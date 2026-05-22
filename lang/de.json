@@ -313,6 +313,11 @@
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
             "errorReading": "Fehler beim Lesen der Datei"
         },
+        "icgemWrongApp": {
+            "title": "ICGEM-Metadatendatei erkannt",
+            "body": "Sehr geehrte Nutzende,\n\nes scheint, als wollten Sie eine ICGEM-Metadatendatei auf ELMO hochladen. Dies ist zwar möglich, aber nicht in dieser Version. Bitte besuchen Sie ELMOGEM (https://icgem.gfz.de/elmogem), um die Metadatenübermittlung für das gravitationsbezogene Produkt abzuschließen.",
+            "close": "Schließen"
+        },
         "changelog": {
             "title": "Änderungsprotokoll",
             "aboutText": "Die Grundlagen für den ELMO Metadateneditor wurden 2024 von Studierenden der Fachhochschule Potsdam in Zusammenarbeit mit dem GFZ Helmholtz-Zentrum für Geoforschung Potsdam entwickelt. Anschließend hat das Entwicklungsteam des GFZ weiter optimiert. Der ELMO Metadateneditor wird unter der GNU General Public License, Version 2, veröffentlicht.",

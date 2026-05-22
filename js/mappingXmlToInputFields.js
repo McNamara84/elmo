@@ -1355,6 +1355,8 @@ function processFunders(xmlDoc, resolver) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
@@ -1470,8 +1472,11 @@ async function loadXmlToForm(xmlDoc) {
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
   }
-  // Process descriptions
-  processDescriptions(xmlDoc, resolver);
+  // For ICGEM schema files, descriptions use a section attribute (not DataCite descriptionType)
+  const isIcgem = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
+  if (!isIcgem) {
+    processDescriptions(xmlDoc, resolver);
+  }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
   // Process Keywords
@@ -1484,6 +1489,10 @@ async function loadXmlToForm(xmlDoc) {
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
+  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  if (isIcgem) {
+    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+  }
 }
 
 // Export for testing (CommonJS)

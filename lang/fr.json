@@ -310,6 +310,11 @@
             "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
         },
+        "icgemWrongApp": {
+            "title": "Fichier de métadonnées ICGEM détecté",
+            "body": "Cher utilisateur,\nil semble que vous souhaitiez télécharger un fichier de métadonnées ICGEM sur ELMO. Cela est certes possible, mais pas avec cette version. Veuillez vous rendre sur ELMOGEM (https://icgem.gfz.de/elmogem) pour finaliser la transmission des métadonnées relatives au produit gravimétrique.",
+            "close": "Fermer"
+        },
         "changelog": {
             "title": "Journal des modifications",
             "aboutText": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",

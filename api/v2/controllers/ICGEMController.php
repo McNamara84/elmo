@@ -359,12 +359,13 @@ class ICGEMController extends DatasetController
             foreach ($dataSources as $dataSource) {
                 $dsElement = $xml->addChild(self::ICGEM_NAMESPACE_PREFIX . ':inputDataSource', null, self::ICGEM_NAMESPACE_URI);
                 
-                // Map type code to human-readable name and set as attribute
+                // Map type code to human-readable name; store as XML attribute to match schema
                 $sourceType = $typeMap[$dataSource['type']] ?? $dataSource['type'];
-                $dsElement->addAttribute('type', $sourceType);
+                $dsElement->addAttribute('type', $this->prepare($sourceType, 'inputDataSourceType'));
                 
-                if (!empty($dataSource['description'])) {
-                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare($dataSource['description'], 'description'), self::ICGEM_NAMESPACE_URI);
+                // Always add description if the key exists, even if empty
+                if (array_key_exists('description', $dataSource)) {
+                    $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':description', $this->prepare((string)($dataSource['description'] ?? ''), 'description'), self::ICGEM_NAMESPACE_URI);
                 }
                 
                 // Handle different source types
@@ -669,6 +670,12 @@ class ICGEMController extends DatasetController
             $trimmed = preg_replace('/\s+/', ' ', $trimmed) ?? $trimmed;
         }
         
+        // Normalize line endings in description fields to LF-only (strip CR to avoid double-encoding)
+        if ($fieldName === 'description') {
+            $trimmed = str_replace("\r\n", "\n", $trimmed);
+            $trimmed = str_replace("\r", "\n", $trimmed);
+        }
+
         // Capitalize if this is an enumeration field
         if (in_array($fieldName, self::ENUMERATION_FIELDS, true)) {
             $trimmed = ucfirst($trimmed);

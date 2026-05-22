@@ -1686,7 +1686,9 @@ npm test -- --watch # run in watch mode
 
 ### Playwright (End-to-End Tests)
 
-Playwright tests live in `tests/playwright/` and run against the four ELMO Docker instances:
+Playwright tests live in `tests/playwright/` 
+
+In CI - Github Actions they run against the four ELMO Docker instances:
 
 | Playwright Project | Browser | ELMO Instance | URL |
 |--------------------|---------|---------------|-----|
@@ -1694,6 +1696,8 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 | `webkit` | WebKit (Safari) | MSL Edition | `http://localhost:8081/` |
 | `firefox-gem` | Firefox | ICGEM Edition | `http://localhost:8082/` |
 | `firefox-igsn` | Firefox | IGSN Edition | `http://localhost:8083/` |
+
+Locally, 1 docker container is enough. The tests run using 4 configuration files (one for each variant).
 
 #### Prerequisites
 
@@ -1712,36 +1716,53 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 
 #### Running Playwright Tests
 
+**Running all tests at once:**
+
 ```bash
-# Run all tests (all browsers/projects)
+# Run all 4 variants sequentially on a single container (settings switched between variants)
+# This uses the default config (playwright.config.ts with workers:1)
 npx playwright test
+```
 
-# Run only one project (e.g. only Chromium / Standard instance)
-npx playwright test --project=chromium
+**Running a specific variant (recommended for development):**
 
-# Run a specific test file
-npx playwright test tests/playwright/formgroups/authors.spec.ts
-
-# Run tests with visible browser (headed mode)
-npx playwright test --headed --project=chromium
-
-# Run a single test by title
-npx playwright test -g "populates author details"
-
-# Run tests for a specific ELMO variant (local parallel mode with fast feedback)
+```bash
+# Fast parallel execution with full test scope for each variant:
 npx playwright test --config=playwright.generic.config.ts  # Standard DataCite edition
 npx playwright test --config=playwright.gem.config.ts      # ICGEM Global Geopotential Models
 npx playwright test --config=playwright.msl.config.ts      # MSL Multi-Scale Laboratories edition
 npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated GeoSample Metadata
+```
 
-# Run all 4 variants sequentially (CI mode - one container, settings switched between variants)
-npx playwright test  # Uses default config (playwright.config.ts with workers:1)
+**Running individual tests:**
+
+```bash
+# Run a specific test file
+npx playwright test tests/playwright/formgroups/authors.spec.ts
+
+# Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
+npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
+
+# Run a single test by title
+npx playwright test -g "populates author details"
+
+# Run only one browser/project (e.g. only Chromium)
+npx playwright test --project=chromium
+
+# Run tests with visible browser (headed mode)
+npx playwright test --headed --project=chromium
 
 # Show the HTML report after a test run
 npx playwright show-report
 ```
 
-**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) against a single Docker container with that variant's settings applied once via setup. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), switching `settings.php` between variants. Variant-specific configs are ideal for fast local feedback during development; the default config is used in CI.
+**Important:** When running tests for a specific variant locally, always pass the correct `--config` file:
+- **Generic tests:** `--config=playwright.generic.config.ts`
+- **GEM tests:** `--config=playwright.gem.config.ts`
+- **MSL tests:** `--config=playwright.msl.config.ts`
+- **IGSN tests:** `--config=playwright.igsn.config.ts`
+
+**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) for fast feedback during development. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), automatically switching `settings.php` between variants—this is what CI uses.
 
 #### Troubleshooting
 

@@ -945,6 +945,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[0]->attributes()['type'] ?? '';
         $this->assertEquals('Satellite', (string)$typeAttr);
         $sourceChildren = $sources[0]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Satellite', (string)$sources[0]->attributes()['type']);
         $this->assertEquals('GRACE satellite data', (string)$sourceChildren->description);
         $this->assertEquals('GRACE', (string)$sourceChildren->satelliteValueName);
         $this->assertEquals('https://nasa.gov', (string)$sourceChildren->satelliteSchemeUri);
@@ -953,6 +954,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[1]->attributes()['type'] ?? '';
         $this->assertEquals('Ground data', (string)$typeAttr);
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Ground data', (string)$sources[1]->attributes()['type']);
         $this->assertEquals('Ground gravity', (string)$sourceChildren->description);
         $this->assertEquals('Terrestrial data', (string)$sourceChildren->groundDetail);
 
@@ -960,6 +962,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[2]->attributes()['type'] ?? '';
         $this->assertEquals('Altimetry', (string)$typeAttr);
         $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Altimetry', (string)$sources[2]->attributes()['type']);
         $this->assertEquals('Satellite altimetry data', (string)$sourceChildren->description);
         $this->assertEquals('Direct observations from altimetry satellites', (string)$sourceChildren->altimetryDetail);
 
@@ -967,6 +970,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[3]->attributes()['type'] ?? '';
         $this->assertEquals('Model', (string)$typeAttr);
         $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Model', (string)$sources[3]->attributes()['type']);
         $this->assertEquals('Reference model input', (string)$sourceChildren->description);
         $this->assertEquals('Global Gravitational Model', (string)$sourceChildren->modelDetail);
         $this->assertEquals('10.5880/icgem.2024.001', (string)$sourceChildren->identifier);
@@ -977,6 +981,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[4]->attributes()['type'] ?? '';
         $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Elevation/Terrain', (string)$sources[4]->attributes()['type']);
         $this->assertEquals('Topography input', (string)$sourceChildren->description);
         $this->assertEquals('Bathymetry', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertSame('', (string)$sourceChildren->compensationDepth);
@@ -985,6 +990,7 @@ final class ICGEMControllerTest extends TestCase
         $typeAttr = $sources[5]->attributes()['type'] ?? '';
         $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[5]->children('http://icgem.gfz.de/schema');
+        $this->assertEquals('Elevation/Terrain', (string)$sources[5]->attributes()['type']);
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);

@@ -234,9 +234,9 @@
         "tideSystem": "Tide system",
         "tideSystemInvalid": "Please choose tide system.",
         "tideSystemOptions": {
-            "zeroTide": "zero tide",
-            "meanTide": "mean tide",
-            "tideFree": "tide free"
+            "zeroTide": "Zero-tide",
+            "meanTide": "Mean-tide",
+            "tideFree": "Tide-free"
         },
         "errors": "Errors",
         "errorsInvalid": "Please choose error type.",
@@ -311,6 +311,11 @@
             "invalidFileType": "Please upload an XML or JSON-LD file.",
             "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
+        },
+        "icgemWrongApp": {
+            "title": "ICGEM Metadata File Detected",
+            "body": "Dear user,\n\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "close": "Close"
         },
         "changelog": {
             "title": "Changelog",

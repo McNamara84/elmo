@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <dace:creators>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Torkhov, Aleksandr</dace:creatorName>
+      <dace:givenName>Aleksandr</dace:givenName>
+      <dace:familyName>Torkhov</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0009-0006-3313-7304</dace:nameIdentifier>
+      <dace:affiliation>Central Queensland University</dace:affiliation>
+      <dace:affiliation>Municipality of Amaroussion</dace:affiliation>
+      <dace:affiliation>OmegaChem (Canada)</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Organizational">Sektion 5.1</dace:creatorName>
+      <dace:affiliation>Fraunhofer Institute for Systems and Innovation Research</dace:affiliation>
+      <dace:affiliation>Fraunhofer Institute for Microengineering and Microsystems</dace:affiliation>
+    </dace:creator>
+  </dace:creators>
+  <dace:titles>
+    <dace:title xml:lang="en">test submission</dace:title>
+  </dace:titles>
+  <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+  <dace:publicationYear>2024</dace:publicationYear>
+  <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+  <dace:subjects>
+    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9" xml:lang="en">GEODETICS</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/22f57987-7a8d-46d8-9b3d-37761755f8b2" xml:lang="en">GEODETICS &gt; TECHNIQUES &gt; SLR (SATELLITE LASER RANGING)</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847" xml:lang="en">Space-based Platforms</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/41de58a7-f1e3-453f-9094-80cb8e839b36" xml:lang="en">Space-based Platforms &gt; Navigation Satellites &gt; NAVSTAR</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4013d60-ac0d-478f-b18f-0098caef0f78" xml:lang="en">Space-based Platforms &gt; Navigation Satellites &gt; Navigation with Indian Constellation (NavIC)</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</dace:subject>
+  </dace:subjects>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Torkhov, Aleksandr</dace:contributorName>
+      <dace:givenName>Aleksandr</dace:givenName>
+      <dace:familyName>Torkhov</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0009-0006-3313-7304</dace:nameIdentifier>
+      <dace:affiliation>Central Queensland University</dace:affiliation>
+      <dace:affiliation>Municipality of Amaroussion</dace:affiliation>
+      <dace:affiliation>OmegaChem (Canada)</dace:affiliation>
+    </dace:contributor>
+  </dace:contributors>
+  <dace:dates>
+    <dace:date dateType="Created">2026-01-01</dace:date>
+  </dace:dates>
+  <dace:language>en</dace:language>
+  <dace:version>2</dace:version>
+  <dace:rightsList>
+    <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+  </dace:rightsList>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">field</dace:description>
+  </dace:descriptions>
+  <dace:geoLocations/>
+</dace:resource>
+  <grav:globalGravityProduct>
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Model_2</grav:modelName>
+      <grav:publicationYear>2024</grav:publicationYear>
+      <grav:modelType>Temporal</grav:modelType>
+      <grav:mathematicalRepresentation>Spherical harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Mars</grav:celestialBody>
+      <grav:fileFormat>icgem1.0</grav:fileFormat>
+      <grav:tideSystem>Zero-tide</grav:tideSystem>
+      <grav:degreeOrderMax>23</grav:degreeOrderMax>
+      <grav:radius>345</grav:radius>
+      <grav:earthGravityConstant>345</grav:earthGravityConstant>
+      <grav:errors>No</grav:errors>
+      <grav:temporalModelProperties>
+        <grav:temporalCoverage>2026-04-14/open</grav:temporalCoverage>
+        <grav:temporalResolution uom="d">7</grav:temporalResolution>
+      </grav:temporalModelProperties>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Satellite">
+      <grav:description>s1</grav:description>
+      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</grav:satelliteValueName>
+      <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac</grav:satelliteValueUri>
+      <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
+      <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
+    </grav:inputDataSource>
+    <grav:inputDataSource type="Satellite">
+      <grav:description>s2</grav:description>
+      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</grav:satelliteValueName>
+      <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d</grav:satelliteValueUri>
+      <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
+      <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
+    </grav:inputDataSource>
+    <grav:inputDataSource type="Satellite">
+      <grav:description>s2</grav:description>
+      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</grav:satelliteValueName>
+      <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9</grav:satelliteValueUri>
+      <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
+      <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
+    </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">field</grav:description>
+    </grav:descriptions>
+    <dace:contributors>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName>Aleksandr Torkhov</dace:contributorName>
+        <dace:givenName>Aleksandr</dace:givenName>
+        <dace:familyName>Torkhov</dace:familyName>
+        <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org">0009-0006-3313-7304</dace:nameIdentifier>
+        <dace:nameIdentifier nameIdentifierScheme="email">torkhov8@gmail.com</dace:nameIdentifier>
+        <dace:affiliation>Central Queensland University</dace:affiliation>
+        <dace:affiliation>Municipality of Amaroussion</dace:affiliation>
+        <dace:affiliation>OmegaChem (Canada)</dace:affiliation>
+      </dace:contributor>
+    </dace:contributors>
+  </grav:globalGravityProduct>
+</grav:envelope>
