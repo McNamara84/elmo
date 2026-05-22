@@ -30,12 +30,14 @@ function escapeSelector(value) {
 $(document).ready(function () {
   const fundingreferenceGroup = $("#group-fundingreference");
 
+  // Clear the hidden funder fields when the visible funder input is empty.
   function clearFunderHiddenFields(row) {
     const $row = $(row);
     $row.find('.inputFunderId').val('');
     $row.find('.inputFunderIdTyp').val('');
   }
 
+  // Keep hidden funder values in sync when the funder input is cleared.
   fundingreferenceGroup.on('input blur', '.inputFunder', function () {
     if ($(this).val().trim() !== '') {
       return;
