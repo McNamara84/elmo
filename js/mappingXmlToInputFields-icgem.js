@@ -248,7 +248,9 @@ function populateIcgemProperties(data) {
   if (scalars.degreeOrderMax) $('#input-degree').val(scalars.degreeOrderMax);
 
   // Errors: XML stores "Formal" (ucfirst), select values are lowercase
-  if (scalars.errors) $('#input-errors').val(scalars.errors.toLowerCase());
+  if (scalars.errors) {
+    $('#input-errors').val(scalars.errors.toLowerCase()).trigger('change');
+  }
 
   if (scalars.errorHandling) $('#input-error-handling-approach').val(scalars.errorHandling);
 
