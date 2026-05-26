@@ -235,4 +235,28 @@ test.describe('Funding Reference form group', () => {
       await expect(rows).toHaveCount(initialCount);
     }
   });
+
+  test('clears hidden funder values when the visible funder input is cleared', async ({ page }) => {
+    const firstRow = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`).first();
+    const funderInput = firstRow.locator('.inputFunder');
+    const funderIdInput = firstRow.locator('.inputFunderId');
+    const funderIdTypeInput = firstRow.locator('.inputFunderIdTyp');
+
+    await funderInput.click();
+    await funderInput.type('Gordon');
+
+    const dropdown = page.locator('ul.ui-autocomplete').filter({ hasText: 'Gordon and Betty Moore Foundation' }).first();
+    await expect(dropdown).toBeVisible();
+    await dropdown.locator('li', { hasText: 'Gordon and Betty Moore Foundation' }).first().click();
+
+    await expect(funderInput).toHaveValue('Gordon and Betty Moore Foundation');
+    await expect(funderIdInput).toHaveValue('100000012');
+    await expect(funderIdTypeInput).toHaveValue('crossref');
+
+    await funderInput.fill('');
+
+    await expect(funderInput).toHaveValue('');
+    await expect(funderIdInput).toHaveValue('');
+    await expect(funderIdTypeInput).toHaveValue('');
+  });
 });
