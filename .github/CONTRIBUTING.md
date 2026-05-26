@@ -31,3 +31,18 @@ git push origin hotfix/fix-login-bug
 # Create PR targeting main
 # After merge into main, merge main into dev
 ```
+
+#### Features
+- **Purpose**: New features or enhancements
+- **Created from**: `dev`
+- **Merged into**: `dev`
+- **Naming convention**: `feature/description-of-feature`
+
+**Important**: Before creating a PR, ensure your feature branch contains the latest changes from `main`:
+```bash
+git checkout feature/your-feature
+git fetch origin
+git merge origin/main
+# Resolve conflicts if any
+git push origin feature/your-feature
+```
