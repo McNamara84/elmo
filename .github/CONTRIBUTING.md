@@ -56,3 +56,9 @@ git push origin feature/your-feature
 #### Other Types
 - **fixes** (non-critical): `fix/description` - created from `dev`, merged into `dev`
 - **Chores** (maintenance, configs): `chore/description` - created from `dev`, merged into `dev`
+
+## Questions or Issues?
+
+If you have questions or run into issues, please open an issue in this repository or contact the team.
+
+Thank you for contributing! 🎉
