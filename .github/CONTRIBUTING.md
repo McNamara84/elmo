@@ -46,3 +46,13 @@ git merge origin/main
 # Resolve conflicts if any
 git push origin feature/your-feature
 ```
+
+#### Documentation Changes
+- **Purpose**: Updates to documentation, guides, or comments
+- **Created from**: `dev`
+- **Merged into**: `dev`
+- **Naming convention**: `doc/description-of-change`
+
+#### Other Types
+- **fixes** (non-critical): `fix/description` - created from `dev`, merged into `dev`
+- **Chores** (maintenance, configs): `chore/description` - created from `dev`, merged into `dev`
