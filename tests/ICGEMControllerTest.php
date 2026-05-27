@@ -1738,4 +1738,274 @@ EOT;
         $sourceNs = $to->source->children('http://datacite.org/schema/kernel-4');
         $this->assertNotNull($sourceNs->new);
     }
+
+    // ============================================
+    // PART 4: insertContact TESTS
+    // ============================================
+
+    /**
+     * Helper: build a mock prepare/execute/get_result chain that returns $rows via fetch_assoc.
+     * $rows should be an array of assoc rows; a trailing null is added automatically.
+     *
+     * @param array<array<string,mixed>> $rows
+     * @param int $prepareCallIndex 0-based index for expects() ordering (use $this->any() by default)
+     */
+    private function mockContactPersonsQuery(array $rows): void
+    {
+        $mockStmt   = $this->createMock(\mysqli_stmt::class);
+        $mockResult = $this->createMock(\mysqli_result::class);
+
+        $this->mockConnection->expects($this->any())
+            ->method('prepare')
+            ->willReturn($mockStmt);
+
+        $mockStmt->expects($this->any())->method('bind_param');
+        $mockStmt->expects($this->any())->method('execute');
+        $mockStmt->expects($this->any())->method('get_result')->willReturn($mockResult);
+
+        // fetch_assoc returns each row in turn, then null
+        $consecutiveCalls = array_merge($rows, [null]);
+        $mockResult->expects($this->any())
+            ->method('fetch_assoc')
+            ->willReturnOnConsecutiveCalls(...$consecutiveCalls);
+    }
+
+    /**
+     * Test insertContact creates grav:contact with address from email.
+     */
+    public function testInsertContactCreatesAddressFromEmail(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane.doe@example.com',
+                'website'          => null,
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ]
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $children = $xml->children($ns);
+        $this->assertCount(1, $children->contact, 'grav:contact element must be created');
+
+        $contactChildren = $children->contact->children($ns);
+        $this->assertCount(1, $contactChildren->address, 'One grav:address expected');
+        $this->assertEquals('jane.doe@example.com', (string)$contactChildren->address);
+    }
+
+    /**
+     * Test insertContact adds grav:onlineResource when website is present.
+     */
+    public function testInsertContactAddsOnlineResourceWhenWebsitePresent(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Smith',
+                'givenname'        => 'John',
+                'orcid'            => null,
+                'email'            => 'john.smith@gfz.de',
+                'website'          => 'https://www.gfz.de/john',
+                'contact_person_id' => 2,
+                'Resource_has_Contact_Person_id' => 2,
+            ]
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 2);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+        $this->assertCount(1, $contactChildren->address);
+        $this->assertEquals('john.smith@gfz.de', (string)$contactChildren->address);
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://www.gfz.de/john', (string)$contactChildren->onlineResource);
+    }
+
+    /**
+     * Test insertContact with multiple contact persons produces multiple address/onlineResource entries.
+     */
+    public function testInsertContactWithMultipleContactPersons(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane@example.com',
+                'website'          => 'https://jane.example.com',
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ],
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Bob',
+                'orcid'            => null,
+                'email'            => 'bob@example.com',
+                'website'          => null,
+                'contact_person_id' => 2,
+                'Resource_has_Contact_Person_id' => 2,
+            ],
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+
+        // Two address elements (one per person)
+        $this->assertCount(2, $contactChildren->address);
+        $this->assertEquals('jane@example.com', (string)$contactChildren->address[0]);
+        $this->assertEquals('bob@example.com',  (string)$contactChildren->address[1]);
+
+        // Only one onlineResource (second person has no website)
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://jane.example.com', (string)$contactChildren->onlineResource[0]);
+    }
+
+    /**
+     * Test insertContact creates empty grav:contact when no contact persons are stored.
+     */
+    public function testInsertContactCreatesEmptyContactWhenNoPersons(): void
+    {
+        $this->mockContactPersonsQuery([]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 99);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $children = $xml->children($ns);
+        // The element must still be created (schema requires it)
+        $this->assertCount(1, $children->contact);
+        // But no child elements inside it
+        $contactChildren = $children->contact->children($ns);
+        $this->assertCount(0, $contactChildren->address);
+        $this->assertCount(0, $contactChildren->onlineResource);
+    }
+
+    /**
+     * Test insertContact skips a person whose email is empty but still adds their website.
+     * (Addresses are only inserted when email is non-empty; websites are only inserted when non-empty.)
+     */
+    public function testInsertContactSkipsEmptyEmail(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Ghost',
+                'givenname'        => 'User',
+                'orcid'            => null,
+                'email'            => '',        // empty — should be skipped
+                'website'          => 'https://ghost.example.com',
+                'contact_person_id' => 3,
+                'Resource_has_Contact_Person_id' => 3,
+            ],
+            [
+                'familyname'       => 'Real',
+                'givenname'        => 'User',
+                'orcid'            => null,
+                'email'            => 'real@example.com',
+                'website'          => null,
+                'contact_person_id' => 4,
+                'Resource_has_Contact_Person_id' => 4,
+            ],
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+
+        // Only the second person's email should produce an address element
+        $this->assertCount(1, $contactChildren->address);
+        $this->assertEquals('real@example.com', (string)$contactChildren->address[0]);
+
+        // The first person's website should still be emitted
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://ghost.example.com', (string)$contactChildren->onlineResource[0]);
+    }
+
+    /**
+     * Test insertContact is placed before harmonicCoefficientsModel in globalGravityProduct.
+     * This verifies the XSD sequence: contact → xs:choice (harmonicCoefficientsModel).
+     */
+    public function testInsertContactIsFirstChildOfGlobalGravityProduct(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane@example.com',
+                'website'          => null,
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ]
+        ]);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="' . $ns . '"/>'
+        );
+
+        // Simulate createICGEMxml order: insertContact first, then harmonicCoefficientsModel
+        $reflection = new \ReflectionClass($this->controller);
+        $insertContact = $reflection->getMethod('insertContact');
+        $insertContact->setAccessible(true);
+        $insertContact->invoke($this->controller, $xml, 1);
+
+        $xml->addChild('grav:harmonicCoefficientsModel', null, $ns);
+
+        $children = $xml->children($ns);
+        $names = [];
+        foreach ($children as $child) {
+            $names[] = $child->getName();
+        }
+
+        $this->assertSame('contact', $names[0], 'grav:contact must be the first child');
+        $this->assertSame('harmonicCoefficientsModel', $names[1]);
+    }
 }
+

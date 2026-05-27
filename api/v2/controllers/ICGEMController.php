@@ -812,6 +812,41 @@ class ICGEMController extends DatasetController
         }
     }
     /**
+     * Inserts the mandatory grav:contact element (CI_Contact type) as the first child
+     * of globalGravityProduct, per the ICGEM XSD sequence.
+     *
+     * Populates grav:address from each contact person's email (required, minOccurs=1)
+     * and grav:onlineResource from each contact person's website (optional).
+     * If no contact persons exist, an empty grav:contact element is added to satisfy
+     * the schema requirement (validation at submit time will catch missing email).
+     *
+     * @param SimpleXMLElement $icgempart The globalGravityProduct element.
+     * @param int $id The resource ID.
+     */
+    protected function insertContact(SimpleXMLElement $icgempart, int $id): void
+    {
+        $contactPersons = $this->getContactPersons($this->connection, $id);
+        $contact = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
+
+        foreach ($contactPersons as $cp) {
+            if (!empty($cp['email'])) {
+                $contact->addChild(
+                    self::ICGEM_NAMESPACE_PREFIX . ':address',
+                    htmlspecialchars(trim($cp['email'])),
+                    self::ICGEM_NAMESPACE_URI
+                );
+            }
+            if (!empty($cp['website'])) {
+                $contact->addChild(
+                    self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
+                    htmlspecialchars(trim($cp['website'])),
+                    self::ICGEM_NAMESPACE_URI
+                );
+            }
+        }
+    }
+
+    /**
      * Inserts contact persons from the Authors form-group into the envelope under the
      * xs:any extension point, using the DataCite namespace (dace:).
      *
@@ -970,8 +1005,11 @@ class ICGEMController extends DatasetController
         
         // 6. Create ICGEM globalGravityProduct as child of envelope
         $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
-        
-        // 7. Create harmonicCoefficientsModel container (FIRST per XSD sequence)
+
+        // 6a. Insert grav:contact (FIRST per XSD sequence, before xs:choice)
+        $this->insertContact($icgempart, $id);
+
+        // 7. Create harmonicCoefficientsModel container (xs:choice option, SECOND per XSD sequence)
         $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':harmonicCoefficientsModel', null, self::ICGEM_NAMESPACE_URI);
         
         // 8. Insert core GGM properties into harmonicCoefficientsModel
