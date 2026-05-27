@@ -768,9 +768,9 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person (optional – not all XMLs have a ContactPerson contributor)
+    // Contact person – email is required, website is optional
     if (parsedData.contactPersonLastName) expect(parsedData.contactPersonLastName, 'contactPersonLastName').not.toBe('');
-    if (parsedData.contactPersonEmail) expect(parsedData.contactPersonEmail, 'contactPersonEmail').not.toBe('');
+    expect(parsedData.contactPersonEmail, 'contactPersonEmail').not.toBe('');
 
     // Subjects (GCMD keywords)
     expect(parsedData.subjects.length, 'subjects.length').toBeGreaterThan(0);
@@ -962,6 +962,12 @@ for (const testCase of TEST_CASES) {
     await expect(firstAuthorRow.locator('[id^="input-author-firstname"]'), 'author firstName').toHaveValue('');
     await expect(firstAuthorRow.locator('[id^="input-author-orcid"]'), 'author ORCID').toHaveValue('');
 
+    // Contact person checkbox should be unchecked, email and website fields should be empty
+    const cpCheckbox = firstAuthorRow.locator('input[name="contacts[]"]');
+    await expect(cpCheckbox, 'contact person checkbox after clear').not.toBeChecked();
+    const cpEmailAfterClear = await firstAuthorRow.locator('input[name="cpEmail[]"]').inputValue().catch(() => '');
+    expect(cpEmailAfterClear, 'contactPersonEmail after clear').toBe('');
+
     // ── ICGEM Definition fields ────────────────────────────────────────────
     await expect(page.locator('#input-model-name'), 'modelName').toHaveValue('');
     await expect(page.locator('#input-model-type'), 'modelType').toHaveValue('');
@@ -1077,14 +1083,18 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email + website (populated by populateIcgemContactPersons from GGP contributors)
-    if (parsedData.contactPersonEmail) {
-      const emailVal = await page.locator('#input-contactperson-email').first().inputValue().catch(() => '');
-      expect(emailVal, 'contactPersonEmail').toContain(parsedData.contactPersonEmail);
-    }
+    // Contact person email (required) and website (optional)
+    // Email is populated by populateIcgemContactPersons from grav:contact/grav:address.
+    // The field becomes visible after the upload toggles the contact-person checkbox.
+    await expect(
+      page.locator('#input-contactperson-email').first(),
+      'contactPersonEmail',
+    ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
     if (parsedData.contactPersonWebsite) {
-      const websiteVal = await page.locator('#input-contactperson-website').first().inputValue().catch(() => '');
-      expect(websiteVal, 'contactPersonWebsite').toContain(parsedData.contactPersonWebsite);
+      await expect(
+        page.locator('#input-contactperson-website').first(),
+        'contactPersonWebsite',
+      ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
