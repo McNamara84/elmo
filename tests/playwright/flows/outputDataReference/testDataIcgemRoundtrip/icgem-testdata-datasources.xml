@@ -58,6 +58,10 @@
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>gfz@gfz.de</grav:address>
+      <grav:onlineResource>gfz.de</grav:onlineResource>
+    </grav:contact>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Model_2</grav:modelName>
       <grav:publicationYear>2024</grav:publicationYear>

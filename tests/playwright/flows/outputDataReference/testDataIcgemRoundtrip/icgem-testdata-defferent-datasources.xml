@@ -91,6 +91,9 @@
   </dace:descriptions>
   </dace:resource>
   <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>example@gfz.de</grav:address>
+    </grav:contact>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Model_5_topographic_separate_density</grav:modelName>
       <grav:publicationYear>2020</grav:publicationYear>
