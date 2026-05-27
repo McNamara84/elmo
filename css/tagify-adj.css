@@ -30,6 +30,11 @@
     border-bottom-right-radius: 0;
 }
 
+.input-left-no-round-corners {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+}
+
 /* Makes the square corners round */
 .input-group-text {
     border-top-right-radius: 0.375rem !important;
