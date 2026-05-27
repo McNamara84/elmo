@@ -415,12 +415,12 @@ function populateIcgemDataSources(data) {
 
 /**
  * Populates contact person email and website fields from the ICGEM-envelope's
- * dace:contributors section (inside globalGravityProduct).
+ * grav:contact element (inside globalGravityProduct).
  *
- * The authors form is already populated (names/orcid from DataCite creators) and
- * processContactPersonsFromDataCite has already checked the contact-person checkboxes.
- * This function fills in the email and website values that are only present in the
- * ICGEM-specific contributor section (as dace:nameIdentifier elements).
+ * Contact info (email/website) is stored positionally in grav:contact/grav:address
+ * and grav:contact/grav:onlineResource. The i-th address and i-th onlineResource
+ * correspond to the i-th ContactPerson contributor listed in the DataCite resource
+ * section. Names from that section are used to locate the correct author row.
  *
  * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
  * does not show the hidden fields. This function explicitly checks the checkbox and
@@ -450,34 +450,41 @@ function populateIcgemContactPersons(xmlDoc) {
     return n ? n.textContent.trim() : '';
   }
 
-  // Locate globalGravityProduct — the ICGEM-specific container
+  // Locate globalGravityProduct
   const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//globalGravityProduct', xmlDoc);
   if (!ggpNode) return;
 
-  // Find all ContactPerson contributors inside globalGravityProduct
-  const snap = xpAll('.//dc:contributors/dc:contributor | .//contributors/contributor', ggpNode);
-  for (let i = 0; i < snap.snapshotLength; i++) {
-    const node = snap.snapshotItem(i);
-    if (node.getAttribute('contributorType') !== 'ContactPerson') continue;
+  // Find grav:contact and read emails (addresses) and websites (onlineResources).
+  // These are in the same positional order as the ContactPerson contributors
+  // in the DataCite resource section.
+  const contactNode = xpFirst('icgv:contact | contact', ggpNode);
+  if (!contactNode) return;
 
+  const addressSnap = xpAll('icgv:address | address', contactNode);
+  const onlineSnap  = xpAll('icgv:onlineResource | onlineResource', contactNode);
+
+  if (addressSnap.snapshotLength === 0 && onlineSnap.snapshotLength === 0) return;
+
+  // Get ContactPerson contributors from the DataCite resource for name-based row matching.
+  // These are listed in the same order as grav:contact addresses/onlineResources.
+  const allContribs = xpAll('.//dc:contributors/dc:contributor | .//contributors/contributor', xmlDoc);
+  const contactPersons = [];
+  for (let i = 0; i < allContribs.snapshotLength; i++) {
+    const node = allContribs.snapshotItem(i);
+    if (node.getAttribute('contributorType') !== 'ContactPerson') continue;
     const familyName = nodeText('dc:familyName | familyName', node);
     const givenName  = nodeText('dc:givenName  | givenName',  node);
-    if (!familyName || !givenName) continue;
+    contactPersons.push({ familyName, givenName });
+  }
 
-    // Extract email and website from nameIdentifier elements
-    let email = '';
-    let website = '';
-    const identifiers = xpAll('dc:nameIdentifier | nameIdentifier', node);
-    for (let j = 0; j < identifiers.snapshotLength; j++) {
-      const idNode = identifiers.snapshotItem(j);
-      const scheme = idNode.getAttribute('nameIdentifierScheme') || '';
-      if (scheme === 'email' && !email)   email   = idNode.textContent.trim();
-      if (scheme === 'URL'   && !website) website = idNode.textContent.trim();
-    }
+  for (let i = 0; i < contactPersons.length; i++) {
+    const { familyName, givenName } = contactPersons[i];
+    const email   = i < addressSnap.snapshotLength ? addressSnap.snapshotItem(i).textContent.trim() : '';
+    const website = i < onlineSnap.snapshotLength  ? onlineSnap.snapshotItem(i).textContent.trim()  : '';
 
     if (!email && !website) continue;
+    if (!familyName && !givenName) continue;
 
-    // Find matching author row by name (case-insensitive)
     const normFamily = familyName.toLowerCase();
     const normGiven  = givenName.toLowerCase();
     const $row = $('div[data-creator-row]').filter(function () {
@@ -494,7 +501,6 @@ function populateIcgemContactPersons(xmlDoc) {
     $row.find('input[name="contacts[]"]').prop('checked', true);
     $row.find('.contact-person-input').show();
 
-    // Populate the fields
     if (email)   $row.find('input[name="cpEmail[]"]').val(email);
     if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
   }

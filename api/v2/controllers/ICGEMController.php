@@ -847,69 +847,6 @@ class ICGEMController extends DatasetController
     }
 
     /**
-     * Inserts contact persons from the Authors form-group into the envelope under the
-     * xs:any extension point, using the DataCite namespace (dace:).
-     *
-     * Each contact person is serialised as a dace:contributor with
-     * contributorType="ContactPerson", preserving family/given name, ORCID, e-mail,
-     * website, and affiliations so the information is never lost during ETL.
-     *
-     * @param SimpleXMLElement $icgempart The globalGravityProduct element.
-     * @param int $id The resource ID.
-     */
-    protected function insertContactPersons(SimpleXMLElement $icgempart, int $id): void
-    {
-        $contactPersons = $this->getContactPersons($this->connection, $id);
-        if (empty($contactPersons)) {
-            return;
-        }
-
-        $daceNs = 'http://datacite.org/schema/kernel-4';
-        $contributors = $icgempart->addChild('dace:contributors', null, $daceNs);
-
-        foreach ($contactPersons as $cp) {
-            $contributor = $contributors->addChild('dace:contributor', null, $daceNs);
-            $contributor->addAttribute('contributorType', 'ContactPerson');
-
-            $givenName  = trim($cp['givenname']  ?? '');
-            $familyName = trim($cp['familyname'] ?? '');
-            $fullName   = trim("$givenName $familyName");
-
-            if ($fullName !== '') {
-                $contributor->addChild('dace:contributorName', htmlspecialchars($fullName), $daceNs);
-            }
-            if ($givenName !== '') {
-                $contributor->addChild('dace:givenName', htmlspecialchars($givenName), $daceNs);
-            }
-            if ($familyName !== '') {
-                $contributor->addChild('dace:familyName', htmlspecialchars($familyName), $daceNs);
-            }
-            if (!empty($cp['orcid'])) {
-                $orcidEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['orcid']), $daceNs);
-                $orcidEl->addAttribute('nameIdentifierScheme', 'ORCID');
-                $orcidEl->addAttribute('schemeURI', 'https://orcid.org');
-            }
-            if (!empty($cp['email'])) {
-                $emailEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['email']), $daceNs);
-                $emailEl->addAttribute('nameIdentifierScheme', 'email');
-            }
-            if (!empty($cp['website'])) {
-                $webEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['website']), $daceNs);
-                $webEl->addAttribute('nameIdentifierScheme', 'URL');
-            }
-            foreach ($cp['Affiliations'] ?? [] as $aff) {
-                if (!empty($aff['name'])) {
-                    $affEl = $contributor->addChild('dace:affiliation', htmlspecialchars($aff['name']), $daceNs);
-                    if (!empty($aff['rorId'])) {
-                        $affEl->addAttribute('affiliationIdentifier', $aff['rorId']);
-                        $affEl->addAttribute('affiliationIdentifierScheme', 'ROR');
-                    }
-                }
-            }
-        }
-    }
-
-    /**
      * Removes the xsi:schemaLocation attribute from the DataCite XML root element.
      * This prevents namespace/schema conflicts when the DataCite XML is embedded
      * inside the ICGEM envelope, which carries its own xsi:schemaLocation.
@@ -1026,10 +963,7 @@ class ICGEMController extends DatasetController
         // 10. Insert descriptions (THIRD per XSD sequence)
         $this->insertDescriptions($icgempart, $id);
 
-        // 11. Insert contact persons (xs:any extension point – DataCite namespace)
-        $this->insertContactPersons($icgempart, $id);
-        
-        // 12. Format and return the combined envelope XML
+        // 11. Format and return the combined envelope XML
         // Re-parse stripping all existing whitespace-only text nodes (inherited from
         // the XSLT-generated DataCite XML) so that formatOutput can re-indent the
         // merged document consistently from scratch.

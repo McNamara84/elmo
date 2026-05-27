@@ -61,17 +61,25 @@ describe('populateIcgemContactPersons', () => {
 
   // ─── XML helpers ──────────────────────────────────────────────────────────
 
-  // JSDOM's XPath engine matches namespace prefixes by name, not by URI.
-  // The resolver in populateIcgemContactPersons maps 'icgv' → ICGEM NS and
-  // 'dc' → DataCite NS. Test XML must use those exact prefixes so the
-  // XPath expressions find the elements. Production XML uses 'grav:' and
-  // 'dace:' — that real-world path is covered by Playwright E2E tests.
+  // JSDOM XPath matches namespace prefixes by name, not URI.
+  // Resolver maps 'icgv' → ICGEM NS and 'dc' → DataCite NS.
+  // Test XML must use those exact prefixes. Real-world grav:/dace: is covered by Playwright.
   const ICGEM_NS = 'http://icgem.gfz.de/schema';
   const DACE_NS  = 'http://datacite.org/schema/kernel-4';
 
   /**
-   * Build a minimal ICGEM envelope containing one or more ContactPerson contributors.
-   * Uses icgv:/dc: prefixes for JSDOM XPath compatibility.
+   * Build a minimal ICGEM envelope for testing populateIcgemContactPersons.
+   *
+   * Contact person names come from dc:resource/dc:contributors (DataCite, for row
+   * matching). Contact email and website come from icgv:globalGravityProduct/icgv:contact
+   * (addresses and onlineResources, positionally aligned with contributors).
+   *
+   * Note: email is NOT NULL in the DB, so every contact person always contributes
+   * exactly one icgv:address. icgv:onlineResource is only emitted when a website exists,
+   * so position[i] of onlineResource corresponds to the i-th person who has a website.
+   * Tests use cases where all persons either all have or all lack websites to avoid the
+   * positional-mismatch edge case.
+   *
    * @param {Array<{familyName, givenName, email?, website?}>} contacts
    */
   function makeIcgemXml(contacts) {
@@ -80,20 +88,28 @@ describe('populateIcgemContactPersons', () => {
         <dc:contributorName>${c.givenName} ${c.familyName}</dc:contributorName>
         <dc:givenName>${c.givenName}</dc:givenName>
         <dc:familyName>${c.familyName}</dc:familyName>
-        ${c.email   ? `<dc:nameIdentifier nameIdentifierScheme="email">${c.email}</dc:nameIdentifier>` : ''}
-        ${c.website ? `<dc:nameIdentifier nameIdentifierScheme="URL">${c.website}</dc:nameIdentifier>` : ''}
       </dc:contributor>
     `).join('');
 
+    // Addresses and onlineResources in positional order (one per person).
+    const contactChildren = contacts.map(c => {
+      let s = '';
+      if (c.email)   s += `<icgv:address>${c.email}</icgv:address>\n          `;
+      if (c.website) s += `<icgv:onlineResource>${c.website}</icgv:onlineResource>\n          `;
+      return s;
+    }).join('');
+
     return new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <icgv:envelope xmlns:icgv="${ICGEM_NS}" xmlns:dc="${DACE_NS}">
-        <icgv:globalGravityProduct>
-          <icgv:contact>
-            ${contacts.filter(c => c.email).map(c => `<icgv:address>${c.email}</icgv:address>`).join('')}
-          </icgv:contact>
+        <dc:resource>
           <dc:contributors>
             ${contributors}
           </dc:contributors>
+        </dc:resource>
+        <icgv:globalGravityProduct>
+          <icgv:contact>
+            ${contactChildren}
+          </icgv:contact>
         </icgv:globalGravityProduct>
       </icgv:envelope>`, 'application/xml');
   }
@@ -214,17 +230,19 @@ describe('populateIcgemContactPersons', () => {
 
   test('skips contributor with no email and no website', () => {
     buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
-    // Contributor has only an ORCID nameIdentifier — no email, no website
+    // icgv:contact is present but empty — no icgv:address or icgv:onlineResource
     const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <icgv:envelope xmlns:icgv="${ICGEM_NS}" xmlns:dc="${DACE_NS}">
-        <icgv:globalGravityProduct>
+        <dc:resource>
           <dc:contributors>
             <dc:contributor contributorType="ContactPerson">
               <dc:givenName>Jane</dc:givenName>
               <dc:familyName>Doe</dc:familyName>
-              <dc:nameIdentifier nameIdentifierScheme="ORCID">0000-0001-2345-6789</dc:nameIdentifier>
             </dc:contributor>
           </dc:contributors>
+        </dc:resource>
+        <icgv:globalGravityProduct>
+          <icgv:contact></icgv:contact>
         </icgv:globalGravityProduct>
       </icgv:envelope>`, 'application/xml');
 
@@ -244,7 +262,6 @@ describe('populateIcgemContactPersons', () => {
           <dc:contributor contributorType="ContactPerson">
             <dc:givenName>Jane</dc:givenName>
             <dc:familyName>Doe</dc:familyName>
-            <dc:nameIdentifier nameIdentifierScheme="email">jane@example.com</dc:nameIdentifier>
           </dc:contributor>
         </dc:contributors>
       </dc:resource>`, 'application/xml');

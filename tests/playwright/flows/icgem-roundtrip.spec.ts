@@ -286,15 +286,12 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const cpOrcidEntry = cpOrcidList.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'ORCID');
   const contactPersonOrcid = extractText(cpOrcidEntry ?? cpOrcidList[0]);
 
-  // Contact email (from GGP contributors – dace:nameIdentifier with scheme "email")
-  const ggpContribsNode = getNode(ggp, 'contributors') as Record<string, unknown> | undefined;
-  const ggpContribList = ggpContribsNode ? toArray(getNode(ggpContribsNode, 'contributor')) : [];
-  const ggpCp = ggpContribList.find((c: unknown) => (c as Record<string, unknown>)['contributorType'] === 'ContactPerson') as Record<string, unknown> | undefined;
-  const ggpCpNameIds = ggpCp ? toArray(getNode(ggpCp, 'nameIdentifier')) : [];
-  const emailEntry = ggpCpNameIds.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'email') as Record<string, unknown> | undefined;
-  const contactPersonEmail = extractText(emailEntry);
-  const websiteEntry = ggpCpNameIds.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'URL') as Record<string, unknown> | undefined;
-  const contactPersonWebsite = extractText(websiteEntry);
+  // Contact email and website (from grav:contact inside globalGravityProduct)
+  const contactEl = getNode(ggp, 'contact') as Record<string, unknown> | undefined;
+  const addressList = contactEl ? toArray(getNode(contactEl, 'address')) : [];
+  const contactPersonEmail = extractText(addressList[0]);
+  const onlineResourceList = contactEl ? toArray(getNode(contactEl, 'onlineResource')) : [];
+  const contactPersonWebsite = extractText(onlineResourceList[0]);
 
   // Subjects / GCMD thesaurus keywords
   const subjectsNode = getNode(resource, 'subjects') as Record<string, unknown> | undefined;
