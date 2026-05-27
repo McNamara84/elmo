@@ -1205,4 +1205,68 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $this->assertCount(1, $rows, 'Pre-existing row with empty ORCID should be matched by form save.');
         $this->assertEquals($legacyId, $rows[0]['author_person_id'], 'The pre-existing legacy author ID should be reused.');
     }
+
+    public function testSaveAuthorsPreservesMixedAuthorsPayloadOrder(): void
+    {
+        $resource_id = $this->createResource('GFZ.TEST.MIXED.AUTHOR.PAYLOAD.ORDER', 'Test Mixed Author Payload Order');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => 'FirstPayload',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => true,
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'institution',
+                    'institutionname' => 'Payload Institute',
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'person',
+                    'familyname' => 'LastPayload',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => false,
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => ['FirstPayload', 'LastPayload'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', ''],
+            'authorinstitutionName' => ['Payload Institute'],
+            'institutionAffiliation' => [''],
+            'authorInstitutionRorIds' => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            "SELECT
+                CASE
+                    WHEN ap.author_person_id IS NOT NULL THEN CONCAT('person:', ap.familyname)
+                    ELSE CONCAT('institution:', ai.institutionname)
+                END AS author_key
+            FROM Resource_has_Author rha
+            JOIN Author a ON rha.Author_author_id = a.author_id
+            LEFT JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+            LEFT JOIN Author_institution ai ON a.Author_Institution_author_institution_id = ai.author_institution_id
+            WHERE rha.Resource_resource_id = ?
+            ORDER BY rha.Resource_has_Author_id ASC"
+        );
+        $stmt->bind_param('i', $resource_id);
+        $stmt->execute();
+        $rows = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertSame(
+            ['person:FirstPayload', 'institution:Payload Institute', 'person:LastPayload'],
+            array_column($rows, 'author_key'),
+            'saveAuthors should preserve the mixed order from authorsPayload instead of grouping persons before institutions.'
+        );
+    }
 }

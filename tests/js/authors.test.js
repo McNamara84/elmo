@@ -136,6 +136,21 @@ describe('author.js', () => {
     expect($('#group-author .row').length).toBe(1);
   });
 
+  test('keeps the original person author row unchanged after adding and removing a clone', () => {
+    $('#button-author-add').trigger('click');
+
+    const originalRow = $('#group-author .row').first();
+    expect(originalRow.find('input[name="familynames[]"]').val()).toBe('Doe');
+    expect(originalRow.find('input[name="givennames[]"]').val()).toBe('John');
+    expect(originalRow.find('input[name="personAffiliation[]"]').val()).toBe('Some Affil');
+    expect(originalRow.find('input[name="authorPersonRorIds[]"]').val()).toBe('123');
+
+    $('#group-author .row').last().find('.removeButton').trigger('click');
+
+    expect($('#group-author .row').length).toBe(1);
+    expect($('#group-author .row').first().find('input[name="familynames[]"]').val()).toBe('Doe');
+  });
+
   test('initialisiert Sortable mit Drag-Handle-Unterstützung für Buttons', () => {
     expect($.fn.sortable).toHaveBeenCalledTimes(1);
     expect($.fn.sortable.mock.calls[0][0]).toMatchObject({

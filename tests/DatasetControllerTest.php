@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+require_once __DIR__ . '/../save/formgroups/save_authors.php';
+
 /**
  * Test class for DatasetController
  * 
@@ -149,6 +151,63 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->assertEquals('Doe', $authors[0]['familyname']);
         $this->assertEquals('John', $authors[0]['givenname']);
         $this->assertEquals('0000-0001-2345-6789', $authors[0]['orcid']);
+    }
+
+    public function testResourceXmlPreservesMixedAuthorsPayloadOrder(): void
+    {
+        $resourceId = $this->createResource('GFZ.TEST.EXPORT.MIXED.AUTHORS', 'Test Export Mixed Authors');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => 'XmlFirst',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => true,
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'institution',
+                    'institutionname' => 'Xml Institute',
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'person',
+                    'familyname' => 'XmlLast',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => false,
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => ['XmlFirst', 'XmlLast'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', ''],
+            'authorinstitutionName' => ['Xml Institute'],
+            'institutionAffiliation' => [''],
+            'authorInstitutionRorIds' => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resourceId);
+
+        $xmlString = $this->controller->getResourceAsXml($this->connection, $resourceId);
+        $xml = new \SimpleXMLElement($xmlString);
+        $authorKeys = [];
+
+        foreach ($xml->Authors->children() as $authorNode) {
+            $authorKeys[] = $authorNode->getName() === 'AuthorPerson'
+                ? 'person:' . (string) $authorNode->familyname
+                : 'institution:' . (string) $authorNode->institutionname;
+        }
+
+        $this->assertSame(
+            ['person:XmlFirst', 'institution:Xml Institute', 'person:XmlLast'],
+            $authorKeys,
+            'The internal Resource XML should preserve the mixed authorsPayload order.'
+        );
     }
 
     public function testGetAuthorAffiliationsReturnsCorrectData(): void

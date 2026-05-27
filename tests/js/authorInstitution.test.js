@@ -124,6 +124,20 @@ describe('authorInstitution.js', () => {
     expect($('#group-authorinstitution .row').length).toBe(1);
   });
 
+  test('keeps the original institution author row unchanged after adding and removing a clone', () => {
+    $('#button-authorinstitution-add').trigger('click');
+
+    const originalRow = $('#group-authorinstitution .row').first();
+    expect(originalRow.find('input[name="authorinstitutionName[]"]').val()).toBe('Test Inst');
+    expect(originalRow.find('input[name="institutionAffiliation[]"]').val()).toBe('Some Affil');
+    expect(originalRow.find('input[name="authorInstitutionRorIds[]"]').val()).toBe('123');
+
+    $('#group-authorinstitution .row').last().find('.removeButton').trigger('click');
+
+    expect($('#group-authorinstitution .row').length).toBe(1);
+    expect($('#group-authorinstitution .row').first().find('input[name="authorinstitutionName[]"]').val()).toBe('Test Inst');
+  });
+
   test('initializes sortable with accessible drag handle configuration', () => {
     expect($.fn.sortable).toHaveBeenCalledTimes(1);
     expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
