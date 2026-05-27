@@ -1744,30 +1744,49 @@ EOT;
     // ============================================
 
     /**
-     * Helper: build a mock prepare/execute/get_result chain that returns $rows via fetch_assoc.
-     * $rows should be an array of assoc rows; a trailing null is added automatically.
+     * Helper: build a mock prepare/execute/get_result chain for contact-person loading.
+     *
+     * The first prepare() call is getContactPersons() and returns $rows via fetch_assoc.
+     * Subsequent prepare() calls are getContactPersonAffiliations() and return no rows.
+     * This avoids exhausting fetch_assoc return values when nested queries are executed.
      *
      * @param array<array<string,mixed>> $rows
-     * @param int $prepareCallIndex 0-based index for expects() ordering (use $this->any() by default)
      */
     private function mockContactPersonsQuery(array $rows): void
     {
-        $mockStmt   = $this->createMock(\mysqli_stmt::class);
-        $mockResult = $this->createMock(\mysqli_result::class);
+        $contactStmt   = $this->createMock(\mysqli_stmt::class);
+        $contactResult = $this->createMock(\mysqli_result::class);
+        $affStmt       = $this->createMock(\mysqli_stmt::class);
+        $affResult     = $this->createMock(\mysqli_result::class);
 
+        $contactStmt->expects($this->any())->method('bind_param');
+        $contactStmt->expects($this->any())->method('execute');
+        $contactStmt->expects($this->any())->method('get_result')->willReturn($contactResult);
+
+        $index = 0;
+        $contactResult->expects($this->any())
+            ->method('fetch_assoc')
+            ->willReturnCallback(function () use ($rows, &$index) {
+                if ($index < count($rows)) {
+                    return $rows[$index++];
+                }
+                return null;
+            });
+
+        $affStmt->expects($this->any())->method('bind_param');
+        $affStmt->expects($this->any())->method('execute');
+        $affStmt->expects($this->any())->method('get_result')->willReturn($affResult);
+        $affResult->expects($this->any())
+            ->method('fetch_assoc')
+            ->willReturn(null);
+
+        $prepareCalls = 0;
         $this->mockConnection->expects($this->any())
             ->method('prepare')
-            ->willReturn($mockStmt);
-
-        $mockStmt->expects($this->any())->method('bind_param');
-        $mockStmt->expects($this->any())->method('execute');
-        $mockStmt->expects($this->any())->method('get_result')->willReturn($mockResult);
-
-        // fetch_assoc returns each row in turn, then null
-        $consecutiveCalls = array_merge($rows, [null]);
-        $mockResult->expects($this->any())
-            ->method('fetch_assoc')
-            ->willReturnOnConsecutiveCalls(...$consecutiveCalls);
+            ->willReturnCallback(function () use (&$prepareCalls, $contactStmt, $affStmt) {
+                $prepareCalls++;
+                return $prepareCalls === 1 ? $contactStmt : $affStmt;
+            });
     }
 
     /**
