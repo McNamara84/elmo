@@ -124,6 +124,7 @@ interface IcgemParsedData {
   contactPersonFirstName: string;
   contactPersonOrcid: string;
   contactPersonEmail: string;
+  contactPersonWebsite: string;
   subjects: Subject[];
   // ── ICGEM-specific ──
   modelName: string;
@@ -292,6 +293,8 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const ggpCpNameIds = ggpCp ? toArray(getNode(ggpCp, 'nameIdentifier')) : [];
   const emailEntry = ggpCpNameIds.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'email') as Record<string, unknown> | undefined;
   const contactPersonEmail = extractText(emailEntry);
+  const websiteEntry = ggpCpNameIds.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'URL') as Record<string, unknown> | undefined;
+  const contactPersonWebsite = extractText(websiteEntry);
 
   // Subjects / GCMD thesaurus keywords
   const subjectsNode = getNode(resource, 'subjects') as Record<string, unknown> | undefined;
@@ -351,7 +354,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
     doi, title, publicationYear, language, version,
     abstract, dateCreated, rightsIdentifier, rightsURI,
     personalCreators, orgCreators,
-    contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail,
+    contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail, contactPersonWebsite,
     subjects,
     modelName, modelType, mathRepresentation, celestialBody, fileFormat,
     tideSystem, degree, errors, radius, earthGravityConstant,
@@ -458,6 +461,12 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
       await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
         await emailField.fill(data.contactPersonEmail);
+      }
+      // Fill website if present
+      const websiteField = page.locator('#input-contactperson-website').first();
+      await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+      if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
+        await websiteField.fill(data.contactPersonWebsite);
       }
     }
   }
@@ -1071,11 +1080,14 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email (populated from GGP contributors section)
+    // Contact person email + website (populated by populateIcgemContactPersons from GGP contributors)
     if (parsedData.contactPersonEmail) {
       const emailVal = await page.locator('#input-contactperson-email').first().inputValue().catch(() => '');
-      // TODO: processContactPersonsFromDataCite does not populate email; remove soft when fixed
-      // expect.soft(emailVal, 'contactPersonEmail').toContain(parsedData.contactPersonEmail);
+      expect(emailVal, 'contactPersonEmail').toContain(parsedData.contactPersonEmail);
+    }
+    if (parsedData.contactPersonWebsite) {
+      const websiteVal = await page.locator('#input-contactperson-website').first().inputValue().catch(() => '');
+      expect(websiteVal, 'contactPersonWebsite').toContain(parsedData.contactPersonWebsite);
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────

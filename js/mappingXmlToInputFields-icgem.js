@@ -414,6 +414,93 @@ function populateIcgemDataSources(data) {
 }
 
 /**
+ * Populates contact person email and website fields from the ICGEM-envelope's
+ * dace:contributors section (inside globalGravityProduct).
+ *
+ * The authors form is already populated (names/orcid from DataCite creators) and
+ * processContactPersonsFromDataCite has already checked the contact-person checkboxes.
+ * This function fills in the email and website values that are only present in the
+ * ICGEM-specific contributor section (as dace:nameIdentifier elements).
+ *
+ * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
+ * does not show the hidden fields. This function explicitly checks the checkbox and
+ * calls .show() to ensure the fields are visible before populating them.
+ *
+ * @param {Document} xmlDoc
+ */
+function populateIcgemContactPersons(xmlDoc) {
+  const daceNs = 'http://datacite.org/schema/kernel-4';
+
+  function resolver(prefix) {
+    if (prefix === 'icgv') return ICGEM_NAMESPACE_URI;
+    if (prefix === 'dc') return daceNs;
+    return null;
+  }
+
+  function xpFirst(xpath, ctx) {
+    return xmlDoc.evaluate(xpath, ctx, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  }
+
+  function xpAll(xpath, ctx) {
+    return xmlDoc.evaluate(xpath, ctx, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  }
+
+  function nodeText(xpath, ctx) {
+    const n = xpFirst(xpath, ctx);
+    return n ? n.textContent.trim() : '';
+  }
+
+  // Locate globalGravityProduct — the ICGEM-specific container
+  const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//globalGravityProduct', xmlDoc);
+  if (!ggpNode) return;
+
+  // Find all ContactPerson contributors inside globalGravityProduct
+  const snap = xpAll('.//dc:contributors/dc:contributor | .//contributors/contributor', ggpNode);
+  for (let i = 0; i < snap.snapshotLength; i++) {
+    const node = snap.snapshotItem(i);
+    if (node.getAttribute('contributorType') !== 'ContactPerson') continue;
+
+    const familyName = nodeText('dc:familyName | familyName', node);
+    const givenName  = nodeText('dc:givenName  | givenName',  node);
+    if (!familyName || !givenName) continue;
+
+    // Extract email and website from nameIdentifier elements
+    let email = '';
+    let website = '';
+    const identifiers = xpAll('dc:nameIdentifier | nameIdentifier', node);
+    for (let j = 0; j < identifiers.snapshotLength; j++) {
+      const idNode = identifiers.snapshotItem(j);
+      const scheme = idNode.getAttribute('nameIdentifierScheme') || '';
+      if (scheme === 'email' && !email)   email   = idNode.textContent.trim();
+      if (scheme === 'URL'   && !website) website = idNode.textContent.trim();
+    }
+
+    if (!email && !website) continue;
+
+    // Find matching author row by name (case-insensitive)
+    const normFamily = familyName.toLowerCase();
+    const normGiven  = givenName.toLowerCase();
+    const $row = $('div[data-creator-row]').filter(function () {
+      const rf = ($('input[name="familynames[]"]', this).val() || '').trim().toLowerCase();
+      const rg = ($('input[name="givennames[]"]', this).val() || '').trim().toLowerCase();
+      return rf === normFamily && rg === normGiven;
+    }).first();
+
+    if (!$row.length) continue;
+
+    // Ensure the contact-person toggle is active and fields are visible.
+    // The toggle handler fires on "click", not "change", so we must explicitly
+    // check the checkbox and show the fields rather than relying on the event.
+    $row.find('input[name="contacts[]"]').prop('checked', true);
+    $row.find('.contact-person-input').show();
+
+    // Populate the fields
+    if (email)   $row.find('input[name="cpEmail[]"]').val(email);
+    if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
+  }
+}
+
+/**
  * Populates the GGMsDescriptions form fields.
  * ICGEM descriptions use a 'section' attribute (unlike DataCite descriptionType).
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
@@ -467,6 +554,7 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemModelTypes(data);
   populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
+  populateIcgemContactPersons(xmlDoc);
 
   // Process DataCite keywords from <dace:subjects> elements
   // This ensures keywords are properly ingested during ICGEM uploads
@@ -504,6 +592,7 @@ if (typeof module !== 'undefined' && module.exports) {
     populateIcgemModelTypes,
     populateIcgemDataSources,
     populateIcgemDescriptions,
+    populateIcgemContactPersons,
     loadIcgemXmlToForm
   };
 }
