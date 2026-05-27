@@ -8,6 +8,11 @@
 
 ## Checklist
 
+### Branching Strategy:
+If this is a hotfix: The branch was created from `main` and will be merged into `main`.
+If this is a feature or documentation change: The branch was created from `dev` and will be merged into `dev`.
+If this is a feature or documentation branch, I have pulled the latest changes from `main` into my branch.
+
 ### Code Quality
 - [ ] My code follows the style guide.
 - [ ] I have self-reviewed my code.
