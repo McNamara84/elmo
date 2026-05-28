@@ -21,7 +21,57 @@ http://www.altova.com/mapforce
 					<xsl:value-of select="*[local-name()='doi' and namespace-uri()='']"/>
 				</identifier>
 				<creators>
-					<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='AuthorPerson' and namespace-uri()='']">
+					<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()='']">
+						<xsl:variable name="var_author_cur" select="."/>
+						<creator>
+							<xsl:choose>
+								<xsl:when test="*[local-name()='institutionname' and namespace-uri()='']">
+									<creatorName>
+										<xsl:attribute name="nameType" namespace="">Organizational</xsl:attribute>
+										<xsl:value-of select="*[local-name()='institutionname' and namespace-uri()='']"/>
+									</creatorName>
+								</xsl:when>
+								<xsl:otherwise>
+									<creatorName>
+										<xsl:attribute name="nameType" namespace="">Personal</xsl:attribute>
+										<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+									</creatorName>
+									<givenName>
+										<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
+									</givenName>
+									<familyName>
+										<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
+									</familyName>
+									<xsl:for-each select="(./*[local-name()='orcid' and namespace-uri()=''])[((string-length(string(.)) &gt; 0) and boolean($var_author_cur/*[local-name()='orcid' and namespace-uri()='']))]">
+										<nameIdentifier>
+											<xsl:attribute name="nameIdentifierScheme" namespace="">ORCID</xsl:attribute>
+											<xsl:attribute name="schemeURI" namespace="">https://orcid.org/</xsl:attribute>
+											<xsl:value-of select="."/>
+										</nameIdentifier>
+									</xsl:for-each>
+								</xsl:otherwise>
+							</xsl:choose>
+							<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
+								<affiliation>
+									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
+										<xsl:attribute name="affiliationIdentifierScheme" namespace="">ROR</xsl:attribute>
+									</xsl:if>
+									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
+										<xsl:attribute name="schemeURI" namespace="">https://ror.org/</xsl:attribute>
+									</xsl:if>
+									<xsl:if test="*[local-name()='rorId' and namespace-uri()='']">
+										<xsl:for-each select="*[local-name()='rorId' and namespace-uri()='']">
+											<xsl:attribute name="affiliationIdentifier" namespace="">
+												<xsl:value-of select="concat('https://ror.org/', .)"/>
+											</xsl:attribute>
+										</xsl:for-each>
+									</xsl:if>
+									<xsl:value-of select="*[local-name()='name' and namespace-uri()='']"/>
+								</affiliation>
+							</xsl:for-each>
+						</creator>
+					</xsl:for-each>
+					<xsl:for-each select="*[local-name()='Authors' and namespace-uri()=''][not(*[local-name()='Author' and namespace-uri()=''])]/*[local-name()='AuthorPerson' and namespace-uri()='']">
 						<xsl:variable name="var3_cur" select="."/>
 						<creator>
 							<creatorName>
@@ -64,7 +114,7 @@ http://www.altova.com/mapforce
 							</xsl:for-each>
 						</creator>
 					</xsl:for-each>
-					<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='AuthorInstitution' and namespace-uri()='']">
+					<xsl:for-each select="*[local-name()='Authors' and namespace-uri()=''][not(*[local-name()='Author' and namespace-uri()=''])]/*[local-name()='AuthorInstitution' and namespace-uri()='']">
 						<xsl:variable name="var7_cur" select="."/>
 						<creator>
 							<creatorName>

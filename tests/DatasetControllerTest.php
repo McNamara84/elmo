@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 require_once __DIR__ . '/../save/formgroups/save_authors.php';
+require_once __DIR__ . '/../includes/author_payload_xml.php';
 
 /**
  * Test class for DatasetController
@@ -209,6 +210,148 @@ final class DatasetControllerTest extends DatabaseTestCase
             'The internal Resource XML should preserve the mixed authorsPayload order.'
         );
     }
+
+        public function testAuthorPayloadReplacesResourceXmlAuthorsAndContactPersons(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.PAYLOAD.XML</doi>
+    <Authors>
+        <AuthorPerson><familyname>OldDb</familyname><givenname>Author</givenname></AuthorPerson>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>OldDb</familyname><givenname>Contact</givenname></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'DirectFirst',
+                                        'givenname' => 'Person',
+                                        'orcid' => '',
+                                        'isContact' => true,
+                                        'email' => 'direct-first@example.com',
+                                        'website' => 'https://direct-first.example.com',
+                                        'affiliations' => [
+                                                ['label' => 'Payload University', 'rorId' => '04z8jg394']
+                                        ]
+                                ],
+                                [
+                                        'type' => 'institution',
+                                        'institutionname' => 'Direct Institute',
+                                        'affiliations' => []
+                                ],
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'DirectLast',
+                                        'givenname' => 'Person',
+                                        'orcid' => '',
+                                        'isContact' => false,
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+                $authorKeys = [];
+
+                foreach ($xml->Authors->Author as $authorNode) {
+                        $authorKeys[] = isset($authorNode->institutionname)
+                                ? 'institution:' . (string) $authorNode->institutionname
+                                : 'person:' . (string) $authorNode->familyname;
+                }
+
+                $this->assertSame(
+                        ['person:DirectFirst', 'institution:Direct Institute', 'person:DirectLast'],
+                        $authorKeys
+                );
+                $this->assertSame('DirectFirst', (string) $xml->ContactPersons->ContactPerson->familyname);
+                $this->assertStringNotContainsString('OldDb', $updatedXml);
+        }
+
+        public function testDataCiteTransformUsesUnifiedAuthorsInPayloadOrder(): void
+        {
+                $sourceXml = $this->directAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $creatorNames = [];
+                foreach ($xpath->query('//dc:creators/dc:creator/dc:creatorName') as $creatorName) {
+                        $creatorNames[] = trim($creatorName->textContent);
+                }
+
+                $contactContributors = $xpath->query('//dc:contributors/dc:contributor[@contributorType="ContactPerson"]/dc:contributorName');
+
+                $this->assertSame(
+                        ['DirectFirst, Person', 'Direct Institute', 'DirectLast, Person'],
+                        $creatorNames
+                );
+                $this->assertSame('DirectFirst, Person', trim($contactContributors->item(0)->textContent));
+        }
+
+        public function testIsoTransformReadsUnifiedPersonAuthorsWithoutBlankInstitutionAuthor(): void
+        {
+                $sourceXml = $this->directAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+                $dom = new \DOMDocument();
+                $dom->loadXML($isoXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('gmd', 'http://www.isotc211.org/2005/gmd');
+                $xpath->registerNamespace('gco', 'http://www.isotc211.org/2005/gco');
+
+                $authorNames = [];
+                foreach ($xpath->query('//gmd:citedResponsibleParty/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode[@codeListValue="author"]/../../gmd:individualName/gco:CharacterString') as $authorName) {
+                        $text = trim($authorName->textContent);
+                        if ($text !== '') {
+                                $authorNames[] = $text;
+                        }
+                }
+
+                $this->assertSame(['DirectFirst, Person', 'DirectLast, Person'], $authorNames);
+        }
+
+        private function directAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.DIRECT.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-05-28</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Direct Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Direct author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname>DirectFirst</familyname>
+            <givenname>Person</givenname>
+            <Affiliations><Affiliation><name>Payload University</name><rorId>04z8jg394</rorId></Affiliation></Affiliations>
+        </Author>
+        <Author>
+            <institutionname>Direct Institute</institutionname>
+        </Author>
+        <Author>
+            <familyname>DirectLast</familyname>
+            <givenname>Person</givenname>
+        </Author>
+        <AuthorPerson><familyname>LegacyGrouped</familyname><givenname>ShouldNotBeUsed</givenname></AuthorPerson>
+        <AuthorInstitution><institutionname>Legacy Institution Should Not Be Used</institutionname></AuthorInstitution>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>DirectFirst</familyname><givenname>Person</givenname><email>direct-first@example.com</email></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+        }
 
     public function testGetAuthorAffiliationsReturnsCorrectData(): void
     {

@@ -35,6 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     require_once __DIR__ . '/formgroups/save_ggms_properties.php';
     require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
     require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/../includes/author_payload_xml.php';
 }
 
 /**
@@ -71,16 +72,18 @@ function generateAndOutputDownload($resource_id)
 
     try {
         $controller = new DatasetController();
+        require_once __DIR__ . '/../includes/author_payload_xml.php';
+        $sourceXml = buildResourceXmlWithAuthorPayload($connection, $controller, (int) $resource_id, $_POST);
 
         if ($downloadFormat === 'jsonld') {
-            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
+            $payload = $controller->transformResourceToJsonLd((int) $resource_id, $sourceXml);
             $filename = $baseFilename . '.jsonld';
             $contentType = 'application/ld+json';
         } else {
             $ICGEMcontroller = new ICGEMController();
             $payload = $showGGMsProperties
-                ? $ICGEMcontroller->createICGEMxml($resource_id)
-                : $controller->envelopeXmlAsString($connection, $resource_id);
+                ? $ICGEMcontroller->createICGEMxml($resource_id, $sourceXml)
+                : $controller->envelopeXmlAsString($connection, $resource_id, $sourceXml);
             $filename = $baseFilename . '.xml';
             $contentType = 'application/xml';
         }

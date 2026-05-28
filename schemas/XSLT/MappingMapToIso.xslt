@@ -181,7 +181,7 @@ http://www.altova.com/mapforce
 										</dateType>
 									</CI_Date>
 								</date>
-								<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()='']">
+								<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''][not(*[local-name()='institutionname' and namespace-uri()=''])]">
 									<xsl:variable name="var6_cur" select="."/>
 									<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
 										<xsl:variable name="var7_cur" select="."/>
@@ -216,7 +216,7 @@ http://www.altova.com/mapforce
 										</citedResponsibleParty>
 									</xsl:for-each>
 								</xsl:for-each>
-								<xsl:for-each select="(./*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''])[not(*[local-name()='Affiliations' and namespace-uri()=''])]">
+								<xsl:for-each select="(./*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''][not(*[local-name()='institutionname' and namespace-uri()=''])])[not(*[local-name()='Affiliations' and namespace-uri()=''])]">
 									<xsl:variable name="var9_filter" select="."/>
 									<citedResponsibleParty>
 										<xsl:if test="*[local-name()='orcid' and namespace-uri()='']">

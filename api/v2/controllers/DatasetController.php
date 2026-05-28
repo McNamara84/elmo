@@ -1109,61 +1109,29 @@ class DatasetController
      *
      * @return string|null The transformed XML as a string if $download is false; null if the XML is downloaded.
      */
-    function transformAndSaveOrDownloadXml($id, $format, $download = false)
+    function transformAndSaveOrDownloadXml($id, $format, $download = false, ?string $sourceXmlString = null)
     {
-        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
-
-        $formatInfo = [
-            'iso' => [
-                'xsltFile' => 'MappingMapToIso.xslt',
-                'outputPrefix' => 'iso'
-            ],
-            'datacite' => [
-                'xsltFile' => 'MappingMapToDataCiteSchema47.xslt',
-                'outputPrefix' => 'datacite'
-            ]
-        ];
-
-        if (!isset($formatInfo[$format])) {
-            throw new Exception("Invalid format.");
-        }
+        $formatInfo = $this->getTransformFormatInfo($format);
         
-        // Temporarily create FreestyleXML
-        $this->getResourceAsXml($GLOBALS['connection'], $id);
-        $inputXmlPath = $this->generate_xml_path($id);
-        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
-        $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);
+        if ($sourceXmlString === null) {
+            // Temporarily create FreestyleXML
+            $this->getResourceAsXml($GLOBALS['connection'], $id);
+            $inputXmlPath = $this->generate_xml_path($id);
+
+            if (!file_exists($inputXmlPath)) {
+                throw new Exception("Required resource XML file is missing. xmlpath is {$inputXmlPath}");
+            }
+
+            $sourceXmlString = file_get_contents($inputXmlPath);
+            if ($sourceXmlString === false) {
+                throw new Exception("Could not read resource XML file: {$inputXmlPath}");
+            }
+        }
+
+        $outputXmlPath = $this->generate_xml_path($id, $formatInfo['outputPrefix']);
         //REPLACES $baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
 
-        // Check if the input XML and XSLT files exist
-        if (!file_exists($inputXmlPath) || !file_exists($xsltPath)) {
-            throw new Exception("Required files are missing. xmlpath is {$inputXmlPath}, xsltpath is {$xsltPath}");
-        }
-
-        // Load XML document and XSLT stylesheet
-        $xml = new DOMDocument;
-        $xml->load($inputXmlPath);
-        $xsl = new DOMDocument;
-        $xsl->load($xsltPath);
-
-        // Create XSLT processor, configure it, and perform the transformation
-        $proc = new XSLTProcessor;
-        $proc->importStyleSheet($xsl);
-        // Pass the contact email as an XSLT parameter
-        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
-        $proc->setParameter('', 'contactEmail', $contactEmail);
-        $newXml = $proc->transformToXML($xml);
-
-        if ($newXml === false) {
-            throw new Exception("Error during XSLT transformation.");
-        }
-
-        // Post-process DataCite XML to strip empty elements that violate nonemptycontentStringType.
-        // The XSLT emits e.g. <givenName/>, <affiliation/>, <nameIdentifier/> even when source
-        // values are null/empty; DataCite schema (minLength=1) rejects those.
-        if ($format === 'datacite') {
-            $newXml = $this->stripEmptyDataciteElements($newXml);
-        }
+        $newXml = $this->transformResourceXmlString($sourceXmlString, $format);
 
         if ($download) {
             // Set headers for download and output the file
@@ -1179,14 +1147,79 @@ class DatasetController
     }
 
     /**
+     * Transforms a resource XML string with the configured XSLT for the requested format.
+     *
+     * @param string $sourceXmlString The source Resource XML string.
+     * @param string $format The target format, either datacite or iso.
+     * @return string The transformed XML string.
+     * @throws Exception If the format is invalid, files are missing, or transformation fails.
+     */
+    public function transformResourceXmlString(string $sourceXmlString, string $format): string
+    {
+        $formatInfo = $this->getTransformFormatInfo($format);
+        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo['xsltFile'];
+
+        if (!file_exists($xsltPath)) {
+            throw new Exception("Required XSLT file is missing. xsltpath is {$xsltPath}");
+        }
+
+        $xml = new DOMDocument;
+        if (!$xml->loadXML($sourceXmlString)) {
+            throw new Exception("Could not parse source resource XML string.");
+        }
+
+        $xsl = new DOMDocument;
+        $xsl->load($xsltPath);
+
+        $proc = new XSLTProcessor;
+        $proc->importStyleSheet($xsl);
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
+        $newXml = $proc->transformToXML($xml);
+
+        if ($newXml === false) {
+            throw new Exception("Error during XSLT transformation.");
+        }
+
+        if ($format === 'datacite') {
+            $newXml = $this->stripEmptyDataciteElements($newXml);
+        }
+
+        return $newXml;
+    }
+
+    private function getTransformFormatInfo(string $format): array
+    {
+        $formatInfo = [
+            'iso' => [
+                'xsltFile' => 'MappingMapToIso.xslt',
+                'outputPrefix' => 'iso'
+            ],
+            'datacite' => [
+                'xsltFile' => 'MappingMapToDataCiteSchema47.xslt',
+                'outputPrefix' => 'datacite'
+            ]
+        ];
+
+        if (!isset($formatInfo[$format])) {
+            throw new Exception("Invalid format.");
+        }
+
+        return $formatInfo[$format];
+    }
+
+    /**
      * Transforms the DataCite XML export into compact JSON-LD.
      *
      * @param int $id The identifier of the resource.
      * @return string JSON-LD representation of the DataCite export.
      */
-    public function transformResourceToJsonLd(int $id): string
+    public function transformResourceToJsonLd(int $id, ?string $sourceXmlString = null): string
     {
-        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
+        $dataciteXml = $sourceXmlString === null
+            ? $this->transformAndSaveOrDownloadXml($id, 'datacite', false)
+            : $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
         $service = new DataCiteJsonLdService();
 
         return $service->convertXmlStringToJsonLd($dataciteXml);
@@ -1353,14 +1386,14 @@ class DatasetController
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
      * @return string|null
      */
-    private function handleExportAll(array $vars, $download, $returnAsString = false): ?string
+    private function handleExportAll(array $vars, $download, $returnAsString = false, ?string $sourceXmlString = null): ?string
     {
         $id = intval($vars['id']);
 
         try {
             // Retrieve all three XML formats
-            $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
-            $isoXml = $this->transformAndSaveOrDownloadXml($id, 'iso', false);
+            $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
+            $isoXml = $this->transformAndSaveOrDownloadXml($id, 'iso', false, $sourceXmlString);
             // Remove XML declarations from individual XMLs
             $dataciteXml = preg_replace('/<\?xml[^>]+\?>/', '', $dataciteXml);
             $isoXml = preg_replace('/<\?xml[^>]+\?>/', '', $isoXml);
@@ -1417,10 +1450,10 @@ XML;
      * @param mysqli $connection The database connection.
      * @param int $id The ID of the resource.
      */
-    public function envelopeXmlAsString($connection, $id): string
+    public function envelopeXmlAsString($connection, $id, ?string $sourceXmlString = null): string
     {
         // Use the existing private function, returning the combined XML as a string.
         $vars = ['id' => $id];
-        return $this->handleExportAll($vars, false, true);
+        return $this->handleExportAll($vars, false, true, $sourceXmlString);
     }
 }
