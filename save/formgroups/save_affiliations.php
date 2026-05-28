@@ -20,44 +20,61 @@
  */
 function saveAffiliations($connection, $entity_id, $affiliation_data, $rorId_data, $link_table, $entity_column)
 {
-    $affiliationNames = parseAffiliationData($affiliation_data);
-    $rorIds = parseRorIds($rorId_data);
+    $affiliations = parseAffiliationEntries($affiliation_data, $rorId_data);
 
-    $length = count($affiliationNames);
-
-    for ($i = 0; $i < $length; $i++) {
-        $affiliationName = $affiliationNames[$i];
+    foreach ($affiliations as $affiliation) {
+        $affiliationName = $affiliation['label'];
         if (empty($affiliationName)) {
             continue; // Skip empty affiliations
         }
 
-        $rorId = isset($rorIds[$i]) ? str_replace("https://ror.org/", "", $rorIds[$i]) : null;
+        $rorId = $affiliation['rorId'];
+        $affiliation_id = null;
 
-        // Check if affiliation already exists
-        $stmt = $connection->prepare("SELECT affiliation_id FROM Affiliation WHERE name = ?");
-        $stmt->bind_param("s", $affiliationName);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        if ($result->num_rows > 0) {
-            // Update existing affiliation
+        if ($rorId !== null) {
+            $stmt = $connection->prepare("SELECT affiliation_id FROM Affiliation WHERE rorId = ? ORDER BY affiliation_id ASC LIMIT 1");
+            $stmt->bind_param("s", $rorId);
+            $stmt->execute();
+            $result = $stmt->get_result();
             $row = $result->fetch_assoc();
-            $affiliation_id = $row['affiliation_id'];
+            $stmt->close();
 
-            if ($rorId !== null) {
-                $updateStmt = $connection->prepare("UPDATE Affiliation SET rorId = ? WHERE affiliation_id = ?");
-                $updateStmt->bind_param("si", $rorId, $affiliation_id);
+            if ($row) {
+                $affiliation_id = (int) $row['affiliation_id'];
+                $updateStmt = $connection->prepare("UPDATE Affiliation SET name = ? WHERE affiliation_id = ?");
+                $updateStmt->bind_param("si", $affiliationName, $affiliation_id);
                 $updateStmt->execute();
                 $updateStmt->close();
             }
-        } else {
-            // Create new affiliation
-            $stmt = $connection->prepare("INSERT INTO Affiliation (name, rorId) VALUES (?, ?)");
-            $stmt->bind_param("ss", $affiliationName, $rorId);
-            $stmt->execute();
-            $affiliation_id = $stmt->insert_id;
         }
-        $stmt->close();
+
+        if ($affiliation_id === null) {
+            // Check if affiliation already exists
+            $stmt = $connection->prepare("SELECT affiliation_id FROM Affiliation WHERE name = ?");
+            $stmt->bind_param("s", $affiliationName);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            $row = $result->fetch_assoc();
+
+            if ($row) {
+                // Update existing affiliation
+                $affiliation_id = (int) $row['affiliation_id'];
+
+                if ($rorId !== null) {
+                    $updateStmt = $connection->prepare("UPDATE Affiliation SET rorId = ? WHERE affiliation_id = ?");
+                    $updateStmt->bind_param("si", $rorId, $affiliation_id);
+                    $updateStmt->execute();
+                    $updateStmt->close();
+                }
+            } else {
+                // Create new affiliation
+                $stmt = $connection->prepare("INSERT INTO Affiliation (name, rorId) VALUES (?, ?)");
+                $stmt->bind_param("ss", $affiliationName, $rorId);
+                $stmt->execute();
+                $affiliation_id = $stmt->insert_id;
+            }
+            $stmt->close();
+        }
 
         // Check if link already exists in the link table
         $checkLinkStmt = $connection->prepare("SELECT 1 FROM $link_table WHERE $entity_column = ? AND Affiliation_affiliation_id = ?");
@@ -73,6 +90,44 @@ function saveAffiliations($connection, $entity_id, $affiliation_data, $rorId_dat
             $stmt->close();
         }
     }
+}
+
+/**
+ * Parses structured affiliation data together with the legacy ROR ID CSV.
+ *
+ * @param string|null $affiliation_data JSON string containing affiliation data.
+ * @param string|null $rorId_data Comma-separated legacy ROR IDs.
+ * @return array<int, array{label: string, rorId: string|null}>
+ */
+function parseAffiliationEntries($affiliation_data, $rorId_data): array
+{
+    if (empty($affiliation_data)) {
+        return [];
+    }
+
+    $affiliations = json_decode($affiliation_data, true);
+    if (!is_array($affiliations)) {
+        return [];
+    }
+
+    $legacyRorIds = parseRorIds($rorId_data);
+    $entries = [];
+
+    foreach ($affiliations as $index => $affiliation) {
+        if (!is_array($affiliation)) {
+            continue;
+        }
+
+        $label = trim((string) ($affiliation['label'] ?? $affiliation['value'] ?? $affiliation['name'] ?? ''));
+        $rorId = normalizeRorId($affiliation['rorId'] ?? $affiliation['id'] ?? $legacyRorIds[$index] ?? null);
+
+        $entries[] = [
+            'label' => $label,
+            'rorId' => $rorId
+        ];
+    }
+
+    return $entries;
 }
 
 /**
@@ -93,8 +148,20 @@ function parseAffiliationData($affiliation_data)
     }
 
     return array_map(function ($aff) {
-        return $aff['value'];
+        return $aff['value'] ?? $aff['label'] ?? $aff['name'] ?? '';
     }, $affiliations);
+}
+
+function normalizeRorId($rorId): ?string
+{
+    if ($rorId === null) {
+        return null;
+    }
+
+    $rorId = trim((string) $rorId);
+    $rorId = preg_replace('#^https?://ror\.org/#', '', $rorId);
+
+    return $rorId !== '' ? $rorId : null;
 }
 
 /**
@@ -112,10 +179,6 @@ function parseRorIds($rorId_data)
 
     $rorIds = explode(',', $rorId_data);
     return array_map(function ($rorId) {
-        $rorId = trim($rorId);
-        if (strpos($rorId, 'https://ror.org/') === 0) {
-            $rorId = substr($rorId, strlen('https://ror.org/'));
-        }
-        return $rorId ?: null;
+        return normalizeRorId($rorId);
     }, $rorIds);
 }

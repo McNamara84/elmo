@@ -134,6 +134,30 @@ describe('affiliations.js', () => {
     expect(input._tagify.dropdown.hide).toHaveBeenCalled();
   });
 
+  test('editing an affiliation label keeps the structured ROR ID', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.whitelist = [{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }];
+    input._tagify.trigger('add', {
+      data: { value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }
+    });
+
+    input._tagify.value[0].value = 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany';
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
+  });
+
   /**
    * Checks that the remove event clears tags when no contact person is specified.
    */

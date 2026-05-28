@@ -112,6 +112,32 @@ final class SaveAffiliationsTest extends DatabaseTestCase
         );
     }
 
+    public function testSaveAffiliationsReadsStructuredRorIdFromAffiliationJson(): void
+    {
+        $affiliationData = json_encode([
+            [
+                'value' => 'Test Structured University',
+                'label' => 'Test Structured University',
+                'rorId' => 'https://ror.org/05abcde12'
+            ]
+        ]);
+
+        saveAffiliations(
+            $this->connection,
+            1000,
+            $affiliationData,
+            '',
+            'Author_has_Affiliation',
+            'Author_author_id'
+        );
+
+        $result = $this->connection->query("SELECT name, rorId FROM Affiliation WHERE name = 'Test Structured University'");
+        $row = $result->fetch_assoc();
+
+        $this->assertSame('Test Structured University', $row['name']);
+        $this->assertSame('05abcde12', $row['rorId']);
+    }
+
     public function testSaveAffiliationsHandlesMultipleAffiliations(): void
     {
         $affiliationData = json_encode([
