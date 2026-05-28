@@ -77,7 +77,7 @@
         </div>
         <!-- Input field Affiliation Author-->
         <div class="col-10 col-sm-11 col-md-10 col-lg-4 p-1">
-          <label for="input-author-affiliation" class="visually-hidden">Affiliation</label>
+          <label for="input-author-affiliation" class="visually-hidden" data-translate="general.affiliation">Affiliation</label>
           <div class="input-group has-validation">
             <input type="text" class="form-control input-with-help input-right-no-round-corners"
               id="input-author-affiliation" name="personAffiliation[]" data-translate-placeholder="general.affiliation" />
@@ -89,10 +89,11 @@
         <!-- Button "add Author" -->
         <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
           <button type="button" class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
-            title="Drag & drop to change order" aria-label="Drag & drop to change order">
+            data-translate-title="authors.dragHandle" title="Drag & drop to change order" aria-label="Drag & drop to change order">
             <i class="bi bi-grip-vertical"></i>
           </button>
-          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-author-add-type="person" data-translate="general.add">
+          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-author-add-type="person"
+            data-translate="general.add" data-translate-title="authors.addPerson" title="Add person" aria-label="Add person">
             +
           </button>
         </div>
@@ -153,7 +154,7 @@
           </div>
           <!-- input field for Institution Affiliation -->
           <div class="col-12 col-md-6 p-1">
-            <label for="input-authorinstitution-affiliation" class="visually-hidden">Affiliation</label>
+            <label for="input-authorinstitution-affiliation" class="visually-hidden" data-translate="general.affiliation">Affiliation</label>
             <div class="input-group has-validation">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
                 id="input-authorinstitution-affiliation" name="institutionAffiliation[]"
@@ -166,11 +167,12 @@
           <!-- Button to add new row -->
           <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
             <button type="button" class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
-              title="Drag & drop to change order" aria-label="Drag & drop to change order">
+              data-translate-title="authors.dragHandle" title="Drag & drop to change order" aria-label="Drag & drop to change order">
               <i class="bi bi-grip-vertical"></i>
             </button>
             <button type="button" class="btn btn-primary addauthorinstitution add-button"
-              id="button-authorinstitution-add" data-author-add-type="institution" data-translate="general.add">+</button>
+              id="button-authorinstitution-add" data-author-add-type="institution" data-translate="general.add"
+              data-translate-title="authors.addInstitution" title="Add institution" aria-label="Add institution">+</button>
           </div>
         </div>
       <?php endif; ?>

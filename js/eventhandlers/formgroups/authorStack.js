@@ -403,24 +403,57 @@ $(document).ready(function () {
     return payload;
   }
 
+  function translate(key, fallback, variables = {}) {
+    const translated = window.elmo && typeof window.elmo.translate === 'function'
+      ? window.elmo.translate(key)
+      : null;
+    const template = typeof translated === 'string' && translated !== '' ? translated : fallback;
+
+    return Object.keys(variables).reduce(function (result, variableName) {
+      return result.replace(new RegExp(`\\{${variableName}\\}`, 'g'), String(variables[variableName]));
+    }, template);
+  }
+
+  function countSummary(count, singularKey, pluralKey, summaryKey, singularFallback, pluralFallback) {
+    const label = count === 1
+      ? translate(singularKey, singularFallback)
+      : translate(pluralKey, pluralFallback);
+
+    return translate(summaryKey, '{count} {label}', { count, label });
+  }
+
   function updateSummary(payload) {
     const authorCount = payload.length;
     const contactCount = payload.filter(function (author) {
       return author.type === 'person' && author.isContact === true;
     }).length;
 
-    summaryCount.text(`${authorCount} ${authorCount === 1 ? 'author' : 'authors'}`);
+    summaryCount.text(countSummary(
+      authorCount,
+      'authors.authorSingular',
+      'authors.authorPlural',
+      'authors.entriesSummary',
+      'author',
+      'authors'
+    ));
 
     if (contactCount > 0) {
       contactSummary
         .removeClass('text-bg-warning')
         .addClass('text-bg-success')
-        .text(`${contactCount} ${contactCount === 1 ? 'contact' : 'contacts'}`);
+        .text(countSummary(
+          contactCount,
+          'authors.contactSingular',
+          'authors.contactPlural',
+          'authors.contactsSummary',
+          'contact',
+          'contacts'
+        ));
     } else {
       contactSummary
         .removeClass('text-bg-success')
         .addClass('text-bg-warning')
-        .text('at least 1 contact required');
+        .text(translate('authors.contactRequired', 'at least 1 contact required'));
     }
   }
 
@@ -492,6 +525,10 @@ $(document).ready(function () {
     }
 
     ensureRowsForField(detail.name, detail.requiredCount);
+  });
+
+  document.addEventListener('translationsLoaded', function () {
+    updateSummary(collectPayload());
   });
 
   window.authorStack = {

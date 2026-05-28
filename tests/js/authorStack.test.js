@@ -78,6 +78,7 @@ describe('authorStack.js', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
+    delete window.elmo;
   });
 
   function payload() {
@@ -119,6 +120,31 @@ describe('authorStack.js', () => {
     expect(payload()[0].affiliations).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
     expect($('[data-author-summary-count]').text()).toBe('3 authors');
     expect($('[data-author-contact-summary]').text()).toBe('1 contact');
+  });
+
+  test('updates summary badges when translations are loaded', () => {
+    window.elmo = {
+      translate: jest.fn((key) => ({
+        'authors.authorSingular': 'Eintrag',
+        'authors.authorPlural': 'Einträge',
+        'authors.contactSingular': 'Kontakt',
+        'authors.contactPlural': 'Kontakte',
+        'authors.contactRequired': 'mindestens 1 Kontakt erforderlich',
+        'authors.entriesSummary': '{count} {label}',
+        'authors.contactsSummary': '{count} {label}'
+      })[key])
+    };
+
+    document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations: {} } }));
+    expect($('[data-author-summary-count]').text()).toBe('0 Einträge');
+    expect($('[data-author-contact-summary]').text()).toBe('mindestens 1 Kontakt erforderlich');
+
+    $('#input-author-lastname').val('Doe').trigger('input');
+    $('#input-author-firstname').val('Jane').trigger('input');
+    $('#checkbox-author-contactperson').prop('checked', true).trigger('change');
+
+    expect($('[data-author-summary-count]').text()).toBe('1 Eintrag');
+    expect($('[data-author-contact-summary]').text()).toBe('1 Kontakt');
   });
 
   test('adds removable institution rows for autosave array restoration', () => {
