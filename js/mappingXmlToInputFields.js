@@ -267,14 +267,41 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
+      const $rows = $("div[data-creator-row]");
+
       if (personIndex === 0) {
-        // For the first person creator, use the first existing row in the form
+        // For the first person creator, use the first existing row in the form.
+        // If no row exists yet, create one first.
+        if ($rows.length === 0) {
+          $("#button-author-add").trigger("click");
+        }
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent person creators, simulate click on "add author" button to create new row
-        $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(personIndex);
+        // For subsequent person creators, add a new row and verify it exists.
+        const countBefore = $rows.length;
+        $("#button-author-add").trigger("click");
+        const countAfter = $("div[data-creator-row]").length;
+
+        if (countAfter <= countBefore) {
+          console.warn(
+            "processCreators: could not create new author row; skipping creator",
+            { givenName, familyName }
+          );
+          continue;
+        }
+
+        // Use the newly created last row rather than relying on a specific index.
+        $row = $("div[data-creator-row]").last();
       }
+
+      if (!$row || $row.length === 0) {
+        console.warn(
+          "processCreators: target author row not found; skipping creator",
+          { givenName, familyName }
+        );
+        continue;
+      }
+
       personIndex++;
 
       // Populate the personal author fields
