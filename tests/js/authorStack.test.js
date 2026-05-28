@@ -137,4 +137,41 @@ describe('authorStack.js', () => {
     $('[data-authorinstitution-row]').last().find('.removeButton').trigger('click');
     expect($('[data-authorinstitution-row]').length).toBe(1);
   });
+
+  test('setAuthors rebuilds the mixed stack from a structured payload', () => {
+    window.authorStack.setAuthors([
+      {
+        type: 'institution',
+        institutionname: 'Payload Institute',
+        affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }]
+      },
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        orcid: 'https://orcid.org/0000-0001-2345-6789',
+        isContact: true,
+        email: 'jane@example.org',
+        website: 'https://example.org/jane',
+        affiliations: [{ label: 'GFZ', rorId: 'https://ror.org/04z8jg394' }]
+      }
+    ]);
+
+    const authors = payload();
+    expect(authors.map((author) => author.type)).toEqual(['institution', 'person']);
+    expect(authors[0].institutionname).toBe('Payload Institute');
+    expect(authors[0].affiliations).toEqual([{ label: 'Helmholtz', rorId: '03qjp1d79' }]);
+    expect(authors[1]).toEqual(expect.objectContaining({
+      familyname: 'Doe',
+      givenname: 'Jane',
+      orcid: '0000-0001-2345-6789',
+      isContact: true,
+      email: 'jane@example.org',
+      website: 'https://example.org/jane'
+    }));
+    expect(authors[1].affiliations).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
+    expect($('[data-author-contact-summary]').text()).toBe('1 contact');
+    expect($('[data-author-add-type="person"]').length).toBe(1);
+    expect($('[data-author-add-type="institution"]').length).toBe(1);
+  });
 });

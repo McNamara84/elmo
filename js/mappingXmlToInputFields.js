@@ -221,6 +221,118 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   return node ? node.textContent.trim() : "";
 }
 
+function getAuthorStackController() {
+  return typeof window !== "undefined" && window.authorStack && typeof window.authorStack.setAuthors === "function"
+    ? window.authorStack
+    : null;
+}
+
+function normalizeRorId(value) {
+  return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, "") : "";
+}
+
+function buildAffiliationsPayload(xmlDoc, creatorNode, resolver) {
+  const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const affiliations = [];
+
+  for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
+    const affNode = affiliationNodes.snapshotItem(j);
+    const label = affNode.textContent.trim();
+    const rorId = normalizeRorId(affNode.getAttribute("affiliationIdentifier"));
+
+    if (label || rorId) {
+      affiliations.push({ label, rorId });
+    }
+  }
+
+  return affiliations;
+}
+
+function normalizeNameKey(familyName, givenName) {
+  return `${String(familyName || "").trim().toLowerCase()}\u0000${String(givenName || "").trim().toLowerCase()}`;
+}
+
+function getCurrentAuthorsPayload(authorStack) {
+  if (authorStack && typeof authorStack.collectPayload === "function") {
+    return authorStack.collectPayload();
+  }
+
+  const payloadInput = document.querySelector('input[name="authorsPayload"]');
+  if (!payloadInput || !payloadInput.value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(payloadInput.value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function applyContactsToAuthorStack(contactPersons) {
+  const authorStack = getAuthorStackController();
+  if (!authorStack || !contactPersons.length) {
+    return false;
+  }
+
+  const authors = getCurrentAuthorsPayload(authorStack).map((author) => ({ ...author }));
+
+  contactPersons.forEach((contact) => {
+    const contactKey = normalizeNameKey(contact.familyname, contact.givenname);
+    let author = authors.find((candidate) => (
+      candidate.type === "person" && normalizeNameKey(candidate.familyname, candidate.givenname) === contactKey
+    ));
+
+    if (!author) {
+      author = {
+        type: "person",
+        familyname: contact.familyname,
+        givenname: contact.givenname,
+        orcid: "",
+        affiliations: []
+      };
+      authors.push(author);
+    }
+
+    author.isContact = true;
+    author.email = contact.email || author.email || "";
+    author.website = contact.website || author.website || "";
+  });
+
+  authorStack.setAuthors(authors);
+  return true;
+}
+
+function collectDataCiteContactPersons(xmlDoc) {
+  function dcResolver(prefix) {
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  const contactPersons = [];
+  const allContributors = xmlDoc.evaluate(
+    './/ns:contributors/ns:contributor',
+    xmlDoc,
+    dcResolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < allContributors.snapshotLength; i++) {
+    const node = allContributors.snapshotItem(i);
+    if (node.getAttribute("contributorType") !== "ContactPerson") continue;
+
+    const familyname = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
+    const givenname = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
+
+    if (familyname && givenname) {
+      contactPersons.push({ familyname, givenname, email: "", website: "" });
+    }
+  }
+
+  return contactPersons;
+}
+
 /**
  * Process creators from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -229,6 +341,46 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
 function processCreators(xmlDoc, resolver) {
   // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  const authorStack = getAuthorStackController();
+  if (authorStack) {
+    const authors = [];
+
+    for (let i = 0; i < creatorNodes.snapshotLength; i++) {
+      const creatorNode = creatorNodes.snapshotItem(i);
+      const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
+      const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
+      const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+      const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
+      const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
+      const affiliations = buildAffiliationsPayload(xmlDoc, creatorNode, resolver);
+
+      if (givenname || familyname || nameType === "Personal") {
+        authors.push({
+          type: "person",
+          familyname,
+          givenname,
+          orcid,
+          isContact: false,
+          email: "",
+          website: "",
+          affiliations
+        });
+      } else if (creatorName || nameType === "Organizational") {
+        authors.push({
+          type: "institution",
+          institutionname: creatorName,
+          affiliations
+        });
+      }
+    }
+
+    if (authors.length > 0) {
+      authorStack.setAuthors(authors);
+      return;
+    }
+  }
 
   // Separate counter for person authors to avoid index mismatch when creators
   // contain a mix of persons and institutions (fixes #739)
@@ -355,6 +507,49 @@ function processContactPersons(xmlDoc) {
 
   const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
+  if (getAuthorStackController()) {
+    const contactPersons = [];
+
+    for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
+      const contactPersonNode = contactPersonNodes.snapshotItem(i);
+      const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
+      const [familyname, givenname] = fullName?.split(", ");
+
+      if (!givenname || !familyname) {
+        continue;
+      }
+
+      let email = getNodeText(
+        contactPersonNode,
+        "gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString",
+        xmlDoc,
+        nsResolver
+      );
+      let website = getNodeText(
+        contactPersonNode,
+        "gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL",
+        xmlDoc,
+        nsResolver
+      );
+
+      if (!email) {
+        email = getNodeText(contactPersonNode, "//electronicMailAddress/CharacterString", xmlDoc, null);
+      }
+      if (!website) {
+        website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
+      }
+
+      contactPersons.push({ familyname, givenname, email, website });
+    }
+
+    if (contactPersonNodes.snapshotLength === 0) {
+      contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
+    }
+
+    applyContactsToAuthorStack(contactPersons);
+    return;
+  }
+
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
 
@@ -438,6 +633,11 @@ function processContactPersons(xmlDoc) {
 function processContactPersonsFromDataCite(xmlDoc) {
   function dcResolver(prefix) {
     return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  if (getAuthorStackController()) {
+    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc));
+    return;
   }
 
   // Select all contributors, then filter by attribute in JS

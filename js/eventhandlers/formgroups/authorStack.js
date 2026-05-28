@@ -65,7 +65,7 @@ $(document).ready(function () {
     row.find('.tagify').remove();
   }
 
-  function prepareClone(template, type) {
+  function prepareClone(template, type, keepAddButton = false) {
     if (!template || !template.length) {
       return null;
     }
@@ -75,7 +75,9 @@ $(document).ready(function () {
     row.attr('data-author-entry-key', `author-${type}-${index}`);
     updateIds(row, index);
     resetRow(row);
-    row.find('.addAuthor, .addauthorinstitution').replaceWith(createRemoveButton());
+    if (!keepAddButton) {
+      row.find('.addAuthor, .addauthorinstitution').replaceWith(createRemoveButton());
+    }
     replaceHelpButtonInClonedRows(row);
     translateClonedRow(row);
     setupContactFields(row);
@@ -115,6 +117,156 @@ $(document).ready(function () {
     initializeTooltips(row);
     updatePayload();
     return row;
+  }
+
+  function normalizeRorId(value) {
+    if (!value) {
+      return '';
+    }
+
+    return String(value).trim().replace(/^https?:\/\/ror\.org\//, '');
+  }
+
+  function normalizeAffiliations(affiliations) {
+    if (!Array.isArray(affiliations)) {
+      return [];
+    }
+
+    return affiliations
+      .map(function (affiliation) {
+        if (typeof affiliation === 'string') {
+          return { label: affiliation, rorId: '' };
+        }
+
+        const label = affiliation.label || affiliation.name || affiliation.value || '';
+        const rorId = normalizeRorId(affiliation.rorId || affiliation.id || affiliation.affiliationIdentifier || '');
+        return { label, rorId };
+      })
+      .filter(function (affiliation) {
+        return affiliation.label !== '' || affiliation.rorId !== '';
+      });
+  }
+
+  function setAffiliations(row, affiliationName, rorName, affiliations) {
+    const normalizedAffiliations = normalizeAffiliations(affiliations);
+    const affiliationInput = row.find(`input[name="${affiliationName}"]`);
+    const rorInput = row.find(`input[name="${rorName}"]`);
+    const tagifyElement = affiliationInput.get(0);
+    const tagifyTags = normalizedAffiliations.map(function (affiliation) {
+      return {
+        value: affiliation.label,
+        label: affiliation.label,
+        rorId: affiliation.rorId,
+        id: affiliation.rorId
+      };
+    });
+
+    rorInput.val(normalizedAffiliations.map(function (affiliation) {
+      return affiliation.rorId;
+    }).join(','));
+
+    if (tagifyElement && tagifyElement._tagify) {
+      tagifyElement._tagify.removeAllTags();
+      tagifyElement._tagify.addTags(tagifyTags);
+    }
+
+    affiliationInput.val(JSON.stringify(tagifyTags));
+  }
+
+  function createPayloadRow(author, keepAddButton) {
+    const type = author.type === 'institution' ? 'institution' : 'person';
+    const template = type === 'institution' ? institutionTemplate : personTemplate;
+    const row = prepareClone(template, type, keepAddButton);
+
+    if (!row) {
+      return null;
+    }
+
+    if (type === 'institution') {
+      row.find('input[name="authorinstitutionName[]"]').val(author.institutionname || author.institutionName || '');
+      setAffiliations(row, 'institutionAffiliation[]', 'authorInstitutionRorIds[]', author.affiliations || []);
+    } else {
+      row.find('input[name="familynames[]"]').val(author.familyname || author.familyName || '');
+      row.find('input[name="givennames[]"]').val(author.givenname || author.givenName || '');
+      row.find('input[name="orcids[]"]').val(String(author.orcid || '').replace(/^https?:\/\/orcid\.org\//, ''));
+      row.find('input[name="contacts[]"]').prop('checked', author.isContact === true);
+      row.find('input[name="cpEmail[]"]').val(author.email || '');
+      row.find('input[name="cpOnlineResource[]"]').val(author.website || '');
+      setAffiliations(row, 'personAffiliation[]', 'authorPersonRorIds[]', author.affiliations || []);
+      setupContactFields(row);
+    }
+
+    return row;
+  }
+
+  function normalizeAuthorsInput(authors) {
+    if (typeof authors === 'string') {
+      try {
+        const parsed = JSON.parse(authors);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    return Array.isArray(authors) ? authors : [];
+  }
+
+  function setAuthors(authors) {
+    const normalizedAuthors = normalizeAuthorsInput(authors);
+    const hasPerson = normalizedAuthors.some(function (author) { return author.type === 'person'; });
+    const hasInstitution = normalizedAuthors.some(function (author) { return author.type === 'institution'; });
+    let keptPersonAddButton = false;
+    let keptInstitutionAddButton = false;
+
+    stack.empty();
+
+    normalizedAuthors.forEach(function (author) {
+      const type = author.type === 'institution' ? 'institution' : 'person';
+      const keepAddButton = type === 'person'
+        ? !keptPersonAddButton
+        : !keptInstitutionAddButton;
+      const row = createPayloadRow(author, keepAddButton);
+
+      if (!row) {
+        return;
+      }
+
+      if (type === 'person' && keepAddButton) {
+        keptPersonAddButton = true;
+      }
+      if (type === 'institution' && keepAddButton) {
+        keptInstitutionAddButton = true;
+      }
+
+      stack.append(row);
+      initializeAffiliationAutocomplete(row);
+      initializeTooltips(row);
+    });
+
+    if (!hasPerson) {
+      const row = createPayloadRow({ type: 'person', affiliations: [] }, true);
+      if (row) {
+        stack.prepend(row);
+        initializeAffiliationAutocomplete(row);
+        initializeTooltips(row);
+      }
+    }
+
+    if (!hasInstitution && institutionTemplate.length) {
+      const row = createPayloadRow({ type: 'institution', affiliations: [] }, true);
+      if (row) {
+        stack.append(row);
+        initializeAffiliationAutocomplete(row);
+        initializeTooltips(row);
+      }
+    }
+
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+
+    return updatePayload();
   }
 
   function initializeTooltips(row) {
@@ -345,6 +497,7 @@ $(document).ready(function () {
   window.authorStack = {
     addPerson: function () { return addRow('person'); },
     addInstitution: function () { return addRow('institution'); },
+    setAuthors,
     updatePayload,
     collectPayload
   };
