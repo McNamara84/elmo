@@ -114,6 +114,215 @@ function validateInstitutionAuthors(array $postData): bool
     return false; // No valid entries found
 }
 
+function decodeAuthorsPayload(array $postData): ?array
+{
+    if (!array_key_exists('authorsPayload', $postData)) {
+        return null;
+    }
+
+    if (is_array($postData['authorsPayload'])) {
+        return $postData['authorsPayload'];
+    }
+
+    if (!is_string($postData['authorsPayload']) || trim($postData['authorsPayload']) === '') {
+        return null;
+    }
+
+    $decoded = json_decode($postData['authorsPayload'], true);
+
+    return is_array($decoded) ? $decoded : null;
+}
+
+function normalizeAuthorBoolean($value): bool
+{
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    if (is_string($value)) {
+        return in_array(strtolower($value), ['1', 'true', 'on', 'yes'], true);
+    }
+
+    return (bool) $value;
+}
+
+function normalizeAuthorAffiliations($affiliations): array
+{
+    if (!is_array($affiliations)) {
+        return [
+            'affiliation_data' => '',
+            'rorId_data' => ''
+        ];
+    }
+
+    $normalized = [];
+    $rorIds = [];
+
+    foreach ($affiliations as $affiliation) {
+        if (!is_array($affiliation)) {
+            continue;
+        }
+
+        $label = trim((string) ($affiliation['label'] ?? $affiliation['value'] ?? $affiliation['name'] ?? ''));
+        $rorId = normalizeRorId($affiliation['rorId'] ?? $affiliation['id'] ?? null);
+
+        if ($label === '' && $rorId === null) {
+            continue;
+        }
+
+        $normalized[] = [
+            'value' => $label,
+            'label' => $label,
+            'rorId' => $rorId ?? '',
+            'id' => $rorId ?? ''
+        ];
+        $rorIds[] = $rorId ?? '';
+    }
+
+    return [
+        'affiliation_data' => empty($normalized) ? '' : json_encode($normalized, JSON_UNESCAPED_SLASHES),
+        'rorId_data' => implode(',', $rorIds)
+    ];
+}
+
+function normalizeAuthorsFromPayload(array $payload): array
+{
+    $authors = [];
+
+    foreach ($payload as $author) {
+        if (!is_array($author)) {
+            continue;
+        }
+
+        $type = $author['type'] ?? '';
+        $affiliationData = normalizeAuthorAffiliations($author['affiliations'] ?? []);
+
+        if ($type === 'person') {
+            $familyname = trim((string) ($author['familyname'] ?? $author['familyName'] ?? ''));
+            $givenname = trim((string) ($author['givenname'] ?? $author['givenName'] ?? ''));
+
+            if ($familyname === '' || $givenname === '') {
+                continue;
+            }
+
+            $authors[] = [
+                'type' => 'person',
+                'familyname' => $familyname,
+                'givenname' => $givenname,
+                'orcid' => trim((string) ($author['orcid'] ?? '')),
+                'institutionname' => null,
+                'isContact' => normalizeAuthorBoolean($author['isContact'] ?? false),
+                'email' => trim((string) ($author['email'] ?? '')),
+                'website' => trim((string) ($author['website'] ?? '')),
+                'affiliation_data' => $affiliationData['affiliation_data'],
+                'rorId_data' => $affiliationData['rorId_data']
+            ];
+        } elseif ($type === 'institution') {
+            $institutionname = trim((string) ($author['institutionname'] ?? $author['institutionName'] ?? ''));
+
+            if ($institutionname === '') {
+                continue;
+            }
+
+            $authors[] = [
+                'type' => 'institution',
+                'familyname' => null,
+                'givenname' => null,
+                'orcid' => null,
+                'institutionname' => $institutionname,
+                'isContact' => false,
+                'email' => '',
+                'website' => '',
+                'affiliation_data' => $affiliationData['affiliation_data'],
+                'rorId_data' => $affiliationData['rorId_data']
+            ];
+        }
+    }
+
+    return $authors;
+}
+
+function normalizeLegacyAuthors(array $postData): array
+{
+    $authors = [];
+    $filteredPersons = (!empty($postData['familynames']) || !empty($postData['givennames']))
+        ? filterValidPersonAuthors($postData)
+        : [
+            'familynames' => [],
+            'givennames' => [],
+            'orcids' => [],
+            'personAffiliation' => [],
+            'authorPersonRorIds' => []
+        ];
+
+    foreach ($filteredPersons['familynames'] as $i => $familyname) {
+        $affiliationData = trim($filteredPersons['personAffiliation'][$i] ?? '');
+        $rorIdData = trim($filteredPersons['authorPersonRorIds'][$i] ?? '');
+
+        if (!empty(parseRorIds($rorIdData)) && empty(parseAffiliationData($affiliationData))) {
+            continue;
+        }
+
+        $authors[] = [
+            'type' => 'person',
+            'familyname' => trim($familyname),
+            'givenname' => trim($filteredPersons['givennames'][$i] ?? ''),
+            'orcid' => trim($filteredPersons['orcids'][$i] ?? ''),
+            'institutionname' => null,
+            'isContact' => false,
+            'email' => '',
+            'website' => '',
+            'affiliation_data' => $affiliationData,
+            'rorId_data' => $rorIdData
+        ];
+    }
+
+    $institutionnames = $postData['authorinstitutionName'] ?? [];
+    $institutionAffiliations = $postData['institutionAffiliation'] ?? [];
+    $institutionRorIds = $postData['authorInstitutionRorIds'] ?? [];
+
+    foreach ($institutionnames as $i => $institutionname) {
+        $institutionname = trim((string) $institutionname);
+
+        if ($institutionname === '') {
+            continue;
+        }
+
+        $affiliationData = trim($institutionAffiliations[$i] ?? '');
+        $rorIdData = trim($institutionRorIds[$i] ?? '');
+
+        if (!empty(parseRorIds($rorIdData)) && empty(parseAffiliationData($affiliationData))) {
+            continue;
+        }
+
+        $authors[] = [
+            'type' => 'institution',
+            'familyname' => null,
+            'givenname' => null,
+            'orcid' => null,
+            'institutionname' => $institutionname,
+            'isContact' => false,
+            'email' => '',
+            'website' => '',
+            'affiliation_data' => $affiliationData,
+            'rorId_data' => $rorIdData
+        ];
+    }
+
+    return $authors;
+}
+
+function normalizeAuthorsPayload(array $postData): array
+{
+    $payload = decodeAuthorsPayload($postData);
+
+    if ($payload !== null) {
+        return normalizeAuthorsFromPayload($payload);
+    }
+
+    return normalizeLegacyAuthors($postData);
+}
+
 /**
  * Saves author information in the database.
  *
@@ -139,106 +348,28 @@ function validateInstitutionAuthors(array $postData): bool
 function saveAuthors($connection, $postData, $resource_id)
 {
     $action = $postData['action'] ?? 'save_and_download';
+    $authors = normalizeAuthorsPayload($postData);
 
-    $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
-    $hasInstitutionData = !empty($postData['authorinstitutionName']);
-
-    if ($action === 'submit') {
-        $validPerson = $hasPersonData ? validatePersonAuthors($postData) : false;
-        $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
-
-    if (!$validPerson && !$validInstitution) {
+    if ($action === 'submit' && empty($authors)) {
         // No valid author data. only fails when BOTH are invalid, which is the correct behavior.
         throw new Exception("No valid author data provided");
     }
-    }
 
-    // Filtering of person authors: only complete pure
-    $filteredPersons = $hasPersonData ? filterValidPersonAuthors($postData) : [
-        'familynames' => [],
-        'givennames' => [],
-        'orcids' => [],
-        'personAffiliation' => [],
-        'authorPersonRorIds' => []
-    ];
-
-    // Personal data
-    $familynames = $filteredPersons['familynames'];
-    $givennames = $filteredPersons['givennames'];
-    $orcids = $filteredPersons['orcids'];
-    $personAffiliations = $filteredPersons['personAffiliation'];
-    $personRorIds = $filteredPersons['authorPersonRorIds'];
-
-    // Institution
-    $institutionnames = $postData['authorinstitutionName'] ?? [];
-    $institutionAffiliations = $postData['institutionAffiliation'] ?? [];
-    $institutionRorIds = $postData['authorInstitutionRorIds'] ?? [];
-
-    // Processing of personal authors
-    try{
-        $personCount = count($familynames);
-        for ($i = 0; $i < $personCount; $i++) {
-            $familyname = trim($familynames[$i] ?? '');
-            $givenname = trim($givennames[$i] ?? '');
-            $orcid = trim($orcids[$i] ?? '');
-            // Remove ORCID URL prefix if present (defense against frontend bypass)
+    try {
+        foreach ($authors as $sortOrder => $author) {
+            $orcid = trim((string) ($author['orcid'] ?? ''));
             $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
 
-            // Validate ORCID checksum on submit
             if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
                 throw new Exception("Invalid ORCID checksum: {$orcid}");
             }
 
-            $affiliation_data = trim($personAffiliations[$i] ?? '');
-            $rorId_data = trim($personRorIds[$i] ?? '');
-
-
-            $rorIdArray = parseRorIds($rorId_data);
-            $affiliationArray = parseAffiliationData($affiliation_data);
-            if (!empty($rorIdArray) && empty($affiliationArray))
-                continue;
-
-            processAuthor($connection, $resource_id, [
-                'familyname' => $familyname,
-                'givenname' => $givenname,
-                'orcid' => $orcid,
-                'institutionname' => null,
-                'affiliation_data' => $affiliation_data,
-                'rorId_data' => $rorId_data
-            ]);
+            $author['orcid'] = $orcid;
+            $author_id = processAuthor($connection, $author);
+            linkResourceAuthor($connection, $resource_id, $author_id, $sortOrder);
         }
     } catch (Exception $e) {
-        error_log("Error processing personal authors: " . $e->getMessage());
-        throw $e;
-    }
-
-    // Processing of institutional authors
-    try {
-        $institutionCount = count($institutionnames);
-        for ($i = 0; $i < $institutionCount; $i++) {
-            $institutionname = trim($institutionnames[$i] ?? '');
-            $affiliation_data = trim($institutionAffiliations[$i] ?? '');
-            $rorId_data = trim($institutionRorIds[$i] ?? '');
-
-            if (empty($institutionname))
-                continue;
-
-            $rorIdArray = parseRorIds($rorId_data);
-            $affiliationArray = parseAffiliationData($affiliation_data);
-            if (!empty($rorIdArray) && empty($affiliationArray))
-                continue;
-
-            processAuthor($connection, $resource_id, [
-                'familyname' => null,
-                'givenname' => null,
-                'orcid' => null,
-                'institutionname' => $institutionname,
-                'affiliation_data' => $affiliation_data,
-                'rorId_data' => $rorId_data
-            ]);
-        }
-    } catch (Exception $e) {
-        error_log("Error processing institutional authors: " . $e->getMessage());
+        error_log("Error processing authors: " . $e->getMessage());
         throw $e;
     }
 }
@@ -247,7 +378,6 @@ function saveAuthors($connection, $postData, $resource_id)
  * Processes a single author's data including creation/update and affiliations.
  *
  * @param mysqli $connection The database connection
- * @param int $resource_id The resource ID
  * @param array $authorData Array containing author data:
  *                         - familyname: string
  *                         - givenname: string
@@ -257,7 +387,7 @@ function saveAuthors($connection, $postData, $resource_id)
  *
  * @throws mysqli_sql_exception If a database error occurs
  */
-function processAuthor($connection, $resource_id, $authorData)
+function processAuthor($connection, $authorData): int
 {
     $author_person_id = null;
     $author_institution_id = null;
@@ -320,12 +450,6 @@ function processAuthor($connection, $resource_id, $authorData)
     }
     $stmt->close();
 
-    // 4. Resource_has_Author link
-    $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Author (Resource_resource_id, Author_author_id) VALUES (?, ?)");
-    $stmt->bind_param("ii", $resource_id, $author_id);
-    $stmt->execute();
-    $stmt->close();
-
     // Save affiliations if present
     if (!empty($authorData['affiliation_data'])) {
         saveAffiliations(
@@ -337,4 +461,29 @@ function processAuthor($connection, $resource_id, $authorData)
             'Author_author_id'
         );
     }
+
+    return (int) $author_id;
+}
+
+function linkResourceAuthor($connection, int $resource_id, int $author_id, int $sortOrder): void
+{
+    $stmt = $connection->prepare("SELECT Resource_has_Author_id FROM Resource_has_Author WHERE Resource_resource_id = ? AND Author_author_id = ? ORDER BY Resource_has_Author_id ASC LIMIT 1");
+    $stmt->bind_param("ii", $resource_id, $author_id);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    if ($row) {
+        $linkId = (int) $row['Resource_has_Author_id'];
+        $stmt = $connection->prepare("UPDATE Resource_has_Author SET sort_order = ? WHERE Resource_has_Author_id = ?");
+        $stmt->bind_param("ii", $sortOrder, $linkId);
+        $stmt->execute();
+        $stmt->close();
+        return;
+    }
+
+    $stmt = $connection->prepare("INSERT INTO Resource_has_Author (Resource_resource_id, Author_author_id, sort_order) VALUES (?, ?, ?)");
+    $stmt->bind_param("iii", $resource_id, $author_id, $sortOrder);
+    $stmt->execute();
+    $stmt->close();
 }

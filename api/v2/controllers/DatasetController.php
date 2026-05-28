@@ -184,6 +184,7 @@ class DatasetController
         LEFT JOIN Author_institution ai ON a.Author_Institution_author_institution_id = ai.author_institution_id
         JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
         WHERE rha.Resource_resource_id = ?
+        ORDER BY rha.sort_order ASC, rha.Resource_has_Author_id ASC
     ");
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
