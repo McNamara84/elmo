@@ -812,64 +812,36 @@ class ICGEMController extends DatasetController
         }
     }
     /**
-     * Inserts contact persons from the Authors form-group into the envelope under the
-     * xs:any extension point, using the DataCite namespace (dace:).
+     * Inserts the mandatory grav:contact element (CI_Contact type) as the first child
+     * of globalGravityProduct, per the ICGEM XSD sequence.
      *
-     * Each contact person is serialised as a dace:contributor with
-     * contributorType="ContactPerson", preserving family/given name, ORCID, e-mail,
-     * website, and affiliations so the information is never lost during ETL.
+     * Populates grav:address from each contact person's email (required, minOccurs=1)
+     * and grav:onlineResource from each contact person's website (optional).
+     * If no contact persons exist, an empty grav:contact element is added to satisfy
+     * the schema requirement (validation at submit time will catch missing email).
      *
      * @param SimpleXMLElement $icgempart The globalGravityProduct element.
      * @param int $id The resource ID.
      */
-    protected function insertContactPersons(SimpleXMLElement $icgempart, int $id): void
+    protected function insertContact(SimpleXMLElement $icgempart, int $id): void
     {
         $contactPersons = $this->getContactPersons($this->connection, $id);
-        if (empty($contactPersons)) {
-            return;
-        }
-
-        $daceNs = 'http://datacite.org/schema/kernel-4';
-        $contributors = $icgempart->addChild('dace:contributors', null, $daceNs);
+        $contact = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
 
         foreach ($contactPersons as $cp) {
-            $contributor = $contributors->addChild('dace:contributor', null, $daceNs);
-            $contributor->addAttribute('contributorType', 'ContactPerson');
-
-            $givenName  = trim($cp['givenname']  ?? '');
-            $familyName = trim($cp['familyname'] ?? '');
-            $fullName   = trim("$givenName $familyName");
-
-            if ($fullName !== '') {
-                $contributor->addChild('dace:contributorName', htmlspecialchars($fullName), $daceNs);
-            }
-            if ($givenName !== '') {
-                $contributor->addChild('dace:givenName', htmlspecialchars($givenName), $daceNs);
-            }
-            if ($familyName !== '') {
-                $contributor->addChild('dace:familyName', htmlspecialchars($familyName), $daceNs);
-            }
-            if (!empty($cp['orcid'])) {
-                $orcidEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['orcid']), $daceNs);
-                $orcidEl->addAttribute('nameIdentifierScheme', 'ORCID');
-                $orcidEl->addAttribute('schemeURI', 'https://orcid.org');
-            }
             if (!empty($cp['email'])) {
-                $emailEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['email']), $daceNs);
-                $emailEl->addAttribute('nameIdentifierScheme', 'email');
+                $contact->addChild(
+                    self::ICGEM_NAMESPACE_PREFIX . ':address',
+                    htmlspecialchars(trim($cp['email'])),
+                    self::ICGEM_NAMESPACE_URI
+                );
             }
             if (!empty($cp['website'])) {
-                $webEl = $contributor->addChild('dace:nameIdentifier', htmlspecialchars($cp['website']), $daceNs);
-                $webEl->addAttribute('nameIdentifierScheme', 'URL');
-            }
-            foreach ($cp['Affiliations'] ?? [] as $aff) {
-                if (!empty($aff['name'])) {
-                    $affEl = $contributor->addChild('dace:affiliation', htmlspecialchars($aff['name']), $daceNs);
-                    if (!empty($aff['rorId'])) {
-                        $affEl->addAttribute('affiliationIdentifier', $aff['rorId']);
-                        $affEl->addAttribute('affiliationIdentifierScheme', 'ROR');
-                    }
-                }
+                $contact->addChild(
+                    self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
+                    htmlspecialchars(trim($cp['website'])),
+                    self::ICGEM_NAMESPACE_URI
+                );
             }
         }
     }
@@ -970,8 +942,11 @@ class ICGEMController extends DatasetController
         
         // 6. Create ICGEM globalGravityProduct as child of envelope
         $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
-        
-        // 7. Create harmonicCoefficientsModel container (FIRST per XSD sequence)
+
+        // 6a. Insert grav:contact (FIRST per XSD sequence, before xs:choice)
+        $this->insertContact($icgempart, $id);
+
+        // 7. Create harmonicCoefficientsModel container (xs:choice option, SECOND per XSD sequence)
         $shm = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':harmonicCoefficientsModel', null, self::ICGEM_NAMESPACE_URI);
         
         // 8. Insert core GGM properties into harmonicCoefficientsModel
@@ -988,10 +963,7 @@ class ICGEMController extends DatasetController
         // 10. Insert descriptions (THIRD per XSD sequence)
         $this->insertDescriptions($icgempart, $id);
 
-        // 11. Insert contact persons (xs:any extension point – DataCite namespace)
-        $this->insertContactPersons($icgempart, $id);
-        
-        // 12. Format and return the combined envelope XML
+        // 11. Format and return the combined envelope XML
         // Re-parse stripping all existing whitespace-only text nodes (inherited from
         // the XSLT-generated DataCite XML) so that formatOutput can re-indent the
         // merged document consistently from scratch.

@@ -124,6 +124,7 @@ interface IcgemParsedData {
   contactPersonFirstName: string;
   contactPersonOrcid: string;
   contactPersonEmail: string;
+  contactPersonWebsite: string;
   subjects: Subject[];
   // ── ICGEM-specific ──
   modelName: string;
@@ -285,13 +286,12 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const cpOrcidEntry = cpOrcidList.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'ORCID');
   const contactPersonOrcid = extractText(cpOrcidEntry ?? cpOrcidList[0]);
 
-  // Contact email (from GGP contributors – dace:nameIdentifier with scheme "email")
-  const ggpContribsNode = getNode(ggp, 'contributors') as Record<string, unknown> | undefined;
-  const ggpContribList = ggpContribsNode ? toArray(getNode(ggpContribsNode, 'contributor')) : [];
-  const ggpCp = ggpContribList.find((c: unknown) => (c as Record<string, unknown>)['contributorType'] === 'ContactPerson') as Record<string, unknown> | undefined;
-  const ggpCpNameIds = ggpCp ? toArray(getNode(ggpCp, 'nameIdentifier')) : [];
-  const emailEntry = ggpCpNameIds.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'email') as Record<string, unknown> | undefined;
-  const contactPersonEmail = extractText(emailEntry);
+  // Contact email and website (from grav:contact inside globalGravityProduct)
+  const contactEl = getNode(ggp, 'contact') as Record<string, unknown> | undefined;
+  const addressList = contactEl ? toArray(getNode(contactEl, 'address')) : [];
+  const contactPersonEmail = extractText(addressList[0]);
+  const onlineResourceList = contactEl ? toArray(getNode(contactEl, 'onlineResource')) : [];
+  const contactPersonWebsite = extractText(onlineResourceList[0]);
 
   // Subjects / GCMD thesaurus keywords
   const subjectsNode = getNode(resource, 'subjects') as Record<string, unknown> | undefined;
@@ -351,7 +351,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
     doi, title, publicationYear, language, version,
     abstract, dateCreated, rightsIdentifier, rightsURI,
     personalCreators, orgCreators,
-    contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail,
+    contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail, contactPersonWebsite,
     subjects,
     modelName, modelType, mathRepresentation, celestialBody, fileFormat,
     tideSystem, degree, errors, radius, earthGravityConstant,
@@ -458,6 +458,12 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
       await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
         await emailField.fill(data.contactPersonEmail);
+      }
+      // Fill website if present
+      const websiteField = page.locator('#input-contactperson-website').first();
+      await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
+      if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
+        await websiteField.fill(data.contactPersonWebsite);
       }
     }
   }
@@ -762,9 +768,9 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person (optional – not all XMLs have a ContactPerson contributor)
+    // Contact person – email is required, website is optional
     if (parsedData.contactPersonLastName) expect(parsedData.contactPersonLastName, 'contactPersonLastName').not.toBe('');
-    if (parsedData.contactPersonEmail) expect(parsedData.contactPersonEmail, 'contactPersonEmail').not.toBe('');
+    expect(parsedData.contactPersonEmail, 'contactPersonEmail').not.toBe('');
 
     // Subjects (GCMD keywords)
     expect(parsedData.subjects.length, 'subjects.length').toBeGreaterThan(0);
@@ -956,6 +962,12 @@ for (const testCase of TEST_CASES) {
     await expect(firstAuthorRow.locator('[id^="input-author-firstname"]'), 'author firstName').toHaveValue('');
     await expect(firstAuthorRow.locator('[id^="input-author-orcid"]'), 'author ORCID').toHaveValue('');
 
+    // Contact person checkbox should be unchecked, email and website fields should be empty
+    const cpCheckbox = firstAuthorRow.locator('input[name="contacts[]"]');
+    await expect(cpCheckbox, 'contact person checkbox after clear').not.toBeChecked();
+    const cpEmailAfterClear = await firstAuthorRow.locator('input[name="cpEmail[]"]').inputValue().catch(() => '');
+    expect(cpEmailAfterClear, 'contactPersonEmail after clear').toBe('');
+
     // ── ICGEM Definition fields ────────────────────────────────────────────
     await expect(page.locator('#input-model-name'), 'modelName').toHaveValue('');
     await expect(page.locator('#input-model-type'), 'modelType').toHaveValue('');
@@ -1071,11 +1083,18 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email (populated from GGP contributors section)
-    if (parsedData.contactPersonEmail) {
-      const emailVal = await page.locator('#input-contactperson-email').first().inputValue().catch(() => '');
-      // TODO: processContactPersonsFromDataCite does not populate email; remove soft when fixed
-      // expect.soft(emailVal, 'contactPersonEmail').toContain(parsedData.contactPersonEmail);
+    // Contact person email (required) and website (optional)
+    // Email is populated by populateIcgemContactPersons from grav:contact/grav:address.
+    // The field becomes visible after the upload toggles the contact-person checkbox.
+    await expect(
+      page.locator('#input-contactperson-email').first(),
+      'contactPersonEmail',
+    ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
+    if (parsedData.contactPersonWebsite) {
+      await expect(
+        page.locator('#input-contactperson-website').first(),
+        'contactPersonWebsite',
+      ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
