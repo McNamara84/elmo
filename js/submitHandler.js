@@ -174,7 +174,23 @@ if (groupStc) {
  * Validates if a Contact Person is selected from group of Authors.
  */
 function validateContactPerson() {
-    var isValid = $('input[name="contacts[]"]:checked').length > 0;
+    var payloadInput = document.querySelector('input[name="authorsPayload"]');
+    var authorsPayload = null;
+
+    if (payloadInput && payloadInput.value) {
+        try {
+            authorsPayload = JSON.parse(payloadInput.value);
+        } catch (error) {
+            authorsPayload = null;
+        }
+    }
+
+    var isValid = Array.isArray(authorsPayload)
+        ? authorsPayload.some(function (author) {
+            return author && author.type === 'person' && author.isContact === true;
+        })
+        : $('input[name="contacts[]"]:checked').length > 0;
+
     $('#contact-person-error').remove();
     // 
     if (!isValid) {

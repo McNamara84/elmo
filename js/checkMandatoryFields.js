@@ -3,9 +3,20 @@
  */
 function setupContactPersonListener() {
     // When the checkbox for "Contact Person" is toggled (checked/unchecked), call validateContactPersonRequirements
-    $('#group-author').on('change', '[id^="checkbox-author-contactperson"]', function () {
+    const authorContainer = $('[data-author-stack]').length ? $('[data-author-stack]') : $('#group-author');
+    authorContainer.on('change', '[id^="checkbox-author-contactperson"]', function () {
         validateContactPersonRequirements();  // Re-run the validateContactPersonRequirements function whenever the checkbox state changes
     });
+}
+
+function getPersonAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-creator-row]');
+    return stackRows.length ? stackRows : $('#group-author').children('.row');
+}
+
+function getInstitutionAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-authorinstitution-row]');
+    return stackRows.length ? stackRows : $('#group-authorinstitution').children('.row');
 }
 
 /**
@@ -18,7 +29,7 @@ function setupContactPersonListener() {
  */
 function validateContactPersonRequirements() {
     // Loops through each row in the "group-author" container
-    $('#group-author').children('.row').each(function () {
+    getPersonAuthorRows().each(function () {
         var row = $(this);
 
         // Defines the relevant fields for the Contact Person section
@@ -342,7 +353,7 @@ function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
 }
 
 function validateAuthorInstitutionRequirements() {
-    $('#group-authorinstitution').children('.row').each(function () {
+    getInstitutionAuthorRows().each(function () {
         var row = $(this);
         // Defines the relevant fields for the Author-Institution section
         var fields = {

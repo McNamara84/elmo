@@ -13,9 +13,9 @@
   </div>
   <div class="card-body">
     <input type="hidden" id="authors-payload" name="authorsPayload" value="[]">
-    <div id="group-author-stack" class="d-grid gap-2" data-author-stack>
-      <div id="group-author" class="d-grid gap-2" data-author-person-group>
-      <div class="row g-1 border rounded p-2 bg-body" data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
+    <div id="group-author" data-author-stack-shell>
+      <div id="group-author-stack" class="d-grid gap-2" data-author-stack>
+        <div class="row g-1 border rounded p-2 bg-body" data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
         <!-- Input field ORCID Author mit Contact Person Toggle -->
         <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
           <div class="input-group has-validation">
@@ -92,7 +92,7 @@
             title="Drag & drop to change order" aria-label="Drag & drop to change order">
             <i class="bi bi-grip-vertical"></i>
           </button>
-          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-translate="general.add">
+          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-author-add-type="person" data-translate="general.add">
             +
           </button>
         </div>
@@ -138,10 +138,8 @@
             </div>
           </div>
         </div>
-      </div>
-      </div>
+        </div>
       <?php if ($showAuthorInstitution ?? true): ?>
-      <div id="group-authorinstitution" class="d-grid gap-2" data-author-institution-group>
         <div class="row g-1 border rounded p-2 bg-body" data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
           <!-- Input field for Institution Name -->
           <div class="col-12 col-md-5 p-1">
@@ -172,11 +170,11 @@
               <i class="bi bi-grip-vertical"></i>
             </button>
             <button type="button" class="btn btn-primary addauthorinstitution add-button"
-              id="button-authorinstitution-add" data-translate="general.add">+</button>
+              id="button-authorinstitution-add" data-author-add-type="institution" data-translate="general.add">+</button>
           </div>
         </div>
-      </div>
       <?php endif; ?>
+      </div>
     </div>
   </div>
 </div>
