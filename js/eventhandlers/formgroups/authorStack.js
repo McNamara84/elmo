@@ -20,7 +20,9 @@ $(document).ready(function () {
 
   const personTemplate = stack.find('[data-creator-row]').first().clone(false);
   const institutionTemplate = stack.find('[data-authorinstitution-row]').first().clone(false);
+  const authorUiState = new Map();
   let entryIndex = stack.find('[data-author-entry-row]').length;
+  const authorTypes = ['person', 'institution'];
 
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -42,6 +44,31 @@ $(document).ready(function () {
   function getEditPanelId(row) {
     const key = row.attr('data-author-entry-key') || `author-entry-${entryIndex}`;
     return `${key}-edit`.replace(/[^A-Za-z0-9_-]/g, '-');
+  }
+
+  function getEntryKey(row) {
+    let entryKey = row.attr('data-author-entry-key');
+    if (!entryKey) {
+      entryKey = `author-${getEntryType(row)}-${entryIndex++}`;
+      row.attr('data-author-entry-key', entryKey);
+    }
+    return entryKey;
+  }
+
+  function getRowState(row) {
+    const entryKey = getEntryKey(row);
+    let state = authorUiState.get(entryKey);
+    if (!state) {
+      state = {
+        entryKey,
+        type: getEntryType(row),
+        isExpanded: row.find('[data-author-edit-panel]').first().hasClass('show') !== false,
+        isContact: false,
+        affiliations: []
+      };
+      authorUiState.set(entryKey, state);
+    }
+    return state;
   }
 
   function createSummary(type) {
@@ -73,6 +100,73 @@ $(document).ready(function () {
     button.attr('data-author-remove', '').addClass('btn-sm').removeAttr('style');
     button.html('<i class="bi bi-x-lg" aria-hidden="true"></i>');
     return button;
+  }
+
+  function getTypeLabel(type) {
+    return type === 'institution'
+      ? translate('authors.institution', 'Institution')
+      : translate('authors.person', 'Person');
+  }
+
+  function createTypeSwitcher() {
+    const switcher = $('<div class="border-bottom bg-body-tertiary p-2" data-author-type-switcher></div>');
+    const group = $('<div class="btn-group btn-group-sm" role="group"></div>')
+      .attr('aria-label', translate('authors.typeSwitcherLabel', 'Author type'));
+
+    authorTypes.forEach(function (type) {
+      group.append(
+        $('<button type="button" class="btn btn-outline-dark" data-author-type-option></button>')
+          .attr('data-author-type-option', type)
+      );
+    });
+
+    return switcher.append(group);
+  }
+
+  function ensureTypeSwitcher(row) {
+    const editPanel = row.find('[data-author-edit-panel]').first();
+    if (!editPanel.children('[data-author-type-switcher]').length) {
+      editPanel.prepend(createTypeSwitcher());
+    }
+    updateTypeSwitcher(row);
+  }
+
+  function setExpanded(row, isExpanded) {
+    const state = getRowState(row);
+    const editPanel = row.find('[data-author-edit-panel]').first();
+    const toggle = row.find('[data-author-toggle-edit]').first();
+    state.isExpanded = isExpanded;
+
+    row.attr('data-author-expanded', isExpanded ? 'true' : 'false');
+    editPanel.toggleClass('show', isExpanded).attr('aria-hidden', isExpanded ? 'false' : 'true');
+    toggle.attr({
+      'aria-expanded': isExpanded ? 'true' : 'false',
+      'aria-label': isExpanded ? 'Collapse author entry' : 'Edit author entry'
+    });
+    toggle.find('i')
+      .toggleClass('bi-pencil', !isExpanded)
+      .toggleClass('bi-chevron-up', isExpanded);
+  }
+
+  function focusFirstEditableField(row) {
+    const preferredInput = row.is('[data-authorinstitution-row]')
+      ? row.find('input[name="authorinstitutionName[]"]').first()
+      : row.find('input[name="familynames[]"]').first();
+    const fallbackInput = row.find('[data-author-edit-panel] input:not([type="hidden"]), [data-author-edit-panel] select, [data-author-edit-panel] textarea').first();
+    const target = preferredInput.length ? preferredInput : fallbackInput;
+
+    if (target.length) {
+      target.trigger('focus');
+    }
+  }
+
+  function focusAfterRemove(nextFocusTarget) {
+    const fallbackButton = shell.find('[data-author-add-type="person"]').first();
+    const target = nextFocusTarget.length ? nextFocusTarget : fallbackButton;
+
+    if (target.length) {
+      target.trigger('focus');
+    }
   }
 
   function ensureCardScaffold(row, type = getEntryType(row)) {
@@ -125,6 +219,9 @@ $(document).ready(function () {
       contactToggle.removeAttr('data-author-contact-toggle');
       row.find('[data-author-contact-badge]').remove();
     }
+
+    ensureTypeSwitcher(row);
+    setExpanded(row, getRowState(row).isExpanded !== false);
 
     return row;
   }
@@ -220,7 +317,7 @@ $(document).ready(function () {
     }
   }
 
-  function addRow(type) {
+  function addRow(type, options = {}) {
     const template = type === 'institution' ? institutionTemplate : personTemplate;
     const row = prepareClone(template, type);
     if (!row) {
@@ -234,6 +331,9 @@ $(document).ready(function () {
     initializeAffiliationAutocomplete(row);
     initializeTooltips(row);
     updatePayload();
+    if (options.focus !== false) {
+      focusFirstEditableField(row);
+    }
     return row;
   }
 
@@ -338,6 +438,7 @@ $(document).ready(function () {
     let keptInstitutionAddButton = false;
 
     stack.empty();
+    authorUiState.clear();
 
     normalizedAuthors.forEach(function (author) {
       const type = author.type === 'institution' ? 'institution' : 'person';
@@ -476,6 +577,80 @@ $(document).ready(function () {
     return author.institutionname !== '' || author.affiliations.length > 0;
   }
 
+  function rowHasContent(row) {
+    return getEntryType(row) === 'institution'
+      ? readInstitution(row, 0) !== null
+      : readPerson(row, 0) !== null;
+  }
+
+  function updateTypeSwitcher(row) {
+    const switcher = row.find('[data-author-type-switcher]').first();
+    if (!switcher.length) {
+      return;
+    }
+
+    const currentType = getEntryType(row);
+    const isLocked = rowHasContent(row);
+    const lockText = translate('authors.typeSwitchLocked', 'Type can only be changed while this entry is empty.');
+
+    switcher.find('[role="group"]').attr('aria-label', translate('authors.typeSwitcherLabel', 'Author type'));
+    switcher.find('[data-author-type-option]').each(function () {
+      const button = $(this);
+      const type = button.attr('data-author-type-option') === 'institution' ? 'institution' : 'person';
+      const isActive = type === currentType;
+      const isDisabled = isLocked && !isActive;
+
+      button
+        .text(getTypeLabel(type))
+        .toggleClass('active', isActive)
+        .attr('aria-pressed', isActive ? 'true' : 'false')
+        .prop('disabled', isDisabled)
+        .attr('aria-disabled', isDisabled ? 'true' : 'false');
+
+      if (isDisabled) {
+        button.attr({
+          title: lockText,
+          'data-bs-title': lockText
+        });
+      } else {
+        button.removeAttr('title data-bs-title');
+      }
+    });
+  }
+
+  function switchEntryType(row, targetType) {
+    const currentType = getEntryType(row);
+    if (!authorTypes.includes(targetType) || targetType === currentType) {
+      return row;
+    }
+
+    if (rowHasContent(row)) {
+      updateTypeSwitcher(row);
+      return row;
+    }
+
+    const entryKey = getEntryKey(row);
+    const isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
+    const template = targetType === 'institution' ? institutionTemplate : personTemplate;
+    const replacement = prepareClone(template, targetType);
+
+    if (!replacement) {
+      return row;
+    }
+
+    row.replaceWith(replacement);
+    authorUiState.delete(entryKey);
+    setExpanded(replacement, isExpanded);
+    initializeAffiliationAutocomplete(replacement);
+    initializeTooltips(replacement);
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    updatePayload();
+    focusFirstEditableField(replacement);
+    return replacement;
+  }
+
   function readPerson(row, order) {
     const author = {
       type: 'person',
@@ -583,6 +758,27 @@ $(document).ready(function () {
     return badge;
   }
 
+  function getInitials(givenname, familyname) {
+    const initials = [givenname, familyname]
+      .map(function (part) { return part.trim().charAt(0).toUpperCase(); })
+      .filter(Boolean)
+      .join('');
+    return initials || '?';
+  }
+
+  function syncRowState(row) {
+    const state = getRowState(row);
+    const isPerson = getEntryType(row) === 'person';
+    const affiliationName = isPerson ? 'personAffiliation[]' : 'institutionAffiliation[]';
+    const rorName = isPerson ? 'authorPersonRorIds[]' : 'authorInstitutionRorIds[]';
+
+    state.type = getEntryType(row);
+    state.isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
+    state.isContact = isPerson && row.find('input[name="contacts[]"]').prop('checked') === true;
+    state.affiliations = buildAffiliations(row, affiliationName, rorName);
+    return state;
+  }
+
   function renderEntrySummary(row) {
     const type = getEntryType(row);
     const isPerson = type === 'person';
@@ -595,12 +791,19 @@ $(document).ready(function () {
     const fallbackName = isPerson ? translate('authors.person', 'Person') : translate('authors.institution', 'Institution');
     const typeLabel = isPerson ? translate('authors.person', 'Person') : translate('authors.institution', 'Institution');
     const summary = row.find('[data-author-summary]').first();
+    const state = syncRowState(row);
 
     summary.find('[data-author-summary-name]').text(name || fallbackName);
     summary.find('[data-author-type-badge]').text(typeLabel);
+    const avatar = summary.find('[data-author-avatar]').first();
+    if (isPerson) {
+      avatar.text(getInitials(givenname, familyname));
+    } else if (!avatar.find('.bi-building').length) {
+      avatar.html('<i class="bi bi-building" aria-hidden="true"></i>');
+    }
 
     const contactBadge = summary.find('[data-author-contact-badge]');
-    if (isPerson && row.find('input[name="contacts[]"]').prop('checked') === true) {
+    if (isPerson && state.isContact) {
       contactBadge.removeClass('d-none').text(translate('authors.contactSingular', 'Contact'));
     } else {
       contactBadge.addClass('d-none');
@@ -612,9 +815,10 @@ $(document).ready(function () {
     const affiliationName = isPerson ? 'personAffiliation[]' : 'institutionAffiliation[]';
     const rorName = isPerson ? 'authorPersonRorIds[]' : 'authorInstitutionRorIds[]';
     const affiliationSummary = summary.find('[data-author-summary-affiliations]').empty();
-    buildAffiliations(row, affiliationName, rorName).forEach(function (affiliation) {
+    state.affiliations.forEach(function (affiliation) {
       affiliationSummary.append(createAffiliationBadge(affiliation));
     });
+    updateTypeSwitcher(row);
   }
 
   function updatePayload() {
@@ -636,7 +840,7 @@ $(document).ready(function () {
       : 'person';
 
     while (currentCount < requiredCount) {
-      const row = addRow(type);
+      const row = addRow(type, { focus: false });
       if (!row) {
         break;
       }
@@ -672,9 +876,32 @@ $(document).ready(function () {
     addRow('institution');
   });
 
+  stack.on('click', '[data-author-toggle-edit]', function (event) {
+    event.preventDefault();
+    const row = $(this).closest('[data-author-entry-row]');
+    const isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
+    setExpanded(row, !isExpanded);
+  });
+
+  stack.on('click', '[data-author-type-option]', function (event) {
+    event.preventDefault();
+    const button = $(this);
+    if (button.prop('disabled')) {
+      return;
+    }
+
+    const row = button.closest('[data-author-entry-row]');
+    switchEntryType(row, button.attr('data-author-type-option'));
+  });
+
   stack.on('click', '.removeButton', function () {
-    $(this).closest('[data-author-entry-row]').remove();
+    const row = $(this).closest('[data-author-entry-row]');
+    const entryKey = getEntryKey(row);
+    const nextFocusTarget = row.next('[data-author-entry-row]').find('[data-author-toggle-edit]').first();
+    row.remove();
+    authorUiState.delete(entryKey);
     updatePayload();
+    focusAfterRemove(nextFocusTarget);
   });
 
   stack.on('input change', 'input, select, textarea', function () {
@@ -695,6 +922,9 @@ $(document).ready(function () {
   });
 
   document.addEventListener('translationsLoaded', function () {
+    stack.children('[data-author-entry-row]').each(function () {
+      renderEntrySummary($(this));
+    });
     updateSummary(collectPayload());
   });
 

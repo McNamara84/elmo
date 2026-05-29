@@ -109,6 +109,8 @@
         "stackTitle": "Authors",
         "person": "Person",
         "institution": "Institution",
+        "typeSwitcherLabel": "Author type",
+        "typeSwitchLocked": "Type can only be changed while this entry is empty.",
         "addPerson": "Add person",
         "addInstitution": "Add institution",
         "dragHandle": "Drag & drop to change order",

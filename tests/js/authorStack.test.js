@@ -228,12 +228,47 @@ describe('authorStack.js', () => {
     expect(personCard.find('[data-author-actions] [data-author-toggle-edit]').length).toBe(1);
     expect(personCard.find('[data-author-actions] [data-author-remove]').length).toBe(1);
     expect(personCard.find('[data-author-edit-panel].collapse').length).toBe(1);
+    expect(personCard.find('[data-author-type-switcher]').length).toBe(1);
+    expect(personCard.find('[data-author-type-option="person"]').hasClass('active')).toBe(true);
+    expect(personCard.find('[data-author-type-option="institution"]').prop('disabled')).toBe(true);
 
     const institutionCard = cards.eq(1);
     expect(institutionCard.find('[data-author-summary]').text()).toContain('European Plate Observatory');
     expect(institutionCard.find('[data-author-type-badge]').text()).toMatch(/institution/i);
     expect(institutionCard.find('[data-author-contact-badge]').length).toBe(0);
     expect(institutionCard.find('[data-author-contact-toggle]').length).toBe(0);
+    expect(institutionCard.find('[data-author-type-option="institution"]').hasClass('active')).toBe(true);
+    expect(institutionCard.find('[data-author-type-option="person"]').prop('disabled')).toBe(true);
+  });
+
+  test('switches empty cards between person and institution without discarding filled entries', () => {
+    window.authorStack.setAuthors([
+      { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+      { type: 'institution', institutionname: 'European Plate Observatory', affiliations: [] }
+    ]);
+
+    const filledPerson = $('[data-author-card]').first();
+    const filledPersonPayload = payload();
+    expect(filledPerson.find('[data-author-type-option="institution"]').prop('disabled')).toBe(true);
+    filledPerson.find('[data-author-type-option="institution"]').trigger('click');
+    expect(payload()).toEqual(filledPersonPayload);
+    expect(filledPerson.attr('data-author-entry-type')).toBe('person');
+
+    window.authorStack.addPerson();
+    const emptyPerson = $('[data-author-card]').last();
+    expect(emptyPerson.attr('data-author-entry-type')).toBe('person');
+    expect(emptyPerson.find('[data-author-type-option="institution"]').prop('disabled')).toBe(false);
+
+    emptyPerson.find('[data-author-type-option="institution"]').trigger('click');
+    const switchedCard = $('[data-author-card]').last();
+    expect(switchedCard.attr('data-author-entry-type')).toBe('institution');
+    expect(switchedCard.find('[data-author-type-option="institution"]').hasClass('active')).toBe(true);
+    expect(document.activeElement).toBe(switchedCard.find('input[name="authorinstitutionName[]"]').get(0));
+    expect(payload()).toEqual(filledPersonPayload);
+
+    switchedCard.find('input[name="authorinstitutionName[]"]').val('New Institute').trigger('input');
+    expect(payload().map((author) => author.type)).toEqual(['person', 'institution', 'institution']);
+    expect(switchedCard.find('[data-author-type-option="person"]').prop('disabled')).toBe(true);
   });
 
   test('keeps multiple edit panels open and opens newly added cards by default', () => {
@@ -243,7 +278,16 @@ describe('authorStack.js', () => {
     ]);
 
     const cards = $('[data-author-card]');
+    const initialPayload = payload();
+
+    expect(cards.eq(0).find('[data-author-edit-panel]').hasClass('show')).toBe(true);
     cards.eq(0).find('[data-author-toggle-edit]').trigger('click');
+    expect(cards.eq(0).find('[data-author-edit-panel]').hasClass('show')).toBe(false);
+    expect(payload()).toEqual(initialPayload);
+
+    cards.eq(0).find('[data-author-toggle-edit]').trigger('click');
+    cards.eq(1).find('[data-author-toggle-edit]').trigger('click');
+    expect(cards.eq(1).find('[data-author-edit-panel]').hasClass('show')).toBe(false);
     cards.eq(1).find('[data-author-toggle-edit]').trigger('click');
 
     expect(cards.eq(0).find('[data-author-edit-panel]').hasClass('show')).toBe(true);
@@ -253,6 +297,22 @@ describe('authorStack.js', () => {
     const newCard = $('[data-author-card]').last();
     expect(newCard.attr('data-author-entry-type')).toBe('person');
     expect(newCard.find('[data-author-edit-panel]').hasClass('show')).toBe(true);
+    expect(document.activeElement).toBe(newCard.find('input[name="familynames[]"]').get(0));
+  });
+
+  test('moves focus to the next card or add button after removing a card', () => {
+    window.authorStack.setAuthors([
+      { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+      { type: 'institution', institutionname: 'European Plate Observatory', affiliations: [] }
+    ]);
+
+    $('[data-author-card]').first().find('[data-author-remove]').trigger('click');
+    expect($('[data-author-card]').length).toBe(1);
+    expect(document.activeElement).toBe($('[data-author-card]').first().find('[data-author-toggle-edit]').get(0));
+
+    $('[data-author-card]').first().find('[data-author-remove]').trigger('click');
+    expect($('[data-author-card]').length).toBe(0);
+    expect(document.activeElement).toBe($('[data-author-add-type="person"]').get(0));
   });
 
   test('updates payload through the dedicated authors affiliation editor', () => {

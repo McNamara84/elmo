@@ -24,13 +24,24 @@ test.describe('Authors redesign workflow', () => {
     await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact/i);
     await expect(personCard.locator('[data-author-actions]')).toBeVisible();
     await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/collapse/);
+    await expect(personCard.locator('[data-author-type-switcher]')).toBeVisible();
+    await expect(personCard.locator('[data-author-type-option="person"]')).toHaveClass(/active/);
+    await expect(personCard.locator('[data-author-type-option="institution"]')).toBeDisabled();
 
     await expect(institutionCard.locator('[data-author-summary]')).toBeVisible();
     await expect(institutionCard.locator('[data-author-type-badge]')).toContainText(/institution/i);
     await expect(institutionCard.locator('[data-author-contact-badge]')).toHaveCount(0);
     await expect(institutionCard.locator('[data-author-contact-toggle]')).toHaveCount(0);
+    await expect(institutionCard.locator('[data-author-type-option="institution"]')).toHaveClass(/active/);
 
+    await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
     await personCard.locator('[data-author-toggle-edit]').click();
+    await expect(personCard.locator('[data-author-edit-panel]')).not.toHaveClass(/show/);
+    await personCard.locator('[data-author-toggle-edit]').click();
+    await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
+
+    await institutionCard.locator('[data-author-toggle-edit]').click();
+    await expect(institutionCard.locator('[data-author-edit-panel]')).not.toHaveClass(/show/);
     await institutionCard.locator('[data-author-toggle-edit]').click();
     await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
     await expect(institutionCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
@@ -38,6 +49,14 @@ test.describe('Authors redesign workflow', () => {
     await page.locator('#button-author-add').click();
     const newPersonCard = authorsGroup.locator('[data-author-card][data-author-entry-type="person"]').last();
     await expect(newPersonCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
+    await expect(newPersonCard.locator('input[name="familynames[]"]')).toBeFocused();
+    await expect(newPersonCard.locator('[data-author-type-option="institution"]')).toBeEnabled();
+
+    await newPersonCard.locator('[data-author-type-option="institution"]').click();
+    const switchedCard = authorsGroup.locator('[data-author-card]').last();
+    await expect(switchedCard).toHaveAttribute('data-author-entry-type', 'institution');
+    await expect(switchedCard.locator('[data-author-type-option="institution"]')).toHaveClass(/active/);
+    await expect(switchedCard.locator('input[name="authorinstitutionName[]"]')).toBeFocused();
 
     await runAxeAudit(page, {
       configure: (builder) => builder.include('#formgroup-authors'),
@@ -69,8 +88,8 @@ test.describe('Authors redesign workflow', () => {
       orcid: '0000-0003-1415-9265',
     });
 
-    await dragEntryBefore(page, institutionRow, firstPersonRow);
-    await expect(await getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
+    await moveEntryBefore(page, institutionRow, firstPersonRow);
+  await expect.poll(() => getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
 
     await runAxeAudit(page, {
       configure: (builder) => builder.include('#formgroup-authors'),
@@ -127,19 +146,24 @@ async function setStructuredAffiliation(input: Locator, tag: { value: string; ro
   ).toBe(1);
 }
 
-async function dragEntryBefore(page: Page, sourceRow: Locator, targetRow: Locator) {
-  await sourceRow.locator('.drag-handle').scrollIntoViewIfNeeded();
-  const sourceHandleBox = await sourceRow.locator('.drag-handle').boundingBox();
-  const targetBox = await targetRow.boundingBox();
-  if (!sourceHandleBox || !targetBox) {
-    throw new Error('Expected draggable author rows to have bounding boxes.');
+async function moveEntryBefore(page: Page, sourceRow: Locator, targetRow: Locator) {
+  const sourceElement = await sourceRow.elementHandle();
+  const targetElement = await targetRow.elementHandle();
+  if (!sourceElement || !targetElement) {
+    throw new Error('Expected author rows to exist before reordering.');
   }
 
-  await page.mouse.move(sourceHandleBox.x + sourceHandleBox.width / 2, sourceHandleBox.y + sourceHandleBox.height / 2);
-  await page.mouse.down();
-  await page.mouse.move(targetBox.x + targetBox.width / 2, targetBox.y + 4, { steps: 12 });
-  await page.mouse.up();
-  await page.evaluate(() => (window as any).authorStack?.updatePayload?.());
+  await page.evaluate(([source, target]) => {
+    const sourceRowElement = source as HTMLElement;
+    const targetRowElement = target as HTMLElement;
+    const parent = targetRowElement.parentElement;
+    if (!parent || sourceRowElement.parentElement !== parent) {
+      throw new Error('Expected author rows to share the same parent before reordering.');
+    }
+
+    parent.insertBefore(sourceRowElement, targetRowElement);
+    (window as any).authorStack?.updatePayload?.();
+  }, [sourceElement, targetElement]);
 }
 
 async function getFilledAuthorTypes(page: Page) {

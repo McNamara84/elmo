@@ -110,6 +110,8 @@
         "stackTitle": "Autorinnen und Autoren",
         "person": "Person",
         "institution": "Institution",
+        "typeSwitcherLabel": "Autorentyp",
+        "typeSwitchLocked": "Der Typ kann nur geändert werden, solange dieser Eintrag leer ist.",
         "addPerson": "Person hinzufügen",
         "addInstitution": "Institution hinzufügen",
         "dragHandle": "Reihenfolge per Drag & Drop ändern",
