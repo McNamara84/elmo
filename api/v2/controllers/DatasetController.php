@@ -1189,6 +1189,9 @@ class DatasetController
         return $newXml;
     }
 
+    /**
+     * @return array{xsltFile: string, outputPrefix: string}
+     */
     private function getTransformFormatInfo(string $format): array
     {
         $formatInfo = [

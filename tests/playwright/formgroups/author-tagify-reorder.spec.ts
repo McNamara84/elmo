@@ -18,7 +18,7 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
     // Step 2: Simulate jQuery UI Sortable reorder –
     // move the first row (with the "+" button) to the end
     await page.evaluate(() => {
-      const group = document.querySelector('#group-author');
+      const group = document.querySelector('#group-author-stack');
       const firstRow = group?.querySelector('[data-creator-row]');
       if (group && firstRow) {
         group.appendChild(firstRow);
@@ -58,7 +58,7 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
 
     // Move first row to the end
     await page.evaluate(() => {
-      const group = document.querySelector('#group-author');
+      const group = document.querySelector('#group-author-stack');
       const firstRow = group?.querySelector('[data-creator-row]');
       if (group && firstRow) {
         group.appendChild(firstRow);
@@ -92,7 +92,7 @@ test.describe('Issue #962 – Tagify not initiated in cloned rows after reorder'
 
     // Move first row to the end
     await page.evaluate(() => {
-      const group = document.querySelector('#group-authorinstitution');
+      const group = document.querySelector('#group-author-stack');
       const firstRow = group?.querySelector('[data-authorinstitution-row]');
       if (group && firstRow) {
         group.appendChild(firstRow);

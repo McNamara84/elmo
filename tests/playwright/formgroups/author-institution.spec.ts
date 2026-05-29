@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 import { getTranslations } from '../utils';
 
-test.describe('Author Institution form group', () => {
+test.describe('Author institution entries in the Authors form group', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     
@@ -24,9 +24,9 @@ test.describe('Author Institution form group', () => {
 
     await expect(rows).toHaveCount(1);
 
-    const heading = page.locator('[data-translate="authorsInstitutions.title"]');
-    const propperName = translations.authorsInstitutions.title;
-    await expect(heading).toContainText(propperName);
+    const heading = page.locator('[data-translate="authors.stackTitle"]');
+    const properName = translations.authors.stackTitle;
+    await expect(heading).toContainText(properName);
 
     const nameInput = formGroup.locator('input[name="authorinstitutionName[]"]');
     await expect(nameInput).toBeVisible();
@@ -40,13 +40,13 @@ test.describe('Author Institution form group', () => {
     const affiliationLabel = formGroup.locator('label[for="input-authorinstitution-affiliation"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
 
-    const formHelpIcon = page.locator('[data-help-section-id="help-author-institution-fg"]');
+    const formHelpIcon = page.locator('[data-help-section-id="help-authors-fg"]');
     await expect(formHelpIcon).toBeVisible();
 
-    const affiliationHelpIcon = formGroup.locator('[data-help-section-id="help-contributorinstitutions-affiliation"]');
+    const affiliationHelpIcon = firstRow.locator('[data-help-section-id="help-author-affiliation"]');
     await expect(affiliationHelpIcon).toBeVisible();
 
-    const dragHandle = formGroup.locator('.drag-handle');
+    const dragHandle = firstRow.locator('.drag-handle');
     await expect(dragHandle).toHaveAttribute('aria-label', 'Drag & drop to change order');
   });
 
@@ -81,7 +81,7 @@ test.describe('Author Institution form group', () => {
     await expect(secondAffiliationLabel).toHaveAttribute('for', secondAffiliationId!);
 
     await expect(secondRow.locator('.removeButton')).toBeVisible();
-    await expect(secondRow.locator('.help-placeholder')).toHaveAttribute('data-help-section-id', 'help-contributorinstitutions-affiliation');
+    await expect(secondRow.locator('.help-placeholder')).toHaveAttribute('data-help-section-id', 'help-author-affiliation');
 
     const firstRorId = await firstRow.locator('input[name="authorInstitutionRorIds[]"]').getAttribute('id');
     const secondRorId = await secondRow.locator('input[name="authorInstitutionRorIds[]"]').getAttribute('id');
