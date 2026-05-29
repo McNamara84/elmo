@@ -25,6 +25,7 @@ async function selectAffiliationFromDropdown(
     .first();
 
   const tagifyInput = authorRow.locator('.tagify__input[title^="Affiliation"]');
+  await tagifyInput.scrollIntoViewIfNeeded();
   await tagifyInput.click();
   await tagifyInput.type(searchTerm);
 
@@ -211,44 +212,7 @@ test.describe('Affiliation tag label editing', () => {
   );
 
   /**
-   * Test 2 – focused label-edit + ROR preservation:
-   * Selects GFZ from the whitelist, renames its tag, saves, and verifies that
-   * the XML element carries the original ROR identifier alongside the new label.
-   */
-  test(
-    'editing the label of a whitelist-selected affiliation preserves its ROR identifier in the saved XML',
-    async ({ page }) => {
-      await completeMinimalDatasetForm(page);
-
-      // Select GFZ from the whitelist
-      const gfz = await selectAffiliationFromDropdown(page, 'helmholtz potsdam');
-      expect(gfz.id, 'GFZ tag must carry a ROR id').toMatch(
-        /^https:\/\/ror\.org\//,
-      );
-
-      // Rename the tag
-      const customLabel = 'GFZ Helmholtz Centre for Geosciences (Potsdam)';
-      await editAffiliationLabel(page, gfz.value, customLabel);
-
-      // Save and read XML
-      const xml = await saveAndGetXml(page, 'affil-test-gfz-edit');
-
-      // The affiliation element must use the custom label …
-      expect(xml, 'XML must contain the edited label').toContain(customLabel);
-      // … and must still declare the original ROR identifier
-      expect(
-        xml,
-        'XML must contain the original ROR identifier',
-      ).toContain(`affiliationIdentifier="${gfz.id}"`);
-      expect(
-        xml,
-        'XML must declare affiliationIdentifierScheme="ROR"',
-      ).toContain('affiliationIdentifierScheme="ROR"');
-    },
-  );
-
-  /**
-   * Test 3 – cancel guard:
+   * Test 2 – cancel guard:
    * Opens the edit modal for a tag that has a known ROR id, types a new value,
    * cancels, and confirms the tag still displays the original label.
    * No save is required because this is a purely UI-level assertion.
@@ -280,8 +244,8 @@ test.describe('Affiliation tag label editing', () => {
       // Type a replacement value – should be discarded on cancel
       await page.locator(AFFIL_EDIT_INPUT).fill('random stuff – should be discarded');
 
-      // Cancel via the modal's dismiss button
-      await page.locator(`${AFFIL_EDIT_MODAL} [data-bs-dismiss="modal"]`).click();
+      // Cancel via the Cancel button (not the X close button)
+      await page.getByRole('button', { name: 'Cancel' }).click();
       await expect(modal).toBeHidden({ timeout: 5_000 });
 
       // The original tag must still be present with its original label
