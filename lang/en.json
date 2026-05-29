@@ -115,6 +115,10 @@
         "addInstitution": "Add institution",
         "dragHandle": "Drag & drop to change order",
         "removeEntry": "Remove author entry",
+        "editEntry": "Edit author entry",
+        "collapseEntry": "Collapse author entry",
+        "moveEntryUp": "Move author up",
+        "moveEntryDown": "Move author down",
         "authorSingular": "author",
         "authorPlural": "authors",
         "entrySingular": "entry",
@@ -135,6 +139,7 @@
         "affiliationSearch": "Search affiliation",
         "affiliationMoveUp": "Move affiliation up",
         "affiliationMoveDown": "Move affiliation down",
+        "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."

@@ -116,6 +116,10 @@
         "addInstitution": "Institution hinzufügen",
         "dragHandle": "Reihenfolge per Drag & Drop ändern",
         "removeEntry": "Autoreneintrag entfernen",
+        "editEntry": "Autoreneintrag bearbeiten",
+        "collapseEntry": "Autoreneintrag einklappen",
+        "moveEntryUp": "Autoreneintrag nach oben verschieben",
+        "moveEntryDown": "Autoreneintrag nach unten verschieben",
         "authorSingular": "Autoreneintrag",
         "authorPlural": "Autoreneinträge",
         "entrySingular": "Eintrag",
@@ -136,6 +140,7 @@
         "affiliationSearch": "Affiliation suchen",
         "affiliationMoveUp": "Affiliation nach oben verschieben",
         "affiliationMoveDown": "Affiliation nach unten verschieben",
+        "affiliationRorId": "ROR-ID",
         "affiliationRemove": "Affiliation entfernen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."

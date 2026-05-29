@@ -234,6 +234,13 @@ describe('authorStack.js', () => {
     expect(personCard.find('[data-author-contact-badge]').text()).toMatch(/contact person/i);
     expect(personCard.find('[data-author-contact-toggle]').text()).toMatch(/contact person/i);
     expect(personCard.find('[data-author-actions] [data-author-toggle-edit]').length).toBe(1);
+    expect(personCard.attr('role')).toBe('group');
+    expect(personCard.attr('aria-labelledby')).toContain(personCard.find('[data-author-summary-name]').attr('id'));
+    expect(personCard.attr('aria-labelledby')).toContain(personCard.find('[data-author-type-badge]').attr('id'));
+    expect(personCard.find('[data-author-toggle-edit]').attr('aria-controls')).toBe(personCard.find('[data-author-edit-panel]').attr('id'));
+    expect(personCard.find('[data-author-toggle-edit]').attr('aria-expanded')).toBe('true');
+    expect(personCard.find('[data-author-actions] [data-author-move-up]').length).toBe(1);
+    expect(personCard.find('[data-author-actions] [data-author-move-down]').length).toBe(1);
     expect(personCard.find('[data-author-actions] [data-author-remove]').length).toBe(1);
     expect(personCard.find('[data-author-edit-panel].collapse').length).toBe(1);
     expect(personCard.find('[data-author-type-switcher]').length).toBe(1);
@@ -247,6 +254,26 @@ describe('authorStack.js', () => {
     expect(institutionCard.find('[data-author-contact-toggle]').length).toBe(0);
     expect(institutionCard.find('[data-author-type-option="institution"]').hasClass('active')).toBe(true);
     expect(institutionCard.find('[data-author-type-option="person"]').prop('disabled')).toBe(true);
+  });
+
+  test('moves author cards with keyboard-friendly action buttons', () => {
+    window.authorStack.setAuthors([
+      { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+      { type: 'institution', institutionname: 'European Plate Observatory', affiliations: [] }
+    ]);
+
+    const initialCards = $('[data-author-card]');
+    expect(initialCards.eq(0).find('[data-author-move-up]').prop('disabled')).toBe(true);
+    expect(initialCards.eq(1).find('[data-author-move-down]').prop('disabled')).toBe(true);
+
+    initialCards.eq(1).find('[data-author-move-up]').trigger('click');
+
+    const reorderedCards = $('[data-author-card]');
+    expect(payload().map((author) => author.type)).toEqual(['institution', 'person']);
+    expect(reorderedCards.eq(0).attr('data-author-entry-type')).toBe('institution');
+    expect(reorderedCards.eq(0).find('[data-author-move-up]').prop('disabled')).toBe(true);
+    expect(reorderedCards.eq(1).find('[data-author-move-down]').prop('disabled')).toBe(true);
+    expect(document.activeElement).toBe(reorderedCards.eq(0).find('[data-author-move-down]').get(0));
   });
 
   test('switches empty cards between person and institution without discarding filled entries', () => {
@@ -340,6 +367,7 @@ describe('authorStack.js', () => {
     expect(editor.length).toBe(1);
     expect(editor.find('[data-author-affiliation-chip]').length).toBe(2);
     expect(editor.find('[data-author-affiliation-chip]').first().find('[data-author-affiliation-ror]').text()).toBe('04z8jg394');
+    expect(editor.find('[data-author-affiliation-chip]').first().find('[data-author-affiliation-ror]').attr('aria-label')).toContain('04z8jg394');
 
     editor.find('[data-author-affiliation-label]').first()
       .val('GFZ Helmholtz Centre for Geosciences, Potsdam, Germany')

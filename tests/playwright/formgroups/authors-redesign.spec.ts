@@ -23,10 +23,14 @@ test.describe('Authors redesign workflow', () => {
     await expect(authorsFormGroup.locator('[data-author-summary-count]')).toContainText(/entry|entries/i);
     await expect(authorsFormGroup.locator('[data-author-contact-summary]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-summary]')).toContainText('Carberry');
+    await expect(personCard).toHaveAttribute('role', 'group');
+    await expect(personCard).toHaveAttribute('aria-labelledby', /summary-name/);
     await expect(personCard.locator('[data-author-type-badge]')).toContainText(/person/i);
     await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-contact-toggle]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-actions]')).toBeVisible();
+    await expect(personCard.locator('[data-author-move-up]')).toBeVisible();
+    await expect(personCard.locator('[data-author-move-down]')).toBeVisible();
     await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/collapse/);
     await expect(personCard.locator('[data-author-type-switcher]')).toBeVisible();
     await expect(personCard.locator('[data-author-type-option="person"]')).toHaveClass(/active/);

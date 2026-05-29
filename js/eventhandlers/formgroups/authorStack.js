@@ -101,7 +101,10 @@ $(document).ready(function () {
 
   function createCardRemoveButton() {
     const button = createRemoveButton();
-    button.attr('data-author-remove', '').addClass('btn-sm').removeAttr('style');
+    button.attr({
+      'data-author-remove': '',
+      'aria-label': translate('authors.removeEntry', 'Remove author entry')
+    }).addClass('btn-sm').removeAttr('style');
     button.html('<i class="bi bi-x-lg" aria-hidden="true"></i>');
     return button;
   }
@@ -205,7 +208,9 @@ $(document).ready(function () {
     editPanel.toggleClass('show', isExpanded).attr('aria-hidden', isExpanded ? 'false' : 'true');
     toggle.attr({
       'aria-expanded': isExpanded ? 'true' : 'false',
-      'aria-label': isExpanded ? 'Collapse author entry' : 'Edit author entry'
+      'aria-label': isExpanded
+        ? translate('authors.collapseEntry', 'Collapse author entry')
+        : translate('authors.editEntry', 'Edit author entry')
     });
     toggle.find('i')
       .toggleClass('bi-pencil', !isExpanded)
@@ -238,6 +243,8 @@ $(document).ready(function () {
     row.removeClass('row g-1 p-2').addClass('d-flex align-items-stretch border rounded bg-body overflow-hidden');
 
     const editPanelId = getEditPanelId(row);
+    const summaryNameId = `${editPanelId}-summary-name`;
+    const typeBadgeId = `${editPanelId}-type`;
     const dragButton = row.find('.drag-handle').first().detach();
     let dragZone = row.children('[data-author-drag-zone]').first().detach();
     if (!dragZone.length) {
@@ -252,10 +259,16 @@ $(document).ready(function () {
       actions = $('<div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary" data-author-actions></div>');
     }
     if (!actions.find('[data-author-toggle-edit]').length) {
-      actions.append(createActionButton('data-author-toggle-edit', 'bi-pencil', 'Edit author entry').attr({
+      actions.append(createActionButton('data-author-toggle-edit', 'bi-pencil', translate('authors.editEntry', 'Edit author entry')).attr({
         'aria-controls': editPanelId,
         'aria-expanded': 'true'
       }));
+    }
+    if (!actions.find('[data-author-move-up]').length) {
+      actions.append(createActionButton('data-author-move-up', 'bi-chevron-up', translate('authors.moveEntryUp', 'Move author up')));
+    }
+    if (!actions.find('[data-author-move-down]').length) {
+      actions.append(createActionButton('data-author-move-down', 'bi-chevron-down', translate('authors.moveEntryDown', 'Move author down')));
     }
     if (!actions.find('[data-author-remove]').length) {
       actions.append(createCardRemoveButton());
@@ -276,6 +289,13 @@ $(document).ready(function () {
     }
 
     row.empty().append(dragZone, content, actions);
+    row.attr({
+      role: 'group',
+      'aria-labelledby': `${summaryNameId} ${typeBadgeId}`
+    });
+    row.find('[data-author-summary-name]').first().attr('id', summaryNameId);
+    row.find('[data-author-type-badge]').first().attr('id', typeBadgeId);
+    row.find('[data-author-edit-panel]').first().attr('aria-labelledby', summaryNameId);
     const contactToggle = row.find('label[for^="checkbox-author-contactperson"]');
     if (type === 'person') {
       contactToggle.attr('data-author-contact-toggle', '');
@@ -684,6 +704,7 @@ $(document).ready(function () {
       .attr('aria-label', translate('authors.affiliationEdit', 'Edit affiliation'))
       .val(label);
     const rorSegment = $('<span class="input-group-text small" data-author-affiliation-ror></span>')
+      .attr('aria-label', rorId ? `${translate('authors.affiliationRorId', 'ROR ID')} ${rorId}` : translate('authors.affiliationRorId', 'ROR ID'))
       .toggleClass('d-none', rorId === '')
       .text(rorId);
     const remove = $('<button type="button" class="btn btn-outline-danger" data-author-affiliation-remove></button>')
@@ -966,6 +987,8 @@ $(document).ready(function () {
       'entry',
       'entries'
     ));
+    summaryCount.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
+    contactSummary.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
 
     if (contactCount > 0) {
       contactSummary
@@ -1058,10 +1081,53 @@ $(document).ready(function () {
     updateTypeSwitcher(row);
   }
 
+  function updateReorderControls() {
+    const rows = stack.children('[data-author-entry-row]');
+    rows.each(function (index) {
+      const row = $(this);
+      const isFirst = index === 0;
+      const isLast = index === rows.length - 1;
+      row.find('[data-author-move-up]')
+        .prop('disabled', isFirst)
+        .attr('aria-disabled', isFirst ? 'true' : 'false')
+        .attr('aria-label', translate('authors.moveEntryUp', 'Move author up'));
+      row.find('[data-author-move-down]')
+        .prop('disabled', isLast)
+        .attr('aria-disabled', isLast ? 'true' : 'false')
+        .attr('aria-label', translate('authors.moveEntryDown', 'Move author down'));
+    });
+  }
+
+  function moveEntry(row, direction) {
+    const target = direction < 0
+      ? row.prev('[data-author-entry-row]')
+      : row.next('[data-author-entry-row]');
+
+    if (!target.length) {
+      return;
+    }
+
+    if (direction < 0) {
+      target.before(row);
+    } else {
+      target.after(row);
+    }
+
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    updatePayload();
+    const preferredButton = row.find(direction < 0 ? '[data-author-move-up]' : '[data-author-move-down]');
+    const fallbackButton = row.find(direction < 0 ? '[data-author-move-down]' : '[data-author-move-up]');
+    const focusButton = preferredButton.prop('disabled') ? fallbackButton : preferredButton;
+    focusButton.trigger('focus');
+  }
+
   function updatePayload() {
     stack.children('[data-author-entry-row]').each(function () {
       renderEntrySummary($(this));
     });
+    updateReorderControls();
     const payload = collectPayload();
     payloadInput.val(JSON.stringify(payload));
     updateSummary(payload);
@@ -1129,6 +1195,16 @@ $(document).ready(function () {
 
     const row = button.closest('[data-author-entry-row]');
     switchEntryType(row, button.attr('data-author-type-option'));
+  });
+
+  stack.on('click', '[data-author-move-up], [data-author-move-down]', function (event) {
+    event.preventDefault();
+    const button = $(this);
+    if (button.prop('disabled')) {
+      return;
+    }
+
+    moveEntry(button.closest('[data-author-entry-row]'), button.is('[data-author-move-up]') ? -1 : 1);
   });
 
   stack.on('input', '[data-author-affiliation-label]', function () {
