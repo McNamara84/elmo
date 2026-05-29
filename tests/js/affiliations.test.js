@@ -14,7 +14,11 @@ class MockTagify {
     this.settings = options;
     this.whitelist = options.whitelist || [];
     this.value = [];
-    this.DOM = { input: { style: { width: '' } } };
+    const scopeEl = document.createElement('div');
+    this.DOM = { 
+      input: { style: { width: '' } },
+      scope: scopeEl
+    };
     this.dropdown = { hide: jest.fn(), show: jest.fn() };
     this._callbacks = {};
   }
