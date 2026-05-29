@@ -105,9 +105,9 @@ test.describe('JSON-LD roundtrip flow', () => {
     const titleField = page.locator('input[name="title[]"]').first();
     await expect(titleField).toHaveValue('A dataset', { timeout: 20000 });
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('2025');
-    await expect(page.locator('#input-author-orcid')).toHaveValue('0000-0002-1825-0097');
-    await expect(page.locator('#input-author-firstname')).toHaveValue('Josiah');
-    await expect(page.locator('#input-author-lastname')).toHaveValue('Carberry');
+    await expect(page.locator('input[name="orcids[]"]').first()).toHaveValue('0000-0002-1825-0097');
+    await expect(page.locator('input[name="givennames[]"]').first()).toHaveValue('Josiah');
+    await expect(page.locator('input[name="familynames[]"]').first()).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'Abstract*' })).toHaveValue('Necessary abstract');
     await expect(page.getByRole('textbox', { name: 'Date created*' })).toHaveValue('2025-01-01');
 

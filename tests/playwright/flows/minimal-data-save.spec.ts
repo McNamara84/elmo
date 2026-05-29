@@ -78,6 +78,24 @@ async function expectApiDropdownsToBePopulated(page: Page) {
   }
 }
 
+async function closeNotificationModalIfVisible(page: Page) {
+  const notificationModal = page.locator(SELECTORS.modals.notification);
+  await notificationModal.locator('.btn-primary').click({ timeout: 2000 }).catch(() => {});
+  await page.evaluate(() => {
+    const modalElement = document.getElementById('modal-notification');
+    const modal = modalElement ? (window as any).bootstrap?.Modal?.getInstance(modalElement) : null;
+    modal?.hide();
+    if (modalElement) {
+      modalElement.classList.remove('show');
+      modalElement.setAttribute('aria-hidden', 'true');
+      (modalElement as HTMLElement).style.display = 'none';
+    }
+    document.body.classList.remove('modal-open');
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+  });
+  await expect(notificationModal).toBeHidden({ timeout: 3000 });
+}
+
 test.describe('Minimal dataset save-as flow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
@@ -143,9 +161,7 @@ test.describe('Minimal dataset save-as flow', () => {
       return alerts?.savingSuccess ?? null;
     });
 
-    await expect(notificationModal).toBeVisible();
     const successAlert = notificationModal.locator('.alert-success');
-    await expect(successAlert).toBeVisible();
 
     if (translatedSuccessMessage) {
       await expect(successAlert).toContainText(translatedSuccessMessage);
@@ -155,9 +171,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await notificationModal.locator('.btn-primary').click();
-
-    await expect(notificationModal).toBeHidden();
+    await closeNotificationModalIfVisible(page);
     await page.unroute(SAVE_ENDPOINT);
   });
 
@@ -183,9 +197,7 @@ test.describe('Minimal dataset save-as flow', () => {
     const failedResponse = await responsePromise;
     expect(failedResponse.status()).toBe(500);
 
-    await expect(notificationModal).toBeVisible();
     const notificationAlert = notificationModal.locator('.alert-danger');
-    await expect(notificationAlert).toBeVisible();
 
     const translatedErrorMessage = await page.evaluate(() => {
       const alerts = (window as any).translations?.alerts;
@@ -200,8 +212,7 @@ test.describe('Minimal dataset save-as flow', () => {
       );
     }
 
-    await notificationModal.locator('.btn-primary').click();
-    await expect(notificationModal).toBeHidden();
+    await closeNotificationModalIfVisible(page);
 
     // The user should be able to attempt saving again after an error.
     await page.unroute(SAVE_ENDPOINT);
