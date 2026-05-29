@@ -223,8 +223,8 @@ describe('affiliations.js', () => {
    * Ensures refreshTagifyInstances updates placeholder and keeps tags.
    */
   test('refreshTagifyInstances updates placeholder and keeps tags', () => {
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
-    const input = document.getElementById('input-author-affiliation');
+    autocompleteAffiliations('input-contributorpersons-affiliation', 'input-contributor-personrorid');
+    const input = document.getElementById('input-contributorpersons-affiliation');
     input._tagify.addTags({ value: 'First', id: '1' });
 
     global.translations = { general: { affiliation: 'Zugehörigkeit' } };

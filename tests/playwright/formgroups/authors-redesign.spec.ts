@@ -89,7 +89,7 @@ test.describe('Authors redesign workflow', () => {
     });
 
     await moveEntryBefore(page, institutionRow, firstPersonRow);
-  await expect.poll(() => getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
+    await expect.poll(() => getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
 
     await runAxeAudit(page, {
       configure: (builder) => builder.include('#formgroup-authors'),
@@ -128,22 +128,51 @@ async function fillPerson(row: Locator, data: { familyName: string; givenName: s
 }
 
 async function setStructuredAffiliation(input: Locator, tag: { value: string; rorId: string }) {
-  await expect.poll(
-    () => input.evaluate((element: HTMLInputElement & { _tagify?: unknown }) => Boolean(element._tagify)),
-    { timeout: 10000 },
-  ).toBe(true);
+  const row = input.locator('xpath=ancestor::*[@data-author-entry-row][1]');
+  const editor = row.locator('[data-author-affiliation-editor]');
+  await expect(editor).toBeVisible();
 
-  await input.evaluate((element: HTMLInputElement & { _tagify?: any }, structuredTag) => {
-    element._tagify.removeAllTags();
-    element._tagify.addTags([structuredTag]);
+  if (await editor.locator('[data-author-affiliation-chip]').count() === 0) {
+    await editor.locator('[data-author-affiliation-input]').fill(tag.value);
+    await editor.locator('[data-author-affiliation-add]').click();
+  }
+
+  await input.evaluate((element: HTMLInputElement, structuredTag) => {
+    const rowElement = element.closest('[data-author-entry-row]');
+    const rorInput = rowElement?.querySelector('input[name="authorPersonRorIds[]"], input[name="authorInstitutionRorIds[]"]') as HTMLInputElement | null;
+    const chip = rowElement?.querySelector('[data-author-affiliation-chip]') as HTMLElement | null;
+    const labelInput = chip?.querySelector('[data-author-affiliation-label]') as HTMLInputElement | null;
+    const rorSegment = chip?.querySelector('[data-author-affiliation-ror]') as HTMLElement | null;
+    const tagValue = {
+      value: structuredTag.value,
+      label: structuredTag.value,
+      rorId: structuredTag.rorId,
+      id: structuredTag.rorId,
+    };
+
+    element.value = JSON.stringify([tagValue]);
+    rorInput && (rorInput.value = structuredTag.rorId);
+    if (chip) {
+      chip.setAttribute('data-author-affiliation-ror-id', structuredTag.rorId);
+    }
+    if (labelInput) {
+      labelInput.value = structuredTag.value;
+    }
+    if (rorSegment) {
+      rorSegment.textContent = structuredTag.rorId;
+      rorSegment.classList.remove('d-none');
+    }
+
+    element.dispatchEvent(new Event('input', { bubbles: true }));
     element.dispatchEvent(new Event('change', { bubbles: true }));
     (window as any).authorStack?.updatePayload?.();
   }, tag);
 
   await expect.poll(
-    () => input.evaluate((element: HTMLInputElement & { _tagify?: { value?: unknown[] } }) => element._tagify?.value?.length ?? 0),
+    () => input.evaluate((element: HTMLInputElement) => JSON.parse(element.value || '[]').length),
     { timeout: 5000 },
   ).toBe(1);
+  await expect(editor.locator('[data-author-affiliation-ror]').first()).toHaveText(tag.rorId);
 }
 
 async function moveEntryBefore(page: Page, sourceRow: Locator, targetRow: Locator) {

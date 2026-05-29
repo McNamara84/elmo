@@ -444,23 +444,11 @@ async function addAuthor(
   await firstNameField.fill(data.firstName);
   await expect(firstNameField).toHaveValue(data.firstName);
 
-  // Add affiliation tag via Tagify API directly (more reliable than type+Enter
-  // because Tagify's async API search can block Enter key processing during loading state)
-  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
-  await expect(async () => {
-    const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
-    expect(hasTagify).toBe(true);
-  }).toPass({ timeout: 10000 });
-
-  await affiliationInput.evaluate((el: any, affiliation: string) => {
-    el._tagify.addTags([{ value: affiliation }]);
-  }, data.affiliation);
-
-  // Wait for the tagify tag element to appear in the DOM
-  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
-
-  // Brief settle time so the next addAuthor call doesn't race with Tagify rendering
-  await page.waitForTimeout(200);
+  const affiliationEditor = authorRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 export { exampleData };
 

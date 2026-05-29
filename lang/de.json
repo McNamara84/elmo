@@ -123,8 +123,12 @@
         "contactRequired": "mindestens 1 Kontakt erforderlich",
         "entriesSummary": "{count} {label}",
         "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
         "affiliationAdd": "Affiliation hinzufügen",
         "affiliationEdit": "Affiliation bearbeiten",
+        "affiliationSearch": "Affiliation suchen",
+        "affiliationMoveUp": "Affiliation nach oben verschieben",
+        "affiliationMoveDown": "Affiliation nach unten verschieben",
         "affiliationRemove": "Affiliation entfernen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."

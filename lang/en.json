@@ -122,8 +122,12 @@
         "contactRequired": "at least 1 contact required",
         "entriesSummary": "{count} {label}",
         "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
         "affiliationAdd": "Add affiliation",
         "affiliationEdit": "Edit affiliation",
+        "affiliationSearch": "Search affiliation",
+        "affiliationMoveUp": "Move affiliation up",
+        "affiliationMoveDown": "Move affiliation down",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."

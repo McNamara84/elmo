@@ -34,8 +34,6 @@ async function searchAffiliationsFromServer(query, limit = 20) {
  */
 function refreshTagifyInstances() {
   const allPairs = [
-    { input: "input-author-affiliation", hidden: "input-author-rorid" },
-    { input: "input-authorinstitution-affiliation", hidden: "input-author-institutionrorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
     { input: "input-contributorpersons-affiliation", hidden: "input-contributor-personrorid" },
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
@@ -74,8 +72,6 @@ function refreshTagifyInstances() {
  * Uses server-side search instead of loading the full JSON file.
  */
 $(document).ready(function () {
-  autocompleteAffiliations("input-author-affiliation", "input-author-rorid");
-  autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid");
   autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
   autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
   document.addEventListener('translationsLoaded', refreshTagifyInstances);

@@ -154,11 +154,8 @@ describe('authorStack.js', () => {
 
     expect($('[data-authorinstitution-row]').length).toBe(2);
     expect($('[data-authorinstitution-row]').last().find('.removeButton').length).toBe(1);
-    expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      expect.stringMatching(/^input-authorinstitution-affiliation-/),
-      expect.stringMatching(/^input-author-institutionrorid-/),
-      window.affiliationsData
-    );
+    expect($('[data-authorinstitution-row]').last().find('[data-author-affiliation-editor]').length).toBe(1);
+    expect(window.autocompleteAffiliations).not.toHaveBeenCalled();
 
     $('[data-authorinstitution-row]').last().find('.removeButton').trigger('click');
     expect($('[data-authorinstitution-row]').length).toBe(1);
