@@ -84,7 +84,7 @@ $(document).ready(function () {
         </span>
         <strong class="me-1" data-author-summary-name></strong>
         <span class="badge text-bg-light border text-uppercase" data-author-type-badge></span>
-        <span class="badge text-bg-warning d-none" data-author-contact-badge>Contact</span>
+        <span class="badge text-bg-warning d-none" data-author-contact-badge></span>
         <span class="small text-body-secondary" data-author-summary-orcid></span>
         <span class="d-flex flex-wrap gap-1" data-author-summary-affiliations></span>
       </div>`
@@ -217,6 +217,17 @@ $(document).ready(function () {
       .toggleClass('bi-chevron-up', isExpanded);
   }
 
+  function updateCardActionLabels(row) {
+    const isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
+    row.find('[data-author-toggle-edit]').first().attr(
+      'aria-label',
+      isExpanded
+        ? translate('authors.collapseEntry', 'Collapse author entry')
+        : translate('authors.editEntry', 'Edit author entry')
+    );
+    row.find('[data-author-remove]').first().attr('aria-label', translate('authors.removeEntry', 'Remove author entry'));
+  }
+
   function focusFirstEditableField(row) {
     const preferredInput = row.is('[data-authorinstitution-row]')
       ? row.find('input[name="authorinstitutionName[]"]').first()
@@ -296,6 +307,7 @@ $(document).ready(function () {
     row.find('[data-author-summary-name]').first().attr('id', summaryNameId);
     row.find('[data-author-type-badge]').first().attr('id', typeBadgeId);
     row.find('[data-author-edit-panel]').first().attr('aria-labelledby', summaryNameId);
+    updateCardActionLabels(row);
     const contactToggle = row.find('label[for^="checkbox-author-contactperson"]');
     if (type === 'person') {
       contactToggle.attr('data-author-contact-toggle', '');
@@ -1070,7 +1082,7 @@ $(document).ready(function () {
     }
 
     const orcid = String(row.find('input[name="orcids[]"]').val() || '').trim();
-    summary.find('[data-author-summary-orcid]').text(orcid ? `ORCID ${orcid}` : '');
+    summary.find('[data-author-summary-orcid]').text(orcid ? `${translate('general.orcid', 'ORCID')} ${orcid}` : '');
 
     const affiliationName = isPerson ? 'personAffiliation[]' : 'institutionAffiliation[]';
     const rorName = isPerson ? 'authorPersonRorIds[]' : 'authorInstitutionRorIds[]';
@@ -1302,9 +1314,12 @@ $(document).ready(function () {
   document.addEventListener('translationsLoaded', function () {
     stack.children('[data-author-entry-row]').each(function () {
       const row = $(this);
+      setupContactFields(row);
       renderEntrySummary(row);
       renderAffiliationEditor(row);
+      updateCardActionLabels(row);
     });
+    updateReorderControls();
     updateSummary(collectPayload());
   });
 

@@ -105,7 +105,7 @@
         "licenseTitle": "License"
     },
     "authors": {
-        "title": "Author: Persons",
+        "title": "Authors",
         "stackTitle": "Authors",
         "person": "Person",
         "institution": "Institution",
@@ -136,7 +136,7 @@
         "affiliations": "Affiliations",
         "affiliationAdd": "Add affiliation",
         "affiliationEdit": "Edit affiliation",
-        "affiliationSearch": "Search affiliation",
+        "affiliationSearch": "Search ROR affiliation",
         "affiliationMoveUp": "Move affiliation up",
         "affiliationMoveDown": "Move affiliation down",
         "affiliationRorId": "ROR ID",

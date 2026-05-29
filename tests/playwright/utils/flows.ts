@@ -24,7 +24,9 @@ export async function completeMinimalDatasetForm(page: Page) {
     affiliation: 'GFZ Helmholtz Centre for Geosciences',
   });
 
-  await page.getByText('ContactPerson?').click();
+  const contactToggle = page.locator(`${SELECTORS.formGroups.authors} [data-author-contact-toggle]`).first();
+  await expect(contactToggle).toBeVisible();
+  await contactToggle.click();
 
   const emailField = page.getByRole('textbox', { name: 'Email address*' });
   await expect(emailField).toBeVisible();

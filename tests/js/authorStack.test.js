@@ -131,6 +131,13 @@ describe('authorStack.js', () => {
         'authors.authorPlural': 'Einträge',
         'authors.entrySingular': 'Eintrag',
         'authors.entryPlural': 'Einträge',
+        'authors.typeSwitcherLabel': 'Autorentyp',
+        'authors.typeSwitchLocked': 'Der Typ kann nur geändert werden, solange dieser Eintrag leer ist.',
+        'authors.editEntry': 'Autoreneintrag bearbeiten',
+        'authors.collapseEntry': 'Autoreneintrag einklappen',
+        'authors.removeEntry': 'Autoreneintrag entfernen',
+        'authors.moveEntryUp': 'Autoreneintrag nach oben verschieben',
+        'authors.moveEntryDown': 'Autoreneintrag nach unten verschieben',
         'authors.contactSingular': 'Kontakt',
         'authors.contactPlural': 'Kontakte',
         'authors.contactPersonSingular': 'Kontaktperson',
@@ -140,13 +147,30 @@ describe('authorStack.js', () => {
         'authors.markAsContact': 'Als Kontakt markieren',
         'authors.contactRequired': 'mindestens 1 Kontakt erforderlich',
         'authors.entriesSummary': '{count} {label}',
-        'authors.contactsSummary': '{count} {label}'
+        'authors.contactsSummary': '{count} {label}',
+        'authors.affiliations': 'Affiliations',
+        'authors.affiliationAdd': 'Affiliation hinzufügen',
+        'authors.affiliationEdit': 'Affiliation bearbeiten',
+        'authors.affiliationSearch': 'Affiliation in ROR suchen',
+        'authors.affiliationMoveUp': 'Affiliation nach oben verschieben',
+        'authors.affiliationMoveDown': 'Affiliation nach unten verschieben',
+        'authors.affiliationRorId': 'ROR-ID',
+        'authors.affiliationRemove': 'Affiliation entfernen',
+        'general.affiliation': 'Affiliation',
+        'general.orcid': 'ORCID'
       })[key])
     };
 
     document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations: {} } }));
     expect($('[data-author-summary-count]').text()).toBe('0 Einträge');
     expect($('[data-author-contact-summary]').text()).toBe('mindestens 1 Kontakt erforderlich');
+    expect($('[data-author-contact-toggle]').first().text()).toContain('Als Kontakt markieren');
+    expect($('[data-author-toggle-edit]').first().attr('aria-label')).toBe('Autoreneintrag einklappen');
+    expect($('[data-author-remove]').first().attr('aria-label')).toBe('Autoreneintrag entfernen');
+    expect($('[data-author-move-down]').first().attr('aria-label')).toBe('Autoreneintrag nach unten verschieben');
+    expect($('[data-author-type-switcher] [role="group"]').first().attr('aria-label')).toBe('Autorentyp');
+    expect($('[data-author-affiliation-search]').first().attr('aria-label')).toBe('Affiliation in ROR suchen');
+    expect($('[data-author-affiliation-add-label]').first().text()).toBe('Affiliation hinzufügen');
 
     $('#input-author-lastname').val('Doe').trigger('input');
     $('#input-author-firstname').val('Jane').trigger('input');
