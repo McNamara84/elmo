@@ -58,6 +58,14 @@ footer.fixed-bottom {
     border: 0;
 }
 
+footer.fixed-bottom {
+    background: transparent;
+}
+
+body {
+    padding-bottom: 140px;
+}
+
 /* Feedback Button */
 .feedback-button {
     --bs-btn-color: #ffffff;
