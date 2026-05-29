@@ -31,6 +31,9 @@ function clearInputFields() {
     const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="personAffiliation[]"]')[0];
     if (firstAffiliationTagify && firstAffiliationTagify._tagify) {
         firstAffiliationTagify._tagify.removeAllTags();
+        if (typeof firstAffiliationTagify._tagify._updateHiddenField === 'function') {
+            firstAffiliationTagify._tagify._updateHiddenField();
+        }
     }
 
     // Removes all author-institution lines except the first one
@@ -42,6 +45,9 @@ function clearInputFields() {
     const firstInstitutionAffiliationTagify = $('div[data-authorinstitution-row]:first').find('input[name="institutionAffiliation[]"]')[0];
     if (firstInstitutionAffiliationTagify && firstInstitutionAffiliationTagify._tagify) {
         firstInstitutionAffiliationTagify._tagify.removeAllTags();
+        if (typeof firstInstitutionAffiliationTagify._tagify._updateHiddenField === 'function') {
+            firstInstitutionAffiliationTagify._tagify._updateHiddenField();
+        }
     }
 
 
@@ -83,6 +89,9 @@ function clearInputFields() {
         const tagifyInput = document.querySelector(selector);
         if (tagifyInput && tagifyInput._tagify) {
             tagifyInput._tagify.removeAllTags();
+            if (typeof tagifyInput._tagify._updateHiddenField === 'function') {
+                tagifyInput._tagify._updateHiddenField();
+            }
         }
     });
   
