@@ -11,6 +11,8 @@ $(document).ready(function () {
   const payloadInput = $('input[name="authorsPayload"]').first();
   const summaryCount = $('[data-author-summary-count]').first();
   const contactSummary = $('[data-author-contact-summary]').first();
+  const shell = stack.closest('[data-author-stack-shell]');
+  const eventRoot = shell.length ? shell : stack;
 
   if (!stack.length || !payloadInput.length) {
     return;
@@ -29,6 +31,123 @@ $(document).ready(function () {
 
   function normalizeBaseId(id) {
     return id ? id.replace(/-\d+$/, '') : id;
+  }
+
+  function getEntryType(row) {
+    return row.is('[data-authorinstitution-row]') || row.attr('data-author-entry-type') === 'institution'
+      ? 'institution'
+      : 'person';
+  }
+
+  function getEditPanelId(row) {
+    const key = row.attr('data-author-entry-key') || `author-entry-${entryIndex}`;
+    return `${key}-edit`.replace(/[^A-Za-z0-9_-]/g, '-');
+  }
+
+  function createSummary(type) {
+    const iconClass = type === 'institution' ? 'bi-building' : 'bi-person';
+    return $(
+      `<div class="d-flex flex-wrap align-items-center gap-2 p-2" data-author-summary>
+        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-body-tertiary border text-body-secondary" style="width: 2rem; height: 2rem;" data-author-avatar>
+          <i class="bi ${iconClass}" aria-hidden="true"></i>
+        </span>
+        <strong class="me-1" data-author-summary-name></strong>
+        <span class="badge text-bg-light border text-uppercase" data-author-type-badge></span>
+        <span class="badge text-bg-warning d-none" data-author-contact-badge>Contact</span>
+        <span class="small text-body-secondary" data-author-summary-orcid></span>
+        <span class="d-flex flex-wrap gap-1" data-author-summary-affiliations></span>
+      </div>`
+    );
+  }
+
+  function createActionButton(name, iconClass, label) {
+    return $(
+      `<button type="button" class="btn btn-outline-secondary btn-sm" ${name} aria-label="${label}">
+        <i class="bi ${iconClass}" aria-hidden="true"></i>
+      </button>`
+    );
+  }
+
+  function createCardRemoveButton() {
+    const button = createRemoveButton();
+    button.attr('data-author-remove', '').addClass('btn-sm').removeAttr('style');
+    button.html('<i class="bi bi-x-lg" aria-hidden="true"></i>');
+    return button;
+  }
+
+  function ensureCardScaffold(row, type = getEntryType(row)) {
+    row.attr('data-author-card', '').attr('data-author-entry-type', type);
+    row.removeClass('row g-1 p-2').addClass('d-flex align-items-stretch border rounded bg-body overflow-hidden');
+
+    const editPanelId = getEditPanelId(row);
+    const dragButton = row.find('.drag-handle').first().detach();
+    let dragZone = row.children('[data-author-drag-zone]').first().detach();
+    if (!dragZone.length) {
+      dragZone = $('<div class="d-flex align-items-center justify-content-center px-2 border-end bg-body-tertiary" data-author-drag-zone></div>');
+    }
+    if (dragButton.length && !dragZone.find('.drag-handle').length) {
+      dragZone.empty().append(dragButton);
+    }
+
+    let actions = row.children('[data-author-actions]').first().detach();
+    if (!actions.length) {
+      actions = $('<div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary" data-author-actions></div>');
+    }
+    if (!actions.find('[data-author-toggle-edit]').length) {
+      actions.append(createActionButton('data-author-toggle-edit', 'bi-pencil', 'Edit author entry').attr({
+        'aria-controls': editPanelId,
+        'aria-expanded': 'true'
+      }));
+    }
+    if (!actions.find('[data-author-remove]').length) {
+      actions.append(createCardRemoveButton());
+    }
+
+    let content = row.children('[data-author-card-content]').first().detach();
+    if (!content.length) {
+      const fields = row.children().not('[data-author-drag-zone], [data-author-actions]').detach();
+      content = $('<div class="flex-grow-1 min-width-0" data-author-card-content></div>');
+      content.append(createSummary(type));
+      content.append(
+        $('<div class="collapse show border-top" data-author-edit-panel></div>')
+          .attr('id', editPanelId)
+          .append($('<div class="row g-1 p-2" data-author-fields></div>').append(fields))
+      );
+    } else {
+      content.find('[data-author-edit-panel]').first().attr('id', editPanelId).addClass('collapse');
+    }
+
+    row.empty().append(dragZone, content, actions);
+    const contactToggle = row.find('label[for^="checkbox-author-contactperson"]');
+    if (type === 'person') {
+      contactToggle.attr('data-author-contact-toggle', '');
+    } else {
+      contactToggle.removeAttr('data-author-contact-toggle');
+      row.find('[data-author-contact-badge]').remove();
+    }
+
+    return row;
+  }
+
+  function ensureAddActions() {
+    let addActions = shell.find('[data-author-add-actions]').first();
+    if (!addActions.length) {
+      addActions = $('<div class="d-flex flex-wrap gap-2 mt-2" data-author-add-actions></div>');
+      stack.after(addActions);
+    }
+
+    if (addActions.children().length) {
+      return;
+    }
+
+    const addPersonButton = stack.find('#button-author-add').first().detach();
+    const addInstitutionButton = stack.find('#button-authorinstitution-add').first().detach();
+    if (addPersonButton.length) {
+      addActions.append(addPersonButton);
+    }
+    if (addInstitutionButton.length) {
+      addActions.append(addInstitutionButton);
+    }
   }
 
   function updateIds(row, index) {
@@ -75,9 +194,8 @@ $(document).ready(function () {
     row.attr('data-author-entry-key', `author-${type}-${index}`);
     updateIds(row, index);
     resetRow(row);
-    if (!keepAddButton) {
-      row.find('.addAuthor, .addauthorinstitution').replaceWith(createRemoveButton());
-    }
+    row.find('.addAuthor, .addauthorinstitution').remove();
+    ensureCardScaffold(row, type);
     replaceHelpButtonInClonedRows(row);
     translateClonedRow(row);
     setupContactFields(row);
@@ -457,7 +575,52 @@ $(document).ready(function () {
     }
   }
 
+  function createAffiliationBadge(affiliation) {
+    const badge = $('<span class="badge text-bg-light border text-body-secondary"></span>');
+    const label = affiliation.label || '';
+    const rorId = normalizeRorId(affiliation.rorId || '');
+    badge.text(rorId ? `${label} ${rorId}` : label);
+    return badge;
+  }
+
+  function renderEntrySummary(row) {
+    const type = getEntryType(row);
+    const isPerson = type === 'person';
+    const familyname = String(row.find('input[name="familynames[]"]').val() || '').trim();
+    const givenname = String(row.find('input[name="givennames[]"]').val() || '').trim();
+    const institutionName = String(row.find('input[name="authorinstitutionName[]"]').val() || '').trim();
+    const name = isPerson
+      ? [givenname, familyname].filter(Boolean).join(' ')
+      : institutionName;
+    const fallbackName = isPerson ? translate('authors.person', 'Person') : translate('authors.institution', 'Institution');
+    const typeLabel = isPerson ? translate('authors.person', 'Person') : translate('authors.institution', 'Institution');
+    const summary = row.find('[data-author-summary]').first();
+
+    summary.find('[data-author-summary-name]').text(name || fallbackName);
+    summary.find('[data-author-type-badge]').text(typeLabel);
+
+    const contactBadge = summary.find('[data-author-contact-badge]');
+    if (isPerson && row.find('input[name="contacts[]"]').prop('checked') === true) {
+      contactBadge.removeClass('d-none').text(translate('authors.contactSingular', 'Contact'));
+    } else {
+      contactBadge.addClass('d-none');
+    }
+
+    const orcid = String(row.find('input[name="orcids[]"]').val() || '').trim();
+    summary.find('[data-author-summary-orcid]').text(orcid ? `ORCID ${orcid}` : '');
+
+    const affiliationName = isPerson ? 'personAffiliation[]' : 'institutionAffiliation[]';
+    const rorName = isPerson ? 'authorPersonRorIds[]' : 'authorInstitutionRorIds[]';
+    const affiliationSummary = summary.find('[data-author-summary-affiliations]').empty();
+    buildAffiliations(row, affiliationName, rorName).forEach(function (affiliation) {
+      affiliationSummary.append(createAffiliationBadge(affiliation));
+    });
+  }
+
   function updatePayload() {
+    stack.children('[data-author-entry-row]').each(function () {
+      renderEntrySummary($(this));
+    });
     const payload = collectPayload();
     payloadInput.val(JSON.stringify(payload));
     updateSummary(payload);
@@ -481,8 +644,12 @@ $(document).ready(function () {
     }
   }
 
+  ensureAddActions();
+
   stack.children('[data-author-entry-row]').each(function () {
-    setupContactFields($(this));
+    const row = $(this);
+    ensureCardScaffold(row);
+    setupContactFields(row);
   });
 
   if (typeof stack.sortable === 'function') {
@@ -497,11 +664,11 @@ $(document).ready(function () {
     });
   }
 
-  stack.on('click', '#button-author-add, [data-author-add-type="person"]', function () {
+  eventRoot.on('click', '#button-author-add, [data-author-add-type="person"]', function () {
     addRow('person');
   });
 
-  stack.on('click', '#button-authorinstitution-add, [data-author-add-type="institution"]', function () {
+  eventRoot.on('click', '#button-authorinstitution-add, [data-author-add-type="institution"]', function () {
     addRow('institution');
   });
 

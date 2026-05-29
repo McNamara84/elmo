@@ -15,7 +15,7 @@
     <input type="hidden" id="authors-payload" name="authorsPayload" value="[]">
     <div id="group-author" data-author-stack-shell>
       <div id="group-author-stack" class="d-grid gap-2" data-author-stack>
-        <div class="row g-1 border rounded p-2 bg-body" data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
+        <div class="row g-1 border rounded p-2 bg-body" data-author-card data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
         <!-- Input field ORCID Author mit Contact Person Toggle -->
         <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
           <div class="input-group has-validation">
@@ -92,9 +92,10 @@
             data-translate-title="authors.dragHandle" title="Drag & drop to change order" aria-label="Drag & drop to change order">
             <i class="bi bi-grip-vertical"></i>
           </button>
-          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-author-add-type="person"
-            data-translate="general.add" data-translate-title="authors.addPerson" title="Add person" aria-label="Add person">
-            +
+          <button type="button" class="btn btn-primary addAuthor add-button d-inline-flex align-items-center gap-1" id="button-author-add" data-author-add-type="person"
+            data-translate-title="authors.addPerson" title="Add person" aria-label="Add person">
+            <i class="bi bi-person-plus" aria-hidden="true"></i>
+            <span data-translate="authors.addPerson">Add person</span>
           </button>
         </div>
         <!-- Input field Email Address -->
@@ -141,7 +142,7 @@
         </div>
         </div>
       <?php if ($showAuthorInstitution ?? true): ?>
-        <div class="row g-1 border rounded p-2 bg-body" data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
+        <div class="row g-1 border rounded p-2 bg-body" data-author-card data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
           <!-- Input field for Institution Name -->
           <div class="col-12 col-md-5 p-1">
             <div class="input-group has-validation">
@@ -170,13 +171,17 @@
               data-translate-title="authors.dragHandle" title="Drag & drop to change order" aria-label="Drag & drop to change order">
               <i class="bi bi-grip-vertical"></i>
             </button>
-            <button type="button" class="btn btn-primary addauthorinstitution add-button"
-              id="button-authorinstitution-add" data-author-add-type="institution" data-translate="general.add"
-              data-translate-title="authors.addInstitution" title="Add institution" aria-label="Add institution">+</button>
+            <button type="button" class="btn btn-outline-secondary addauthorinstitution add-button d-inline-flex align-items-center gap-1"
+              id="button-authorinstitution-add" data-author-add-type="institution"
+              data-translate-title="authors.addInstitution" title="Add institution" aria-label="Add institution">
+              <i class="bi bi-building-add" aria-hidden="true"></i>
+              <span data-translate="authors.addInstitution">Add institution</span>
+            </button>
           </div>
         </div>
       <?php endif; ?>
       </div>
+      <div class="d-flex flex-wrap gap-2 mt-2" data-author-add-actions></div>
     </div>
   </div>
 </div>
