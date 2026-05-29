@@ -356,6 +356,11 @@
         "searchButtonTitle": "Rechercher ORCID par nom",
         "inputRequired": "Veuillez saisir au moins un prénom ou un nom."
     },
+    "affiliationEdit": {
+        "title": "Modifier l'affiliation",
+        "save": "Enregistrer",
+        "cancel": "Annuler"
+    },
     "welcome": {
         "title": "Bienvenue sur ELMO 😊",
         "paragraph1": "Bienvenue sur ELMO – le nouvel éditeur de métadonnées en ligne des GFZ Data Services.",

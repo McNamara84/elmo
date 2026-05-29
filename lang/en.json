@@ -358,6 +358,11 @@
         "searchButtonTitle": "Search ORCID by name",
         "inputRequired": "Please enter at least a first or last name."
     },
+    "affiliationEdit": {
+        "title": "Edit Affiliation",
+        "save": "Save",
+        "cancel": "Cancel"
+    },
     "welcome": {
         "title": "Welcome to ELMO 😊",
         "paragraph1": "Welcome to ELMO – the new online metadata editor for GFZ Data Services.",
