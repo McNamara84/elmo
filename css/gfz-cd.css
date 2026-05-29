@@ -617,3 +617,17 @@ header .ms-auto.d-flex {
     height: 32px;
   }
 }
+
+/* Keep ORCID buttons aligned with the input height */
+#checkbox-author-contactperson+label,
+.orcid-search-btn,
+.orcid-help-icon {
+    min-height: calc(3.5rem + 2px);
+}
+
+.orcid-search-btn,
+.orcid-help-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
