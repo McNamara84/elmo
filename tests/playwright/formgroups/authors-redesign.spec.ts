@@ -9,7 +9,39 @@ const GFZ_ROR_ID = '04z8jg394';
 test.describe('Authors redesign workflow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
-    await page.waitForSelector('[data-author-entry-row] .tagify', { timeout: 10000 });
+    await page.waitForSelector('[data-author-entry-row]', { timeout: 10000 });
+  });
+
+  test('exposes final card stack semantics for summary, edit, and action states', async ({ page }) => {
+    await completeMinimalDatasetForm(page);
+
+    const authorsGroup = page.locator(SELECTORS.formGroups.authors);
+    const personCard = authorsGroup.locator('[data-author-card][data-author-entry-type="person"]').first();
+    const institutionCard = authorsGroup.locator('[data-author-card][data-author-entry-type="institution"]').first();
+
+    await expect(personCard.locator('[data-author-summary]')).toContainText('Carberry');
+    await expect(personCard.locator('[data-author-type-badge]')).toContainText(/person/i);
+    await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact/i);
+    await expect(personCard.locator('[data-author-actions]')).toBeVisible();
+    await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/collapse/);
+
+    await expect(institutionCard.locator('[data-author-summary]')).toBeVisible();
+    await expect(institutionCard.locator('[data-author-type-badge]')).toContainText(/institution/i);
+    await expect(institutionCard.locator('[data-author-contact-badge]')).toHaveCount(0);
+    await expect(institutionCard.locator('[data-author-contact-toggle]')).toHaveCount(0);
+
+    await personCard.locator('[data-author-toggle-edit]').click();
+    await institutionCard.locator('[data-author-toggle-edit]').click();
+    await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
+    await expect(institutionCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
+
+    await page.locator('#button-author-add').click();
+    const newPersonCard = authorsGroup.locator('[data-author-card][data-author-entry-type="person"]').last();
+    await expect(newPersonCard.locator('[data-author-edit-panel]')).toHaveClass(/show/);
+
+    await runAxeAudit(page, {
+      configure: (builder) => builder.include('#formgroup-authors'),
+    });
   });
 
   test('downloads XML with mixed creator order, contact person, and edited ROR affiliation', async ({ page }) => {
@@ -38,7 +70,7 @@ test.describe('Authors redesign workflow', () => {
     });
 
     await dragEntryBefore(page, institutionRow, firstPersonRow);
-  await expect(await getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
+    await expect(await getFilledAuthorTypes(page)).toEqual(['institution', 'person', 'person']);
 
     await runAxeAudit(page, {
       configure: (builder) => builder.include('#formgroup-authors'),

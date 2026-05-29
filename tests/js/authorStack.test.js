@@ -200,4 +200,102 @@ describe('authorStack.js', () => {
     expect($('[data-author-add-type="person"]').length).toBe(1);
     expect($('[data-author-add-type="institution"]').length).toBe(1);
   });
+
+  test('renders the final card structure with summary, edit panel, and person-only contact affordances', () => {
+    window.authorStack.setAuthors([
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        orcid: '0000-0001-2345-6789',
+        isContact: true,
+        affiliations: [{ label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }]
+      },
+      {
+        type: 'institution',
+        institutionname: 'European Plate Observatory',
+        affiliations: [{ label: 'Universität Potsdam', rorId: '03bnmw459' }]
+      }
+    ]);
+
+    const cards = $('[data-author-card]');
+    expect(cards.length).toBe(2);
+
+    const personCard = cards.eq(0);
+    expect(personCard.find('[data-author-summary]').text()).toContain('Jane Doe');
+    expect(personCard.find('[data-author-type-badge]').text()).toMatch(/person/i);
+    expect(personCard.find('[data-author-contact-badge]').text()).toMatch(/contact/i);
+    expect(personCard.find('[data-author-actions] [data-author-toggle-edit]').length).toBe(1);
+    expect(personCard.find('[data-author-actions] [data-author-remove]').length).toBe(1);
+    expect(personCard.find('[data-author-edit-panel].collapse').length).toBe(1);
+
+    const institutionCard = cards.eq(1);
+    expect(institutionCard.find('[data-author-summary]').text()).toContain('European Plate Observatory');
+    expect(institutionCard.find('[data-author-type-badge]').text()).toMatch(/institution/i);
+    expect(institutionCard.find('[data-author-contact-badge]').length).toBe(0);
+    expect(institutionCard.find('[data-author-contact-toggle]').length).toBe(0);
+  });
+
+  test('keeps multiple edit panels open and opens newly added cards by default', () => {
+    window.authorStack.setAuthors([
+      { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+      { type: 'institution', institutionname: 'European Plate Observatory', affiliations: [] }
+    ]);
+
+    const cards = $('[data-author-card]');
+    cards.eq(0).find('[data-author-toggle-edit]').trigger('click');
+    cards.eq(1).find('[data-author-toggle-edit]').trigger('click');
+
+    expect(cards.eq(0).find('[data-author-edit-panel]').hasClass('show')).toBe(true);
+    expect(cards.eq(1).find('[data-author-edit-panel]').hasClass('show')).toBe(true);
+
+    window.authorStack.addPerson();
+    const newCard = $('[data-author-card]').last();
+    expect(newCard.attr('data-author-entry-type')).toBe('person');
+    expect(newCard.find('[data-author-edit-panel]').hasClass('show')).toBe(true);
+  });
+
+  test('updates payload through the dedicated authors affiliation editor', () => {
+    window.authorStack.setAuthors([
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        affiliations: [
+          { label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' },
+          { label: 'Universität Potsdam', rorId: '03bnmw459' }
+        ]
+      }
+    ]);
+
+    const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
+    expect(editor.length).toBe(1);
+    expect(editor.find('[data-author-affiliation-chip]').length).toBe(2);
+    expect(editor.find('[data-author-affiliation-chip]').first().find('[data-author-affiliation-ror]').text()).toBe('04z8jg394');
+
+    editor.find('[data-author-affiliation-label]').first()
+      .val('GFZ Helmholtz Centre for Geosciences, Potsdam, Germany')
+      .trigger('input');
+    expect(payload()[0].affiliations[0]).toEqual({
+      label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+      rorId: '04z8jg394'
+    });
+
+    editor.find('[data-author-affiliation-input]').val('Visiting researcher, ETH Zürich (2025)').trigger('input');
+    editor.find('[data-author-affiliation-add]').trigger('click');
+    expect(payload()[0].affiliations[2]).toEqual({
+      label: 'Visiting researcher, ETH Zürich (2025)',
+      rorId: ''
+    });
+
+    editor.find('[data-author-affiliation-move-down]').first().trigger('click');
+    expect(payload()[0].affiliations.map((affiliation) => affiliation.label)).toEqual([
+      'Universität Potsdam',
+      'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+      'Visiting researcher, ETH Zürich (2025)'
+    ]);
+
+    editor.find('[data-author-affiliation-remove]').last().trigger('click');
+    expect(payload()[0].affiliations).toHaveLength(2);
+  });
 });
