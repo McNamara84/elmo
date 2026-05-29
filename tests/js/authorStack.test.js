@@ -92,8 +92,9 @@ describe('authorStack.js', () => {
       cancel: 'input, textarea, select, option'
     }));
     expect(payload()).toEqual([]);
-    expect($('[data-author-summary-count]').text()).toBe('0 authors');
+    expect($('[data-author-summary-count]').text()).toBe('0 entries');
     expect($('.contact-person-input').first().css('display')).toBe('none');
+    expect($('[data-author-contact-toggle]').first().text()).toContain('Mark as contact');
   });
 
   test('builds authorsPayload in mixed person-institution-person DOM order', () => {
@@ -118,8 +119,9 @@ describe('authorStack.js', () => {
     ]);
     expect(payload()[0].isContact).toBe(true);
     expect(payload()[0].affiliations).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
-    expect($('[data-author-summary-count]').text()).toBe('3 authors');
-    expect($('[data-author-contact-summary]').text()).toBe('1 contact');
+    expect($('[data-author-summary-count]').text()).toBe('3 entries');
+    expect($('[data-author-contact-summary]').text()).toBe('1 contact person');
+    expect($('[data-author-contact-toggle]').first().text()).toContain('Contact person');
   });
 
   test('updates summary badges when translations are loaded', () => {
@@ -127,8 +129,15 @@ describe('authorStack.js', () => {
       translate: jest.fn((key) => ({
         'authors.authorSingular': 'Eintrag',
         'authors.authorPlural': 'Einträge',
+        'authors.entrySingular': 'Eintrag',
+        'authors.entryPlural': 'Einträge',
         'authors.contactSingular': 'Kontakt',
         'authors.contactPlural': 'Kontakte',
+        'authors.contactPersonSingular': 'Kontaktperson',
+        'authors.contactPersonPlural': 'Kontaktpersonen',
+        'authors.contactPersonBadge': 'Kontaktperson',
+        'authors.contactPersonLabel': 'Kontaktperson',
+        'authors.markAsContact': 'Als Kontakt markieren',
         'authors.contactRequired': 'mindestens 1 Kontakt erforderlich',
         'authors.entriesSummary': '{count} {label}',
         'authors.contactsSummary': '{count} {label}'
@@ -144,7 +153,8 @@ describe('authorStack.js', () => {
     $('#checkbox-author-contactperson').prop('checked', true).trigger('change');
 
     expect($('[data-author-summary-count]').text()).toBe('1 Eintrag');
-    expect($('[data-author-contact-summary]').text()).toBe('1 Kontakt');
+    expect($('[data-author-contact-summary]').text()).toBe('1 Kontaktperson');
+    expect($('[data-author-contact-toggle]').first().text()).toContain('Kontaktperson');
   });
 
   test('adds removable institution rows for autosave array restoration', () => {
@@ -193,7 +203,7 @@ describe('authorStack.js', () => {
       website: 'https://example.org/jane'
     }));
     expect(authors[1].affiliations).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
-    expect($('[data-author-contact-summary]').text()).toBe('1 contact');
+    expect($('[data-author-contact-summary]').text()).toBe('1 contact person');
     expect($('[data-author-add-type="person"]').length).toBe(1);
     expect($('[data-author-add-type="institution"]').length).toBe(1);
   });
@@ -221,7 +231,8 @@ describe('authorStack.js', () => {
     const personCard = cards.eq(0);
     expect(personCard.find('[data-author-summary]').text()).toContain('Jane Doe');
     expect(personCard.find('[data-author-type-badge]').text()).toMatch(/person/i);
-    expect(personCard.find('[data-author-contact-badge]').text()).toMatch(/contact/i);
+    expect(personCard.find('[data-author-contact-badge]').text()).toMatch(/contact person/i);
+    expect(personCard.find('[data-author-contact-toggle]').text()).toMatch(/contact person/i);
     expect(personCard.find('[data-author-actions] [data-author-toggle-edit]').length).toBe(1);
     expect(personCard.find('[data-author-actions] [data-author-remove]').length).toBe(1);
     expect(personCard.find('[data-author-edit-panel].collapse').length).toBe(1);

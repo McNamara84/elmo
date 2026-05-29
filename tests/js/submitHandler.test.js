@@ -669,4 +669,15 @@ describe('submitHandler.js', () => {
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
   });
+
+  test('validateContactPerson reads contact state from authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
 });

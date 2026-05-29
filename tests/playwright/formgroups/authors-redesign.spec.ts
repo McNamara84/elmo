@@ -16,12 +16,16 @@ test.describe('Authors redesign workflow', () => {
     await completeMinimalDatasetForm(page);
 
     const authorsGroup = page.locator(SELECTORS.formGroups.authors);
+    const authorsFormGroup = page.locator('#formgroup-authors');
     const personCard = authorsGroup.locator('[data-author-card][data-author-entry-type="person"]').first();
     const institutionCard = authorsGroup.locator('[data-author-card][data-author-entry-type="institution"]').first();
 
+    await expect(authorsFormGroup.locator('[data-author-summary-count]')).toContainText(/entry|entries/i);
+    await expect(authorsFormGroup.locator('[data-author-contact-summary]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-summary]')).toContainText('Carberry');
     await expect(personCard.locator('[data-author-type-badge]')).toContainText(/person/i);
-    await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact/i);
+    await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact person/i);
+    await expect(personCard.locator('[data-author-contact-toggle]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-actions]')).toBeVisible();
     await expect(personCard.locator('[data-author-edit-panel]')).toHaveClass(/collapse/);
     await expect(personCard.locator('[data-author-type-switcher]')).toBeVisible();

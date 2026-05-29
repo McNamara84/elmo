@@ -573,9 +573,24 @@ $(document).ready(function () {
     }
 
     const checkbox = row.find('input[name="contacts[]"]');
+    const contactToggle = row.find(`label[for="${checkbox.attr('id')}"]`).first();
     const contactFields = row.find('.contact-person-input');
 
     function updateFields() {
+      contactToggle
+        .addClass('btn btn-outline-primary d-inline-flex align-items-center gap-1')
+        .removeClass('lh-sm round-corners-left con-reduce')
+        .attr('data-author-contact-toggle', '')
+        .removeAttr('aria-pressed')
+        .toggleClass('active', checkbox.prop('checked'))
+        .empty()
+        .append('<i class="bi bi-person-lines-fill" aria-hidden="true"></i>')
+        .append($('<span></span>').text(
+          checkbox.prop('checked')
+            ? translate('authors.contactPersonLabel', 'Contact person')
+            : translate('authors.markAsContact', 'Mark as contact')
+        ));
+
       if (checkbox.prop('checked')) {
         contactFields.show();
       } else {
@@ -945,11 +960,11 @@ $(document).ready(function () {
 
     summaryCount.text(countSummary(
       authorCount,
-      'authors.authorSingular',
-      'authors.authorPlural',
+      'authors.entrySingular',
+      'authors.entryPlural',
       'authors.entriesSummary',
-      'author',
-      'authors'
+      'entry',
+      'entries'
     ));
 
     if (contactCount > 0) {
@@ -958,11 +973,11 @@ $(document).ready(function () {
         .addClass('text-bg-success')
         .text(countSummary(
           contactCount,
-          'authors.contactSingular',
-          'authors.contactPlural',
+          'authors.contactPersonSingular',
+          'authors.contactPersonPlural',
           'authors.contactsSummary',
-          'contact',
-          'contacts'
+          'contact person',
+          'contact persons'
         ));
     } else {
       contactSummary
@@ -1026,7 +1041,7 @@ $(document).ready(function () {
 
     const contactBadge = summary.find('[data-author-contact-badge]');
     if (isPerson && state.isContact) {
-      contactBadge.removeClass('d-none').text(translate('authors.contactSingular', 'Contact'));
+      contactBadge.removeClass('d-none').text(translate('authors.contactPersonBadge', 'Contact person'));
     } else {
       contactBadge.addClass('d-none');
     }
