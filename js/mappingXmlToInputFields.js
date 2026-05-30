@@ -248,18 +248,18 @@ function processCreators(xmlDoc, resolver) {
     const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
     const affiliations = [];
     const rorIds = [];
+    const affiliationTags = [];
 
     // Collect all affiliation names and ROR IDs for the current creator
     for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
       const affNode = affiliationNodes.snapshotItem(j);
       const affiliationName = affNode.textContent;
-      const rorId = affNode.getAttribute("affiliationIdentifier");
+      const rorId = affNode.getAttribute("affiliationIdentifier") || '';
 
       if (affiliationName) {
         affiliations.push(affiliationName);
-        if (rorId) {
-          rorIds.push(rorId);
-        }
+        rorIds.push(rorId);
+        affiliationTags.push(rorId ? { value: affiliationName, id: rorId } : { value: affiliationName });
       }
     }
 
@@ -286,7 +286,7 @@ function processCreators(xmlDoc, resolver) {
       const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
       if (tagifyInput && tagifyInput._tagify) {
         tagifyInput._tagify.removeAllTags(); // Clear existing tags
-        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+        tagifyInput._tagify.addTags(affiliationTags); // Preserve imported ROR ids on Tagify tags
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(",")); // Set ROR IDs as CSV string
       } else {
         // Fallback if Tagify is not used: set affiliations as comma-separated string
@@ -326,7 +326,7 @@ function processCreators(xmlDoc, resolver) {
       const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
       if (tagifyInput && tagifyInput._tagify) {
         tagifyInput._tagify.removeAllTags(); // Clear existing tags
-        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+        tagifyInput._tagify.addTags(affiliationTags); // Preserve imported ROR ids on Tagify tags
       } else {
         // Fallback: set affiliations as comma-separated string if no Tagify
         $instRow.find('input[name="institutionAffiliation[]"]').val(affiliations.join(","));

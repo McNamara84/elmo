@@ -26,6 +26,15 @@ async function searchAffiliationsFromServer(query, limit = 20) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Refreshes all Tagify instances when translations are changed.
  * This function updates the placeholder text without destroying instances.
@@ -213,7 +222,9 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       // The tag template needs to recreate the whole templates.tag string. There is no partial override.
       // The key addition is the button  looking like a pencil - a symbol of editing
       tag(tagData, ctrl) {
-        return `<tag title="${tagData.value}"
+        const safeValue = escapeHtml(tagData.value);
+
+        return `<tag title="${safeValue}"
                      contenteditable='false'
                      spellcheck='false'
                      tabIndex="-1"
@@ -221,7 +232,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
                      ${ctrl.getAttributes(tagData)}>
           <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
           <div>
-            <span class='tagify__tag-text'>${tagData.value}</span>
+            <span class='tagify__tag-text'>${safeValue}</span>
             <button type='button' class='tagify__tag__editBtn' tabindex='-1' aria-label='Edit affiliation'>
               <i class='bi bi-pencil-fill' aria-hidden='true'></i>
             </button>
@@ -230,8 +241,10 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       },
       dropdownItem(item) {
         // Build dropdown item using Tagify's standard approach but with custom content
-        const displayText = item.mappedValue || item.value || '';
-        const otherNames = item.other && Array.isArray(item.other) ? item.other.join(', ') : '';
+        const displayText = escapeHtml(item.mappedValue || item.value || '');
+        const otherNames = item.other && Array.isArray(item.other)
+          ? escapeHtml(item.other.join(', '))
+          : '';
         
         // Build HTML with all necessary Tagify attributes for proper selection handling
         let html = `<div ${this.getAttributes(item)}

@@ -324,6 +324,23 @@ describe('affiliations.js', () => {
     expect(hidden.value).toBe(originalRorId);
   });
 
+  test('tag template escapes affiliation labels before rendering', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const maliciousLabel = '"><img src=x onerror=alert(1)>';
+
+    const html = input._tagify.settings.templates.tag(
+      { value: maliciousLabel },
+      {
+        settings: { classNames: { tag: 'tagify__tag' } },
+        getAttributes: () => ''
+      }
+    );
+
+    expect(html).toContain('&quot;&gt;&lt;img src=x onerror=alert(1)&gt;');
+    expect(html).not.toContain(maliciousLabel);
+  });
+
   /**
    * Verifies that author institution name becomes required when affiliations are present.
    */
