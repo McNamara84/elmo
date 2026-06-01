@@ -350,5 +350,46 @@ describe('map.js', () => {
       // FIXED: setMode cancels the pending timer, so no marker appears.
       expect(createdMarkers.length).toBe(0);
     });
+
+    test('right-click after first rectangle corner removes the preview and resets to initial state', async () => {
+      document.getElementById('btn-draw-rectangle').click();
+
+      // Place the first corner
+      fireMapEvent('click', 52.6, 13.5);
+      await waitMs(OVER_THRESHOLD); // previewRect created, rectState = 'started'
+
+      expect(createdRectangles.length).toBe(1);
+      expect(createdRectangles[0].map).not.toBeNull();
+
+      // Right-click: cancel the in-progress rectangle
+      fireMapEvent('rightclick', 0, 0);
+
+      // Preview rect must have been removed from the map
+      expect(createdRectangles[0].setMap).toHaveBeenCalledWith(null);
+
+      // A subsequent left-click must start a NEW first corner, not complete a rectangle
+      fireMapEvent('click', 52.9, 14.0);
+      await waitMs(OVER_THRESHOLD);
+
+      // Inputs still empty – the click started a fresh preview, not a completion
+      expect(document.querySelector('[id^=input-stc-latmax]').value).toBe('');
+      // A new preview rectangle must have been created
+      expect(createdRectangles.length).toBe(2);
+      expect(createdRectangles[1].map).not.toBeNull();
+    });
+
+    test('right-click while debounce is still pending (before first corner is anchored) is also a no-op', async () => {
+      document.getElementById('btn-draw-rectangle').click();
+
+      // Click, but right-click BEFORE the 150 ms debounce fires
+      fireMapEvent('click', 52.6, 13.5);
+      fireMapEvent('rightclick', 0, 0); // cancel during the pending timer
+
+      await waitMs(OVER_THRESHOLD);
+
+      // The pending click must have been swallowed — no preview rect, no coords
+      expect(createdRectangles.length).toBe(0);
+      expect(document.querySelector('[id^=input-stc-latmax]').value).toBe('');
+    });
   });
 });

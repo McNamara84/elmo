@@ -262,6 +262,20 @@ $(document).ready(function () {
         self.previewRect.setBounds(new google.maps.LatLngBounds(sw, ne));
       }
     });
+
+    // Right-click cancels an in-progress rectangle and resets to initial drawing state.
+    this._map.addListener("rightclick", function () {
+      if (self._clickTimer !== null) {
+        clearTimeout(self._clickTimer);
+        self._clickTimer = null;
+      }
+      if (self.previewRect) {
+        self.previewRect.setMap(null);
+        self.previewRect = null;
+      }
+      self.rectState = null;
+      self.startLatLng = null;
+    });
   };
 
   /**
