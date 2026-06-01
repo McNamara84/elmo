@@ -292,7 +292,10 @@ function loadKeywordsForConfig(config, response) {
     $(config.jsTreeId).jstree({
         core: {
             data: processedData,
-            themes: { icons: false }
+            themes: {
+                icons: false,
+                dots: false
+            }
         },
         checkbox: {
             keep_selected_style: true,
