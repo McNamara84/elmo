@@ -841,10 +841,10 @@ $(document).ready(function () {
      */
     function generateAccordionItem(key, config, displayName) {
         return `
-        <div class="thesaurus-input-item mb-3">                                                              /** hier muss ich nochmal angucken */
+        <div class="thesaurus-input-item mb-3">
             <div class="input-group has-validation input-margin-top-bottom">
                 <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
-                <div class="form-floating flex-grow-1">                                                      /** hier muss ich nochmal angucken */ 
+                <div class="form-floating flex-grow-1"> 
                     <div class="input-group has-validation">
                         <input type="text" class="form-control input-with-help input-right-no-round-corners"
                             id="${config.inputId}" name="${config.inputName}" />
