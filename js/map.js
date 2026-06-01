@@ -38,7 +38,25 @@ $(document).ready(function () {
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
       google.maps.event.trigger(map, "resize");
-      fitMapBounds();
+
+      var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
+      var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
+      var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
+      var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
+
+      if (latMin && lngMin) {
+        // Ensure overlay exists for this row (may not if coords were set programmatically)
+        var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
+        if (!hasOverlay) {
+          updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
+        } else {
+          fitMapBoundsForRow(rowId);
+        }
+      } else {
+        // No coordinates yet – reset to whole-planet view
+        map.setCenter({ lat: 20, lng: 0 });
+        map.setZoom(2);
+      }
     });
   });
 
@@ -81,8 +99,8 @@ $(document).ready(function () {
   function DrawingController(mapInstance) {
     /** @type {string|null} Current drawing mode: 'marker' | 'rectangle' | null */
     this.mode = "marker";
-    /** @type {boolean} Whether a rectangle drag is in progress */
-    this.isDrawing = false;
+    /** @type {string|null} Rectangle drawing state: null | 'started' */
+    this.rectState = null;
     /** @type {?google.maps.LatLng} Start position for rectangle drawing */
     this.startLatLng = null;
     /** @type {?google.maps.Rectangle} Temporary preview rectangle during drag */
@@ -152,7 +170,9 @@ $(document).ready(function () {
   };
 
   /**
-   * Sets up click, mousemove, and mouseup listeners on the map for drawing.
+   * Sets up click and mousemove listeners on the map for drawing.
+   * Rectangle drawing uses two clicks: first click sets the first corner,
+   * second click completes the rectangle. Any corner order is supported.
    * @private
    */
   DrawingController.prototype._setupMapListeners = function () {
@@ -165,38 +185,52 @@ $(document).ready(function () {
           map: self._map
         });
         self._emit("markercomplete", marker);
-      } else if (self.mode === "rectangle" && !self.isDrawing) {
-        self.isDrawing = true;
-        self.startLatLng = e.latLng;
-        self.previewRect = new google.maps.Rectangle({
-          bounds: new google.maps.LatLngBounds(e.latLng, e.latLng),
-          strokeColor: RECTANGLE_STYLE.strokeColor,
-          strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
-          strokeWeight: RECTANGLE_STYLE.strokeWeight,
-          fillColor: RECTANGLE_STYLE.fillColor,
-          fillOpacity: RECTANGLE_STYLE.fillOpacity,
-          map: self._map,
-          clickable: false
-        });
-        self._map.setOptions({ gestureHandling: "none" });
+      } else if (self.mode === "rectangle") {
+        if (self.rectState === null) {
+          // First click: anchor the first corner and show a preview rectangle
+          self.rectState = "started";
+          self.startLatLng = e.latLng;
+          self.previewRect = new google.maps.Rectangle({
+            bounds: new google.maps.LatLngBounds(e.latLng, e.latLng),
+            strokeColor: RECTANGLE_STYLE.strokeColor,
+            strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
+            strokeWeight: RECTANGLE_STYLE.strokeWeight,
+            fillColor: RECTANGLE_STYLE.fillColor,
+            fillOpacity: RECTANGLE_STYLE.fillOpacity,
+            map: self._map,
+            clickable: false
+          });
+        } else {
+          // Second click: finalize bounds (normalise so any corner order works)
+          self.rectState = null;
+          var sw = new google.maps.LatLng(
+            Math.min(self.startLatLng.lat(), e.latLng.lat()),
+            Math.min(self.startLatLng.lng(), e.latLng.lng())
+          );
+          var ne = new google.maps.LatLng(
+            Math.max(self.startLatLng.lat(), e.latLng.lat()),
+            Math.max(self.startLatLng.lng(), e.latLng.lng())
+          );
+          var rect = self.previewRect;
+          rect.setBounds(new google.maps.LatLngBounds(sw, ne));
+          self.previewRect = null;
+          self.startLatLng = null;
+          self._emit("rectanglecomplete", rect);
+        }
       }
     });
 
     this._map.addListener("mousemove", function (e) {
-      if (self.isDrawing && self.previewRect) {
-        self.previewRect.setBounds(
-          new google.maps.LatLngBounds(self.startLatLng, e.latLng)
+      if (self.rectState === "started" && self.previewRect) {
+        var sw = new google.maps.LatLng(
+          Math.min(self.startLatLng.lat(), e.latLng.lat()),
+          Math.min(self.startLatLng.lng(), e.latLng.lng())
         );
-      }
-    });
-
-    this._map.addListener("mouseup", function () {
-      if (self.isDrawing && self.previewRect) {
-        self.isDrawing = false;
-        self._map.setOptions({ gestureHandling: "auto" });
-        var rect = self.previewRect;
-        self.previewRect = null;
-        self._emit("rectanglecomplete", rect);
+        var ne = new google.maps.LatLng(
+          Math.max(self.startLatLng.lat(), e.latLng.lat()),
+          Math.max(self.startLatLng.lng(), e.latLng.lng())
+        );
+        self.previewRect.setBounds(new google.maps.LatLngBounds(sw, ne));
       }
     });
   };
@@ -502,7 +536,8 @@ $(document).ready(function () {
         strokeWeight: RECTANGLE_STYLE.strokeWeight,
         fillColor: RECTANGLE_STYLE.fillColor,
         fillOpacity: RECTANGLE_STYLE.fillOpacity,
-        map: map
+        map: map,
+        clickable: false
       });
 
       var label = createLabeledMarker(bounds.getCenter(), displayNumber.toString());
@@ -520,7 +555,7 @@ $(document).ready(function () {
       drawnOverlays.push({ rowId: currentRowId, overlay: marker });
     }
 
-    fitMapBounds();
+    fitMapBoundsForRow(currentRowId);
   }
 
   /**
@@ -539,6 +574,39 @@ $(document).ready(function () {
       }
       return true;
     });
+  }
+
+  /**
+   * Adjusts the map's viewport to fit the drawn overlays for a single row.
+   *
+   * @param {string} rowId - The row whose overlays define the viewport.
+   */
+  function fitMapBoundsForRow(rowId) {
+    var bounds = new google.maps.LatLngBounds();
+    drawnOverlays.forEach(function (item) {
+      if (item.rowId !== rowId) return;
+      if (item.overlay.getBounds) {
+        bounds.union(item.overlay.getBounds());
+      } else if (item.overlay.position) {
+        var pos = item.overlay.position;
+        if (typeof pos.lat === "function") {
+          bounds.extend(pos);
+        } else {
+          bounds.extend(new google.maps.LatLng(pos.lat, pos.lng));
+        }
+      } else if (item.overlay.getPosition) {
+        bounds.extend(item.overlay.getPosition());
+      }
+    });
+    if (!bounds.isEmpty()) {
+      var ne = bounds.getNorthEast();
+      var sw = bounds.getSouthWest();
+      var lat_buffer = (ne.lat() - sw.lat()) * 0.5 || 2;
+      var lng_buffer = (ne.lng() - sw.lng()) * 0.5 || 2;
+      bounds.extend(new google.maps.LatLng(ne.lat() + lat_buffer, ne.lng() + lng_buffer));
+      bounds.extend(new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer));
+      map.fitBounds(bounds);
+    }
   }
 
   /**
@@ -652,6 +720,7 @@ $(document).ready(function () {
   // Make functions globally accessible
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;
   window.fitMapBounds = fitMapBounds;
+  window.fitMapBoundsForRow = fitMapBoundsForRow;
   window.updateOverlayLabels = updateOverlayLabels;
   window.updateMapOverlay = updateMapOverlay;
 });
