@@ -261,4 +261,94 @@ describe('map.js', () => {
     expect(calls).toContain('marker');
     expect(calls).toContain('places');
   });
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // DrawingController: mode switching and preview rectangle
+  // ─────────────────────────────────────────────────────────────────────────
+  describe('DrawingController: mode switching and preview rectangle', () => {
+    // Safely above the 150 ms DBLCLICK_THRESHOLD in map.js
+    const OVER_THRESHOLD = 250;
+
+    function fireMapEvent(eventName, lat, lng) {
+      (mapInstance.listeners[eventName] || []).forEach(cb =>
+        cb({ latLng: new google.maps.LatLng(lat, lng) })
+      );
+    }
+
+    function waitMs(ms) {
+      return new Promise(r => setTimeout(r, ms));
+    }
+
+    beforeEach(() => {
+      // Wire up #modal-stc-map so the rectanglecomplete / markercomplete handlers
+      // can find the current row and write coordinate values into its inputs.
+      const row1El = document.querySelector('[tsc-row-id="row1"]');
+      document.getElementById('modal-stc-map')._data = {
+        'current-row': global.$(row1El),
+        'tsc-row-id': 'row1'
+      };
+    });
+
+    test('preview rect appears and follows mouse: place marker → switch to rect → click first corner', async () => {
+      // 1. Place a marker in the default marker mode
+      fireMapEvent('click', 52.5, 13.4);
+      await waitMs(OVER_THRESHOLD);
+      expect(createdMarkers.length).toBeGreaterThan(0);
+
+      // 2. Switch to rectangle mode
+      document.getElementById('btn-draw-rectangle').click();
+
+      // 3. Click the first corner of the rectangle
+      fireMapEvent('click', 52.6, 13.5);
+      await waitMs(OVER_THRESHOLD);
+
+      // A preview rectangle must have been created and remain on the map
+      expect(createdRectangles.length).toBe(1);
+      expect(createdRectangles[0].map).not.toBeNull();
+
+      // Coordinate inputs must still be empty — rectangle is not yet completed
+      expect(document.querySelector('[id^=input-stc-latmax]').value).toBe('');
+
+      // Moving the mouse must update the preview bounds
+      fireMapEvent('mousemove', 52.7, 13.6);
+      expect(createdRectangles[0].setBounds).toHaveBeenCalled();
+    });
+
+    test('switching modes mid-rectangle resets state so the next first click starts a fresh preview', async () => {
+      // Start a rectangle — click first corner and wait for debounce
+      document.getElementById('btn-draw-rectangle').click();
+      fireMapEvent('click', 52.6, 13.5);
+      await waitMs(OVER_THRESHOLD); // rectState = 'started', previewRect on map
+
+      expect(createdRectangles.length).toBe(1);
+
+      // Switch away and back (user hesitation / back-and-forth)
+      document.getElementById('btn-draw-marker').click();
+      document.getElementById('btn-draw-rectangle').click();
+
+      // User now clicks what they intend as the FIRST corner of a new rectangle
+      fireMapEvent('click', 52.8, 13.6);
+      await waitMs(OVER_THRESHOLD);
+
+      // BUG (unfixed): stale rectState='started' causes this click to be treated as
+      // the second click → rectanglecomplete fires immediately → inputs get filled.
+      // FIXED: setMode resets state, so this click only starts the preview.
+      expect(document.querySelector('[id^=input-stc-latmax]').value).toBe('');
+    });
+
+    test('clicking in rect mode then quickly switching to marker cancels the pending rectangle click', async () => {
+      document.getElementById('btn-draw-rectangle').click();
+
+      // Click in rectangle mode, then switch modes BEFORE the debounce fires
+      fireMapEvent('click', 52.6, 13.5);
+      document.getElementById('btn-draw-marker').click(); // switch within 150 ms
+
+      await waitMs(OVER_THRESHOLD);
+
+      // BUG (unfixed): the debounce timer fires in marker mode and creates an
+      // unintended marker at the rectangle click coordinates.
+      // FIXED: setMode cancels the pending timer, so no marker appears.
+      expect(createdMarkers.length).toBe(0);
+    });
+  });
 });

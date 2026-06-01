@@ -105,6 +105,8 @@ $(document).ready(function () {
     this.startLatLng = null;
     /** @type {?google.maps.Rectangle} Temporary preview rectangle during drag */
     this.previewRect = null;
+    /** @type {?number} Pending single-click debounce timer (on instance so setMode can cancel it) */
+    this._clickTimer = null;
     /** @type {Object} Registered event callbacks */
     this._listeners = { rectanglecomplete: [], markercomplete: [] };
     /** @type {google.maps.Map} */
@@ -145,6 +147,19 @@ $(document).ready(function () {
    * @param {string} mode - The drawing mode to activate ('marker' or 'rectangle').
    */
   DrawingController.prototype.setMode = function (mode) {
+    // Cancel any click that hasn't fired yet so it can't bleed into the new mode
+    if (this._clickTimer !== null) {
+      clearTimeout(this._clickTimer);
+      this._clickTimer = null;
+    }
+    // Discard any in-progress rectangle so the new mode always starts clean
+    if (this.previewRect) {
+      this.previewRect.setMap(null);
+      this.previewRect = null;
+    }
+    this.rectState = null;
+    this.startLatLng = null;
+
     this.mode = mode;
     this._updateToolbarUI();
     this._map.setOptions({
@@ -177,23 +192,21 @@ $(document).ready(function () {
    */
   DrawingController.prototype._setupMapListeners = function () {
     var self = this;
-    /** @type {?number} Pending single-click timer handle */
-    var clickTimer = null;
     /** @type {number} Two clicks within this window (ms) are treated as a double-click */
     var DBLCLICK_THRESHOLD = 150;
 
     this._map.addListener("click", function (e) {
-      if (clickTimer !== null) {
+      if (self._clickTimer !== null) {
         // Second click arrived within the threshold – treat as double-click.
         // Cancel the pending drawing action; Google Maps handles the zoom via dblclick.
-        clearTimeout(clickTimer);
-        clickTimer = null;
+        clearTimeout(self._clickTimer);
+        self._clickTimer = null;
         return;
       }
 
       var latLng = e.latLng;
-      clickTimer = setTimeout(function () {
-        clickTimer = null;
+      self._clickTimer = setTimeout(function () {
+        self._clickTimer = null;
         if (self.mode === "marker") {
           var marker = new AdvancedMarkerElement({
             position: latLng,
