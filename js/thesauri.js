@@ -756,7 +756,7 @@ $(document).ready(function () {
                     const config = THESAURUS_CONFIG[item.key];
                     if (!config) return;
 
-                    accordionContainer.innerHTML += generateAccordionItem(item.key, config, item.displayName, isFirst);
+                    accordionContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName, isFirst);
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
                     isFirst = false;
 
@@ -839,7 +839,7 @@ $(document).ready(function () {
      * @param {boolean} expanded - Whether this item should be initially expanded.
      * @returns {string} HTML string for the accordion item.
      */
-    function generateAccordionItem(key, config, displayName) {
+    function generateThesaurusInputItem(key, config, displayName) {
         return `
         <div class="thesaurus-input-item mb-3">
             <div class="input-group has-validation input-margin-top-bottom">
