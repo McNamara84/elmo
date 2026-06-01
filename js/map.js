@@ -177,47 +177,63 @@ $(document).ready(function () {
    */
   DrawingController.prototype._setupMapListeners = function () {
     var self = this;
+    /** @type {?number} Pending single-click timer handle */
+    var clickTimer = null;
+    /** @type {number} Two clicks within this window (ms) are treated as a double-click */
+    var DBLCLICK_THRESHOLD = 150;
 
     this._map.addListener("click", function (e) {
-      if (self.mode === "marker") {
-        var marker = new AdvancedMarkerElement({
-          position: e.latLng,
-          map: self._map
-        });
-        self._emit("markercomplete", marker);
-      } else if (self.mode === "rectangle") {
-        if (self.rectState === null) {
-          // First click: anchor the first corner and show a preview rectangle
-          self.rectState = "started";
-          self.startLatLng = e.latLng;
-          self.previewRect = new google.maps.Rectangle({
-            bounds: new google.maps.LatLngBounds(e.latLng, e.latLng),
-            strokeColor: RECTANGLE_STYLE.strokeColor,
-            strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
-            strokeWeight: RECTANGLE_STYLE.strokeWeight,
-            fillColor: RECTANGLE_STYLE.fillColor,
-            fillOpacity: RECTANGLE_STYLE.fillOpacity,
-            map: self._map,
-            clickable: false
-          });
-        } else {
-          // Second click: finalize bounds (normalise so any corner order works)
-          self.rectState = null;
-          var sw = new google.maps.LatLng(
-            Math.min(self.startLatLng.lat(), e.latLng.lat()),
-            Math.min(self.startLatLng.lng(), e.latLng.lng())
-          );
-          var ne = new google.maps.LatLng(
-            Math.max(self.startLatLng.lat(), e.latLng.lat()),
-            Math.max(self.startLatLng.lng(), e.latLng.lng())
-          );
-          var rect = self.previewRect;
-          rect.setBounds(new google.maps.LatLngBounds(sw, ne));
-          self.previewRect = null;
-          self.startLatLng = null;
-          self._emit("rectanglecomplete", rect);
-        }
+      if (clickTimer !== null) {
+        // Second click arrived within the threshold – treat as double-click.
+        // Cancel the pending drawing action; Google Maps handles the zoom via dblclick.
+        clearTimeout(clickTimer);
+        clickTimer = null;
+        return;
       }
+
+      var latLng = e.latLng;
+      clickTimer = setTimeout(function () {
+        clickTimer = null;
+        if (self.mode === "marker") {
+          var marker = new AdvancedMarkerElement({
+            position: latLng,
+            map: self._map
+          });
+          self._emit("markercomplete", marker);
+        } else if (self.mode === "rectangle") {
+          if (self.rectState === null) {
+            // First click: anchor the first corner and show a preview rectangle
+            self.rectState = "started";
+            self.startLatLng = latLng;
+            self.previewRect = new google.maps.Rectangle({
+              bounds: new google.maps.LatLngBounds(latLng, latLng),
+              strokeColor: RECTANGLE_STYLE.strokeColor,
+              strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
+              strokeWeight: RECTANGLE_STYLE.strokeWeight,
+              fillColor: RECTANGLE_STYLE.fillColor,
+              fillOpacity: RECTANGLE_STYLE.fillOpacity,
+              map: self._map,
+              clickable: false
+            });
+          } else {
+            // Second click: finalize bounds (normalise so any corner order works)
+            self.rectState = null;
+            var sw = new google.maps.LatLng(
+              Math.min(self.startLatLng.lat(), latLng.lat()),
+              Math.min(self.startLatLng.lng(), latLng.lng())
+            );
+            var ne = new google.maps.LatLng(
+              Math.max(self.startLatLng.lat(), latLng.lat()),
+              Math.max(self.startLatLng.lng(), latLng.lng())
+            );
+            var rect = self.previewRect;
+            rect.setBounds(new google.maps.LatLngBounds(sw, ne));
+            self.previewRect = null;
+            self.startLatLng = null;
+            self._emit("rectanglecomplete", rect);
+          }
+        }
+      }, DBLCLICK_THRESHOLD);
     });
 
     this._map.addListener("mousemove", function (e) {
@@ -347,6 +363,22 @@ $(document).ready(function () {
       mapOptions.mapId = mapId;
     }
     map = new Map(mapElement, mapOptions);
+
+    // Keyboard zoom: + / = zooms in, - zooms out, active whenever the map modal is visible.
+    document.addEventListener("keydown", function (e) {
+      var modal = document.getElementById("modal-stc-map");
+      if (!modal || !modal.classList.contains("show")) return;
+      // Don't steal keystrokes from text inputs (e.g. the place-search field)
+      var tag = e.target ? e.target.tagName.toUpperCase() : "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        map.setZoom(map.getZoom() + 1);
+      } else if (e.key === "-") {
+        e.preventDefault();
+        map.setZoom(map.getZoom() - 1);
+      }
+    });
 
     // Setup custom drawing controller (replaces deprecated DrawingManager)
     var drawingController = new DrawingController(map);
