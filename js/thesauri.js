@@ -839,41 +839,25 @@ $(document).ready(function () {
      * @param {boolean} expanded - Whether this item should be initially expanded.
      * @returns {string} HTML string for the accordion item.
      */
-    function generateAccordionItem(key, config, displayName, expanded) {
-        const collapseId = 'collapse-' + key;
-        const headingId = 'heading-' + key;
-        const buttonClass = expanded ? 'accordion-button' : 'accordion-button collapsed';
-        const collapseClass = expanded ? 'accordion-collapse collapse show' : 'accordion-collapse collapse';
-
+    function generateAccordionItem(key, config, displayName) {
         return `
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="${headingId}">
-                <button class="${buttonClass}" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#${collapseId}" aria-expanded="${expanded}" aria-controls="${collapseId}">
-                    ${escapeHtml(displayName)}
-                </button>
-            </h2>
-            <div id="${collapseId}" class="${collapseClass}" aria-labelledby="${headingId}"
-                data-bs-parent="#accordionThesauri">
-                <div class="accordion-body">
-                    <div class="input-group has-validation input-margin-top-bottom">
-                        <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
-                        <div class="form-floating">
-                            <div class="input-group has-validation">
-                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                                    id="${config.inputId}" name="${config.inputName}" />
-                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                                    data-help-section-id="${config.helpSectionId}"></i></span>
-                            </div>
-                        </div>
-                        <div class="col-auto p-2">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#${config.modalId}" id="button-${key}-open">
-                                <i class="bi bi-diagram-3" aria-hidden="true"></i>
-                                <span class="visually-hidden">${translations?.keywords?.thesaurus?.label || 'Open thesaurus'}</span>
-                            </button>
-                        </div>
+        <div class="thesaurus-input-item mb-3">                                                              /** hier muss ich nochmal angucken */
+            <div class="input-group has-validation input-margin-top-bottom">
+                <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
+                <div class="form-floating flex-grow-1">                                                      /** hier muss ich nochmal angucken */ 
+                    <div class="input-group has-validation">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                            id="${config.inputId}" name="${config.inputName}" />
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                               data-help-section-id="${config.helpSectionId}"></i></span>
                     </div>
+                </div>
+                <div class="col-auto p-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#${config.modalId}" id="button-${key}-open">
+                        <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                        <span class="visually-hidden">${translations?.keywords?.thesaurus?.label || 'Open thesaurus'}</span>
+                    </button>
                 </div>
             </div>
         </div>`;
