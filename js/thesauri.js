@@ -831,13 +831,12 @@ $(document).ready(function () {
     }
 
     /**
-     * Generates Bootstrap accordion item HTML for a thesaurus.
+     * Generates HTML for a thesaurus input field and its modal trigger button.
      *
      * @param {string} key - The thesaurus key (e.g. 'science_keywords').
-     * @param {Object} config - THESAURUS_CONFIG entry.
+     * @param {Object} config - THESAURUS_CONFIG entry for the thesaurus.
      * @param {string} displayName - Display name from ERNIE availability.
-     * @param {boolean} expanded - Whether this item should be initially expanded.
-     * @returns {string} HTML string for the accordion item.
+     * @returns {string} HTML string for the thesaurus input item.
      */
     function generateThesaurusInputItem(key, config, displayName) {
         return `
