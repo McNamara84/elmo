@@ -225,13 +225,12 @@ describe('thesauri.js', () => {
     }
   }
 
-  test('fetches availability and generates accordion items for available thesauri', () => {
+  test('fetches availability and generates UI for available thesauri', () => {
     // availability was called
     expect($.getJSON).toHaveBeenCalledWith('api/v2/vocabs/thesauri/availability');
 
-    // Should generate accordion items only for available thesauri (science_keywords and platforms)
-    const accordionItems = document.querySelectorAll('#accordionThesauri .accordion-item');
-    expect(accordionItems.length).toBe(2);
+    expect(document.querySelector('#input-sciencekeyword')).toBeTruthy();
+    expect(document.querySelector('#input-platforms')).toBeTruthy();
 
     // Should generate modals
     const modals = document.querySelectorAll('#thesaurusModalsContainer .modal');
