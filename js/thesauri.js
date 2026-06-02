@@ -841,6 +841,9 @@ $(document).ready(function () {
     function generateThesaurusInputItem(key, config, displayName) {
         return `
         <div class="thesaurus-input-item mb-3">
+            <div class="thesaurus-input-label mb-2 fw-semibold">
+                ${escapeHtml(displayName)}
+            </div>
             <div class="input-group has-validation input-margin-top-bottom">
                 <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
                 <div class="form-floating flex-grow-1"> 
