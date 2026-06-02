@@ -854,7 +854,7 @@ $(document).ready(function () {
                 <div class="col-auto p-2">
                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
                         data-bs-target="#${config.modalId}" id="button-${key}-open">
-                        <i class="bi bi-diagram-3" aria-hidden="true"></i>
+                        <span data-translate="keywords.thesaurus.button">Open Thesaurus</span>
                         <span class="visually-hidden">${translations?.keywords?.thesaurus?.label || 'Open thesaurus'}</span>
                     </button>
                 </div>
