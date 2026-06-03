@@ -235,30 +235,25 @@ test.describe('Thesauri Keywords Form Group', () => {
     await waitForThesauriInit(page);
   });
 
-  test('renders accessible accordion sections and controls', async ({ page }) => {
+  test('renders accessible thesaurus input sections and controls', async ({ page }) => {
     const header = page.locator('b[data-translate="keywords.thesaurus.name"]');
     await expect(header).toBeVisible();
     await expect(header).toContainText('Thesauri Keywords');
 
-    // Only 3 available thesauri should generate accordion items
-    const accordionItems = page.locator('#accordionThesauri .accordion-item');
-    await expect(accordionItems).toHaveCount(3);
+    const thesaurusItems = page.locator('#accordionThesauri .thesaurus-input-item');
+    await expect(thesaurusItems).toHaveCount(3);
 
     const sectionConfigs = [
       {
         name: 'GCMD Science Keywords',
-        collapseId: 'collapse-science_keywords',
-        expanded: 'true',
         helpId: 'help-scienceKeywords-keyword',
         inputId: '#input-sciencekeyword',
         expectedName: 'gcmdScienceKeywords',
-        modalButton: '#button-science_keywords-open',
+        modalButton: '#button-sciencekeywords-open',
         modalTarget: '#modal-sciencekeyword',
       },
       {
         name: 'GCMD Platforms',
-        collapseId: 'collapse-platforms',
-        expanded: 'false',
         helpId: 'help-gcmd-platforms-keyword',
         inputId: '#input-platforms',
         expectedName: 'platforms',
@@ -267,8 +262,6 @@ test.describe('Thesauri Keywords Form Group', () => {
       },
       {
         name: 'GCMD Instruments',
-        collapseId: 'collapse-instruments',
-        expanded: 'false',
         helpId: 'help-gcmd-instruments-keyword',
         inputId: '#input-instruments',
         expectedName: 'instruments',
@@ -278,18 +271,17 @@ test.describe('Thesauri Keywords Form Group', () => {
     ] as const;
 
     for (const config of sectionConfigs) {
-      const button = page.locator(`button[data-bs-target="#${config.collapseId}"]`);
-      await expect(button).toHaveAttribute('aria-controls', config.collapseId);
-      await expect(button).toHaveAttribute('aria-expanded', config.expanded);
-      await expect(button).toHaveText(config.name);
+      const input = page.locator(config.inputId);
+      const item = input.locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]');
 
-      const helpIcon = page.locator(`#${config.collapseId} i.bi-question-circle-fill`);
+      await expect(item.locator('.thesaurus-input-label')).toHaveText(config.name);
+
+      const helpIcon = item.locator('i.bi-question-circle-fill');
       await expect(helpIcon).toHaveAttribute('data-help-section-id', config.helpId);
 
-      const input = page.locator(config.inputId);
       await expect(input).toHaveAttribute('name', config.expectedName);
 
-      const modalButton = page.locator(config.modalButton);
+      const modalButton = item.locator(config.modalButton);
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
     }
   });
