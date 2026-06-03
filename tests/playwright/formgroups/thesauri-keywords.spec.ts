@@ -359,10 +359,6 @@ test.describe('Thesauri Keywords Form Group', () => {
   });
 
   test('supports searching, keyboard access, and persistence across thesauri modals', async ({ page }) => {
-    const platformsButton = page.locator('button[data-bs-target="#collapse-platforms"]');
-    await platformsButton.press(' ');
-    await expect(platformsButton).toHaveAttribute('aria-expanded', 'true');
-
     const openPlatformsModal = page.locator('#button-platforms-open');
     await openPlatformsModal.focus();
     await openPlatformsModal.press('Enter');
@@ -419,16 +415,14 @@ test.describe('Thesauri Keywords Form Group', () => {
     await platformsModal.locator('.modal-footer button.btn-primary').click();
     await expect(platformsModal).toBeHidden();
 
-    const platformTags = page.locator('#collapse-platforms .tagify__tag');
+    const platformTags = page.locator('#input-platforms').locator('..').locator('.tagify__tag');
     await expect(platformTags).toHaveCount(1);
     await expect(page.locator('#input-platforms')).toHaveValue(/BALLOONS/);
 
-    const instrumentsButton = page.locator('button[data-bs-target="#collapse-instruments"]');
-    await instrumentsButton.press('Enter');
-    await expect(instrumentsButton).toHaveAttribute('aria-expanded', 'true');
-
     const instrumentsModalButton = page.locator('#button-instruments-open');
-    await instrumentsModalButton.click();
+    await instrumentsModalButton.focus();
+    await instrumentsModalButton.press('Enter');
+
     const instrumentsModal = page.locator('#modal-instruments');
     await expect(instrumentsModal).toBeVisible();
 
