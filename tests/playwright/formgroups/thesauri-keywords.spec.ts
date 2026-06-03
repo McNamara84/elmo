@@ -139,13 +139,11 @@ const MOCK_AVAILABILITY = {
 };
 
 async function waitForThesauriInit(page: import('@playwright/test').Page) {
-  // Wait until the accordion has been populated with at least one item
-  await page.waitForFunction(() => {
-    const accordion = document.getElementById('accordionThesauri');
-    return accordion && accordion.children.length > 0;
-  }, { timeout: 15000 });
-  // Wait until Tagify is initialised on the first available input
-  await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
+  await expect(page.locator('.thesaurus-input-item').first()).toBeVisible({ timeout: 15000 });
+  await page.waitForFunction(
+    () => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify),
+    { timeout: 15000 }
+  );
 }
 
 test.describe('Thesauri Keywords Form Group', () => {
