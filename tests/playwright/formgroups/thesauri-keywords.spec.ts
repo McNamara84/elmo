@@ -315,7 +315,7 @@ test.describe('Thesauri Keywords Form Group', () => {
   });
 
   test('synchronises science keyword selections between tree, summary list, and Tagify input', async ({ page }) => {
-    await page.locator('#button-science_keywords-open').click();
+    await page.locator('#button-sciencekeywords-open').click();
     const scienceModal = page.locator('#modal-sciencekeyword');
     await expect(scienceModal).toBeVisible();
 
@@ -348,7 +348,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     await expect(selectedItems).toHaveCount(1);
     await expect(selectedItems.first()).toContainText(SCIENCE_PATH);
 
-    const scienceTags = page.locator('#thesaurusKeywordsGroup #collapse-science_keywords .tagify__tag');
+    const scienceTags = page.locator('#input-sciencekeyword').locator('..').locator('.tagify__tag');
     await expect(scienceTags).toHaveCount(1);
     await expect(scienceTags.first()).toContainText('AQUACULTURE');
 
