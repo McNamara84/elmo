@@ -314,7 +314,12 @@ test.describe('Thesauri Keywords Form Group', () => {
   });
 
   test('synchronises science keyword selections between tree, summary list, and Tagify input', async ({ page }) => {
-    await page.locator('#button-sciencekeywords-open').click();
+    await page
+      .locator('#input-sciencekeyword')
+      .locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]')
+      .locator('button[data-bs-toggle="modal"]')
+      .click();
+
     const scienceModal = page.locator('#modal-sciencekeyword');
     await expect(scienceModal).toBeVisible();
 
