@@ -676,7 +676,7 @@ export function initTagifyForInput(inputElement, configKey) {
  * Flow:
  * 1. Check master toggle (ELMO_FEATURES.showThesauri)
  * 2. Fetch thesauri availability from ELMO API (ERNIE proxy)
- * 3. For each available thesaurus: generate accordion + modal HTML, init Tagify, register lazy loading
+ * 3. For each available thesaurus: generate input section + modal HTML, init Tagify, register lazy loading
  * 4. Show form group if at least one thesaurus is available
  *
  * Also handles MSL keywords (static config, separate feature toggle).
@@ -747,18 +747,16 @@ $(document).ready(function () {
 
                 if (availableThesauri.length === 0) return;
 
-                const accordionContainer = document.getElementById('accordionThesauri');
+                const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
                 const modalContainer = document.getElementById('thesaurusModalsContainer');
-                if (!accordionContainer || !modalContainer) return;
+                if (!thesaurusContainer || !modalContainer) return;
 
-                let isFirst = true;
                 availableThesauri.forEach(function (item) {
                     const config = THESAURUS_CONFIG[item.key];
                     if (!config) return;
 
-                    accordionContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName, isFirst);
+                    thesaurusContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName);
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
-                    isFirst = false;
 
                     // Build keywordConfigurations entry for this thesaurus.
                     // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
