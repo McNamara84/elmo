@@ -249,7 +249,6 @@ test.describe('Thesauri Keywords Form Group', () => {
         helpId: 'help-scienceKeywords-keyword',
         inputId: '#input-sciencekeyword',
         expectedName: 'gcmdScienceKeywords',
-        modalButton: '#button-sciencekeywords-open',
         modalTarget: '#modal-sciencekeyword',
       },
       {
@@ -257,7 +256,6 @@ test.describe('Thesauri Keywords Form Group', () => {
         helpId: 'help-gcmd-platforms-keyword',
         inputId: '#input-platforms',
         expectedName: 'platforms',
-        modalButton: '#button-platforms-open',
         modalTarget: '#modal-platforms',
       },
       {
@@ -265,7 +263,6 @@ test.describe('Thesauri Keywords Form Group', () => {
         helpId: 'help-gcmd-instruments-keyword',
         inputId: '#input-instruments',
         expectedName: 'instruments',
-        modalButton: '#button-instruments-open',
         modalTarget: '#modal-instruments',
       },
     ] as const;
@@ -274,6 +271,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       const input = page.locator(config.inputId);
       const item = input.locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]');
 
+      await expect(item).toBeVisible();
       await expect(item.locator('.thesaurus-input-label')).toHaveText(config.name);
 
       const helpIcon = item.locator('i.bi-question-circle-fill');
@@ -281,7 +279,8 @@ test.describe('Thesauri Keywords Form Group', () => {
 
       await expect(input).toHaveAttribute('name', config.expectedName);
 
-      const modalButton = item.locator(config.modalButton);
+      const modalButton = item.locator('button[data-bs-toggle="modal"]');
+      await expect(modalButton).toBeVisible();
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
     }
   });
