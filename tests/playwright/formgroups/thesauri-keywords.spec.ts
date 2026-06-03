@@ -292,13 +292,13 @@ test.describe('Thesauri Keywords Form Group', () => {
     await expect(scienceModal).toBeHidden();
 
     // Click on the Tagify input to trigger focus-based lazy loading
-    const tagifyInput = page.locator('#collapse-science_keywords .tagify__input');
+    const tagifyInput = page.locator('#input-sciencekeyword').locator('..').locator('.tagify__input');
     await tagifyInput.click();
 
     // Wait for the API call to complete and whitelist to be populated
     await page.waitForFunction(() => {
       const input = document.getElementById('input-sciencekeyword') as any;
-      return input?._tagify?.settings?.whitelist?.length > 0;
+      return input?.tagify?.settings?.whitelist?.length > 0 || input?._tagify?.settings?.whitelist?.length > 0;
     }, { timeout: 10000 });
 
     // Type enough characters to trigger the dropdown (dropdown.enabled: 3)
