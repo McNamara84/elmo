@@ -240,7 +240,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     await expect(header).toBeVisible();
     await expect(header).toContainText('Thesauri Keywords');
 
-    const thesaurusItems = page.locator('#accordionThesauri .thesaurus-input-item');
+    const thesaurusItems = page.locator('.thesaurus-input-item');
     await expect(thesaurusItems).toHaveCount(3);
 
     const sectionConfigs = [
