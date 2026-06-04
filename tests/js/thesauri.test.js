@@ -786,7 +786,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
   function setupEnvironment(done, featureFlags = {}) {
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" style="display: none;">
-        <div class="accordion p-2" id="accordionThesauri"></div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -905,7 +905,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(ids).toContain('uri:ocean-depth');
     });
 
-    test('nodes NOT in GGM_ROOT_IDS and not their descendants are excluded', () => {
+    test('nodes NOT in GGM_ROOT_IDS and not their descendants are excluded', () => {       //failed
       const tree = $('#jstree-sciencekeyword').jstree(true);
       const ids = tree.allNodeIds();
       // TOPOGRAPHY is a sibling of GEODETICS but not listed
@@ -914,7 +914,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(ids).not.toContain('uri:climate-models');
     });
 
-    test('ancestor/container nodes that lead to listed nodes are NOT present (subtrees are detached)', () => {
+    test('ancestor/container nodes that lead to listed nodes are NOT present (subtrees are detached)', () => {      //failed 
       const tree = $('#jstree-sciencekeyword').jstree(true);
       const ids = tree.allNodeIds();
       // The tree should start from the listed nodes themselves, not from the full hierarchy
@@ -923,7 +923,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(ids).not.toContain('uri:solid-earth');
     });
 
-    test('Tagify whitelist only contains paths reachable from listed nodes', () => {
+    test('Tagify whitelist only contains paths reachable from listed nodes', () => {     //failed
       const input = document.getElementById('input-sciencekeyword');
       const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
 
@@ -938,7 +938,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(whitelistValues.some(v => v.includes('CLIMATE MODELS'))).toBe(false);
     });
 
-    test('entry built for science_keywords uses rootNodes (array), not rootNodeId', () => {
+    test('entry built for science_keywords uses rootNodes (array), not rootNodeId', () => {      //failed
       // Verify the bug is fixed: an array override must not land on rootNodeId
       const input = document.getElementById('input-sciencekeyword');
       // The Tagify whitelist being scoped is enough proof, but we also confirm
@@ -954,7 +954,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     // ── overlap / deduplication ─────────────────────────────────────────────
 
-    test('when rootNodes contains both a parent and its child, the child is not promoted to a separate top-level entry', (done) => {
+    test('when rootNodes contains both a parent and its child, the child is not promoted to a separate top-level entry', (done) => {      //failed
       // Simulate rootNodes = [GEODETICS, ELLIPSOID_CHARACTERISTICS] — a parent and its own child.
       // The child must NOT appear at top level alongside its parent; it must only appear
       // as a child of GEODETICS — otherwise it gets two breadcrumb paths in the whitelist.
@@ -962,7 +962,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
-          <div class="accordion p-2" id="accordionThesauri"></div>
+          <div id="thesaurusKeywordsGroup"></div>
         </div>
         <div id="thesaurusModalsContainer"></div>
       `;
@@ -1011,13 +1011,13 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     // ── focus-trigger lazy loading ────────────────────────────────────────
 
-    test('Tagify input focus also produces a filtered tree and whitelist (focus-trigger path)', (done) => {
+    test('Tagify input focus also produces a filtered tree and whitelist (focus-trigger path)', (done) => {        //failed
       // Reset state so lazy loading has not fired yet for this sub-test.
       // Re-run setupEnvironment WITHOUT dispatching the modal event so the
       // vocabulary data has not been loaded when we fire focus.
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
-          <div class="accordion p-2" id="accordionThesauri"></div>
+          <div id="thesaurusKeywordsGroup"></div>
         </div>
         <div id="thesaurusModalsContainer"></div>
       `;
@@ -1096,7 +1096,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       delete window.ELMO_FEATURES;
     });
 
-    test('full vocabulary tree is loaded without filtering when feature is off', () => {
+    test('full vocabulary tree is loaded without filtering when feature is off', () => {             //failed
       const tree = $('#jstree-sciencekeyword').jstree(true);
       const ids = tree.allNodeIds();
       // All nodes including non-GGM ones should be present
@@ -1105,7 +1105,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(ids).toContain('uri:science-keywords');
     });
 
-    test('Tagify whitelist includes non-GGM paths when feature is off', () => {
+    test('Tagify whitelist includes non-GGM paths when feature is off', () => {          //failed
       const input = document.getElementById('input-sciencekeyword');
       const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
       expect(whitelistValues.some(v => v.includes('TOPOGRAPHY'))).toBe(true);
