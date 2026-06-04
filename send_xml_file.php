@@ -157,6 +157,91 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     return $xmlFilename;
 }
 
+
+function collectResearcherConfirmationDataFromXml(string $xml_content): array
+{
+    $title = '';
+    $contacts = [];
+    $seen = [];
+
+    if (empty(trim($xml_content))) {
+        error_log("Researcher confirmation: XML content is empty.");
+        return [
+            'title' => $title,
+            'contacts' => $contacts,
+        ];
+    }
+
+    try {
+        $xml = new SimpleXMLElement($xml_content);
+
+        $titleNodes = $xml->xpath('//*[local-name()="title"]');
+        if ($titleNodes !== false && !empty($titleNodes)) {
+            $title = trim((string) $titleNodes[0]);
+        }
+
+        $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
+
+        error_log("Researcher confirmation: XML title = " . ($title !== '' ? $title : '[empty]'));
+        error_log("Researcher confirmation: XML raw pointOfContact count = " . (is_array($pointOfContactNodes) ? count($pointOfContactNodes) : 0));
+
+        if ($pointOfContactNodes !== false) {
+            foreach ($pointOfContactNodes as $pointOfContactNode) {
+                $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
+                $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
+
+                $fullName = '';
+                $email = '';
+
+                if ($nameNodes !== false && !empty($nameNodes)) {
+                    $fullName = trim((string) $nameNodes[0]);
+                }
+
+                if ($emailNodes !== false && !empty($emailNodes)) {
+                    $email = trim((string) $emailNodes[0]);
+                }
+
+                if ($fullName === '') {
+                    $fullName = 'researcher';
+                }
+
+                if (strpos($fullName, ',') !== false) {
+                    $nameParts = array_map('trim', explode(',', $fullName, 2));
+                    $familyName = $nameParts[0] ?? '';
+                    $givenName = $nameParts[1] ?? '';
+                    $fullName = trim($givenName . ' ' . $familyName);
+                }
+
+                if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    continue;
+                }
+
+                $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $contacts[] = [
+                    'fullName' => $fullName,
+                    'email' => $email,
+                ];
+
+                error_log("Researcher confirmation: XML contact {$fullName} <{$email}>");
+            }
+        }
+
+        error_log("Researcher confirmation: XML prepared contact count = " . count($contacts));
+    } catch (Exception $e) {
+        error_log("Researcher confirmation: Failed to parse XML. " . $e->getMessage());
+    }
+
+    return [
+        'title' => $title,
+        'contacts' => $contacts,
+    ];
+}
+
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 try {
@@ -371,6 +456,7 @@ if (!$simulateEmail) {
 } else {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
 }
+    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
 
     error_log("send_xml_file.php: About to return success");
 
