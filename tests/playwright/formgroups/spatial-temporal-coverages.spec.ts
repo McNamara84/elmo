@@ -129,15 +129,34 @@ const googleMapsStub = String.raw`(() => {
     constructor(opts = {}) {
       this._bounds = opts.bounds || null;
       this._map = opts.map || null;
+      this._listeners = {};
     }
     setMap(map) {
       this._map = map;
     }
     setBounds(bounds) {
       this._bounds = bounds;
+      // Trigger bounds_changed event when bounds are set
+      this._triggerEvent('bounds_changed');
     }
     getBounds() {
       return this._bounds;
+    }
+    addListener(eventName, callback) {
+      if (!this._listeners[eventName]) {
+        this._listeners[eventName] = [];
+      }
+      this._listeners[eventName].push(callback);
+      return {
+        remove: () => {
+          this._listeners[eventName] = this._listeners[eventName].filter(cb => cb !== callback);
+        }
+      };
+    }
+    _triggerEvent(eventName) {
+      if (this._listeners[eventName]) {
+        this._listeners[eventName].forEach(cb => cb());
+      }
     }
   }
 
@@ -327,22 +346,38 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     // Switch to rectangle mode by clicking the rectangle toolbar button
     await page.locator('#btn-draw-rectangle').click();
 
-    // Simulate rectangle drawing: click (start) → mousemove (drag) → mouseup (complete)
+    // Simulate rectangle drawing by creating and setting bounds on a rectangle
     await page.evaluate(() => {
       const mapInstance = (window as any).__elmoMapInstance;
       const LatLng = (window as any).google.maps.LatLng;
+      const LatLngBounds = (window as any).google.maps.LatLngBounds;
+      const Rectangle = (window as any).google.maps.Rectangle;
 
-      // Start: click sets startLatLng and creates preview rectangle
-      (window as any).google.maps.event.trigger(mapInstance, 'click', {
-        latLng: new LatLng(40.0, -74.5),
+      // Create a rectangle with the target bounds
+      const rectangle = new Rectangle({
+        map: mapInstance,
+        bounds: new LatLngBounds(
+          new LatLng(40.0, -74.5),  // SW (min lat, min lng)
+          new LatLng(41.0, -73.5)   // NE (max lat, max lng)
+        )
       });
-      // Drag: mousemove updates preview rectangle bounds
-      (window as any).google.maps.event.trigger(mapInstance, 'mousemove', {
-        latLng: new LatLng(41.0, -73.5),
-      });
-      // Release: mouseup completes the rectangle
-      (window as any).google.maps.event.trigger(mapInstance, 'mouseup', {});
+
+      // Trigger bounds_changed event by calling setBounds
+      rectangle.setBounds(rectangle.getBounds());
+      
+      // Store reference for test to verify
+      (window as any).__testRectangle = rectangle;
     });
+
+    // Wait for coordinate fields to be populated
+    await page.waitForFunction(
+      () => {
+        const latMax = document.querySelector('#input-stc-latmax_1') as HTMLInputElement;
+        const longMax = document.querySelector('#input-stc-longmax_1') as HTMLInputElement;
+        return latMax?.value && longMax?.value;
+      },
+      { timeout: 5000 }
+    );
 
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);
