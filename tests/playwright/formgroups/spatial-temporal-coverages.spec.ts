@@ -346,38 +346,27 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     // Switch to rectangle mode by clicking the rectangle toolbar button
     await page.locator('#btn-draw-rectangle').click();
 
-    // Simulate rectangle drawing by creating and setting bounds on a rectangle
+    // Rectangle drawing uses TWO clicks (not click+drag): first click anchors the
+    // first corner, second click completes it. A 150ms double-click guard timer
+    // must expire between clicks, so we wait 300ms after each.
+
+    // First click – anchors first corner, starts the preview rectangle
     await page.evaluate(() => {
       const mapInstance = (window as any).__elmoMapInstance;
-      const LatLng = (window as any).google.maps.LatLng;
-      const LatLngBounds = (window as any).google.maps.LatLngBounds;
-      const Rectangle = (window as any).google.maps.Rectangle;
-
-      // Create a rectangle with the target bounds
-      const rectangle = new Rectangle({
-        map: mapInstance,
-        bounds: new LatLngBounds(
-          new LatLng(40.0, -74.5),  // SW (min lat, min lng)
-          new LatLng(41.0, -73.5)   // NE (max lat, max lng)
-        )
+      (window as any).google.maps.event.trigger(mapInstance, 'click', {
+        latLng: new (window as any).google.maps.LatLng(40.0, -74.5),
       });
-
-      // Trigger bounds_changed event by calling setBounds
-      rectangle.setBounds(rectangle.getBounds());
-      
-      // Store reference for test to verify
-      (window as any).__testRectangle = rectangle;
     });
+    await page.waitForTimeout(300); // wait for 150ms DBLCLICK_THRESHOLD timer to fire
 
-    // Wait for coordinate fields to be populated
-    await page.waitForFunction(
-      () => {
-        const latMax = document.querySelector('#input-stc-latmax_1') as HTMLInputElement;
-        const longMax = document.querySelector('#input-stc-longmax_1') as HTMLInputElement;
-        return latMax?.value && longMax?.value;
-      },
-      { timeout: 5000 }
-    );
+    // Second click – completes the rectangle and emits 'rectanglecomplete'
+    await page.evaluate(() => {
+      const mapInstance = (window as any).__elmoMapInstance;
+      (window as any).google.maps.event.trigger(mapInstance, 'click', {
+        latLng: new (window as any).google.maps.LatLng(41.0, -73.5),
+      });
+    });
+    await page.waitForTimeout(300); // wait for timer to fire and fields to update
 
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);
