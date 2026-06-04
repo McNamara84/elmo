@@ -139,11 +139,11 @@ const MOCK_AVAILABILITY = {
 };
 
 async function waitForThesauriInit(page: import('@playwright/test').Page) {
-  await expect(page.locator('.thesaurus-input-item').first()).toBeVisible({ timeout: 15000 });
-  await page.waitForFunction(
-    () => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify),
-    { timeout: 15000 }
-  );
+  await page.waitForFunction(() => {
+    const thesaurusGroup = document.getElementById('thesaurusKeywordsGroup');
+    return thesaurusGroup && thesaurusGroup.children.length > 0;
+  }, { timeout: 15000 });
+  await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
 }
 
 test.describe('Thesauri Keywords Form Group', () => {
