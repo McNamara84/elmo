@@ -88,6 +88,30 @@ async function waitForThesauriInit(page: import('@playwright/test').Page) {
   await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
 }
 
+async function triggerTranslationsAndWaitForThesauri(page: import('@playwright/test').Page) {
+  await page.evaluate(() => {
+    const header = document.querySelector('[data-translate="keywords.thesaurus.name"]');
+    if (header) header.textContent = 'Thesauri Keywords';
+  });
+
+  for (let attempt = 0; attempt < 3; attempt++) {
+    await page.evaluate(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
+    try {
+      await page.waitForFunction(() => {
+        const accordion = document.getElementById('accordionThesauri');
+        return accordion && accordion.children.length > 0;
+      }, { timeout: 5000 });
+      await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 5000 });
+      return;
+    } catch (error) {
+      if (attempt === 2) throw error;
+    }
+  }
+}
+
 test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
   test.beforeEach(async ({ page }) => {
     await page.route(`**${TEST_ROUTE_PATH}`, async route => {
@@ -141,13 +165,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
 
     await injectModuleScript(page, 'js/thesauri.js');
 
-    await page.evaluate(() => {
-      const header = document.querySelector('[data-translate="keywords.thesaurus.name"]');
-      if (header) header.textContent = 'Thesauri Keywords';
-      document.dispatchEvent(new Event('translationsLoaded'));
-    });
-
-    await waitForThesauriInit(page);
+    await triggerTranslationsAndWaitForThesauri(page);
   });
 
   test('processKeywords loads tags with all metadata fields including language', async ({ page }) => {
