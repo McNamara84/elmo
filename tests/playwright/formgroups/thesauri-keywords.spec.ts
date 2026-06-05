@@ -139,12 +139,10 @@ const MOCK_AVAILABILITY = {
 };
 
 async function waitForThesauriInit(page: import('@playwright/test').Page) {
-  // Wait until the accordion has been populated with at least one item
   await page.waitForFunction(() => {
-    const accordion = document.getElementById('accordionThesauri');
-    return accordion && accordion.children.length > 0;
+    const thesaurusGroup = document.getElementById('thesaurusKeywordsGroup');
+    return thesaurusGroup && thesaurusGroup.children.length > 0;
   }, { timeout: 15000 });
-  // Wait until Tagify is initialised on the first available input
   await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
 }
 
@@ -235,61 +233,53 @@ test.describe('Thesauri Keywords Form Group', () => {
     await waitForThesauriInit(page);
   });
 
-  test('renders accessible accordion sections and controls', async ({ page }) => {
+  test('renders accessible thesaurus input sections and controls', async ({ page }) => {
     const header = page.locator('b[data-translate="keywords.thesaurus.name"]');
     await expect(header).toBeVisible();
     await expect(header).toContainText('Thesauri Keywords');
 
-    // Only 3 available thesauri should generate accordion items
-    const accordionItems = page.locator('#accordionThesauri .accordion-item');
-    await expect(accordionItems).toHaveCount(3);
+    const thesaurusItems = page.locator('.thesaurus-input-item');
+    await expect(thesaurusItems).toHaveCount(3);
 
     const sectionConfigs = [
       {
         name: 'GCMD Science Keywords',
-        collapseId: 'collapse-science_keywords',
-        expanded: 'true',
         helpId: 'help-scienceKeywords-keyword',
         inputId: '#input-sciencekeyword',
         expectedName: 'gcmdScienceKeywords',
-        modalButton: '#button-science_keywords-open',
         modalTarget: '#modal-sciencekeyword',
       },
       {
         name: 'GCMD Platforms',
-        collapseId: 'collapse-platforms',
-        expanded: 'false',
         helpId: 'help-gcmd-platforms-keyword',
         inputId: '#input-platforms',
         expectedName: 'platforms',
-        modalButton: '#button-platforms-open',
         modalTarget: '#modal-platforms',
       },
       {
         name: 'GCMD Instruments',
-        collapseId: 'collapse-instruments',
-        expanded: 'false',
         helpId: 'help-gcmd-instruments-keyword',
         inputId: '#input-instruments',
         expectedName: 'instruments',
-        modalButton: '#button-instruments-open',
         modalTarget: '#modal-instruments',
       },
     ] as const;
 
     for (const config of sectionConfigs) {
-      const button = page.locator(`button[data-bs-target="#${config.collapseId}"]`);
-      await expect(button).toHaveAttribute('aria-controls', config.collapseId);
-      await expect(button).toHaveAttribute('aria-expanded', config.expanded);
-      await expect(button).toHaveText(config.name);
+      const input = page.locator(config.inputId);
+      const item = input.locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]');
 
-      const helpIcon = page.locator(`#${config.collapseId} i.bi-question-circle-fill`);
+      await expect(item).toBeVisible();
+      await expect(input).not.toHaveAttribute('aria-hidden', 'true');
+      await expect(item.locator('.thesaurus-input-label')).toHaveText(config.name);
+
+      const helpIcon = item.locator('i.bi-question-circle-fill');
       await expect(helpIcon).toHaveAttribute('data-help-section-id', config.helpId);
 
-      const input = page.locator(config.inputId);
       await expect(input).toHaveAttribute('name', config.expectedName);
 
-      const modalButton = page.locator(config.modalButton);
+      const modalButton = item.locator('button[data-bs-toggle="modal"]');
+      await expect(modalButton).toBeVisible();
       await expect(modalButton).toHaveAttribute('data-bs-target', config.modalTarget);
     }
   });
@@ -300,7 +290,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     await expect(scienceModal).toBeHidden();
 
     // Click on the Tagify input to trigger focus-based lazy loading
-    const tagifyInput = page.locator('#collapse-science_keywords .tagify__input');
+    const tagifyInput = page.locator('#input-sciencekeyword').locator('..').locator('.tagify__input');
     await tagifyInput.click();
 
     // Wait for the API call to complete and whitelist to be populated
@@ -323,7 +313,12 @@ test.describe('Thesauri Keywords Form Group', () => {
   });
 
   test('synchronises science keyword selections between tree, summary list, and Tagify input', async ({ page }) => {
-    await page.locator('#button-science_keywords-open').click();
+    await page
+      .locator('#input-sciencekeyword')
+      .locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]')
+      .locator('button[data-bs-toggle="modal"]')
+      .click();
+
     const scienceModal = page.locator('#modal-sciencekeyword');
     await expect(scienceModal).toBeVisible();
 
@@ -356,7 +351,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     await expect(selectedItems).toHaveCount(1);
     await expect(selectedItems.first()).toContainText(SCIENCE_PATH);
 
-    const scienceTags = page.locator('#thesaurusKeywordsGroup #collapse-science_keywords .tagify__tag');
+    const scienceTags = page.locator('#input-sciencekeyword').locator('..').locator('.tagify__tag');
     await expect(scienceTags).toHaveCount(1);
     await expect(scienceTags.first()).toContainText('AQUACULTURE');
 
@@ -367,10 +362,6 @@ test.describe('Thesauri Keywords Form Group', () => {
   });
 
   test('supports searching, keyboard access, and persistence across thesauri modals', async ({ page }) => {
-    const platformsButton = page.locator('button[data-bs-target="#collapse-platforms"]');
-    await platformsButton.press(' ');
-    await expect(platformsButton).toHaveAttribute('aria-expanded', 'true');
-
     const openPlatformsModal = page.locator('#button-platforms-open');
     await openPlatformsModal.focus();
     await openPlatformsModal.press('Enter');
@@ -427,16 +418,14 @@ test.describe('Thesauri Keywords Form Group', () => {
     await platformsModal.locator('.modal-footer button.btn-primary').click();
     await expect(platformsModal).toBeHidden();
 
-    const platformTags = page.locator('#collapse-platforms .tagify__tag');
+    const platformTags = page.locator('#input-platforms').locator('..').locator('.tagify__tag');
     await expect(platformTags).toHaveCount(1);
     await expect(page.locator('#input-platforms')).toHaveValue(/BALLOONS/);
 
-    const instrumentsButton = page.locator('button[data-bs-target="#collapse-instruments"]');
-    await instrumentsButton.press('Enter');
-    await expect(instrumentsButton).toHaveAttribute('aria-expanded', 'true');
-
     const instrumentsModalButton = page.locator('#button-instruments-open');
-    await instrumentsModalButton.click();
+    await instrumentsModalButton.focus();
+    await instrumentsModalButton.press('Enter');
+
     const instrumentsModal = page.locator('#modal-instruments');
     await expect(instrumentsModal).toBeVisible();
 

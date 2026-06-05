@@ -162,7 +162,8 @@
             "title": "Thesauri",
             "name": "Thesauri Keywords",
             "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...",
-            "unavailable": "Thesaurus-Daten sind derzeit nicht verfügbar."
+            "unavailable": "Thesaurus-Daten sind derzeit nicht verfügbar.",
+            "button": "Thesaurus öffnen"
         },
         "free": {
             "title": "Freie Schlagworte",
