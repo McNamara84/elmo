@@ -46,7 +46,7 @@ function validateSaveSecurity($postData, $connection)
     
     // Security Check 1: Honeypot
     if (!validateHoneypot($postData['website'] ?? '')) {
-        error_log("[💿SAVE]: Save blocked - Honeypot triggered from IP {$clientIp}");
+        logSuspiciousAttempt($connection, 'save', 'honeypot triggered', $clientIp);
         return [
             'status' => false,
             'message' => 'Invalid request',
@@ -57,7 +57,7 @@ function validateSaveSecurity($postData, $connection)
     // Security Check 2: CSRF Token validation
     $submittedToken = $postData['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
-        error_log("[💿SAVE]: Save blocked - Invalid CSRF token from IP {$clientIp}");
+        logSuspiciousAttempt($connection, 'save', 'invalid csrf token', $clientIp);
         return [
             'status' => false,
             'message' => 'Invalid request - CSRF token validation failed',
@@ -67,25 +67,19 @@ function validateSaveSecurity($postData, $connection)
     
     // Security Check 3: Rate limiting
     if (!checkRateLimit($connection, $clientIp, 'save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        error_log("[💿SAVE]: Save blocked - Rate limit exceeded for IP {$clientIp}");
+        logSuspiciousAttempt($connection, 'save', 'rate limit exceeded', $clientIp);
         return [
             'status' => false,
             'message' => 'Too many save requests. Please try again later.',
             'code' => 429
         ];
     }
-    
-    // Record this save for rate limiting
-    recordRateLimit($connection, $clientIp, 'save');
-    
-    // Invalidate the used CSRF token
-    invalidateCsrfToken();
-    
+
     // Security Check 4: Minimum time validation
     if (isset($postData['save_time_spent'])) {
         $timeSpent = (int) $postData['save_time_spent'];
         if ($timeSpent < 2) {
-            error_log("[💿SAVE]: Save blocked - Insufficient time spent ({$timeSpent}s) from IP {$clientIp}");
+            logSuspiciousAttempt($connection, 'save', "insufficient time spent ({$timeSpent}s)", $clientIp);
             return [
                 'status' => false,
                 'message' => 'Save request too fast - minimum 2 seconds required',
@@ -93,6 +87,12 @@ function validateSaveSecurity($postData, $connection)
             ];
         }
     }
+
+    // Record this save for rate limiting
+    recordRateLimit($connection, $clientIp, 'save');
+
+    // Invalidate the used CSRF token only after all checks pass.
+    invalidateCsrfToken();
     
     return ['status' => true];
 }

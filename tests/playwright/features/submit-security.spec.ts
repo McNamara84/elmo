@@ -1,235 +1,130 @@
-import { test, expect } from '@playwright/test';
-import { navigateToHome, completeMinimalDatasetForm } from '../utils';
+import { test, expect, type Page } from '@playwright/test';
+import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
-const SUBMIT_ENDPOINT = '**/api/v2/controllers/SubmitController.php';
+const SUBMIT_ENDPOINT = '**/send_xml_file.php';
+
+async function openSubmitModal(page: Page) {
+  await completeMinimalDatasetForm(page);
+
+  const submitBtn = page.locator('#button-form-submit');
+  await submitBtn.scrollIntoViewIfNeeded();
+  await submitBtn.click();
+
+  const submitModal = page.locator('#modal-submit');
+  await expect(submitModal).toBeVisible({ timeout: 5000 });
+
+  const csrfField = submitModal.locator('input[name="csrf_token"]').first();
+  await expect(csrfField).not.toHaveValue('');
+
+  return { submitModal, csrfField };
+}
+
+function extractMultipartField(body: string, fieldName: string): string | null {
+  const pattern = new RegExp(`name="${fieldName}"\\r\\n\\r\\n([^\\r\\n]*)`);
+  const match = body.match(pattern);
+  return match ? match[1] : null;
+}
 
 test.describe('Submit Operation Security Features', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
   });
 
-  test.describe('Honeypot field protection in submit form', () => {
-    test('honeypot field exists but is hidden in submit form', async ({ page }) => {
-      await completeMinimalDatasetForm(page);
+  test('submit modal exposes honeypot + CSRF fields and honeypot starts empty', async ({ page }) => {
+    const { submitModal, csrfField } = await openSubmitModal(page);
 
-      // Open submit modal
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      const submitModal = page.locator('#modal-submit');
-      await expect(submitModal).toBeVisible({ timeout: 5000 });
+    const honeypotField = submitModal.locator('input[name="website"]').first();
+    await expect(honeypotField).toHaveAttribute('tabindex', '-1');
+    await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
+    await expect(honeypotField).toHaveValue('');
 
-      // Check honeypot field
-      const honeypotField = page.locator('#modal-submit input[name="website"]').first();
-      const honeypotCount = await honeypotField.count();
-
-      if (honeypotCount > 0) {
-        await expect(honeypotField).toHaveAttribute('tabindex', '-1');
-        await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
-        await expect(honeypotField).toHaveAttribute('type', 'text');
-      }
-    });
-
-    test('honeypot field is empty in submit form', async ({ page }) => {
-      await completeMinimalDatasetForm(page);
-
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
-
-      const honeypotField = page.locator('#modal-submit input[name="website"]').first();
-      const honeypotCount = await honeypotField.count();
-
-      if (honeypotCount > 0) {
-        await expect(honeypotField).toHaveValue('');
-      }
-    });
-
-    test('submit form includes honeypot field in submission', async ({ page }) => {
-      let capturedFormData: Record<string, string> = {};
-
-      await page.route(SUBMIT_ENDPOINT, async route => {
-        try {
-          const postData = route.request().postData();
-          if (postData) {
-            const params = new URLSearchParams(postData);
-            params.forEach((value, key) => {
-              capturedFormData[key] = value;
-            });
-          }
-        } catch (e) {
-          console.log('Error capturing form data:', e);
-        }
-
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ success: true, message: 'Submitted' }),
-        });
-      });
-
-      await completeMinimalDatasetForm(page);
-
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
-
-      const honeypotField = page.locator('#modal-submit input[name="website"]').first();
-      const honeypotCount = await honeypotField.count();
-
-      if (honeypotCount > 0) {
-        await expect(honeypotField).toHaveValue('');
-        
-        // Submit the form
-        const submitFormBtn = page.locator('#modal-submit button[type="submit"]').first();
-        await submitFormBtn.click();
-        await page.waitForTimeout(500);
-
-        // Verify honeypot was sent (should be empty)
-        if (capturedFormData['website'] !== undefined) {
-          expect(capturedFormData['website']).toBe('');
-        }
-      }
-
-      await page.unroute(SUBMIT_ENDPOINT);
-    });
+    await expect(csrfField).toHaveAttribute('type', 'hidden');
+    await expect(csrfField).not.toHaveValue('');
   });
 
-  test.describe('CSRF token protection in submit', () => {
-    test('submit form includes CSRF token field', async ({ page }) => {
-      await completeMinimalDatasetForm(page);
+  test('normal submit sends security fields and does not hit false-negative timing', async ({ page }) => {
+    let capturedBody = '';
 
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
+    await page.route(SUBMIT_ENDPOINT, async (route) => {
+      const bodyBuffer = route.request().postDataBuffer();
+      capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
 
-      const csrfField = page.locator('#modal-submit input[name="csrf_token"]').first();
-      const csrfCount = await csrfField.count();
-
-      if (csrfCount > 0) {
-        await expect(csrfField).toHaveAttribute('type', 'hidden');
-        const tokenValue = await csrfField.inputValue();
-        expect(tokenValue).toBeTruthy();
-        expect(tokenValue?.length).toBeGreaterThan(0);
-      }
-    });
-
-    test('submit form includes security fields in submission', async ({ page }) => {
-      const securityFieldsFound = {
-        csrf_token: false,
-        website: false,
-      };
-
-      await page.route(SUBMIT_ENDPOINT, async route => {
-        try {
-          const postData = route.request().postData() || '';
-          const params = new URLSearchParams(postData);
-
-          if (params.has('csrf_token')) {
-            securityFieldsFound.csrf_token = true;
-          }
-          if (params.has('website')) {
-            securityFieldsFound.website = true;
-          }
-        } catch (e) {
-          console.log('Error checking security fields:', e);
-        }
-
-        await route.fulfill({
-          status: 200,
-          contentType: 'application/json',
-          body: JSON.stringify({ success: true, message: 'Submitted' }),
-        });
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, message: 'Submitted successfully' }),
       });
-
-      await completeMinimalDatasetForm(page);
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
-
-      const submitFormBtn = page.locator('#modal-submit button[type="submit"]').first();
-      await submitFormBtn.click();
-      await page.waitForTimeout(500);
-
-      expect(securityFieldsFound.csrf_token).toBe(true);
-      expect(securityFieldsFound.website).toBe(true);
-
-      await page.unroute(SUBMIT_ENDPOINT);
     });
+
+    const { submitModal } = await openSubmitModal(page);
+    await page.check('#input-submit-privacycheck');
+    await expect(page.locator('#button-submit-submit')).toBeEnabled();
+
+    // Simulate a real user pause before confirming.
+    await page.waitForTimeout(3200);
+
+    await Promise.all([
+      page.waitForRequest(SUBMIT_ENDPOINT),
+      page.locator('#button-submit-submit').click(),
+    ]);
+
+    const submittedTimeSpentRaw = extractMultipartField(capturedBody, 'submit_time_spent');
+    const submittedTimeSpent = Number.parseInt(submittedTimeSpentRaw ?? '0', 10);
+
+    expect(capturedBody).toContain('name="csrf_token"');
+    expect(capturedBody).toContain('name="website"');
+    expect(capturedBody).toContain('name="submit_time_spent"');
+    expect(submittedTimeSpent).toBeGreaterThanOrEqual(3);
+
+    const notificationModal = page.locator(SELECTORS.modals.notification);
+    await expect(notificationModal).toBeVisible();
+    await expect(notificationModal.locator('.alert-success')).toBeVisible();
+
+    await page.unroute(SUBMIT_ENDPOINT);
   });
 
-  test.describe('Rate limiting on submit operations', () => {
-    test('shows rate limit error message when server returns 429 on submit', async ({ page }) => {
-      await page.route(SUBMIT_ENDPOINT, async route => {
-        await route.fulfill({
-          status: 429,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: false,
-            message: 'Too many submission requests.',
-          }),
-        });
-      });
+  test('backend rejects submit when CSRF token is corrupted', async ({ page }) => {
+    await openSubmitModal(page);
+    await page.check('#input-submit-privacycheck');
 
-      await completeMinimalDatasetForm(page);
-
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
-
-      const submitFormBtn = page.locator('#modal-submit button[type="submit"]').first();
-      await submitFormBtn.click();
-
-      // Wait for error to appear
-      await page.waitForTimeout(1500);
-
-      const errorAlert = page.locator('.alert-danger, .alert-error, [role="alert"]').first();
-      const errorExists = await errorAlert.count() > 0;
-
-      if (errorExists) {
-        await expect(errorAlert).toBeVisible({ timeout: 3000 });
-      }
-
-      await page.unroute(SUBMIT_ENDPOINT);
+    // Simulate token tampering before request submission.
+    await page.locator('#input-submit-csrf-token').evaluate((el) => {
+      (el as HTMLInputElement).value = 'corrupted-token';
     });
 
-    test('shows CSRF error message when token is invalid for submit', async ({ page }) => {
-      await page.route(SUBMIT_ENDPOINT, async route => {
-        await route.fulfill({
-          status: 403,
-          contentType: 'application/json',
-          body: JSON.stringify({
-            success: false,
-            message: 'Invalid CSRF token',
-          }),
-        });
-      });
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
 
-      await completeMinimalDatasetForm(page);
+    await page.locator('#button-submit-submit').click();
+    const response = await responsePromise;
 
-      const submitBtn = page.locator('#button-form-submit');
-      await submitBtn.scrollIntoViewIfNeeded();
-      await submitBtn.click();
-      await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
+    expect(response.status()).toBe(403);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
+    expect(payload.message).toContain('Security token validation failed');
+  });
 
-      const submitFormBtn = page.locator('#modal-submit button[type="submit"]').first();
-      await submitFormBtn.click();
+  test('backend rejects submit when modal confirmation is too fast (<3s)', async ({ page }) => {
+    await openSubmitModal(page);
+    await page.check('#input-submit-privacycheck');
 
-      await page.waitForTimeout(1500);
-
-      const errorAlert = page.locator('.alert-danger, .alert-error, [role="alert"]').first();
-      const errorExists = await errorAlert.count() > 0;
-
-      if (errorExists) {
-        await expect(errorAlert).toBeVisible({ timeout: 3000 });
-      }
-
-      await page.unroute(SUBMIT_ENDPOINT);
+    // Freeze Date.now close to modal-open time so client sends a low time-spent value.
+    await page.evaluate(() => {
+      const now = Date.now();
+      Date.now = () => now;
     });
+
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+
+    await page.locator('#button-submit-submit').click();
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(400);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
+    expect(payload.message).toContain('Please take time to review your submission before submitting.');
   });
 });

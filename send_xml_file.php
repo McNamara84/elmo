@@ -105,6 +105,7 @@ function validateSubmitSecurity(array $postData, $connection) {
     
     // Check 1: Honeypot - Silent rejection
     if (!validateHoneypot($postData['website'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'honeypot triggered', $clientIp);
         http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
@@ -114,13 +115,10 @@ function validateSubmitSecurity(array $postData, $connection) {
         ]);
         exit;
     }
-    // Check 2: CSRF Token validation
-    $csrfToken = $postData['csrf_token'] ?? '';
-    error_log("DEBUG: CSRF token from POST: " . (!empty($csrfToken) ? 'present' : 'MISSING'));
-    error_log("DEBUG: Session token: " . (!empty($_SESSION['csrf_token'] ?? '') ? 'present' : 'MISSING'));
-    
+
     // Check 2: CSRF Token validation
     if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'invalid csrf token', $clientIp);
         http_response_code(403);
         ob_clean();
         header('Content-Type: application/json');
@@ -133,6 +131,7 @@ function validateSubmitSecurity(array $postData, $connection) {
     
     // Check 3: Rate limiting for submit (10 per hour)
     if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($connection, 'submit', 'rate limit exceeded', $clientIp);
         http_response_code(429);
         ob_clean();
         header('Content-Type: application/json');
@@ -143,9 +142,10 @@ function validateSubmitSecurity(array $postData, $connection) {
         exit;
     }
     
-    // Check 4: Minimum time spent (5 seconds for submit)
+    // Check 4: Minimum time spent (3 seconds for submit)
     $timeSpent = intval($postData['submit_time_spent'] ?? 0);
-    if ($timeSpent < 5) {
+    if ($timeSpent < 3) {
+        logSuspiciousAttempt($connection, 'submit', "insufficient time spent ({$timeSpent}s)", $clientIp);
         http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');

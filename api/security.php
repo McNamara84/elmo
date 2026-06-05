@@ -33,6 +33,7 @@ define('RATE_LIMIT_FEEDBACK_MAX', (int) getenv('FEEDBACK_MAX_SUBMISSIONS') ?: 3)
 define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
 define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
 define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
+define('RATE_LIMIT_SUSPICIOUS_LOG_MAX', (int) getenv('SUSPICIOUS_LOG_RATE_LIMIT') ?: 10);
 
 /**
  * Initializes session if not already started.
@@ -199,5 +200,49 @@ function recordRateLimit(
     $stmt->close();
     
     return $success;
+}
+
+/**
+ * Logs suspicious request attempts with an hourly cap per IP.
+ *
+ * Uses the existing Rate_Limit table with a dedicated action bucket
+ * ("suspicious") so logging cannot flood application logs.
+ *
+ * @param mysqli $connection Database connection
+ * @param string $operation High-level operation name (save, submit, ...)
+ * @param string $reason Rejection reason
+ * @param string|null $ipAddress Optional client IP, auto-detected when omitted
+ * @return void
+ */
+function logSuspiciousAttempt(
+    $connection,
+    string $operation,
+    string $reason,
+    ?string $ipAddress = null
+): void
+{
+    $clientIp = $ipAddress ?: getClientIp();
+
+    // Fail safe: if connection is unavailable, still emit a single plain log line.
+    if (!$connection) {
+        error_log("[SECURITY]: Suspicious {$operation} attempt blocked ({$reason}) from IP {$clientIp}");
+        return;
+    }
+
+    if (!checkRateLimit(
+        $connection,
+        $clientIp,
+        'suspicious',
+        RATE_LIMIT_SUSPICIOUS_LOG_MAX,
+        RATE_LIMIT_WINDOW_SECONDS
+    )) {
+        return;
+    }
+
+    $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
+    $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
+
+    error_log("[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}");
+    recordRateLimit($connection, $clientIp, 'suspicious');
 }
 ?>

@@ -149,7 +149,7 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
             
       // Check for hidden CSRF field
-      const csrfField = page.locator('input[name="csrf_token"]');
+      const csrfField = page.locator('input[id="input-save-csrf-token"]');
       
       if (await csrfField.count() > 0) {
         await expect(csrfField).toHaveAttribute('type', 'hidden');
