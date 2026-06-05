@@ -157,7 +157,7 @@ describe('ggms-properties.js', () => {
         window.updateErrorHandlingVisibility();
         
         expect($('#input-error-handling-approach').closest('.col-12').css('display')).not.toBe('none');
-        expect($('#input-error-handling-approach').attr('required')).toBe('required');
+        expect($('#input-error-handling-approach').prop('required')).toBe(true);
         expect($('#input-errors').closest('.col-12').hasClass('col-lg-2')).toBeTruthy();
         expect($('#input-errors').closest('.col-12').hasClass('col-lg-6')).toBeFalsy();
     });
@@ -168,7 +168,7 @@ describe('ggms-properties.js', () => {
         window.updateErrorHandlingVisibility();
         
         expect($('#input-error-handling-approach').closest('.col-12').css('display')).toBe('none');
-        expect($('#input-error-handling-approach').attr('required')).toBeUndefined();
+        expect($('#input-error-handling-approach').prop('required')).toBe(false);
         expect($('#input-errors').closest('.col-12').hasClass('col-lg-6')).toBeTruthy();
         expect($('#input-errors').closest('.col-12').hasClass('col-lg-2')).toBeFalsy();
     });
@@ -179,7 +179,7 @@ describe('ggms-properties.js', () => {
         window.updateErrorHandlingVisibility();
         
         expect($('#input-error-handling-approach').closest('.col-12').css('display')).toBe('none');
-        expect($('#input-error-handling-approach').attr('required')).toBeUndefined();
+        expect($('#input-error-handling-approach').prop('required')).toBe(false);
     });
 
     test('should clear error handling approach field value when hiding', () => {
@@ -228,12 +228,12 @@ describe('ggms-properties.js', () => {
       expect($('.visibility-spherical').css('display')).toBe('none');
 
       // Check required attributes for ellipsoidal fields
-      expect($('#input-semimajor-axis').attr('required')).toBe('required');
-      expect($('#input-second-variable').attr('required')).toBe('required');
-      expect($('#input-second-variable-value').attr('required')).toBe('required');
+      expect($('#input-semimajor-axis').prop('required')).toBe(true);
+      expect($('#input-second-variable').prop('required')).toBe(true);
+      expect($('#input-second-variable-value').prop('required')).toBe(true);
 
       // Check that spherical fields are not required
-      expect($('#input-radius').attr('required')).toBeUndefined();
+      expect($('#input-radius').prop('required')).toBe(false);
     });
 
     test('should show spherical fields and set required attributes when "spherical harmonics" is selected', () => {
@@ -250,12 +250,12 @@ describe('ggms-properties.js', () => {
       expect($('.visibility-ellipsoidal').css('display')).toBe('none');
 
       // Check required attributes for spherical fields
-      expect($('#input-radius').attr('required')).toBe('required');
+      expect($('#input-radius').prop('required')).toBe(true);
 
       // Check that ellipsoidal fields are not required
-      expect($('#input-semimajor-axis').attr('required')).toBeUndefined();
-      expect($('#input-second-variable').attr('required')).toBeUndefined();
-      expect($('#input-second-variable-value').attr('required')).toBeUndefined();
+      expect($('#input-semimajor-axis').prop('required')).toBe(false);
+      expect($('#input-second-variable').prop('required')).toBe(false);
+      expect($('#input-second-variable-value').prop('required')).toBe(false);
     });
   });
 });

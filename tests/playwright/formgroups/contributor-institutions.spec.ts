@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS } from '../utils';
+import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS, simulateSubmitValidation  } from '../utils';
 
 const contributorInstitutionsMarkup = String.raw`
 <div class="card mb-2">
@@ -107,6 +107,7 @@ function buildTestPageMarkup() {
     <script src="js/roles.js"></script>
     <script src="js/affiliations.js"></script>
     <script src="js/checkMandatoryFields.js"></script>
+    <script src="js/validation/orcidValidation.js"></script>
     <script src="js/autocomplete.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/contributor-organisation.js"></script>
   </body>
@@ -144,7 +145,6 @@ test.describe('Contributor (Institutions) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-organisationrole');
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
@@ -222,8 +222,8 @@ test.describe('Contributor (Institutions) form group', () => {
   test('updates hidden ROR identifier when affiliations change', async ({ page }) => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
-      affiliationInput.tagify.addTags([
+      affiliationInput._tagify.removeAllTags();
+      affiliationInput._tagify.addTags([
         { value: 'Fraunhofer Institute for Open Communication Systems FOKUS', id: 'https://ror.org/019wvm592' },
         { value: 'Brown University', id: 'https://ror.org/05p8bnz29' }
       ]);
@@ -233,7 +233,7 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
+      affiliationInput._tagify.removeAllTags();
     });
 
     await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('');
@@ -248,18 +248,22 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
+      affiliationInput._tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
       (window as any).validateAllMandatoryFields();
     });
+
+    await simulateSubmitValidation(page); 
 
     await expect(nameInput).toHaveAttribute('required', 'required');
     await expect(roleInput).toHaveAttribute('required', 'required');
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
-      affiliationInput.tagify.removeAllTags();
+      affiliationInput._tagify.removeAllTags();
       (window as any).validateAllMandatoryFields();
     });
+
+    await simulateSubmitValidation(page); 
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
     await expect(roleInput).not.toHaveAttribute('required', 'required');

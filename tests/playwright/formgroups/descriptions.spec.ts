@@ -1,70 +1,75 @@
-import { test, expect, Locator } from '@playwright/test';
+import { test, expect, Locator, Page } from '@playwright/test';
 import { navigateToHome, openLanguageMenu, SELECTORS } from '../utils';
+
+/**
+ * Waits until the dynamic description types have been loaded from the ERNIE API
+ * and rendered into the accordion. Checks for at least one dynamic accordion item.
+ */
+async function waitForDynamicDescriptionTypes(page: Page) {
+  await page.waitForFunction(() => {
+    const items = document.querySelectorAll('#accordion-description .accordion-item[data-description-slug]');
+    return items.length > 0;
+  }, { timeout: 15000 });
+}
 
 test.describe('Descriptions Form Group', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expect(page.locator(SELECTORS.formGroups.descriptions)).toBeVisible();
+    await waitForDynamicDescriptionTypes(page);
   });
 
-  test('renders descriptions accordion with accessible sections and help icons', async ({ page }) => {
+  test('renders static Abstract and dynamic description types from ERNIE', async ({ page }) => {
     const header = page.locator('b[data-translate="descriptions.title"]');
     await expect(header).toBeVisible();
     await expect(page.locator('[data-help-section-id="help-descriptions-fg"]')).toBeVisible();
 
-    const accordionButtons = page.locator('#accordion-description .accordion-button');
-    await expect(accordionButtons).toHaveCount(4);
+    // Abstract is always the first accordion item (static HTML)
+    const abstractButton = page.locator('#accordion-description .accordion-button').first();
+    await expect(abstractButton).toHaveAttribute('data-bs-target', '#collapse-abstract');
+    await expect(abstractButton).toHaveAttribute('data-translate', 'descriptions.abstract');
+    await expect(abstractButton).toHaveAttribute('aria-expanded', 'true');
+    const abstractHelp = page.locator('#collapse-abstract i.bi-question-circle-fill');
+    await expect(abstractHelp).toHaveAttribute('data-help-section-id', 'help-description-abstract');
+    await expect(abstractHelp).toBeVisible();
 
-    const sectionConfigs = [
-      {
-        index: 0,
-        target: '#collapse-abstract',
-        translateKey: 'descriptions.abstract',
-        expanded: 'true',
-        helpId: 'help-description-abstract',
-        visible: true,
-      },
-      {
-        index: 1,
-        target: '#collapse-methods',
-        translateKey: 'descriptions.methods',
-        expanded: 'false',
-        helpId: 'help-description-methods',
-        visible: false,
-      },
-      {
-        index: 2,
-        target: '#collapse-technicalinfo',
-        translateKey: 'descriptions.technicalInfo',
-        expanded: 'false',
-        helpId: 'help-description-technicalinfo',
-        visible: false,
-      },
-      {
-        index: 3,
-        target: '#collapse-other',
-        translateKey: 'descriptions.other',
-        expanded: 'false',
-        helpId: 'help-description-other',
-        visible: false,
-      },
-    ] as const;
+    // Dynamic types are loaded from ERNIE – at least one should exist
+    const dynamicItems = page.locator('#accordion-description .accordion-item[data-description-slug]');
+    const count = await dynamicItems.count();
+    expect(count).toBeGreaterThan(0);
 
-    for (const config of sectionConfigs) {
-      const button = accordionButtons.nth(config.index);
-      await expect(button).toHaveAttribute('data-bs-target', config.target);
-      await expect(button).toHaveAttribute('data-translate', config.translateKey);
-      await expect(button).toHaveAttribute('aria-expanded', config.expanded);
-      const helpIcon = page.locator(`${config.target} i.bi-question-circle-fill`);
-      await expect(helpIcon).toHaveAttribute('data-help-section-id', config.helpId);
+    // Each dynamic item should have a collapsed accordion button and a help icon
+    for (let i = 0; i < count; i++) {
+      const item = dynamicItems.nth(i);
+      const button = item.locator('.accordion-button');
+      await expect(button).toHaveAttribute('aria-expanded', 'false');
+      const helpIcon = item.locator('i.bi-question-circle-fill');
       await expect(helpIcon).toBeAttached();
-      if (config.visible) {
-        await expect(helpIcon).toBeVisible();
-      }
     }
   });
 
-  test('allows entering descriptions data and maintains accessibility metadata', async ({ page }) => {
+  test('description types API returns valid data', async ({ page }) => {
+    const response = await page.request.get('/api/v2/vocabs/descriptiontypes');
+    expect(response.ok()).toBe(true);
+
+    const data = await response.json();
+    expect(Array.isArray(data)).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+
+    // Every type should have id, name, slug
+    for (const item of data) {
+      expect(item).toHaveProperty('id');
+      expect(item).toHaveProperty('name');
+      expect(item).toHaveProperty('slug');
+    }
+
+    // Abstract must always be present
+    const hasAbstract = data.some((item: { slug: string }) => item.slug === 'Abstract');
+    expect(hasAbstract).toBe(true);
+  });
+
+  test('allows entering descriptions and maintains accessibility metadata', async ({ page }) => {
+    // Abstract is always required
     const abstractField = page.locator('#input-abstract');
     await expect(abstractField).toHaveJSProperty('required', true);
     await expect(abstractField).toHaveAttribute('aria-describedby', 'abstract-help');
@@ -89,66 +94,52 @@ test.describe('Descriptions Form Group', () => {
       await expect(panel).toHaveClass(/collapse/);
     };
 
-    const { button: methodsButton, panel: methodsPanel } = await expandSection('#collapse-methods');
-    const methodsField = page.locator('#input-methods');
-    await methodsField.fill('Detailed methodology description.');
-    await expect(methodsField).toHaveValue('Detailed methodology description.');
+    // Expand and fill all dynamic description types
+    const dynamicItems = page.locator('#accordion-description .accordion-item[data-description-slug]');
+    const count = await dynamicItems.count();
+    expect(count).toBeGreaterThan(0);
 
-    const { button: technicalButton, panel: technicalPanel } = await expandSection('#collapse-technicalinfo');
-    const technicalField = page.locator('#input-technicalinfo');
-    await technicalField.fill('Technical specs and processing information.');
-    await expect(technicalField).toHaveValue('Technical specs and processing information.');
+    const firstItem = dynamicItems.first();
+    const firstSlug = await firstItem.getAttribute('data-description-slug');
+    const firstCollapseId = `#collapse-description-${firstSlug}`;
+    const firstInputId = `#input-description-${firstSlug}`;
 
-    const { button: otherButton, panel: otherPanel } = await expandSection('#collapse-other');
-    const otherField = page.locator('#input-other');
-    await otherField.fill('Supplementary notes and related information.');
-    await expect(otherField).toHaveValue('Supplementary notes and related information.');
+    const { button: firstButton, panel: firstPanel } = await expandSection(firstCollapseId);
+    const firstField = page.locator(firstInputId);
+    await firstField.fill('Test description text.');
+    await expect(firstField).toHaveValue('Test description text.');
 
-    await collapseSection(otherButton, otherPanel);
+    // Check aria-describedby on dynamic textarea
+    const ariaDescribedBy = await firstField.getAttribute('aria-describedby');
+    expect(ariaDescribedBy).toBeTruthy();
 
-    await otherButton.click();
-    await expect(otherButton).toHaveAttribute('aria-expanded', 'true');
-    await expect(otherPanel).toHaveClass(/show/);
-    await expect(otherPanel).toBeVisible();
-    await expect(otherField).toHaveValue('Supplementary notes and related information.');
-
-    // Close previously opened sections to keep the UI state tidy for following tests
-    const closeSectionIfExpanded = async (sectionButton: Locator, panel: Locator) => {
-      if ((await sectionButton.getAttribute('aria-expanded')) === 'true') {
-        await collapseSection(sectionButton, panel);
-        return;
-      }
-
-      await expect(panel).not.toBeVisible();
-      await expect(panel).toHaveClass(/collapse/);
-      await expect(sectionButton).toHaveAttribute('aria-expanded', 'false');
-    };
-
-    // Close previously opened sections to keep the UI state tidy for following tests
-    await closeSectionIfExpanded(technicalButton, technicalPanel);
-    await closeSectionIfExpanded(methodsButton, methodsPanel);
+    // Collapse and verify it stays collapsed
+    await collapseSection(firstButton, firstPanel);
   });
 
-  test('supports expanding sections via mouse and keyboard interactions', async ({ page }) => {
-    const methodsButton = page.locator('button[data-bs-target="#collapse-methods"]');
-    await expect(methodsButton).toHaveAttribute('aria-expanded', 'false');
-    await methodsButton.click();
-    await expect(methodsButton).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('#collapse-methods')).toHaveClass(/show/);
+  test('supports expanding dynamic sections via mouse and keyboard', async ({ page }) => {
+    const dynamicItems = page.locator('#accordion-description .accordion-item[data-description-slug]');
+    const count = await dynamicItems.count();
+    expect(count).toBeGreaterThan(0);
 
-    const technicalButton = page.locator('button[data-bs-target="#collapse-technicalinfo"]');
-    await expect(technicalButton).toHaveAttribute('aria-expanded', 'false');
-    await technicalButton.focus();
-    await technicalButton.press('Enter');
-    await expect(technicalButton).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('#collapse-technicalinfo')).toHaveClass(/show/);
+    // Test click on first dynamic item
+    const firstSlug = await dynamicItems.first().getAttribute('data-description-slug');
+    const firstButton = page.locator(`button[data-bs-target="#collapse-description-${firstSlug}"]`);
+    await expect(firstButton).toHaveAttribute('aria-expanded', 'false');
+    await firstButton.click();
+    await expect(firstButton).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.locator(`#collapse-description-${firstSlug}`)).toHaveClass(/show/);
 
-    const otherButton = page.locator('button[data-bs-target="#collapse-other"]');
-    await expect(otherButton).toHaveAttribute('aria-expanded', 'false');
-    await otherButton.focus();
-    await otherButton.press(' ');
-    await expect(otherButton).toHaveAttribute('aria-expanded', 'true');
-    await expect(page.locator('#collapse-other')).toHaveClass(/show/);
+    // Test keyboard Enter on second dynamic item (if available)
+    if (count > 1) {
+      const secondSlug = await dynamicItems.nth(1).getAttribute('data-description-slug');
+      const secondButton = page.locator(`button[data-bs-target="#collapse-description-${secondSlug}"]`);
+      await expect(secondButton).toHaveAttribute('aria-expanded', 'false');
+      await secondButton.focus();
+      await secondButton.press('Enter');
+      await expect(secondButton).toHaveAttribute('aria-expanded', 'true');
+      await expect(page.locator(`#collapse-description-${secondSlug}`)).toHaveClass(/show/);
+    }
   });
 
   test('updates placeholders according to selected language', async ({ page }) => {
@@ -158,27 +149,30 @@ test.describe('Descriptions Form Group', () => {
       'Please enter an abstract of the data. Please do not repeat the abstract of a paper, but describe the data itself.'
     );
 
-    const methodsField = page.locator('#input-methods');
-    await expect(methodsField).toHaveAttribute(
-      'placeholder',
-      'Please enter a description of the methodology employed for the study or research.'
-    );
+    // Find a dynamic textarea with a placeholder
+    const dynamicTextarea = page.locator('#accordion-description .accordion-item[data-description-slug] textarea[data-translate-placeholder]').first();
+    const enPlaceholder = await dynamicTextarea.getAttribute('placeholder');
+    expect(enPlaceholder).toBeTruthy();
 
     await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="de"]').click();
-    await page.waitForTimeout(1000);
 
+    // Wait for translation to be applied
     await expect(abstractField).toHaveAttribute(
       'placeholder',
       'Bitte ein Abstract zu den Daten einreichen. Bitte nicht das Abstract der dazugehörigen Publikation wiederholen, sondern die Daten an sich beschreiben.'
     );
-    await expect(methodsField).toHaveAttribute(
-      'placeholder',
-      'Bitte eine Beschreibung der für die Studie oder Forschung verwendeten Methodik eingeben.'
-    );
+    // Dynamic placeholder should have changed to German
+    const dePlaceholder = await dynamicTextarea.getAttribute('placeholder');
+    expect(dePlaceholder).toBeTruthy();
+    expect(dePlaceholder).not.toBe(enPlaceholder);
 
     await openLanguageMenu(page);
     await page.locator('[data-bs-language-value="en"]').click();
-    await page.waitForTimeout(500);
+    // Wait for language switch to complete
+    await expect(abstractField).toHaveAttribute(
+      'placeholder',
+      'Please enter an abstract of the data. Please do not repeat the abstract of a paper, but describe the data itself.'
+    );
   });
 });

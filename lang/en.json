@@ -9,18 +9,19 @@
         "language": "Language"
     },
     "general": {
-        "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
+        "logoTitle": "ELMO - Enhanced Linked Metadata Organizer 2.0",
         "logoTitleShort": "ELMO 2.0",
         "choose": "Choose...",
         "valid": "Valid",
         "pleaseChoose": "Please choose",
         "orcid": "ORCID",
         "orcidInvalid": "Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "The ORCID checksum is invalid. Please verify the ORCID at <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Last Name",
-        "lastNameInvalid": "Please provide a lastname. Only letters are allowed.",
-        "firstNameInvalid": "Please provide a firstname. Only letters are allowed.",
+        "lastNameInvalid": "Please provide a lastname. Letters only. No digits or special characters (e.g. $, %, _).",
+        "firstNameInvalid": "Please provide a firstname. Letters only. No digits or special characters (e.g. $, %, _).",
         "firstName": "First Name",
-        "affiliation": "Affiliation(s)",
+        "affiliation": "Affiliation",
         "roleLabel": "Role(s)",
         "add": "+",
         "cancel": "Cancel",
@@ -52,7 +53,11 @@
         "submitError": "Failed to submit dataset.",
         "errorHeading": "Error",
         "successHeading": "Success! Your metadata has been submitted.",
-        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly."
+        "successMessage": "Thank you for cooperating with us. You will be contacted via email by the data curation team of GFZ Data Services shortly.",
+        "dataUploadTitle": "Upload primary data",
+        "dataUploadMessage": "Only the <strong>metadata</strong> has been submitted to GFZ Data Services. Please upload your primary data (research data) via the following link to the Nextcloud:",
+        "dataUploadLinkText": "Upload primary data here",
+        "dataUploadFileNameHint": "Please name your file(s) according to the title of your dataset:"
     },
     "autosave": {
         "status": {
@@ -83,13 +88,13 @@
         "title": "Resource Information",
         "doi": "DOI",
         "doiValid": "A new DOI will be registered.",
-        "doiInvalid": "Please use format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
+        "doiInvalid": "Please use the format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
         "publicationYear": "Publication Year (YYYY)",
         "yearPlaceholder": "YYYY",
         "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits in the format YYYY).",
         "resourceType": "Resource Type",
         "version": "Version",
-        "versionInvalid": "If unsure leave blank",
+        "versionInvalid": "Please use digits.digits as the format. If unsure leave blank",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
         "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data).",
@@ -100,12 +105,12 @@
         "licenseTitle": "License"
     },
     "authors": {
-        "title": "Author(s)",
+        "title": "Author: Persons",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."
     },
     "authorsInstitutions": {
-        "title": "Author Institution",
+        "title": "Author: Institutions",
         "name": "Author Institution name"
     },
     "contactPersons": {
@@ -117,11 +122,11 @@
         "websiteInvalid": "Please provide a valid URL."
     },
     "contributorPersons": {
-        "title": "Contributor (Persons)"
+        "title": "Contributor: Persons"
     },
     "contributorInstitutions": {
-        "title": "Contributor (Institutions)",
-        "organization": "Organisation name",
+        "title": "Contributor: Institutions",
+        "organization": "Institution name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {
@@ -142,17 +147,21 @@
         "technicalinfoPlaceholder": "Please enter detailed information that may be associated with design, implementation, operation, use, and/or maintenance of a process, system, or instrument.",
         "other": "Other",
         "otherTooltip": "Please enter other information..",
-        "otherPlaceholder": "Please enter other description information that does not fit into an existing category."
+        "otherPlaceholder": "Please enter other description information that does not fit into an existing category.",
+        "seriesInformation": "Series Information",
+        "seriesInformationTooltip": "Please enter series information...",
+        "seriesInformationPlaceholder": "Please enter information about a repeating series, such as volume, issue, number.",
+        "tableOfContents": "Table of Contents",
+        "tableOfContentsTooltip": "Please enter a table of contents...",
+        "tableOfContentsPlaceholder": "Please enter a listing of the contents of the resource."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Platforms",
-            "instruments": "GCMD Instruments",
-            "label": "Open thesaurus to choose keywords or start typing..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Open thesaurus to choose keywords or start typing...",
+            "unavailable": "Thesaurus data currently unavailable."
         },
         "free": {
             "title": "Free Keywords",
@@ -180,10 +189,18 @@
         "end": "End",
         "dateTimeInvalid": "Please enter a valid date.",
         "endDateError": "End date must not be before start date.",
+        "endTimeError": "When start and end date are the same, end time must not be before start time.",
         "timezone": "Timezone",
         "timezoneInvalid": "Please choose a timezone",
         "mapInfo": "(Please choose coordinates with rectangle or marker)",
         "mapSearch": "Search for place names"
+    },
+    "usedInstruments": {
+        "title": "Used Instruments",
+        "placeholder": "Search and select instruments...",
+        "loading": "Loading instrument list...",
+        "unavailable": "Instrument list currently unavailable. Please try again later.",
+        "selected": "selected instruments"
     },
     "relatedWork": {
         "title": "Related work",
@@ -217,9 +234,9 @@
         "tideSystem": "Tide system",
         "tideSystemInvalid": "Please choose tide system.",
         "tideSystemOptions": {
-            "zeroTide": "zero tide",
-            "meanTide": "mean tide",
-            "tideFree": "tide free"
+            "zeroTide": "Zero-tide",
+            "meanTide": "Mean-tide",
+            "tideFree": "Tide-free"
         },
         "errors": "Errors",
         "errorsInvalid": "Please choose error type.",
@@ -249,13 +266,15 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save",
-        "saveAsTooltip": "Save the current data or content under a new file name.",
+        "saveAs": "Save as XML",
+        "saveAsTooltip": "Save the current data or content as an XML file.",
+        "saveAsJsonLd": "Save as JSON-LD",
+        "saveAsJsonLdTooltip": "Save the current data or content as a JSON-LD file.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
         "PrivacyPolicy": "Privacy Policy",
-        "elmoGuide": "Elmo Guide"
+        "elmoGuide": "Guide"
     },
     "modals": {
         "feedback": {
@@ -283,17 +302,30 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here"
+            "modalTitle": "Load metadata file",
+            "title": "Select XML or JSON-LD file:",
+            "dropZoneInfo": "Drop XML or JSON-LD file here",
+            "loading": "Processing file...",
+            "successToast": "successfully loaded",
+            "errorToast": "Error loading file",
+            "invalidFileType": "Please upload an XML or JSON-LD file.",
+            "errorProcessing": "Error processing metadata file",
+            "errorReading": "Error reading file"
+        },
+        "icgemWrongApp": {
+            "title": "ICGEM Metadata File Detected",
+            "body": "Dear user,\n\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "close": "Close"
         },
         "changelog": {
             "title": "Changelog",
             "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
-            "aboutHeading": "About ELMO - Enhanced Laboratory Metadata Organizer"
+            "aboutHeading": "About ELMO - Enhanced Linked Metadata Organizer"
         },
         "save": {
             "title": "Save Metadata",
             "saveAs": "Save as XML",
+            "saveAsJsonLd": "Save as JSON-LD",
             "filename": "Filename",
             "save": "Save"
         },
@@ -307,7 +339,33 @@
             "high": "high",
             "normal": "normal",
             "low": "low"
+        },
+        "validationFailed": {
+            "title": "Submission not possible",
+            "greeting": "Dear user,",
+            "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as XML</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "fixHint": "Otherwise, please complete the fields marked in red and try again.",
+            "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
+            "close": "Close"
         }
+    },
+    "orcidSearch": {
+        "modalTitle": "Search ORCID",
+        "lastName": "Last Name",
+        "firstName": "First Name",
+        "searchButton": "Search",
+        "resultsHeading": "Search Results",
+        "noResults": "No results found.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Last Name",
+        "columnFirstName": "First Name",
+        "columnAffiliation": "Affiliation(s)",
+        "accept": "Accept",
+        "searching": "Searching...",
+        "error": "The ORCID service is temporarily unavailable. Please try again later.",
+        "searchButtonTitle": "Search ORCID by name",
+        "inputRequired": "Please enter at least a first or last name."
     },
     "welcome": {
         "title": "Welcome to ELMO 😊",
@@ -315,6 +373,19 @@
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
         "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
+    },
+    "doiPrefill": {
+        "modalTitle": "Pre-fill from DOI",
+        "modalMessage": "The following metadata was found for this DOI. Do you want to pre-fill the form? Existing entries will be overwritten.",
+        "confirm": "Apply",
+        "cancel": "Cancel",
+        "loading": "Looking up DOI…",
+        "versionHint": "Please check and adjust the version number if necessary.",
+        "previewTitle": "Title",
+        "previewAuthors": "Authors",
+        "previewType": "Resource Type",
+        "previewYear": "Publication Year",
+        "previewLicense": "License"
     }
 
 }

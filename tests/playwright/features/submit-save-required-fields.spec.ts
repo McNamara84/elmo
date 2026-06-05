@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('Save vs Submit – required fields', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('', { waitUntil: 'domcontentloaded' });
   });
 
   test('Save makes js-required-on-submit field optional', async ({ page }) => {

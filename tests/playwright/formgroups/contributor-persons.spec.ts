@@ -28,7 +28,7 @@ const contributorGroupMarkup = String.raw`
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-lastname" pattern="^[a-zA-ZäöéüÄÖÜß \-]*$"
+              <input type="text" class="form-control" id="input-contributor-lastname" pattern="[^0-9$§?!&%=_*+<>]*"
                 name="cbPersonLastname[]" />
               <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
@@ -38,7 +38,7 @@ const contributorGroupMarkup = String.raw`
         <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-firstname" pattern="^[a-zA-ZäöéüÄÖÜß \-.]*$"
+              <input type="text" class="form-control" id="input-contributor-firstname" pattern="[^0-9$§?!&%=_*+<>]*"
                 name="cbPersonFirstname[]" />
               <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
               <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
@@ -178,6 +178,7 @@ function buildTestPageMarkup() {
     <script src="js/roles.js"></script>
     <script src="js/affiliations.js"></script>
     <script src="js/checkMandatoryFields.js"></script>
+    <script src="js/validation/orcidValidation.js"></script>
     <script src="js/autocomplete.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/contributor-person.js"></script>
   </body>
@@ -206,6 +207,24 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
+    // Mock the new server-side affiliations search API endpoint
+    await page.route('**/api/v2/affiliations/search**', async route => {
+      const url = new URL(route.request().url());
+      const query = url.searchParams.get('q')?.toLowerCase() || '';
+      
+      // Filter affiliations based on search query
+      const filtered = affiliationFixtures.filter((aff: any) => 
+        aff.name.toLowerCase().includes(query) ||
+        (aff.other || []).some((alt: string) => alt.toLowerCase().includes(query))
+      );
+      
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(filtered.slice(0, 20))
+      });
+    });
+
     await page.route('**/test-harness', async route => {
       await route.fulfill({
         status: 200,
@@ -215,7 +234,6 @@ test.describe('Contributor (Persons) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
-    await page.waitForLoadState('networkidle');
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('#input-contributor-personrole');
       const affiliationInput: any = document.querySelector('#input-contributorpersons-affiliation');
@@ -261,7 +279,7 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
-    await page.locator('#input-contributor-orcid').fill('0000-0003-1825-0097');
+    await page.locator('#input-contributor-orcid').fill('0000-0003-1825-0094');
     await page.locator('#input-contributor-lastname').click();
 
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Nguyen');
@@ -269,12 +287,12 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.waitForFunction(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input?.tagify?.value?.length === 2;
+      return input?._tagify?.value?.length === 2;
     });
 
     const affiliationValues = await page.evaluate(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input.tagify.value.map((tag: { value: string }) => tag.value);
+      return input._tagify.value.map((tag: { value: string }) => tag.value);
     });
 
     expect(affiliationValues).toEqual([
@@ -322,7 +340,6 @@ test.describe('Contributor (Persons) form group', () => {
 
     await page.locator('#input-contributor-orcid').fill('1234');
     await page.locator('#input-contributor-firstname').click();
-    await page.waitForTimeout(400);
 
     expect(requests).toHaveLength(0);
     await expect(page.locator('#input-contributor-lastname')).toHaveValue('Existing');
@@ -356,17 +373,18 @@ test.describe('Contributor (Persons) form group', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Wait for affiliation field to be initialized with Tagify
+    // Note: Tagify is stored as `element.tagify` (without underscore) in affiliations.js
     await page.waitForFunction(() => {
       const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      return !!input?.tagify && input.tagify.whitelist?.length > 0;
+      return !!input?.tagify || !!input?._tagify;
     });
 
-    // Trigger dropdown programmatically with a search term that returns multiple results
-    // Using "University" as it's common and returns multiple institutions
-    await page.evaluate(() => {
-      const input: any = document.querySelector('#input-contributorpersons-affiliation');
-      input.tagify.dropdown.show('University');
-    });
+    // Type search term to trigger server-side search and populate dropdown
+    const affiliationInput = page.locator('#input-contributorpersons-affiliation').locator('..').locator('.tagify__input');
+    await affiliationInput.click();
+    await affiliationInput.fill('University');
+    
+    // Wait for dropdown to appear after server search
     
     // Wait for dropdown to appear
     const dropdown = page.locator('.tagify__dropdown.affiliation');

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+    bootstrap="tests/bootstrap.php"
+    colors="true">
+    <testsuites>
+        <testsuite name="SaveTests">
+            <directory>tests</directory>
+        </testsuite>
+    </testsuites>
+
+    <coverage includeUncoveredFiles="true">
+        <report>
+            <clover outputFile="clover.xml" />
+        </report>
+    </coverage>
+
+    <source>
+        <include>
+            <directory suffix=".php">./save</directory>
+            <directory suffix=".php">./includes</directory>
+            <directory suffix=".php">./api/v2</directory>
+            <file>./api_functions.php</file>
+            <file>./send_xml_file.php</file>
+            <file>./log_page_event.php</file>
+        </include>
+        <exclude>
+            <file>./save/save_data.php</file>
+        </exclude>
+    </source>
+</phpunit>

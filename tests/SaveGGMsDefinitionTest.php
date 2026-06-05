@@ -1,8 +1,9 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
 
@@ -14,7 +15,7 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
  * - validateGGMData validation
  * - saveGGMsDefinition complete flow
  */
-class SaveGGMsDefinitionTest extends DatabaseTestCase
+final class SaveGGMsDefinitionTest extends DatabaseTestCase
 {
     private $resourceId;
 
@@ -189,41 +190,39 @@ class SaveGGMsDefinitionTest extends DatabaseTestCase
     }
 
     /**
-     * Test: validateGGMData throws exception for invalid model type
+     * Test: validateGGMData accepts any string for model_type (no validation against allowed values)
      */
-    public function testValidateGGMDataThrowsExceptionForInvalidModelType(): void
+    public function testValidateGGMDataAcceptsAnyModelType(): void
     {
         $data = [
             'model_name' => 'TEST_MODEL',
-            'model_type' => 'InvalidType',
+            'model_type' => 'AnyTypeValue',  // No validation against specific values
             'mathematical_representation' => 'Spherical harmonics',
             'file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid value for model_type');
-
-        validateGGMData($data, $this->resourceId);
+        // Should not throw - function doesn't validate model_type values
+        $result = validateGGMData($data, $this->resourceId);
+        $this->assertEquals('AnyTypeValue', $result['model_type']);
     }
 
     /**
-     * Test: validateGGMData throws exception for invalid celestial body
+     * Test: validateGGMData accepts any string for celestial_body (no validation against allowed values)
      */
-    public function testValidateGGMDataThrowsExceptionForInvalidCelestialBody(): void
+    public function testValidateGGMDataAcceptsAnyCelestialBody(): void
     {
         $data = [
             'model_name' => 'TEST_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
             'file_format' => 'icgem1.0',
-            'celestial_body' => 'Jupiter'
+            'celestial_body' => 'Jupiter'  // No validation against specific values
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Invalid value for celestial_body');
-
-        validateGGMData($data, $this->resourceId);
+        // Should not throw - function doesn't validate celestial_body values
+        $result = validateGGMData($data, $this->resourceId);
+        $this->assertEquals('Jupiter', $result['celestial_body']);
     }
 
     // ============================================================================
@@ -361,7 +360,7 @@ class SaveGGMsDefinitionTest extends DatabaseTestCase
     }
 
     /**
-     * Test: saveGGMsDefinition throws exception when foreign key lookup fails
+     * Test: saveGGMsDefinition throws exception on submit when foreign key lookup fails
      */
     public function testSaveGGMsDefinitionThrowsExceptionWhenForeignKeyLookupFails(): void
     {
@@ -369,6 +368,7 @@ class SaveGGMsDefinitionTest extends DatabaseTestCase
         $this->connection->query("DELETE FROM `Model_Type`");
 
         $postData = [
+            'action' => 'submit',
             'model_name' => 'WILL_FAIL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
@@ -380,5 +380,28 @@ class SaveGGMsDefinitionTest extends DatabaseTestCase
         $this->expectExceptionMessage('Failed to resolve foreign keys');
 
         saveGGMsDefinition($this->connection, $postData, $this->resourceId);
+    }
+
+    /**
+     * Test: saveGGMsDefinition does NOT throw on save_and_download when foreign key lookup fails
+     * (dropdowns on "Choose" are acceptable during partial saves)
+     */
+    public function testSaveGGMsDefinitionSaveDoesNotThrowWhenForeignKeyLookupFails(): void
+    {
+        // Clear lookup tables – same conditions as the submit test
+        $this->connection->query("DELETE FROM `Model_Type`");
+
+        $postData = [
+            'action' => 'save_and_download',
+            'model_name' => 'INCOMPLETE_SAVE',
+            'model_type' => 'Static',
+            'mathematical_representation' => 'Spherical harmonics',
+            'file_format' => 'icgem1.0',
+            'celestial_body' => 'Earth'
+        ];
+
+        // Must not throw even though FK lookup returns null
+        $result = saveGGMsDefinition($this->connection, $postData, $this->resourceId);
+        $this->assertTrue($result);
     }
 }

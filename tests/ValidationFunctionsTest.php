@@ -1,6 +1,10 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/validation.php';
@@ -11,7 +15,13 @@ require_once __DIR__ . '/../save/validation.php';
  * These tests ensure that the validation logic for required fields,
  * dependencies and data structures behaves as expected.
  */
-class ValidationFunctionsTest extends TestCase
+#[CoversFunction('validateRequiredFields')]
+#[CoversFunction('validateArrayDependencies')]
+#[CoversFunction('validateContributorPersonDependencies')]
+#[CoversFunction('validateContributorInstitutionDependencies')]
+#[CoversFunction('validateFundingReferenceDependencies')]
+#[CoversFunction('validateRelatedWorkDependencies')]
+final class ValidationFunctionsTest extends TestCase
 {
     /**
      * Validates that all required fields being present returns true.
@@ -184,6 +194,17 @@ class ValidationFunctionsTest extends TestCase
      */
     public function testValidateKeywordEntriesValid(): void
     {
+        $entry = [['value' => 'A', 'scheme' => 's']];
+        $this->assertTrue(validateKeywordEntries($entry));
+    }
+
+    /**
+     * Checks keyword validation passes with optional fields (schemeURI, language) present.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesValidWithOptionalFields(): void
+    {
         $entry = [['value' => 'A', 'id' => '1', 'scheme' => 's', 'schemeURI' => 'u', 'language' => 'en']];
         $this->assertTrue(validateKeywordEntries($entry));
     }
@@ -195,8 +216,30 @@ class ValidationFunctionsTest extends TestCase
      */
     public function testValidateKeywordEntriesMissingField(): void
     {
-        $entry = [['value' => 'A', 'id' => '1']];
+        $entry = [['id' => '1', 'scheme' => 's']];
         $this->assertFalse(validateKeywordEntries($entry));
+    }
+
+    /**
+     * Ensures keyword validation passes without optional language and schemeURI.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesWithoutOptionalFields(): void
+    {
+        $entry = [['value' => 'EARTH SCIENCE > GRAVITY', 'scheme' => 'NASA/GCMD Earth Science Keywords']];
+        $this->assertTrue(validateKeywordEntries($entry));
+    }
+
+    /**
+     * Ensures keyword validation passes when only value is present.
+     *
+     * @return void
+     */
+    public function testValidateKeywordEntriesValueOnly(): void
+    {
+        $entry = [['value' => 'A']];
+        $this->assertTrue(validateKeywordEntries($entry));
     }
 
     /**
@@ -228,14 +271,15 @@ class ValidationFunctionsTest extends TestCase
     }
 
     /**
-     * Ensures STC validation fails when base fields are missing.
+     * Verifies STC validation succeeds when no fields are provided (empty entry is valid).
      *
      * @return void
      */
-    public function testValidateSTCDependenciesMissingBase(): void
+    public function testValidateSTCDependenciesEmptyEntry(): void
     {
         $entry = [];
-        $this->assertFalse(validateSTCDependencies($entry));
+        // Empty entries are considered valid - no data = no validation errors
+        $this->assertTrue(validateSTCDependencies($entry));
     }
 
     /**
@@ -274,6 +318,48 @@ class ValidationFunctionsTest extends TestCase
             'longitudeMax' => 2
         ];
         $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    /**
+     * Ensures STC validation fails when end time is before start time on the same date.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesSameDateEndTimeBeforeStartTime(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-01',
+            'timeStart' => '12:00',
+            'timeEnd' => '11:59',
+            'timezone' => 'UTC'
+        ];
+
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    /**
+     * Ensures STC validation accepts a valid time range on the same date.
+     *
+     * @return void
+     */
+    public function testValidateSTCDependenciesSameDateValidTimeOrder(): void
+    {
+        $entry = [
+            'latitudeMin' => 1,
+            'longitudeMin' => 1,
+            'description' => 'd',
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-01',
+            'timeStart' => '11:00',
+            'timeEnd' => '11:30',
+            'timezone' => 'UTC'
+        ];
+
+        $this->assertTrue(validateSTCDependencies($entry));
     }
 
     /**

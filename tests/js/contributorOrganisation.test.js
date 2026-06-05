@@ -39,6 +39,7 @@ describe('contributor-organisation.js', () => {
 
     global.createRemoveButton = jest.fn(() => $('<button class="removeButton"></button>'));
     global.replaceHelpButtonInClonedRows = jest.fn();
+    global.translateClonedRow = jest.fn();
     global.setupRolesDropdown = jest.fn();
     global.autocompleteAffiliations = jest.fn();
     global.validateAllMandatoryFields = jest.fn();
@@ -46,7 +47,7 @@ describe('contributor-organisation.js', () => {
     window.affiliationsData = [{ id: '1', name: 'Org' }];
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/contributor-organisation.js'), 'utf8');
-    script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
+    script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } = window;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);\s*$/, '\n})();');
     window.eval(script);
@@ -56,6 +57,7 @@ describe('contributor-organisation.js', () => {
     jest.restoreAllMocks();
     delete global.createRemoveButton;
     delete global.replaceHelpButtonInClonedRows;
+    delete global.translateClonedRow;
     delete global.setupRolesDropdown;
     delete global.autocompleteAffiliations;
     delete global.validateAllMandatoryFields;

@@ -42,13 +42,13 @@ $(document).ready(function () {
 
     // Adjust Title Input field width
     newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")
-      .removeClass("col-sm-11 col-md-11 col-lg-11")
-      .addClass("col-11 col-md-8 col-lg-8");
+      .removeClass("col-10 col-sm-11 col-md-11 col-lg-11")
+      .addClass("col-10 col-sm-5 col-md-8 col-lg-8");
 
     // Adjust Title Type Dropdown width and make it visible
     newTitleRow.find("#container-resourceinformation-titletype")
       .removeClass("col-10 col-md-3 unvisible")
-      .addClass("col-10 col-md-3 col-lg-3");
+      .addClass("col-10 col-sm-5 col-md-3 col-lg-3");
 
     // Control the visibility of the title type dropdown.
     if (titlesNumber === 0) {
@@ -63,14 +63,33 @@ $(document).ready(function () {
     if (window.mainTitleTypeId) {
       $select.find(`option[value='${window.mainTitleTypeId}']`).remove();
     }
-    $select.val("");
+    // Pre-select "Alternative Title" by ID so the title type is never empty.
+    // Falls back to the first non-empty option if the ID is unavailable.
+    if (window.alternativeTitleTypeId && $select.find(`option[value='${window.alternativeTitleTypeId}']`).length) {
+      $select.val(window.alternativeTitleTypeId);
+    } else {
+      const $firstOption = $select.find("option[value]").filter(function () {
+        return $(this).val() !== "";
+      }).first();
+      $select.val($firstOption.val() || "");
+    }
+    // Explicitly set the disabled state based on whether valid options exist.
+    // A "valid" option has a non-empty value — the placeholder (value="")
+    // added by select.js does not count. When no valid options exist (e.g. the
+    // user clicked "Add" while title types are still loading, or the API
+    // returned no types), disable the select to prevent a required empty
+    // control from blocking form submission.
+    const hasValidOptions = $select.find("option").filter(function () {
+      return $(this).val() !== "";
+    }).length > 0;
+    $select.prop("disabled", !hasValidOptions);
 
     // Create a remove button for the new row.
     const removeBtn = $("<button/>", {
       text: "-",
       type: "button",
       class: "btn btn-danger removeTitle",
-    }).css("width", "36px").click(function () {
+    }).css({ "width": "36px", "margin-inline-end": "0.75rem" }).click(function () {
       // Remove the current row and decrement the titles counter.
       $(this).closest(".row").remove();
       titlesNumber--;
@@ -92,5 +111,11 @@ $(document).ready(function () {
     if (titlesNumber >= maxTitles) {
       $addTitleBtn.prop("disabled", true);
     }
+  });
+
+  // Listen for clear event to reset title counter and button state
+  $(document).on('elmo:clearTitles', function () {
+    titlesNumber = 1;
+    $("#button-resourceinformation-addtitle").prop("disabled", false);
   });
 });

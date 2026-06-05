@@ -24,7 +24,7 @@ services:
       DB_NAME: ${DB_NAME}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: keep_data
+      DB_INIT_MODE: drop_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -35,12 +35,27 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for Standard ELMO
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for Standard ELMO (all form groups enabled)
+      SHOW_MSL_LABS: ${SHOW_MSL_LABS:-false}
+      SHOW_MSL_VOCABS: ${SHOW_MSL_VOCABS:-false}
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: ${SHOW_MSL_DEFAULT_FREE_KEYWORDS:-false}
+      SHOW_MSL_LOGO: ${SHOW_MSL_LOGO:-false}
+      SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-true}
+      SHOW_THESAURI: ${SHOW_THESAURI:-true}
+      SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS:-true}
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE:-true}
+      SHOW_RELATED_WORK: ${SHOW_RELATED_WORK:-true}
     depends_on:
       - db
     restart: unless-stopped
@@ -65,9 +80,6 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      # No install routine
-      INSTALL_ACTION: skip
-      DB_INIT_MODE: keep_data
 
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -78,12 +90,28 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
+      SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      # Flags for msl
-      SHOW_MSL_LABS: "true"
-      SHOW_MSL_VOCABS: "true"
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for MSL (MSL-specific vocabularies enabled)
+      SHOW_MSL_LABS: ${SHOW_MSL_LABS_MSL:-true}
+      SHOW_MSL_VOCABS: ${SHOW_MSL_VOCABS_MSL:-true}
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: ${SHOW_MSL_DEFAULT_FREE_KEYWORDS_MSL:-true}
+      SHOW_MSL_LOGO: ${SHOW_MSL_LOGO_MSL:-true}
+      SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES_MSL:-false}
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS_MSL:-false}
+      SHOW_THESAURI: ${SHOW_THESAURI_MSL:-true}
+      SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS_MSL:-true}
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE_MSL:-true}
+      SHOW_RELATED_WORK: ${SHOW_RELATED_WORK_MSL:-true}
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
       - db
     restart: unless-stopped

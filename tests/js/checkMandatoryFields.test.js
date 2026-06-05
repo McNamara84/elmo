@@ -1,5 +1,7 @@
 const fs = require('fs');
 const path = require('path');
+const { simulateSubmitValidation } = require('./utils');
+
 
 describe('validateAuthorInstitutionRequirements', () => {
   let $;
@@ -56,18 +58,18 @@ describe('validateAuthorInstitutionRequirements', () => {
     const applyAccessibilitySpy = jest.fn();
 
     window.applyTagifyAccessibilityAttributes = applyAccessibilitySpy;
-    affiliationInput[0].tagify = { value: [] };
+    affiliationInput[0]._tagify = { value: [] };
 
     expect(typeof window.validateAuthorInstitutionRequirements).toBe('function');
 
     // No value - should not be required
     window.validateAuthorInstitutionRequirements();
     await flushMicrotasks();
-    expect(nameInput.attr('required')).toBeUndefined();
+    expect(nameInput.prop('required')).toBe(false);
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
-    expect(applyAccessibilitySpy).toHaveBeenCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: false
     }));
 
@@ -76,43 +78,43 @@ describe('validateAuthorInstitutionRequirements', () => {
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
-    nameInput[0].setAttribute('required', '');
-    nameInput[0].setAttribute('aria-required', '');
+    nameInput[0].setAttribute('required', 'required');
+    nameInput[0].setAttribute('aria-required', 'true');
     await runAnimationFrameQueue();
-    expect(nameInput.attr('required')).toBe('required');
+    expect(nameInput.prop('required')).toBe(true);
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: true
     }));
 
     // Clear visible value but simulate Tagify tags
     affiliationInput.val('');
-    affiliationInput[0].tagify = { value: [{ value: 'Helmholtz Centre Potsdam - GFZ' }] };
+    affiliationInput[0]._tagify = { value: [{ value: 'Helmholtz Centre Potsdam - GFZ' }] };
     window.validateAuthorInstitutionRequirements();
     nameInput[0].required = true;
     await flushMicrotasks();
-    nameInput[0].setAttribute('required', '');
-    nameInput[0].setAttribute('aria-required', '');
+    nameInput[0].setAttribute('required', 'required');
+    nameInput[0].setAttribute('aria-required', 'true');
     await runAnimationFrameQueue();
-    expect(nameInput.attr('required')).toBe('required');
+    expect(nameInput.prop('required')).toBe(true);
     expect(nameInput.attr('aria-required')).toBe('true');
     expect(nameInput[0].getAttribute('required')).toBe('required');
     expect(nameInput[0].getAttribute('aria-required')).toBe('true');
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: true
     }));
 
     // Remove Tagify tags -> requirement should be cleared
-    affiliationInput[0].tagify.value = [];
+    affiliationInput[0]._tagify.value = [];
     window.validateAuthorInstitutionRequirements();
     await flushMicrotasks();
-    expect(nameInput.attr('required')).toBeUndefined();
+    expect(nameInput.prop('required')).toBe(false);
     expect(nameInput.attr('aria-required')).toBeUndefined();
     expect(nameInput[0].getAttribute('required')).toBeNull();
     expect(nameInput[0].getAttribute('aria-required')).toBeNull();
-    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0].tagify, affiliationInput[0], expect.objectContaining({
+    expect(applyAccessibilitySpy).toHaveBeenLastCalledWith(affiliationInput[0]._tagify, affiliationInput[0], expect.objectContaining({
       isRequired: false
     }));
   });
@@ -170,6 +172,7 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
     delete global.requestAnimationFrame;
   });
 
+
   test('date without time is allowed (time not required)', () => {
     const datestart = $('#input-stc-datestart');
     const dateend = $('#input-stc-dateend');
@@ -189,16 +192,18 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     window.validateSpatialTemporalCoverageRequirements();
 
+    simulateSubmitValidation();
+
     // datestart and dateend should be required
-    expect(datestart.attr('required')).toBe('required');
-    expect(dateend.attr('required')).toBe('required');
+    expect(datestart.prop('required')).toBe(true);
+    expect(dateend.prop('required')).toBe(true);
 
     // time fields should NOT be required (time is optional)
-    expect(timestart.attr('required')).toBeUndefined();
-    expect(timeend.attr('required')).toBeUndefined();
+    expect(timestart.prop('required')).toBe(false);
+    expect(timeend.prop('required')).toBe(false);
 
     // timezone should NOT be required without time
-    expect(timezone.attr('required')).toBeUndefined();
+    expect(timezone.prop('required')).toBe(false);
   });
 
   test('time provided triggers time and timezone requirements', () => {
@@ -221,9 +226,12 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     window.validateSpatialTemporalCoverageRequirements();
 
+    simulateSubmitValidation();
+
     // Now time fields ARE required (since a time was given)
-    expect(timestart.attr('required')).toBe('required');
-    expect(timeend.attr('required')).toBe('required');
-    expect(timezone.attr('required')).toBe('required');
+    expect(timestart.prop('required')).toBe(true);
+    expect(timeend.prop('required')).toBe(true);
+    expect(timezone.prop('required')).toBe(true);
   });
+
 });

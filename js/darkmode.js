@@ -1,3 +1,46 @@
+/**
+ * Updates the active state of theme dropdown items.
+ * @param {NodeList} themeDropdownItems - The dropdown items
+ * @param {string} theme - The current theme
+ */
+function updateActiveTheme(themeDropdownItems, theme) {
+  themeDropdownItems.forEach((item) => {
+    const value = item.getAttribute("data-bs-theme-value");
+    item.classList.toggle("active", value === theme);
+  });
+}
+
+/**
+ * Applies the specified theme.
+ * @param {NodeList} themeDropdownItems - The dropdown items
+ * @param {string} theme - The theme to apply
+ */
+function applyTheme(themeDropdownItems, theme) {
+  document.documentElement.setAttribute("data-bs-theme", theme);
+  localStorage.setItem("theme", theme);
+  updateActiveTheme(themeDropdownItems, theme);
+}
+
+/**
+ * Gets the preferred theme based on system settings.
+ * @returns {string} - 'dark' or 'light'
+ */
+function getPreferredTheme() {
+  if (typeof window.matchMedia === "function") {
+    const prefersDarkScheme = window.matchMedia("(prefers-color-scheme: dark)");
+    return prefersDarkScheme.matches ? "dark" : "light";
+  }
+  return "light";
+}
+
+/**
+ * Gets the stored theme from localStorage.
+ * @returns {string|null} - The stored theme or null
+ */
+function getStoredTheme() {
+  return localStorage.getItem("theme");
+}
+
 document.addEventListener("DOMContentLoaded", function () {
   const themeDropdown = document.getElementById("bd-theme");
   if (!themeDropdown || !themeDropdown.parentElement) {
@@ -12,19 +55,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let autoMode = false;
   let removePreferenceListener = null;
 
-  function updateActiveTheme(theme) {
-    themeDropdownItems.forEach((item) => {
-      const value = item.getAttribute("data-bs-theme-value");
-      item.classList.toggle("active", value === theme);
-    });
-  }
-
-  function applyTheme(theme) {
-    document.documentElement.setAttribute("data-bs-theme", theme);
-    localStorage.setItem("theme", theme);
-    updateActiveTheme(theme);
-  }
-
   function handlePreferenceChange() {
     if (!autoMode) {
       return;
@@ -35,7 +65,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const nextTheme = prefersDarkScheme.matches ? "dark" : "light";
-    applyTheme(nextTheme);
+    applyTheme(themeDropdownItems, nextTheme);
   }
 
   function enablePreferenceListener() {
@@ -72,7 +102,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function setTheme(theme) {
     autoMode = false;
     disablePreferenceListener();
-    applyTheme(theme);
+    applyTheme(themeDropdownItems, theme);
   }
 
   function setAutoTheme() {
@@ -105,3 +135,13 @@ document.addEventListener("DOMContentLoaded", function () {
     setAutoTheme();
   }
 });
+
+// Export functions for testing
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = {
+    updateActiveTheme,
+    applyTheme,
+    getPreferredTheme,
+    getStoredTheme
+  };
+}

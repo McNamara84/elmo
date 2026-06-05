@@ -1,11 +1,14 @@
 <?php
-namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
 
+declare(strict_types=1);
+
+namespace Tests;
+
+
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
 
-class SaveOriginatingLaboratoryTest extends DatabaseTestCase
+final class SaveOriginatingLaboratoryTest extends DatabaseTestCase
 {
     /**
      * Test saving of a single Originating Laboratory.

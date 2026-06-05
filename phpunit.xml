@@ -1,32 +1,26 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
-    bootstrap="vendor/autoload.php"
+    bootstrap="tests/bootstrap.php"
     colors="true">
     <testsuites>
         <testsuite name="SaveTests">
             <directory>tests</directory>
         </testsuite>
     </testsuites>
-    
-    <!-- Add Coverage configs -->
+
     <source>
         <include>
-            <directory suffix=".php">.</directory>
+            <!-- Only include directories with testable code that have tests -->
+            <directory suffix=".php">./save</directory>
+            <directory suffix=".php">./includes</directory>
+            <directory suffix=".php">./api/v2</directory>
+            <file>./send_xml_file.php</file>
+            <file>./log_page_event.php</file>
         </include>
         <exclude>
-            <directory>./.github</directory>
-            <directory>./.vscode</directory>
-            <directory>./assets</directory>
-            <directory>./css</directory>
-            <directory>./formgroups</directory>
-            <directory>./js</directory>
-            <directory>./json</directory>
-            <directory>./lang</directory>
-            <directory>./schemas</directory>
-            <directory>./tests</directory>
-            <directory>./vendor</directory>
-            <directory>./xml</directory>
+            <!-- Exclude save_data.php as it's mainly an orchestration file -->
+            <file>./save/save_data.php</file>
         </exclude>
     </source>
 </phpunit>

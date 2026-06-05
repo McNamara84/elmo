@@ -12,9 +12,13 @@
             data-translate="buttons.load" data-translate-tooltip="buttons.loadTooltip">
             Load
           </button>
-          <button type="submit" class="btn btn-warning m-0 m-md-1" form="form-mde" id="button-form-save" data-action="save"
+          <button type="submit" class="btn btn-warning m-0 m-md-1" form="form-mde" id="button-form-save" data-action="save-xml"
             data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
-            Save
+            Save as XML
+          </button>
+          <button type="submit" class="btn btn-outline-dark m-0 m-md-1" form="form-mde" id="button-form-save-jsonld" data-action="save-jsonld"
+            data-translate="buttons.saveAsJsonLd" data-translate-tooltip="buttons.saveAsJsonLdTooltip">
+            Save as JSON-LD
           </button>
           <button type="submit" class="btn btn-success m-0 m-md-1" form="form-mde" id="button-form-submit" data-action="submit"
             data-translate="buttons.submit" data-translate-tooltip="buttons.submitTooltip">
@@ -51,6 +55,33 @@
 </footer>
 
 
+<!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<script>
+window.ELMO_FEATURES = {
+    showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
+    showMslVocabs: <?php echo json_encode($showMslVocabs ?? false); ?>,
+    showMslDefaultFreeKeywords: <?php echo json_encode($showMslDefaultFreeKeywords ?? false); ?>,
+    showMslLabs: <?php echo json_encode($showMslLabs ?? false); ?>,
+    showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
+    showContributorPersons: <?php echo json_encode($showContributorPersons ?? true); ?>,
+    showContributorInstitutions: <?php echo json_encode($showContributorInstitutions ?? true); ?>,
+    showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
+    showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
+    showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
+    showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
+    showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
+    funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
+    dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
+    xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>
+};
+</script>
+
+<!-- Expose "isNewRecord" so JS can apply behavior only for new records -->
+<script>
+  window.elmo = window.elmo || {};
+  window.elmo.isNewRecord = <?php echo !empty($isNewRecord) && $isNewRecord ? 'true' : 'false'; ?>;
+</script>
+
 <!-- jQuery -->
 <script src="node_modules/jquery/dist/jquery.min.js"></script>
 <!-- jQuery UI -->
@@ -61,11 +92,17 @@
 <!-- Language switch -->
 <script src="js/language.js"></script>
 <!-- Thesauri laden -->
-<script src="js/thesauri.js"></script>
+<script type="module" src="js/thesauri.js"></script>
+<!-- Loading Description Types dynamically -->
+<script src="js/descriptionTypes.js"></script>
 <!-- Validierungen laden -->
 <script type="module" src="js/validation.js"></script>
+<!-- ORCID checksum validation and auto-formatting -->
+<script src="js/validation/orcidValidation.js"></script>
 <!-- autocomplete laden -->
 <script src="js/autocomplete.js"></script>
+<!-- ORCID Search -->
+<script src="js/orcidSearch.js"></script>
 <!-- Eventhandlers einbinden -->
 <script type="module" src="js/eventhandlers/buttons.js"></script>
 <!-- Roles laden -->
@@ -74,6 +111,8 @@
 <script src="js/originatingLaboratories.js"></script>
 <!-- JS-Datei für die Tags einbinden -->
 <script src="js/freekeywordTags.js"></script>
+<!-- JS-Datei für Used Instruments Tagify einbinden -->
+<script src="js/usedInstruments.js"></script>
 <!-- affiliations laden -->
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->
@@ -90,8 +129,16 @@
 <script src="js/clear.js"></script> 
 <!-- Upload Handler -->
 <script src="js/upload.js"></script>
+<!-- ICGEM XML mapping module -->
+<script src="js/mappingXmlToInputFields-icgem.js"></script>
 <!-- Mapping from XML file to input fields -->
 <script src="js/mappingXmlToInputFields.js"></script>
+<!-- DOI Lookup Service -->
+<script src="js/services/doiLookupService.js"></script>
+<!-- DOI Prefill: JSON → form mapping -->
+<script src="js/doiPrefill.js"></script>
+<!-- DOI Prefill: blur handler + modal -->
+<script src="js/eventhandlers/doiPrefillHandler.js"></script>
 <!-- Bootstrap 5 -->
 <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <!-- select-Funktionen laden -->

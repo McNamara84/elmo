@@ -52,7 +52,7 @@ $(document).ready(function () {
  * Validates the Contributor Person section of the form.
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
-function validateContributorPersonRequirements	() {
+function validateContributorPersonRequirements() {
     $('#group-contributorperson').children('.row').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
@@ -64,18 +64,18 @@ function validateContributorPersonRequirements	() {
             affiliation: row.find('[id^="input-contributorpersons-affiliation"]')
         };
 
+        fields.lastname.removeAttr('required').removeClass('js-required-on-submit');
+        fields.firstname.removeAttr('required').removeClass('js-required-on-submit');
+        fields.role.removeAttr('required').removeClass('js-required-on-submit');
+
         // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
+        var isAnyFieldFilled = Object.values(fields).some(function (field) { return field.val() && field.val().trim() !== ''; });
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.lastname.attr('required', 'required');
-            fields.firstname.attr('required', 'required');
-            fields.role.attr('required', 'required');
-        } else {
-            fields.lastname.removeAttr('required');
-            fields.firstname.removeAttr('required');
-            fields.role.removeAttr('required');
+            fields.lastname.addClass('js-required-on-submit');
+            fields.firstname.addClass('js-required-on-submit');
+            fields.role.addClass('js-required-on-submit');
         };
     });
 }
@@ -95,15 +95,16 @@ function validateContributorOrganisationRequirements() {
         };
 
         // Checks if any field in the row is filled
+        fields.name.removeAttr('required').removeClass('js-required-on-submit');
+        fields.role.removeAttr('required').removeClass('js-required-on-submit');
+
+        // Ist irgendetwas in der Zeile befüllt?
         var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.name.attr('required', 'required');
-            fields.role.attr('required', 'required');
-        } else {
-            fields.name.removeAttr('required');
-            fields.role.removeAttr('required');
+            fields.name.addClass('js-required-on-submit');
+            fields.role.addClass('js-required-on-submit');
         }
 
     });
@@ -137,10 +138,10 @@ function validateSpatialTemporalCoverageRequirements() {
         var filled = {};
 
         // Store jQuery elements and their filled status
-        fields.forEach(field => {
-            inputs[field] = row.find(`[id^="input-stc-${field}"]`);
+        fields.forEach(function (field) {
+            inputs[field] = row.find('[id^="input-stc-' + field + '"]');
             filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
-            inputs[field].removeAttr('required'); // Reset required first
+            inputs[field].removeAttr('required').removeClass('js-required-on-submit');
         });
 
         // If all fields are empty, skip this row
@@ -148,24 +149,38 @@ function validateSpatialTemporalCoverageRequirements() {
             return;
         }
 
+        // _______________________________________________________________________
+
         // Bounding box dependencies -> dates required but time optional
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If any of latmin/longmin/description is filled -> dates required, time optional
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend'].forEach(field => inputs[field].attr('required', 'required'));
+            ['latmin', 'longmin', 'description', 'datestart', 'dateend']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If dates are provided -> ensure basic required fields, time optional
         if (filled.datestart || filled.dateend) {
-            ['datestart', 'dateend', 'latmin', 'longmin', 'description'].forEach(field => inputs[field].attr('required', 'required'));
+            ['datestart', 'dateend', 'latmin', 'longmin', 'description']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
 
         // If any time value is provided in this row -> require both times, dates and timezone
         if (filled.timestart || filled.timeend) {
-            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone'].forEach(field => inputs[field].attr('required', 'required'));
+            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone']
+                .forEach(function (field) {
+                    inputs[field].addClass('js-required-on-submit');
+                });
         }
     });
 }
@@ -174,7 +189,7 @@ function validateSpatialTemporalCoverageRequirements() {
 
 
 /**
- * Validates the Related Work section of the form.
+ * Validates the Related Work section of the form(only when clicking submit).
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
  */
 function validateRelatedWorkRequirements() {
@@ -188,24 +203,29 @@ function validateRelatedWorkRequirements() {
         };
 
         // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(field => field.val() && field.val().trim() !== '');
+        var isAnyFieldFilled = Object.values(fields).some(function (field) {
+            return field.val() && field.val().trim() !== '';
+        });
 
         // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            fields.relation.attr('required', 'required');
-            fields.identifier.attr('required', 'required');
-            fields.type.attr('required', 'required');
+            // Diese drei Felder sollen beim Submit required sein
+            fields.relation.addClass('js-required-on-submit');
+            fields.identifier.addClass('js-required-on-submit');
+            fields.type.addClass('js-required-on-submit');
         } else {
-            fields.relation.removeAttr('required');
-            fields.identifier.removeAttr('required');
-            fields.type.removeAttr('required');
+            // Zeile leer: nicht submit-pflichtig, altes required aufräumen
+            fields.relation.removeClass('js-required-on-submit').removeAttr('required');
+            fields.identifier.removeClass('js-required-on-submit').removeAttr('required');
+            fields.type.removeClass('js-required-on-submit').removeAttr('required');
         }
     });
 
 };
 
+
 /**
- * Validates the Funding Reference section of the form.
+ * Validates the Funding Reference section of the form(only when clicking submit).
  * Ensures the "Funder" field is required if either "Grant Number" or "Grant Name" fields are filled.
  */
 function validateFundingReferenceRequirements() {
@@ -224,11 +244,12 @@ function validateFundingReferenceRequirements() {
             (fields.grantName.val() && fields.grantName.val().trim() !== '') ||
             (fields.awardUri.val() && fields.awardUri.val().trim() !== '');
 
-        // Sets or removes the 'required' attribute for the Funder field based on the Grant fields' fill status
+        // Mark Funder as a required field only if Submit has been clicked.
         if (isAnyGrantFieldFilled) {
-            fields.funder.attr('required', 'required');
+            fields.funder.addClass('js-required-on-submit');
         } else {
-            fields.funder.removeAttr('required');
+            fields.funder.removeClass('js-required-on-submit')
+                .removeAttr('required');
         }
     });
 };
@@ -331,7 +352,7 @@ function validateAuthorInstitutionRequirements() {
 
         // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
-        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?.tagify;
+        var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?._tagify;
         var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
         var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
 
@@ -345,7 +366,7 @@ function validateAuthorInstitutionRequirements() {
                 return;
             }
 
-            const tagifyInstance = this.tagify;
+            const tagifyInstance = this._tagify;
             if (!tagifyInstance) {
                 return;
             }
@@ -417,8 +438,136 @@ if (errorHandlingApproach) {
         errorHandlingApproach.addEventListener(evt, validateErrorHandlingApproachField)
     );
 }
+
+// Select the title input element
+const titleInput = document.getElementById('input-resourceinformation-title');
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (titleInput) {
+    ['input', 'blur'].forEach(evt =>
+        titleInput.addEventListener(evt, validateTitleField)
+    );
+}
+
 /**
- * Validates the error handling approach textarea field.
+ * Validates the resource title input field.
+ * - Marks the field as valid if it contains non-whitespace text.
+ * - Marks the field as invalid if it is empty or contains only whitespace.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateTitleField() {
+    const titleInput = document.getElementById('input-resourceinformation-title');
+    if (!titleInput) return true;
+    const value = titleInput.value.trim();
+    const container = titleInput.closest('.input-group') || titleInput.parentElement;
+
+    titleInput.classList.remove('is-valid', 'is-invalid');
+
+    let oldFeedback = container.querySelector('.invalid-feedback[data-translate="resourceInfo.resourceTitleInvalid"]');
+    if (oldFeedback) oldFeedback.remove();
+
+    if (value.length === 0) {
+        titleInput.classList.add('is-invalid');
+        const message = (typeof translations !== 'undefined' && translations.resourceInfo)
+            ? translations.resourceInfo.resourceTitleInvalid
+            : 'Please provide a title.';
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.setAttribute('data-translate', 'resourceInfo.resourceTitleInvalid');
+        feedbackElem.innerText = message;
+        container.appendChild(feedbackElem);
+        titleInput.setCustomValidity(message);
+        return false;
+    } else {
+        titleInput.classList.add('is-valid');
+        titleInput.setCustomValidity("");
+        return true;
+    }
+}
+
+// Select the author name input elements
+const authorLastname = document.getElementById('input-author-lastname');
+const authorFirstname = document.getElementById('input-author-firstname');
+[authorLastname, authorFirstname].forEach(el => {
+    if (el) {
+        ['input', 'blur'].forEach(evt =>
+            el.addEventListener(evt, validateAuthorNameFields)
+        );
+    }
+});
+
+/**
+ * Validates the first author's last name and first name input fields.
+ * - Marks each field as valid if it contains non-whitespace text.
+ * - Marks each field as invalid if it is empty or contains only whitespace.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateAuthorNameFields() {
+    let isValid = true;
+    const fields = [
+        { id: 'input-author-lastname', translationKey: 'general.lastNameInvalid' },
+        { id: 'input-author-firstname', translationKey: 'general.firstNameInvalid' }
+    ];
+
+    fields.forEach(({ id, translationKey }) => {
+        const input = document.getElementById(id);
+        if (!input) return;
+        const value = input.value.trim();
+        const container = input.closest('.input-group') || input.parentElement;
+
+        input.classList.remove('is-valid', 'is-invalid');
+
+        let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+        if (oldFeedback) oldFeedback.remove();
+
+        const [section, key] = translationKey.split('.');
+        if (value.length === 0) {
+            input.classList.add('is-invalid');
+            const message = (typeof translations !== 'undefined' && translations[section])
+                ? translations[section][key]
+                : translationKey;
+            const feedbackElem = document.createElement('div');
+            feedbackElem.className = 'invalid-feedback';
+            feedbackElem.setAttribute('data-translate', translationKey);
+            feedbackElem.innerText = message;
+            container.appendChild(feedbackElem);
+            input.setCustomValidity(message);
+            isValid = false;
+        } else {
+            input.classList.add('is-valid');
+            input.setCustomValidity("");
+        }
+    });
+
+    return isValid;
+}
+/**
+ * ICGEM special: Marks topographic-specific selects (layerApproach, forwardModellingDomain) as
+ * required-on-submit only when the topographic section is currently visible.
+ * Called from the Submit button handler in buttons.js.
+ */
+function validateTopographicModelTypeRequirements() {
+    const topoSection = document.querySelector('.visibility-modeltype-topographic');
+    const layerApproach = document.getElementById('select-topo-layerapproach');
+    const domain = document.getElementById('select-topo-domain');
+
+    if (!topoSection || !layerApproach || !domain) {
+        return;
+    }
+
+    const isVisible = !topoSection.classList.contains('d-none');
+
+    if (isVisible) {
+        layerApproach.classList.add('js-required-on-submit');
+        domain.classList.add('js-required-on-submit');
+    } else {
+        layerApproach.classList.remove('js-required-on-submit');
+        layerApproach.removeAttribute('required');
+        domain.classList.remove('js-required-on-submit');
+        domain.removeAttribute('required');
+    }
+}
+/**
+ * ICGEM special: Validates the error handling approach textarea field.
  * - Returns success automatically if the field is not required or not present.
  * - Marks the field as valid if it contains text and is required.
  * - Marks the field as invalid if it is required but empty or contains only whitespace.
@@ -452,8 +601,6 @@ function validateErrorHandlingApproachField() {
     let oldFeedback = inputGroup.querySelector('.invalid-feedback.custom-error-handling');
     if (oldFeedback) oldFeedback.remove();
     errorHandlingApproach.setCustomValidity("");
-
-
 
     // Field is required, so validate content
     if (value.trim().length === 0) {
@@ -561,11 +708,14 @@ function validateAllMandatoryFields() {
     // for the entire form
     removeGreenCheckmarks();
 
-    // Validate error handling approach field
+    // ICGEM special Validate error handling approach field
     validateErrorHandlingApproachField();
+    // ICGEM special Validate topographic model type requirements
+    validateTopographicModelTypeRequirements();
 
 };
 
+// used to remove the green checkmarks from optional fields
 const optionalFieldsSelector = [
     // Resource Information
     'input[name="doi"]',
@@ -662,6 +812,9 @@ $(document).on('blur',
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
     'input[name="awardURI[]"], ' +
+    'input[name="title[]"], ' +
+    'input[name="familynames[]"], ' +
+    'input[name="givennames[]"], ' +
     'textarea#input-abstract' , +
     'textarea#input-error-handling-approach',
 
@@ -697,6 +850,7 @@ $(document).on('change',
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
-        validateAllMandatoryFields
+        validateAllMandatoryFields,
+        validateTopographicModelTypeRequirements
     };
 }

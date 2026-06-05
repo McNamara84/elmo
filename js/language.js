@@ -69,6 +69,12 @@ function getNestedValue(obj, path) {
  * Applies the loaded translations to all UI elements
  */
 function applyTranslations() {
+    // Guard: skip if translations have not been loaded yet (race condition
+    // when descriptionTypes.js AJAX resolves before the language file).
+    if (!translations || !translations.general) {
+        return;
+    }
+
     // Set document title
     document.title = translations.general.logoTitle;
 
@@ -134,6 +140,22 @@ function applyTranslations() {
     });
     document.dispatchEvent(translationEvent);
 }
+
+/**
+ * Updates dropdown placeholder options when dropdowns are initialized after translations.
+ * Handles the race condition where dropdowns may be populated before translations load.
+ */
+function handleDropdownsReady() {
+    if (!translations || !translations.general) return;
+    const translatedText = getNestedValue(translations, 'general.choose');
+    if (!translatedText) return;
+
+    $('option[data-translate="general.choose"]').each(function () {
+        $(this).text(translatedText);
+    });
+}
+
+document.addEventListener('dropdownsReady', handleDropdownsReady);
 
 /**
  * Changes the application language and stores the selection
@@ -206,4 +228,22 @@ $(document).ready(function () {
             changeLanguage(lang);
         }
     });
+        // Force English for GEM instances
+    if (window.ELMO_FEATURES?.showGGMsProperties) {
+        changeLanguage('en');
+    }
 });
+
+// Export for testing
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        loadTranslations,
+        applyTranslations,
+        changeLanguage,
+        getBrowserLanguage,
+        updateActiveLanguage,
+        getNestedValue,
+        translatePlaceholders,
+        handleDropdownsReady
+    };
+}

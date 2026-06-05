@@ -1,4 +1,11 @@
 $(document).ready(function () {
+    // Check if MSL Labs feature is enabled - skip loading if not
+    const features = window.ELMO_FEATURES || {};
+    if (features.showMslLabs !== true) {
+        // Feature not enabled, skip initialization entirely
+        return;
+    }
+
     let labData;
     let rowCounter = 1;
 

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/save_affiliations.php';
+require_once __DIR__ . '/../validation.php';
 
 /**
  * Saves contact person information in the database.
@@ -31,6 +32,7 @@ function saveContactPerson($connection, $postData, $resource_id)
     $websites = $postData['cpOnlineResource'] ?? [];
     $affiliations = $postData['personAffiliation'] ?? [];
     $rorIds = $postData['authorPersonRorIds'] ?? [];
+    $action = $postData['action'] ?? 'save_and_download';
 
     $maxLen = count($familynames);
 
@@ -39,8 +41,19 @@ function saveContactPerson($connection, $postData, $resource_id)
         $familyname = trim($familynames[$i] ?? '');
         $givenname = trim($givennames[$i] ?? '');
         $orcid = trim($orcids[$i] ?? '');
+        // Remove ORCID URL prefix if present (defense against frontend bypass)
+        $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+
+        // Validate ORCID checksum on submit
+        if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
+            throw new Exception("Invalid ORCID checksum: {$orcid}");
+        }
+
         $email = trim($emails[$i] ?? '');
-        $website = isset($websites[$i]) ? preg_replace('#^https?://#', '', $websites[$i]) : '';
+        $website = isset($websites[$i]) ? trim(preg_replace('#^https?://#', '', trim($websites[$i]))) : '';
+        // Normalize empty optional fields to NULL for consistent DB storage and duplicate detection
+        $orcid = $orcid !== '' ? $orcid : null;
+        $website = $website !== '' ? $website : null;
         $affiliation_data = $affiliations[$i] ?? '';
         $rorId_data = $rorIds[$i] ?? '';
 
@@ -52,9 +65,10 @@ function saveContactPerson($connection, $postData, $resource_id)
         // If there's an email (whether or not other fields are filled), save as a contact person
         if (!empty($email)&& !empty($familyname) && !empty($givenname)) {
             // Check if a contact person with the exact data already exists
+            // Using <=> (NULL-safe equal) for orcid and website which can be NULL
             $stmt = $connection->prepare("
                 SELECT contact_person_id FROM Contact_Person 
-                WHERE familyName = ? AND givenname = ? AND orcid = ? AND email = ? AND website = ?
+                WHERE familyName = ? AND givenname = ? AND orcid <=> ? AND email = ? AND website <=> ?
             ");
             $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
             $stmt->execute();

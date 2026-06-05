@@ -10,11 +10,24 @@ authors:
   - family-names: "Mohammed"
     given-names: "Ali"
     orcid: "https://orcid.org/0009-0007-2910-0469"
+  - family-names: "Torkhov"
+    given-names: "Aleksandr"
+    orcid: "https://orcid.org/0009-0006-3313-7304"
   - family-names: "Rethfeldt"
     given-names: "Nina"
     orcid: "https://orcid.org/0009-0006-5992-0559"
-title: "ELMO - Enhanced Laboratory Metadata Organizer"
+  - family-names: "Antipanova"
+    given-names: "Tatjana"
+    orcid: "https://orcid.org/0009-0003-4793-2913"
+  - family-names: "Brauser"
+    given-names: "Alexander"
+    orcid: "https://orcid.org/0000-0002-4411-3205"
+  - family-names: "Elger"
+    given-names: "Kirsten"
+    orcid: "https://orcid.org/0000-0001-5140-8602"
+
+title: "ELMO - Enhanced Linked Metadata Organizer"
 version: 2.0.1
-#doi: 10.5880/GFZ.XXXXXX
-date-released: 2025-03-13
+#doi: 10.5880/GFZ.LIS.2026.001
+date-released: 2026-05-13
 url: "https://github.com/McNamara84/elmo"

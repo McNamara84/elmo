@@ -1,51 +1,60 @@
 <?php
-require_once __DIR__ . '/../../../settings.php';
-require_once __DIR__ . '/ICGEMController.php'; // Require parent class with ICGEM-specific methods.
+if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
+require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 
-
-class DatasetController extends ICGEMController
+class DatasetController
 {
-    // private mysqli $connection;
-    // private mixed $logger;
+    protected mysqli $connection;
+    protected mixed $logger;
 
     public function __construct() 
     {
-        parent::__construct(); // Constructor for this class is in ICGEMController!
+        global $connection;
+        $this->connection = $connection;
+        $this->logger = null; // Optional logger
     }
 
     /**
-     * Loads and parses the lastUpdated information from thesauri JSON files.
+     * Loads and parses the lastUpdated information from thesauri cache files.
      * 
-     * This method reads the lastUpdated timestamps from various JSON files containing
-     * keyword definitions. It handles GCMD Platform, Instrument, and Science keywords,
-     * as well as MSL vocabularies.
+     * This method reads the lastUpdated timestamps from ERNIE cache files
+     * in storage/cache/ and from the local MSL vocabularies JSON file.
      *
-     * @return array<mixed> An associative array where keys are the JSON filename bases (without extension)
+     * @return array<mixed> An associative array where keys are thesaurus identifiers
      *               and values are their corresponding lastUpdated timestamps.
-     *               Format: [
-     *                   'gcmdPlatformsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdInstrumentsKeywords' => 'YYYY-MM-DD',
-     *                   'gcmdScienceKeywords' => 'YYYY-MM-DD',
-     *                   'msl-vocabularies' => 'YYYY-MM-DD'
-     *               ]
      * @return array<mixed>
      */
     private function loadThesauriData(): array
     {
         $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
-        $jsonDir = $baseDir . '/json/thesauri'; // Path to the 'thesauri' folder
-
         $keywordData = [];
 
-        // Scan the directory for all .json files inside the thesauri folder
-        $files = glob($jsonDir . '/*.json');  // Match all .json files in thesauri
+        // ERNIE cache files for thesauri
+        $cacheFiles = [
+            'gcmdScienceKeywords' => $baseDir . '/storage/cache/ernie_gcmd_science_keywords.json',
+            'gcmdPlatformsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_platforms.json',
+            'gcmdInstrumentsKeywords' => $baseDir . '/storage/cache/ernie_gcmd_instruments.json',
+            'chronostratTimescale' => $baseDir . '/storage/cache/ernie_chronostrat_timescale.json',
+            'gemet' => $baseDir . '/storage/cache/ernie_gemet.json',
+        ];
 
-        foreach ($files as $file) {
-            $fileNameBase = basename($file, '.json'); // Extract the file name without extension
-            $data = json_decode(file_get_contents($file), true);
+        foreach ($cacheFiles as $key => $file) {
+            if (file_exists($file)) {
+                $data = json_decode(file_get_contents($file), true);
+                if ($data && isset($data['lastUpdated'])) {
+                    $keywordData[$key] = $data['lastUpdated'];
+                }
+            }
+        }
 
+        // MSL vocabularies remain in local JSON
+        $mslFile = $baseDir . '/json/thesauri/msl-vocabularies.json';
+        if (file_exists($mslFile)) {
+            $data = json_decode(file_get_contents($mslFile), true);
             if ($data && isset($data['lastUpdated'])) {
-                $keywordData[$fileNameBase] = $data['lastUpdated']; // Store lastUpdated for each file
+                $keywordData['msl-vocabularies'] = $data['lastUpdated'];
             }
         }
 
@@ -638,10 +647,9 @@ class DatasetController extends ICGEMController
             chmod($outputDir, 0777);
         }
         // Especially for saving xml transformed in different schemas
-        $filename = "resource_$id.xml";
-        if ($prefix) {
-            $filename = $outputDir . "/" . $prefix . "_" . $filename;
-        }
+        $filename = $prefix
+            ? $prefix . "_resource_$id.xml"
+            : "resource_$id.xml";
 
         return $outputDir . "/" . $filename;
     }
@@ -919,13 +927,17 @@ class DatasetController extends ICGEMController
             }
         }
 
-        // Descriptions
+        // Descriptions (only valid DataCite types)
         $descriptions = $this->getDescriptions($connection, $id);
+        $validDescriptionTypes = ['Abstract', 'Methods', 'SeriesInformation', 'TableOfContents', 'TechnicalInfo', 'Other'];
         $descriptionsXml = $xml->addChild('Descriptions');
         foreach ($descriptions as $description) {
-            $descriptionXml = $descriptionsXml->addChild('Description');
-            $descriptionXml->addChild('type', htmlspecialchars($description['type']));
-            $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            // Only include descriptions with valid DataCite types
+            if (in_array($description['type'], $validDescriptionTypes)) {
+                $descriptionXml = $descriptionsXml->addChild('Description');
+                $descriptionXml->addChild('type', htmlspecialchars($description['type']));
+                $descriptionXml->addChild('description', htmlspecialchars($description['description']));
+            }
         }
 
         // Thesaurus Keywords
@@ -946,11 +958,13 @@ class DatasetController extends ICGEMController
             // Load lastUpdated data from JSON files
             $keywordData = $this->loadThesauriData();
 
-            // Map JSON file keys to XSD element names
+            // Map cache file keys to XSD element names
             $lastUpdatedMapping = [
                 'gcmdPlatformsKeywords' => 'lastUpdatedGcmdPlatformsKeywords',
                 'gcmdInstrumentsKeywords' => 'lastUpdatedGcmdInstrumentsKeywords',
                 'gcmdScienceKeywords' => 'lastUpdatedGcmdScienceKeywords',
+                'chronostratTimescale' => 'lastUpdatedChronostratTimescale',
+                'gemet' => 'lastUpdatedGemet',
                 'msl-vocabularies' => 'lastUpdatedMslVocabularies'
             ];
 
@@ -1004,11 +1018,38 @@ class DatasetController extends ICGEMController
             $relatedWorksXml = $xml->addChild('RelatedWorks');
             foreach ($relatedWorks as $work) {
                 $workXml = $relatedWorksXml->addChild('RelatedWork');
-                $workXml->addChild('Identifier', htmlspecialchars($work['Identifier']));
+                $identifier = $work['Identifier'] ?? '';
+                $workXml->addChild(
+                    'Identifier',
+                    htmlspecialchars((string) $identifier, ENT_XML1, 'UTF-8')
+                );
+                $relationName = '';
+                if (isset($work['Relation'])) {
+                    if (is_array($work['Relation'])) {
+                        $relationName = $work['Relation']['name'] ?? '';
+                    } else {
+                        $relationName = $work['Relation'];
+                    }
+                }
                 $relationXml = $workXml->addChild('Relation');
-                $relationXml->addChild('name', htmlspecialchars($work['Relation']['name']));
+                $relationXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $relationName, ENT_XML1, 'UTF-8')
+                );
+                $identifierTypeName = '';
+                if (isset($work['IdentifierType'])) {
+                    if (is_array($work['IdentifierType'])) {
+                        $identifierTypeName = $work['IdentifierType']['name'] ?? '';
+                    } else {
+                        $identifierTypeName = $work['IdentifierType'];
+                    }
+                }
+
                 $identifierTypeXml = $workXml->addChild('IdentifierType');
-                $identifierTypeXml->addChild('name', htmlspecialchars($work['IdentifierType']['name']));
+                $identifierTypeXml->addChild(
+                    'name',
+                    htmlspecialchars((string) $identifierTypeName, ENT_XML1, 'UTF-8')
+                );
             }
         }
 
@@ -1077,7 +1118,7 @@ class DatasetController extends ICGEMController
                 'outputPrefix' => 'iso'
             ],
             'datacite' => [
-                'xsltFile' => 'MappingMapToDataCiteSchema45.xslt',
+                'xsltFile' => 'MappingMapToDataCiteSchema47.xslt',
                 'outputPrefix' => 'datacite'
             ]
         ];
@@ -1107,10 +1148,20 @@ class DatasetController extends ICGEMController
         // Create XSLT processor, configure it, and perform the transformation
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
+        // Pass the contact email as an XSLT parameter
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {
             throw new Exception("Error during XSLT transformation.");
+        }
+
+        // Post-process DataCite XML to strip empty elements that violate nonemptycontentStringType.
+        // The XSLT emits e.g. <givenName/>, <affiliation/>, <nameIdentifier/> even when source
+        // values are null/empty; DataCite schema (minLength=1) rejects those.
+        if ($format === 'datacite') {
+            $newXml = $this->stripEmptyDataciteElements($newXml);
         }
 
         if ($download) {
@@ -1124,6 +1175,72 @@ class DatasetController extends ICGEMController
             // Return the XML string
             return $newXml;
         }
+    }
+
+    /**
+     * Transforms the DataCite XML export into compact JSON-LD.
+     *
+     * @param int $id The identifier of the resource.
+     * @return string JSON-LD representation of the DataCite export.
+     */
+    public function transformResourceToJsonLd(int $id): string
+    {
+        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
+        $service = new DataCiteJsonLdService();
+
+        return $service->convertXmlStringToJsonLd($dataciteXml);
+    }
+
+    /**
+     * Removes empty elements from a DataCite XML string that would violate the
+     * nonemptycontentStringType constraint (minLength=1).
+     *
+     * The XSLT transformation outputs optional elements like <givenName>, <familyName>,
+     * <affiliation>, and <nameIdentifier> unconditionally, even when the source value
+     * is null or an empty string. DataCite schema requires all of these to have
+     * non-empty text content. This method strips them after the fact so the XSLT
+     * (which carries a "do not modify" comment as it was MapForce-generated) does not
+     * need to be changed.
+     *
+     * Also removes empty <geoLocationPoint> elements (no pointLongitude/pointLatitude
+     * children) which arise when a SpatialTemporalCoverage row has only a description
+     * but no coordinates.
+     *
+     * @param string $xml Raw DataCite XML string.
+     * @return string Cleaned DataCite XML string.
+     */
+    private function stripEmptyDataciteElements(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml; // Return unchanged if unparseable
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        
+        // Elements whose text content must be non-empty per nonemptycontentStringType.
+        // Remove the element entirely when content is blank/whitespace-only.
+        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation'];
+        foreach ($leafElements as $tag) {
+            $nodes = $xpath->query("//dc:{$tag}"); 
+            foreach ($nodes as $node) {
+                if (trim($node->textContent) === '') {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+
+        // Remove <geoLocationPoint> that has no coordinate children — happens when
+        // a coverage row carries only a description (no lat/lon values).
+        $emptyPoints = $xpath->query('//dc:geoLocationPoint[not(dc:pointLongitude) or not(dc:pointLatitude)]');
+        foreach ($emptyPoints as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
     }
     
     /**
@@ -1163,7 +1280,7 @@ class DatasetController extends ICGEMController
         $scheme = strtolower($vars['scheme']);
 
         // Check for valid schema formats
-        $validSchemes = ['datacite', 'iso'];
+        $validSchemes = ['datacite', 'iso', 'jsonld'];
         if (!in_array($scheme, $validSchemes)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid metadata scheme. Supported schemes are: ' . implode(', ', $validSchemes)]);
@@ -1171,27 +1288,31 @@ class DatasetController extends ICGEMController
         }
 
         try {
-            $result = $this->transformAndSaveOrDownloadXml($id, $scheme, $download);
+            if ($scheme === 'jsonld') {
+                $result = $this->transformResourceToJsonLd($id);
+                $filename = "dataset_{$id}_jsonld.jsonld";
+                $contentType = 'application/ld+json; charset=utf-8';
+            } else {
+                $result = $this->transformAndSaveOrDownloadXml($id, $scheme, false);
+                $filename = "dataset_{$id}_{$scheme}.xml";
+                $contentType = 'application/xml; charset=utf-8';
+            }
 
             if ($download) {
                 // Ensure no output has been sent before headers
-                if (ob_get_level())
+                if (ob_get_level()) {
                     ob_end_clean();
+                }
 
-                $filename = "dataset_{$id}_{$scheme}.xml";
-
-                // Binary Transfer
-                header('Content-Type: application/octet-stream');
+                header('Content-Type: ' . $contentType);
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Content-Length: ' . strlen($result));
-                header('Content-Transfer-Encoding: binary');
-                header('Connection: close');
 
                 echo $result;
                 flush();
                 exit();
             } else {
-                header('Content-Type: application/xml; charset=utf-8');
+                header('Content-Type: ' . $contentType);
                 echo $result;
             }
         } catch (Exception $e) {
@@ -1278,7 +1399,7 @@ XML;
                 header('Content-Type: application/xml; charset=utf-8');
                 echo $combinedXml;
             }
-        } catch (Exception $e) {
+        } catch (\Throwable $e) {
             if ($returnAsString) {
                 throw $e;
             }

@@ -239,6 +239,7 @@ label.mandatory-field::after {
 
 .add-button {
     width: 36px;
+    margin-inline-end: 0.75rem;
 }
 
 .map-panel {
@@ -455,14 +456,19 @@ header.navbar {
   left: 50%;
   transform: translateX(-50%);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  flex: 0 0 auto;
+  padding: 0.5rem;
 }
 
 /* Click area only fits the logo */
 .logo-center-wrapper img {
   display: block;
   pointer-events: auto;
+  max-width: 85%;
+  height: auto;
+  object-fit: contain;
 }
 
 /* Right alignment for legal notice / dropdowns */
@@ -473,17 +479,39 @@ header .ms-auto.d-flex {
   gap: 0.5rem; 
 }
 
+/* Center logo stays visible on all screen sizes - scales more gradually */
+.logo-center-wrapper img {
+  /* Large screens (1400px+): ~100px */
+  max-height: 100px;
+}
+
 /* Make logo smaller at screen widths of 1100px or less so that nothing overlaps */
 @media (max-width: 1100px) {
   .logo {
     height: 35px;
   }
 
-  /* On mobile/tablet the center logo becomes right-aligned */
+  /* On tablet/smaller screens the center logo becomes right-aligned */
   .logo-center-wrapper {
     position: static;
     transform: none;
     margin-left: auto;
+    margin-right: 0;
+  }
+  
+  /* Center logo scales to 70px on tablets/smaller screens */
+  .logo-center-wrapper img {
+    max-height: 70px;
+  }
+}
+
+/* On very small and medium screens (up to 1000px), center the logo */
+@media (max-width: 1000px) {
+  .logo-center-wrapper {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-left: 0;
     margin-right: 0;
   }
 }
@@ -491,6 +519,18 @@ header .ms-auto.d-flex {
 @media (max-width: 900px) {
   .logo {
     height: 30px;
+  }
+  
+  /* Center logo stays at comfortable 60px on medium screens */
+  .logo-center-wrapper img {
+    max-height: 60px;
+  }
+}
+
+@media (max-width: 576px) {
+  /* On very small screens, just keep it readable */
+  .logo-center-wrapper img {
+    max-height: 50px;
   }
 }
 
@@ -546,4 +586,61 @@ header .ms-auto.d-flex {
         margin: 0 !important;
         padding: 0.25rem 0;
     }
+}
+
+/* Base size for the MSL logo */
+/* small screens */
+/* Small screens (between 576px and 768px) */
+/* Laptop-Screens */
+/* Large screens */
+.logo-msl {
+  height: 32px;
+  width: auto;
+}
+@media (max-width: 575.98px) {
+  .logo-msl {
+    height: 24px;
+  }
+}
+@media (min-width: 576px) and (max-width: 767.98px) {
+  .logo-msl {
+    height: 26px;
+  }
+}
+@media (min-width: 768px) and (max-width: 1199.98px) {
+  .logo-msl {
+    height: 28px;
+  }
+}
+@media (min-width: 1200px) {
+  .logo-msl {
+    height: 32px;
+  }
+}
+
+/* ─── DOI Prefill ──────────────────────────────────────────────── */
+
+.doi-lookup-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  color: var(--bs-secondary);
+  margin-top: 0.25rem;
+}
+
+.prefill-highlight {
+  background-color: rgba(255, 193, 7, 0.15) !important;
+  border-color: var(--bs-warning) !important;
+  transition: background-color 0.3s ease;
+}
+
+.doi-prefill-preview .table {
+  font-size: 0.9rem;
+}
+
+.doi-prefill-preview .table th {
+  width: 140px;
+  color: var(--bs-secondary);
+  font-weight: 600;
 }

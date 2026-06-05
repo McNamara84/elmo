@@ -119,6 +119,7 @@ require_once __DIR__ . '/formgroups/save_descriptions.php';
 require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
 require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/formgroups/save_fundingreferences.php';
 // ICGEM related formgroups
 require_once __DIR__ . '/formgroups/save_ggms_definition.php';
@@ -127,85 +128,81 @@ require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
 require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
 
 /**
- * Generates and outputs XML for a dataset
+ * Generates and outputs a download for a dataset
  * 
- * Attempts to generate XML via API call first, falls back to in-memory generation if needed.
+ * Supports XML and JSON-LD generation based on the requested download format.
  * If filename is provided in $_POST, triggers file download.
  * 
- * @param int $resource_id The resource ID to generate XML for
+ * @param int $resource_id The resource ID to generate output for
  * @return void Outputs XML or error response, may exit
- * @throws Exception If critical errors occur during XML generation
+ * @throws Exception If critical errors occur during generation
  */
-function generateAndOutputXml($resource_id)
+if (!function_exists('generateAndOutputDownload')) {
+function generateAndOutputDownload($resource_id)
 {
     global $connection, $showGGMsProperties;
     
     try {
+        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-    } catch (Exception $e) {
-        error_log("Error accessing DatasetController: " . $e->getMessage());
-        http_response_code(500);
-        echo "Error: Could not initialize XML generator";
-        exit();
+    } catch (\Throwable $e) {
+        error_log("[SAVE] Error loading controllers: " . $e->getMessage());
+        throw new \RuntimeException('Could not initialize XML generator: ' . $e->getMessage(), 0, $e);
     }
 
-    // Handle file download if requested
-    if (isset($_POST['filename'])) {
-        $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
+    // Only handle download when filename is in POST
+    if (!isset($_POST['filename'])) {
+        return;
+    }
 
-        header('Content-Type: application/xml');
-        header('Content-Disposition: attachment; filename="' . $filename . '"');
+    $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
+    $downloadFormat = strtolower($_POST['download_format'] ?? 'xml');
+    error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
 
-        $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-        $base_url = $protocol . $_SERVER['HTTP_HOST'];
-        $project_path = rtrim(dirname(dirname($_SERVER['PHP_SELF'])), '/\\');
-        
-        // $showGGMsProperties; is an indicator, whether this version is ICGEM or not.
+    try {
+        $controller = new DatasetController();
 
-        $general_url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-        $icgem_url   = $base_url . $project_path . "/api/v2/dataset/icgem_export/" . $resource_id;
-        $url         = $showGGMsProperties ? $icgem_url : $general_url;
-
-        // Try API call first
-        $bytesRead = @readfile($url);
-
-        if ($bytesRead === false) {
-            error_log("[💿SAVE]: readfile from URL failed. Attempting in-memory generation. Resource ID: $resource_id");
-            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
-            error_log("[💿SAVE]: showGGMsProperties = " . var_export($showGGMsProperties, true));
-            error_log("[💿SAVE]: Will use " . ($showGGMsProperties ? "createICGEMxml()" : "envelopeXmlAsString()"));
-
-            try {
-                $datasetController = new DatasetController();
-                $xmlString = $showGGMsProperties
-                    ? $datasetController->createICGEMxml($resource_id)
-                    : $datasetController->envelopeXmlAsString($connection, $resource_id);
-                    
-                if ($xmlString) {
-                    echo $xmlString;
-                } else {
-                    http_response_code(500);
-                    echo "Error: Could not retrieve or generate XML file.";
-                }
-            } catch (Exception $e) {
-                error_log("[💿SAVE]: XML in-memory generation failed for resource ID: $resource_id. Error: " . $e->getMessage());
-                http_response_code(500);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => "Sorry, we encountered an error while generating an XML file with your data:\n\n" .
-                    $e->getMessage() . "\n\n" .
-                    "Your data has been saved in our system.\n\n" .
-                    "Please contact the data curation team at datapub@gfz.de.\n" .
-                    "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
-                    "We will be glad to fix the issue and see your data resubmitted.\n\n" .
-                    "ELMO team"
-    ]);
-            }
+        if ($downloadFormat === 'jsonld') {
+            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
+            $filename = $baseFilename . '.jsonld';
+            $contentType = 'application/ld+json';
+        } else {
+            $ICGEMcontroller = new ICGEMController();
+            $payload = $showGGMsProperties
+                ? $ICGEMcontroller->createICGEMxml($resource_id)
+                : $controller->envelopeXmlAsString($connection, $resource_id);
+            $filename = $baseFilename . '.xml';
+            $contentType = 'application/xml';
         }
-        exit();
+    } catch (\Throwable $e) {
+        error_log("[SAVE] Generation threw: " . $e->getMessage());
+        throw new \RuntimeException(
+            "Download generation failed for resource $resource_id: " . $e->getMessage(),
+            0,
+            $e
+        );
     }
+
+    if (!$payload) {
+        error_log("[SAVE] Generation returned empty for resource_id=$resource_id");
+        throw new \RuntimeException("Download generation returned empty result for resource $resource_id");
+    }
+
+    error_log("[SAVE] Payload generated successfully, length=" . strlen($payload) . " bytes");
+
+    // Flush any stale output buffers before sending the response
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+
+    // Set headers and send the body with explicit Content-Length
+    header('Content-Type: ' . $contentType);
+    header('Content-Disposition: attachment; filename="' . $filename . '"');
+    header('Content-Length: ' . strlen($payload));
+    echo $payload;
+    flush();
 }
+} // end function_exists('generateAndOutputDownload')
 
 /**
  * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
@@ -216,6 +213,7 @@ function generateAndOutputXml($resource_id)
  * @return mixed The return value from the callback
  * @throws Exception If the callback returns false
  */
+if (!function_exists('executeSaveFunction')) {
 function executeSaveFunction($callback, ...$args)
 {
     $functionName = is_array($callback) ? $callback[1] : $callback;
@@ -234,10 +232,12 @@ function executeSaveFunction($callback, ...$args)
         throw $e; // Re-throw so outer catch can handle it
     }
 }
+} // end function_exists('executeSaveFunction')
 
-// only process requests
+// only process requests (use return instead of exit to avoid killing
+// the PHPUnit process when this file is loaded via require_once)
 if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
-    exit();
+    return;
 }
 
 // Only load settings if connection not already injected (for testing)
@@ -273,7 +273,7 @@ try {
         executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
     }
     executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
-    if ($showGcmdThesauri) {
+    if ($showThesauri) {
         executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
     }
     if ($showFreeKeywords) {
@@ -284,6 +284,9 @@ try {
     }
     if ($showRelatedWork) {
         executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
+    }
+    if ($showUsedInstruments) {
+        executeSaveFunction('saveUsedInstruments', $connection, $_POST, $resource_id);
     }
     if ($showFundingReference) {
         executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
@@ -302,30 +305,38 @@ try {
     
     error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
     
-    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate XML =====
+    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate download =====
     try {
-        generateAndOutputXml($resource_id);
-    } catch (Exception $e) {
-        error_log("[💿SAVE]: XML generation failed after successful database commit for resource ID: " . $resource_id . ". Error: " . $e->getMessage());
+        generateAndOutputDownload($resource_id);
+    } catch (\Throwable $e) {
+        error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
+        // Flush any buffers from the failed generation attempt
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
         http_response_code(500);
-        echo json_encode(['error' => 'Data saved but XML generation failed: ' . $e->getMessage()]);
+        $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
+        header('Content-Type: application/json');
+        header('Content-Length: ' . strlen($errorJson));
+        echo $errorJson;
+        flush();
     }
     
-} catch (Exception $e) {
+} catch (\Throwable $e) {
     // Transaction or save operation failed
     $connection->rollback();
-    error_log("[💿SAVE]: Transaction rolled back. Save process failed for resource ID: " . (isset($resource_id) ? $resource_id : 'N/A') . ". Error: " . $e->getMessage());
-    // Return error response
+    error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());
+    // Flush any buffers
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
     http_response_code(500);
-    header('Content-Type: application/json');
-    echo json_encode([
+    $errorJson = json_encode([
         'success' => false,
-        'message' => "Sorry, we encountered an error while saving your data in the database system:\n\n" .
-                     $e->getMessage() . "\n\n" .
-                     "Your data has NOT been saved in our system. Sorry for the inconvenience.\n\n" .
-                     "Please contact the data curation team at datapub@gfz.de.\n" .
-                     "In your Email, make sure to reference this Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
-                     "We will be glad to fix the issue and see your data resubmitted.\n\n" .
-                     "ELMO team"
+        'message' => 'Save process failed: ' . $e->getMessage()
     ]);
+    header('Content-Type: application/json');
+    header('Content-Length: ' . strlen($errorJson));
+    echo $errorJson;
+    flush();
 }

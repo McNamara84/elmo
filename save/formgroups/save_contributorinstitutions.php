@@ -15,6 +15,9 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
 {
     $valid_roles = getValidRoles($connection);
 
+    // Validate only on submit
+    $action = $postData['action'] ?? 'save_and_download';
+
     if (
         !isset(
         $postData['cbOrganisationName'],
@@ -34,16 +37,25 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         $entry = [
             'name' => $postData['cbOrganisationName'][$i] ?? '',
-            'roles' => $postData['cbOrganisationRoles'][$i] ?? ''
+            'roles' => $postData['cbOrganisationRoles'][$i] ?? '',
+            'affiliation' => $postData['OrganisationAffiliation'][$i] ?? ''
         ];
 
-        if (!validateContributorInstitutionDependencies($entry)) {
-            $allSuccessful = false;
-            continue;
+
+        if ($action === 'submit') {
+            if (!validateContributorInstitutionDependencies($entry)) {
+                $allSuccessful = false;
+                continue;
+            }
         }
 
         // Skip if no data provided
-        if (empty($entry['name']) && empty($entry['roles'])) {
+        if (empty($entry['name']) && empty($entry['roles']) && empty($entry['affiliation'])) {
+            continue;
+        }
+
+        // Skip if roles are empty (required field)
+        if (empty($entry['roles'])) {
             continue;
         }
 
@@ -54,28 +66,21 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
             continue;
         }
 
-        if (!linkResourceToContributorInstitution($connection, $resource_id, $contributor_institution_id)) {
-            $allSuccessful = false;
-        }
+        linkResourceToContributorInstitution($connection, $resource_id, $contributor_institution_id);
 
         if (!empty($postData['OrganisationAffiliation'][$i])) {
-            if (
-                !saveAffiliations(
-                    $connection,
-                    $contributor_institution_id,
-                    $postData['OrganisationAffiliation'][$i],
-                    $postData['hiddenOrganisationRorId'][$i] ?? null,
-                    'Contributor_Institution_has_Affiliation',
-                    'Contributor_Institution_contributor_institution_id'
-                )
-            ) {
-                $allSuccessful = false;
-            }
+            saveAffiliations(
+                $connection,
+                $contributor_institution_id,
+                $postData['OrganisationAffiliation'][$i],
+                $postData['hiddenOrganisationRorId'][$i] ?? null,
+                'Contributor_Institution_has_Affiliation',
+                'Contributor_Institution_contributor_institution_id'
+            );
         }
 
-        if (!saveContributorInstitutionRoles($connection, $contributor_institution_id, $entry['roles'], $valid_roles)) {
-            $allSuccessful = false;
-        }
+        saveContributorInstitutionRoles($connection, $contributor_institution_id, $entry['roles'], $valid_roles);
+
     }
 
     return $allSuccessful;

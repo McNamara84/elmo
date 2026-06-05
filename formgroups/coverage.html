@@ -108,8 +108,8 @@
                         </div>
                         <!-- Button for cloning new row -->
                         <div
-                            class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-                            <button type="button" class="btn btn-primary addtsc" id="button-stc-add"
+                            class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
+                            <button type="button" class="btn btn-primary addtsc add-button" id="button-stc-add"
                                 data-translate="general.add">+</button>
                         </div>
                     </div>
@@ -132,8 +132,21 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="input-stc-map-search" class="form-label">Search for place names</label>
-                    <input type="text" id="input-stc-map-search" class="form-control mb-2" placeholder="Search for a place" data-translate-placeholder="coverage.mapSearch">
+                    <!-- Drawing toolbar (replaces deprecated Google Maps Drawing Library) -->
+                    <div id="map-drawing-toolbar" class="btn-group mb-2" role="toolbar" aria-label="Map drawing tools" style="display:none;">
+                        <button type="button" id="btn-draw-marker" class="btn btn-sm btn-outline-primary active" aria-pressed="true" title="Place Marker">
+                            <i class="bi bi-geo-alt-fill"></i> <span data-translate="coverage.markerTool">Marker</span>
+                        </button>
+                        <button type="button" id="btn-draw-rectangle" class="btn btn-sm btn-outline-primary" aria-pressed="false" title="Draw Rectangle">
+                            <i class="bi bi-bounding-box"></i> <span data-translate="coverage.rectangleTool">Rectangle</span>
+                        </button>
+                    </div>
+                    <!-- Place autocomplete search (replaces deprecated SearchBox) -->
+                    <div id="place-autocomplete-card" class="mb-2">
+                        <label for="input-stc-map-search" class="form-label visually-hidden">Search for place names</label>
+                        <gmp-place-autocomplete id="input-stc-map-search" placeholder="Search for a place" data-translate-placeholder="coverage.mapSearch">
+                        </gmp-place-autocomplete>
+                    </div>
                     <div class="map-panel" id="panel-stc-map">
                         <!-- Panel for loading google maps -->
                     </div>

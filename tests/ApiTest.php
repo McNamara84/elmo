@@ -1,7 +1,9 @@
 <?php
+
+declare(strict_types=1);
+
 namespace Tests;
 
-use PHPUnit\Framework\TestCase;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use Exception;
@@ -9,7 +11,7 @@ use Exception;
 /**
  * Test class for the API endpoints
  */
-class ApiTest extends DatabaseTestCase
+final class ApiTest extends DatabaseTestCase
 {
     /**
      * @var Client HTTP client instance
@@ -41,13 +43,14 @@ class ApiTest extends DatabaseTestCase
         // Database setup from DatabaseTestCase first
         parent::setUp();
 
-        $this->baseUri = rtrim((string) getenv('API_BASE_URL'), '/');
+        $this->baseUri = rtrim((string) (getenv('API_BASE_URL') ?: 'http://localhost:8080'), '/');
 
         $this->projectPath = '';
 
         $this->client = new Client([
             'base_uri' => $this->baseUri ?: '',
             'http_errors' => false,
+            'cookies' => true,
             'headers' => [
                 'Accept' => 'application/json',
                 'X-API-KEY' => self::API_KEY,
@@ -94,7 +97,7 @@ class ApiTest extends DatabaseTestCase
                 'Expected status code 200. Response: ' . $response->getBody()
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
@@ -140,7 +143,7 @@ class ApiTest extends DatabaseTestCase
                 "\nEndpoint: " . $endpointUrl
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
@@ -176,7 +179,7 @@ class ApiTest extends DatabaseTestCase
                 'Expected status code 200. Response: ' . $response->getBody()
             );
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
@@ -209,7 +212,7 @@ class ApiTest extends DatabaseTestCase
             echo "\nResponse Status: " . $response->getStatusCode();
             echo "\nResponse Body: " . $response->getBody();
 
-            $data = json_decode($response->getBody(), true);
+            $data = json_decode((string) $response->getBody(), true);
             if (json_last_error() !== JSON_ERROR_NONE) {
                 $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
             }
@@ -266,61 +269,109 @@ class ApiTest extends DatabaseTestCase
     }
 
     /**
-     * Tests the CGI keywords update endpoint.
-     *
-     * This test accepts either a successful update (status code 200)
-     * or an error response (status code 500) depending on the
-     * availability of the external vocabulary source.
+     * Tests the full draft API lifecycle over HTTP with one session.
      *
      * @return void
      * @throws Exception
      */
-    public function testUpdateCgiKeywordsEndpoint(): void
+    public function testDraftLifecycleEndpoints(): void
     {
-        $endpointUrl = $this->getApiUrl('update/vocabs/cgi');
-        echo "\nTesting endpoint: " . $this->baseUri . $endpointUrl;
+        $createUrl = $this->getApiUrl('drafts');
+        $createPayload = [
+            'payload' => [
+                'values' => [
+                    'title' => 'Draft via API test'
+                ],
+                'timestamp' => '2026-03-12T10:00:00Z'
+            ]
+        ];
 
-        try {
-            $response = $this->client->get($endpointUrl);
-            echo "\nResponse Status: " . $response->getStatusCode();
-            echo "\nResponse Body: " . $response->getBody();
+        $createResponse = $this->client->post($createUrl, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => json_encode($createPayload)
+        ]);
 
-            $data = json_decode($response->getBody(), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
-            }
+        $this->assertEquals(
+            201,
+            $createResponse->getStatusCode(),
+            'Expected draft creation to return 201. Response: ' . $createResponse->getBody()
+        );
 
-            if ($response->getStatusCode() === 200) {
-                $this->assertArrayHasKey('message', $data, 'Response should contain a message');
-                $this->assertArrayHasKey('timestamp', $data, 'Response should contain a timestamp');
+        $created = json_decode((string) $createResponse->getBody(), true);
+        $this->assertIsArray($created);
+        $this->assertArrayHasKey('id', $created);
+        $this->assertNotEmpty($created['id']);
+        $this->assertArrayHasKey('updatedAt', $created);
+        $this->assertArrayHasKey('checksum', $created);
 
-                $this->assertStringContainsString(
-                    'CGI keywords successfully updated',
-                    $data['message'],
-                    'Message should indicate successful update'
-                );
+        $draftId = $created['id'];
 
-                $this->assertMatchesRegularExpression(
-                    '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/',
-                    $data['timestamp'],
-                    'Timestamp should be ISO 8601 format'
-                );
-            } elseif ($response->getStatusCode() === 500) {
-                $this->assertArrayHasKey('error', $data, 'Error response should contain an error message');
-                $this->assertNotEmpty($data['error'], 'Error message should not be empty');
-            } else {
-                $this->fail('Unexpected response status code: ' . $response->getStatusCode());
-            }
+        $latestUrl = $this->getApiUrl('drafts/session/latest');
+        $latestResponse = $this->client->get($latestUrl);
+        $this->assertEquals(
+            200,
+            $latestResponse->getStatusCode(),
+            'Expected latest draft endpoint to return 200. Response: ' . $latestResponse->getBody()
+        );
 
-        } catch (Exception $e) {
-            echo "\nException: " . get_class($e);
-            echo "\nMessage: " . $e->getMessage();
-            if ($e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse()) {
-                $response = $e->getResponse();
-                echo "\nResponse Status: " . $response->getStatusCode();
-                echo "\nResponse Body: " . $response->getBody();
-            }
-            throw $e;
-        }
+        $latest = json_decode((string) $latestResponse->getBody(), true);
+        $this->assertIsArray($latest);
+        $this->assertSame($draftId, $latest['id']);
+        $this->assertSame('Draft via API test', $latest['payload']['values']['title']);
+
+        $getUrl = $this->getApiUrl('drafts/' . $draftId);
+        $getResponse = $this->client->get($getUrl);
+        $this->assertEquals(
+            200,
+            $getResponse->getStatusCode(),
+            'Expected draft get endpoint to return 200. Response: ' . $getResponse->getBody()
+        );
+
+        $fetched = json_decode((string) $getResponse->getBody(), true);
+        $this->assertIsArray($fetched);
+        $this->assertSame($draftId, $fetched['id']);
+        $this->assertSame('Draft via API test', $fetched['payload']['values']['title']);
+
+        $updateUrl = $this->getApiUrl('drafts/' . $draftId);
+        $updatePayload = [
+            'payload' => [
+                'values' => [
+                    'title' => 'Updated draft via API test'
+                ],
+                'timestamp' => '2026-03-12T10:05:00Z'
+            ]
+        ];
+
+        $updateResponse = $this->client->put($updateUrl, [
+            'headers' => ['Content-Type' => 'application/json'],
+            'body' => json_encode($updatePayload)
+        ]);
+
+        $this->assertEquals(
+            200,
+            $updateResponse->getStatusCode(),
+            'Expected draft update endpoint to return 200. Response: ' . $updateResponse->getBody()
+        );
+
+        $updated = json_decode((string) $updateResponse->getBody(), true);
+        $this->assertIsArray($updated);
+        $this->assertSame($draftId, $updated['id']);
+        $this->assertArrayHasKey('updatedAt', $updated);
+
+        $getUpdatedResponse = $this->client->get($getUrl);
+        $this->assertEquals(200, $getUpdatedResponse->getStatusCode());
+        $fetchedUpdated = json_decode((string) $getUpdatedResponse->getBody(), true);
+        $this->assertSame('Updated draft via API test', $fetchedUpdated['payload']['values']['title']);
+
+        $deleteUrl = $this->getApiUrl('drafts/' . $draftId);
+        $deleteResponse = $this->client->delete($deleteUrl);
+        $this->assertEquals(204, $deleteResponse->getStatusCode());
+
+        $getDeletedResponse = $this->client->get($getUrl);
+        $this->assertEquals(
+            204,
+            $getDeletedResponse->getStatusCode(),
+            'Expected deleted draft to return 204. Response: ' . $getDeletedResponse->getBody()
+        );
     }
 }

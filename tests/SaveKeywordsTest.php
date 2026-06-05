@@ -1,11 +1,14 @@
 <?php
-namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
 
+declare(strict_types=1);
+
+namespace Tests;
+
+
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_thesauruskeywords.php';
 
-class SaveKeywordsTest extends DatabaseTestCase
+final class SaveKeywordsTest extends DatabaseTestCase
 {
     /**
      * Alle Thesaurus Keyword Eingabefelder enthalten exakt eine Eingabe
@@ -134,7 +137,9 @@ class SaveKeywordsTest extends DatabaseTestCase
     }
 
     /**
-     * Nur einzelne Thesaurus Keyword Eingabefelder wurden befüllt. Diese sollten dann natürlich nicht gespeichert werden.
+     * Only some thesaurus keyword fields were filled. Keywords with only a value
+     * (and no scheme/schemeURI/language) should still be saved — all attributes
+     * except value are optional per the DataCite schema.
      */
     public function testSavePartialThesaurusKeywords()
     {
@@ -157,12 +162,27 @@ class SaveKeywordsTest extends DatabaseTestCase
 
         saveKeywords($this->connection, $postData, $resource_id);
 
-        // Check if only the filled keywords were saved
+        // Both keywords should be saved even without optional metadata
         $stmt = $this->connection->prepare("SELECT * FROM Thesaurus_Keywords");
         $stmt->execute();
         $result = $stmt->get_result();
 
-        $this->assertEquals(0, $result->num_rows, "Es sollten genau 0 Thesaurus Keywords gespeichert worden sein.");
+        $this->assertEquals(2, $result->num_rows, "Es sollten genau 2 Thesaurus Keywords gespeichert worden sein.");
+
+        // Verify optional fields are NULL when not provided
+        while ($row = $result->fetch_assoc()) {
+            $this->assertNull($row['language'], "Language should be NULL when not provided.");
+            $this->assertNull($row['valueURI'], "valueURI should be NULL when not provided.");
+            $this->assertNull($row['schemeURI'], "schemeURI should be NULL when not provided.");
+
+            if ($row['keyword'] === 'Keyword1') {
+                // gcmdScienceKeywords entry: no scheme provided → NULL
+                $this->assertNull($row['scheme'], "scheme should be NULL for gcmdScienceKeywords when not provided.");
+            } else {
+                // MSLKeywords entry: scheme is hardcoded to 'EPOS MSL vocabulary'
+                $this->assertSame('EPOS MSL vocabulary', $row['scheme'], "scheme should be 'EPOS MSL vocabulary' for MSLKeywords.");
+            }
+        }
     }
 
     /**

@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -66,6 +67,7 @@ function loadTemplate(relativePath: string): string {
 const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
+const AUTHOR_INSTITUTION_HTML = loadTemplate('formgroups/authorInstitution.html');
 const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
 const THESAURUS_HTML = loadTemplate('formgroups/thesaurusKeywords.html');
@@ -87,6 +89,7 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${RESOURCE_INFORMATION_HTML}
     ${RIGHTS_HTML}
     ${AUTHORS_HTML}
+    ${AUTHOR_INSTITUTION_HTML}
     ${ORIGINATING_LAB_HTML}
     ${DESCRIPTIONS_HTML}
     ${THESAURUS_HTML}
@@ -101,6 +104,70 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${MODALS_HTML}
   </body>
 </html>`;
+
+// ─── Mixed-creator XML for Issue #739 regression tests ──────────────────────
+
+const XML_MIXED_PERSON_INSTITUTION_PERSON = `<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <identifier identifierType="DOI">10.1234/elmo.mixed</identifier>
+  <publicationYear>2024</publicationYear>
+  <language>en</language>
+  <titles>
+    <title xml:lang="en" titleType="MainTitle">Mixed Creator Test</title>
+  </titles>
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Smith, Alice</creatorName>
+      <givenName>Alice</givenName>
+      <familyName>Smith</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Organizational">ACME Research Corp</creatorName>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Jones, Bob</creatorName>
+      <givenName>Bob</givenName>
+      <familyName>Jones</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+  </creators>
+  <descriptions>
+    <description descriptionType="Abstract" xml:lang="en">Test abstract.</description>
+  </descriptions>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <rightsList>
+    <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0">CC BY 4.0</rights>
+  </rightsList>
+</resource>`;
+
+const XML_MIXED_INSTITUTION_PERSON = `<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <identifier identifierType="DOI">10.1234/elmo.mixed2</identifier>
+  <publicationYear>2024</publicationYear>
+  <language>en</language>
+  <titles>
+    <title xml:lang="en" titleType="MainTitle">Institution First Test</title>
+  </titles>
+  <creators>
+    <creator>
+      <creatorName nameType="Organizational">ACME Research Corp</creatorName>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Smith, Alice</creatorName>
+      <givenName>Alice</givenName>
+      <familyName>Smith</familyName>
+      <affiliation>Test University</affiliation>
+    </creator>
+  </creators>
+  <descriptions>
+    <description descriptionType="Abstract" xml:lang="en">Test abstract.</description>
+  </descriptions>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <rightsList>
+    <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0">CC BY 4.0</rights>
+  </rightsList>
+</resource>`;
 
 const TEST_TRANSLATIONS = {
   general: {
@@ -135,6 +202,7 @@ const MOCK_LICENSES = [
     rights_id: 1,
     text: 'Creative Commons Attribution 4.0 International',
     rightsIdentifier: 'CC-BY-4.0',
+    forSoftware: '0',
   },
 ];
 
@@ -202,161 +270,69 @@ const MOCK_THESAURI_TREE = [
   },
 ];
 
-async function mockVocabularyRequests(page: Page) {
-  await page.route('**/api/v2/vocabs/resourcetypes', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_RESOURCE_TYPES),
-    });
-  });
+const MOCK_TIMEZONES = [
+  { label: 'UTC+00:00 (Africa/Abidjan)' },
+  { label: 'UTC+01:00 (Europe/Berlin)' },
+  { label: 'UTC-05:00 (America/New_York)' },
+];
 
-  await page.route('**/api/v2/vocabs/languages', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LANGUAGES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/titletypes', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_TITLE_TYPES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/licenses/all', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LICENSES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/licenses/software', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LICENSES),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=person', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.person),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=institution', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.institution),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/roles?type=both', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_ROLES.both),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/relations', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_RELATIONS),
-    });
-  });
-
-  await page.route('**/api/v2/vocabs/freekeywords/curated', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_FREE_KEYWORDS),
-    });
-  });
-}
-
-async function mockValidationAndReferenceData(page: Page) {
-  await page.route('**/api/v2/validation/identifiertypes/active', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_IDENTIFIER_TYPES),
-    });
-  });
-
-  await page.route('**/api/v2/validation/patterns/**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ pattern: '.*' }),
-    });
-  });
-
-  await page.route('**/json/funders.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_FUNDERS),
-    });
-  });
-
-  await page.route('**/json/msl-labs.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify(MOCK_LABS),
-    });
-  });
-
-  await page.route('**/json/affiliations.json', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify([
-        {
-          id: 'aff-1',
-          name: 'GFZ German Research Centre for Geosciences',
-          other: ['GFZ'],
-        },
-      ]),
-    });
-  });
-
-  await page.route('**/json/thesauri/**', async route => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ data: MOCK_THESAURI_TREE }),
-    });
-  });
-}
+/**
+ * Central mock data configuration for all API endpoints.
+ * This is used by the browser-level fetch/ajax mocking in beforeEach.
+ * Note: page.route() does NOT work for about:blank pages, so we mock
+ * fetch() and $.ajax() directly in the browser context instead.
+ */
+const MOCK_API_DATA: Record<string, any> = {
+  'json/timezones.json': [
+    { label: 'UTC+00:00 (Africa/Abidjan)' },
+    { label: 'UTC+01:00 (Europe/Berlin)' },
+    { label: 'UTC-05:00 (America/New_York)' },
+  ],
+  'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
+  'api/v2/vocabs/languages': MOCK_LANGUAGES,
+  'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
+  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
+  'api/v2/vocabs/licenses/software': MOCK_LICENSES,
+  'api/v2/vocabs/roles?type=person': MOCK_ROLES.person,
+  'api/v2/vocabs/roles?type=institution': MOCK_ROLES.institution,
+  'api/v2/vocabs/roles?type=both': MOCK_ROLES.both,
+  'api/v2/vocabs/relations': MOCK_RELATIONS,
+  'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
+  'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
+  'json/funders.json': MOCK_FUNDERS,
+  'json/msl-labs.json': MOCK_LABS,
+  'json/affiliations.json': [{
+    id: 'aff-1',
+    name: 'GFZ German Research Centre for Geosciences',
+    other: ['GFZ'],
+  }],
+  'api/v2/vocabs/thesauri/availability': {
+    science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+    platforms: { available: true, displayName: 'GCMD Platforms' },
+    instruments: { available: true, displayName: 'GCMD Instruments' },
+    chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+    gemet: { available: false, displayName: 'GEMET' },
+  },
+  'api/v2/vocabs/thesauri/gcmd-science-keywords': { data: [] },
+  'api/v2/vocabs/thesauri/gcmd-platforms': { data: [] },
+  'api/v2/vocabs/thesauri/gcmd-instruments': { data: [] },
+};
 
 async function waitForEditorReady(page: Page) {
   await expect(page.locator('#input-resourceinformation-doi')).toBeVisible({ timeout: 15000 });
 
+  // Wait for language dropdown to be populated
   await page.waitForFunction(() => {
     const select = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
     return Boolean(select && select.options.length > 2);
-  });
+  }, { timeout: 30000 });
 
   await page.waitForFunction(() => {
     const tagify = (document.querySelector('#input-freekeyword') as any)?._tagify;
     return Boolean(tagify);
-  });
+  }, { timeout: 15000 });
 
-  await page.waitForFunction(() => {
-    const select = document.querySelector<HTMLSelectElement>('select[name="laboratoryName[]"]');
-    return Boolean(select && Array.from(select.options).some(option => option.value === 'Sample Lab'));
-  });
+  // Labs are mocked and enabled via ELMO_FEATURES
 }
 
 async function uploadSampleXml(page: Page) {
@@ -389,32 +365,161 @@ async function uploadSampleXml(page: Page) {
     document.querySelectorAll('.modal-backdrop').forEach(node => node.remove());
   });
 
-  const status = page.locator('#xml-upload-status');
-  await expect(status).toHaveClass(/alert-success/);
-  await expect(status).toContainText('XML file successfully loaded');
+  // Verify success toast is shown with file name
+  const toast = page.locator('#toast-upload-feedback');
+  await expect(toast).toBeVisible();
+  await expect(toast).toHaveClass(/show/);
+  await expect(toast).toHaveClass(/text-bg-success/);
+  const toastMessage = page.locator('#toast-upload-feedback-message');
+  await expect(toastMessage).toContainText('sample-upload.xml');
 }
 
 test.describe('XML Upload Mapping Flow', () => {
   test.beforeEach(async ({ page }) => {
-    await mockVocabularyRequests(page);
-    await mockValidationAndReferenceData(page);
+    // Note: page.route() does NOT work for about:blank pages, so we mock
+    // fetch() and $.ajax() directly in the browser context below.
 
     await page.addInitScript(({ translations }) => {
       (window as any).translations = translations;
+      // Enable MSL Labs feature for test
+      (window as any).ELMO_FEATURES = {
+        showMslLabs: true,
+        showMslVocabs: false,
+        showGGMsProperties: false,
+        showThesauri: true
+      };
     }, { translations: TEST_TRANSLATIONS });
 
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/css/bootstrap.min.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css') });
-    await page.addStyleTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.css') });
+    // Inject mock fetch that returns data directly instead of making network requests
+    // Uses the central MOCK_API_DATA configuration defined above
+    await page.evaluate((data) => {
+      const mockDataMap = new Map(Object.entries(data.mockData));
+      
+      // Mock fetch to return data directly
+      (window as any).__originalFetch = window.fetch;
+      (window as any).__fetchCalls = [];
+      window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+        const url = typeof input === 'string' ? input : input.toString();
+        (window as any).__fetchCalls.push({ url, resolved: url });
+        
+        // Check if we have mock data for this URL
+        for (const [pattern, responseData] of mockDataMap.entries()) {
+          if (url.includes(pattern)) {
+            return Promise.resolve(new Response(JSON.stringify(responseData), {
+              status: 200,
+              headers: { 'Content-Type': 'application/json' }
+            }));
+          }
+        }
+        
+        // For validation patterns, return a generic pattern
+        if (url.includes('api/v2/validation/patterns/')) {
+          return Promise.resolve(new Response(JSON.stringify({ pattern: '.*' }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // For thesauri, return mock tree data
+        if (url.includes('json/thesauri/')) {
+          return Promise.resolve(new Response(JSON.stringify({ data: data.mockThesauri }), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // For affiliations search, return mock data
+        if (url.includes('api/v2/affiliations/search')) {
+          return Promise.resolve(new Response(JSON.stringify([{
+            name: 'GFZ German Research Centre for Geosciences',
+            ror: 'https://ror.org/04z8jg394',
+            other: ['GFZ', 'Helmholtz Centre Potsdam'],
+          }]), {
+            status: 200,
+            headers: { 'Content-Type': 'application/json' }
+          }));
+        }
+        
+        // Fallback: return empty array for unknown URLs
+        console.warn('Unmocked fetch URL:', url);
+        return Promise.resolve(new Response('[]', {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' }
+        }));
+      };
+    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
 
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery/dist/jquery.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jquery-ui/dist/jquery-ui.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/@yaireo/tagify/dist/tagify.js') });
-    await page.addScriptTag({ path: path.join(REPO_ROOT, 'node_modules/jstree/dist/jstree.min.js') });
+    await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+    await injectStylesheet(page, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css');
+    await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
+
+    await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    
+    // Patch jQuery $.ajax and $.getJSON to return mock data directly
+    await page.evaluate((data) => {
+      const mockDataMap = new Map(Object.entries(data.mockData));
+      const $ = (window as any).jQuery;
+      
+      if ($ && $.ajax) {
+        const originalAjax = $.ajax;
+        $.ajax = function(urlOrSettings: any, settings?: any) {
+          // Handle both $.ajax(url, settings) and $.ajax(settings) signatures
+          let url: string;
+          let opts: any;
+          if (typeof urlOrSettings === 'string') {
+            url = urlOrSettings;
+            opts = settings || {};
+          } else {
+            url = urlOrSettings?.url || '';
+            opts = urlOrSettings || {};
+          }
+          
+          // Check if we have mock data for this URL
+          for (const [pattern, responseData] of mockDataMap.entries()) {
+            if (url.includes(pattern)) {
+              // Create a deferred object that mimics jQuery's $.ajax return value
+              const deferred = $.Deferred();
+              setTimeout(() => {
+                if (opts.success) opts.success(responseData, 'success', {});
+                if (opts.complete) opts.complete({}, 'success');
+                deferred.resolve(responseData);
+              }, 0);
+              return deferred.promise();
+            }
+          }
+          
+          // Fallback to original ajax for unhandled URLs
+          return originalAjax.call(this, urlOrSettings, settings);
+        };
+        
+        // Also patch $.getJSON
+        const originalGetJSON = $.getJSON;
+        $.getJSON = function(url: string, ...args: any[]) {
+          // Check if we have mock data for this URL
+          for (const [pattern, responseData] of mockDataMap.entries()) {
+            if (url.includes(pattern)) {
+              const deferred = $.Deferred();
+              setTimeout(() => {
+                // Check if second argument is a callback
+                const callback = typeof args[0] === 'function' ? args[0] : args[1];
+                if (callback) callback(responseData);
+                deferred.resolve(responseData);
+              }, 0);
+              return deferred.promise();
+            }
+          }
+          return originalGetJSON.call(this, url, ...args);
+        };
+      }
+    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
+    
+    await injectScript(page, 'node_modules/jquery-ui/dist/jquery-ui.min.js');
+    await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
+    await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
+    await injectScript(page, 'node_modules/jstree/dist/jstree.min.js');
 
     await page.evaluate(() => {
       const $ = (window as any).jQuery;
@@ -430,6 +535,31 @@ test.describe('XML Upload Mapping Flow', () => {
       }
     });
 
+    // Register simplified click handlers for add-row buttons since ES modules
+    // cannot load on about:blank pages. These mimic the core cloning logic from
+    // js/eventhandlers/formgroups/author.js and authorInstitution.js.
+    await page.evaluate(() => {
+      const $ = (window as any).jQuery;
+      $('#button-author-add').click(function () {
+        const $container = $('div[data-creator-row]').parent();
+        const $first = $('div[data-creator-row]').first();
+        const $clone = $first.clone(false);
+        $clone.find('input, select, textarea').val('').removeAttr('required');
+        $clone.find('.tagify').remove();
+        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        $container.append($clone);
+      });
+      $('#button-authorinstitution-add').click(function () {
+        const $container = $('div[data-authorinstitution-row]').parent();
+        const $first = $('div[data-authorinstitution-row]').first();
+        const $clone = $first.clone(false);
+        $clone.find('input, select, textarea').val('').removeAttr('required');
+        $clone.find('.tagify').remove();
+        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        $container.append($clone);
+      });
+    });
+
     const appScripts = [
       'js/clear.js',
       'js/select.js',
@@ -443,7 +573,7 @@ test.describe('XML Upload Mapping Flow', () => {
     ];
 
     for (const script of appScripts) {
-      await page.addScriptTag({ path: path.join(REPO_ROOT, script) });
+      await injectScript(page, script);
     }
 
     await page.evaluate(() => {
@@ -453,7 +583,9 @@ test.describe('XML Upload Mapping Flow', () => {
     });
 
     await page.evaluate(() => {
-      const selectors = ['#input-sciencekeyword', '#input-Platforms', '#input-Instruments', '#input-mslkeyword'];
+      // Initialize Tagify for keyword input fields that need it for the test
+      // Note: #input-freekeyword is included because waitForEditorReady() checks for it
+      const selectors = ['#input-sciencekeyword', '#input-platforms', '#input-instruments', '#input-mslkeyword', '#input-freekeyword'];
       selectors.forEach((selector) => {
         const element = document.querySelector(selector) as any;
         if (element && !element._tagify && (window as any).Tagify) {
@@ -491,7 +623,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect
       .poll(async () => page.evaluate(() => {
         const input = document.querySelector('input[name="personAffiliation[]"]') as any;
-        return input?.tagify ? input.tagify.value.map((tag: any) => tag.value) : [];
+        return input?._tagify ? input._tagify.value.map((tag: any) => tag.value) : [];
       }))
       .toEqual(['GFZ German Research Centre for Geosciences']);
 
@@ -520,5 +652,61 @@ test.describe('XML Upload Mapping Flow', () => {
       return element.options[element.selectedIndex]?.text;
     });
     expect(selectedRelation).toBe('IsSupplementTo');
+  });
+
+  // ── Issue #739 regression: mixed person/institution creators ───────
+
+  test('Person, Institution, Person → 2 person rows, 1 institution row, no extra empty rows (Issue #739)', async ({ page }) => {
+    await page.getByRole('button', { name: /Load/i }).click();
+    const modal = page.locator('div#modal-uploadxml');
+    await expect(modal).toBeVisible();
+
+    await page.setInputFiles('#input-uploadxml-file', {
+      name: 'mixed-creators.xml',
+      mimeType: 'text/xml',
+      buffer: Buffer.from(XML_MIXED_PERSON_INSTITUTION_PERSON, 'utf-8'),
+    });
+
+    await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Mixed Creator Test', { timeout: 15000 });
+
+    const personRows = page.locator('#group-author [data-creator-row]');
+    await expect(personRows).toHaveCount(2);
+    await expect(personRows.nth(0).locator('input[name="familynames[]"]')).toHaveValue('Smith');
+    await expect(personRows.nth(0).locator('input[name="givennames[]"]')).toHaveValue('Alice');
+    await expect(personRows.nth(1).locator('input[name="familynames[]"]')).toHaveValue('Jones');
+    await expect(personRows.nth(1).locator('input[name="givennames[]"]')).toHaveValue('Bob');
+
+    // No empty person rows
+    for (let i = 0; i < 2; i++) {
+      const family = await personRows.nth(i).locator('input[name="familynames[]"]').inputValue();
+      expect(family.trim()).not.toBe('');
+    }
+
+    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    await expect(instRows).toHaveCount(1);
+    await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
+  });
+
+  test('Institution, Person → 1 person row, 1 institution row, no extra empty rows (Issue #739)', async ({ page }) => {
+    await page.getByRole('button', { name: /Load/i }).click();
+    const modal = page.locator('div#modal-uploadxml');
+    await expect(modal).toBeVisible();
+
+    await page.setInputFiles('#input-uploadxml-file', {
+      name: 'inst-first.xml',
+      mimeType: 'text/xml',
+      buffer: Buffer.from(XML_MIXED_INSTITUTION_PERSON, 'utf-8'),
+    });
+
+    await expect(page.locator('#input-resourceinformation-title')).toHaveValue('Institution First Test', { timeout: 15000 });
+
+    const personRows = page.locator('#group-author [data-creator-row]');
+    await expect(personRows).toHaveCount(1);
+    await expect(personRows.nth(0).locator('input[name="familynames[]"]')).toHaveValue('Smith');
+    await expect(personRows.nth(0).locator('input[name="givennames[]"]')).toHaveValue('Alice');
+
+    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    await expect(instRows).toHaveCount(1);
+    await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
   });
 });

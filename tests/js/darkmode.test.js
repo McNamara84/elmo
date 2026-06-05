@@ -1,17 +1,23 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('darkmode.js', () => {
+describe('darkmode.js (integration)', () => {
   let prefersDark;
   let triggerMediaQueryChange;
 
   function loadScript() {
+    // Load the script and transform to run immediately
     let script = fs.readFileSync(
       path.resolve(__dirname, '../../js/darkmode.js'),
       'utf8'
     );
+    // Remove module.exports block at the end
+    script = script.replace(/\/\/ Export functions for testing[\s\S]*$/, '');
+    // Replace DOMContentLoaded with IIFE
     script = script.replace('document.addEventListener("DOMContentLoaded", function () {', '(function () {');
-    script = script.replace(/\}\);\s*$/, '})();');
+    // Find the last }); and replace with })();
+    script = script.replace(/\}\);(\s*)$/, '})();$1');
+    
     window.eval(script);
   }
 
@@ -24,6 +30,7 @@ describe('darkmode.js', () => {
         <button class="dropdown-item" data-bs-theme-value="auto"></button>
       </div>
     `;
+    document.documentElement.removeAttribute('data-bs-theme');
     prefersDark = false;
     const listeners = new Set();
     const mediaQueryList = {

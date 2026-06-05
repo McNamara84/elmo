@@ -1,5 +1,5 @@
 <div class="card mb-2">
-  <div class="card-header"><b data-translate="authors.title">Author(s)</b>
+  <div class="card-header"><b data-translate="authors.title">Author: Persons</b>
     <i class="bi bi-question-circle-fill" data-help-section-id="help-authors-fg"></i>
   </div>
   <div class="card-body">
@@ -16,13 +16,20 @@
             </label>
             <!-- ORCID Input Field -->
             <div class="form-floating flex-grow-1">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+              <input type="text" class="form-control input-right-no-round-corners"
+                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" maxlength="19" />
               <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
               <div class="invalid-feedback" data-translate="general.orcidInvalid">
                 Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
               </div>
             </div>
+            <!-- ORCID Search Button -->
+            <button type="button" class="btn btn-outline-secondary orcid-search-btn input-with-help"
+              data-bs-toggle="modal" data-bs-target="#modal-orcid-search"
+              data-translate-title="orcidSearch.searchButtonTitle" title="Search ORCID by name"
+              aria-label="Search ORCID by name">
+              <i class="bi bi-search" aria-hidden="true"></i>
+            </button>
             <!-- Help Icon -->
             <span class="input-group-text">
               <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
@@ -34,7 +41,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control js-required-on-submit" id="input-author-lastname" name="familynames[]" 
-              pattern="^[\p{L}\s'-]+$"  required />
+              pattern="[^0-9$§?!&%=_*+<>]*"  required />
               <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
                   class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="general.lastNameInvalid">
@@ -48,7 +55,7 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control js-required-on-submit" id="input-author-firstname" name="givennames[]" 
-              pattern="^[\p{L}\s'-]+$"  required   />
+              pattern="[^0-9$§?!&%=_*+<>]*"  required   />
               <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span><span
                   class="red-star">*</span></label>
               <div class="invalid-feedback" data-translate="general.firstNameInvalid">
@@ -69,22 +76,20 @@
           </div>
         </div>
         <!-- Button "add Author" -->
-        <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-          <button type="button" class="drag-handle align-items-center" data-bs-toggle="tooltip" data-bs-placement="top"
+        <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
+          <button type="button" class="drag-handle align-items-center me-2" data-bs-toggle="tooltip" data-bs-placement="top"
             title="Drag & drop to change order" aria-label="Drag & drop to change order">
-            <i class="bi bi-grip-vertical pe-4"></i>
+            <i class="bi bi-grip-vertical"></i>
           </button>
-          <div class="align-items-center">
-            <button type="button" class="btn btn-primary addAuthor" id="button-author-add" class="add-button" data-translate="general.add">
-              +
-            </button>
-          </div>
+          <button type="button" class="btn btn-primary addAuthor add-button" id="button-author-add" data-translate="general.add">
+            +
+          </button>
         </div>
         <!-- Input field Email Address -->
         <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
           <div class="input-group has-validation">
             <div class="form-floating">
-              <input type="email" class="form-control" name="cpEmail[]"
+              <input type="email" class="form-control input-with-help input-right-no-round-corners" name="cpEmail[]"
                 pattern="^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$"
                 id="input-contactperson-email"  />
               <label for="input-contactperson-email"><span data-translate="contactPersons.email">Email
@@ -93,6 +98,11 @@
               <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">
                 Please provide a valid email address in the format xxx.xxx@xxx.xxx.
               </div>
+            </div>
+            <div class="input-group-append">
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                  data-help-section-id="help-contactperson-email"></i>
+              </span>
             </div>
           </div>
         </div>

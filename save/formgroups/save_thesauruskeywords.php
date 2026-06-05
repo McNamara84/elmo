@@ -14,10 +14,12 @@ function saveKeywords($connection, $postData, $resource_id)
 {
     // Defines the fields to process
     $fieldsToProcess = [
-        'gcmdScienceKeywords',  // Thesaurus Keywords
+        'gcmdScienceKeywords',  // GCMD Science Keywords
         'MSLKeywords',          // MSL Keywords
         'platforms',            // GCMD Platforms
-        'instruments'           // GCMD Instruments
+        'instruments',          // GCMD Instruments
+        'chronostratKeywords',  // ICS Chronostratigraphy
+        'gemetKeywords',        // GEMET Thesaurus
     ];
 
     // Iterates over the fields and checks if they exist in the POST data and are not empty
@@ -55,16 +57,16 @@ function processThesaurusKeyword($connection, $entry, $resource_id, $field)
 {
     // Retrieves the values from the keyword array
     $value = $entry['value'];
-    $valueURI = isset($entry['id']) ? $entry['id'] : null;       // Uses the URI if available
-    $scheme = isset($entry['scheme']) ? $entry['scheme'] : $field; // If no scheme, use the field name
+    $valueURI = isset($entry['id']) && $entry['id'] !== '' ? $entry['id'] : null;
+    $scheme = isset($entry['scheme']) && $entry['scheme'] !== '' ? $entry['scheme'] : null;
 
     // Workaround until Utrecht fixed it in the original source
     if ($field === 'MSLKeywords') {
         $scheme = 'EPOS MSL vocabulary';
     }
 
-    $schemeURI = isset($entry['schemeURI']) ? $entry['schemeURI'] : ''; // Optional: URI of the scheme
-    $language = isset($entry['language']) ? $entry['language'] : 'en'; // Default language: English
+    $schemeURI = isset($entry['schemeURI']) && $entry['schemeURI'] !== '' ? $entry['schemeURI'] : null;
+    $language = isset($entry['language']) && $entry['language'] !== '' ? $entry['language'] : null;
 
     // If the value is not empty, process it
     if (!empty($value)) {
@@ -80,18 +82,22 @@ function processThesaurusKeyword($connection, $entry, $resource_id, $field)
  *
  * @param mysqli      $connection The database connection.
  * @param string      $value      The value of the keyword.
- * @param string      $scheme     The scheme of the keyword.
- * @param string      $schemeURI  The URI of the scheme.
+ * @param string|null $scheme     The scheme of the keyword.
+ * @param string|null $schemeURI  The URI of the scheme.
  * @param string|null $valueURI   The URI of the value.
- * @param string      $language   The language of the keyword.
+ * @param string|null $language   The language of the keyword.
  *
  * @return int The ID of the thesaurus keyword.
  */
 function getOrCreateThesaurusKeyword($connection, $value, $scheme, $schemeURI, $valueURI, $language)
 {
-    // Checks if the keyword already exists
-    $stmt = $connection->prepare("SELECT thesaurus_keywords_id FROM Thesaurus_Keywords WHERE keyword = ?");
-    $stmt->bind_param("s", $value);
+    // Checks if the keyword with the exact same attributes already exists.
+    // Uses NULL-safe comparison (<=>) so that NULL values match correctly.
+    $stmt = $connection->prepare(
+        "SELECT thesaurus_keywords_id FROM Thesaurus_Keywords
+         WHERE keyword = ? AND scheme <=> ? AND schemeURI <=> ? AND valueURI <=> ? AND language <=> ?"
+    );
+    $stmt->bind_param("sssss", $value, $scheme, $schemeURI, $valueURI, $language);
     $stmt->execute();
     $stmt->store_result();
 

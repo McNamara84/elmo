@@ -49,6 +49,12 @@ describe('buttons.js', () => {
     window.showConfirmationModal = jest.fn();
     window.open = jest.fn();
     localStorage.clear();
+
+    window.validateFundingReferenceRequirements = jest.fn();
+    window.validateRelatedWorkRequirements = jest.fn();
+    window.validateSpatialTemporalCoverageRequirements = jest.fn();
+    window.validateContributorOrganisationRequirements = jest.fn();
+    window.validateContributorPersonRequirements = jest.fn();
   });
 
   afterEach(() => {
@@ -161,25 +167,36 @@ describe('buttons.js', () => {
     expect(field2.hasAttribute('required')).toBe(false);
     expect(field1.classList.contains('is-invalid')).toBe(false);
     expect(field2.classList.contains('is-invalid')).toBe(false);
+
+    // Save must NOT trigger submit validators
+    expect(window.validateFundingReferenceRequirements).not.toHaveBeenCalled();
+    expect(window.validateRelatedWorkRequirements).not.toHaveBeenCalled();
+    expect(window.validateSpatialTemporalCoverageRequirements).not.toHaveBeenCalled();
+    expect(window.validateContributorOrganisationRequirements).not.toHaveBeenCalled();
+    expect(window.validateContributorPersonRequirements).not.toHaveBeenCalled();
   });
 
-  test('Submit button enforces required on js-required-on-submit fields and triggers HTML5 validation', () => {
+  test('Submit button enforces required on js-required-on-submit fields and calls validators', () => {
     loadScript();
-    const form = document.getElementById('form-mde');
     const field1 = document.getElementById('field1');
     const field2 = document.getElementById('field2');
-
-    const checkSpy = jest.spyOn(form, 'checkValidity').mockReturnValue(false);
 
     const clickEvent = $.Event('click');
     $('#button-form-submit').trigger(clickEvent);
 
     expect(field1.hasAttribute('required')).toBe(true);
     expect(field2.hasAttribute('required')).toBe(true);
-    expect(clickEvent.isDefaultPrevented()).toBe(true);
-    expect(form.classList.contains('was-validated')).toBe(true);
 
-    checkSpy.mockRestore();
+    // Validation is now handled by submitHandler.handleSubmit() in validation.js,
+    // so buttons.js must NOT call preventDefault or add was-validated.
+    expect(clickEvent.isDefaultPrevented()).toBe(false);
+
+    // Validators must run on Submit
+    expect(window.validateFundingReferenceRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateRelatedWorkRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateSpatialTemporalCoverageRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateContributorOrganisationRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateContributorPersonRequirements).toHaveBeenCalledTimes(1);
   });
 
 });

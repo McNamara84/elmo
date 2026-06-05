@@ -1,15 +1,38 @@
-// Global array to store affiliations data
+// Global array to store affiliations data (kept for compatibility, but now empty initially)
 var affiliationsData = [];
 
 /**
+ * Searches affiliations via the server-side API endpoint.
+ * This avoids loading the full 23MB affiliations.json file.
+ * 
+ * @param {string} query - The search query (minimum 2 characters)
+ * @param {number} [limit=20] - Maximum number of results
+ * @returns {Promise<Array>} Array of matching affiliations
+ */
+async function searchAffiliationsFromServer(query, limit = 20) {
+  if (!query || query.length < 2) {
+    return [];
+  }
+
+  try {
+    const response = await fetch(`api/v2/affiliations/search?q=${encodeURIComponent(query)}&limit=${limit}`);
+    if (!response.ok) {
+      throw new Error(`Search failed with status ${response.status}`);
+    }
+    return await response.json();
+  } catch (error) {
+    console.error('Affiliation search error:', error);
+    return [];
+  }
+}
+
+/**
  * Refreshes all Tagify instances when translations are changed.
- * This function updates the whitelist and restores any previously selected values without destroying instances.
+ * This function updates the placeholder text without destroying instances.
  * 
  * @returns {void}
  */
 function refreshTagifyInstances() {
-  if (!window.affiliationsData) return;
-
   const allPairs = [
     { input: "input-author-affiliation", hidden: "input-author-rorid" },
     { input: "input-authorinstitution-affiliation", hidden: "input-author-institutionrorid" },
@@ -20,22 +43,14 @@ function refreshTagifyInstances() {
 
   allPairs.forEach(pair => {
     const inputElement = document.getElementById(pair.input);
-    if (!inputElement || !inputElement.tagify) return;
+    if (!inputElement || !inputElement._tagify) return;
 
     // Save current values
-    const currentValues = [...inputElement.tagify.value]; // Create a copy
-
-    // Update whitelist without destroying the instance
-    inputElement.tagify.settings.whitelist = window.affiliationsData.map(item => ({
-      value: item.name,
-      id: item.id,
-      other: item.other
-    }));
-    inputElement.tagify.settings.dropdown.searchKeys = ['value', 'other'];
+    const currentValues = [...inputElement._tagify.value]; // Create a copy
 
     // Update placeholder if translations are available
     if (translations?.general?.affiliation) {
-      inputElement.tagify.settings.placeholder = translations.general.affiliation;
+      inputElement._tagify.settings.placeholder = translations.general.affiliation;
       const placeholderElement = inputElement.parentElement.querySelector('.tagify__input');
       if (placeholderElement) {
         placeholderElement.setAttribute('data-placeholder', translations.general.affiliation);
@@ -43,32 +58,27 @@ function refreshTagifyInstances() {
     }
 
     if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
-      window.applyTagifyAccessibilityAttributes(inputElement.tagify, inputElement, {
-        placeholder: inputElement.tagify.settings.placeholder
+      window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
+        placeholder: inputElement._tagify.settings.placeholder
       });
     }
 
     // Restore previously selected values
-    inputElement.tagify.removeAllTags();
-    inputElement.tagify.addTags(currentValues);
+    inputElement._tagify.removeAllTags();
+    inputElement._tagify.addTags(currentValues);
   });
 }
 
 /**
- * Loads affiliations data from a JSON file and initializes Tagify for specified input fields.
+ * Initialize Tagify for affiliation fields when the document is ready.
+ * Uses server-side search instead of loading the full JSON file.
  */
-$.getJSON("json/affiliations.json", function (data) {
-  // Globale Variable mit den Daten befüllen
-  window.affiliationsData = data;  // Explizit global verfügbar machen
-
-  // Initialize Tagify for existing input fields when the document is ready
-  $(document).ready(function () {
-    autocompleteAffiliations("input-author-affiliation", "input-author-rorid", affiliationsData);
-    autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid", affiliationsData);
-    autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid", affiliationsData);
-    autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid", affiliationsData);
-    document.addEventListener('translationsLoaded', refreshTagifyInstances);
-  });
+$(document).ready(function () {
+  autocompleteAffiliations("input-author-affiliation", "input-author-rorid");
+  autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid");
+  autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
+  autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
+  document.addEventListener('translationsLoaded', refreshTagifyInstances);
 });
 
 /**
@@ -80,12 +90,12 @@ $.getJSON("json/affiliations.json", function (data) {
 
 /**
  * Initializes Tagify on a specified input field for affiliation autocompletion.
+ * Uses server-side search for performance instead of loading the full affiliations list.
  *
  * @param {string} inputFieldId - The ID of the input field to initialize Tagify on.
  * @param {string} hiddenFieldId - The ID of the hidden input field to store selected affiliation IDs.
- * @param {Affiliation[]} data - The affiliation data array used for autocompletion.
  */
-function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
+function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   const inputElement = $("#" + inputFieldId);
   if (!inputElement.length) return;
 
@@ -184,15 +194,11 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     enforceWhitelist: false,
     duplicates: false,
     placeholder: placeholderValue,
-    whitelist: data.map(item => ({
-      value: item.name,
-      id: item.id,
-      other: item.other
-    })),
+    whitelist: [], // Start with empty whitelist - will be populated via server search
     dropdown: {
       maxItems: 20,
       classname: "affiliation",
-      enabled: 3,
+      enabled: 2, // Show dropdown after 2 characters
       closeOnSelect: true,
       searchKeys: ['value', 'other'],
       position: 'all',
@@ -226,6 +232,52 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
         return html;
       }
     }
+  });
+
+  // Track the search timeout for this specific Tagify instance
+  let searchTimeout = null;
+
+  /**
+   * Event handler for Tagify input - performs server-side search
+   */
+  tagify.on('input', async function(e) {
+    const query = e.detail.value;
+    
+    // Clear previous timeout
+    if (searchTimeout) {
+      clearTimeout(searchTimeout);
+    }
+
+    // Don't search if query is too short
+    if (!query || query.length < 2) {
+      tagify.whitelist = [];
+      return;
+    }
+
+    // Debounce: wait 200ms before searching
+    searchTimeout = setTimeout(async () => {
+      // Show loading state
+      tagify.loading(true);
+
+      try {
+        // Fetch results from server
+        const results = await searchAffiliationsFromServer(query, 20);
+
+        // Update whitelist with server results
+        tagify.whitelist = results.map(item => ({
+          value: item.name,
+          id: item.id,
+          other: item.other
+        }));
+
+        // Hide loading and show dropdown
+        tagify.loading(false);
+        tagify.dropdown.show(query);
+      } catch (error) {
+        console.error('Error during affiliation search:', error);
+        tagify.loading(false);
+      }
+    }, 200);
   });
 
   /**
@@ -322,18 +374,14 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId, data) {
     }
   });
 
-  // Event listener for input changes to adjust the input field width dynamically
-  tagify.on("input", function (e) {
-    tagify.DOM.input.style.width = (e.detail.value.length + 1) * 8 + "px";
-  });
-
   // Store the Tagify instance in the DOM element for later access
-  inputElement[0].tagify = tagify;
+  // Using _tagify prefix for consistency with other modules (roles.js, freekeywordTags.js, etc.)
+  inputElement[0]._tagify = tagify;
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();
   syncAuthorInstitutionRequirement();
 }
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { autocompleteAffiliations, refreshTagifyInstances };
+  module.exports = { autocompleteAffiliations, refreshTagifyInstances, searchAffiliationsFromServer };
 }

@@ -2,14 +2,15 @@
 require_once dirname(__FILE__) . '/../validation.php';
 
 /**
- * Saves or updates resource information and rights in the database.
+ * Creates a new resource information and rights entry in the database.
  *
- * If a record with the same DOI exists, it updates the existing record.
- * For records without DOI, it creates a new entry with a NEW Resource ID.
- * Duplicate titles are only saved once.
+ * Always creates a new Resource entry with a new Resource ID.
+ * Duplicate titles are deduplicated within the same resource.
+ * Titles are only validated on submit action; save_and_download allows partial data.
  *
  * @param mysqli $connection The database connection
  * @param array  $postData   The POST data from the form containing:
+ *                          - action (string): Either 'submit' or 'save_and_download'
  *                          - doi (string|null): The DOI of the resource
  *                          - year (int): Publication year
  *                          - dateCreated (string): Creation date
@@ -21,7 +22,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  *                          - title (array): Array of titles
  *                          - titleType (array): Array of title types
  *
- * @return int|false The ID of the created/updated resource or false if validation fails
+ * @return int|false The ID of the newly created resource or false if validation fails
  * @throws mysqli_sql_exception If a database error occurs
  */
 function saveResourceInformationAndRights($connection, $postData)
@@ -31,9 +32,9 @@ function saveResourceInformationAndRights($connection, $postData)
     try {        
         // Only require Rights field if license form group is shown
         global $showLicense;
-        $action = $postData['action'] ?? 'submit';
+        $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'dateCreated', 'resourcetype', 'language'];
+            $requiredFields = ['year', 'dateCreated', 'resourcetype'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {
@@ -47,21 +48,10 @@ function saveResourceInformationAndRights($connection, $postData)
 
         // Sanitize and prepare data
         $resourceData = prepareResourceData($postData);
-
-
-        // Check for existing DOI and handle accordingly
-        $resource_id = handleExistingResource($connection, $resourceData);
-        if ($resource_id === false) {
-            // Create new resource if no existing one was found/updated
-            $resource_id = createNewResource($connection, $resourceData);
-        }
-
-        // IMPORTANT: Always save titles after resource is created/updated
-        if (!$resource_id) {
-            return false;
-        }
-        
-        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'])) {
+        // Create new resource 
+        $resource_id = createNewResource($connection, $resourceData);
+        // Save titles after resource is created
+        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'], $action)) {
             return false;
         }
 
@@ -81,38 +71,57 @@ function saveResourceInformationAndRights($connection, $postData)
  */
 function prepareResourceData($postData)
 {
+    global $connection, $defaultLicense;
 
-    global $showLicense, $connection, $showGGMsProperties, $defaultLicense;
+    $rightsId = null;
     
-    // If showLicense is false and no Rights value is provided, use CC-BY 4.0 (rights_id = 1)
-    $rightsId = isset($postData['Rights']) ? (int) $postData['Rights'] : null;
-    // this part handles the assignment of license when the license form group is not shown
-    if ($rightsId === null && !$showLicense) {
-        // Query the database to find the default license provided in settings.php
-        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
+    // Try to get Rights from POST data
+    if (isset($postData['Rights']) && !empty($postData['Rights'])) {
+        try {
+            $rightsId = (int) $postData['Rights'];
+            // Check if casting resulted in 0 or invalid value
+            if ($rightsId <= 0) {
+                error_log("Rights value is not a valid positive integer: " . var_export($postData['Rights'], true));
+                $rightsId = null;
+            }
+        } catch (Exception $e) {
+            error_log("Failed to cast Rights to int: " . $e->getMessage() . ". Value: " . var_export($postData['Rights'], true));
+            $rightsId = null;
+        }
+        
+        // Validate that this rights_id actually exists
+        if ($rightsId !== null) {
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rights_id = ?");
+            $stmt->bind_param("i", $rightsId);
+            $stmt->execute();
+            if ($stmt->get_result()->num_rows === 0) {
+                error_log("Invalid Rights ID provided: $rightsId. Falling back to default.");
+                $rightsId = null;
+            }
+        }
+    }
+    
+    // If no valid Rights from POST, use default
+    if ($rightsId === null) {
+        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ? LIMIT 1");
         $stmt->bind_param("s", $defaultLicense);
         $stmt->execute();
         $result = $stmt->get_result();
         if ($row = $result->fetch_assoc()) {
             $rightsId = $row['rights_id'];
         } else {
-            // Fallback: try to find CC-BY-4.0 if default license not found
-            $fallbackLicense = "CC-BY-4.0";
-            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ?");
-            $stmt->bind_param("s", $fallbackLicense);
+            // Fallback to first available rights (not hardcoded ID)
+            $stmt = $connection->prepare("SELECT rights_id FROM Rights ORDER BY rights_id ASC LIMIT 1");
             $stmt->execute();
             $result = $stmt->get_result();
             if ($row = $result->fetch_assoc()) {
                 $rightsId = $row['rights_id'];
-                error_log("Saving license. fallback activated: Default license '$defaultLicense' not found, using CC-BY-4.0 fallback");
+                error_log("Default license '$defaultLicense' not found. Using first available: {$rightsId}");
             } else {
-                // Final fallback to ID 1 if CC-BY-4.0 also not found
-                $rightsId = 1;
-                error_log("Saving license. fallback activated: Neither default license '$defaultLicense' nor CC-BY-4.0 found, using hardcoded ID 1");
+                error_log("CRITICAL: No Rights records exist in database!");
+                return true; // Cannot proceed without a valid rights_id
             }
         }
-    } else {
-        $rightsId = (int) $postData['Rights'];
     }
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
@@ -130,87 +139,6 @@ function prepareResourceData($postData)
             ? trim($postData['language']): null,
         'rights' => (int) $rightsId
     ];
-}
-
-/**
- * Handles existing resources, updating them if found.
- * Cleans up all related entries before update.
- *
- * @param mysqli $connection The database connection
- * @param array $resourceData The prepared resource data
- * @return int|false Resource ID if updated, false if no existing resource found
- */
-function handleExistingResource($connection, $resourceData)
-{
-    if (empty($resourceData['doi'])) {
-        return false;
-    }
-
-    $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE doi = ?");
-    $stmt->bind_param("s", $resourceData['doi']);
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    if ($result->num_rows === 0) {
-        return false;
-    }
-
-    $row = $result->fetch_assoc();
-    $resource_id = $row['resource_id'];
-
-    // Delete entries from tables with direct resource_id reference
-    $directTables = [
-        'Description' => 'resource_id',  // Table name => column name
-        'Title' => 'Resource_resource_id'
-    ];
-
-    foreach ($directTables as $table => $columnName) {
-        $stmt = $connection->prepare("DELETE FROM " . $table . " WHERE " . $columnName . " = ?");
-        $stmt->bind_param("i", $resource_id);
-        $stmt->execute();
-    }
-
-    // Delete entries from relationship tables
-    $relationTables = [
-        'Resource_has_Author',
-        'Resource_has_Contributor_Person',
-        'Resource_has_Contributor_Institution',
-        'Resource_has_Contact_Person',
-        'Resource_has_Funding_Reference',
-        'Resource_has_Originating_Laboratory',
-        'Resource_has_Related_Work',
-        'Resource_has_Spatial_Temporal_Coverage',
-        'Resource_has_Thesaurus_Keywords',
-        'Resource_has_Free_Keywords'
-    ];
-
-    foreach ($relationTables as $table) {
-        $stmt = $connection->prepare("DELETE FROM " . $table . " WHERE Resource_resource_id = ?");
-        $stmt->bind_param("i", $resource_id);
-        $stmt->execute();
-    }
-
-    // Update existing resource
-    $stmt = $connection->prepare("UPDATE Resource SET 
-        version = ?, year = ?, dateCreated = ?, dateEmbargoUntil = ?,
-        Rights_rights_id = ?, Resource_Type_resource_name_id = ?, Language_language_id = ?
-        WHERE resource_id = ?");
-
-    $stmt->bind_param(
-        "dissiiii",
-        $resourceData['version'],
-        $resourceData['year'],
-        $resourceData['dateCreated'],
-        $resourceData['dateEmbargoUntil'],
-        $resourceData['rights'],
-        $resourceData['resourceType'],
-        $resourceData['language'],
-        $resource_id
-    );
-
-    $stmt->execute();
-
-    return $resource_id;
 }
 
 /**
@@ -248,27 +176,160 @@ function createNewResource($connection, $resourceData)
 }
 
 /**
+ * Validates that a title type ID exists in the database.
+ *
+ * @param mysqli $connection The database connection
+ * @param int $title_type_id The title type ID to validate
+ * @return bool True if the title type exists, false otherwise
+ */
+function isTitleTypeValid($connection, $title_type_id)
+{
+    if ($title_type_id === null || $title_type_id <= 0) {
+        return false;
+    }
+    
+    $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type WHERE title_type_id = ?");
+    $stmt->bind_param("i", $title_type_id);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    
+    return $result->num_rows > 0;
+}
+
+/**
+ * Resolves and caches default title type IDs ("Main Title" and "Alternative Title").
+ *
+ * Runs at most two queries on the first call per connection and caches the
+ * results for the lifetime of the request. Subsequent calls with the same
+ * connection return the cached values.
+ *
+ * @param mysqli $connection The database connection
+ * @return array{main: int|null, alternative: int|null} Resolved IDs (null when the row does not exist)
+ */
+function resolveDefaultTitleTypeIds($connection)
+{
+    static $cache = [];
+    $connId = spl_object_id($connection);
+    if (isset($cache[$connId])) {
+        return $cache[$connId];
+    }
+
+    $ids = ['main' => null, 'alternative' => null];
+
+    $stmt = $connection->prepare(
+        "SELECT name, title_type_id FROM Title_Type WHERE name IN ('Main Title', 'Alternative Title')"
+    );
+    $stmt->execute();
+    $result = $stmt->get_result();
+    while ($row = $result->fetch_assoc()) {
+        if ($row['name'] === 'Main Title') {
+            $ids['main'] = (int) $row['title_type_id'];
+        } elseif ($row['name'] === 'Alternative Title') {
+            $ids['alternative'] = (int) $row['title_type_id'];
+        }
+    }
+
+    // Fallback: first available title type
+    if ($ids['main'] === null || $ids['alternative'] === null) {
+        $stmt = $connection->prepare("SELECT title_type_id FROM Title_Type ORDER BY title_type_id ASC LIMIT 1");
+        $stmt->execute();
+        $fallback = $stmt->get_result()->fetch_assoc();
+        $fallbackId = $fallback ? (int) $fallback['title_type_id'] : null;
+        $ids['main'] = $ids['main'] ?? $fallbackId;
+        $ids['alternative'] = $ids['alternative'] ?? $fallbackId;
+    }
+
+    $cache[$connId] = $ids;
+    return $cache[$connId];
+}
+
+/**
+ * Returns the default title type ID for a given title position.
+ *
+ * - First saved title (savedCount === 0): returns "Main Title" type ID
+ * - Subsequent saved titles: returns "Alternative Title" type ID
+ *
+ * Uses cached IDs from resolveDefaultTitleTypeIds().
+ *
+ * @param mysqli $connection The database connection
+ * @param int $savedCount Number of titles already collected for saving
+ * @return int|null The default title type ID, or null if no Title_Type rows exist
+ */
+function getDefaultTitleTypeId($connection, $savedCount)
+{
+    $ids = resolveDefaultTitleTypeIds($connection);
+    return $savedCount === 0 ? $ids['main'] : $ids['alternative'];
+}
+
+/**
  * Saves titles for a resource, handling duplicates.
+ * Allows saving:
+ * - Titles with both text and titleType
+ * - Titles with text but no titleType (defaults to "Main Title" for the
+ *   first saved title, "Alternative Title" for subsequent ones)
+ *
+ * Will SKIP without a failure:
+ * - Titles with titleType only (text must be present if type is present)
+ * - Entirely empty entries (both text and type are empty)
+ * - (submit action only) Titles whose titleType ID does not exist in the
+ *   Title_Type table (validated via isTitleTypeValid())
+ *
+ * Title types are validated against the Title_Type table in the database.
  *
  * @param mysqli $connection The database connection
  * @param int $resource_id The resource ID
  * @param array $titles Array of titles
- * @param array $titleTypes Array of title types
+ * @param array $titleTypes Array of title types (as integers from form)
+ * @param string $action The save action ('save_and_download' or 'submit')
  * @return bool True if successful, false otherwise
  */
-function saveTitles($connection, $resource_id, $titles, $titleTypes)
+function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = 'save_and_download')
 {
-    error_log("saveTitles called with resource_id: $resource_id, title count: " . count($titles));
-    
     $uniqueTitles = [];
     for ($i = 0; $i < count($titles); $i++) {
-        $key = $titles[$i] . '|' . $titleTypes[$i];
+        $title_text = isset($titles[$i]) ? trim($titles[$i]) : '';
+        $title_type_str = isset($titleTypes[$i]) ? trim($titleTypes[$i]) : '';
+
+        // Skip entirely empty entries (both text and type are empty)
+        if (empty($title_text) && empty($title_type_str)) {
+            continue;
+        }
+
+        // Skip if text is empty (text is required)
+        if (empty($title_text)) {
+            continue;
+        }
+
+        // If type is empty but text exists, assign a default title type
+        if (empty($title_type_str)) {
+            $defaultId = getDefaultTitleTypeId($connection, count($uniqueTitles));
+            if ($defaultId === null) {
+                error_log("Cannot assign default title type: no Title_Type rows exist in database");
+                return false;
+            }
+            $title_type_str = (string) $defaultId;
+        }
+
+        // Convert title_type string to integer if present
+        $title_type_int = intval($title_type_str);
+
+        // (only for submit action): Validate the title type exists in the database
+        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
+            continue;
+        }
+
+        // Create unique key for deduplication
+        $key = $title_text . '|' . $title_type_int;
         if (!isset($uniqueTitles[$key])) {
             $uniqueTitles[$key] = [
-                'text' => $titles[$i],
-                'type' => $titleTypes[$i]
+                'text' => $title_text,
+                'type' => $title_type_int
             ];
         }
+    }
+
+    if (empty($uniqueTitles)) {
+        return $action !== 'submit';
     }
 
     foreach ($uniqueTitles as $title) {
@@ -281,11 +342,11 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes)
             $title['type'],
             $resource_id
         );
+
         if (!$stmt->execute()) {
             error_log("Failed to insert title: " . $stmt->error);
             return false;
         }
-        error_log("Successfully inserted title: " . $title['text']);
     }
 
     return true;

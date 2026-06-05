@@ -25,16 +25,56 @@ function validateEmbargoDate() {
 }
 
 /**
- * Validates that the start date is not after the end date in the temporal coverage section.
+ * Converts a time string (HH:MM or HH:MM:SS) to seconds for robust ordering checks.
+ * @param {string} timeValue - Time value from an input[type="time"] field.
+ * @returns {number|null} Seconds since midnight, or null if value is empty/invalid.
+ */
+function parseTimeToSeconds(timeValue) {
+    if (!timeValue) {
+        return null;
+    }
+
+    const parts = timeValue.split(':');
+    if (parts.length < 2 || parts.length > 3) {
+        return null;
+    }
+
+    const [hours, minutes, seconds = '0'] = parts;
+    const h = Number(hours);
+    const m = Number(minutes);
+    const s = Number(seconds);
+
+    if ([h, m, s].some(Number.isNaN)) {
+        return null;
+    }
+
+    return (h * 3600) + (m * 60) + s;
+}
+
+/**
+ * Validates date and time order in the temporal coverage section.
  * @param {HTMLElement} row - The row containing the start and end dates.
- * @returns {boolean} True if the dates are valid, false otherwise.
+ * @returns {boolean} True if date/time values are valid, false otherwise.
  */
 function validateTemporalCoverage(row) {
+    if (!row) {
+        return true;
+    }
+
     const dateStartInput = row.querySelector('[id*="input-stc-datestart"]');
     const dateEndInput = row.querySelector('[id*="input-stc-dateend"]');
-    const dateTimeInvalidFeedback = row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
+    const timeStartInput = row.querySelector('[id*="input-stc-timestart"]');
+    const timeEndInput = row.querySelector('[id*="input-stc-timeend"]');
+    const dateTimeInvalidFeedback =
+        dateEndInput?.closest('.input-group')?.querySelector('.invalid-feedback') ||
+        row.querySelector('.invalid-feedback[data-translate="coverage.dateTimeInvalid"]');
 
-    if (!dateStartInput || !dateEndInput) {
+    if (!dateStartInput || !dateEndInput || !dateTimeInvalidFeedback) {
+        return true;
+    }
+
+    if (!dateStartInput.value || !dateEndInput.value) {
+        setValidState(dateEndInput, dateTimeInvalidFeedback);
         return true;
     }
 
@@ -44,10 +84,37 @@ function validateTemporalCoverage(row) {
     if (dateStart > dateEnd) {
         setInvalidState(dateEndInput, dateTimeInvalidFeedback, translations.coverage.endDateError);
         return false;
-    } else {
-        setValidState(dateEndInput, dateTimeInvalidFeedback);
-        return true;
     }
+
+    if (dateStartInput.value === dateEndInput.value && timeStartInput && timeEndInput) {
+        const startSeconds = parseTimeToSeconds(timeStartInput.value);
+        const endSeconds = parseTimeToSeconds(timeEndInput.value);
+
+        if (startSeconds !== null && endSeconds !== null && endSeconds < startSeconds) {
+            setInvalidState(dateEndInput, dateTimeInvalidFeedback, translations.coverage.endTimeError);
+            return false;
+        }
+    }
+
+    setValidState(dateEndInput, dateTimeInvalidFeedback);
+    return true;
+}
+
+/**
+ * Validates all STC rows to ensure submit is blocked even without prior change events.
+ * @returns {boolean} True if all rows are valid.
+ */
+function validateAllTemporalCoverageRows() {
+    const rows = document.querySelectorAll('#group-stc [tsc-row]');
+    let isValid = true;
+
+    rows.forEach((row) => {
+        if (!validateTemporalCoverage(row)) {
+            isValid = false;
+        }
+    });
+
+    return isValid;
 }
 
 function setInvalidState(input, feedback, message) {
@@ -87,7 +154,15 @@ if (dateEmbargoInput) {
 // Event listener for temporal coverage validation
 if (groupStc) {
     groupStc.addEventListener('change', function(event) {
-        if (event.target && (event.target.id.includes('input-stc-datestart') || event.target.id.includes('input-stc-dateend'))) {
+        if (
+            event.target &&
+            (
+                event.target.id.includes('input-stc-datestart') ||
+                event.target.id.includes('input-stc-dateend') ||
+                event.target.id.includes('input-stc-timestart') ||
+                event.target.id.includes('input-stc-timeend')
+            )
+        ) {
             const row = event.target.closest('[tsc-row]');
             validateTemporalCoverage(row);
         }
@@ -130,7 +205,10 @@ class SubmitHandler {
         this.$form = $(`#${formId}`);
         this.modals = {
             submit: new bootstrap.Modal($(`#${submitModalId}`)[0]),
-            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
+            notification: new bootstrap.Modal($(`#${notificationModalId}`)[0]),
+            validationFailed: document.getElementById('modal-validation-failed')
+                ? new bootstrap.Modal($('#modal-validation-failed')[0])
+                : null
         };
 
         // File Input References
@@ -248,18 +326,38 @@ class SubmitHandler {
             this.autosaveService.flushPending();
         }
         validateEmbargoDate();
-        if (!this.$form[0].checkValidity() || !validateContactPerson()) {
+        validateTitleField();
+        validateAuthorNameFields();
+        const temporalCoverageValid = validateAllTemporalCoverageRows();
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
-            $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            $firstInvalid.focus();
-            this.showNotification('danger',
-                translations.alerts.validationErrorheading,
-                translations.alerts.validationError);
+            if ($firstInvalid.length > 0 && $firstInvalid[0]) {
+                $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+                $firstInvalid.focus();
+            }
+            this.showValidationFailedModal();
             return;
         }
 
         this.modals.submit.show();
+    }
+
+    /**
+     * Show the validation-failed modal with dynamic email address.
+     * Replaces the {email} placeholder in the save-hint paragraph with
+     * the configured xmlSubmitAddress from ELMO_FEATURES.
+     */
+    showValidationFailedModal() {
+        const email = window.ELMO_FEATURES?.xmlSubmitAddress || '';
+        const saveHintEl = document.getElementById('modal-validation-failed-save-hint');
+        if (saveHintEl && email) {
+            const template = translations.modals?.validationFailed?.saveHint || '';
+            saveHintEl.innerHTML = template.replace(/\{email\}/g, this.escapeHtml(email));
+        }
+        if (this.modals.validationFailed) {
+            this.modals.validationFailed.show();
+        }
     }
 
     /**
@@ -286,6 +384,7 @@ class SubmitHandler {
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
+        submitData.append('action', 'submit');
 
         const dataDescriptionFile = $('#input-submit-datadescription')[0].files[0];
         if (dataDescriptionFile) {
@@ -323,6 +422,16 @@ class SubmitHandler {
                     this.showNotification('success',
                         translations.alerts.successHeading,
                         translations.alerts.successMessage);
+
+                    // Append primary data upload hint if URL is configured
+                    const uploadUrl = window.ELMO_FEATURES?.dataUploadUrl;
+                    if (uploadUrl) {
+                        const mainTitle = $('#input-resourceinformation-title').val() || '';
+                        const hint = this.buildDataUploadHint(uploadUrl, mainTitle);
+                        $('#modal-notification-body').append(hint);
+                        $('#modal-notification .modal-dialog').addClass('modal-lg');
+                    }
+
                     if (this.autosaveService) {
                         this.autosaveService.clearDraft();
                     }
@@ -447,6 +556,35 @@ class SubmitHandler {
         });
     }
     /**
+     * Build HTML for the primary data upload hint shown after successful submit.
+     * @param {string} uploadUrl - The Nextcloud upload URL
+     * @param {string} mainTitle - The main title from the form
+     * @returns {string} HTML string for the hint block
+     */
+    buildDataUploadHint(uploadUrl, mainTitle) {
+        const escapedTitle = this.escapeHtml(mainTitle);
+        const titleHint = escapedTitle
+            ? `<p class="mb-1"><strong>${translations.alerts.dataUploadFileNameHint}</strong></p>
+               <p class="mb-0 font-monospace bg-light rounded px-2 py-1">${escapedTitle}</p>`
+            : '';
+
+        return `
+            <div class="alert alert-warning mt-3 mb-0">
+                <h6 class="alert-heading fw-bold">
+                    <i class="bi bi-cloud-arrow-up-fill me-2"></i>${translations.alerts.dataUploadTitle}
+                </h6>
+                <p>${translations.alerts.dataUploadMessage}</p>
+                <p class="mb-2">
+                    <a href="${this.escapeHtml(uploadUrl)}" target="_blank" rel="noopener noreferrer"
+                       class="btn btn-warning btn-sm fw-bold">
+                        <i class="bi bi-box-arrow-up-right me-1"></i>${translations.alerts.dataUploadLinkText}
+                    </a>
+                </p>
+                ${titleHint}
+            </div>
+        `;
+    }
+    /**
      * Format message for display (scrubs risky tags, escapes, and converts newlines)
      * @param {string} message - Raw message
      * @returns {string} Formatted HTML message
@@ -481,10 +619,11 @@ if (typeof module !== 'undefined' && module.exports) {
     SubmitHandler,
     validateEmbargoDate,
     validateTemporalCoverage,
+        validateAllTemporalCoverageRows,
     validateContactPerson,
     default: SubmitHandler
   };
 }
 
-export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateContactPerson };
+export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson };
 export default SubmitHandler;

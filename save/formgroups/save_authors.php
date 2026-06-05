@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/save_affiliations.php';
+require_once __DIR__ . '/../validation.php';
 
 /**
  * Filters the input author data and returns only those authors 
@@ -137,7 +138,7 @@ function validateInstitutionAuthors(array $postData): bool
  */
 function saveAuthors($connection, $postData, $resource_id)
 {
-    $action = $postData['action'] ?? 'submit';
+    $action = $postData['action'] ?? 'save_and_download';
 
     $hasPersonData = !empty($postData['familynames']) || !empty($postData['givennames']);
     $hasInstitutionData = !empty($postData['authorinstitutionName']);
@@ -147,7 +148,7 @@ function saveAuthors($connection, $postData, $resource_id)
         $validInstitution = $hasInstitutionData ? validateInstitutionAuthors($postData) : false;
 
     if (!$validPerson && !$validInstitution) {
-        // No valid author data
+        // No valid author data. only fails when BOTH are invalid, which is the correct behavior.
         throw new Exception("No valid author data provided");
     }
     }
@@ -180,6 +181,14 @@ function saveAuthors($connection, $postData, $resource_id)
             $familyname = trim($familynames[$i] ?? '');
             $givenname = trim($givennames[$i] ?? '');
             $orcid = trim($orcids[$i] ?? '');
+            // Remove ORCID URL prefix if present (defense against frontend bypass)
+            $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+
+            // Validate ORCID checksum on submit
+            if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
+                throw new Exception("Invalid ORCID checksum: {$orcid}");
+            }
+
             $affiliation_data = trim($personAffiliations[$i] ?? '');
             $rorId_data = trim($personRorIds[$i] ?? '');
 
@@ -255,6 +264,7 @@ function processAuthor($connection, $resource_id, $authorData)
 
     if (!empty($authorData['familyname']) && !empty($authorData['givenname'])) {
         // 1. Save or find PERSON
+        // Author_person.orcid is NOT NULL, so empty strings are stored as-is and = suffices
         $stmt = $connection->prepare("SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ? AND orcid = ?");
         $stmt->bind_param("sss", $authorData['familyname'], $authorData['givenname'], $authorData['orcid']);
         $stmt->execute();

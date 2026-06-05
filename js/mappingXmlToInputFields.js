@@ -1,12 +1,21 @@
-/**
+﻿/**
  * Processes the resource type from an XML document and selects the corresponding option
  * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
  *
  * @param {Document} xmlDoc - The XML document containing the resourceType element.
+ * @param {Function} resolver - The namespace resolver function.
  */
-function processResourceType(xmlDoc) {
-  // Extract the resourceType element
-  const resourceNode = xmlDoc.querySelector("resourceType");
+function processResourceType(xmlDoc, resolver) {
+  // Extract the resourceType element using XPath with namespace fallback
+  // (supports both namespaced and non-namespaced XML documents)
+  const result = xmlDoc.evaluate(
+    ".//ns:resourceType | .//resourceType",
+    xmlDoc,
+    resolver,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  );
+  const resourceNode = result.singleNodeValue;
   if (!resourceNode) {
     console.error("No resourceType element found in XML");
     return;
@@ -221,6 +230,10 @@ function processCreators(xmlDoc, resolver) {
   // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
+  // Separate counter for person authors to avoid index mismatch when creators
+  // contain a mix of persons and institutions (fixes #739)
+  let personIndex = 0;
+
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
 
@@ -254,14 +267,42 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
-      if (i === 0) {
-        // For the first creator, use the first existing row in the form
+      const $rows = $("div[data-creator-row]");
+
+      if (personIndex === 0) {
+        // For the first person creator, use the first existing row in the form.
+        // If no row exists yet, create one first.
+        if ($rows.length === 0) {
+          $("#button-author-add").trigger("click");
+        }
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent creators, simulate click on "add author" button to create new row
-        $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(i);
+        // For subsequent person creators, add a new row and verify it exists.
+        const countBefore = $rows.length;
+        $("#button-author-add").trigger("click");
+        const countAfter = $("div[data-creator-row]").length;
+
+        if (countAfter <= countBefore) {
+          console.warn(
+            "processCreators: could not create new author row; skipping creator",
+            { givenName, familyName }
+          );
+          continue;
+        }
+
+        // Use the newly created last row rather than relying on a specific index.
+        $row = $("div[data-creator-row]").last();
       }
+
+      if (!$row || $row.length === 0) {
+        console.warn(
+          "processCreators: target author row not found; skipping creator",
+          { givenName, familyName }
+        );
+        continue;
+      }
+
+      personIndex++;
 
       // Populate the personal author fields
       $row.find('input[name="orcids[]"]').val(orcid);
@@ -270,9 +311,9 @@ function processCreators(xmlDoc, resolver) {
 
       // Handle affiliations with Tagify plugin if initialized
       const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput.tagify) {
-        tagifyInput.tagify.removeAllTags(); // Clear existing tags
-        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+      if (tagifyInput && tagifyInput._tagify) {
+        tagifyInput._tagify.removeAllTags(); // Clear existing tags
+        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(",")); // Set ROR IDs as CSV string
       } else {
         // Fallback if Tagify is not used: set affiliations as comma-separated string
@@ -310,9 +351,9 @@ function processCreators(xmlDoc, resolver) {
 
       // Handle institution affiliations with Tagify plugin if present
       const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput.tagify) {
-        tagifyInput.tagify.removeAllTags(); // Clear existing tags
-        tagifyInput.tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
+      if (tagifyInput && tagifyInput._tagify) {
+        tagifyInput._tagify.removeAllTags(); // Clear existing tags
+        tagifyInput._tagify.addTags(affiliations.map((a) => ({ value: a }))); // Add new affiliations as tags
       } else {
         // Fallback: set affiliations as comma-separated string if no Tagify
         $instRow.find('input[name="institutionAffiliation[]"]').val(affiliations.join(","));
@@ -373,16 +414,29 @@ function processContactPersons(xmlDoc) {
       website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
     }
 
-    // Find the matching author row based on name
+    // Find the matching author row based on name (case-insensitive, trimmed)
+    const normalizedFamily = familyName.trim().toLowerCase();
+    const normalizedGiven = givenName.trim().toLowerCase();
     let $row = $("div[data-creator-row]")
       .filter(function () {
-        return $(this).find('input[name="familynames[]"]').val() === familyName && $(this).find('input[name="givennames[]"]').val() === givenName;
+        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
+        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
+        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
       })
       .first();
 
     if ($row.length === 0) {
-      console.warn(`No matching author row found for contact person: ${givenName} ${familyName}`);
-      continue;
+      // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
+      $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
     }
 
     // Mark the row as contact person
@@ -394,6 +448,71 @@ function processContactPersons(xmlDoc) {
     // Populate the contact person fields
     $row.find('input[name="cpEmail[]"]').val(email || "");
     $row.find('input[name="cpOnlineResource[]"]').val(website || "");
+  }
+
+  // If no ISO contact persons were found, try DataCite fallback
+  if (contactPersonNodes.snapshotLength === 0) {
+    processContactPersonsFromDataCite(xmlDoc);
+  }
+}
+
+/**
+ * Fallback: Process contact persons from DataCite contributor elements.
+ * Used when no ISO pointOfContact section is present (e.g. pure DataCite XML).
+ * Note: DataCite schema does not carry email/website for contact persons.
+ * @param {Document} xmlDoc - The parsed XML document
+ */
+function processContactPersonsFromDataCite(xmlDoc) {
+  function dcResolver(prefix) {
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  // Select all contributors, then filter by attribute in JS
+  // (some XPath engines don't support attribute predicates on namespaced elements)
+  const allContributors = xmlDoc.evaluate(
+    './/ns:contributors/ns:contributor',
+    xmlDoc,
+    dcResolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < allContributors.snapshotLength; i++) {
+    const node = allContributors.snapshotItem(i);
+    if (node.getAttribute("contributorType") !== "ContactPerson") continue;
+
+    const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
+    const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
+
+    if (!familyName || !givenName) continue;
+
+    const normalizedFamily = familyName.trim().toLowerCase();
+    const normalizedGiven = givenName.trim().toLowerCase();
+    let $row = $("div[data-creator-row]")
+      .filter(function () {
+        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
+        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
+        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
+      })
+      .first();
+
+    if ($row.length === 0) {
+      // No matching author found — add a new author row for the contact person
+      const countBefore = $("div[data-creator-row]").length;
+      $("#button-author-add").click();
+      const countAfter = $("div[data-creator-row]").length;
+      if (countAfter <= countBefore) {
+        console.warn("Could not create new author row for contact person:", familyName, givenName);
+        continue;
+      }
+      $row = $("div[data-creator-row]").last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
+    }
+
+    $row.find('input[name="contacts[]"]').prop("checked", true);
+    $row.find(".contact-person-input").show();
+    // Email/website not available in DataCite schema
   }
 }
 
@@ -594,25 +713,21 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
   const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
 
-  // Get affiliations
+  // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  const affiliations = [];
-  const rorIds = [];
+  const affiliationPairs = [];
 
   for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
     const affNode = affiliationNodes.snapshotItem(j);
-    const affiliationName = affNode.textContent;
+    const affiliationName = affNode.textContent ? affNode.textContent.trim().replace(/\s+/g, ' ') : '';
     const rorId = affNode.getAttribute("affiliationIdentifier");
 
-    if (affiliationName && !affiliations.includes(affiliationName)) {
-      affiliations.push(affiliationName);
-      if (rorId) {
-        const cleanRorId = rorId.replace("https://ror.org/", "");
-        if (!rorIds.includes(cleanRorId)) {
-          rorIds.push(cleanRorId);
-        }
-      }
+    if (affiliationName && !affiliationPairs.some(p => p.name === affiliationName)) {
+      affiliationPairs.push({
+        name: affiliationName,
+        rorId: rorId ? rorId.replace("https://ror.org/", "") : ""
+      });
     }
   }
 
@@ -624,16 +739,14 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
       givenName,
       familyName,
       orcid,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   } else {
     updateContributorMap(orgMap, contributorName, {
       name: contributorName,
-      roles: [normalizeRole(contributorType)], // Use normalized role
-      affiliations,
-      rorIds,
+      roles: [normalizeRole(contributorType)],
+      affiliationPairs,
     });
   }
 }
@@ -650,14 +763,14 @@ function updateContributorMap(map, key, newData) {
     if (!existing.roles.includes(newData.roles[0])) {
       existing.roles.push(newData.roles[0]);
     }
-    newData.affiliations.forEach((aff) => {
-      if (!existing.affiliations.includes(aff)) {
-        existing.affiliations.push(aff);
-      }
-    });
-    newData.rorIds.forEach((rid) => {
-      if (!existing.rorIds.includes(rid)) {
-        existing.rorIds.push(rid);
+    newData.affiliationPairs.forEach((pair) => {
+      const existingPair = existing.affiliationPairs.find(p => p.name === pair.name);
+      if (existingPair) {
+        if (!existingPair.rorId && pair.rorId) {
+          existingPair.rorId = pair.rorId;
+        }
+      } else {
+        existing.affiliationPairs.push(pair);
       }
     });
   } else {
@@ -674,8 +787,8 @@ function getTagifyInstance(inputElement) {
   if (!inputElement) return null;
 
   // Check for direct property
-  if (inputElement.tagify) {
-    return inputElement.tagify;
+  if (inputElement._tagify) {
+    return inputElement._tagify;
   }
 
   // Check for _tagify property
@@ -684,13 +797,13 @@ function getTagifyInstance(inputElement) {
   }
 
   // Check for jQuery element with tagify
-  if (inputElement[0] && inputElement[0].tagify) {
-    return inputElement[0].tagify;
+  if (inputElement[0] && inputElement[0]._tagify) {
+    return inputElement[0]._tagify;
   }
 
   // Look for data- attribute
-  if (inputElement.dataset && inputElement.dataset.tagify) {
-    return window[inputElement.dataset.tagify];
+  if (inputElement.dataset && inputElement.dataset._tagify) {
+    return window[inputElement.dataset._tagify];
   }
 
   console.log("No existing Tagify instance found for element, returning null", inputElement);
@@ -698,7 +811,8 @@ function getTagifyInstance(inputElement) {
 }
 
 /**
- * Populate the form with processed contributor data, handling both original and cloned field names
+ * Populate the form with processed contributor data using canonical field names
+ * (cbAffiliation[], cbpRorIds[], OrganisationAffiliation[], hiddenOrganisationRorId[]).
  * @param {Map} personMap - Map containing person contributors
  * @param {Map} orgMap - Map containing organization contributors
  */
@@ -709,7 +823,6 @@ function populateFormWithContributors(personMap, orgMap) {
   // Process persons
   for (const person of personMap.values()) {
     const personRow = getOrCreatePersonRow(personIndex++);
-    let isClonedRow = personIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
@@ -730,38 +843,28 @@ function populateFormWithContributors(personMap, orgMap) {
     personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
     personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbPersonAffiliations[] as the name
-      affiliationInput = personRow.find('input[name="cbPersonAffiliations[]"]')[0];
-    } else {
-      // Original row uses cbAffiliation[] as the name
-      affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    }
-
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
+    const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(person.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(person.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
-      console.warn("No Tagify instance found for affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbPersonRorIds[] as the name
-      personRow.find('input[name="cbPersonRorIds[]"]').val(person.rorIds.join(","));
-    } else {
-      // Original row uses cbpRorIds[] as the name
-      personRow.find('input[name="cbpRorIds[]"]').val(person.rorIds.join(","));
-    }
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    personRow.find('input[name="cbpRorIds[]"]').val(
+      person.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 
   // Process organizations
   for (const org of orgMap.values()) {
     const orgRow = getOrCreateOrgRow(orgIndex++);
-    let isClonedRow = orgIndex > 1; // First row is original, others are cloned
 
     // Roles
     const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
@@ -776,32 +879,23 @@ function populateFormWithContributors(personMap, orgMap) {
     // Organization name
     orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
 
-    // Affiliations - handle both original and cloned field names
-    let affiliationInput;
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationAffiliations[] as the name
-      affiliationInput = orgRow.find('input[name="cbOrganisationAffiliations[]"]')[0];
-    } else {
-      // Original row uses OrganisationAffiliation[] as the name
-      affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    }
-
+    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
+    const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
     const tagifyAffiliations = getTagifyInstance(affiliationInput);
     if (tagifyAffiliations) {
       tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(org.affiliations.map((aff) => ({ value: aff })));
+      tagifyAffiliations.addTags(org.affiliationPairs.map((pair) => ({
+        value: pair.name,
+        id: pair.rorId
+      })));
     } else {
-      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput, "in row", isClonedRow ? "cloned" : "original");
+      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput);
     }
 
-    // ROR IDs - handle both original and cloned field names
-    if (isClonedRow) {
-      // Cloned rows use cbOrganisationRorIds[] as the name
-      orgRow.find('input[name="cbOrganisationRorIds[]"]').val(org.rorIds.join(","));
-    } else {
-      // Original row uses hiddenOrganisationRorId[] as the name
-      orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(org.rorIds.join(","));
-    }
+    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
+    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(
+      org.affiliationPairs.map((pair) => pair.rorId).join(",")
+    );
   }
 }
 
@@ -877,26 +971,38 @@ function parseTemporalData(dateNode) {
 /**
  * Extract spatial coordinates and description from a geoLocation node.
  * @param {Element} node - The geoLocation XML element.
+ * @param {Document} xmlDoc - The XML document (needed for XPath evaluation).
+ * @param {Function} resolver - The namespace resolver function.
  * @returns {Object} Parsed location data.
  */
-function getGeoLocationData(node) {
-  const place = node.querySelector("geoLocationPlace")?.textContent || "";
-  const boxNode = node.querySelector("geoLocationBox");
-  const pointNode = node.querySelector("geoLocationPoint");
+function getGeoLocationData(node, xmlDoc, resolver) {
+  function getText(contextNode, localName) {
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    return result.singleNodeValue?.textContent || "";
+  }
+
+  function getNode(contextNode, localName) {
+    const result = xmlDoc.evaluate("ns:" + localName + " | " + localName, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
+    return result.singleNodeValue;
+  }
+
+  const place = getText(node, "geoLocationPlace");
+  const boxNode = getNode(node, "geoLocationBox");
+  const pointNode = getNode(node, "geoLocationPoint");
 
   if (boxNode) {
     return {
       place,
-      latitudeMin: boxNode.querySelector("southBoundLatitude")?.textContent || "",
-      latitudeMax: boxNode.querySelector("northBoundLatitude")?.textContent || "",
-      longitudeMin: boxNode.querySelector("westBoundLongitude")?.textContent || "",
-      longitudeMax: boxNode.querySelector("eastBoundLongitude")?.textContent || "",
+      latitudeMin: getText(boxNode, "southBoundLatitude"),
+      latitudeMax: getText(boxNode, "northBoundLatitude"),
+      longitudeMin: getText(boxNode, "westBoundLongitude"),
+      longitudeMax: getText(boxNode, "eastBoundLongitude"),
     };
   }
 
   if (pointNode) {
-    const lat = pointNode.querySelector("pointLatitude")?.textContent || "";
-    const lon = pointNode.querySelector("pointLongitude")?.textContent || "";
+    const lat = getText(pointNode, "pointLatitude");
+    const lon = getText(pointNode, "pointLongitude");
     return {
       place,
       latitudeMin: lat,
@@ -963,11 +1069,11 @@ function fillTemporalFields($row, temporalData) {
  * @param {Function} resolver - The namespace resolver function.
  */
 function processSpatialTemporalCoverages(xmlDoc, resolver) {
-  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const geoLocationNodes = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation | .//geoLocations/geoLocation", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = xmlDoc.evaluate('//ns:dates/ns:date[@dateType="Coverage" or @dateType="Collected"] | //dates/date[@dateType="Coverage" or @dateType="Collected"]', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < geoLocationNodes.snapshotLength; i++) {
-    const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i));
+    const geoData = getGeoLocationData(geoLocationNodes.snapshotItem(i), xmlDoc, resolver);
     const temporalData = parseTemporalData(dateNodes.snapshotItem(i));
 
     const $lastRow = $('textarea[name="tscDescription[]"]').last().closest("[tsc-row]");
@@ -989,31 +1095,32 @@ function processDescriptions(xmlDoc, resolver) {
   // Get all description elements
   const descriptionNodes = xmlDoc.evaluate(".//ns:descriptions/ns:description", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  // Create a mapping of description types to form input IDs
-  const descriptionMapping = {
+  // Mapping for Abstract (always static) and dynamic description types
+  const staticMapping = {
     Abstract: "input-abstract",
-    Methods: "input-methods",
-    TechnicalInformation: "input-technicalinfo",
-    Other: "input-other",
   };
+
+  // Dynamic description types use the pattern input-description-{Slug}
+  const dynamicSlugs = ["Methods", "TechnicalInfo", "TechnicalInformation", "SeriesInformation", "TableOfContents", "Other"];
 
   // Process each description node
   for (let i = 0; i < descriptionNodes.snapshotLength; i++) {
     const descriptionNode = descriptionNodes.snapshotItem(i);
     const descriptionType = descriptionNode.getAttribute("descriptionType");
-    const language = descriptionNode.getAttribute("xml:lang") || "en";
     const content = descriptionNode.textContent.trim();
 
-    // Find the corresponding input field
-    const inputId = descriptionMapping[descriptionType];
-    if (inputId) {
-      // Set the content in the appropriate textarea
-      $(`#${inputId}`).val(content);
-
-      // If this is not the Abstract, expand the corresponding accordion section
-      if (descriptionType !== "Abstract") {
-        const collapseId = `collapse-${descriptionType.toLowerCase().replace("information", "info")}`;
-        $(`#${collapseId}`).addClass("show");
+    if (staticMapping[descriptionType]) {
+      // Abstract: static field
+      $(`#${staticMapping[descriptionType]}`).val(content);
+    } else if (dynamicSlugs.indexOf(descriptionType) !== -1) {
+      // Dynamic types: normalize TechnicalInformation -> TechnicalInfo
+      const slug = descriptionType === "TechnicalInformation" ? "TechnicalInfo" : descriptionType;
+      const inputId = "input-description-" + slug;
+      const $input = $(`#${inputId}`);
+      if ($input.length) {
+        $input.val(content);
+        // Expand the accordion section
+        $(`#collapse-description-${slug}`).addClass("show");
       }
     }
   }
@@ -1051,66 +1158,81 @@ function processDates(xmlDoc, resolver) {
  */
 function processKeywords(xmlDoc, resolver) {
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
   const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
+  const tagifyInputPlatforms = document.querySelector("#input-platforms");
+  const tagifyInputInstruments = document.querySelector("#input-instruments");
+  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
+  const tagifyInputGemet = document.querySelector("#input-gemet");
+
+  // Always-present inputs
   const tagifyInputMsl = document.querySelector("#input-mslkeyword");
   const tagifyInputFree = document.querySelector("#input-freekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-Platforms");
-  const tagifyInputInstruments = document.querySelector("#input-Instruments");
 
-  // Error handling
-  if (
-    !tagifyInputGCMD?._tagify ||
-    !tagifyInputMsl?._tagify ||
-    !tagifyInputFree?._tagify ||
-    !tagifyInputPlatforms?._tagify ||
-    !tagifyInputInstruments?._tagify
-  ) {
-    console.error("One or more Tagify instances are not properly initialized.");
+  if (!tagifyInputFree?._tagify) {
+    console.error("Free keyword Tagify instance is not properly initialized.");
     return;
   }
 
-  // Retrieve existing Tagify instances
-  const tagifyGCMD = tagifyInputGCMD._tagify;
-  const tagifyMsl = tagifyInputMsl._tagify;
   const tagifyFree = tagifyInputFree._tagify;
-  const tagifyPlatforms = tagifyInputPlatforms._tagify;
-  const tagifyInstruments = tagifyInputInstruments._tagify;
+  const tagifyMsl = tagifyInputMsl?._tagify;
 
-  // Clear existing tags
-  tagifyGCMD.removeAllTags();
-  tagifyMsl.removeAllTags();
+  // Clear existing tags on all available inputs
   tagifyFree.removeAllTags();
-  tagifyPlatforms.removeAllTags();
-  tagifyInstruments.removeAllTags();
+  tagifyMsl?.removeAllTags();
+  tagifyInputGCMD?._tagify?.removeAllTags();
+  tagifyInputPlatforms?._tagify?.removeAllTags();
+  tagifyInputInstruments?._tagify?.removeAllTags();
+  tagifyInputChronostrat?._tagify?.removeAllTags();
+  tagifyInputGemet?._tagify?.removeAllTags();
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
     const schemeURI = subjectNode.getAttribute("schemeURI") || "";
     const valueURI = subjectNode.getAttribute("valueURI") || "";
+    const language = subjectNode.getAttribute("xml:lang") || "";
     const keyword = subjectNode.textContent.trim();
 
-    // Create the tag data
     const tagData = {
       value: keyword,
       scheme: subjectScheme,
       schemeURI: schemeURI,
       id: valueURI,
     };
+    if (language) {
+      tagData.language = language;
+    }
 
-    // Check the schemeURI and add the tag to the appropriate Tagify instance
+    // Route tag to appropriate Tagify instance based on schemeURI
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      // Add the tag to the GCMD Science Keyword input field
-      tagifyGCMD.addTags([tagData]);
+      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      tagifyPlatforms.addTags([tagData]);
+      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      tagifyInstruments.addTags([tagData]);
+      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
+      subjectScheme === "International Chronostratigraphic Chart" ||
+      subjectScheme === "Chronostratigraphic Chart"
+    ) {
+      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
+    } else if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
+      subjectScheme?.includes("GEMET")
+    ) {
+      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      // Add the tag to the MSL Keyword input field
-      tagifyMsl.addTags([tagData]);
+      if (tagifyMsl) tagifyMsl.addTags([tagData]);
+      else tagifyFree.addTags([tagData]);
     } else {
-      // Add all other tags to the Free Keyword input field
       tagifyFree.addTags([tagData]);
     }
   }
@@ -1118,11 +1240,17 @@ function processKeywords(xmlDoc, resolver) {
 
 /**
  * Process related identifiers from XML and populate the formgroup Related Works
+ * When showUsedInstruments is active, entries with relationType="IsCollectedBy" are
+ * filtered out and handled by processUsedInstruments() instead.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
 function processRelatedWorks(xmlDoc, resolver) {
   const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  // Collect entries, optionally filtering out instruments
+  const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
+  let entries = [];
 
   for (let i = 0; i < identifierNodes.snapshotLength; i++) {
     const identifierNode = identifierNodes.snapshotItem(i);
@@ -1130,25 +1258,87 @@ function processRelatedWorks(xmlDoc, resolver) {
     const identifierType = identifierNode.getAttribute("relatedIdentifierType");
     const identifierValue = identifierNode.textContent;
 
+    // Skip IsCollectedBy entries when Used Instruments feature is active
+    if (showUsedInstruments && relationType === "IsCollectedBy") {
+      continue;
+    }
+
+    entries.push({ relationType, identifierType, identifierValue });
+  }
+
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+
     // Find last row
     const $lastRow = $('input[name="rIdentifier[]"]').last().closest(".row");
 
     // Set values
-    $lastRow.find('input[name="rIdentifier[]"]').val(identifierValue);
-    $lastRow.find('select[name="rIdentifierType[]"]').val(identifierType);
+    $lastRow.find('input[name="rIdentifier[]"]').val(entry.identifierValue);
+    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.identifierType);
     // Match relation by visible text instead of value
     $lastRow
       .find('select[name="relation[]"]:first option')
       .filter(function () {
-        return $(this).text() === relationType; // Match by visible text
+        return $(this).text() === entry.relationType; // Match by visible text
       })
       .prop("selected", true);
 
     // clone row for the next entry, if there is one
-    if (i < identifierNodes.snapshotLength - 1) {
+    if (i < entries.length - 1) {
       // Add Related Work
       $("#button-relatedwork-add").click();
     }
+  }
+}
+
+/**
+ * Process related identifiers with relationType="IsCollectedBy" from XML
+ * and populate the Used Instruments Tagify field.
+ * Only active when the showUsedInstruments feature toggle is enabled.
+ * Adds PID-only tags immediately so the import pipeline is never blocked,
+ * then triggers a background API load that upgrades them with full metadata
+ * (name, instrument types) once the data arrives.
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
+function processUsedInstruments(xmlDoc, resolver) {
+  if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
+    return;
+  }
+
+  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  const pidList = [];
+
+  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
+    const identifierNode = identifierNodes.snapshotItem(i);
+    const relationType = identifierNode.getAttribute("relationType");
+
+    if (relationType !== "IsCollectedBy") {
+      continue;
+    }
+
+    const pidType = identifierNode.getAttribute("relatedIdentifierType") || "Handle";
+    const pid = identifierNode.textContent.trim();
+
+    pidList.push({
+      pid: pid,
+      pidType: pidType
+    });
+  }
+
+  if (pidList.length > 0 && window.usedInstrumentsModule) {
+    // Add PID-only tags immediately so the import pipeline is never blocked
+    // by a slow/unreachable PID4INST endpoint.
+    window.usedInstrumentsModule.addInstrumentsByPid(pidList);
+
+    // Fire-and-forget: load API data in the background and upgrade the
+    // PID-only tags with full metadata (name, types) once available.
+    window.usedInstrumentsModule.loadInstrumentsFromAPI().then(function (result) {
+      if (result.dataLoaded) {
+        window.usedInstrumentsModule.upgradeInstrumentTags();
+      }
+    });
   }
 }
 
@@ -1159,16 +1349,17 @@ function processRelatedWorks(xmlDoc, resolver) {
  */
 function processFunders(xmlDoc, resolver) {
   // Fetch all fundingReference nodes
-  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const funderNodes = xmlDoc.evaluate(".//ns:fundingReferences/ns:fundingReference | .//fundingReferences/fundingReference", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   for (let i = 0; i < funderNodes.snapshotLength; i++) {
     const funderNode = funderNodes.snapshotItem(i);
     // Extract data from XML
-    const funderName = getNodeText(funderNode, "ns:funderName", xmlDoc, resolver);
-    const funderId = getNodeText(funderNode, "ns:funderIdentifier", xmlDoc, resolver);
-    const funderIdTyp = funderNode.querySelector("funderIdentifier")?.getAttribute("funderIdentifierType") || "";
-    const awardTitle = getNodeText(funderNode, "ns:awardTitle", xmlDoc, resolver);
-    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderName = getNodeText(funderNode, "ns:funderName | funderName", xmlDoc, resolver);
+    const funderIdNode = xmlDoc.evaluate("ns:funderIdentifier | funderIdentifier", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const funderId = funderIdNode ? funderIdNode.textContent.trim() : "";
+    const funderIdTyp = funderIdNode?.getAttribute("funderIdentifierType") || "";
+    const awardTitle = getNodeText(funderNode, "ns:awardTitle | awardTitle", xmlDoc, resolver);
+    const awardNumberNode = xmlDoc.evaluate("ns:awardNumber | awardNumber", funderNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
     const awardNumber = awardNumberNode ? awardNumberNode.textContent.trim() : "";
     const awardUri = awardNumberNode?.getAttribute("awardURI") || "";
 
@@ -1190,6 +1381,8 @@ function processFunders(xmlDoc, resolver) {
     }
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 /**
  * Loads XML data into form fields according to mapping configuration
@@ -1289,27 +1482,76 @@ async function loadXmlToForm(xmlDoc) {
     }
   }
 
-  processResourceType(xmlDoc);
+  processResourceType(xmlDoc, resolver);
   // Process titles
   processTitles(xmlDoc, resolver, titleTypeMapping);
   // Processing Creators
   processCreators(xmlDoc, resolver);
+  // Allow DOM to settle after creator row insertion (fixes Firefox timing issue #1046)
+  await new Promise(resolve => setTimeout(resolve, 0));
   // Process Contact Persons
   processContactPersons(xmlDoc);
   // Process Originating Laboratories
   processOriginatingLaboratories(xmlDoc, resolver);
   // Process contributors
   processContributors(xmlDoc, resolver);
-  // Process descriptions
-  processDescriptions(xmlDoc, resolver);
+  // Wait for dynamic description type fields to be ready
+  if (window.descriptionTypesReady) {
+    await window.descriptionTypesReady;
+  }
+  // For ICGEM schema files, descriptions use a section attribute (not DataCite descriptionType)
+  const isIcgem = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
+  if (!isIcgem) {
+    processDescriptions(xmlDoc, resolver);
+  }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
   // Process Keywords
   processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
+  // Process Used Instruments (IsCollectedBy entries)
+  processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
+  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  if (isIcgem) {
+    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+  }
+}
+
+// Export for testing (CommonJS)
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        processResourceType,
+        extractLicenseIdentifier,
+        mapTitleType,
+        processTitles,
+        getNodeText,
+        processCreators,
+        processContactPersons,
+        processContactPersonsFromDataCite,
+        findLabNameById,
+        setLabDataInRow,
+        processOriginatingLaboratories,
+        normalizeRole,
+        getOrCreateOrgRow,
+        getOrCreatePersonRow,
+        processContributors,
+        processIndividualContributor,
+        updateContributorMap,
+        getTagifyInstance,
+        populateFormWithContributors,
+        processKeywords,
+        parseTemporalData,
+        getGeoLocationData,
+        fillSpatialFields,
+        processUsedInstruments,
+        processDescriptions,
+        processRelatedWorks,
+        processFunders,
+        processSpatialTemporalCoverages
+    };
 }

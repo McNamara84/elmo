@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <envelope>
     
-<resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 file:///C:/xampp/htdocs/msl-mde/schemas/DataCite/DataCiteSchema45.xsd">
+<resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
   <identifier identifierType="DOI"/>
   <creators>
     <creator>
@@ -41,7 +41,7 @@
   </contributors>
   <dates>
     <date dateType="Available">2025-01-01</date>
-    <date dateType="Collected">2100-01-01T12:00:00/2100-02-02T14:00:00</date>
+    <date dateType="Coverage">2100-01-01T12:00:00/2100-02-02T14:00:00</date>
     <date dateType="Created">2100-01-01</date>
   </dates>
   <language>fr</language>

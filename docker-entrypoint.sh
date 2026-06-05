@@ -16,10 +16,21 @@ if [ ! -d /var/www/html/node_modules ]; then
   npm install --omit=dev
 fi
 
-# Ensure a settings.php exists; in production create it from settings.elmo.php,
-# so that local settings.php (dev) is not needed/overwritten.
-if [ ! -f /var/www/html/settings.php ]; then
-  echo "⚙️  No settings.php found, creating from settings.elmo.php"
+# Ensure a settings.php exists; in production always refresh from settings.elmo.php
+# In local development, keep the existing settings.php
+# Set LOCAL_DEVELOPMENT=true in docker-compose for local deployments
+if [ "${LOCAL_DEVELOPMENT}" = "true" ]; then
+  # Local development mode - keep existing settings.php
+  if [ ! -f /var/www/html/settings.php ]; then
+    echo "⚙️  Local development: settings.php not found, creating from settings.elmo.php"
+    cp /var/www/html/settings.elmo.php /var/www/html/settings.php
+    chown www-data:www-data /var/www/html/settings.php
+  else
+    echo "⚙️  Local development: keeping existing settings.php"
+  fi
+else
+  # Production mode - always refresh settings.php for environment variable changes
+  echo "⚙️  Production mode: refreshing settings.php from settings.elmo.php"
   cp /var/www/html/settings.elmo.php /var/www/html/settings.php
   chown www-data:www-data /var/www/html/settings.php
 fi
@@ -67,6 +78,19 @@ else
     echo "⚠️  Unknown DB_INIT_MODE: '${DB_INIT_MODE}'. Skipping install."
   fi
   echo "🏁  Database setup finished."
+fi
+
+# Schema migrations for existing databases (only when keeping data and tables exist)
+if [ "${DB_INIT_MODE}" = "keep_data" ] && db_has_tables; then
+  # Make Thesaurus_Keywords.language nullable (was NOT NULL, all attributes are optional per DataCite schema)
+  IS_NULLABLE=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" \
+    -e "SELECT IS_NULLABLE FROM information_schema.COLUMNS WHERE TABLE_SCHEMA='${DB_NAME}' AND TABLE_NAME='Thesaurus_Keywords' AND COLUMN_NAME='language';" || echo "")
+  if [ "${IS_NULLABLE}" = "NO" ]; then
+    echo "🔧  Migrating Thesaurus_Keywords.language to nullable…"
+    mysql -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" "${DB_NAME}" \
+      -e "ALTER TABLE Thesaurus_Keywords MODIFY COLUMN language VARCHAR(20) NULL DEFAULT NULL;"
+    echo "✅  Migration complete."
+  fi
 fi
 
 # Clean up install files (optional)

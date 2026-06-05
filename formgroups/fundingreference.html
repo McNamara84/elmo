@@ -8,7 +8,7 @@
                     <div class="input-group has-validation">
                         <div class="form-floating ">
                             <input type="text"
-                                class="form-control input-with-help input-right-with-round-corners inputFunder"
+                                class="form-control input-with-help input-right-with-round-corners inputFunder js-required-on-submit"
                                 name="funder[]" autocomplete="off" id="input-funder"  >
                             <label for="input-funder" data-translate="funding.funder">Funder</label>
                             <div class="invalid-feedback" data-translate="funding.funderInvalid">Please enter the name of the funder.</div>
@@ -57,9 +57,9 @@
                     </div>
                 </div>
                 <!-- Button "add Funding Reference" -->
-                <div class="col-2 col-sm-2 col-md-1 col-lg-1 p-1 d-flex justify-content-center align-items-center">
-                    <button type="button" class="btn btn-primary addFundingReference" id="button-fundingreference-add"
-                        class="add-button" data-translate="general.add">
+                <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
+                    <button type="button" class="btn btn-primary addFundingReference add-button" id="button-fundingreference-add"
+                        data-translate="general.add">
                         +
                     </button>
                 </div>

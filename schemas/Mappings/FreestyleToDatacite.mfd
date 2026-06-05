@@ -1058,7 +1058,7 @@
 					</targets>
 					<view ltx="858" lty="-138" rbx="943" rby="-121"/>
 					<data>
-						<constant value="Collected" datatype="string"/>
+						<constant value="Coverage" datatype="string"/>
 						<comment>
 							<text>Default value for dateType when data was collected</text>
 						</comment>
@@ -1826,7 +1826,7 @@
 						<constant value="https://ror.org/" datatype="string"/>
 					</data>
 				</component>
-				<component name="DataCiteSchema45" library="xml" uid="3" kind="14">
+				<component name="DataCiteSchema47" library="xml" uid="3" kind="14">
 					<properties XSLTTargetEncoding="UTF-8" XSLTDefaultOutput="1"/>
 					<view ltx="1470" lty="-99" rbx="2074" rby="2689"/>
 					<data>
@@ -2022,7 +2022,7 @@
 								</entry>
 							</entry>
 						</root>
-						<document schema="..\DataCite\DataCiteSchema45.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample45.xml" outputinstance="..\DataCite\DataCiteExample45.xml"/>
+						<document schema="..\DataCite\DataCiteSchema47.xsd" instanceroot="{http://datacite.org/schema/kernel-4}resource" inputinstance="..\DataCite\DataCiteExample47.xml" outputinstance="..\DataCite\DataCiteExample47.xml"/>
 					</data>
 				</component>
 				<component name="exists" library="core" uid="315" kind="5">

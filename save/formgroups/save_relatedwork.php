@@ -26,6 +26,8 @@ function saveRelatedWork($connection, $postData, $resource_id)
         return true; // No data provided is valid
     }
 
+    $action = $postData['action'] ?? 'save_and_download';
+
     $allSuccessful = true;
     $len = count($postData['rIdentifier']);
 
@@ -36,32 +38,65 @@ function saveRelatedWork($connection, $postData, $resource_id)
             'identifierType' => $postData['rIdentifierType'][$i] ?? ''
         ];
 
-        // Validate dependencies for this entry
-        if (!validateRelatedWorkDependencies($entry)) {
-            error_log('Related Work entry validation failed: ' . json_encode($entry));
-            $allSuccessful = false;
-            continue;
-        }
-
         // Skip if no data provided for this entry
-        if (empty($entry['identifier']) && empty($entry['relation']) && empty($entry['identifierType'])) {
+        if (
+            $entry['identifier'] === '' &&
+            $entry['relation'] === '' &&
+            $entry['identifierType'] === ''
+        ) {
             continue;
         }
 
-        $relation_id = getRelationId($connection, $entry['relation']);
-        $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+        // Skip if required fields are missing
+        if ($entry['identifier'] === '' || $entry['relation'] === '') {
+            continue;
+        }
 
-        if ($relation_id !== null && $identifier_type_id !== null) {
-            $related_work_id = insertRelatedWork($connection, $entry['identifier'], $relation_id, $identifier_type_id);
-            if ($related_work_id) {
-                linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+        if ($action === 'submit') {
+            if (!validateRelatedWorkDependencies($entry)) {
+                error_log('Related Work entry validation failed: ' . json_encode($entry));
+                $allSuccessful = false;
+                continue;
+            }
+
+            $relation_id = getRelationId($connection, $entry['relation']);
+            $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+
+            if ($relation_id === null || $identifier_type_id === null) {
+                error_log('Failed to retrieve IDs for Related Work entry : ' . json_encode($entry));
+                $allSuccessful = false;
+                continue;
+            }
+
+        } else {
+            if ($entry['relation'] === '' || $entry['relation'] === null) {
+                $relation_id = null;
             } else {
-                error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
+                $relation_id = getRelationId($connection, $entry['relation']);
+            }
+
+            if ($entry['identifierType'] === '' || $entry['identifierType'] === null) {
+                $identifier_type_id = null;
+            } else {
+                $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
+            }
+
+        }
+
+        $related_work_id = insertRelatedWork(
+            $connection,
+            $entry['identifier'],
+            $relation_id,
+            $identifier_type_id
+        );
+
+        if ($related_work_id) {
+            linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+        } else {
+            error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
+            if ($action === 'submit') {
                 $allSuccessful = false;
             }
-        } else {
-            error_log('Failed to retrieve IDs for Related Work entry: ' . json_encode($entry));
-            $allSuccessful = false;
         }
     }
 
@@ -69,20 +104,33 @@ function saveRelatedWork($connection, $postData, $resource_id)
 }
 
 /**
- * Retrieves the relation id based on name.
+ * Retrieves the relation id based on name or numeric ID.
  * @param mysqli $connection The database connection.
- * @param string $relationName The relation name to search for.
+ * @param string|int $relationNameOrId The relation name or ID to search for.
  *
  * @return int|null The found relation ID or null if not found.
  */
-function getRelationId(mysqli $connection, string $relationName): ?int
+function getRelationId(mysqli $connection, string|int $relationNameOrId): ?int
 {
-    $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `name` = ?");
-    if (!$stmt) {
-        error_log("Failed to prepare statement for getRelationId: " . $connection->error);
-        return null;
+    // If numeric, verify the ID exists
+    if (is_numeric($relationNameOrId)) {
+        $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `relation_id` = ?");
+        if (!$stmt) {
+            error_log("Failed to prepare statement for getRelationId: " . $connection->error);
+            return null;
+        }
+        $id = (int)$relationNameOrId;
+        $stmt->bind_param("i", $id);
+    } else {
+        // Search by name
+        $stmt = $connection->prepare("SELECT `relation_id` FROM `Relation` WHERE `name` = ?");
+        if (!$stmt) {
+            error_log("Failed to prepare statement for getRelationId: " . $connection->error);
+            return null;
+        }
+        $stmt->bind_param("s", $relationNameOrId);
     }
-    $stmt->bind_param("s", $relationName);
+    
     if (!$stmt->execute()) {
         error_log("Failed to execute statement for getRelationId: " . $stmt->error);
         $stmt->close();

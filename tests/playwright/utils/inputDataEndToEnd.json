@@ -1,0 +1,145 @@
+{
+  "minimal": {
+    "publicationYear": "2025",
+    "resourceType": "5",
+    "language": "1",
+    "title": "A dataset",
+    "author": {
+      "orcid": "0000-0002-1825-0097",
+      "lastName": "Carberry",
+      "firstName": "Josiah",
+      "affiliation": "GFZ Helmholtz Centre for Geosciences"
+    },
+    "contactPerson": {
+      "email": "example@gmail.com"
+    },
+    "abstract": "Necessary abstract",
+    "dateCreated": "2025-01-01"
+  },
+  "extended": {
+    "descriptions": {
+      "methods": "Data was collected using seismic stations deployed across the region.",
+      "technicalInfo": "Sampling rate: 100 Hz. Data format: miniSEED.",
+      "other": "Additional processing applied: bandpass filtering between 0.5-25 Hz."
+    },
+    "relatedWorks": [
+      {
+        "identifier": "10.5880/GFZ.DMJQ.2025.007",
+        "type": "DOI",
+        "relation": "References"
+      }
+    ],
+    "keywords": ["seismic data"],
+    "fundingReferences": [
+      {
+        "funder": "DFG",
+        "grantNumber": "DFG-12345",
+        "grantName": "Seismic Monitoring Network",
+        "awardUri": "https://gepris.dfg.de/gepris/project/12345"
+      }
+    ],
+    "authorInstitutions": [
+      {
+        "institutionName": "GFZ Helmholtz Centre for Geosciences",
+        "affiliation": "GFZ Helmholtz Centre for Geosciences"
+      }
+    ],
+    "contributorPersons": [
+      {
+        "orcid": "0000-0001-5109-3700",
+        "lastName": "Haak",
+        "firstName": "Laurel",
+        "role": "Data Collector",
+        "affiliation": "Japanese Geological Survey"
+      }
+    ],
+    "contributorInstitutions": [
+      {
+        "organizationName": "FFFF",
+        "role": "Translator",
+        "affiliation": "Florida Forest Friends Fund"
+      }
+    ]
+  },
+  "extendedMultiple": {
+    "relatedWorks": [
+      {
+        "identifier": "10.5880/GFZ.DMJQ.2025.008",
+        "type": "DOI",
+        "relation": "References"
+      },
+      {
+        "identifier": "10.5880/GFZ.DMJQ.2025.009",
+        "type": "DOI",
+        "relation": "References"
+      }
+    ],
+    "keywords": ["nowcasting", "monitoring", "plate tectonics"],
+    "fundingReferences": [
+      {
+        "funder": "NSF",
+        "grantNumber": "NSF-67890",
+        "grantName": "Climate Data Analytics Initiative",
+        "awardUri": "https://www.nsf.gov/awardsearch/showAward?AWD_ID=2067890"
+      },
+      {
+        "funder": "EU Horizon",
+        "grantNumber": "EU-2025-001",
+        "grantName": "European Research Initiative",
+        "awardUri": "https://cordis.europa.eu/project/id/2025001"
+      }
+    ],
+    "authors": [
+      {
+        "orcid": "0000-0001-2345-6789",
+        "lastName": "Isaak",
+        "firstName": "Johann",
+        "affiliation": "University of Cambridge"
+      },
+      {
+        "orcid": "0000-0001-6352-9161",
+        "lastName": "Mueller",
+        "firstName": "Hans",
+        "affiliation": "ETH Zurich"
+      }
+    ],
+    "authorInstitutions": [
+      {
+        "institutionName": "Research Institute for Sustainability",
+        "affiliation": "Research Institute for Sustainability at GFZ"
+      },
+      {
+        "institutionName": "ETH Zürich Foundation",
+        "affiliation": "Swiss Federal Institute of Technology"
+      }
+    ],
+    "contributorPersons": [
+      {
+        "orcid": "0000-0002-3915-1872",
+        "lastName": "Eze",
+        "firstName": "Ifeoma",
+        "role": "Researcher",
+        "affiliation": "The Shepherd MediCentre"
+      },
+      {
+        "orcid": "0000-0002-8022-6178",
+        "lastName": "Turabyan",
+        "firstName": "Astghik",
+        "role": "Editor",
+        "affiliation": "Yerevan State University"
+      }
+    ],
+    "contributorInstitutions": [
+      {
+        "organizationName": "THE Japan Thailand Association",
+        "role": "Sponsor",
+        "affiliation": "Japan Thailand Association"
+      },
+      {
+        "organizationName": "DataCite",
+        "role": "Hosting Institution",
+        "affiliation": "DataCite"
+      }
+    ]
+  }
+}

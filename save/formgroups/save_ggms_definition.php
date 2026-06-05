@@ -123,15 +123,32 @@ function insertGGMDefinition(mysqli $connection, array $data, int $resourceId): 
  */
 function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId): bool
 {
-    // 1) Validate the input data
-    $data = validateGGMData($postData, $resourceId);
+    $action = $postData['action'] ?? 'save_and_download';
+
+    // 1) Validate the input data (only on submit)
+    if ($action === 'submit') {
+        $data = validateGGMData($postData, $resourceId);
+    } else {
+        // For save action, prepare data without strict validation
+        if ($resourceId <= 0) {
+            throw new Exception('Invalid resource ID');
+        }
+        $data = [
+            'model_name' => trim($postData['model_name'] ?? ''),
+            'model_type' => trim($postData['model_type'] ?? ''),
+            'mathematical_representation' => trim($postData['mathematical_representation'] ?? ''),
+            'product_type' => trim($postData['product_type'] ?? ''),
+            'file_format' => trim($postData['file_format'] ?? ''),
+            'celestial_body' => trim($postData['celestial_body'] ?? '')
+        ];
+    }
 
     // 2) Resolve foreign keys for Model_Type, Mathematical_Representation, and File_Format
     $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
     $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
     $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
 
-    if (!$modelTypeId || !$mathRepId || !$fileFmtId) {
+    if ($action === 'submit' && (!$modelTypeId || !$mathRepId || !$fileFmtId)) {
         throw new Exception('Failed to resolve foreign keys for Model_Type, Mathematical_Representation, or File_Format.');
     }
 

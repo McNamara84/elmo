@@ -26,15 +26,21 @@ function fundingReferenceArraysExist($postData)
 /**
  * Prepares funder ID string and type.
  *
- * @param string $funderId Raw funder ID.
+ * @param string $funderId    Raw funder ID.
+ * @param string $funderIdTyp The funder ID type from the form ('crossref' or 'ROR').
  *
  * @return array Array with the processed funder ID and the ID type.
  */
-function prepareFunderIdDetails($funderId)
+function prepareFunderIdDetails($funderId, $funderIdTyp = 'crossref')
 {
     if (!empty($funderId)) {
-        $funderIdString = extractLastTenDigits($funderId);
-        $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+        if ($funderIdTyp === 'ROR') {
+            $funderIdString = $funderId;
+            $funderIdType = 'ROR';
+        } else {
+            $funderIdString = extractLastTenDigits($funderId);
+            $funderIdType = !empty($funderIdString) ? "Crossref Funder ID" : "Unknown";
+        }
     } else {
         $funderIdString = null;
         $funderIdType = null;
@@ -54,29 +60,34 @@ function prepareFunderIdDetails($funderId)
  */
 function saveFundingReferenceEntry($connection, $entry, $resource_id)
 {
-    if (!validateFundingReferenceDependencies($entry)) {
-        return false;
-    }
+    // Trim and normalize all fields upfront so whitespace-only input
+    // is treated the same as truly empty input in the guards below.
+    $funder = trim($entry['funder'] ?? '');
+    $funderId = trim($entry['funderId'] ?? '');
+    $grantNumber = trim($entry['grantNumber'] ?? '');
+    $grantName = trim($entry['grantName'] ?? '');
+    $awardUri = trim($entry['awardUri'] ?? '');
 
-    if (
-        empty($entry['funder']) &&
-        empty($entry['funderId']) &&
-        empty($entry['grantNumber']) &&
-        empty($entry['grantName'])
-    ) {
+    if ($funder === '' && $funderId === '' && $grantNumber === '' && $grantName === '' && $awardUri === '') {
         return true;
     }
 
-    [$funderIdString, $funderIdType] = prepareFunderIdDetails($entry['funderId']);
-    $awardUri = !empty($entry['awardUri']) ? $entry['awardUri'] : null;
+    if ($funder === '') {
+        return false;
+    }
+
+    [$funderIdString, $funderIdType] = prepareFunderIdDetails($funderId, $entry['funderIdTyp'] ?? 'crossref');
+    $awardUri = $awardUri !== '' ? $awardUri : null;
+    $grantNumber = $grantNumber !== '' ? $grantNumber : null;
+    $grantName = $grantName !== '' ? $grantName : null;
 
     $funding_reference_id = insertFundingReference(
         $connection,
-        $entry['funder'],
+        $funder,
         $funderIdString,
         $funderIdType,
-        $entry['grantNumber'],
-        $entry['grantName'],
+        $grantNumber,
+        $grantName,
         $awardUri
     );
 
@@ -111,19 +122,35 @@ function saveFundingReferences($connection, $postData, $resource_id)
     if (!fundingReferenceArraysExist($postData)) {
         return true; // No data provided is valid
     }
+    $action = $postData['action'] ?? 'save_and_download';
 
-    $allSuccessful = true;
+    // Build trimmed entries once so validation and saving see the same values
     $len = count($postData['funder']);
+    $entries = [];
 
     for ($i = 0; $i < $len; $i++) {
-        $entry = [
-            'funder' => $postData['funder'][$i] ?? '',
-            'funderId' => $postData['funderId'][$i] ?? '',
-            'grantNumber' => $postData['grantNummer'][$i] ?? '',
-            'grantName' => $postData['grantName'][$i] ?? '',
-            'awardUri' => $postData['awardURI'][$i] ?? ''
+        $entries[] = [
+            'funder' => trim($postData['funder'][$i] ?? ''),
+            'funderId' => trim($postData['funderId'][$i] ?? ''),
+            'funderIdTyp' => $postData['funderidtyp'][$i] ?? 'crossref',
+            'grantNumber' => trim($postData['grantNummer'][$i] ?? ''),
+            'grantName' => trim($postData['grantName'][$i] ?? ''),
+            'awardUri' => trim($postData['awardURI'][$i] ?? '')
         ];
+    }
 
+    // Validate all entries before any DB writes to avoid partial saves
+    if ($action === 'submit') {
+        foreach ($entries as $entry) {
+            if (!validateFundingReferenceDependencies($entry)) {
+                return false;
+            }
+        }
+    }
+
+    $allSuccessful = true;
+
+    foreach ($entries as $entry) {
         if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
             $allSuccessful = false;
         }
@@ -148,15 +175,16 @@ function saveFundingReferences($connection, $postData, $resource_id)
 function insertFundingReference($connection, $funder, $funderId, $funderIdType, $grantNumber, $grantName, $awardUri)
 {
     // Check if the funding reference already exists
+    // Using <=> (NULL-safe equal) to correctly compare NULL values in MariaDB/MySQL
     $checkQuery = "
         SELECT funding_reference_id
         FROM Funding_Reference
         WHERE funder = ?
-          AND (funderid = ?)
-          AND (funderidtyp = ?)
-          AND (grantnumber = ?)
-          AND (grantname = ?)
-          AND (awarduri = ?)";
+          AND funderid <=> ?
+          AND funderidtyp <=> ?
+          AND grantnumber <=> ?
+          AND grantname <=> ?
+          AND awarduri <=> ?";
     $checkStmt = $connection->prepare($checkQuery);
     if (!$checkStmt) {
         error_log("Prepare failed for existence check: " . $connection->error);

@@ -1,14 +1,17 @@
 <?php
-namespace Tests;
-use PHPUnit\Framework\TestCase;
-use mysqli_sql_exception;
 
+declare(strict_types=1);
+
+namespace Tests;
+
+
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
 require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
 
 /**
  * Test suite for saving free keywords.
  */
-class SaveFreekeywordsTest extends DatabaseTestCase
+final class SaveFreekeywordsTest extends DatabaseTestCase
 {
     /**
      * Saves a new uncurated free keyword and verifies its storage.

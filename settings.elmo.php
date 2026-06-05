@@ -27,8 +27,22 @@ $connection = connectDb();
 $apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+// Google Maps Map ID (required for AdvancedMarkerElement)
+$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
+
+// ERNIE Integration (External Vocabulary Service)
+$ernieUrl = getenv('ERNIE_URL') ?: '';
+$ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
+// Cache TTL for all ERNIE data in seconds (default: 6 hours)
+$ernieCacheTtl = 21600;
+
+// Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
+$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
+
+// URL for primary data upload (shown after successful submit)
+$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 
 // SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
@@ -41,8 +55,8 @@ $showMslLogo = false;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
-// Show GCMD Thesauri form group
-$showGcmdThesauri = true;
+// Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
+$showThesauri = true;
 // Show Free Keywords form group
 $showFreeKeywords = true;
 // Show Spatial and Temporal Coverage form group
@@ -54,7 +68,7 @@ $showFundingReference = true;
 
 $showAuthorInstitution = true;
 // Show license formgroup. if not shown defaults to CC-BY 4.0
-$showLicense = false;
+$showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
 
@@ -67,14 +81,34 @@ $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+$showMslDefaultFreeKeywords = false;
+
 $envShowMslLabs   = getenv('SHOW_MSL_LABS');
 $envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
+$envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
+$envShowMslLogo = getenv('SHOW_MSL_LOGO');
 
 if ($envShowMslLabs !== false) {
     $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
 }
 if ($envShowMslVocabs !== false) {
     $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslDefaultFreeKeywords !== false) {
+    $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowMslLogo !== false) {
+    $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
+}
+
+// SETTINGS FOR PID4INST INSTRUMENTS
+// Show Used Instruments form group (PID4INST via ERNIE API)
+$showUsedInstruments = false;
+
+$envShowUsedInstruments = getenv('SHOW_USED_INSTRUMENTS');
+
+if ($envShowUsedInstruments !== false) {
+    $showUsedInstruments = filter_var($envShowUsedInstruments, FILTER_VALIDATE_BOOLEAN);
 }
 
 // SETTINGS FOR ICGEM
@@ -85,6 +119,25 @@ $envShowGGMsProperties = getenv('SHOW_GGMS_PROPERTIES');
 
 if ($envShowGGMsProperties !== false) {
     $showGGMsProperties = filter_var($envShowGGMsProperties, FILTER_VALIDATE_BOOLEAN);
+}
+
+// Environment variable overrides for additional form groups
+$envShowThesauri = getenv('SHOW_THESAURI');
+$envShowFreeKeywords = getenv('SHOW_FREE_KEYWORDS');
+$envShowSpatialTemporalCoverage = getenv('SHOW_SPATIAL_TEMPORAL_COVERAGE');
+$envShowRelatedWork = getenv('SHOW_RELATED_WORK');
+
+if ($envShowThesauri !== false) {
+    $showThesauri = filter_var($envShowThesauri, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowFreeKeywords !== false) {
+    $showFreeKeywords = filter_var($envShowFreeKeywords, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowSpatialTemporalCoverage !== false) {
+    $showSpatialTemporalCoverage = filter_var($envShowSpatialTemporalCoverage, FILTER_VALIDATE_BOOLEAN);
+}
+if ($envShowRelatedWork !== false) {
+    $showRelatedWork = filter_var($envShowRelatedWork, FILTER_VALIDATE_BOOLEAN);
 }
 
 // Display the feedback link (true to display, false to hide)
@@ -99,6 +152,9 @@ $smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
 $smtpSecure = getenv('SMTP_SECURE') ?: '';
 $smtpAuth   = getenv('SMTP_AUTH') ?: '';
 
+// Simulate email (true = skip actual sending, only log. Set to false in production)
+$SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+
 // Target address for feedback
 $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
@@ -107,20 +163,22 @@ $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
-    global $apiKeyGoogleMaps, $showMslLabs;
+    global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
 
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($setting) {
         case 'apiKey':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps
+                'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps
             ]);
             break;
 
         case 'all':
             echo json_encode([
                 'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps,
                 'showMslLabs' => $showMslLabs
             ]);
             break;
@@ -136,6 +194,9 @@ if (isset($_GET['setting'])) {
     getSettings($_GET['setting']);
     exit;
 }
+
+// Instance title for header (can be overridden via environment variable)
+$instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor 2.0';
 
 // Initialize logging
 function elmo_log($msg) {

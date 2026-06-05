@@ -1,10 +1,14 @@
 <?php
 
+declare(strict_types=1);
+
+use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../api/v2/controllers/DraftController.php';
 
-class DraftControllerTest extends TestCase
+#[CoversClass(\DraftController::class)]
+final class DraftControllerTest extends TestCase
 {
     private string $storagePath;
 
@@ -269,5 +273,16 @@ class DraftControllerTest extends TestCase
         });
 
         $this->assertSame(403, $forbiddenStatus);
+    }
+
+    public function testGetNonExistentDraftReturns204(): void
+    {
+        $controller = new DraftController();
+        [$status, $data] = $this->captureResponse(function () use ($controller) {
+            $controller->get(['id' => 'aaaabbbbccccdddd1111222233334444']);
+        });
+
+        $this->assertSame(204, $status);
+        $this->assertNull($data);
     }
 }

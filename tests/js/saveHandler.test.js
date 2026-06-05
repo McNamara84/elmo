@@ -21,7 +21,13 @@ describe('saveHandler.js', () => {
           <input type="checkbox" name="contacts[]" value="2">
         </div>
       </form>
-      <div id="modal-saveas"><input id="input-saveas-filename"><button class="btn-close"></button><button class="btn-secondary"></button></div>
+      <div id="modal-saveas">
+        <h2 id="label-saveas-modal"></h2>
+        <input id="input-saveas-filename">
+        <span id="saveas-extension"></span>
+        <button class="btn-close"></button>
+        <button class="btn-secondary"></button>
+      </div>
       <div id="modal-notification">
         <div id="modal-notification-label"></div>
         <div id="modal-notification-body"></div>
@@ -47,6 +53,8 @@ describe('saveHandler.js', () => {
       dates: { embargoDateError: 'embargoErr' },
       coverage: { endDateError: 'endErr' },
       alerts: {
+        processingHeading: 'procH',
+        preparingDownload: 'prepD',
         filenameErrorHeading: 'fh',
         filenameError: 'fe',
         successHeading: 'sh',
@@ -55,6 +63,12 @@ describe('saveHandler.js', () => {
         saveError: 'se',
         savingHeading: 'savH',
         savingInfo: 'savI'
+      },
+      modals: {
+        save: {
+          saveAs: 'Save as XML',
+          saveAsJsonLd: 'Save as JSON-LD'
+        }
       }
     };
     global.logEvent = jest.fn().mockResolvedValue();
@@ -66,7 +80,7 @@ describe('saveHandler.js', () => {
   });
 
   test('generateFilename returns formatted timestamp', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z'));
+    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z').getTime());
     const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
     const name = await handler.generateFilename();
     expect(name).toBe('dataset_20240530_123456');
@@ -86,7 +100,20 @@ describe('saveHandler.js', () => {
     $('#input-saveas-filename').val('file');
     await handler.handleSaveConfirm();
     expect(modalInstances[0].hide).toHaveBeenCalled();
-    expect(handler.saveAndDownload).toHaveBeenCalledWith('file');
+    expect(handler.saveAndDownload).toHaveBeenCalledWith('file', 'xml');
+  });
+
+  test('handleSave updates modal state for jsonld', async () => {
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'generateFilename').mockResolvedValue('dataset_20240530_123456');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleSave('jsonld');
+
+    expect($('#label-saveas-modal').text()).toBe('Save as JSON-LD');
+    expect($('#saveas-extension').text()).toBe('.jsonld');
+    expect($('#input-saveas-filename').val()).toBe('dataset_20240530_123456');
+    expect(modalInstances[0].show).toHaveBeenCalled();
   });
 
   test('showNotification updates modal and hides on actions', () => {
@@ -122,6 +149,7 @@ describe('saveHandler.js', () => {
     expect(autosave.flushPending).toHaveBeenCalled();
     expect(autosave.markManualSave).toHaveBeenCalled();
     expect(global.fetch).toHaveBeenCalledWith('save/save_data.php', expect.objectContaining({ method: 'POST' }));
+  expect(global.fetch.mock.calls[0][1].body.get('download_format')).toBe('xml');
     expect(revokeSpy).toHaveBeenCalledWith('blob:mock');
 
     window.URL.createObjectURL = originalCreate;
@@ -148,6 +176,25 @@ describe('saveHandler.js', () => {
 
     expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally');
     expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload sends jsonld format and logs jsonld success', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      headers: {
+        get: jest.fn(() => 'attachment; filename="dataset.jsonld"')
+      },
+      blob: jest.fn().mockResolvedValue(new Blob([], { type: 'application/ld+json' }))
+    });
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock-jsonld');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset', 'jsonld');
+
+    expect(global.fetch.mock.calls[0][1].body.get('download_format')).toBe('jsonld');
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved json-ld file locally');
     delete global.fetch;
   });
 

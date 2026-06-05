@@ -1,0 +1,204 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <dace:identifier identifierType="DOI">10.5880/gfz.gracefo_06_gsm</dace:identifier>
+  <dace:creators>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Dahle, Christoph</dace:creatorName>
+      <dace:givenName>Christoph</dace:givenName>
+      <dace:familyName>Dahle</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-4733-9242</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Flechtner, Frank</dace:creatorName>
+      <dace:givenName>Frank</dace:givenName>
+      <dace:familyName>Flechtner</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3093-5558</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Murböck, Michael</dace:creatorName>
+      <dace:givenName>Michael</dace:givenName>
+      <dace:familyName>Murböck</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-4108-578X</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Michalak, Grzegorz</dace:creatorName>
+      <dace:givenName>Grzegorz</dace:givenName>
+      <dace:familyName>Michalak</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1925-8824</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Neumayer, Karl Hans</dace:creatorName>
+      <dace:givenName>Karl Hans</dace:givenName>
+      <dace:familyName>Neumayer</dace:familyName>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Abrykosov, Oleh</dace:creatorName>
+      <dace:givenName>Oleh</dace:givenName>
+      <dace:familyName>Abrykosov</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0003-1463-412X</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Reinhold, Anton</dace:creatorName>
+      <dace:givenName>Anton</dace:givenName>
+      <dace:familyName>Reinhold</dace:familyName>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">König, Rolf</dace:creatorName>
+      <dace:givenName>Rolf</dace:givenName>
+      <dace:familyName>König</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-7155-6976</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:creator>
+  </dace:creators>
+  <dace:titles>
+    <dace:title xml:lang="en">Test:temporal model</dace:title>
+  </dace:titles>
+  <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+  <dace:publicationYear>2019</dace:publicationYear>
+  <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+  <dace:subjects>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+  </dace:subjects>
+  <dace:contributors>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Dahle, Christoph</dace:contributorName>
+      <dace:givenName>Christoph</dace:givenName>
+      <dace:familyName>Dahle</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-4733-9242</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectLeader">
+      <dace:contributorName nameType="Personal">Flechtner, Frank</dace:contributorName>
+      <dace:givenName>Frank</dace:givenName>
+      <dace:familyName>Flechtner</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3093-5558</dace:nameIdentifier>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Murböck, Michael</dace:contributorName>
+      <dace:givenName>Michael</dace:givenName>
+      <dace:familyName>Murböck</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-4108-578X</dace:nameIdentifier>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Michalak, Grzegorz</dace:contributorName>
+      <dace:givenName>Grzegorz</dace:givenName>
+      <dace:familyName>Michalak</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1925-8824</dace:nameIdentifier>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Neumayer, Karl Hans</dace:contributorName>
+      <dace:givenName>Karl Hans</dace:givenName>
+      <dace:familyName>Neumayer</dace:familyName>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Abrykosov, Oleh</dace:contributorName>
+      <dace:givenName>Oleh</dace:givenName>
+      <dace:familyName>Abrykosov</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0003-1463-412X</dace:nameIdentifier>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">Reinhold, Anton</dace:contributorName>
+      <dace:givenName>Anton</dace:givenName>
+      <dace:familyName>Reinhold</dace:familyName>
+    </dace:contributor>
+    <dace:contributor contributorType="ProjectMember">
+      <dace:contributorName nameType="Personal">König, Rolf</dace:contributorName>
+      <dace:givenName>Rolf</dace:givenName>
+      <dace:familyName>König</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-7155-6976</dace:nameIdentifier>
+    </dace:contributor>
+    <dace:contributor contributorType="HostingInstitution">
+      <dace:contributorName nameType="Organizational">GRACE-FO Science Data System</dace:contributorName>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/0000-0002-4733-9242">GFZ German Research Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+    </dace:contributor>
+  </dace:contributors>
+  <dace:dates>
+    <dace:date dateType="Created">2019-06-12</dace:date>
+  </dace:dates>
+  <dace:language>en</dace:language>
+  <dace:relatedIdentifiers>
+    <dace:relatedIdentifier relatedIdentifierType="DOI" relationType="Cites">10.5880/ICGEM.2019.004</dace:relatedIdentifier>
+    <dace:relatedIdentifier relatedIdentifierType="DOI" relationType="Is Documented By">10.5880/ICGEM.2019.007</dace:relatedIdentifier>
+  </dace:relatedIdentifiers>
+  <dace:version>6.3</dace:version>
+  <dace:rightsList>
+    <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+  </dace:rightsList>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">Spherical harmonic coefficients representing an estimate of Earth's mean gravity field during the specified timespan derived from GRACE-FO mission measurements. These coefficients represent the full magnitude of land hydrology, ice, and solid Earth processes. Further, they represent atmospheric and oceanic processes not captured in the accompanying GAC product. &#13;
+ &#13;
+ --------------------------------------------------------------------------------------------- &#13;
+ &#13;
+ Version History: &#13;
+ &#13;
+ 19 September 2024: &#13;
+ Release of Version 6.3. This is an update of Version 6.1 of the same data set (see changelog for details). Note that Version 6.2 was skipped to ensure consistent version numbering within the GRACE-FO Science Data System. &#13;
+ &#13;
+ 27 April 2022: &#13;
+ Release of Version 6.1. This is an update of Version 6.0 of the same data set (see changelog for details). &#13;
+ &#13;
+ 12 June 2019: &#13;
+ Initial release of the data (Version 6.0). &#13;
+ &#13;
+ All changes and updates are documented in the changelog available via the data download section (ftp://isdcftp.gfz-potsdam.de/grace-fo/Level-2/GFZ).</dace:description>
+  </dace:descriptions>
+  <dace:geoLocations/>
+</dace:resource>
+  <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>gfz@gfz.de</grav:address>
+      <grav:onlineResource>knowledge.de</grav:onlineResource>
+    </grav:contact>    
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Grace-FO_GFZ</grav:modelName>
+      <grav:publicationYear>2019</grav:publicationYear>
+      <grav:modelType>Temporal</grav:modelType>
+      <grav:mathematicalRepresentation>Spherical harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Earth</grav:celestialBody>
+      <grav:fileFormat>icgem2.0</grav:fileFormat>
+      <grav:tideSystem>Zero-tide</grav:tideSystem>
+      <grav:degreeOrderMax>60</grav:degreeOrderMax>
+      <grav:radius>650000000</grav:radius>
+      <grav:earthGravityConstant>4560000000</grav:earthGravityConstant>
+      <grav:errors>Formal</grav:errors>
+      <grav:temporalModelProperties>
+        <grav:temporalCoverage>2015-01-01/2019-01-01</grav:temporalCoverage>
+        <grav:temporalResolution uom="d">30</grav:temporalResolution>
+      </grav:temporalModelProperties>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Satellite">
+      <grav:description/>
+      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</grav:satelliteValueName>
+      <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632</grav:satelliteValueUri>
+      <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
+      <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
+    </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">Spherical harmonic coefficients representing an estimate of Earth's mean gravity field during the specified timespan derived from GRACE-FO mission measurements. These coefficients represent the full magnitude of land hydrology, ice, and solid Earth processes. Further, they represent atmospheric and oceanic processes not captured in the accompanying GAC product. &#13;
+ &#13;
+ --------------------------------------------------------------------------------------------- &#13;
+ &#13;
+ Version History: &#13;
+ &#13;
+ 19 September 2024: &#13;
+ Release of Version 6.3. This is an update of Version 6.1 of the same data set (see changelog for details). Note that Version 6.2 was skipped to ensure consistent version numbering within the GRACE-FO Science Data System. &#13;
+ &#13;
+ 27 April 2022: &#13;
+ Release of Version 6.1. This is an update of Version 6.0 of the same data set (see changelog for details). &#13;
+ &#13;
+ 12 June 2019: &#13;
+ Initial release of the data (Version 6.0). &#13;
+ &#13;
+ All changes and updates are documented in the changelog available via the data download section (ftp://isdcftp.gfz-potsdam.de/grace-fo/Level-2/GFZ).</grav:description>
+    </grav:descriptions>
+  </grav:globalGravityProduct>
+</grav:envelope>

@@ -9,18 +9,19 @@
         "language": "Sprache"
     },
     "general": {
-        "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
+        "logoTitle": "ELMO - Enhanced Linked Metadata Organizer 2.0",
         "logoTitleShort": "ELMO 2.0",
         "choose": "Auswählen...",
         "valid": "Gültig",
         "pleaseChoose": "Bitte auswählen",
         "orcid": "ORCID",
         "orcidInvalid": "Bitte geben Sie eine gültige ORCID ein (XXXX-XXXX-XXXX-XXX(X))",
+        "orcidChecksumInvalid": "Die ORCID-Prüfziffer ist ungültig. Bitte prüfen Sie die ORCID auf <a href='https://orcid.org' target='_blank'>orcid.org</a>.",
         "lastName": "Nachname",
-        "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben sind erlaubt.",
-        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein. Nur Buchstaben sind erlaubt.",
+        "lastNameInvalid": "Bitte geben Sie einen Nachnamen ein. Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
+        "firstNameInvalid": "Bitte geben Sie einen Vornamen ein.  Nur Buchstaben. Keine Ziffern oder Sonderzeichen (z.B. $, %, _).",
         "firstName": "Vorname",
-        "affiliation": "Zugehörigkeit(en)",
+        "affiliation": "Affiliation",
         "roleLabel": "Rolle(n)",
         "add": "+",
         "cancel": "Abbrechen",
@@ -52,7 +53,11 @@
         "submitError": "Datensatz konnte nicht übermittelt werden.",
         "errorHeading": "Fehler",
         "successHeading": "Erfolg! Ihre Metadaten wurden übermittelt.",
-        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert."
+        "successMessage": "Vielen Dank für Ihre Kooperation. Sie werden in Kürze per E-Mail vom Datenkuratierungsteam der GFZ Data Services kontaktiert.",
+        "dataUploadTitle": "Primärdaten hochladen",
+        "dataUploadMessage": "Es wurden nur die <strong>Metadaten</strong> an GFZ Data Services übermittelt. Bitte laden Sie Ihre Primärdaten (Forschungsdaten) über den folgenden Link in der Nextcloud hoch:",
+        "dataUploadLinkText": "Primärdaten hier hochladen",
+        "dataUploadFileNameHint": "Bitte benennen Sie Ihre Datei(en) passend zum Titel Ihres Datensatzes:"
 
     },
     "autosave": {
@@ -90,7 +95,7 @@
         "publicationYearInvalid": "Bitte geben Sie ein gültiges Jahr zwischen 1901-2155 ein (4 Ziffern im Format JJJJ).",
         "resourceType": "Ressourcentyp",
         "version": "Version",
-        "versionInvalid": "Bei Unsicherheit leer lassen.",
+        "versionInvalid": "Bitte verwenden Sie Ziffern.Ziffern als Format. Bei Unsicherheit leer lassen.",
         "datasetLanguage": "Sprache des Datensatzes",
         "resourceTitle": "Titel",
         "resourceTitleInvalid": "Bitte geben Sie einen beschreibenden Titel an (der nicht den Titel der Arbeit wiederholt, sondern die Daten beschreibt).",
@@ -101,12 +106,12 @@
         "licenseTitle": "Lizenz"
     },
     "authors": {
-        "title": "Autor(en)",
+        "title": "Autor: Personen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
     },
     "authorsInstitutions": {
-        "title": "Autor Institution",
+        "title": "Autor: Institutionen",
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
@@ -118,11 +123,11 @@
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
     },
     "contributorPersons": {
-        "title": "Beitragende (Personen)"
+        "title": "Beitragende: Personen"
     },
     "contributorInstitutions": {
-        "title": "Beitragende (Organisationen)",
-        "organization": "Name der Organisation",
+        "title": "Beitragende: Institutionen",
+        "organization": "Name der Institution",
         "organizationInvalid": "Bitte geben Sie einen gültigen Organisationsnamen ein."
     },
     "laboratory": {
@@ -143,17 +148,21 @@
         "technicalinfoPlaceholder": "Bitte detaillierte Informationen angeben, die mit dem Entwurf, der Implementierung, dem Betrieb, der Verwendung und/oder der Wartung eines Prozesses, Systems oder Instruments in Verbindung stehen können.",
         "other": "Sonstiges",
         "otherTooltip": "Bitte geben Sie sonstige Informationen ein..",
-        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen."
+        "otherPlaceholder": "Bitte weitere Beschreibungen eingeben, die nicht in eine der bestehenden Kategorien passen.",
+        "seriesInformation": "Serieninformation",
+        "seriesInformationTooltip": "Bitte geben Sie Serieninformationen ein...",
+        "seriesInformationPlaceholder": "Bitte Informationen zu einer wiederkehrenden Serie eingeben, wie Band, Ausgabe, Nummer.",
+        "tableOfContents": "Inhaltsverzeichnis",
+        "tableOfContentsTooltip": "Bitte geben Sie ein Inhaltsverzeichnis ein...",
+        "tableOfContentsPlaceholder": "Bitte ein Inhaltsverzeichnis der Ressource eingeben."
     },
     "keywords": {
         "mslKeywords": "EPOS Multi-Scale Laboratories Keywords",
         "thesaurus": {
-            "title": "GCMD Thesauri",
-            "name": "GCMD Thesauri Keywords",
-            "scienceKeywords": "GCMD Science Keywords",
-            "platforms": "GCMD Plattformen",
-            "instruments": "GCMD Instrumente",
-            "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe..."
+            "title": "Thesauri",
+            "name": "Thesauri Keywords",
+            "label": "Öffnen Sie den Thesaurus zur Auswahl von Schlagworten oder beginnen Sie mit der Eingabe...",
+            "unavailable": "Thesaurus-Daten sind derzeit nicht verfügbar."
         },
         "free": {
             "title": "Freie Schlagworte",
@@ -181,10 +190,18 @@
         "end": "Ende",
         "dateTimeInvalid": "Bitte geben Sie ein gültiges Datum an.",
         "endDateError": "Das Enddatum darf nicht vor dem Startdatum liegen.",
+        "endTimeError": "Bei gleichem Datum darf die Endzeit nicht vor der Startzeit liegen.",
         "timezone": "Zeitzone",
         "timezoneInvalid": "Bitte wählen Sie die Zeitzone",
         "mapInfo": "(Bitte wählen Sie Koordinaten per Rechteck oder Markierung)",
         "mapSearch": "Bitte geben Sie einen Ort ein..."
+    },
+    "usedInstruments": {
+        "title": "Verwendete Instrumente",
+        "placeholder": "Instrumente suchen und auswählen...",
+        "loading": "Instrumentenliste wird geladen...",
+        "unavailable": "Instrumentenliste derzeit nicht verfügbar. Bitte versuchen Sie es später erneut.",
+        "selected": "ausgewählte Instrumente"
     },
     "relatedWork": {
         "title": "Verwandte Werke",
@@ -250,13 +267,15 @@
         "clearTooltip": "Alle Einträge oder Inhalte löschen.",
         "load": "Laden",
         "loadTooltip": "Gespeicherte Daten oder Inhalte laden.",
-        "saveAs": "Speichern",
-        "saveAsTooltip": "Aktuelle Daten oder Inhalte unter neuem Dateinamen speichern.",
+        "saveAs": "Als XML speichern",
+        "saveAsTooltip": "Aktuelle Daten oder Inhalte als XML-Datei speichern.",
+        "saveAsJsonLd": "Als JSON-LD speichern",
+        "saveAsJsonLdTooltip": "Aktuelle Daten oder Inhalte als JSON-LD-Datei speichern.",
         "submit": "Absenden",
         "submitTooltip": "Eingegebene Daten oder Inhalte übermitteln.",
         "legalNotice": "Impressum",
         "PrivacyPolicy": "Datenschutzerklärung",
-        "elmoGuide": "Elmo Anleitung"
+        "elmoGuide": "Anleitung"
     },
     "modals": {
         "feedback": {
@@ -284,17 +303,30 @@
             "thankYouMessage": "Vielen Dank für Ihr Feedback!"
         },
         "upload": {
-            "title": "XML-Datei auswählen:",
-            "dropZoneInfo": "XML-Datei hier ablegen"
+            "modalTitle": "Metadatendatei laden",
+            "title": "XML- oder JSON-LD-Datei auswählen:",
+            "dropZoneInfo": "XML- oder JSON-LD-Datei hier ablegen",
+            "loading": "Datei wird verarbeitet...",
+            "successToast": "erfolgreich geladen",
+            "errorToast": "Fehler beim Laden der Datei",
+            "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
+            "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
+            "errorReading": "Fehler beim Lesen der Datei"
+        },
+        "icgemWrongApp": {
+            "title": "ICGEM-Metadatendatei erkannt",
+            "body": "Sehr geehrte Nutzende,\n\nes scheint, als wollten Sie eine ICGEM-Metadatendatei auf ELMO hochladen. Dies ist zwar möglich, aber nicht in dieser Version. Bitte besuchen Sie ELMOGEM (https://icgem.gfz.de/elmogem), um die Metadatenübermittlung für das gravitationsbezogene Produkt abzuschließen.",
+            "close": "Schließen"
         },
         "changelog": {
             "title": "Änderungsprotokoll",
             "aboutText": "Die Grundlagen für den ELMO Metadateneditor wurden 2024 von Studierenden der Fachhochschule Potsdam in Zusammenarbeit mit dem GFZ Helmholtz-Zentrum für Geoforschung Potsdam entwickelt. Anschließend hat das Entwicklungsteam des GFZ weiter optimiert. Der ELMO Metadateneditor wird unter der GNU General Public License, Version 2, veröffentlicht.",
-            "aboutHeading": "Über ELMO - Enhanced Laboratory Metadata Organizer"
+            "aboutHeading": "Über ELMO - Enhanced Linked Metadata Organizer"
         },
         "save": {
             "title": "Metadaten speichern",
             "saveAs": "Als XML speichern",
+            "saveAsJsonLd": "Als JSON-LD speichern",
             "filename": "Dateiname",
             "save": "Speichern"
         },
@@ -308,13 +340,50 @@
             "high": "hoch",
             "normal": "normal",
             "low": "niedrig"
+        },
+        "validationFailed": {
+            "title": "Übermittlung nicht möglich",
+            "greeting": "Liebe Nutzerin, lieber Nutzer,",
+            "body": "es scheint, als möchten Sie Daten übermitteln. Leider haben Sie nicht alle Pflichtfelder ausgefüllt.",
+            "saveHint": "Falls Sie bereits mit dem Datenkuratierungsteam vereinbart haben, dass Ihre Einreichung noch nicht vollständig ist, können Sie auf <strong>Als XML speichern</strong> klicken und die erzeugte XML-Datei per E-Mail an <a href='mailto:{email}'>{email}</a> senden.",
+            "fixHint": "Andernfalls füllen Sie bitte die rot markierten Felder aus und versuchen Sie es erneut.",
+            "guideHint": "Wenn Sie weitere Hilfe beim Ausfüllen des Formulars benötigen, finden Sie den <a href='doc/help.php' target='_blank'>ELMO Guide</a> hier.",
+            "close": "Schließen"
         }
+    },
+    "orcidSearch": {
+        "modalTitle": "ORCID durchsuchen",
+        "lastName": "Nachname",
+        "firstName": "Vorname",
+        "searchButton": "Suchen",
+        "resultsHeading": "Suchergebnisse",
+        "noResults": "Keine Ergebnisse gefunden.",
+        "columnOrcid": "ORCID",
+        "columnLastName": "Nachname",
+        "columnFirstName": "Vorname",
+        "columnAffiliation": "Affiliation(en)",
+        "accept": "Übernehmen",
+        "searching": "Suche läuft...",
+        "error": "Der ORCID-Dienst ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
+        "searchButtonTitle": "ORCID nach Name suchen",
+        "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
     },
     "welcome": {
         "title": "Willkommen bei ELMO 😊",
         "paragraph1": "Willkommen bei ELMO – dem neuen Online-Metadateneditor der GFZ Data Services.",
         "paragraph2": "Bitte geben Sie Ihre Informationen ein und klicken Sie auf „Absenden“, um Ihre Metadaten an die Kuratorinnen und Kuratoren der GFZ Data Services zu übermitteln. Wir empfehlen außerdem, eine Kopie der Metadaten für Ihre Unterlagen auf Ihrem Computer zu speichern.",
         "paragraph3": "Weitere Hinweise finden Sie in unseren <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Veröffentlichungshinweise</a>.",
-        "button": "Weiter"
-    }
+        "button": "Weiter"    },
+    "doiPrefill": {
+        "modalTitle": "Vorausfüllung aus DOI",
+        "modalMessage": "Folgende Metadaten wurden für diesen DOI gefunden. Möchten Sie das Formular vorausfüllen? Vorhandene Einträge werden überschrieben.",
+        "confirm": "Übernehmen",
+        "cancel": "Abbrechen",
+        "loading": "DOI wird abgefragt…",
+        "versionHint": "Bitte prüfen und passen Sie die Versionsnummer ggf. an.",
+        "previewTitle": "Titel",
+        "previewAuthors": "Autoren",
+        "previewType": "Ressourcentyp",
+        "previewYear": "Erscheinungsjahr",
+        "previewLicense": "Lizenz"    }
 }
