@@ -75,18 +75,6 @@ function validateSaveSecurity($postData, $connection)
         ];
     }
 
-    // Security Check 4: Minimum time validation
-    if (isset($postData['save_time_spent'])) {
-        $timeSpent = (int) $postData['save_time_spent'];
-        if ($timeSpent < 2) {
-            logSuspiciousAttempt($connection, 'save', "insufficient time spent ({$timeSpent}s)", $clientIp);
-            return [
-                'status' => false,
-                'message' => 'Save request too fast - minimum 2 seconds required',
-                'code' => 400
-            ];
-        }
-    }
 
     // Record this save for rate limiting
     recordRateLimit($connection, $clientIp, 'save');
