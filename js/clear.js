@@ -67,6 +67,11 @@ function clearInputFields() {
     // (textarea.textarea-description is the shared class on all GGMs description fields)
     $('#accordion-description textarea.textarea-description').val('');
   
+
+    if (typeof window.clearAllThesaurusSelections === 'function') {
+        window.clearAllThesaurusSelections();
+    }
+    
     // Clear all Tagify fields
     const tagifySelectors = [
         '#input-sciencekeyword',
