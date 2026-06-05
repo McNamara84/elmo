@@ -98,6 +98,23 @@ test.describe('Submit Operation Security Features', () => {
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Security token validation failed');
   });
+  test('backend rejects submit when honeypot field is filled', async ({ page }) => {
+    await openSubmitModal(page);
+
+    // Simulate bot filling honeypot before request submission.
+    await page.locator('#input-honeypot-website').evaluate((el) => {
+      (el as HTMLInputElement).value = 'I am a bot';
+    });
+
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+
+    await submitFromModalWithPrivacyConsent(page);
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(400);
+  });
 
   test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
     let capturedBody = '';

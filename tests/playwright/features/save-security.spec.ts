@@ -162,6 +162,42 @@ test.describe('Save Operation Security Features', () => {
     });
   });
 
+  test.describe('Time-spent validation on save', () => {
+    test('backend rejects save when time_spent is below threshold', async ({ page }) => {
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        const bodyBuffer = route.request().postDataBuffer();
+        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+        const timeSpent = extractMultipartField(body, 'save_time_spent');
+        const timeSpentSeconds = parseInt(timeSpent || '0', 10);
+
+        // Reject if time spent is below 2 seconds
+        const responseStatus = timeSpentSeconds < 2 ? 400 : 200;
+        await route.fulfill({
+          status: responseStatus,
+          contentType: 'application/json',
+          body: JSON.stringify(responseStatus === 400
+            ? { error: 'insufficient time spent' }
+            : { success: true, message: 'Saved' }),
+        });
+      });
+
+      await navigateToHome(page);
+
+      // Open modal and submit immediately (minimal time spent)
+      await openSaveModal(page);
+
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 400
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      await expect(page.locator('.alert-danger')).toBeVisible();
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
   test.describe('Rate limiting on save operations', () => {
     test('shows rate limit error message when server returns 429', async ({ page }) => {
       await page.route(SAVE_ENDPOINT, async (route) => {
@@ -190,6 +226,60 @@ test.describe('Save Operation Security Features', () => {
         await expect(errorAlert).toBeVisible();
       }
       
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
+  test.describe('Successful save with all security checks passing', () => {
+    test('backend accepts save when honeypot empty, csrf valid, time sufficient, and not rate limited', async ({ page }) => {
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        const bodyBuffer = route.request().postDataBuffer();
+        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+        
+        // Verify all security fields are present
+        const honeypot = extractMultipartField(body, 'website') || '';
+        const csrfToken = extractMultipartField(body, 'csrf_token') || '';
+        const timeSpent = extractMultipartField(body, 'save_time_spent') || '0';
+        const timeSpentSeconds = parseInt(timeSpent, 10);
+
+        // Accept if honeypot is empty, csrf exists, and time >= 2 seconds
+        const isValid = honeypot === '' && csrfToken && timeSpentSeconds >= 2;
+        const responseStatus = isValid ? 200 : 400;
+
+        await route.fulfill({
+          status: responseStatus,
+          contentType: 'application/json',
+          body: JSON.stringify(responseStatus === 200
+            ? { success: true, message: 'File saved successfully' }
+            : { error: 'Security validation failed' }),
+        });
+      });
+
+      await navigateToHome(page);
+
+      const honeypot = page.locator('#form-mde input[name="website"]').first();
+      // Ensure honeypot is empty (should be by default)
+      await expect(honeypot).toHaveValue('');
+
+      // Open modal - this fetches fresh CSRF token
+      await openSaveModal(page);
+      
+      // Verify CSRF token was populated
+      await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('');
+
+      // Wait 2+ seconds to ensure time_spent >= 2
+      await page.waitForTimeout(2100);
+
+      // Click save and wait for success response
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 200
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      // Verify success notification appears
+      await expect(page.locator('.alert-success')).toBeVisible();
       await page.unroute(SAVE_ENDPOINT);
     });
   });
