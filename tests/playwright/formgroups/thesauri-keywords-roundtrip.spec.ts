@@ -82,8 +82,8 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
 
 async function waitForThesauriInit(page: import('@playwright/test').Page) {
   await page.waitForFunction(() => {
-    const accordion = document.getElementById('accordionThesauri');
-    return accordion && accordion.children.length > 0;
+    const thesaurusGroup = document.getElementById('thesaurusKeywordsGroup');
+    return thesaurusGroup && thesaurusGroup.children.length > 0;
   }, { timeout: 15000 });
   await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 15000 });
 }

@@ -75,13 +75,11 @@ describe('thesauri.js', () => {
   let $;
 
   beforeEach((done) => {
-    // Minimal HTML containers (thesauri.js generates accordion items + modals dynamically)
+    // Minimal HTML containers (thesauri.js generates thesaurus input items + modals dynamically)
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
         <div class="card-header"><b data-translate="keywords.thesaurus.name"></b></div>
-        <div id="thesaurusKeywordsGroup">
-          <div class="accordion p-2" id="accordionThesauri"></div>
-        </div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -225,13 +223,12 @@ describe('thesauri.js', () => {
     }
   }
 
-  test('fetches availability and generates accordion items for available thesauri', () => {
+  test('fetches availability and generates UI for available thesauri', () => {
     // availability was called
     expect($.getJSON).toHaveBeenCalledWith('api/v2/vocabs/thesauri/availability');
 
-    // Should generate accordion items only for available thesauri (science_keywords and platforms)
-    const accordionItems = document.querySelectorAll('#accordionThesauri .accordion-item');
-    expect(accordionItems.length).toBe(2);
+    expect(document.querySelector('#input-sciencekeyword')).toBeTruthy();
+    expect(document.querySelector('#input-platforms')).toBeTruthy();
 
     // Should generate modals
     const modals = document.querySelectorAll('#thesaurusModalsContainer .modal');
@@ -353,9 +350,7 @@ describe('thesauri.js', () => {
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
         <div class="card-header"><b></b></div>
-        <div id="thesaurusKeywordsGroup">
-          <div class="accordion p-2" id="accordionThesauri"></div>
-        </div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -384,9 +379,7 @@ describe('thesauri.js', () => {
   test('hides form group when no thesauri are available', (done) => {
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
-        <div id="thesaurusKeywordsGroup">
-          <div class="accordion p-2" id="accordionThesauri"></div>
-        </div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -421,8 +414,8 @@ describe('thesauri.js', () => {
       const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
       expect(formGroup.style.display).toBe('none');
 
-      // No accordion items generated
-      expect(document.querySelectorAll('#accordionThesauri .accordion-item').length).toBe(0);
+      // No thesaurus input items generated
+      expect(document.querySelectorAll('.thesaurus-input-item').length).toBe(0);
 
       done();
     });
@@ -438,9 +431,7 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
         <div class="card-header"><b data-translate="keywords.thesaurus.name"></b></div>
-        <div id="thesaurusKeywordsGroup">
-          <div class="accordion p-2" id="accordionThesauri"></div>
-        </div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -787,7 +778,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
   function setupEnvironment(done, featureFlags = {}) {
     document.body.innerHTML = `
       <div id="thesaurusKeywordsFormGroup" style="display: none;">
-        <div class="accordion p-2" id="accordionThesauri"></div>
+        <div id="thesaurusKeywordsGroup"></div>
       </div>
       <div id="thesaurusModalsContainer"></div>
     `;
@@ -915,7 +906,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(ids).not.toContain('uri:climate-models');
     });
 
-    test('ancestor/container nodes that lead to listed nodes are NOT present (subtrees are detached)', () => {
+    test('ancestor/container nodes that lead to listed nodes are NOT present (subtrees are detached)', () => { 
       const tree = $('#jstree-sciencekeyword').jstree(true);
       const ids = tree.allNodeIds();
       // The tree should start from the listed nodes themselves, not from the full hierarchy
@@ -963,7 +954,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
-          <div class="accordion p-2" id="accordionThesauri"></div>
+          <div id="thesaurusKeywordsGroup"></div>
         </div>
         <div id="thesaurusModalsContainer"></div>
       `;
@@ -1018,7 +1009,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       // vocabulary data has not been loaded when we fire focus.
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
-          <div class="accordion p-2" id="accordionThesauri"></div>
+          <div id="thesaurusKeywordsGroup"></div>
         </div>
         <div id="thesaurusModalsContainer"></div>
       `;
