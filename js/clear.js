@@ -69,11 +69,13 @@ function clearInputFields() {
   
     // Clear all Tagify fields
     const tagifySelectors = [
-        '#input-sciencekeyword', 
-        '#input-Platforms', 
-        '#input-Instruments',
-        '#input-mslkeyword', 
-        '#input-freekeyword', 
+        '#input-sciencekeyword',
+        '#input-platforms',
+        '#input-instruments',
+        '#input-chronostratigraphy',
+        '#input-gemet',
+        '#input-mslkeyword',
+        '#input-freekeyword',
         'input[name="cbPersonRoles[]"]',
         'input[name="cbPersonAffiliation[]"]',  
         'input[name="cbAffiliation[]"]', 
