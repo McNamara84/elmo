@@ -192,7 +192,7 @@ function isRateLimitStorageAvailable($connection): bool
         $result->free();
         return $tableAvailable;
     } catch (Throwable $exception) {
-        error_log('[SECURITY]: Rate limit storage check failed: ' . $exception->getMessage());
+        error_log('[SECURITY]: Rate limit storage check failed. We can\'t measure time_spent. We just let it pass. Message: ' . $exception->getMessage());
         $tableAvailable = false;
         return false;
     }
