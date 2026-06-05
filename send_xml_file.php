@@ -95,11 +95,12 @@ function testGfzSmtpConnectivity(): bool {
 }
 /**
  * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
- * @param array $postData POST data from form
+ * @param array<string, mixed> $postData POST data from form
  * @param mysqli $connection Database connection
+ * @return void
  * @throws Exception if validation fails
  */
-function validateSubmitSecurity(array $postData, $connection) {
+function validateSubmitSecurity(array $postData, $connection): void {
     // Get client IP
     $clientIp = getClientIp();
     
@@ -243,6 +244,10 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
 
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
+// Initialize variables that may be used in error handling
+$dataUrl = '';
+$urgencyWeeks = null;
+
 try {
     error_log("send_xml_file.php: Try block started");
     
@@ -269,7 +274,7 @@ try {
 
     error_log("send_xml_file.php: All data saved successfully");
 
-    // Get additional submission data from modal
+    // Get additional submission data from modal (updating initialized variables)
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
     $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
 

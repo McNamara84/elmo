@@ -167,33 +167,32 @@ function getCsrfTokenAgeSeconds(): int
  * If storage is unavailable (missing DB connection/table), callers should
  * degrade gracefully instead of failing request processing.
  *
- * @param mysqli $connection Database connection
+ * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
  * @return bool
  */
 function isRateLimitStorageAvailable($connection): bool
 {
-    if (!($connection instanceof mysqli) || $connection->connect_errno) {
+    // instanceof guards against null and non-mysqli values; enables fail-open when no DB is passed
+    if (!($connection instanceof \mysqli)) {
         return false;
     }
 
-    static $tableAvailable = null;
-    if ($tableAvailable !== null) {
-        return $tableAvailable;
+    if ($connection->connect_errno) {
+        return false;
     }
 
+    // No static cache: avoids stale results across test runs and parallel workers
     try {
         $result = $connection->query("SHOW TABLES LIKE 'Rate_Limit'");
         if ($result === false) {
-            $tableAvailable = false;
             return false;
         }
 
-        $tableAvailable = $result->num_rows > 0;
+        $available = $result->num_rows > 0;
         $result->free();
-        return $tableAvailable;
+        return $available;
     } catch (Throwable $exception) {
         error_log('[SECURITY]: Rate limit storage check failed. We can\'t measure time_spent. We just let it pass. Message: ' . $exception->getMessage());
-        $tableAvailable = false;
         return false;
     }
 }
@@ -201,7 +200,7 @@ function isRateLimitStorageAvailable($connection): bool
 /**
  * Checks if an IP address has exceeded rate limit for a given action type.
  *
- * @param mysqli $connection Database connection
+ * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
  * @param string $ipAddress The client IP address
  * @param string $actionType The action type ('feedback', 'save', 'submit')
  * @param int $maxRequests Maximum allowed requests in the time window
@@ -220,6 +219,7 @@ function checkRateLimit(
     if (!isRateLimitStorageAvailable($connection)) {
         return true;
     }
+    /** @var \mysqli $connection */
 
     // Clean up old entries (older than 24 hours)
     $cleanupSql = "DELETE FROM Rate_Limit WHERE submitted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)";
@@ -252,7 +252,7 @@ function checkRateLimit(
 /**
  * Records a submission for rate limiting purposes.
  *
- * @param mysqli $connection Database connection
+ * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
  * @param string $ipAddress The client IP address
  * @param string $actionType The action type ('feedback', 'save', 'submit')
  * @return bool True if successfully recorded, false on error
@@ -266,6 +266,7 @@ function recordRateLimit(
     if (!isRateLimitStorageAvailable($connection)) {
         return false;
     }
+    /** @var \mysqli $connection */
 
     $stmt = $connection->prepare(
         "INSERT INTO Rate_Limit (action, ip_address, submitted_at) VALUES (?, ?, NOW())"
@@ -287,7 +288,7 @@ function recordRateLimit(
  * Uses the existing Rate_Limit table with a dedicated action bucket
  * ("suspicious") so logging cannot flood application logs.
  *
- * @param mysqli $connection Database connection
+ * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
  * @param string $operation High-level operation name (save, submit, ...)
  * @param string $reason Rejection reason
  * @param string|null $ipAddress Optional client IP, auto-detected when omitted
@@ -301,6 +302,7 @@ function logSuspiciousAttempt(
 ): void
 {
     $clientIp = $ipAddress ?: getClientIp();
+    // Sanitize operation and reason to prevent injection into logs or DB
     $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
     $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
     $fallbackMessage = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}";
@@ -312,6 +314,7 @@ function logSuspiciousAttempt(
     }
 
     try {
+        // Check if logging this attempt would exceed hourly cap; if so, skip to preserve disk space
         if (!checkRateLimit(
             $connection,
             $clientIp,
