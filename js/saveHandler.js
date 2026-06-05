@@ -210,6 +210,7 @@ class SaveHandler {
             formData.append('save_time_spent', this.$timeSpentField.val());
             formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);
+            formData.append('action', 'save_and_download');
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',
