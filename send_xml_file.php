@@ -242,6 +242,86 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
     ];
 }
 
+
+function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): void
+{
+    $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
+    $contacts = $researcherConfirmationData['contacts'] ?? [];
+
+    if (empty($contacts) || !is_array($contacts)) {
+        error_log('Researcher confirmation: No contacts found.');
+        return;
+    }
+
+    foreach ($contacts as $contact) {
+        $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
+        $email = trim((string) ($contact['email'] ?? ''));
+
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            error_log("Researcher confirmation: Invalid email for {$fullName}.");
+            continue;
+        }
+
+        $subject = 'Confirmation of your data submission to ELMO';
+
+        $htmlBody = '
+            <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
+            <p>Thank you for your data submission to ELMO.</p>
+            <p>Your data entry' . ($title !== '' ? ' titled "<strong>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</strong>"' : '') . ' has been received successfully.</p>
+            <p>The data curators will now review your submission. If further information is needed, they will contact you.</p>
+            <p>Best regards<br>ELMO</p>
+        ';
+
+        $plainBody =
+            "Dear {$fullName},\n\n" .
+            "Thank you for your data submission to ELMO.\n" .
+            "Your data entry" . ($title !== '' ? " titled \"{$title}\"" : '') . " has been received successfully.\n" .
+            "The data curators will now review your submission. If further information is needed, they will contact you.\n\n" .
+            "Best regards\n" .
+            "ELMO";
+
+        if ($simulateEmail) {
+            $preview =
+                "To: {$fullName} <{$email}>\n" .
+                "Subject: {$subject}\n\n" .
+                $plainBody;
+
+            foreach (explode("\n", str_replace("\r", '', $preview)) as $line) {
+                error_log($line);
+            }
+
+            continue;
+        }
+
+        try {
+            $mail = new PHPMailer(true);
+
+            $mail->isSMTP();
+            $mail->Host = SMTP_HOST;
+            $mail->Port = SMTP_PORT;
+            $mail->SMTPAuth = SMTP_AUTH;
+            $mail->Username = SMTP_USERNAME;
+            $mail->Password = SMTP_PASSWORD;
+
+            if (defined('SMTP_SECURE') && SMTP_SECURE) {
+                $mail->SMTPSecure = SMTP_SECURE;
+            }
+
+            $mail->CharSet = 'UTF-8';
+            $mail->setFrom(MAIL_FROM_ADDRESS, 'ELMO');
+            $mail->addAddress($email, $fullName);
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            $mail->Body = $htmlBody;
+            $mail->AltBody = $plainBody;
+            $mail->send();
+
+            error_log("Researcher confirmation: Email sent to {$fullName} <{$email}>.");
+        } catch (Exception $e) {
+            error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
+        }
+    }
+}
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 try {
@@ -457,6 +537,7 @@ if (!$simulateEmail) {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
 }
     $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
 
     error_log("send_xml_file.php: About to return success");
 
