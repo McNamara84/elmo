@@ -270,6 +270,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       const item = input.locator('xpath=ancestor::div[contains(@class,"thesaurus-input-item")]');
 
       await expect(item).toBeVisible();
+      await expect(input).not.toHaveAttribute('aria-hidden', 'true');
       await expect(item.locator('.thesaurus-input-label')).toHaveText(config.name);
 
       const helpIcon = item.locator('i.bi-question-circle-fill');
