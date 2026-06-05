@@ -143,6 +143,62 @@ function getClientIp(): string
 }
 
 /**
+ * Returns the age of the current CSRF token in seconds.
+ *
+ * This can be used as a server-trustworthy interaction timer because
+ * the token is fetched when the modal opens.
+ *
+ * @return int Age in seconds, or 0 if no token timestamp is available
+ */
+function getCsrfTokenAgeSeconds(): int
+{
+    initializeCsrfSession();
+    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
+    if ($tokenTime <= 0) {
+        return 0;
+    }
+
+    return max(0, time() - $tokenTime);
+}
+
+/**
+ * Checks whether the shared rate-limit storage is currently available.
+ *
+ * If storage is unavailable (missing DB connection/table), callers should
+ * degrade gracefully instead of failing request processing.
+ *
+ * @param mysqli $connection Database connection
+ * @return bool
+ */
+function isRateLimitStorageAvailable($connection): bool
+{
+    if (!($connection instanceof mysqli) || $connection->connect_errno) {
+        return false;
+    }
+
+    static $tableAvailable = null;
+    if ($tableAvailable !== null) {
+        return $tableAvailable;
+    }
+
+    try {
+        $result = $connection->query("SHOW TABLES LIKE 'Rate_Limit'");
+        if ($result === false) {
+            $tableAvailable = false;
+            return false;
+        }
+
+        $tableAvailable = $result->num_rows > 0;
+        $result->free();
+        return $tableAvailable;
+    } catch (Throwable $exception) {
+        error_log('[SECURITY]: Rate limit storage check failed: ' . $exception->getMessage());
+        $tableAvailable = false;
+        return false;
+    }
+}
+
+/**
  * Checks if an IP address has exceeded rate limit for a given action type.
  *
  * @param mysqli $connection Database connection
@@ -160,17 +216,32 @@ function checkRateLimit(
     int $windowSeconds = 3600
 ): bool
 {
+    // Fail-open: unavailable storage must not block user operations.
+    if (!isRateLimitStorageAvailable($connection)) {
+        return true;
+    }
+
     // Clean up old entries (older than 24 hours)
     $cleanupSql = "DELETE FROM Rate_Limit WHERE submitted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-    mysqli_query($connection, $cleanupSql);
+    if (mysqli_query($connection, $cleanupSql) === false) {
+        return true;
+    }
     
     // Count recent submissions from this IP for this action type
     $stmt = $connection->prepare(
         "SELECT COUNT(*) as count FROM Rate_Limit 
          WHERE ip_address = ? AND action = ? AND submitted_at > DATE_SUB(NOW(), INTERVAL ? SECOND)"
     );
+    if ($stmt === false) {
+        return true;
+    }
+
     $stmt->bind_param("ssi", $ipAddress, $actionType, $windowSeconds);
-    $stmt->execute();
+    if (!$stmt->execute()) {
+        $stmt->close();
+        return true;
+    }
+
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
     $stmt->close();
@@ -192,9 +263,17 @@ function recordRateLimit(
     string $actionType
 ): bool
 {
+    if (!isRateLimitStorageAvailable($connection)) {
+        return false;
+    }
+
     $stmt = $connection->prepare(
         "INSERT INTO Rate_Limit (action, ip_address, submitted_at) VALUES (?, ?, NOW())"
     );
+    if ($stmt === false) {
+        return false;
+    }
+
     $stmt->bind_param("ss", $actionType, $ipAddress);
     $success = $stmt->execute();
     $stmt->close();
@@ -222,27 +301,32 @@ function logSuspiciousAttempt(
 ): void
 {
     $clientIp = $ipAddress ?: getClientIp();
-
-    // Fail safe: if connection is unavailable, still emit a single plain log line.
-    if (!$connection) {
-        error_log("[SECURITY]: Suspicious {$operation} attempt blocked ({$reason}) from IP {$clientIp}");
-        return;
-    }
-
-    if (!checkRateLimit(
-        $connection,
-        $clientIp,
-        'suspicious',
-        RATE_LIMIT_SUSPICIOUS_LOG_MAX,
-        RATE_LIMIT_WINDOW_SECONDS
-    )) {
-        return;
-    }
-
     $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
     $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
+    $fallbackMessage = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}";
 
-    error_log("[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}");
-    recordRateLimit($connection, $clientIp, 'suspicious');
+    // If rate-limit storage is unavailable, log once without throttling.
+    if (!isRateLimitStorageAvailable($connection)) {
+        error_log($fallbackMessage);
+        return;
+    }
+
+    try {
+        if (!checkRateLimit(
+            $connection,
+            $clientIp,
+            'suspicious',
+            RATE_LIMIT_SUSPICIOUS_LOG_MAX,
+            RATE_LIMIT_WINDOW_SECONDS
+        )) {
+            return;
+        }
+
+        error_log($fallbackMessage);
+        recordRateLimit($connection, $clientIp, 'suspicious');
+    } catch (Throwable $exception) {
+        // Never break request handling because suspicious logging failed.
+        error_log($fallbackMessage . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
+    }
 }
 ?>
