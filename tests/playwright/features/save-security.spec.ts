@@ -36,7 +36,7 @@ test.describe('Save Operation Security Features', () => {
     test('save form honeypot exists and starts empty', async ({ page }) => {
       await navigateToHome(page);
 
-      const honeypotField = page.locator('#form-mde input[name="website"]').first();
+      const honeypotField = page.locator('#input-information-website');
       await expect(honeypotField).toHaveAttribute('tabindex', '-1');
       await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
       await expect(honeypotField).toHaveValue('');
@@ -45,7 +45,7 @@ test.describe('Save Operation Security Features', () => {
     test('honeypot value is not cleared when save modal opens', async ({ page }) => {
       await navigateToHome(page);
 
-      const honeypot = page.locator('#form-mde input[name="website"]').first();
+      const honeypot = page.locator('#input-information-website');
       await honeypot.fill('bot-filled-value');
 
       await openSaveModal(page);
@@ -72,7 +72,7 @@ test.describe('Save Operation Security Features', () => {
 
       await navigateToHome(page);
 
-      const honeypot = page.locator('#form-mde input[name="website"]').first();
+      const honeypot = page.locator('#input-information-website');
       await honeypot.fill('bot-value');
       await openSaveModal(page);
 
@@ -257,7 +257,7 @@ test.describe('Save Operation Security Features', () => {
 
       await navigateToHome(page);
 
-      const honeypot = page.locator('#form-mde input[name="website"]').first();
+      const honeypot = page.locator('#input-information-website');
       // Ensure honeypot is empty (should be by default)
       await expect(honeypot).toHaveValue('');
 

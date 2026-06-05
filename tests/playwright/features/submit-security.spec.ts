@@ -102,7 +102,9 @@ test.describe('Submit Operation Security Features', () => {
     await openSubmitModal(page);
 
     // Simulate bot filling honeypot before request submission.
-    await page.locator('#input-honeypot-website').evaluate((el) => {
+    const honeypot = page.locator('#input-information-website');
+    await honeypot.waitFor({ state: 'attached' });
+    await honeypot.evaluate((el) => {
       (el as HTMLInputElement).value = 'I am a bot';
     });
 
