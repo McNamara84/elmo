@@ -295,7 +295,7 @@ test.describe('Thesauri Keywords Form Group', () => {
     // Wait for the API call to complete and whitelist to be populated
     await page.waitForFunction(() => {
       const input = document.getElementById('input-sciencekeyword') as any;
-      return input?.tagify?.settings?.whitelist?.length > 0 || input?._tagify?.settings?.whitelist?.length > 0;
+      return input?._tagify?.settings?.whitelist?.length > 0;
     }, { timeout: 10000 });
 
     // Type enough characters to trigger the dropdown (dropdown.enabled: 3)
