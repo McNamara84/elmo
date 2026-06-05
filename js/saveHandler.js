@@ -43,7 +43,7 @@ class SaveHandler {
         // Security fields
         this.$csrfTokenField = $('#input-save-csrf-token');
         this.$timeSpentField = $('#input-save-time-spent');
-        this.$honeypotField = $('input[name="website"]');
+        this.$honeypotField = this.$form.find('input[name="website"]').first();
         this.modalOpenedAt = null;
         
         this.initializeEventListeners();
@@ -87,9 +87,8 @@ class SaveHandler {
             const token = await this.fetchCsrfToken();
             this.$csrfTokenField.val(token);
             
-            // Reset time spent and honeypot
+            // Reset time spent for current modal interaction
             this.$timeSpentField.val('0');
-            this.$honeypotField.val('');
             
             $('#input-saveas-filename').select();
         });

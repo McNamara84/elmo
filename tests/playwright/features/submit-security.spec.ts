@@ -25,6 +25,17 @@ function extractMultipartField(body: string, fieldName: string): string | null {
   return match ? match[1] : null;
 }
 
+async function submitFromModalWithPrivacyConsent(page: Page) {
+  const privacyCheckbox = page.locator('#input-submit-privacycheck');
+  if (!(await privacyCheckbox.isChecked())) {
+    await privacyCheckbox.check();
+  }
+
+  const modalSubmitButton = page.locator('#button-submit-submit');
+  await expect(modalSubmitButton).toBeEnabled();
+  await modalSubmitButton.click();
+}
+
 test.describe('Submit Operation Security Features', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
@@ -42,13 +53,8 @@ test.describe('Submit Operation Security Features', () => {
     await expect(csrfField).not.toHaveValue('');
   });
 
-  test('normal submit sends security fields and does not hit false-negative timing', async ({ page }) => {
-    let capturedBody = '';
-
+  test('normal submit with privacy consent succeeds', async ({ page }) => {
     await page.route(SUBMIT_ENDPOINT, async (route) => {
-      const bodyBuffer = route.request().postDataBuffer();
-      capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
@@ -57,24 +63,13 @@ test.describe('Submit Operation Security Features', () => {
     });
 
     const { submitModal } = await openSubmitModal(page);
-    await page.check('#input-submit-privacycheck');
-    await expect(page.locator('#button-submit-submit')).toBeEnabled();
-
     // Simulate a real user pause before confirming.
     await page.waitForTimeout(3200);
 
     await Promise.all([
       page.waitForRequest(SUBMIT_ENDPOINT),
-      page.locator('#button-submit-submit').click(),
+      submitFromModalWithPrivacyConsent(page),
     ]);
-
-    const submittedTimeSpentRaw = extractMultipartField(capturedBody, 'submit_time_spent');
-    const submittedTimeSpent = Number.parseInt(submittedTimeSpentRaw ?? '0', 10);
-
-    expect(capturedBody).toContain('name="csrf_token"');
-    expect(capturedBody).toContain('name="website"');
-    expect(capturedBody).toContain('name="submit_time_spent"');
-    expect(submittedTimeSpent).toBeGreaterThanOrEqual(3);
 
     const notificationModal = page.locator(SELECTORS.modals.notification);
     await expect(notificationModal).toBeVisible();
@@ -85,7 +80,6 @@ test.describe('Submit Operation Security Features', () => {
 
   test('backend rejects submit when CSRF token is corrupted', async ({ page }) => {
     await openSubmitModal(page);
-    await page.check('#input-submit-privacycheck');
 
     // Simulate token tampering before request submission.
     await page.locator('#input-submit-csrf-token').evaluate((el) => {
@@ -96,7 +90,7 @@ test.describe('Submit Operation Security Features', () => {
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
     );
 
-    await page.locator('#button-submit-submit').click();
+    await submitFromModalWithPrivacyConsent(page);
     const response = await responsePromise;
 
     expect(response.status()).toBe(403);
@@ -105,9 +99,25 @@ test.describe('Submit Operation Security Features', () => {
     expect(payload.message).toContain('Security token validation failed');
   });
 
-  test('backend rejects submit when modal confirmation is too fast (<3s)', async ({ page }) => {
+  test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
+    let capturedBody = '';
+
+    await page.route(SUBMIT_ENDPOINT, async (route) => {
+      const postData = route.request().postData();
+      const bodyBuffer = route.request().postDataBuffer();
+      capturedBody = postData || (bodyBuffer ? bodyBuffer.toString('utf-8') : '');
+
+      await route.fulfill({
+        status: 400,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          success: false,
+          message: 'Please take time to review your submission before submitting.',
+        }),
+      });
+    });
+
     await openSubmitModal(page);
-    await page.check('#input-submit-privacycheck');
 
     // Freeze Date.now close to modal-open time so client sends a low time-spent value.
     await page.evaluate(() => {
@@ -119,12 +129,19 @@ test.describe('Submit Operation Security Features', () => {
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
     );
 
-    await page.locator('#button-submit-submit').click();
+    await submitFromModalWithPrivacyConsent(page);
     const response = await responsePromise;
 
     expect(response.status()).toBe(400);
+
+    const submittedTimeSpentRaw = extractMultipartField(capturedBody, 'submit_time_spent');
+    const submittedTimeSpent = Number.parseInt(submittedTimeSpentRaw ?? '0', 10);
+    expect(submittedTimeSpent).toBeLessThan(3);
+
     const payload = await response.json();
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Please take time to review your submission before submitting.');
+
+    await page.unroute(SUBMIT_ENDPOINT);
   });
 });

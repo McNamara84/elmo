@@ -220,7 +220,7 @@ class SubmitHandler {
         // Security field references
         this.$csrfTokenField = $('#input-submit-csrf-token');
         this.$timeSpentField = $('#input-submit-time-spent');
-        this.$honeypotField = $('input[name="website"]');
+        this.$honeypotField = $('#modal-submit input[name="website"]');
         this.modalOpenedAt = null;
 
         this.initializeEventListeners();
@@ -381,6 +381,10 @@ class SubmitHandler {
         if (csrfToken) {
             submitData.set('csrf_token', csrfToken);
         }
+
+        // Security fields live in the submit modal, so add them explicitly.
+        submitData.set('submit_time_spent', this.$timeSpentField.val());
+        submitData.set('website', this.$honeypotField.val() || '');
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
