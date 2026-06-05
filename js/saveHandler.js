@@ -43,7 +43,7 @@ class SaveHandler {
         // Security fields
         this.$csrfTokenField = $('#input-save-csrf-token');
         this.$timeSpentField = $('#input-save-time-spent');
-        this.$honeypotField = this.$form.find('input[name="website"]').first();
+        this.$honeypotField = $('#input-information-website');
         this.modalOpenedAt = null;
         
         this.initializeEventListeners();
