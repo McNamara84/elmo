@@ -532,6 +532,56 @@ function syncTreeSelectionFromTagify(config, tagifyInstance) {
 }
 
 /**
+ * Clears all selections for a thesaurus config:
+ * Tagify inputs, shared selected paths, jsTree selection and modal selected list.
+ *
+ * @param {Object} config - Thesaurus configuration.
+ */
+function clearThesaurusSelection(config) {
+    if (!config) return;
+
+    const state = ensureSharedState(config);
+
+    state.isSyncingTree = true;
+
+    // Clear all Tagify instances for this configuration
+    state.tagifyInstances.forEach(function (tagifyInstance) {
+        if (tagifyInstance && typeof tagifyInstance.removeAllTags === 'function') {
+            tagifyInstance.removeAllTags();
+        }
+    });
+
+    // Clear central paths
+    state.selectedPaths.clear();
+
+    // Deselect all jsTree instances
+    state.jsTreeIds.forEach(function (treeSelector) {
+        const tree = $(treeSelector).jstree(true);
+        clearTreeSelection(tree);
+    });
+
+    state.isSyncingTree = false;
+
+    // Render the right-hand Selected Keywords list again
+    updateSelectedKeywordsList(
+        config.selectedKeywordsListId || config.selectedListId,
+        state
+    );
+}
+
+/**
+ * Clears all registered thesaurus selections (all configs).
+ */
+function clearAllThesaurusSelections() {
+    keywordConfigurations.forEach(function (config) {
+        clearThesaurusSelection(config);
+    });
+}
+
+// Global exports for legacy scripts
+window.clearAllThesaurusSelections = clearAllThesaurusSelections;
+
+/**
  * Rebinds the datasource-specific tree button so it activates the correct Tagify instance.
  *
  * @param {HTMLInputElement} inputElement - Raw input element enhanced by Tagify.
