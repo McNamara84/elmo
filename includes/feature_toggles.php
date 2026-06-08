@@ -30,3 +30,45 @@ function resolveFeatureToggle(?bool $value, bool $default): bool
 {
     return $value ?? $default;
 }
+
+/**
+ * Apply cross-feature overrides for specific ELMO GEM variant
+ *
+ * The override map is intentionally defined here so PHP rendering and JS
+ * feature exposure can derive from one source of truth.
+ */
+function applyELMOGEMFeatureOverrides(array $features): array
+{
+    $variantOverrideMap = [
+        'showGGMsProperties' => [
+            // PID4INST is not part of the current ELMOGEM variant.
+            'showUsedInstruments' => false,
+            // Hide thesauri that are not relevant for ELMOGEM workflows.
+            'thesauriHiddenKeys' => ['chronostratigraphy', 'gemet'],
+        ],
+    ];
+
+    foreach ($variantOverrideMap as $variantFlag => $overrides) {
+        if (($features[$variantFlag] ?? false) !== true) {
+            continue;
+        }
+
+        foreach ($overrides as $key => $value) {
+            if ($key === 'thesauriHiddenKeys') {
+                $existing = $features[$key] ?? [];
+                $existing = is_array($existing) ? $existing : [];
+                $incoming = is_array($value) ? $value : [];
+                $features[$key] = array_values(array_unique(array_merge($existing, $incoming)));
+                continue;
+            }
+
+            $features[$key] = $value;
+        }
+    }
+
+    if (!isset($features['thesauriHiddenKeys']) || !is_array($features['thesauriHiddenKeys'])) {
+        $features['thesauriHiddenKeys'] = [];
+    }
+
+    return $features;
+}

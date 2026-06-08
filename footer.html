@@ -56,6 +56,7 @@
 
 
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<!-- If some thesauri need to be hidden inregards of ERNIE settings, they can be added to the "hiddenThesauri" array here<!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
 <script>
 window.ELMO_FEATURES = {
     showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
@@ -73,6 +74,7 @@ window.ELMO_FEATURES = {
     funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
     dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
     xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>
+    hiddenThesauri: <?php echo json_encode($thesauriHiddenKeys ?? []); ?>,
 };
 </script>
 
