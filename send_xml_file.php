@@ -220,7 +220,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
                 // Convert "Last, First" to "First Last".
                 if (strpos($fullName, ',') !== false) {
                     $nameParts = array_map('trim', explode(',', $fullName, 2));
-                    $familyName = $nameParts[0] ?? '';
+                    $familyName = $nameParts[0];
                     $givenName = $nameParts[1] ?? '';
                     $fullName = trim($givenName . ' ' . $familyName);
                 }
