@@ -260,11 +260,19 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 }
 
 
+/**
+ * Send confirmation emails to all researcher contacts.
+ *
+ * @param array{title?: string, contacts?: array<int, array{fullName?: string, email?: string}>} $researcherConfirmationData Prepared title and contact data.
+ * @param bool $simulateEmail Log email preview instead of sending.
+ * @return void
+ */
 function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): void
 {
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
 
+    // Stop early if no contacts exist.
     if (empty($contacts) || !is_array($contacts)) {
         error_log('Researcher confirmation: No contacts found.');
         return;
@@ -274,13 +282,16 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
         $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
         $email = trim((string) ($contact['email'] ?? ''));
 
+        // Skip invalid email addresses.
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             error_log("Researcher confirmation: Invalid email for {$fullName}.");
             continue;
         }
 
+        // Static subject line.
         $subject = 'Confirmation of your data submission to ELMO';
 
+        // Build HTML email body.
         $htmlBody = '
             <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
             <p>Thank you for your data submission to ELMO.</p>
@@ -289,6 +300,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             <p>Best regards<br>ELMO</p>
         ';
 
+        // Build plain text fallback.
         $plainBody =
             "Dear {$fullName},\n\n" .
             "Thank you for your data submission to ELMO.\n" .
@@ -297,6 +309,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             "Best regards\n" .
             "ELMO";
 
+        // Log preview in simulation mode.
         if ($simulateEmail) {
             $preview =
                 "To: {$fullName} <{$email}>\n" .
@@ -311,6 +324,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
         }
 
         try {
+            // Configure and send email.
             $mail = new PHPMailer(true);
 
             $mail->isSMTP();
@@ -335,6 +349,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 
             error_log("Researcher confirmation: Email sent to {$fullName} <{$email}>.");
         } catch (Exception $e) {
+            // Log send failure.
             error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
         }
     }
