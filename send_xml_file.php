@@ -270,8 +270,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
 
-    // Stop early if no contacts exist.
-    if (empty($contacts) || !is_array($contacts)) {
+    if (empty($contacts)) {
         error_log('Researcher confirmation: No contacts found.');
         return;
     }
