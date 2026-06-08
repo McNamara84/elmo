@@ -49,6 +49,20 @@ services:
       - .:/var/www/html
       - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
 
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.60.0-noble
+    profiles:
+      - test
+    ipc: host
+    extra_hosts:
+      - "hostmachine:host-gateway"
+    working_dir: /work
+    depends_on:
+      - web
+    environment:
+      BASE_URL: http://hostmachine:8080/
+    volumes:
+      - .:/work
 
 volumes:
   db_data:
