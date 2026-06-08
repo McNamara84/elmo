@@ -101,8 +101,8 @@ async function triggerTranslationsAndWaitForThesauri(page: import('@playwright/t
 
     try {
       await page.waitForFunction(() => {
-        const accordion = document.getElementById('accordionThesauri');
-        return accordion && accordion.children.length > 0;
+        const thesaurusGroup = document.getElementById('thesaurusKeywordsGroup');
+        return thesaurusGroup && thesaurusGroup.children.length > 0;
       }, { timeout: 5000 });
       await page.waitForFunction(() => Boolean((document.querySelector('#input-sciencekeyword') as any)?._tagify), { timeout: 5000 });
       return;
