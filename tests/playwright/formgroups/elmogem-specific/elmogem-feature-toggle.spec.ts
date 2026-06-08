@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, expectNavbarVisible } from '../../utils';
 
+const MOCK_THESAURI_AVAILABILITY = {
+  science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+  platforms: { available: true, displayName: 'GCMD Platforms' },
+  instruments: { available: true, displayName: 'GCMD Instruments' },
+  chronostratigraphy: { available: true, displayName: 'ICS Chronostratigraphy' },
+  gemet: { available: true, displayName: 'GEMET' },
+};
+
 /**
  * ELMO-GEM Feature Toggle Verification
  *
@@ -15,11 +23,23 @@ import { navigateToHome, expectNavbarVisible } from '../../utils';
  */
 test.describe('ELMO-GEM Feature Toggle Override', () => {
   test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/thesauri/availability', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MOCK_THESAURI_AVAILABILITY),
+      });
+    });
+
     await navigateToHome(page);
     await expectNavbarVisible(page);
   });
 
   test('does NOT render GEMET and Chronostratigraphy thesauri', async ({ page }) => {
+    await page.evaluate(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
     // The thesaurus container is rendered by PHP and items are injected asynchronously.
     await expect(page.locator('#thesaurusKeywordsGroup')).toHaveCount(1);
 
