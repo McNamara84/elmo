@@ -17,6 +17,12 @@ test.describe('ELMO-GEM Feature Toggle Override', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
     await expectNavbarVisible(page);
+
+    // Wait for thesauri module to initialize before checking elements
+    await page.waitForFunction(() => {
+      const thesaurusGroup = document.getElementById('thesaurusKeywordsGroup');
+      return thesaurusGroup && thesaurusGroup.children.length > 0;
+    }, { timeout: 15000 });
   });
 
   test('does NOT render GEMET and Chronostratigraphy thesauri', async ({ page }) => {
