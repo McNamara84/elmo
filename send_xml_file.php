@@ -185,7 +185,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 
         // Read dataset title.
         $titleNodes = $xml->xpath('//*[local-name()="title"]');
-        if ($titleNodes !== false && !empty($titleNodes)) {
+        if (!empty($titleNodes)) {
             $title = trim((string) $titleNodes[0]);
         }
 
@@ -195,8 +195,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
         error_log("Researcher confirmation: XML title = " . ($title !== '' ? $title : '[empty]'));
         error_log("Researcher confirmation: XML raw pointOfContact count = " . (is_array($pointOfContactNodes) ? count($pointOfContactNodes) : 0));
 
-        if ($pointOfContactNodes !== false) {
-            foreach ($pointOfContactNodes as $pointOfContactNode) {
+        foreach ($pointOfContactNodes ?: [] as $pointOfContactNode) {
                 $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
                 $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
 
@@ -204,12 +203,12 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
                 $email = '';
 
                 // Extract raw name.
-                if ($nameNodes !== false && !empty($nameNodes)) {
+                if (!empty($nameNodes)) {
                     $fullName = trim((string) $nameNodes[0]);
                 }
 
                 // Extract raw email.
-                if ($emailNodes !== false && !empty($emailNodes)) {
+                if (!empty($emailNodes)) {
                     $email = trim((string) $emailNodes[0]);
                 }
 
@@ -245,7 +244,6 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 
                 error_log("Researcher confirmation: XML contact {$fullName} <{$email}>");
             }
-        }
 
         error_log("Researcher confirmation: XML prepared contact count = " . count($contacts));
     } catch (Exception $e) {
