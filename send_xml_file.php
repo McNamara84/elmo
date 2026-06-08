@@ -325,10 +325,15 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             $mail = new PHPMailer(true);
 
             $mail->isSMTP();
+            // @phpstan-ignore constant.notFound
             $mail->Host = SMTP_HOST;
+            // @phpstan-ignore constant.notFound
             $mail->Port = SMTP_PORT;
+            // @phpstan-ignore constant.notFound
             $mail->SMTPAuth = SMTP_AUTH;
+            // @phpstan-ignore constant.notFound
             $mail->Username = SMTP_USERNAME;
+            // @phpstan-ignore constant.notFound
             $mail->Password = SMTP_PASSWORD;
 
             if (defined('SMTP_SECURE') && SMTP_SECURE) {
@@ -336,6 +341,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             }
 
             $mail->CharSet = 'UTF-8';
+            // @phpstan-ignore constant.notFound
             $mail->setFrom(MAIL_FROM_ADDRESS, 'ELMO');
             $mail->addAddress($email, $fullName);
             $mail->Subject = $subject;
