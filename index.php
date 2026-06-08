@@ -56,6 +56,7 @@ $showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?
 /** @var bool $showMslLogo */
 $showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
 
+// Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
     'showGGMsProperties' => $showGGMsProperties,
     'showUsedInstruments' => $showUsedInstruments,
