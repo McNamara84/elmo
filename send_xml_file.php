@@ -158,12 +158,19 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
 }
 
 
+/**
+ * Extract title and unique researcher contacts from XML.
+ *
+ * @param string $xml_content Raw XML content.
+ * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
+ */
 function collectResearcherConfirmationDataFromXml(string $xml_content): array
 {
     $title = '';
     $contacts = [];
     $seen = [];
 
+    // Stop early if XML is empty.
     if (empty(trim($xml_content))) {
         error_log("Researcher confirmation: XML content is empty.");
         return [
@@ -173,13 +180,16 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
     }
 
     try {
+        // Parse XML content.
         $xml = new SimpleXMLElement($xml_content);
 
+        // Read dataset title.
         $titleNodes = $xml->xpath('//*[local-name()="title"]');
         if ($titleNodes !== false && !empty($titleNodes)) {
             $title = trim((string) $titleNodes[0]);
         }
 
+        // Read all point of contact entries.
         $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
 
         error_log("Researcher confirmation: XML title = " . ($title !== '' ? $title : '[empty]'));
@@ -193,18 +203,22 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
                 $fullName = '';
                 $email = '';
 
+                // Extract raw name.
                 if ($nameNodes !== false && !empty($nameNodes)) {
                     $fullName = trim((string) $nameNodes[0]);
                 }
 
+                // Extract raw email.
                 if ($emailNodes !== false && !empty($emailNodes)) {
                     $email = trim((string) $emailNodes[0]);
                 }
 
+                // Fallback name.
                 if ($fullName === '') {
                     $fullName = 'researcher';
                 }
 
+                // Convert "Last, First" to "First Last".
                 if (strpos($fullName, ',') !== false) {
                     $nameParts = array_map('trim', explode(',', $fullName, 2));
                     $familyName = $nameParts[0] ?? '';
@@ -212,10 +226,12 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
                     $fullName = trim($givenName . ' ' . $familyName);
                 }
 
+                // Skip invalid email addresses.
                 if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                     continue;
                 }
 
+                // Skip duplicate contacts.
                 $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
                 if (isset($seen[$key])) {
                     continue;
@@ -233,6 +249,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 
         error_log("Researcher confirmation: XML prepared contact count = " . count($contacts));
     } catch (Exception $e) {
+        // Log XML parsing errors.
         error_log("Researcher confirmation: Failed to parse XML. " . $e->getMessage());
     }
 
