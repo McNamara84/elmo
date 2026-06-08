@@ -9,7 +9,7 @@
 include_once __DIR__ . '/../settings.php';
 include_once __DIR__ . '/../includes/feature_toggles.php';
 
-$variantOverrides = applyVariantFeatureOverrides([
+$variantOverrides = applyELMOGEMFeatureOverrides([
 	'showGGMsProperties' => (bool) ($showGGMsProperties ?? false),
 	'showUsedInstruments' => (bool) ($showUsedInstruments ?? false),
 	'thesauriHiddenKeys' => [],
