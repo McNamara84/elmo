@@ -1,0 +1,9 @@
+FROM dhi.io/mariadb:11
+
+# Keep MariaDB defaults from the base image.
+# Runtime environment variables are injected by docker-compose.
+ENV TZ=Europe/Berlin
+
+VOLUME ["/var/lib/mysql"]
+
+EXPOSE 3306

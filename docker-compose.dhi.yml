@@ -1,0 +1,64 @@
+services:
+  db:
+    build:
+      context: .
+      dockerfile: Dockerfile.db.dhi
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
+    volumes:
+      - db_data:/var/lib/mysql
+    restart: unless-stopped
+
+  web-gem:
+    build:
+      context: .
+      dockerfile: Dockerfile.dhi
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      SIMULATE_EMAIL: "false"
+      TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for ICGEM (GGMs properties enabled)
+      SHOW_MSL_LABS: "false"
+      SHOW_MSL_VOCABS: "false"
+      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
+      SHOW_MSL_LOGO: "false"
+      SHOW_GGMS_PROPERTIES: "true"
+      SHOW_USED_INSTRUMENTS: "false"
+      SHOW_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
+      SHOW_RELATED_WORK: "true"
+      INSTANCE_TITLE: "ELMO for ICGEM"
+    depends_on:
+      - db
+    restart: unless-stopped
+
+volumes:
+  db_data:
