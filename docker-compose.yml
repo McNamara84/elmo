@@ -53,6 +53,7 @@ services:
     image: mcr.microsoft.com/playwright:v1.60.0-noble
     profiles:
       - test
+    init: true
     ipc: host
     extra_hosts:
       - "hostmachine:host-gateway"
