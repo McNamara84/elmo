@@ -192,9 +192,6 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
         // Read all point of contact entries.
         $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
 
-        error_log("Researcher confirmation: XML title = " . ($title !== '' ? $title : '[empty]'));
-        error_log("Researcher confirmation: XML raw pointOfContact count = " . (is_array($pointOfContactNodes) ? count($pointOfContactNodes) : 0));
-
         foreach ($pointOfContactNodes ?: [] as $pointOfContactNode) {
                 $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
                 $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
@@ -241,11 +238,9 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
                     'fullName' => $fullName,
                     'email' => $email,
                 ];
-
-                error_log("Researcher confirmation: XML contact {$fullName} <{$email}>");
             }
 
-        error_log("Researcher confirmation: XML prepared contact count = " . count($contacts));
+        error_log('Researcher confirmation: Extracted ' . count($contacts) . ' contact(s) from XML.');
     } catch (Exception $e) {
         // Log XML parsing errors.
         error_log("Researcher confirmation: Failed to parse XML. " . $e->getMessage());
@@ -274,6 +269,8 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
         error_log('Researcher confirmation: No contacts found.');
         return;
     }
+
+    $processedCount = 0;
 
     foreach ($contacts as $contact) {
         $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
@@ -306,17 +303,8 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             "Best regards\n" .
             "ELMO";
 
-        // Log preview in simulation mode.
         if ($simulateEmail) {
-            $preview =
-                "To: {$fullName} <{$email}>\n" .
-                "Subject: {$subject}\n\n" .
-                $plainBody;
-
-            foreach (explode("\n", str_replace("\r", '', $preview)) as $line) {
-                error_log($line);
-            }
-
+            $processedCount++;
             continue;
         }
 
@@ -350,12 +338,14 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             $mail->AltBody = $plainBody;
             $mail->send();
 
-            error_log("Researcher confirmation: Email sent to {$fullName} <{$email}>.");
+            $processedCount++;
         } catch (Exception $e) {
             // Log send failure.
             error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
         }
     }
+
+    error_log('Researcher confirmation: ' . ($simulateEmail ? 'Simulated' : 'Sent') . ' ' . $processedCount . ' confirmation email(s).');
 }
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
