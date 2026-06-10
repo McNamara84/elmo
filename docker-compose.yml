@@ -12,7 +12,9 @@ services:
     restart: unless-stopped
 
   web:
-    build: .
+    build:
+      context: .
+      target: dev
     ports:
       - "8080:80"
     environment:

@@ -87,8 +87,6 @@ else
   echo "Database setup finished."
 fi
 
-
-
 # Clean up install files (optional)
 rm -f /var/www/html/install.{php,html} || true
 

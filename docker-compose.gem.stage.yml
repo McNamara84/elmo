@@ -2,7 +2,7 @@ services:
   db:
     build:
       context: .
-      dockerfile: Dockerfile.db.dhi
+      dockerfile: Dockerfile.db
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
@@ -16,7 +16,8 @@ services:
   web-gem:
     build:
       context: .
-      dockerfile: Dockerfile.dhi
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8080:80"
     environment:
