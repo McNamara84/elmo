@@ -75,6 +75,8 @@ test.describe('JSON-LD roundtrip flow', () => {
     await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
 
     await page.locator('#input-saveas-filename').fill('e2e-jsonld-roundtrip');
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
     await page.locator('#button-saveas-save').click();
 
     const download = await downloadPromise;
@@ -129,6 +131,8 @@ test.describe('JSON-LD roundtrip flow', () => {
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
     await page.locator('#input-saveas-filename').fill('e2e-jsonld-roundtrip-resaved');
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
     await page.locator('#button-saveas-save').click();
 
     const secondDownload = await secondDownloadPromise;

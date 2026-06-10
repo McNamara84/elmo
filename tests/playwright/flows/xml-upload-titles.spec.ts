@@ -140,6 +140,8 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
         await page.locator('#button-form-save').click();
         await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 5_000 });
         await page.locator('#input-saveas-filename').fill('test-two-titles');
+        // Wait 2+ seconds to meet backend minimum interaction time for save
+        await page.waitForTimeout(2100);
         await page.locator('#button-saveas-save').click();
       })(),
     ]);

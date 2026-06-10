@@ -638,6 +638,8 @@ async function downloadAndSaveIcgemXml(
 
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5_000 });
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
   await saveButton.click();
 
   const saveModal = page.locator('#modal-saveas');
@@ -645,6 +647,9 @@ async function downloadAndSaveIcgemXml(
 
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
+
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
 
   await page.locator('#button-saveas-save').click();
 

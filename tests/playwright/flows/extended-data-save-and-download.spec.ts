@@ -394,6 +394,8 @@ async function downloadAndSaveXml(
   // Wait for Save button and click
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5000 });
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
   await saveButton.click();
 
   // Wait for Save As modal to be visible
@@ -403,6 +405,9 @@ async function downloadAndSaveXml(
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
+
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
 
   // Click the save button in the modal
   const saveConfirmButton = page.locator('#button-saveas-save');
