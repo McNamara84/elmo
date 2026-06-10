@@ -200,8 +200,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         error_log("Feedback blocked: Invalid CSRF token from IP {$clientIp}");
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
+
+    // Security Check 3: Minimum interaction time
+    $timeCheck = evaluateInteractionTime((int) ($_POST['feedback_time_spent'] ?? 0), MIN_INTERACTION_FEEDBACK_SECONDS);
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $connection,
+            'feedback',
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
+        );
+        sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
+    }
     
-    // Security Check 3: Rate limiting
+    // Security Check 4: Rate limiting
     if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
         error_log("Feedback blocked: Rate limit exceeded for IP {$clientIp}");
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);

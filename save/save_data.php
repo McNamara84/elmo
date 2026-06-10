@@ -25,7 +25,6 @@ if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
     exit();
 }
 
-// Include security functions BEFORE settings to ensure they're available
 require_once __DIR__ . '/../api/security.php';
 
 // Only load settings if connection not already injected (for testing)
@@ -72,6 +71,22 @@ function validateSaveSecurity($postData, $connection)
             'status' => false,
             'message' => 'Too many save requests. Please try again later.',
             'code' => 429
+        ];
+    }
+
+    // Security Check 4: Minimum interaction time (2 seconds for save, server-trusted)
+    $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $connection,
+            'save',
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
+        );
+        return [
+            'status' => false,
+            'message' => 'Please take time to review your metadata before saving.',
+            'code' => 400
         ];
     }
 

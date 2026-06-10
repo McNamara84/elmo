@@ -34,6 +34,9 @@ define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
 define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
 define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
 define('RATE_LIMIT_SUSPICIOUS_LOG_MAX', (int) getenv('SUSPICIOUS_LOG_RATE_LIMIT') ?: 10);
+define('MIN_INTERACTION_SAVE_SECONDS', (int) getenv('SAVE_MIN_INTERACTION_SECONDS') ?: 2);
+define('MIN_INTERACTION_SUBMIT_SECONDS', (int) getenv('SUBMIT_MIN_INTERACTION_SECONDS') ?: 3);
+define('MIN_INTERACTION_FEEDBACK_SECONDS', (int) getenv('FEEDBACK_MIN_INTERACTION_SECONDS') ?: 2);
 
 /**
  * Initializes session if not already started.
@@ -159,6 +162,33 @@ function getCsrfTokenAgeSeconds(): int
     }
 
     return max(0, time() - $tokenTime);
+}
+
+/**
+ * Evaluates whether the interaction time meets a minimum threshold.
+ *
+ * Uses a trust-preserving strategy by combining client-reported time with
+ * server-measured CSRF token age and taking the lower bound when both exist.
+ *
+ * @param int $reportedTimeSpentSeconds Client-reported interaction time
+ * @param int $minimumSeconds Required minimum interaction time
+ * @return array{isValid: bool, effectiveSeconds: int, clientSeconds: int, serverSeconds: int, minimumSeconds: int}
+ */
+function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeconds): array
+{
+    $clientSeconds = max(0, $reportedTimeSpentSeconds);
+    $serverSeconds = getCsrfTokenAgeSeconds();
+    $effectiveSeconds = $clientSeconds > 0
+        ? min($clientSeconds, $serverSeconds)
+        : $serverSeconds;
+
+    return [
+        'isValid' => $effectiveSeconds >= $minimumSeconds,
+        'effectiveSeconds' => $effectiveSeconds,
+        'clientSeconds' => $clientSeconds,
+        'serverSeconds' => $serverSeconds,
+        'minimumSeconds' => $minimumSeconds,
+    ];
 }
 
 /**
