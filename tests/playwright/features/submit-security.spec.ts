@@ -86,6 +86,9 @@ test.describe('Submit Operation Security Features', () => {
       (el as HTMLInputElement).value = 'corrupted-token';
     });
 
+    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    await page.waitForTimeout(3100);
+
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
     );
@@ -107,6 +110,9 @@ test.describe('Submit Operation Security Features', () => {
     await honeypot.evaluate((el) => {
       (el as HTMLInputElement).value = 'I am a bot';
     });
+
+    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    await page.waitForTimeout(3100);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
