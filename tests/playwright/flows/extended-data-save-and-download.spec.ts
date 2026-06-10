@@ -81,8 +81,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.descriptions.description['#text']).toBe(refRoot.descriptions.description['#text']);
     
     // Assert contact person email
-    expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
-      refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
+    expect(actualEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
+      refEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
     );
 
     console.log('✓ Minimal dataset XML verification passed');
