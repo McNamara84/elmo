@@ -394,13 +394,14 @@ async function downloadAndSaveXml(
   // Wait for Save button and click
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5000 });
-  // Wait 2+ seconds to meet backend minimum interaction time for save
-  await page.waitForTimeout(2100);
   await saveButton.click();
 
   // Wait for Save As modal to be visible
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
+
+  // Wait for CSRF token to be fetched and populated
+  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
 
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
