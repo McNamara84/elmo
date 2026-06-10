@@ -471,6 +471,17 @@ try {
         saveUsedInstruments($connection, $_POST, $resource_id);
     }
     saveFundingReferences($connection, $_POST, $resource_id);
+    } catch (Exception $e) {
+        error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
+        http_response_code(500);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Save operation failed.'
+        ]);
+        exit;    
+    }
 
     error_log("send_xml_file.php: All data saved successfully");
 
@@ -665,13 +676,7 @@ if (!$simulateEmail) {
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
 } else {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-}
-    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
-    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
-
-    error_log("send_xml_file.php: About to return success");
-
-    // Clear any output buffers
+        // Clear any output buffers
     ob_clean();
 
     // Return success response
@@ -682,19 +687,22 @@ if (!$simulateEmail) {
         'resource_id' => $resource_id,
         'simulated' => true
     ]);
-    exit;  // ← ADD THIS
-}
+    exit;
+    }
+try {
+    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
 
-// reached in the normal production flow 
-error_log("send_xml_file.php: About to return success");
-ob_clean();
-header('Content-Type: application/json');
-echo json_encode([
-    'success' => true,
-    'message' => 'Backend reports: XML submission email sent successfully.',
-    'resource_id' => $resource_id,
-    'simulated' => false
-]);
+    // reached in the normal production flow 
+    error_log("send_xml_file.php: About to return success");
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => 'Backend reports: XML submission email sent successfully.',
+        'resource_id' => $resource_id,
+        'simulated' => false
+    ]);
 
 } catch (Exception $e) {
     error_log("XML Submit Error: " . $e->getMessage());
