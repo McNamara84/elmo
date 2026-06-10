@@ -99,10 +99,10 @@ test.describe('Submit Operation Security Features', () => {
     expect(payload.message).toContain('Security token validation failed');
   });
   test('backend rejects submit when honeypot field is filled', async ({ page }) => {
-    await openSubmitModal(page);
+    const { submitModal } = await openSubmitModal(page);
 
     // Simulate bot filling honeypot before request submission.
-    const honeypot = page.locator('#input-information-website');
+    const honeypot = submitModal.locator('input[name="website"]').first();
     await honeypot.waitFor({ state: 'attached' });
     await honeypot.evaluate((el) => {
       (el as HTMLInputElement).value = 'I am a bot';

@@ -143,18 +143,14 @@ function validateSubmitSecurity(array $postData, $connection): void {
         exit;
     }
     
-    // Check 4: Minimum time spent (3 seconds for submit, server-trusted)
-    $reportedTimeSpent = max(0, (int) ($postData['submit_time_spent'] ?? 0));
-    $serverMeasuredTimeSpent = getCsrfTokenAgeSeconds();
-    $effectiveTimeSpent = $reportedTimeSpent > 0
-        ? min($reportedTimeSpent, $serverMeasuredTimeSpent)
-        : $serverMeasuredTimeSpent;
+    // Check 4: Minimum time spent (server-trusted)
+    $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
 
-    if ($effectiveTimeSpent < 3) {
+    if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
             $connection,
             'submit',
-            "insufficient time spent (effective={$effectiveTimeSpent}s, client={$reportedTimeSpent}s, server={$serverMeasuredTimeSpent}s)",
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
             $clientIp
         );
         http_response_code(400);
