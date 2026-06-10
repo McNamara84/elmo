@@ -129,15 +129,34 @@ const googleMapsStub = String.raw`(() => {
     constructor(opts = {}) {
       this._bounds = opts.bounds || null;
       this._map = opts.map || null;
+      this._listeners = {};
     }
     setMap(map) {
       this._map = map;
     }
     setBounds(bounds) {
       this._bounds = bounds;
+      // Trigger bounds_changed event when bounds are set
+      this._triggerEvent('bounds_changed');
     }
     getBounds() {
       return this._bounds;
+    }
+    addListener(eventName, callback) {
+      if (!this._listeners[eventName]) {
+        this._listeners[eventName] = [];
+      }
+      this._listeners[eventName].push(callback);
+      return {
+        remove: () => {
+          this._listeners[eventName] = this._listeners[eventName].filter(cb => cb !== callback);
+        }
+      };
+    }
+    _triggerEvent(eventName) {
+      if (this._listeners[eventName]) {
+        this._listeners[eventName].forEach(cb => cb());
+      }
     }
   }
 
@@ -327,22 +346,27 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     // Switch to rectangle mode by clicking the rectangle toolbar button
     await page.locator('#btn-draw-rectangle').click();
 
-    // Simulate rectangle drawing: click (start) → mousemove (drag) → mouseup (complete)
+    // Rectangle drawing uses TWO clicks (not click+drag): first click anchors the
+    // first corner, second click completes it. A 150ms double-click guard timer
+    // must expire between clicks, so we wait 300ms after each.
+
+    // First click – anchors first corner, starts the preview rectangle
     await page.evaluate(() => {
       const mapInstance = (window as any).__elmoMapInstance;
-      const LatLng = (window as any).google.maps.LatLng;
-
-      // Start: click sets startLatLng and creates preview rectangle
       (window as any).google.maps.event.trigger(mapInstance, 'click', {
-        latLng: new LatLng(40.0, -74.5),
+        latLng: new (window as any).google.maps.LatLng(40.0, -74.5),
       });
-      // Drag: mousemove updates preview rectangle bounds
-      (window as any).google.maps.event.trigger(mapInstance, 'mousemove', {
-        latLng: new LatLng(41.0, -73.5),
-      });
-      // Release: mouseup completes the rectangle
-      (window as any).google.maps.event.trigger(mapInstance, 'mouseup', {});
     });
+    await page.waitForTimeout(300); // wait for 150ms DBLCLICK_THRESHOLD timer to fire
+
+    // Second click – completes the rectangle and emits 'rectanglecomplete'
+    await page.evaluate(() => {
+      const mapInstance = (window as any).__elmoMapInstance;
+      (window as any).google.maps.event.trigger(mapInstance, 'click', {
+        latLng: new (window as any).google.maps.LatLng(41.0, -73.5),
+      });
+    });
+    await page.waitForTimeout(300); // wait for timer to fire and fields to update
 
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);
