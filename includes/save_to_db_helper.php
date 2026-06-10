@@ -48,9 +48,12 @@ function executeSaveFunction($callback, ...$args)
 }
 } // end function_exists('executeSaveFunction')
 
-// includes all save functions and executes them with database connectio
+// includes all save functions and executes them with database connection
 function saveALL(array $postData): int {
-    global $connection;
+    global $connection, $showMslLabs, $showContributorPersons, $showContributorInstitutions;
+    global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
+    global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
+    
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
