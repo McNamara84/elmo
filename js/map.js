@@ -38,7 +38,25 @@ $(document).ready(function () {
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
       google.maps.event.trigger(map, "resize");
-      fitMapBounds();
+
+      var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
+      var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
+      var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
+      var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
+
+      if (latMin && lngMin) {
+        // Ensure overlay exists for this row (may not if coords were set programmatically)
+        var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
+        if (!hasOverlay) {
+          updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
+        } else {
+          fitMapBoundsForRow(rowId);
+        }
+      } else {
+        // No coordinates yet – reset to whole-planet view
+        map.setCenter({ lat: 20, lng: 0 });
+        map.setZoom(2);
+      }
     });
   });
 
@@ -81,12 +99,14 @@ $(document).ready(function () {
   function DrawingController(mapInstance) {
     /** @type {string|null} Current drawing mode: 'marker' | 'rectangle' | null */
     this.mode = "marker";
-    /** @type {boolean} Whether a rectangle drag is in progress */
-    this.isDrawing = false;
+    /** @type {string|null} Rectangle drawing state: null | 'started' */
+    this.rectState = null;
     /** @type {?google.maps.LatLng} Start position for rectangle drawing */
     this.startLatLng = null;
     /** @type {?google.maps.Rectangle} Temporary preview rectangle during drag */
     this.previewRect = null;
+    /** @type {?number} Pending single-click debounce timer (on instance so setMode can cancel it) */
+    this._clickTimer = null;
     /** @type {Object} Registered event callbacks */
     this._listeners = { rectanglecomplete: [], markercomplete: [] };
     /** @type {google.maps.Map} */
@@ -127,6 +147,19 @@ $(document).ready(function () {
    * @param {string} mode - The drawing mode to activate ('marker' or 'rectangle').
    */
   DrawingController.prototype.setMode = function (mode) {
+    // Cancel any click that hasn't fired yet so it can't bleed into the new mode
+    if (this._clickTimer !== null) {
+      clearTimeout(this._clickTimer);
+      this._clickTimer = null;
+    }
+    // Discard any in-progress rectangle so the new mode always starts clean
+    if (this.previewRect) {
+      this.previewRect.setMap(null);
+      this.previewRect = null;
+    }
+    this.rectState = null;
+    this.startLatLng = null;
+
     this.mode = mode;
     this._updateToolbarUI();
     this._map.setOptions({
@@ -152,52 +185,96 @@ $(document).ready(function () {
   };
 
   /**
-   * Sets up click, mousemove, and mouseup listeners on the map for drawing.
+   * Sets up click and mousemove listeners on the map for drawing.
+   * Rectangle drawing uses two clicks: first click sets the first corner,
+   * second click completes the rectangle. Any corner order is supported.
    * @private
    */
   DrawingController.prototype._setupMapListeners = function () {
     var self = this;
+    /** @type {number} Two clicks within this window (ms) are treated as a double-click */
+    var DBLCLICK_THRESHOLD = 150;
 
     this._map.addListener("click", function (e) {
-      if (self.mode === "marker") {
-        var marker = new AdvancedMarkerElement({
-          position: e.latLng,
-          map: self._map
-        });
-        self._emit("markercomplete", marker);
-      } else if (self.mode === "rectangle" && !self.isDrawing) {
-        self.isDrawing = true;
-        self.startLatLng = e.latLng;
-        self.previewRect = new google.maps.Rectangle({
-          bounds: new google.maps.LatLngBounds(e.latLng, e.latLng),
-          strokeColor: RECTANGLE_STYLE.strokeColor,
-          strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
-          strokeWeight: RECTANGLE_STYLE.strokeWeight,
-          fillColor: RECTANGLE_STYLE.fillColor,
-          fillOpacity: RECTANGLE_STYLE.fillOpacity,
-          map: self._map,
-          clickable: false
-        });
-        self._map.setOptions({ gestureHandling: "none" });
+      if (self._clickTimer !== null) {
+        // Second click arrived within the threshold – treat as double-click.
+        // Cancel the pending drawing action; Google Maps handles the zoom via dblclick.
+        clearTimeout(self._clickTimer);
+        self._clickTimer = null;
+        return;
       }
+
+      var latLng = e.latLng;
+      self._clickTimer = setTimeout(function () {
+        self._clickTimer = null;
+        if (self.mode === "marker") {
+          var marker = new AdvancedMarkerElement({
+            position: latLng,
+            map: self._map
+          });
+          self._emit("markercomplete", marker);
+        } else if (self.mode === "rectangle") {
+          if (self.rectState === null) {
+            // First click: anchor the first corner and show a preview rectangle
+            self.rectState = "started";
+            self.startLatLng = latLng;
+            self.previewRect = new google.maps.Rectangle({
+              bounds: new google.maps.LatLngBounds(latLng, latLng),
+              strokeColor: RECTANGLE_STYLE.strokeColor,
+              strokeOpacity: RECTANGLE_STYLE.strokeOpacity,
+              strokeWeight: RECTANGLE_STYLE.strokeWeight,
+              fillColor: RECTANGLE_STYLE.fillColor,
+              fillOpacity: RECTANGLE_STYLE.fillOpacity,
+              map: self._map,
+              clickable: false
+            });
+          } else {
+            // Second click: finalize bounds (normalise so any corner order works)
+            self.rectState = null;
+            var sw = new google.maps.LatLng(
+              Math.min(self.startLatLng.lat(), latLng.lat()),
+              Math.min(self.startLatLng.lng(), latLng.lng())
+            );
+            var ne = new google.maps.LatLng(
+              Math.max(self.startLatLng.lat(), latLng.lat()),
+              Math.max(self.startLatLng.lng(), latLng.lng())
+            );
+            var rect = self.previewRect;
+            rect.setBounds(new google.maps.LatLngBounds(sw, ne));
+            self.previewRect = null;
+            self.startLatLng = null;
+            self._emit("rectanglecomplete", rect);
+          }
+        }
+      }, DBLCLICK_THRESHOLD);
     });
 
     this._map.addListener("mousemove", function (e) {
-      if (self.isDrawing && self.previewRect) {
-        self.previewRect.setBounds(
-          new google.maps.LatLngBounds(self.startLatLng, e.latLng)
+      if (self.rectState === "started" && self.previewRect) {
+        var sw = new google.maps.LatLng(
+          Math.min(self.startLatLng.lat(), e.latLng.lat()),
+          Math.min(self.startLatLng.lng(), e.latLng.lng())
         );
+        var ne = new google.maps.LatLng(
+          Math.max(self.startLatLng.lat(), e.latLng.lat()),
+          Math.max(self.startLatLng.lng(), e.latLng.lng())
+        );
+        self.previewRect.setBounds(new google.maps.LatLngBounds(sw, ne));
       }
     });
 
-    this._map.addListener("mouseup", function () {
-      if (self.isDrawing && self.previewRect) {
-        self.isDrawing = false;
-        self._map.setOptions({ gestureHandling: "auto" });
-        var rect = self.previewRect;
-        self.previewRect = null;
-        self._emit("rectanglecomplete", rect);
+    // Right-click cancels an in-progress rectangle and resets to initial drawing state.
+    this._map.addListener("rightclick", function () {
+      if (self._clickTimer !== null) {
+        clearTimeout(self._clickTimer);
+        self._clickTimer = null;
       }
+      if (self.previewRect) {
+        self.previewRect.setMap(null);
+        self.previewRect = null;
+      }
+      self.rectState = null;
+      self.startLatLng = null;
     });
   };
 
@@ -313,6 +390,22 @@ $(document).ready(function () {
       mapOptions.mapId = mapId;
     }
     map = new Map(mapElement, mapOptions);
+
+    // Keyboard zoom: + / = zooms in, - zooms out, active whenever the map modal is visible.
+    document.addEventListener("keydown", function (e) {
+      var modal = document.getElementById("modal-stc-map");
+      if (!modal || !modal.classList.contains("show")) return;
+      // Don't steal keystrokes from text inputs (e.g. the place-search field)
+      var tag = e.target ? e.target.tagName.toUpperCase() : "";
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
+      if (e.key === "+" || e.key === "=") {
+        e.preventDefault();
+        map.setZoom(map.getZoom() + 1);
+      } else if (e.key === "-") {
+        e.preventDefault();
+        map.setZoom(map.getZoom() - 1);
+      }
+    });
 
     // Setup custom drawing controller (replaces deprecated DrawingManager)
     var drawingController = new DrawingController(map);
@@ -502,7 +595,8 @@ $(document).ready(function () {
         strokeWeight: RECTANGLE_STYLE.strokeWeight,
         fillColor: RECTANGLE_STYLE.fillColor,
         fillOpacity: RECTANGLE_STYLE.fillOpacity,
-        map: map
+        map: map,
+        clickable: false
       });
 
       var label = createLabeledMarker(bounds.getCenter(), displayNumber.toString());
@@ -520,7 +614,7 @@ $(document).ready(function () {
       drawnOverlays.push({ rowId: currentRowId, overlay: marker });
     }
 
-    fitMapBounds();
+    fitMapBoundsForRow(currentRowId);
   }
 
   /**
@@ -539,6 +633,39 @@ $(document).ready(function () {
       }
       return true;
     });
+  }
+
+  /**
+   * Adjusts the map's viewport to fit the drawn overlays for a single row.
+   *
+   * @param {string} rowId - The row whose overlays define the viewport.
+   */
+  function fitMapBoundsForRow(rowId) {
+    var bounds = new google.maps.LatLngBounds();
+    drawnOverlays.forEach(function (item) {
+      if (item.rowId !== rowId) return;
+      if (item.overlay.getBounds) {
+        bounds.union(item.overlay.getBounds());
+      } else if (item.overlay.position) {
+        var pos = item.overlay.position;
+        if (typeof pos.lat === "function") {
+          bounds.extend(pos);
+        } else {
+          bounds.extend(new google.maps.LatLng(pos.lat, pos.lng));
+        }
+      } else if (item.overlay.getPosition) {
+        bounds.extend(item.overlay.getPosition());
+      }
+    });
+    if (!bounds.isEmpty()) {
+      var ne = bounds.getNorthEast();
+      var sw = bounds.getSouthWest();
+      var lat_buffer = (ne.lat() - sw.lat()) * 0.5 || 2;
+      var lng_buffer = (ne.lng() - sw.lng()) * 0.5 || 2;
+      bounds.extend(new google.maps.LatLng(ne.lat() + lat_buffer, ne.lng() + lng_buffer));
+      bounds.extend(new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer));
+      map.fitBounds(bounds);
+    }
   }
 
   /**
@@ -652,6 +779,7 @@ $(document).ready(function () {
   // Make functions globally accessible
   window.deleteDrawnOverlaysForRow = deleteDrawnOverlaysForRow;
   window.fitMapBounds = fitMapBounds;
+  window.fitMapBoundsForRow = fitMapBoundsForRow;
   window.updateOverlayLabels = updateOverlayLabels;
   window.updateMapOverlay = updateMapOverlay;
 });
