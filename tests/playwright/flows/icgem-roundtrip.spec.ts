@@ -644,6 +644,9 @@ async function downloadAndSaveIcgemXml(
 
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5_000 });
+  
+  // Wait for CSRF token to be fetched and populated
+  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
 
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
