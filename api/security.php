@@ -87,8 +87,14 @@ function validateCsrfToken(string $submittedToken): bool
         return false;
     }
     
-    // Token must match (timing-safe comparison)
-    if (!hash_equals($sessionToken, $submittedToken)) {
+    try {
+        // Token must match (timing-safe comparison)
+        if (!hash_equals($sessionToken, $submittedToken)) {
+            return false;
+        }
+    } catch (\ValueError $e) {
+        // Token format invalid (e.g., mismatched lengths)
+        error_log("CSRF token validation error: " . $e->getMessage());
         return false;
     }
     

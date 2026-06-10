@@ -438,7 +438,21 @@ try {
     error_log("send_xml_file.php: Try block started");
     
     // Validate security before saving any data
-    validateSubmitSecurity($_POST, $connection);
+    // Wrap in try-catch to ensure any validation errors return proper status codes
+    try {
+        validateSubmitSecurity($_POST, $connection);
+    } catch (\Exception $e) {
+        // Security validation threw an unexpected exception - return 403
+        error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security validation failed.'
+        ]);
+        exit;
+    }
     
     error_log("send_xml_file.php: Security validation passed");
     
