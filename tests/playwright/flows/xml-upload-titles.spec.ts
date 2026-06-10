@@ -139,6 +139,10 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
         // Open Save As modal
         await page.locator('#button-form-save').click();
         await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 5_000 });
+        
+        // Wait for CSRF token to be fetched and populated
+        await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+        
         await page.locator('#input-saveas-filename').fill('test-two-titles');
         // Wait 2+ seconds to meet backend minimum interaction time for save
         await page.waitForTimeout(2100);
