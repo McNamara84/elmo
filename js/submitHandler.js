@@ -220,7 +220,7 @@ class SubmitHandler {
         // Security field references
         this.$csrfTokenField = $('#input-submit-csrf-token');
         this.$timeSpentField = $('#input-submit-time-spent');
-        this.$honeypotField = $('#input-information-website');
+        this.$honeypotField = $('#modal-submit input[name="website"]').first();
         this.modalOpenedAt = null;
 
         this.initializeEventListeners();
@@ -240,6 +240,7 @@ class SubmitHandler {
         $('#modal-submit').on('shown.bs.modal', async () => {
             await this.fetchCsrfToken();
             this.modalOpenedAt = Date.now();
+            this.$honeypotField.val('');
             this.$timeSpentField.val('0');
             $('#input-submit-dataurl').select();
         });
