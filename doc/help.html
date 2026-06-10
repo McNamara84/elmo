@@ -1542,7 +1542,7 @@ include_once "../settings.php";
             .then(function (response) { return response.json(); })
             .then(function (data) {
                 Object.keys(data).forEach(function (key) {
-                    // Don't show thesauri from the hidden Thesauroi array at all (overwrites ERNIE configuration) 
+                    // Don't show thesauri from the hiddenThesauri array at all (overwrites ERNIE configuration) 
 
                     if (hiddenThesauri.has(key)) {
                         return;
