@@ -4,8 +4,11 @@ services:
       context: .
       dockerfile: Dockerfile.db
     pull_policy: build
+    network_mode: host
     command:
       - mariadbd
+      - --bind-address=127.0.0.1
+      - --port=6770
       - --ddl-log=OFF
       - --skip-log-bin
       - --character-set-server=utf8mb4
@@ -37,10 +40,9 @@ services:
       dockerfile: Dockerfile.web
       target: prod
     pull_policy: build
-    ports:
-      - "8080:80"
+    network_mode: host
     environment:
-      DB_HOST: db
+      DB_HOST: 127.0.0.1:6770
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
@@ -82,7 +84,7 @@ services:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost/"]
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:6779/"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -104,8 +106,3 @@ volumes:
     driver: local
   storage_data:
     driver: local
-
-networks:
-  default:
-    name: elmo-stage
-    driver: bridge
