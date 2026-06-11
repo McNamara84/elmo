@@ -5,25 +5,30 @@ FROM php:8.5-apache-bookworm AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install build dependencies
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends \
+# Install build dependencies (update+install together for caching)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
-        mariadb-client \
-    && rm -rf /var/lib/apt/lists/* \
-    && docker-php-ext-install -j"$(nproc)" \
-        mysqli \
-        pdo_mysql \
-        xsl \
-        zip
+        mariadb-client
 
+# Clean apt cache
+RUN rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install -j"$(nproc)" \
+    mysqli \
+    pdo_mysql \
+    xsl \
+    zip
+
+# Configure Apache
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
-RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/000-default.conf \
-    && a2enmod rewrite deflate headers expires
+RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/000-default.conf
+RUN a2enmod rewrite deflate headers expires
 
 COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
 RUN a2enconf gzip
@@ -33,21 +38,31 @@ WORKDIR /var/www/html
 # ====== Stage 2: Dev ======
 FROM base AS dev
 
-RUN apt-get update \
-    && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
-    && mkdir -p /etc/apt/keyrings \
-    && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
-    && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
-    && apt-get update \
-    && apt-get install -y --no-install-recommends nodejs \
-    && rm -rf /var/lib/apt/lists/*
+# Install Node.js prerequisites (update+install together)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg
 
+# Setup NodeSource repository (all in one RUN for atomicity)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+
+# Install Node.js (update+install together)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
+
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
+# Install project dependencies
 COPY composer.json composer.lock package.json package-lock.json ./
-RUN composer install --prefer-dist --no-interaction --no-scripts \
-    && npm install
+RUN composer install --prefer-dist --no-interaction --no-scripts
+RUN npm install
 
+# Setup entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -59,25 +74,25 @@ FROM dev AS builder
 WORKDIR /var/www/html
 COPY . .
 
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts \
-    && npm install --omit=dev
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
+RUN npm install --omit=dev
 
 # ====== Stage 4: Prod ======
 FROM base AS prod
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Purge dev packages FIRST, then install runtime
-RUN apt-get update && \
-    apt-get purge -y libxml2-dev libxslt-dev libzip-dev && \
-    apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip5 && \
-    apt-get autoremove -y --purge && \
-    rm -rf /var/lib/apt/lists/*
+# Package management - SPLIT for debugging
+RUN apt-get update
+RUN apt-get purge -y libxml2-dev libxslt-dev libzip-dev
+RUN apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip5
+RUN apt-get autoremove -y --purge
+RUN rm -rf /var/lib/apt/lists/*
 
-# Create non-root user and set up directories ONCE
-RUN useradd -r -u 1000 -g www-data appuser && \
-    mkdir -p /var/www/html/xml /var/www/html/storage && \
-    chown -R appuser:www-data /var/www/html
+# User and directory setup
+RUN useradd -r -u 1000 -g www-data appuser
+RUN mkdir -p /var/www/html/xml /var/www/html/storage
+RUN chown -R appuser:www-data /var/www/html
 
 WORKDIR /var/www/html
 
