@@ -1,50 +1,44 @@
 # syntax=docker/dockerfile:1.7
 
-# Stage 1: base
-# Uses php:8.5-apache (Debian-based with Apache bundled) and defines
-# all shared system/PHP runtime capabilities for dev + prod alignment.
-FROM php:8.5-apache AS base
+# ====== Stage 1: Base ======
+# Use minimal Debian-based PHP image with Apache
+FROM php:8.5-apache-bookworm AS base
 
+# Security: Prevent interactive prompts
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Build and runtime libs needed for PHP extensions and DB connectivity.
+# Install minimal required system packages
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
-        gnupg \
-        git \
-        unzip \
-        mariadb-client \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
+        mariadb-client \
+    && rm -rf /var/lib/apt/lists/* \
     && docker-php-ext-install -j"$(nproc)" \
         mysqli \
         pdo_mysql \
         xsl \
         zip \
-    && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-configure zip --with-libzip
 
+# Security: Set Apache document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
-
-# Keep existing Apache behavior used by the application.
 RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite deflate headers expires
 
+# Security: Enable gzip compression
 COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
 RUN a2enconf gzip
 
 WORKDIR /var/www/html
 
-# Stage 2: dev
-# Inherits from base and runs as root for local bind-mount workflows.
+# ====== Stage 2: Dev ======
 FROM base AS dev
 
-USER root
-ARG DEBIAN_FRONTEND=noninteractive
-
-# Install Node.js 24 in the dev-aligned environment.
+# Security: Install Node.js 24 (LTS) from official repo
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
     && mkdir -p /etc/apt/keyrings \
@@ -54,52 +48,62 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer directly into the image.
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Install dependencies early for better build cache behavior.
+# Install dev dependencies (cached layer)
 COPY composer.json composer.lock package.json package-lock.json ./
-RUN composer install --prefer-dist --no-interaction \
+RUN composer install --prefer-dist --no-interaction --no-scripts \
     && npm install
 
-# Stage 3: builder
-# Strictly inherits from dev so prod artifacts are built in the same env.
+# ====== Stage 3: Builder ======
 FROM dev AS builder
 
 WORKDIR /var/www/html
 COPY . .
 
-# Build production dependency sets.
-RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction \
+# Build production assets
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts \
     && npm install --omit=dev
 
-# Stage 4: prod
-# Strictly inherits from base for a smaller runtime image.
+# ====== Stage 4: Prod ======
 FROM base AS prod
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Remove build-only development headers while keeping runtime libraries.
+# Install ONLY runtime libraries (no dev headers)
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libxml2 \
         libxslt1.1 \
-        libzip4 \
+        libzip5 \
     && apt-get purge -y \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
-    && apt-get autoremove -y \
+    && apt-get autoremove -y --purge \
     && rm -rf /var/lib/apt/lists/*
+
+# Security: Create non-root user
+RUN useradd -r -u 1000 -g www-data appuser \
+    && mkdir -p /var/www/html \
+    && chown appuser:www-data /var/www/html
 
 WORKDIR /var/www/html
 
-# Copy the fully prepared application tree plus production dependencies.
-COPY --from=builder --chown=www-data:www-data /var/www/html /var/www/html
+# Copy built assets with proper ownership
+COPY --from=builder --chown=appuser:www-data /var/www/html /var/www/html
 
-COPY --chown=www-data:www-data docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+# Copy entrypoint script
+COPY --chown=appuser:www-data docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+# Create appuser and set up writable directories: storage, xml, json
+RUN useradd -r -u 1000 -g www-data appuser && \
+    chown -R appuser:www-data /var/www/html/save /var/www/html/uploads && \
+    chmod -R 775 /var/www/html/save /var/www/html/uploads
+# Security: Drop root privileges
+USER appuser
 
-# Apache binds :80 as root and serves requests with www-data workers.
+# Security: Run Apache as foreground (non-root)
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]

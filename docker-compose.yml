@@ -15,6 +15,7 @@ services:
     build:
       context: .
       target: dev
+      dockerfile: Dockerfile.web
     ports:
       - "8080:80"
     environment:
