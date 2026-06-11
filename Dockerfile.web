@@ -81,7 +81,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         libxml2 \
         libxslt1.1 \
-        libzip5 \
+        libzip5 || libzip4 # Try libzip5 first, fall back to libzip4 \
     && apt-get purge -y \
         libxml2-dev \
         libxslt-dev \
