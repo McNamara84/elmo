@@ -421,6 +421,33 @@ describe('thesauri.js', () => {
     });
   });
 
+  test('does not render thesauri listed in hiddenThesauri', (done) => {
+    document.body.innerHTML = `
+      <div id="thesaurusKeywordsFormGroup" class="card mb-2" style="display: none;">
+        <div id="thesaurusKeywordsGroup"></div>
+      </div>
+      <div id="thesaurusModalsContainer"></div>
+    `;
+
+    window.ELMO_FEATURES = {
+      showThesauri: true,
+      showMslVocabs: false,
+      hiddenThesauri: ['platforms']
+    };
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
+    window.eval(transformThesauriScript(script));
+
+    $(document).ready(() => {
+      document.dispatchEvent(new Event('translationsLoaded'));
+
+      expect(document.querySelector('#input-sciencekeyword')).toBeTruthy();
+      expect(document.querySelector('#input-platforms')).toBeNull();
+
+      done();
+    });
+  });
+
 });
 
 describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesaurusOnDemand / loadKeywordsForConfig', () => {
