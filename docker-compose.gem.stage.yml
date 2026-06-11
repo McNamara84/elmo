@@ -3,21 +3,40 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.db
+    pull_policy: build
+    command:
+      - mariadbd
+      - --ddl-log=OFF
+      - --skip-log-bin
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
       TZ: Europe/Berlin
-    volumes:
-      - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
   web-gem:
     build:
       context: .
       dockerfile: Dockerfile.web
       target: prod
+    pull_policy: build
     ports:
       - "8080:80"
     environment:
@@ -25,6 +44,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -58,8 +78,34 @@ services:
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
+    volumes:
+      - xml_data:/var/www/html/xml
+      - storage_data:/var/www/html/storage
+    security_opt:
+      - no-new-privileges:true
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        memory: 512M
 
 volumes:
-  db_data:
+  xml_data:
+    driver: local
+  storage_data:
+    driver: local
+
+networks:
+  default:
+    name: elmo-stage
+    driver: bridge
