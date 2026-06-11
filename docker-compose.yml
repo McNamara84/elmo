@@ -1,15 +1,25 @@
 services:
   db:
-    image: mariadb:11
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    tmpfs:  # <-- In-memory, no disk, auto-cleared on restart
+      - /var/lib/mysql
+    command: --ddl-log=OFF --skip-log-bin --skip-innodb
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
       TZ: Europe/Berlin
-    volumes:
-      - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    security_opt:
+      - no-new-privileges:true
 
   web:
     build:
