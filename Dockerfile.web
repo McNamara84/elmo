@@ -1,13 +1,11 @@
 # syntax=docker/dockerfile:1.7
 
 # ====== Stage 1: Base ======
-# Use minimal Debian-based PHP image with Apache
 FROM php:8.5-apache-bookworm AS base
 
-# Security: Prevent interactive prompts
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install minimal required system packages
+# Install build dependencies
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         ca-certificates \
@@ -23,12 +21,10 @@ RUN apt-get update \
         xsl \
         zip
 
-# Security: Set Apache document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
 RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/000-default.conf \
     && a2enmod rewrite deflate headers expires
 
-# Security: Enable gzip compression
 COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
 RUN a2enconf gzip
 
@@ -37,7 +33,6 @@ WORKDIR /var/www/html
 # ====== Stage 2: Dev ======
 FROM base AS dev
 
-# Security: Install Node.js 24 (LTS) from official repo
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ca-certificates curl gnupg \
     && mkdir -p /etc/apt/keyrings \
@@ -47,15 +42,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
-# Install dev dependencies (cached layer)
 COPY composer.json composer.lock package.json package-lock.json ./
 RUN composer install --prefer-dist --no-interaction --no-scripts \
     && npm install
 
-# Use the project runtime entrypoint in dev as well.
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
@@ -67,7 +59,6 @@ FROM dev AS builder
 WORKDIR /var/www/html
 COPY . .
 
-# Build production assets
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts \
     && npm install --omit=dev
 
@@ -76,34 +67,28 @@ FROM base AS prod
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Install ONLY runtime libraries (no dev headers)
+# Purge dev packages FIRST, then install runtime
 RUN apt-get update && \
-    (apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip5 || \
-     apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip4) && \
     apt-get purge -y libxml2-dev libxslt-dev libzip-dev && \
+    apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip5 && \
     apt-get autoremove -y --purge && \
     rm -rf /var/lib/apt/lists/*
 
-# Security: Create non-root user
-RUN useradd -r -u 1000 -g www-data appuser \
-    && mkdir -p /var/www/html \
-    && chown appuser:www-data /var/www/html
+# Create non-root user and set up directories ONCE
+RUN useradd -r -u 1000 -g www-data appuser && \
+    mkdir -p /var/www/html/xml /var/www/html/storage && \
+    chown -R appuser:www-data /var/www/html
 
 WORKDIR /var/www/html
 
-# Copy built assets with proper ownership
+# Copy built assets
 COPY --from=builder --chown=appuser:www-data /var/www/html /var/www/html
 
-# Copy entrypoint script
+# Copy entrypoint
 COPY --chown=appuser:www-data docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
-# Create appuser and set up writable directories: storage, xml, json
-RUN useradd -r -u 1000 -g www-data appuser && \
-    chown -R appuser:www-data /var/www/html/save /var/www/html/uploads && \
-    chmod -R 775 /var/www/html/save /var/www/html/uploads
-# Security: Drop root privileges
+
 USER appuser
 
-# Security: Run Apache as foreground (non-root)
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["apache2-foreground"]
