@@ -21,8 +21,7 @@ RUN apt-get update \
         mysqli \
         pdo_mysql \
         xsl \
-        zip \
-    && docker-php-ext-configure zip --with-libzip
+        zip
 
 # Security: Set Apache document root
 ENV APACHE_DOCUMENT_ROOT=/var/www/html
