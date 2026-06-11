@@ -927,6 +927,32 @@ include_once "../settings.php";
                         research data in our repository.
                     </p>
                 </div>
+                <div id="help-stc-fg-map">
+                    <h4>Using the Map</h4>
+                    <p>You can define the spatial coverage directly on the map. Open the map modal and select your preferred mode:</p>
+                    <ul>
+                        <li><strong>Marker:</strong> Click anywhere on the map to select a single point.</li>
+                        <li><strong>Rectangle:</strong> Left-click two points on the map to draw a bounding rectangle between them. Right-click at any time to cancel drawing.</li>
+                    </ul>
+                    <h5>Map Navigation</h5>
+                    <ul>
+                        <li><strong>Zoom In:</strong>
+                            <ul>
+                                <li>Scroll the mouse wheel while holding <kbd>Ctrl</kbd> (Windows) or <kbd>Cmd</kbd> (Mac).</li>
+                                <li>Click the <kbd>+</kbd> button.</li>
+                                <li>Double-left-click on the map.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Zoom Out:</strong>
+                            <ul>
+                                <li>Scroll the mouse wheel backward while holding <kbd>Ctrl</kbd> (Windows) or <kbd>Cmd</kbd> (Mac).</li>
+                                <li>Click the <kbd>-</kbd> button.</li>
+                                <li>Double-right-click on the map.</li>
+                            </ul>
+                        </li>
+                        <li><strong>Place Search:</strong> Use the search bar to instantly jump and zoom into a specific location or address.</li>
+                    </ul>
+                </div>
                 <div id="help-tsc-geographicalcoverage">
                     <h4>Geographic Coverage</h4>
                     <p>You can add singles coordinates with <code>Latitude Min</code> and <code>Longitude Min</code>
@@ -1532,12 +1558,22 @@ include_once "../settings.php";
     <!-- Custom jQuery Script -->
     <script src="helpMenu.js"></script>
     <script src="search.js"></script>
+    <script id="hidden-thesauri-config" type="application/json"><?php echo json_encode($thesauriHiddenKeys ?? []); ?></script>
     <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const hiddenThesauriConfig = document.getElementById('hidden-thesauri-config');
+        const hiddenThesauri = new Set(JSON.parse(hiddenThesauriConfig ? hiddenThesauriConfig.textContent : '[]'));
+
         fetch('../api/v2/vocabs/thesauri/availability')
             .then(function (response) { return response.json(); })
             .then(function (data) {
                 Object.keys(data).forEach(function (key) {
+                    // Don't show thesauri from the hiddenThesauri array at all (overwrites ERNIE configuration) 
+
+                    if (hiddenThesauri.has(key)) {
+                        return;
+                    }
+
                     if (data[key].available) {
                         document.querySelectorAll('[data-thesaurus="' + key + '"]').forEach(function (el) {
                             el.style.display = '';
@@ -1548,6 +1584,10 @@ include_once "../settings.php";
             .catch(function () {
                 // On error show all thesaurus sections as fallback
                 document.querySelectorAll('[data-thesaurus]').forEach(function (el) {
+                    // Dont show thesauri from the hidden Thesauri array at all (overwrites ERNIE configuration)
+                    if (hiddenThesauri.has(el.getAttribute('data-thesaurus'))) {
+                        return;
+                    }
                     el.style.display = '';
                 });
             });
