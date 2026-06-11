@@ -4,8 +4,12 @@ services:
       context: .
       dockerfile: Dockerfile.db
     tmpfs:  # <-- In-memory, no disk, auto-cleared on restart
-      - /var/lib/mysql
-    command: --ddl-log=OFF --skip-log-bin --skip-innodb
+      - /var/lib/mysql:rw,uid=65532,gid=65532,mode=0770
+    command:
+      - mariadbd
+      - --ddl-log=OFF
+      - --skip-log-bin
+      - --skip-innodb
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
