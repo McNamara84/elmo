@@ -52,40 +52,13 @@ wait_for_db() {
   echo "MariaDB reachable"
 }
 
-# Check if tables already exist in the target schema
-db_has_tables() {
-  TABLE_COUNT=$(mysql -N -s -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" \
-    -e "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='${DB_NAME}';" 2>/dev/null || echo "0")
-  if [ -z "${TABLE_COUNT}" ]; then
-    TABLE_COUNT=0
-  fi
-  [ "${TABLE_COUNT}" -gt 0 ]
-}
-
 wait_for_db
 
-# set the default to keep the data
-DB_INIT_MODE="${DB_INIT_MODE:-keep_data}"
+# Always run install.php after DB is reachable.
 INSTALL_ACTION="${INSTALL_ACTION:-basic}"
-
-if [ "${DB_INIT_MODE}" = "skip" ]; then
-  echo "DB_INIT_MODE=skip - no install attempt."
-else
-  if [ "${DB_INIT_MODE}" = "drop_data" ]; then
-    echo "Running full database setup (DB_INIT_MODE=drop_data)..."
-    php /var/www/html/install.php "${INSTALL_ACTION}"
-  elif [ "${DB_INIT_MODE}" = "keep_data" ]; then
-    if db_has_tables; then
-      echo "DB_INIT_MODE=keep_data and database schema for '${DB_NAME}' already present - install.php is not called."
-    else
-      echo "DB_INIT_MODE=keep_data but no tables exist yet. Running initial database setup (${INSTALL_ACTION})..."
-      php /var/www/html/install.php "${INSTALL_ACTION}"
-    fi
-  else
-    echo "Unknown DB_INIT_MODE: '${DB_INIT_MODE}'. Skipping install."
-  fi
-  echo "Database setup finished."
-fi
+echo "Running database setup via install.php (${INSTALL_ACTION})..."
+php /var/www/html/install.php "${INSTALL_ACTION}"
+echo "Database setup finished."
 
 # Clean up install files (optional)
 rm -f /var/www/html/install.{php,html} || true

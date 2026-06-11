@@ -36,7 +36,6 @@ services:
       ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-      DB_INIT_MODE: drop_data
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
