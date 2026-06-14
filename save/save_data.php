@@ -32,6 +32,9 @@ if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
     require_once __DIR__ . '/../settings.php';
 }
 global $connection;
+
+// ===== Step 0: Security check  =====
+
 /**
  * Validates security checks for save operations.
  * 
@@ -109,8 +112,7 @@ if (!$securityCheck['status']) {
     error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
     exit();
 }
-
-// step 1: save the info into the database. 
+// ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 try {
@@ -132,6 +134,8 @@ try {
     echo $errorJson;
     flush();
 }
+// ===== Step 2: generate a file based on resource_id  =====
+
 /**
  * Generates and outputs a download for a dataset
  * 
@@ -206,8 +210,6 @@ function generateAndOutputDownload($resource_id)
     echo $payload;
     flush();
 }
-    
-// ===== Step 2: generate a file based on resource_id  =====
 try {
     generateAndOutputDownload($resource_id);
 } catch (\Throwable $e) {
