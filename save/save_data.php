@@ -11,32 +11,47 @@
  * @requires formgroups/*.php
  */
 
-/**
- * Process form submission based on action type
- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Include required configuration and helper files
+// only process requests (use return instead of exit to avoid killing
+// the PHPUnit process when this file is loaded via require_once)
+if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
+    return;
+}
+// access connection
+global $connection;
+// Only load settings if connection not already injected (for testing)
+if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
     require_once __DIR__ . '/../settings.php';
-    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-    require_once __DIR__ . '/formgroups/save_authors.php';
-    require_once __DIR__ . '/formgroups/save_contactperson.php';
-    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-    require_once __DIR__ . '/formgroups/save_freekeywords.php';
-    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-    require_once __DIR__ . '/formgroups/save_descriptions.php';
-    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-    require_once __DIR__ . '/formgroups/save_relatedwork.php';
-    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
-    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-    // ICGEM related formgroups
-    require_once __DIR__ . '/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/formgroups/save_ggms_properties.php';
-    require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
-    require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+}
+// Check if this is a resource ID request
+if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
+    $resource_id = saveResourceInformationAndRights($connection, $_POST);
+    header('Content-Type: application/json');
+    echo json_encode(['resource_id' => $resource_id]);
+    exit();
 }
 
+// step 1: save the info into the database. 
+// include a helper function to execute save functions and handle errors
+require_once __DIR__ . '/../includes/save_to_db_helper.php';
+try {
+    $resource_id = saveALL($_POST, $connection);
+} catch (\Throwable $e) {
+    // Transaction or save operation failed
+    error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());
+    // Flush any buffers
+    while (ob_get_level() > 0) {
+        ob_end_clean();
+    }
+    http_response_code(500);
+    $errorJson = json_encode([
+        'success' => false,
+        'message' => 'Save process failed: ' . $e->getMessage()
+    ]);
+    header('Content-Type: application/json');
+    header('Content-Length: ' . strlen($errorJson));
+    echo $errorJson;
+    flush();
+}
 /**
  * Generates and outputs a download for a dataset
  * 
@@ -47,7 +62,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
  * @return void Outputs XML or error response, may exit
  * @throws Exception If critical errors occur during generation
  */
-if (!function_exists('generateAndOutputDownload')) {
 function generateAndOutputDownload($resource_id)
 {
     global $connection, $showGGMsProperties;
@@ -112,139 +126,18 @@ function generateAndOutputDownload($resource_id)
     echo $payload;
     flush();
 }
-} // end function_exists('generateAndOutputDownload')
-
-/**
- * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
- * SO, This Wrapper to convert false returns from save functions into exceptions.
- *
- * @param callable $callback The function to call
- * @param mixed ...$args Arguments to pass to the function
- * @return mixed The return value from the callback
- * @throws Exception If the callback returns false
- */
-if (!function_exists('executeSaveFunction')) {
-function executeSaveFunction($callback, ...$args)
-{
-    $functionName = is_array($callback) ? $callback[1] : $callback;
     
-    try {
-        $result = $callback(...$args);
-        
-        if ($result === false) {
-            error_log("[💿SAVE]: Save operation failed: " . $functionName . " returned false");
-            throw new Exception("Save operation failed: " . $functionName . " returned false");
-        }
-        
-        return $result;
-    } catch (Exception $e) {
-        error_log("[💿SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
-        throw $e; // Re-throw so outer catch can handle it
-    }
-}
-} // end function_exists('executeSaveFunction')
-
-// only process requests (use return instead of exit to avoid killing
-// the PHPUnit process when this file is loaded via require_once)
-if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
-    return;
-}
-
-// Only load settings if connection not already injected (for testing)
-if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
-    require_once __DIR__ . '/../settings.php';
-}
-global $connection;
-
-// Check if this is a resource ID request
-if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
-    $resource_id = saveResourceInformationAndRights($connection, $_POST);
-    header('Content-Type: application/json');
-    echo json_encode(['resource_id' => $resource_id]);
-    exit();
-}
-
-// main line: data saving process and XML generation.
+// ===== Step 2: generate a file based on resource_id  =====
 try {
-    // Saving all mandatory fields & optional fields if needed
-    $connection->begin_transaction();
-    error_log("[💿SAVE]:Starting save process in save_data.php");
-    $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
-    error_log("[💿SAVE]:the id generated is " . $resource_id);
-    executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
-    executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
-    if ($showMslLabs) {
-        executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
-    }
-    if ($showContributorPersons) {
-        executeSaveFunction('saveContributorPersons', $connection, $_POST, $resource_id);
-    }
-    if ($showContributorInstitutions) {
-        executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
-    }
-    executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
-    if ($showThesauri) {
-        executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
-    }
-    if ($showFreeKeywords) {
-        executeSaveFunction('saveFreeKeywords', $connection, $_POST, $resource_id);
-    }
-    if ($showSpatialTemporalCoverage) {
-        executeSaveFunction('saveSpatialTemporalCoverage', $connection, $_POST, $resource_id);
-    }
-    if ($showRelatedWork) {
-        executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
-    }
-    if ($showUsedInstruments) {
-        executeSaveFunction('saveUsedInstruments', $connection, $_POST, $resource_id);
-    }
-    if ($showFundingReference) {
-        executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
-    }
-    if ($showGGMsProperties) {
-        executeSaveFunction('saveGGMsDefinition', $connection, $_POST, $resource_id);
-        executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
-        executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
-        executeSaveFunction('saveGGMsModeltypes', $connection, $_POST, $resource_id);
-    }
-
-    // Validate transaction commit
-    if (!$connection->commit()) {
-        throw new Exception("Transaction commit failed - database returned false");
-    }
-    
-    error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
-    
-    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate download =====
-    try {
-        generateAndOutputDownload($resource_id);
-    } catch (\Throwable $e) {
-        error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
-        // Flush any buffers from the failed generation attempt
-        while (ob_get_level() > 0) {
-            ob_end_clean();
-        }
-        http_response_code(500);
-        $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
-        header('Content-Type: application/json');
-        header('Content-Length: ' . strlen($errorJson));
-        echo $errorJson;
-        flush();
-    }
-    
+    generateAndOutputDownload($resource_id);
 } catch (\Throwable $e) {
-    // Transaction or save operation failed
-    $connection->rollback();
-    error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());
-    // Flush any buffers
+    error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
+    // Flush any buffers from the failed generation attempt
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
     http_response_code(500);
-    $errorJson = json_encode([
-        'success' => false,
-        'message' => 'Save process failed: ' . $e->getMessage()
-    ]);
+    $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
     header('Content-Type: application/json');
     header('Content-Length: ' . strlen($errorJson));
     echo $errorJson;
