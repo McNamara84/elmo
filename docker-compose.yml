@@ -64,6 +64,7 @@ services:
       BASE_URL: http://hostmachine:8080/
     volumes:
       - .:/work
+      - ./playwright-report:/work/playwright-report
 
 volumes:
   db_data:
