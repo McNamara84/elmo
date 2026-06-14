@@ -101,6 +101,19 @@ if ($envShowMslLogo !== false) {
     $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
 }
 
+$showMslMode = false;
+$envShowMslMode = getenv('SHOW_MSL_MODE');
+
+// MSL mode controls all MSL features collectively
+if ($envShowMslMode !== false) {
+    $showMslMode = filter_var($envShowMslMode, FILTER_VALIDATE_BOOLEAN);
+
+    $showMslLabs = $showMslMode;
+    $showMslVocabs = $showMslMode;
+    $showMslDefaultFreeKeywords = $showMslMode;
+    $showMslLogo = $showMslMode;
+}
+
 // SETTINGS FOR PID4INST INSTRUMENTS
 // Show Used Instruments form group (PID4INST via ERNIE API)
 $showUsedInstruments = false;
