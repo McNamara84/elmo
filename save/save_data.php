@@ -110,7 +110,7 @@ if (!$securityCheck['status']) {
     header('Content-Type: application/json');
     echo json_encode(['error' => $securityCheck['message'] ?? 'Security validation failed']);
     error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
-    exit();
+    return;
 }
 // ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
@@ -133,6 +133,7 @@ try {
     header('Content-Length: ' . strlen($errorJson));
     echo $errorJson;
     flush();
+    return;
 }
 // ===== Step 2: generate a file based on resource_id  =====
 
@@ -146,8 +147,7 @@ try {
  * @return void Outputs XML or error response, may exit
  * @throws Exception If critical errors occur during generation
  */
-function generateAndOutputDownload($resource_id)
-{
+try {
     global $connection, $showGGMsProperties;
     
     try {
@@ -160,7 +160,7 @@ function generateAndOutputDownload($resource_id)
 
     // Only handle download when filename is in POST
     if (!isset($_POST['filename'])) {
-        return;
+        throw new \RuntimeException('Filename not provided');
     }
 
     $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
@@ -209,9 +209,6 @@ function generateAndOutputDownload($resource_id)
     header('Content-Length: ' . strlen($payload));
     echo $payload;
     flush();
-}
-try {
-    generateAndOutputDownload($resource_id);
 } catch (\Throwable $e) {
     error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
     // Flush any buffers from the failed generation attempt
@@ -224,4 +221,5 @@ try {
     header('Content-Length: ' . strlen($errorJson));
     echo $errorJson;
     flush();
+    return;
 }
