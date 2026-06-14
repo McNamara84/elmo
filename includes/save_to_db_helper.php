@@ -1,22 +1,22 @@
 <?php
-require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
-require_once __DIR__ . '/save/formgroups/save_authors.php';
-require_once __DIR__ . '/save/formgroups/save_contactperson.php';
-require_once __DIR__ . '/save/formgroups/save_freekeywords.php';
-require_once __DIR__ . '/save/formgroups/save_contributorpersons.php';
-require_once __DIR__ . '/save/formgroups/save_contributorinstitutions.php';
-require_once __DIR__ . '/save/formgroups/save_descriptions.php';
-require_once __DIR__ . '/save/formgroups/save_thesauruskeywords.php';
-require_once __DIR__ . '/save/formgroups/save_spatialtemporalcoverage.php';
-require_once __DIR__ . '/save/formgroups/save_relatedwork.php';
-require_once __DIR__ . '/save/formgroups/save_usedinstruments.php';
-require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
+require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+require_once __DIR__ . '/../save/formgroups/save_authors.php';
+require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
+require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
+require_once __DIR__ . '/../save/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/../save/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/../save/formgroups/save_descriptions.php';
+require_once __DIR__ . '/../save/formgroups/save_thesauruskeywords.php';
+require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
+require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
+require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 global $showGGMsProperties;
 if ($showGGMsProperties) {
-    require_once __DIR__ . '/save/formgroups/save_ggms_properties.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_modeltypes.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_datasources.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
 }
 /**
  * Existing functions (included above) dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
