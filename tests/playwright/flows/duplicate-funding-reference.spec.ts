@@ -60,6 +60,9 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
       { timeout: 30_000 },
     );
 
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
+
     await saveModal.getByRole('button', { name: 'Save' }).click();
 
     await Promise.all([downloadPromise, responsePromise]);
@@ -121,6 +124,9 @@ test.describe('Bug #767 – Duplicate Funding Reference with NULL optional field
       response => response.url().includes('save_data.php'),
       { timeout: 30_000 },
     );
+
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
 
     await saveModal.getByRole('button', { name: 'Save' }).click();
 

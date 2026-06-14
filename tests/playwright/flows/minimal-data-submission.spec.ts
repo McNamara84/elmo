@@ -39,6 +39,9 @@ test.describe('Minimal Valid Dataset Test', () => {
     await page.check('#input-submit-privacycheck');
     await expect(modalSubmitButton).toBeEnabled();
 
+    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    await page.waitForTimeout(3100);
+
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),
       modalSubmitButton.click(),
@@ -79,6 +82,9 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     await page.check('#input-submit-privacycheck');
     const modalSubmitButton = page.locator('#button-submit-submit');
+
+    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),
@@ -131,6 +137,9 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     await page.check('#input-submit-privacycheck');
     const modalSubmitButton = page.locator('#button-submit-submit');
+
+    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),
