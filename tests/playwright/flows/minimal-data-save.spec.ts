@@ -117,6 +117,9 @@ test.describe('Minimal dataset save-as flow', () => {
       });
     });
 
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
+
     const downloadPromise = page.waitForEvent('download');
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('save/save_data.php')
@@ -174,7 +177,8 @@ test.describe('Minimal dataset save-as flow', () => {
         body: 'Internal Server Error',
       });
     });
-
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('save/save_data.php')
     );
