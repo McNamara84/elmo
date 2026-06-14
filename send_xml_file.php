@@ -18,16 +18,19 @@ if (defined('PHPUNIT_RUNNING')) {
 // Enable error logging but suppress direct output to keep JSON responses clean
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+session_start();
 
 // Buffer output
 ob_start();
 
-error_log("send_xml_file.php: Script started");
+
+// Include security functions FIRST (before settings.php to avoid duplicate includes)
+require_once __DIR__ . '/api/security.php';
+
 
 // Include required files
 require_once __DIR__ . '/settings.php';
 
-error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties, $showUsedInstruments;
@@ -89,6 +92,84 @@ function testGfzSmtpConnectivity(): bool {
         error_log("Port {$smtpPort} on {$smtpHost} is CLOSED or FILTERED. Error: {$errno} - {$errstr}");
         return false;
     }
+}
+/**
+ * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
+ * @param array<string, mixed> $postData POST data from form
+ * @param mysqli $connection Database connection
+ * @return void
+ * @throws Exception if validation fails
+ */
+function validateSubmitSecurity(array $postData, $connection): void {
+    // Get client IP
+    $clientIp = getClientIp();
+    
+    // Check 1: Honeypot - Silent rejection
+    if (!validateHoneypot($postData['website'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'honeypot triggered', $clientIp);
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid submission detected.'
+        ]);
+        exit;
+    }
+
+    // Check 2: CSRF Token validation
+    if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'invalid csrf token', $clientIp);
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security token validation failed.'
+        ]);
+        exit;
+    }
+    
+    // Check 3: Rate limiting for submit (10 per hour)
+    if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($connection, 'submit', 'rate limit exceeded', $clientIp);
+        http_response_code(429);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Too many submission attempts. Please try again later.'
+        ]);
+        exit;
+    }
+    
+    // Check 4: Minimum time spent (server-trusted)
+    $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
+
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $connection,
+            'submit',
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
+        );
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Please take time to review your submission before submitting.'
+        ]);
+        exit;
+    }
+    
+    // All checks passed, record the rate limit
+    recordRateLimit($connection, $clientIp, 'submit');
+    
+    // Invalidate CSRF token after successful security validation
+    invalidateCsrfToken();
+    
+    error_log("send_xml_file.php: Submit security validation passed");
 }
 
 /**
@@ -349,8 +430,32 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 }
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
+// Initialize variables that may be used in error handling
+$dataUrl = '';
+$urgencyWeeks = null;
+
 try {
     error_log("send_xml_file.php: Try block started");
+    
+    // Validate security before saving any data
+    // Wrap in try-catch to ensure any validation errors return proper status codes
+    try {
+        validateSubmitSecurity($_POST, $connection);
+    } catch (\Exception $e) {
+        // Security validation threw an unexpected exception - return 403
+        error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security validation failed.'
+        ]);
+        exit;
+    }
+    
+    error_log("send_xml_file.php: Security validation passed");
+    
     // Save all form components
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
@@ -366,10 +471,21 @@ try {
         saveUsedInstruments($connection, $_POST, $resource_id);
     }
     saveFundingReferences($connection, $_POST, $resource_id);
+    } catch (Exception $e) {
+        error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
+        http_response_code(500);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Save operation failed.'
+        ]);
+        exit;    
+    }
 
     error_log("send_xml_file.php: All data saved successfully");
 
-    // Get additional submission data from modal
+    // Get additional submission data from modal (updating initialized variables)
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
     $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
 
@@ -560,21 +676,32 @@ if (!$simulateEmail) {
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
 } else {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-}
-    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
-    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
-
-    error_log("send_xml_file.php: About to return success");
-
-    // Clear any output buffers
+        // Clear any output buffers
     ob_clean();
 
     // Return success response
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
+        'message' => '✓ SIMULATED: Email sending was skipped...',
+        'resource_id' => $resource_id,
+        'simulated' => true
+    ]);
+    exit;
+    }
+try {
+    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
+
+    // reached in the normal production flow 
+    error_log("send_xml_file.php: About to return success");
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
         'message' => 'Backend reports: XML submission email sent successfully.',
-        'resource_id' => $resource_id
+        'resource_id' => $resource_id,
+        'simulated' => false
     ]);
 
 } catch (Exception $e) {

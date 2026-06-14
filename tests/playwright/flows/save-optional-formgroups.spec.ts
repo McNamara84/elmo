@@ -109,6 +109,9 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
       { timeout: 30_000 }
     );
 
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
+
     // Click Save button in modal
     await page.click('#button-saveas-save');
 
@@ -263,6 +266,8 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
 
     // Wait for download
     const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
+    // Wait 2+ seconds to meet backend minimum interaction time for save
+    await page.waitForTimeout(2100);
     await page.click('#button-saveas-save');
     const download = await downloadPromise;
 
