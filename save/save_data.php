@@ -110,35 +110,6 @@ if (!$securityCheck['status']) {
     exit();
 }
 
-// Include required files
-require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-require_once __DIR__ . '/formgroups/save_authors.php';
-require_once __DIR__ . '/formgroups/save_contactperson.php';
-require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-require_once __DIR__ . '/formgroups/save_freekeywords.php';
-require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-require_once __DIR__ . '/formgroups/save_descriptions.php';
-require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-require_once __DIR__ . '/formgroups/save_relatedwork.php';
-    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
-require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-// ICGEM related formgroups
-require_once __DIR__ . '/formgroups/save_ggms_definition.php';
-require_once __DIR__ . '/formgroups/save_ggms_properties.php';
-require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
-require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
-
-}
-// Check if this is a resource ID request
-if (isset($_POST['get_resource_id']) && $_POST['get_resource_id'] === '1') {
-    $resource_id = saveResourceInformationAndRights($connection, $_POST);
-    header('Content-Type: application/json');
-    echo json_encode(['resource_id' => $resource_id]);
-    exit();
-}
-
 // step 1: save the info into the database. 
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
