@@ -361,11 +361,22 @@ function validateAuthorInstitutionRequirements() {
             authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
         };
 
-        // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
+        // Check whether the Author-Institution-Affiliation field has a visible value, JSON affiliations, or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
+        var hasStructuredAffiliations = false;
+        if (affVal.charAt(0) === '[') {
+            try {
+                var parsedAffiliations = JSON.parse(affVal);
+                hasStructuredAffiliations = Array.isArray(parsedAffiliations) && parsedAffiliations.some(function (affiliation) {
+                    return String(affiliation?.label || affiliation?.value || affiliation?.name || '').trim() !== '';
+                });
+            } catch (error) {
+                hasStructuredAffiliations = false;
+            }
+        }
         var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?._tagify;
         var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
-        var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
+        var isauthorinstitutionAffiliationFilled = (affVal !== '' && affVal !== '[]') || hasStructuredAffiliations || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         fields.authorinstitutionName.each(function () {

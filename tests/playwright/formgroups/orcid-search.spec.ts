@@ -3,7 +3,9 @@ import { navigateToHome, SELECTORS } from '../utils';
 
 async function closeOrcidModalIfVisible(page) {
   const modal = page.locator('#modal-orcid-search');
-  await modal.locator('.btn-close').click({ timeout: 2000 }).catch(() => {});
+  await expect(modal).toBeHidden({ timeout: 5000 }).catch(async () => {
+    await modal.locator('.btn-close').click({ timeout: 2000 }).catch(() => {});
+  });
   await page.evaluate(() => {
     const modalElement = document.getElementById('modal-orcid-search');
     const modalInstance = modalElement ? (window as any).bootstrap?.Modal?.getInstance(modalElement) : null;

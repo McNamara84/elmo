@@ -151,21 +151,35 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
     processAffiliation(education);
   });
 
-  // Convert Set to array of objects for Tagify
-  const affiliationObjects = Array.from(affiliationSet).map(name => ({ value: name }));
+  const rorIdsArray = Array.from(rorIds);
+  const affiliationObjects = Array.from(affiliationSet).map((name, index) => {
+    const rorId = rorIdsArray[index] || '';
+    return {
+      value: name,
+      label: name,
+      rorId,
+      id: rorId
+    };
+  });
+  const tagifyObjects = affiliationObjects.map(affiliation => ({ value: affiliation.value }));
 
   // Set Tagify tags
   const affiliationInput = row.find(`input[id^="${fieldMapping.affiliation}"]`)[0];
   if (affiliationInput?._tagify) {
     affiliationInput._tagify.removeAllTags();
     if (affiliationObjects.length > 0) {
-      affiliationInput._tagify.addTags(affiliationObjects);
+      affiliationInput._tagify.addTags(tagifyObjects);
     }
   }
 
-  // Fill hidden ROR ID field
-  const rorIdsArray = Array.from(rorIds);
+  row.find(`input[id^="${fieldMapping.affiliation}"]`)
+    .val(JSON.stringify(affiliationObjects))
+    .trigger('input')
+    .trigger('change');
+
   row.find(`input[id^="${fieldMapping.rorId}"]`).val(rorIdsArray.join(','));
+
+  row.get(0)?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
 }
 
 /**

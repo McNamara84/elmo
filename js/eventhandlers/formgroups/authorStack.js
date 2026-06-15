@@ -486,6 +486,10 @@ $(document).ready(function () {
     const normalizedAffiliations = writeAffiliations(row, config.affiliationName, config.rorName, affiliations);
     const state = getRowState(row);
     state.affiliations = normalizedAffiliations;
+    row.find(`input[name="${config.affiliationName}"]`).trigger('change');
+    if (typeof window.validateAllMandatoryFields === 'function') {
+      window.validateAllMandatoryFields();
+    }
 
     if (options.render !== false) {
       renderAffiliationEditor(row);
@@ -1277,6 +1281,12 @@ $(document).ready(function () {
 
     [affiliations[index], affiliations[targetIndex]] = [affiliations[targetIndex], affiliations[index]];
     setRowAffiliations(row, affiliations);
+    updatePayload();
+  });
+
+  stack.on('author-affiliations:changed', '[data-author-entry-row]', function () {
+    const row = $(this);
+    renderAffiliationEditor(row);
     updatePayload();
   });
 

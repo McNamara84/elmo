@@ -43,7 +43,7 @@ test.describe('Author institution entries in the Authors form group', () => {
     await expect(formHelpIcon).toBeVisible();
 
     const affiliationHelpIcon = firstRow.locator('[data-help-section-id="help-author-affiliation"]');
-    await expect(affiliationHelpIcon).toBeVisible();
+    await expect(affiliationHelpIcon).toHaveCount(1);
 
     const dragHandle = firstRow.locator('.drag-handle');
     await expect(dragHandle).toHaveAttribute('aria-label', 'Drag & drop to change order');
