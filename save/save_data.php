@@ -94,6 +94,9 @@ function validateSaveSecurity($postData, $connection)
     // Record this save for rate limiting
     recordRateLimit($connection, $clientIp, 'save');
 
+    // Invalidate used form token so client must fetch a fresh one.
+    invalidateCsrfToken();
+
     return ['status' => true];
 }
 

@@ -15,7 +15,8 @@ async function openSaveModal(page: Page) {
 
   const saveModal = page.locator('#modal-saveas');
   await expect(saveModal).toBeVisible();
-  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('');
+  // Form token is in main form, not modal - verify it exists and has a value
+  await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('');
 
   const filenameField = page.locator('#input-saveas-filename');
   if (!(await filenameField.inputValue())) {
@@ -123,15 +124,14 @@ test.describe('Save Operation Security Features', () => {
   });
 
   test.describe('CSRF token protection in save', () => {
-    test('save form includes CSRF token field', async ({ page }) => {
+    test('save form includes CSRF token field in main form', async ({ page }) => {
       await navigateToHome(page);
             
-      // Check for hidden CSRF field
-      const csrfField = page.locator('input[id="input-save-csrf-token"]');
+      // Check for hidden CSRF field in main form (not in modal)
+      const csrfField = page.locator('#input-form-csrf-token');
       
-      if (await csrfField.count() > 0) {
-        await expect(csrfField).toHaveAttribute('type', 'hidden');
-      }
+      await expect(csrfField).toHaveAttribute('type', 'hidden');
+      await expect(csrfField).not.toHaveValue('');
     });
 
     test('backend rejects save when token is invalid', async ({ page }) => {
@@ -146,7 +146,8 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
 
       await openSaveModal(page);
-      await page.locator('#input-save-csrf-token').evaluate((el) => {
+      // Corrupt the main form token
+      await page.locator('#input-form-csrf-token').evaluate((el) => {
         (el as HTMLInputElement).value = 'corrupted-token';
       });
 
