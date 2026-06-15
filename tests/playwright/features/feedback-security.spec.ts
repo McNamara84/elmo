@@ -170,8 +170,8 @@ test.describe('Feedback Security Features', () => {
 
       await fillFeedbackForm(page);
 
-      // Wait to simulate real user interaction for time tracking
-      await page.waitForTimeout(2000);
+      // Wait past the client-side minimum interaction gate.
+      await page.waitForTimeout(3100);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -182,9 +182,9 @@ test.describe('Feedback Security Features', () => {
       await sendButton.click();
       await responsePromise;
 
-      // Time spent should be at least 1 second (verifies time tracking works)
+      // Time spent should reflect the modal minimum interaction time.
       const timeSpentNum = parseInt(capturedTimeSpent, 10);
-      expect(timeSpentNum).toBeGreaterThanOrEqual(1);
+      expect(timeSpentNum).toBeGreaterThanOrEqual(3);
       
       await page.unroute(FEEDBACK_ENDPOINT);
     });
@@ -214,6 +214,7 @@ test.describe('Feedback Security Features', () => {
 
       // Wait for CSRF token to be populated before submitting
       await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
+      await page.waitForTimeout(3100);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -255,6 +256,7 @@ test.describe('Feedback Security Features', () => {
 
       await fillFeedbackForm(page);
       await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
+      await page.waitForTimeout(3100);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -291,6 +293,7 @@ test.describe('Feedback Security Features', () => {
 
       await fillFeedbackForm(page);
       await expect(feedbackModal.locator('input[name="csrf_token"]')).not.toHaveValue('');
+      await page.waitForTimeout(3100);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
       
@@ -311,8 +314,9 @@ test.describe('Feedback Security Features', () => {
     });
 
     test('shows time validation error when form submitted too quickly', async ({ page }) => {
-      // Mock time validation error BEFORE opening modal
+      let requestSent = false;
       await page.route(FEEDBACK_ENDPOINT, async (route) => {
+        requestSent = true;
         await route.fulfill({
           status: 429,
           contentType: 'application/json',
@@ -328,19 +332,15 @@ test.describe('Feedback Security Features', () => {
       await fillFeedbackForm(page);
 
       const sendButton = feedbackModal.locator('#button-feedback-send');
-      
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
 
       await sendButton.click();
-      await responsePromise;
 
-      // Error message should be displayed
+      // Client-side gate should block the request and show a warning immediately.
       const statusPanel = feedbackModal.locator('#panel-feedback-status');
-      const errorAlert = statusPanel.locator('.alert-danger');
-      await expect(errorAlert).toBeVisible();
-      await expect(errorAlert).toContainText('zu schnell');
+      const warningAlert = statusPanel.locator('.alert-warning');
+      await expect(warningAlert).toBeVisible();
+      await expect(warningAlert).toContainText('at least 3 seconds');
+      expect(requestSent).toBe(false);
       
       await page.unroute(FEEDBACK_ENDPOINT);
     });

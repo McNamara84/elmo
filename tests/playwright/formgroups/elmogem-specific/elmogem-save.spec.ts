@@ -94,7 +94,7 @@ test.describe('ELMO-GEM save', () => {
     await expect(page.getByRole('heading', { name: 'Save as XML' })).toBeVisible();
     
     // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     
     await page.getByRole('textbox', { name: 'Filename' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).dblclick();
@@ -133,7 +133,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('button', { name: 'Save as XML' }).click();
     
     // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_datase_with_data_sources');
     const downloadPromise = page.waitForEvent('download');
@@ -175,7 +175,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('button', { name: 'Save as XML' }).click();
     
     // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_sparse');
     const downloadPromise = page.waitForEvent('download');
@@ -218,7 +218,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('button', { name: 'Save as XML' }).click();
     
     // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_isostasy');
     const downloadPromise = page.waitForEvent('download');

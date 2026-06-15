@@ -369,10 +369,6 @@ async function downloadAndSaveXml(
   page: Page,
   testName: string
 ): Promise<{ xmlContent: string; parsedXml: any }> {
-  // Intercept the save request via page.route() to capture the response body.
-  // Content-Disposition: attachment causes the browser to treat the response as
-  // a file download, which means response.text() returns an empty string.
-  // By using route.fetch() we read the body before the browser consumes it.
   let capturedBody = '';
   let capturedStatus = 0;
   let capturedHeaders: Record<string, string> = {};
@@ -387,13 +383,13 @@ async function downloadAndSaveXml(
     capturedHeaders = response.headers();
     const body = await response.body();
     capturedBody = body.toString('utf-8');
-    // Forward the original response (including download headers) to the browser
     await route.fulfill({ response, body });
   });
 
   // Wait for Save button and click
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5000 });
+  await page.waitForTimeout(2100);
   await saveButton.click();
 
   // Wait for Save As modal to be visible
@@ -401,7 +397,7 @@ async function downloadAndSaveXml(
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
   // Wait for CSRF token to be fetched and populated
-  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+  await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
 
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
@@ -410,20 +406,15 @@ async function downloadAndSaveXml(
   // Wait 2+ seconds to meet backend minimum interaction time for save
   await page.waitForTimeout(2100);
 
-  // Click the save button in the modal
-  const saveConfirmButton = page.locator('#button-saveas-save');
-  await saveConfirmButton.click();
+  await page.locator('#button-saveas-save').click();
 
-  // Wait for the POST response to complete
   await page.waitForResponse(
     resp => resp.url().includes('/save/save_data.php') && resp.request().method() === 'POST',
     { timeout: 30_000 }
   );
 
-  // Clean up route handler
   await page.unroute('**/save/save_data.php');
 
-  // Use the captured body from route interception
   const xmlContent = capturedBody;
 
   // Fail fast with detailed diagnostics when save response is broken
