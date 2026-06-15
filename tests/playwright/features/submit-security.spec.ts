@@ -123,7 +123,7 @@ test.describe('Submit Operation Security Features', () => {
     await submitFromModalWithPrivacyConsent(page);
     const response = await responsePromise;
 
-    expect(response.status()).toBe(400);
+    expect(response.status()).toBe(403);
   });
 
   test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
