@@ -39,28 +39,6 @@ global $xmlSubmitAddress;
 
 error_log("send_xml_file.php: Globals set, connection: " . (isset($connection) ? 'set' : 'not set'));
 
-require_once __DIR__ . '/save/formgroups/save_resourceinformation_and_rights.php';
-require_once __DIR__ . '/save/formgroups/save_authors.php';
-require_once __DIR__ . '/save/formgroups/save_contactperson.php';
-require_once __DIR__ . '/save/formgroups/save_freekeywords.php';
-require_once __DIR__ . '/save/formgroups/save_contributorpersons.php';
-require_once __DIR__ . '/save/formgroups/save_contributorinstitutions.php';
-require_once __DIR__ . '/save/formgroups/save_descriptions.php';
-require_once __DIR__ . '/save/formgroups/save_thesauruskeywords.php';
-require_once __DIR__ . '/save/formgroups/save_spatialtemporalcoverage.php';
-require_once __DIR__ . '/save/formgroups/save_relatedwork.php';
-require_once __DIR__ . '/save/formgroups/save_usedinstruments.php';
-require_once __DIR__ . '/save/formgroups/save_fundingreferences.php';
-
-if ($showGGMsProperties) {
-    require_once __DIR__ . '/save/formgroups/save_ggms_properties.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_modeltypes.php';
-    require_once __DIR__ . '/save/formgroups/save_ggms_datasources.php';
-}
-
-error_log("send_xml_file.php: Save functions included");
-
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
@@ -428,17 +406,17 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 
     error_log('Researcher confirmation: ' . ($simulateEmail ? 'Simulated' : 'Sent') . ' ' . $processedCount . ' confirmation email(s).');
 }
-$resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
 
 // Initialize variables that may be used in error handling
 $dataUrl = '';
 $urgencyWeeks = null;
 
+// ========= EXECUTION =========
+
 try {
     error_log("send_xml_file.php: Try block started");
     
-    // Validate security before saving any data
-    // Wrap in try-catch to ensure any validation errors return proper status codes
+    // Step 0: Validate security before saving any data
     try {
         validateSubmitSecurity($_POST, $connection);
     } catch (\Exception $e) {
@@ -456,21 +434,10 @@ try {
     
     error_log("send_xml_file.php: Security validation passed");
     
-    // Save all form components
-    $resource_id = saveResourceInformationAndRights($connection, $_POST);
-    saveAuthors($connection, $_POST, $resource_id);
-    saveContactPerson($connection, $_POST, $resource_id);
-    saveContributorInstitutions($connection, $_POST, $resource_id);
-    saveContributorPersons($connection, $_POST, $resource_id);
-    saveDescriptions($connection, $_POST, $resource_id);
-    saveKeywords($connection, $_POST, $resource_id);
-    saveFreeKeywords($connection, $_POST, $resource_id);
-    saveSpatialTemporalCoverage($connection, $_POST, $resource_id);
-    saveRelatedWork($connection, $_POST, $resource_id);
-    if ($showUsedInstruments ?? false) {
-        saveUsedInstruments($connection, $_POST, $resource_id);
-    }
-    saveFundingReferences($connection, $_POST, $resource_id);
+    // Step 1: Save all form components
+    $postData = $_POST;
+    try {
+        $resource_id = saveALL($postData, $connection);
     } catch (Exception $e) {
         error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
         http_response_code(500);
@@ -542,14 +509,33 @@ try {
 
     error_log("send_xml_file.php: XML content ready");
 
+
+    
 // Add simulation flag for development 
 // (set SIMULATE_EMAIL=true in env to skip the actual email sending)
 include_once __DIR__ . '/includes/feature_toggles.php';
 $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 error_log("send_xml_file.php: simulateEmail = " . ($simulateEmail ? 'true' : 'false'));
 
-// Test SMTP connectivity and send email (skip if simulating)
-if (!$simulateEmail) {
+// Simulation path: escape the actual email sending logic and return a success response
+if ($simulateEmail) {
+    error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
+        // Clear any output buffers
+    ob_clean();
+
+    // Return success response
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => '✓ SIMULATED: Email sending was skipped...',
+        'resource_id' => $resource_id,
+        'simulated' => true
+    ]);
+    return;
+    }
+    
+    
+    {
     // Test SMTP connectivity before sending
     if (!testGfzSmtpConnectivity()) {
         throw new Exception("GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.");
@@ -674,21 +660,7 @@ if (!$simulateEmail) {
     error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
     $mail->send();
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
-} else {
-    error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-        // Clear any output buffers
-    ob_clean();
-
-    // Return success response
-    header('Content-Type: application/json');
-    echo json_encode([
-        'success' => true,
-        'message' => '✓ SIMULATED: Email sending was skipped...',
-        'resource_id' => $resource_id,
-        'simulated' => true
-    ]);
-    exit;
-    }
+} else 
 try {
     $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
     sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
