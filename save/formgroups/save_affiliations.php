@@ -159,6 +159,14 @@ function normalizeRorId($rorId): ?string
     }
 
     $rorId = trim((string) $rorId);
+    if ($rorId !== '' && ($rorId[0] === '[' || $rorId[0] === '{')) {
+        $decoded = json_decode($rorId, true);
+        if (is_array($decoded)) {
+            $candidate = isset($decoded[0]) && is_array($decoded[0]) ? $decoded[0] : $decoded;
+            $rorId = trim((string) ($candidate['rorId'] ?? $candidate['id'] ?? $candidate['value'] ?? ''));
+        }
+    }
+
     $rorId = preg_replace('#^https?://ror\.org/#', '', $rorId);
 
     return $rorId !== '' ? $rorId : null;
@@ -175,6 +183,22 @@ function parseRorIds($rorId_data)
 {
     if (empty($rorId_data)) {
         return [];
+    }
+
+    $rorId_data = trim((string) $rorId_data);
+    if ($rorId_data !== '' && ($rorId_data[0] === '[' || $rorId_data[0] === '{')) {
+        $decoded = json_decode($rorId_data, true);
+        if (is_array($decoded)) {
+            $items = array_is_list($decoded) ? $decoded : [$decoded];
+
+            return array_map(function ($item) {
+                if (is_array($item)) {
+                    return normalizeRorId($item['rorId'] ?? $item['id'] ?? $item['value'] ?? null);
+                }
+
+                return normalizeRorId($item);
+            }, $items);
+        }
     }
 
     $rorIds = explode(',', $rorId_data);
