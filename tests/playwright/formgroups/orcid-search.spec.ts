@@ -72,6 +72,8 @@ const mockOrcidRecord = {
 test.describe('ORCID Search Modal', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
+    await page.locator('#button-author-add').click();
+    await expect(page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`)).toHaveCount(1);
   });
 
   test('opens ORCID search modal from author search button', async ({ page }) => {
