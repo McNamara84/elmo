@@ -171,55 +171,96 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
 
 /**
  * Extract title and unique researcher contacts from XML.
+ *
+ * @param string $xml_content Raw XML content.
+ * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
  */
-function collectResearcherConfirmationDataFromXml(string $xml_content): array {
+function collectResearcherConfirmationDataFromXml(string $xml_content): array
+{
     $title = '';
     $contacts = [];
     $seen = [];
 
+    // Stop early if XML is empty.
     if (empty(trim($xml_content))) {
         error_log("Researcher confirmation: XML content is empty.");
-        return ['title' => $title, 'contacts' => $contacts];
+        return [
+            'title' => $title,
+            'contacts' => $contacts,
+        ];
     }
 
     try {
+        // Parse XML content.
         $xml = new SimpleXMLElement($xml_content);
+
+        // Read dataset title.
         $titleNodes = $xml->xpath('//*[local-name()="title"]');
         if (!empty($titleNodes)) {
             $title = trim((string) $titleNodes[0]);
         }
 
+        // Read all point of contact entries.
         $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
+
         foreach ($pointOfContactNodes ?: [] as $pointOfContactNode) {
-            $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
-            $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
+                $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
+                $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
 
-            $fullName = !empty($nameNodes) ? trim((string) $nameNodes[0]) : 'researcher';
-            $email = !empty($emailNodes) ? trim((string) $emailNodes[0]) : '';
+                $fullName = '';
+                $email = '';
 
-            if (strpos($fullName, ',') !== false) {
-                $nameParts = array_map('trim', explode(',', $fullName, 2));
-                $fullName = trim(($nameParts[1] ?? '') . ' ' . $nameParts[0]);
+                // Extract raw name.
+                if (!empty($nameNodes)) {
+                    $fullName = trim((string) $nameNodes[0]);
+                }
+
+                // Extract raw email.
+                if (!empty($emailNodes)) {
+                    $email = trim((string) $emailNodes[0]);
+                }
+
+                // Fallback name.
+                if ($fullName === '') {
+                    $fullName = 'researcher';
+                }
+
+                // Convert "Last, First" to "First Last".
+                if (strpos($fullName, ',') !== false) {
+                    $nameParts = array_map('trim', explode(',', $fullName, 2));
+                    $familyName = $nameParts[0];
+                    $givenName = $nameParts[1] ?? '';
+                    $fullName = trim($givenName . ' ' . $familyName);
+                }
+
+                // Skip invalid email addresses.
+                if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    continue;
+                }
+
+                // Skip duplicate contacts.
+                $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $contacts[] = [
+                    'fullName' => $fullName,
+                    'email' => $email,
+                ];
             }
 
-            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                continue;
-            }
-
-            $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
-            if (isset($seen[$key])) {
-                continue;
-            }
-
-            $seen[$key] = true;
-            $contacts[] = ['fullName' => $fullName, 'email' => $email];
-        }
         error_log('Researcher confirmation: Extracted ' . count($contacts) . ' contact(s) from XML.');
     } catch (Exception $e) {
+        // Log XML parsing errors.
         error_log("Researcher confirmation: Failed to parse XML. " . $e->getMessage());
     }
 
-    return ['title' => $title, 'contacts' => $contacts];
+    return [
+        'title' => $title,
+        'contacts' => $contacts,
+    ];
 }
 
 /**
