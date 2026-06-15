@@ -433,24 +433,6 @@ try {
     }
     
     error_log("send_xml_file.php: Security validation passed");
-    
-    // Step 1: Save all form components
-    $postData = $_POST;
-    try {
-        $resource_id = saveALL($postData, $connection);
-    } catch (Exception $e) {
-        error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
-        http_response_code(500);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'message' => 'Save operation failed.'
-        ]);
-        exit;    
-    }
-
-    error_log("send_xml_file.php: All data saved successfully");
 
     // Get additional submission data from modal (updating initialized variables)
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
@@ -470,6 +452,28 @@ try {
         }
     }
 
+    // todo: generate email text as a function 
+    
+    // Step 1: Save all form components
+    $postData = $_POST;
+    try {
+        $resource_id = saveALL($postData, $connection);
+    } catch (Exception $e) {
+        error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
+        http_response_code(500);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Save operation failed.'
+        ]);
+        exit;    
+    }
+
+    error_log("send_xml_file.php: All data saved successfully");
+
+
+
     // Include the dataset controller to generate the file
     try {
         require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
@@ -477,7 +481,6 @@ try {
     } catch (Exception $e) {
         error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
     }
-
     // Get XML content from API    
     $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
     $base_url = $protocol . $_SERVER['HTTP_HOST'];
@@ -510,19 +513,16 @@ try {
     error_log("send_xml_file.php: XML content ready");
 
 
-    
+// Simulation path: escape the actual email sending logic and return a success response
+if ($simulateEmail) {
 // Add simulation flag for development 
 // (set SIMULATE_EMAIL=true in env to skip the actual email sending)
 include_once __DIR__ . '/includes/feature_toggles.php';
 $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 error_log("send_xml_file.php: simulateEmail = " . ($simulateEmail ? 'true' : 'false'));
-
-// Simulation path: escape the actual email sending logic and return a success response
-if ($simulateEmail) {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-        // Clear any output buffers
+    // Clear any output buffers
     ob_clean();
-
     // Return success response
     header('Content-Type: application/json');
     echo json_encode([
@@ -534,6 +534,7 @@ if ($simulateEmail) {
     return;
     }
     
+// Production path: 
     
     {
     // Test SMTP connectivity before sending
