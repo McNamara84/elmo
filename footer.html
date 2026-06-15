@@ -56,6 +56,7 @@
 
 
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<!-- If some thesauri need to be hidden in regards of ERNIE settings, they can be added to the "hiddenThesauri" array here -->
 <script>
 window.ELMO_FEATURES = {
     showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
@@ -68,6 +69,7 @@ window.ELMO_FEATURES = {
     showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
     showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
     showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
+    hiddenThesauri: <?php echo json_encode($thesauriHiddenKeys ?? []); ?>,
     showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
     showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
     funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,

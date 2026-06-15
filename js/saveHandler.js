@@ -39,7 +39,29 @@ class SaveHandler {
         };
         this.autosaveService = autosaveService;
         this.currentFormat = 'xml';
+        
+        // Security fields
+        this.$csrfTokenField = $('#input-save-csrf-token');
+        this.$timeSpentField = $('#input-save-time-spent');
+        this.$honeypotField = $('#input-information-website');
+        this.modalOpenedAt = null;
+        
         this.initializeEventListeners();
+    }
+
+    /**
+     * Fetches a CSRF token from the server for form protection.
+     * @returns {Promise<string>} The CSRF token
+     */
+    async fetchCsrfToken() {
+        try {
+            const response = await fetch('api/csrf_token.php');
+            const data = await response.json();
+            return data.token || '';
+        } catch (error) {
+            console.error('Failed to fetch CSRF token:', error);
+            return '';
+        }
     }
 
     /**
@@ -56,8 +78,18 @@ class SaveHandler {
             }
         });
 
-        // Focus on input field
-        $('#modal-saveas').on('shown.bs.modal', () => {
+        // Focus on input field and fetch CSRF token
+        $('#modal-saveas').on('shown.bs.modal', async () => {
+            // Record when modal was opened for time-spent calculation
+            this.modalOpenedAt = Date.now();
+            
+            // Fetch fresh CSRF token
+            const token = await this.fetchCsrfToken();
+            this.$csrfTokenField.val(token);
+            
+            // Reset time spent for current modal interaction
+            this.$timeSpentField.val('0');
+            
             $('#input-saveas-filename').select();
         });
         $('#modal-saveas').on('keydown', (e) => {
@@ -127,6 +159,12 @@ class SaveHandler {
             return;
         }
 
+        // Calculate time spent filling the save modal (in seconds)
+        if (this.modalOpenedAt) {
+            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
+            this.$timeSpentField.val(timeSpent);
+        }
+
         this.modals.saveAs.hide();
         await this.saveAndDownload(filename, this.currentFormat);
     }
@@ -166,8 +204,13 @@ class SaveHandler {
             
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
-            formData.append('action', 'save_and_download');
+            
+            // Append security fields
+            formData.append('csrf_token', this.$csrfTokenField.val());
+            formData.append('save_time_spent', this.$timeSpentField.val());
+            formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);
+            formData.append('action', 'save_and_download');
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',

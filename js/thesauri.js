@@ -736,6 +736,7 @@ export function initTagifyForInput(inputElement, configKey) {
 $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
+    const hiddenThesauri = new Set(Array.isArray(features.hiddenThesauri) ? features.hiddenThesauri : []);
     const showMslVocabs = features.showMslVocabs === true;
     const showGGMsProperties = features.showGGMsProperties === true;
 
@@ -867,6 +868,7 @@ $(document).ready(function () {
         const result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
             if (THESAURUS_CONFIG[key].dynamicOnly) return;
+            if (hiddenThesauri.has(key)) return;
 
             if (availability[key] && availability[key].available) {
                 result.push({

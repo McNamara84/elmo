@@ -81,8 +81,8 @@ test.describe('Dataset Save with XML Verification', () => {
     expect(actualRoot.descriptions.description['#text']).toBe(refRoot.descriptions.description['#text']);
     
     // Assert contact person email
-    expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
-      refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
+    expect(actualEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
+      refEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
     );
 
     console.log('✓ Minimal dataset XML verification passed');
@@ -148,8 +148,8 @@ test.describe('Dataset Save with XML Verification', () => {
     }
 
     // Assert contact person email
-    expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
-      refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
+    expect(actualEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(
+      refEnvelope.MD_Metadata.identificationInfo.MD_DataIdentification.pointOfContact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']
     );
 
     console.log('✓ Extended dataset XML verification passed');
@@ -400,9 +400,15 @@ async function downloadAndSaveXml(
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
+  // Wait for CSRF token to be fetched and populated
+  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
+
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
 
   // Click the save button in the modal
   const saveConfirmButton = page.locator('#button-saveas-save');
