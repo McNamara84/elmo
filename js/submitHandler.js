@@ -294,6 +294,18 @@ class SubmitHandler {
     }
 
     /**
+     * Fetch and store a new form CSRF token, then reset form timing baseline.
+     * @returns {Promise<void>}
+     */
+    async refreshFormCsrfToken() {
+        const token = await this.fetchCsrfToken();
+        if (token) {
+            this.$csrfTokenField.val(token);
+            this.formStartedAt = Date.now();
+        }
+    }
+
+    /**
      * Initialize file input handlers
      */
     initializeFileHandlers() {
@@ -463,6 +475,9 @@ class SubmitHandler {
             },
             error: (xhr, textStatus, errorThrown) => {
                 this.handleAjaxError(xhr, textStatus, errorThrown);
+            },
+            complete: () => {
+                this.refreshFormCsrfToken();
             }
         });
     }

@@ -14,7 +14,19 @@ $(document).ready(function () {
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
   const timeSpentField = $("#input-feedback-time-spent");
-  const formCsrfTokenField = $("#input-form-csrf-token");
+  const feedbackCsrfTokenField = $("#input-feedback-csrf-token");
+  const FEEDBACK_MIN_SECONDS = 3;
+  async function fetchFeedbackCsrfToken() {
+    try {
+      const response = await fetch('api/csrf_token.php?scope=feedback');
+      const data = await response.json();
+      return data.token || '';
+    } catch (error) {
+      console.error('Failed to fetch feedback CSRF token:', error);
+      return '';
+    }
+  }
+
 
   // Track when the modal was opened for minimum time validation
   let modalOpenedAt = null;
@@ -46,13 +58,24 @@ $(document).ready(function () {
     if (modalOpenedAt) {
       const timeSpent = Math.floor((Date.now() - modalOpenedAt) / 1000);
       timeSpentField.val(timeSpent);
+
+      if (timeSpent < FEEDBACK_MIN_SECONDS) {
+        applyBooleanAttribute(statusPanel, "hidden", false)
+          .attr("role", "alert")
+          .attr("aria-live", "assertive")
+          .attr("aria-atomic", "true")
+          .html(
+            '<div class="alert alert-warning">Please spend at least 3 seconds in the feedback form before sending.</div>'
+          );
+        return;
+      }
     }
 
     // Form and data setup
     const feedbackDataArray = feedbackForm.serializeArray();
     feedbackDataArray.push({
       name: 'csrf_token',
-      value: (formCsrfTokenField.val() || '').toString()
+      value: (feedbackCsrfTokenField.val() || '').toString()
     });
     const feedbackData = $.param(feedbackDataArray);
 
@@ -130,13 +153,17 @@ $(document).ready(function () {
   });
 
   $('#modal-feedback')
-    .on('show.bs.modal', function () {
+    .on('show.bs.modal', async function () {
       // Record when modal was opened for time-spent calculation
       modalOpenedAt = Date.now();
+
+      const feedbackToken = await fetchFeedbackCsrfToken();
+      feedbackCsrfTokenField.val(feedbackToken);
 
       feedbackForm[0].reset();
       // Reset time spent field after form reset
       timeSpentField.val('0');
+      feedbackCsrfTokenField.val(feedbackToken);
       
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
       thankYouMessage.hide();

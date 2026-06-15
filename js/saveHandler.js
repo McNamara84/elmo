@@ -174,6 +174,18 @@ class SaveHandler {
     }
 
     /**
+     * Fetch and store a new form CSRF token, then reset form timing baseline.
+     * @returns {Promise<void>}
+     */
+    async refreshFormCsrfToken() {
+        const token = await this.fetchCsrfToken();
+        if (token) {
+            this.$csrfTokenField.val(token);
+            this.formStartedAt = Date.now();
+        }
+    }
+
+    /**
      * Save data and trigger download
      * @param {string} filename - Chosen filename
      * @param {string} [format=this.currentFormat] - Download format
@@ -255,6 +267,8 @@ class SaveHandler {
             this.showNotification('danger',
                 translations.alerts.errorHeading,
                 translations.alerts.saveError);
+        } finally {
+            await this.refreshFormCsrfToken();
         }
     }
 

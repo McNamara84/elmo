@@ -16,9 +16,11 @@ header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 
 // Generate a new CSRF token using shared security utility
-$token = generateCsrfToken();
+$scope = isset($_GET['scope']) ? (string) $_GET['scope'] : 'form';
+$token = generateScopedCsrfToken($scope);
 
 echo json_encode([
     'success' => true,
-    'token' => $token
+    'token' => $token,
+    'scope' => normalizeCsrfScope($scope)
 ]);

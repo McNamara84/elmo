@@ -59,18 +59,29 @@ function initializeCsrfSession(): void
  */
 function generateCsrfToken(): string
 {
-    initializeCsrfSession();
-<<<<<<< Updated upstream
-=======
+    return generateScopedCsrfToken('form');
+}
 
-    // Tie interaction timing to token generation at form initialization.
-    $_SESSION['csrf_interaction_start_time'] = time();
->>>>>>> Stashed changes
-    
+/**
+ * Generates a new CSRF token for a specific scope and stores it in the session.
+ *
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return string
+ */
+function generateScopedCsrfToken(string $scope): string
+{
+    initializeCsrfSession();
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
+    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
+    $interactionStartKey = getCsrfInteractionStartSessionKey($normalizedScope);
+
     $token = bin2hex(random_bytes(32));
-    $_SESSION['csrf_token'] = $token;
-    $_SESSION['csrf_token_time'] = time();
-    
+    $_SESSION[$tokenKey] = $token;
+    $_SESSION[$tokenTimeKey] = time();
+    $_SESSION[$interactionStartKey] = time();
+
     return $token;
 }
 
@@ -81,12 +92,16 @@ function generateCsrfToken(): string
  * @param string $submittedToken The token from the form submission
  * @return bool True if token is valid, false otherwise
  */
-function validateCsrfToken(string $submittedToken): bool
+function validateCsrfToken(string $submittedToken, string $scope = 'form'): bool
 {
     initializeCsrfSession();
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
+    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
     
-    $sessionToken = $_SESSION['csrf_token'] ?? '';
-    $tokenTime = $_SESSION['csrf_token_time'] ?? 0;
+    $sessionToken = $_SESSION[$tokenKey] ?? '';
+    $tokenTime = (int) ($_SESSION[$tokenTimeKey] ?? 0);
     
     // Token must exist in session and submitted form
     if (empty($submittedToken) || empty($sessionToken)) {
@@ -120,10 +135,23 @@ function validateCsrfToken(string $submittedToken): bool
  */
 function invalidateCsrfToken(): void
 {
+    invalidateScopedCsrfToken('form');
+}
+
+/**
+ * Invalidates a CSRF token for a specific scope.
+ *
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return void
+ */
+function invalidateScopedCsrfToken(string $scope): void
+{
     initializeCsrfSession();
-    unset($_SESSION['csrf_token']);
-    unset($_SESSION['csrf_token_time']);
-    unset($_SESSION['csrf_interaction_start_time']);
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    unset($_SESSION[getCsrfTokenSessionKey($normalizedScope)]);
+    unset($_SESSION[getCsrfTokenTimeSessionKey($normalizedScope)]);
+    unset($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)]);
 }
 
 /**
@@ -166,15 +194,17 @@ function getClientIp(): string
  *
  * @return int Age in seconds, or 0 if no token timestamp is available
  */
-function getCsrfTokenAgeSeconds(): int
+function getCsrfTokenAgeSeconds(string $scope = 'form'): int
 {
     initializeCsrfSession();
-    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
-    if ($tokenTime <= 0) {
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $interactionStart = (int) ($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] ?? 0);
+    if ($interactionStart <= 0) {
         return 0;
     }
 
-    return max(0, time() - $tokenTime);
+    return max(0, time() - $interactionStart);
 }
 
 /**
@@ -187,10 +217,10 @@ function getCsrfTokenAgeSeconds(): int
  * @param int $minimumSeconds Required minimum interaction time
  * @return array{isValid: bool, effectiveSeconds: int, clientSeconds: int, serverSeconds: int, minimumSeconds: int}
  */
-function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeconds): array
+function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeconds, string $scope = 'form'): array
 {
     $clientSeconds = max(0, $reportedTimeSpentSeconds);
-    $serverSeconds = getCsrfTokenAgeSeconds();
+    $serverSeconds = getCsrfTokenAgeSeconds($scope);
     $effectiveSeconds = $clientSeconds > 0
         ? min($clientSeconds, $serverSeconds)
         : $serverSeconds;
@@ -202,6 +232,45 @@ function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeco
         'serverSeconds' => $serverSeconds,
         'minimumSeconds' => $minimumSeconds,
     ];
+}
+
+/**
+ * Normalizes allowed CSRF scopes.
+ *
+ * @param string $scope
+ * @return string
+ */
+function normalizeCsrfScope(string $scope): string
+{
+    $normalized = strtolower(trim($scope));
+    return in_array($normalized, ['form', 'feedback'], true) ? $normalized : 'form';
+}
+
+/**
+ * @param string $scope
+ * @return string
+ */
+function getCsrfTokenSessionKey(string $scope): string
+{
+    return $scope === 'form' ? 'csrf_token' : 'csrf_token_' . $scope;
+}
+
+/**
+ * @param string $scope
+ * @return string
+ */
+function getCsrfTokenTimeSessionKey(string $scope): string
+{
+    return $scope === 'form' ? 'csrf_token_time' : 'csrf_token_time_' . $scope;
+}
+
+/**
+ * @param string $scope
+ * @return string
+ */
+function getCsrfInteractionStartSessionKey(string $scope): string
+{
+    return $scope === 'form' ? 'csrf_interaction_start_time' : 'csrf_interaction_start_time_' . $scope;
 }
 
 /**
