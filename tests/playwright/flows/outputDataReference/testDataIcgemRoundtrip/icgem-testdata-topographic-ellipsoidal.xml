@@ -67,6 +67,10 @@
   </dace:fundingReferences>
 </dace:resource>
   <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>personal.email.gmx.de</grav:address>
+      <grav:onlineResource>longwebsiteurlfortesting.de/with/path</grav:onlineResource>
+    </grav:contact>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Model_5_topographic_separate_density</grav:modelName>
       <grav:publicationYear>2020</grav:publicationYear>

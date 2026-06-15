@@ -196,7 +196,8 @@
             "title": "Thesauri",
             "name": "Thesauri Keywords",
             "label": "Open thesaurus to choose keywords or start typing...",
-            "unavailable": "Thesaurus data currently unavailable."
+            "unavailable": "Thesaurus data currently unavailable.",
+            "button": "Open Thesaurus"
         },
         "free": {
             "title": "Free Keywords",

@@ -73,13 +73,20 @@ function clearInputFields() {
     // (textarea.textarea-description is the shared class on all GGMs description fields)
     $('#accordion-description textarea.textarea-description').val('');
   
+
+    if (typeof window.clearAllThesaurusSelections === 'function') {
+        window.clearAllThesaurusSelections();
+    }
+    
     // Clear all Tagify fields
     const tagifySelectors = [
-        '#input-sciencekeyword', 
-        '#input-Platforms', 
-        '#input-Instruments',
-        '#input-mslkeyword', 
-        '#input-freekeyword', 
+        '#input-sciencekeyword',
+        '#input-platforms',
+        '#input-instruments',
+        '#input-chronostratigraphy',
+        '#input-gemet',
+        '#input-mslkeyword',
+        '#input-freekeyword',
         'input[name="cbPersonRoles[]"]',
         'input[name="cbPersonAffiliation[]"]',  
         'input[name="cbAffiliation[]"]', 

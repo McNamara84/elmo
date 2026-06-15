@@ -197,7 +197,8 @@
             "title": "Thésaurus",
             "name": "Thésaurus Keywords",
             "label": "Ouvrez le thésaurus pour choisir des mots-clés ou commencez à taper...",
-            "unavailable": "Les données du thésaurus ne sont actuellement pas disponibles."
+            "unavailable": "Les données du thésaurus ne sont actuellement pas disponibles.",
+            "button": "Ouvrir le thésaurus"
         },
         "free": {
             "title": "Mots-clés libres",

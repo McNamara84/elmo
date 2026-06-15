@@ -154,6 +154,10 @@
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>gfz@gfz.de</grav:address>
+      <grav:onlineResource>knowledge.de</grav:onlineResource>
+    </grav:contact>    
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Grace-FO_GFZ</grav:modelName>
       <grav:publicationYear>2019</grav:publicationYear>

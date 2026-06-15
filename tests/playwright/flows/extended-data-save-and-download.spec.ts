@@ -324,9 +324,14 @@ function extractResourceNode(envelope: any): any | null {
 async function expectIsoContactEmail(page: Page, actualEnvelope: any, refEnvelope: any) {
   const configuredEmail = await page.evaluate(() => (window as any).ELMO_FEATURES?.xmlSubmitAddress || null);
   const expectedEmail = configuredEmail
-    || refEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString'];
+    || getIsoContactEmail(refEnvelope);
 
-  expect(actualEnvelope.MD_Metadata.contact.CI_ResponsibleParty.contactInfo.CI_Contact.address.CI_Address.electronicMailAddress['gco:CharacterString']).toBe(expectedEmail);
+  expect(getIsoContactEmail(actualEnvelope)).toBe(expectedEmail);
+}
+
+function getIsoContactEmail(envelope: any): string | undefined {
+  return envelope.MD_Metadata?.identificationInfo?.MD_DataIdentification?.pointOfContact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString']
+    || envelope.MD_Metadata?.contact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString'];
 }
 
 /**
@@ -402,9 +407,15 @@ async function downloadAndSaveXml(
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
+  // Wait for CSRF token to be fetched and populated
+  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
+
+  // Wait 2+ seconds to meet backend minimum interaction time for save
+  await page.waitForTimeout(2100);
 
   // Click the save button in the modal
   const saveConfirmButton = page.locator('#button-saveas-save');

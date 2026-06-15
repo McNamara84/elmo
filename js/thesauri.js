@@ -292,7 +292,10 @@ function loadKeywordsForConfig(config, response) {
     $(config.jsTreeId).jstree({
         core: {
             data: processedData,
-            themes: { icons: false }
+            themes: {
+                icons: false,
+                dots: false
+            }
         },
         checkbox: {
             keep_selected_style: true,
@@ -529,6 +532,56 @@ function syncTreeSelectionFromTagify(config, tagifyInstance) {
 }
 
 /**
+ * Clears all selections for a thesaurus config:
+ * Tagify inputs, shared selected paths, jsTree selection and modal selected list.
+ *
+ * @param {Object} config - Thesaurus configuration.
+ */
+function clearThesaurusSelection(config) {
+    if (!config) return;
+
+    const state = ensureSharedState(config);
+
+    state.isSyncingTree = true;
+
+    // Clear all Tagify instances for this configuration
+    state.tagifyInstances.forEach(function (tagifyInstance) {
+        if (tagifyInstance && typeof tagifyInstance.removeAllTags === 'function') {
+            tagifyInstance.removeAllTags();
+        }
+    });
+
+    // Clear central paths
+    state.selectedPaths.clear();
+
+    // Deselect all jsTree instances
+    state.jsTreeIds.forEach(function (treeSelector) {
+        const tree = $(treeSelector).jstree(true);
+        clearTreeSelection(tree);
+    });
+
+    state.isSyncingTree = false;
+
+    // Render the right-hand Selected Keywords list again
+    updateSelectedKeywordsList(
+        config.selectedKeywordsListId || config.selectedListId,
+        state
+    );
+}
+
+/**
+ * Clears all registered thesaurus selections (all configs).
+ */
+function clearAllThesaurusSelections() {
+    keywordConfigurations.forEach(function (config) {
+        clearThesaurusSelection(config);
+    });
+}
+
+// Global exports for legacy scripts
+window.clearAllThesaurusSelections = clearAllThesaurusSelections;
+
+/**
  * Rebinds the datasource-specific tree button so it activates the correct Tagify instance.
  *
  * @param {HTMLInputElement} inputElement - Raw input element enhanced by Tagify.
@@ -673,7 +726,7 @@ export function initTagifyForInput(inputElement, configKey) {
  * Flow:
  * 1. Check master toggle (ELMO_FEATURES.showThesauri)
  * 2. Fetch thesauri availability from ELMO API (ERNIE proxy)
- * 3. For each available thesaurus: generate accordion + modal HTML, init Tagify, register lazy loading
+ * 3. For each available thesaurus: generate input section + modal HTML, init Tagify, register lazy loading
  * 4. Show form group if at least one thesaurus is available
  *
  * Also handles MSL keywords (static config, separate feature toggle).
@@ -683,6 +736,7 @@ export function initTagifyForInput(inputElement, configKey) {
 $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
+    const hiddenThesauri = new Set(Array.isArray(features.hiddenThesauri) ? features.hiddenThesauri : []);
     const showMslVocabs = features.showMslVocabs === true;
     const showGGMsProperties = features.showGGMsProperties === true;
 
@@ -744,18 +798,16 @@ $(document).ready(function () {
 
                 if (availableThesauri.length === 0) return;
 
-                const accordionContainer = document.getElementById('accordionThesauri');
+                const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
                 const modalContainer = document.getElementById('thesaurusModalsContainer');
-                if (!accordionContainer || !modalContainer) return;
+                if (!thesaurusContainer || !modalContainer) return;
 
-                let isFirst = true;
                 availableThesauri.forEach(function (item) {
                     const config = THESAURUS_CONFIG[item.key];
                     if (!config) return;
 
-                    accordionContainer.innerHTML += generateAccordionItem(item.key, config, item.displayName, isFirst);
+                    thesaurusContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName);
                     modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
-                    isFirst = false;
 
                     // Build keywordConfigurations entry for this thesaurus.
                     // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
@@ -816,6 +868,7 @@ $(document).ready(function () {
         const result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
             if (THESAURUS_CONFIG[key].dynamicOnly) return;
+            if (hiddenThesauri.has(key)) return;
 
             if (availability[key] && availability[key].available) {
                 result.push({
@@ -828,49 +881,35 @@ $(document).ready(function () {
     }
 
     /**
-     * Generates Bootstrap accordion item HTML for a thesaurus.
+     * Generates HTML for a thesaurus input field and its modal trigger button.
      *
      * @param {string} key - The thesaurus key (e.g. 'science_keywords').
-     * @param {Object} config - THESAURUS_CONFIG entry.
+     * @param {Object} config - THESAURUS_CONFIG entry for the thesaurus.
      * @param {string} displayName - Display name from ERNIE availability.
-     * @param {boolean} expanded - Whether this item should be initially expanded.
-     * @returns {string} HTML string for the accordion item.
+     * @returns {string} HTML string for the thesaurus input item.
      */
-    function generateAccordionItem(key, config, displayName, expanded) {
-        const collapseId = 'collapse-' + key;
-        const headingId = 'heading-' + key;
-        const buttonClass = expanded ? 'accordion-button' : 'accordion-button collapsed';
-        const collapseClass = expanded ? 'accordion-collapse collapse show' : 'accordion-collapse collapse';
-
+    function generateThesaurusInputItem(key, config, displayName) {
         return `
-        <div class="accordion-item">
-            <h2 class="accordion-header" id="${headingId}">
-                <button class="${buttonClass}" type="button" data-bs-toggle="collapse"
-                    data-bs-target="#${collapseId}" aria-expanded="${expanded}" aria-controls="${collapseId}">
-                    ${escapeHtml(displayName)}
-                </button>
-            </h2>
-            <div id="${collapseId}" class="${collapseClass}" aria-labelledby="${headingId}"
-                data-bs-parent="#accordionThesauri">
-                <div class="accordion-body">
-                    <div class="input-group has-validation input-margin-top-bottom">
-                        <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
-                        <div class="form-floating">
-                            <div class="input-group has-validation">
-                                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                                    id="${config.inputId}" name="${config.inputName}" />
-                                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                                    data-help-section-id="${config.helpSectionId}"></i></span>
-                            </div>
-                        </div>
-                        <div class="col-auto p-2">
-                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#${config.modalId}" id="button-${key}-open">
-                                <i class="bi bi-diagram-3" aria-hidden="true"></i>
-                                <span class="visually-hidden">${translations?.keywords?.thesaurus?.label || 'Open thesaurus'}</span>
-                            </button>
-                        </div>
+        <div class="thesaurus-input-item mb-3">
+            <div class="thesaurus-input-label mb-2 fw-semibold">
+                ${escapeHtml(displayName)}
+            </div>
+            <div class="input-group has-validation input-margin-top-bottom">
+                <label for="${config.inputId}" class="visually-hidden">${escapeHtml(displayName)}</label>
+                <div class="form-floating flex-grow-1"> 
+                    <div class="input-group has-validation">
+                        <input type="text" class="form-control input-with-help input-right-no-round-corners"
+                            id="${config.inputId}" name="${config.inputName}" />
+                        <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                               data-help-section-id="${config.helpSectionId}"></i></span>
                     </div>
+                </div>
+                <div class="col-auto p-2">
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                        data-bs-target="#${config.modalId}" id="button-${key}-open">
+                        <span data-translate="keywords.thesaurus.button">Open Thesaurus</span>
+                        <span class="visually-hidden">${translations?.keywords?.thesaurus?.label || 'Open thesaurus'}</span>
+                    </button>
                 </div>
             </div>
         </div>`;

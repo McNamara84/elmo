@@ -414,6 +414,99 @@ function populateIcgemDataSources(data) {
 }
 
 /**
+ * Populates contact person email and website fields from the ICGEM-envelope's
+ * grav:contact element (inside globalGravityProduct).
+ *
+ * Contact info (email/website) is stored positionally in grav:contact/grav:address
+ * and grav:contact/grav:onlineResource. The i-th address and i-th onlineResource
+ * correspond to the i-th ContactPerson contributor listed in the DataCite resource
+ * section. Names from that section are used to locate the correct author row.
+ *
+ * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
+ * does not show the hidden fields. This function explicitly checks the checkbox and
+ * calls .show() to ensure the fields are visible before populating them.
+ *
+ * @param {Document} xmlDoc
+ */
+function populateIcgemContactPersons(xmlDoc) {
+  const daceNs = 'http://datacite.org/schema/kernel-4';
+
+  function resolver(prefix) {
+    if (prefix === 'icgv') return ICGEM_NAMESPACE_URI;
+    if (prefix === 'dc') return daceNs;
+    return null;
+  }
+
+  function xpFirst(xpath, ctx) {
+    return xmlDoc.evaluate(xpath, ctx, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  }
+
+  function xpAll(xpath, ctx) {
+    return xmlDoc.evaluate(xpath, ctx, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  }
+
+  function nodeText(xpath, ctx) {
+    const n = xpFirst(xpath, ctx);
+    return n ? n.textContent.trim() : '';
+  }
+
+  // Locate globalGravityProduct
+  const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//globalGravityProduct', xmlDoc);
+  if (!ggpNode) return;
+
+  // Find grav:contact and read emails (addresses) and websites (onlineResources).
+  // These are in the same positional order as the ContactPerson contributors
+  // in the DataCite resource section.
+  const contactNode = xpFirst('icgv:contact | contact', ggpNode);
+  if (!contactNode) return;
+
+  const addressSnap = xpAll('icgv:address | address', contactNode);
+  const onlineSnap  = xpAll('icgv:onlineResource | onlineResource', contactNode);
+
+  if (addressSnap.snapshotLength === 0 && onlineSnap.snapshotLength === 0) return;
+
+  // Get ContactPerson contributors from the DataCite resource for name-based row matching.
+  // These are listed in the same order as grav:contact addresses/onlineResources.
+  const allContribs = xpAll('.//dc:contributors/dc:contributor | .//contributors/contributor', xmlDoc);
+  const contactPersons = [];
+  for (let i = 0; i < allContribs.snapshotLength; i++) {
+    const node = allContribs.snapshotItem(i);
+    if (node.getAttribute('contributorType') !== 'ContactPerson') continue;
+    const familyName = nodeText('dc:familyName | familyName', node);
+    const givenName  = nodeText('dc:givenName  | givenName',  node);
+    contactPersons.push({ familyName, givenName });
+  }
+
+  for (let i = 0; i < contactPersons.length; i++) {
+    const { familyName, givenName } = contactPersons[i];
+    const email   = i < addressSnap.snapshotLength ? addressSnap.snapshotItem(i).textContent.trim() : '';
+    const website = i < onlineSnap.snapshotLength  ? onlineSnap.snapshotItem(i).textContent.trim()  : '';
+
+    if (!email && !website) continue;
+    if (!familyName && !givenName) continue;
+
+    const normFamily = familyName.toLowerCase();
+    const normGiven  = givenName.toLowerCase();
+    const $row = $('div[data-creator-row]').filter(function () {
+      const rf = ($('input[name="familynames[]"]', this).val() || '').trim().toLowerCase();
+      const rg = ($('input[name="givennames[]"]', this).val() || '').trim().toLowerCase();
+      return rf === normFamily && rg === normGiven;
+    }).first();
+
+    if (!$row.length) continue;
+
+    // Ensure the contact-person toggle is active and fields are visible.
+    // The toggle handler fires on "click", not "change", so we must explicitly
+    // check the checkbox and show the fields rather than relying on the event.
+    $row.find('input[name="contacts[]"]').prop('checked', true);
+    $row.find('.contact-person-input').show();
+
+    if (email)   $row.find('input[name="cpEmail[]"]').val(email);
+    if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
+  }
+}
+
+/**
  * Populates the GGMsDescriptions form fields.
  * ICGEM descriptions use a 'section' attribute (unlike DataCite descriptionType).
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
@@ -467,6 +560,7 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemModelTypes(data);
   populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
+  populateIcgemContactPersons(xmlDoc);
 
   // Process DataCite keywords from <dace:subjects> elements
   // This ensures keywords are properly ingested during ICGEM uploads
@@ -504,6 +598,7 @@ if (typeof module !== 'undefined' && module.exports) {
     populateIcgemModelTypes,
     populateIcgemDataSources,
     populateIcgemDescriptions,
+    populateIcgemContactPersons,
     loadIcgemXmlToForm
   };
 }

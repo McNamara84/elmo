@@ -56,12 +56,23 @@ $showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?
 /** @var bool $showMslLogo */
 $showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
 
+// Apply cross-feature overrides for specific ELMO GEM variant
+$variantOverrides = applyELMOGEMFeatureOverrides([
+    'showGGMsProperties' => $showGGMsProperties,
+    'showUsedInstruments' => $showUsedInstruments,
+    'thesauriHiddenKeys' => [],
+]);
+
+$showUsedInstruments = $variantOverrides['showUsedInstruments'];
+$thesauriHiddenKeys = $variantOverrides['thesauriHiddenKeys'];
+
 // Include HTML components using absolute paths to ensure reliable file access
 $mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right logo-msl"> </a>';
 
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
 include $baseDir . 'formgroups/resourceInformation.html';
+include $baseDir . 'formgroups/honeypot.html';
 
 include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
