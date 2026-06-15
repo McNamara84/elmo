@@ -69,8 +69,11 @@ function testGfzSmtpConnectivity(): bool {
 
 /**
  * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
+ *
+ * @param array<string, mixed> $postData
+ * @param mixed $connection
  */
-function validateSubmitSecurity(array $postData, $connection): void {
+function validateSubmitSecurity(array $postData, mixed $connection): void {
     $clientIp = getClientIp();
     
     // Check 1: Honeypot
@@ -127,7 +130,7 @@ function validateSubmitSecurity(array $postData, $connection): void {
 /**
  * Convert weeks to priority text
  */
-function getPriorityText($weeks): string {
+function getPriorityText(?int $weeks): string {
     switch ($weeks) {
         case 2:
             return "high";
@@ -142,6 +145,8 @@ function getPriorityText($weeks): string {
 
 /**
 * Create XML filename from metadata and add as PHPMailer string attachment.
+*
+* @param array<string, mixed> $postData
 */
 function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string {
     $firstAuthor = $postData['familynames'][0] ?? 'unknown';
@@ -265,6 +270,8 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 
 /**
  * Send confirmation emails to all researcher contacts.
+ *
+ * @param array{title?: string, contacts?: array<int, array{fullName?: string, email?: string}>} $researcherConfirmationData
  */
 function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): void {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
@@ -344,7 +351,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 // Initialize execution variables
 $dataUrl = '';
 $urgencyWeeks = null;
-$resource_id = false;
+$resource_id = null;
 
 // ========= EXECUTION PIPELINE =========
 
@@ -519,17 +526,15 @@ try {
         error_log("XML Submit Mailer Error: " . $e->getMessage());
         
         // Failover recovery block logging
-        if ($resource_id !== false) {
-            $urgencyText = $urgencyWeeks ?? 'not set';
-            $dataUrlText = $dataUrl ?: 'not provided';
-            error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
-                      "==================================================\n" .
-                      "📄 Resource ID: {$resource_id}\n" .
-                      "⏰ Urgency: {$urgencyText}\n" .
-                      "🔗 Data URL: {$dataUrlText}\n" .
-                      "🚨 Error on submission: " . $e->getMessage() . "\n" .
-                      "==================================================");
-        }
+        $urgencyText = $urgencyWeeks ?? 'not set';
+        $dataUrlText = $dataUrl ?: 'not provided';
+        error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
+                  "==================================================\n" .
+                  "📄 Resource ID: {$resource_id}\n" .
+                  "⏰ Urgency: {$urgencyText}\n" .
+                  "🔗 Data URL: {$dataUrlText}\n" .
+                  "🚨 Error on submission: " . $e->getMessage() . "\n" .
+                  "==================================================");
         
         ob_clean();
         http_response_code(500);
@@ -538,7 +543,7 @@ try {
             'success' => false,
             'message' => "Sorry, we encountered an error when sending the email:\n\n" . 
                          $e->getMessage() . "\n\n" .
-                         "Your data has been saved in our system with Resource ID: " . ($resource_id !== false ? $resource_id : 'N/A') . "\n\n" .
+                         "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
                          "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
                          "Thank you for your understanding.\n" .
                          "ELMO team"
@@ -553,7 +558,7 @@ try {
     echo json_encode([
         'success' => false,
         'message' => 'Unexpected submission error.',
-        'resource_id' => $resource_id !== false ? $resource_id : null,
+        'resource_id' => $resource_id,
     ]);
 }
 
