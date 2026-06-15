@@ -155,11 +155,9 @@ async function addAuthorInstitution(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  while (await page.locator('[data-authorinstitution-row]').count() <= index) {
     await page.locator('#button-authorinstitution-add').click();
-    // Wait for the new author institution row to be visible
-    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible' });
+    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific author institution row
@@ -418,7 +416,7 @@ async function addAuthor(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
+  while (await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).count() <= index) {
     await page.locator('#button-author-add').click();
     await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }

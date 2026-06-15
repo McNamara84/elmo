@@ -21,11 +21,15 @@ function clearInputFields() {
     // Reset Rights License select field
     $('#input-rights-license').val('');
   
-    // Reset existing authors (now using data-creator-row)
-    $('div[data-creator-row]').not(':first').remove();
-    $('div[data-creator-row]:first').find('input').val('');
-    $('div[data-creator-row]:first').find('.contact-person-input').hide();
-    $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
+    if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
+        window.authorStack.setAuthors([]);
+    } else {
+        // Reset existing authors (legacy fallback)
+        $('div[data-creator-row]').not(':first').remove();
+        $('div[data-creator-row]:first').find('input').val('');
+        $('div[data-creator-row]:first').find('.contact-person-input').hide();
+        $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
+    }
     // Remove the "Please choose at least one contact person" error inserted by submitHandler.js
     $('#contact-person-error').remove();
 
@@ -38,10 +42,12 @@ function clearInputFields() {
         }
     }
 
-    // Removes all author-institution lines except the first one
-    $('div[data-authorinstitution-row]').not(':first').remove();
-    // Clears all input fields (input elements) in the first author-institution row
-    $('div[data-authorinstitution-row]:first').find('input').val('');
+    if (!window.authorStack || typeof window.authorStack.setAuthors !== 'function') {
+        // Removes all author-institution lines except the first one
+        $('div[data-authorinstitution-row]').not(':first').remove();
+        // Clears all input fields (input elements) in the first author-institution row
+        $('div[data-authorinstitution-row]:first').find('input').val('');
+    }
 
     // Clear Tagify for institution affiliations in the first institution row
     const firstInstitutionAffiliationTagify = $('div[data-authorinstitution-row]:first').find('input[name="institutionAffiliation[]"]')[0];

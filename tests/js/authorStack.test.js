@@ -93,19 +93,24 @@ describe('authorStack.js', () => {
     }));
     expect(payload()).toEqual([]);
     expect($('[data-author-summary-count]').text()).toBe('0 entries');
-    expect($('.contact-person-input').first().css('display')).toBe('none');
-    expect($('[data-author-contact-toggle]').first().text()).toContain('Mark as contact');
+    expect($('[data-author-card]').length).toBe(0);
+    expect($('[data-author-add-actions] #button-author-add').length).toBe(1);
+    expect($('[data-author-add-actions] #button-authorinstitution-add').length).toBe(1);
+    expect($('#button-author-add').hasClass('add-button')).toBe(false);
   });
 
   test('builds authorsPayload in mixed person-institution-person DOM order', () => {
-    $('#input-author-lastname').val('First').trigger('input');
-    $('#input-author-firstname').val('Person').trigger('input');
-    $('#checkbox-author-contactperson').prop('checked', true).trigger('change');
-    $('#input-contactperson-email').val('first@example.com').trigger('input');
-    $('#input-author-affiliation').val('[{"value":"GFZ"}]').trigger('input');
-    $('#input-author-rorid').val('https://ror.org/04z8jg394').trigger('input');
+    $('#button-author-add').trigger('click');
+    const firstPerson = $('[data-creator-row]').first();
+    firstPerson.find('input[name="familynames[]"]').val('First').trigger('input');
+    firstPerson.find('input[name="givennames[]"]').val('Person').trigger('input');
+    firstPerson.find('input[name="contacts[]"]').prop('checked', true).trigger('change');
+    firstPerson.find('input[name="cpEmail[]"]').val('first@example.com').trigger('input');
+    firstPerson.find('input[name="personAffiliation[]"]').val('[{"value":"GFZ"}]').trigger('input');
+    firstPerson.find('input[name="authorPersonRorIds[]"]').val('https://ror.org/04z8jg394').trigger('input');
 
-    $('#input-authorinstitution-name').val('Payload Institute').trigger('input');
+    $('#button-authorinstitution-add').trigger('click');
+    $('[data-authorinstitution-row]').first().find('input[name="authorinstitutionName[]"]').val('Payload Institute').trigger('input');
 
     $('#button-author-add').trigger('click');
     const secondPerson = $('[data-creator-row]').last();
@@ -161,6 +166,7 @@ describe('authorStack.js', () => {
       })[key])
     };
 
+    $('#button-author-add').trigger('click');
     document.dispatchEvent(new CustomEvent('translationsLoaded', { detail: { translations: {} } }));
     expect($('[data-author-summary-count]').text()).toBe('0 Einträge');
     expect($('[data-author-contact-summary]').text()).toBe('mindestens 1 Kontakt erforderlich');
@@ -172,9 +178,10 @@ describe('authorStack.js', () => {
     expect($('[data-author-affiliation-search]').first().attr('aria-label')).toBe('Affiliation in ROR suchen');
     expect($('[data-author-affiliation-add-label]').first().text()).toBe('Affiliation hinzufügen');
 
-    $('#input-author-lastname').val('Doe').trigger('input');
-    $('#input-author-firstname').val('Jane').trigger('input');
-    $('#checkbox-author-contactperson').prop('checked', true).trigger('change');
+    const person = $('[data-creator-row]').first();
+    person.find('input[name="familynames[]"]').val('Doe').trigger('input');
+    person.find('input[name="givennames[]"]').val('Jane').trigger('input');
+    person.find('input[name="contacts[]"]').prop('checked', true).trigger('change');
 
     expect($('[data-author-summary-count]').text()).toBe('1 Eintrag');
     expect($('[data-author-contact-summary]').text()).toBe('1 Kontaktperson');

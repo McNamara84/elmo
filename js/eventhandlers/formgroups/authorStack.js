@@ -318,6 +318,7 @@ $(document).ready(function () {
 
     ensureTypeSwitcher(row);
     ensureAffiliationEditor(row);
+    removeEmptyFieldColumns(row);
     setExpanded(row, getRowState(row).isExpanded !== false);
 
     return row;
@@ -329,6 +330,7 @@ $(document).ready(function () {
       addActions = $('<div class="d-flex flex-wrap gap-2 mt-2" data-author-add-actions></div>');
       stack.after(addActions);
     }
+    addActions.addClass('align-items-center');
 
     if (addActions.children().length) {
       return;
@@ -337,11 +339,25 @@ $(document).ready(function () {
     const addPersonButton = stack.find('#button-author-add').first().detach();
     const addInstitutionButton = stack.find('#button-authorinstitution-add').first().detach();
     if (addPersonButton.length) {
-      addActions.append(addPersonButton);
+      addActions.append(prepareAddActionButton(addPersonButton));
     }
     if (addInstitutionButton.length) {
-      addActions.append(addInstitutionButton);
+      addActions.append(prepareAddActionButton(addInstitutionButton));
     }
+  }
+
+  function prepareAddActionButton(button) {
+    return button
+      .removeClass('add-button')
+      .addClass('text-nowrap px-3')
+      .removeAttr('style');
+  }
+
+  function removeEmptyFieldColumns(row) {
+    row.find('[data-author-fields] > div').filter(function () {
+      const column = $(this);
+      return column.text().trim() === '' && column.find('input, select, textarea, button, label').length === 0;
+    }).remove();
   }
 
   function updateIds(row, index) {
@@ -539,8 +555,6 @@ $(document).ready(function () {
 
   function setAuthors(authors) {
     const normalizedAuthors = normalizeAuthorsInput(authors);
-    const hasPerson = normalizedAuthors.some(function (author) { return author.type === 'person'; });
-    const hasInstitution = normalizedAuthors.some(function (author) { return author.type === 'institution'; });
     let keptPersonAddButton = false;
     let keptInstitutionAddButton = false;
 
@@ -569,24 +583,6 @@ $(document).ready(function () {
       initializeAffiliationAutocomplete(row);
       initializeTooltips(row);
     });
-
-    if (!hasPerson) {
-      const row = createPayloadRow({ type: 'person', affiliations: [] }, true);
-      if (row) {
-        stack.prepend(row);
-        initializeAffiliationAutocomplete(row);
-        initializeTooltips(row);
-      }
-    }
-
-    if (!hasInstitution && institutionTemplate.length) {
-      const row = createPayloadRow({ type: 'institution', affiliations: [] }, true);
-      if (row) {
-        stack.append(row);
-        initializeAffiliationAutocomplete(row);
-        initializeTooltips(row);
-      }
-    }
 
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');
@@ -1039,7 +1035,7 @@ $(document).ready(function () {
       .map(function (part) { return part.trim().charAt(0).toUpperCase(); })
       .filter(Boolean)
       .join('');
-    return initials || '?';
+    return initials;
   }
 
   function syncRowState(row) {
@@ -1073,7 +1069,12 @@ $(document).ready(function () {
     summary.find('[data-author-type-badge]').text(typeLabel);
     const avatar = summary.find('[data-author-avatar]').first();
     if (isPerson) {
-      avatar.text(getInitials(givenname, familyname));
+      const initials = getInitials(givenname, familyname);
+      if (initials) {
+        avatar.text(initials);
+      } else {
+        avatar.html('<i class="bi bi-person" aria-hidden="true"></i>');
+      }
     } else if (!avatar.find('.bi-building').length) {
       avatar.html('<i class="bi bi-building" aria-hidden="true"></i>');
     }
@@ -1173,6 +1174,14 @@ $(document).ready(function () {
     const row = $(this);
     ensureCardScaffold(row);
     setupContactFields(row);
+  });
+
+  stack.children('[data-author-entry-row]').each(function () {
+    const row = $(this);
+    if (!rowHasContent(row)) {
+      authorUiState.delete(getEntryKey(row));
+      row.remove();
+    }
   });
 
   if (typeof stack.sortable === 'function') {

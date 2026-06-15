@@ -5,6 +5,7 @@ import { getTranslations } from '../utils';
 test.describe('Author institution entries in the Authors form group', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
+    await page.locator('#button-authorinstitution-add').click();
 
     await page.waitForSelector('[data-authorinstitution-row] [data-author-affiliation-editor]', { timeout: 10000 });
   });
@@ -36,14 +37,14 @@ test.describe('Author institution entries in the Authors form group', () => {
     await expect(affiliationEditor.locator('[data-author-affiliation-input]')).toBeVisible();
     await expect(affiliationEditor.locator('[data-author-affiliation-add]')).toBeVisible();
 
-    const affiliationLabel = formGroup.locator('label[for="input-authorinstitution-affiliation"]');
+    const affiliationLabel = firstRow.locator('label[for^="input-authorinstitution-affiliation"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
 
     const formHelpIcon = page.locator('[data-help-section-id="help-authors-fg"]');
     await expect(formHelpIcon).toBeVisible();
 
     const affiliationHelpIcon = firstRow.locator('[data-help-section-id="help-author-affiliation"]');
-    await expect(affiliationHelpIcon).toHaveCount(1);
+    await expect(affiliationHelpIcon.first()).toBeAttached();
 
     const dragHandle = firstRow.locator('.drag-handle');
     await expect(dragHandle).toHaveAttribute('aria-label', 'Drag & drop to change order');

@@ -331,6 +331,10 @@ function prefillCreators(creators) {
       let $row;
       if (personIndex === 0) {
         $row = $('div[data-creator-row]').eq(0);
+        if (!$row.length) {
+          $('#button-author-add').click();
+          $row = $('div[data-creator-row]').last();
+        }
       } else {
         $('#button-author-add').click();
         $row = $('div[data-creator-row]').eq(personIndex);
@@ -341,16 +345,23 @@ function prefillCreators(creators) {
       $row.find('input[name="familynames[]"]').val(familyName);
       $row.find('input[name="givennames[]"]').val(givenName);
 
+      const affiliationValues = affiliations.map((affiliation, index) => ({
+        value: affiliation,
+        label: affiliation,
+        rorId: rorIds[index] || '',
+        id: rorIds[index] || ''
+      }));
       const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
       const tagify = getTagify(tagifyInput);
       if (tagify) {
         tagify.removeAllTags();
-        tagify.addTags(affiliations.map(a => ({ value: a })));
+        tagify.addTags(affiliationValues);
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
       } else if (tagifyInput) {
-        $(tagifyInput).val(affiliations.join(','));
+        $(tagifyInput).val(JSON.stringify(affiliationValues));
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
       }
+      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
 
       // Reset contact person fields
       $row.find('input[name="contacts[]"]').prop('checked', false);
@@ -375,13 +386,22 @@ function prefillCreators(creators) {
 
       $instRow.find('input[name="authorinstitutionName[]"]').val(creatorName);
 
+      const affiliationValues = affiliations.map((affiliation, index) => ({
+        value: affiliation,
+        label: affiliation,
+        rorId: rorIds[index] || '',
+        id: rorIds[index] || ''
+      }));
       const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
       const tagify = getTagify(tagifyInput);
       if (tagify) {
         tagify.removeAllTags();
-        tagify.addTags(affiliations.map(a => ({ value: a })));
+        tagify.addTags(affiliationValues);
+      } else if (tagifyInput) {
+        $(tagifyInput).val(JSON.stringify(affiliationValues));
       }
       $instRow.find('input[name="authorInstitutionRorIds[]"]').val(rorIds.join(','));
+      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
     }
   });
 }

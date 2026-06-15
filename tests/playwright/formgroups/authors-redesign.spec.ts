@@ -9,11 +9,13 @@ const GFZ_ROR_ID = '04z8jg394';
 test.describe('Authors redesign workflow', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
-    await page.waitForSelector('[data-author-entry-row]', { timeout: 10000 });
+    await expect(page.locator('#button-author-add')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('#button-authorinstitution-add')).toBeVisible({ timeout: 10000 });
   });
 
   test('exposes final card stack semantics for summary, edit, and action states', async ({ page }) => {
     await completeMinimalDatasetForm(page);
+    await page.locator('#button-authorinstitution-add').click();
 
     const authorsGroup = page.locator(SELECTORS.formGroups.authors);
     const authorsFormGroup = page.locator('#formgroup-authors');
@@ -83,6 +85,7 @@ test.describe('Authors redesign workflow', () => {
       rorId: GFZ_ROR_ID,
     });
 
+    await page.locator('#button-authorinstitution-add').click();
     const institutionRow = authorsGroup.locator('[data-authorinstitution-row]').first();
     await institutionRow.locator('input[name="authorinstitutionName[]"]').fill('European Plate Observatory');
 

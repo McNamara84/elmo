@@ -10,7 +10,8 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
     const authorGroup = page.locator(SELECTORS.formGroups.authors);
     const addButton = page.locator('#button-author-add');
 
-    // Step 1: Add two more author rows (total: 3 rows)
+    // Step 1: Add three author rows
+    await addButton.click();
     await addButton.click();
     await addButton.click();
     await expect(authorGroup.locator('[data-creator-row]')).toHaveCount(3);
@@ -50,6 +51,7 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
     const addButton = page.locator('#button-author-add');
 
     await addButton.click();
+    await addButton.click();
     await expect(authorGroup.locator('[data-creator-row]')).toHaveCount(2);
 
     // Move first row to the end
@@ -74,6 +76,7 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
     const instGroup = page.locator(SELECTORS.formGroups.authorInstitution);
     const addButton = page.locator('#button-authorinstitution-add');
 
+    await addButton.click();
     await expect(instGroup.locator('[data-authorinstitution-row] [data-author-affiliation-editor]').first()).toBeVisible({ timeout: 10000 });
 
     // Add a second row, then reorder
