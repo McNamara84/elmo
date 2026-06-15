@@ -222,9 +222,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // All security checks passed - record this submission
     recordRateLimit($connection, $clientIp, 'feedback');
     
-    // Invalidate the used CSRF token
-    invalidateCsrfToken();
-    
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';
     $feedbackQuestion3 = $_POST['feedbackQuestion3'] ?? '';

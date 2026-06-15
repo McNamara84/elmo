@@ -8,7 +8,26 @@ import SaveHandler from './saveHandler.js';
 import SubmitHandler from './submitHandler.js';
 import AutosaveService from './services/autosaveService.js';
 
+async function initializeFormCsrfToken() {
+  const csrfField = document.getElementById('input-form-csrf-token');
+  if (!csrfField || csrfField.value) {
+    return;
+  }
+
+  try {
+    const response = await fetch('api/csrf_token.php');
+    const data = await response.json();
+    if (data.token) {
+      csrfField.value = data.token;
+    }
+  } catch (error) {
+    console.error('Failed to initialize form CSRF token:', error);
+  }
+}
+
 $(() => {
+  initializeFormCsrfToken();
+
   const autosaveService = new AutosaveService('form-mde', {
     statusElementId: 'autosave-status',
     statusTextId: 'autosave-status-text',

@@ -165,10 +165,13 @@ function validateSubmitSecurity(array $postData, $connection): void {
     
     // All checks passed, record the rate limit
     recordRateLimit($connection, $clientIp, 'submit');
+<<<<<<< Updated upstream
     
     // Invalidate CSRF token after successful security validation
     invalidateCsrfToken();
     
+=======
+>>>>>>> Stashed changes
     error_log("send_xml_file.php: Submit security validation passed");
 }
 

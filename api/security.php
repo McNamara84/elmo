@@ -60,6 +60,12 @@ function initializeCsrfSession(): void
 function generateCsrfToken(): string
 {
     initializeCsrfSession();
+<<<<<<< Updated upstream
+=======
+
+    // Tie interaction timing to token generation at form initialization.
+    $_SESSION['csrf_interaction_start_time'] = time();
+>>>>>>> Stashed changes
     
     $token = bin2hex(random_bytes(32));
     $_SESSION['csrf_token'] = $token;
@@ -117,6 +123,7 @@ function invalidateCsrfToken(): void
     initializeCsrfSession();
     unset($_SESSION['csrf_token']);
     unset($_SESSION['csrf_token_time']);
+    unset($_SESSION['csrf_interaction_start_time']);
 }
 
 /**
@@ -155,7 +162,7 @@ function getClientIp(): string
  * Returns the age of the current CSRF token in seconds.
  *
  * This can be used as a server-trustworthy interaction timer because
- * the token is fetched when the modal opens.
+ * the interaction start timestamp is set when the form CSRF token is initialized.
  *
  * @return int Age in seconds, or 0 if no token timestamp is available
  */

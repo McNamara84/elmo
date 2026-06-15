@@ -218,10 +218,10 @@ class SubmitHandler {
         this.autosaveService = autosaveService;
 
         // Security field references
-        this.$csrfTokenField = $('#input-submit-csrf-token');
+        this.$csrfTokenField = $('#input-form-csrf-token');
         this.$timeSpentField = $('#input-submit-time-spent');
         this.$honeypotField = $('#modal-submit input[name="website"]').first();
-        this.modalOpenedAt = null;
+        this.formStartedAt = Date.now();
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -236,10 +236,8 @@ class SubmitHandler {
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
         this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
 
-        // Fetch CSRF token and reset security fields on modal open
-        $('#modal-submit').on('shown.bs.modal', async () => {
-            await this.fetchCsrfToken();
-            this.modalOpenedAt = Date.now();
+        // Reset modal-scoped fields on open
+        $('#modal-submit').on('shown.bs.modal', () => {
             this.$honeypotField.val('');
             this.$timeSpentField.val('0');
             $('#input-submit-dataurl').select();
@@ -270,14 +268,29 @@ class SubmitHandler {
         try {
             const response = await fetch('api/csrf_token.php');
             const data = await response.json();
-            if (data.token) {
-                this.$csrfTokenField.val(data.token);
-            } else {
-                console.error('No token in response:', data);
-            }
+            return data.token || '';
         } catch (error) {
             console.error('Error fetching CSRF token:', error);
+            return '';
         }
+    }
+
+    /**
+     * Ensure that the form-level CSRF token is available.
+     * @returns {Promise<string>} The CSRF token string or empty string on failure.
+     */
+    async ensureCsrfToken() {
+        let token = (this.$csrfTokenField.val() || '').toString();
+        if (token) {
+            return token;
+        }
+
+        token = await this.fetchCsrfToken();
+        if (token) {
+            this.$csrfTokenField.val(token);
+        }
+
+        return token;
     }
 
     /**
@@ -368,18 +381,15 @@ class SubmitHandler {
             await this.autosaveService.flushPending();
         }
         
-        // Calculate time spent in modal
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
-        }
+        const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.formStartedAt) / 1000));
+        this.$timeSpentField.val(String(elapsedSeconds));
         
         const submitData = new FormData(this.$form[0]);
 
-        // Explicitly add CSRF token (it's in the modal, not in the main form)
-        const csrfToken = this.$csrfTokenField.val();
+        // Ensure the single form-level CSRF token is present.
+        const csrfToken = await this.ensureCsrfToken();
         if (csrfToken) {
-            submitData.set('csrf_token', csrfToken);
+            submitData.set('csrf_token', csrfToken.toString());
         }
 
         // Security fields live in the submit modal, so add them explicitly.

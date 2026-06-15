@@ -41,10 +41,10 @@ class SaveHandler {
         this.currentFormat = 'xml';
         
         // Security fields
-        this.$csrfTokenField = $('#input-save-csrf-token');
+        this.$csrfTokenField = $('#input-form-csrf-token');
         this.$timeSpentField = $('#input-save-time-spent');
         this.$honeypotField = $('#input-information-website');
-        this.modalOpenedAt = null;
+        this.formStartedAt = Date.now();
         
         this.initializeEventListeners();
     }
@@ -78,16 +78,8 @@ class SaveHandler {
             }
         });
 
-        // Focus on input field and fetch CSRF token
-        $('#modal-saveas').on('shown.bs.modal', async () => {
-            // Record when modal was opened for time-spent calculation
-            this.modalOpenedAt = Date.now();
-            
-            // Fetch fresh CSRF token
-            const token = await this.fetchCsrfToken();
-            this.$csrfTokenField.val(token);
-            
-            // Reset time spent for current modal interaction
+        // Focus on input field and reset modal-scoped fields
+        $('#modal-saveas').on('shown.bs.modal', () => {
             this.$timeSpentField.val('0');
             
             $('#input-saveas-filename').select();
@@ -159,14 +151,26 @@ class SaveHandler {
             return;
         }
 
-        // Calculate time spent filling the save modal (in seconds)
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
-        }
-
         this.modals.saveAs.hide();
         await this.saveAndDownload(filename, this.currentFormat);
+    }
+
+    /**
+     * Ensure that the form-level CSRF token is available.
+     * @returns {Promise<string>} The CSRF token string or empty string on failure.
+     */
+    async ensureCsrfToken() {
+        let token = (this.$csrfTokenField.val() || '').toString();
+        if (token) {
+            return token;
+        }
+
+        token = await this.fetchCsrfToken();
+        if (token) {
+            this.$csrfTokenField.val(token);
+        }
+
+        return token;
     }
 
     /**
@@ -204,10 +208,13 @@ class SaveHandler {
             
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
+
+            const csrfToken = await this.ensureCsrfToken();
+            const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.formStartedAt) / 1000));
             
             // Append security fields
-            formData.append('csrf_token', this.$csrfTokenField.val());
-            formData.append('save_time_spent', this.$timeSpentField.val());
+            formData.set('csrf_token', csrfToken);
+            formData.set('save_time_spent', String(elapsedSeconds));
             formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');

@@ -14,25 +14,10 @@ $(document).ready(function () {
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
   const timeSpentField = $("#input-feedback-time-spent");
-  const csrfTokenField = $("#input-feedback-csrf-token");
+  const formCsrfTokenField = $("#input-form-csrf-token");
 
   // Track when the modal was opened for minimum time validation
   let modalOpenedAt = null;
-
-  /**
-   * Fetches a CSRF token from the server for form protection.
-   * @returns {Promise<string>} The CSRF token
-   */
-  async function fetchCsrfToken() {
-    try {
-      const response = await fetch('api/csrf_token.php');
-      const data = await response.json();
-      return data.token || '';
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
-      return '';
-    }
-  }
 
   /**
    * Applies or removes a boolean attribute while ensuring an empty string value for accessibility checks.
@@ -64,7 +49,12 @@ $(document).ready(function () {
     }
 
     // Form and data setup
-    const feedbackData = feedbackForm.serialize();
+    const feedbackDataArray = feedbackForm.serializeArray();
+    feedbackDataArray.push({
+      name: 'csrf_token',
+      value: (formCsrfTokenField.val() || '').toString()
+    });
+    const feedbackData = $.param(feedbackDataArray);
 
     // Disable the button and show a loading spinner
     sendButton
@@ -140,18 +130,13 @@ $(document).ready(function () {
   });
 
   $('#modal-feedback')
-    .on('show.bs.modal', async function () {
+    .on('show.bs.modal', function () {
       // Record when modal was opened for time-spent calculation
       modalOpenedAt = Date.now();
-      
-      // Fetch fresh CSRF token
-      const token = await fetchCsrfToken();
-      csrfTokenField.val(token);
-      
+
       feedbackForm[0].reset();
       // Reset time spent field after form reset
       timeSpentField.val('0');
-      csrfTokenField.val(token);
       
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
       thankYouMessage.hide();

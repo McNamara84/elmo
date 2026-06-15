@@ -94,9 +94,6 @@ function validateSaveSecurity($postData, $connection)
     // Record this save for rate limiting
     recordRateLimit($connection, $clientIp, 'save');
 
-    // Invalidate the used CSRF token only after all checks pass.
-    invalidateCsrfToken();
-    
     return ['status' => true];
 }
 
