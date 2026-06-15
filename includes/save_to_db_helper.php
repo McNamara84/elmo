@@ -49,7 +49,8 @@ function executeSaveFunction($callback, ...$args)
 } // end function_exists('executeSaveFunction')
 
 // includes all save functions and executes them with database connectio
-function saveALL(array $postData, mysqli $connection): int {
+function saveALL(array $postData): int {
+    global $connection;
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
@@ -113,13 +114,14 @@ function saveALL(array $postData, mysqli $connection): int {
  *
  * @param mysqli $connection Active database connection
  * @param int $resourceId Resource ID for export
- * @param array{format?: string, useIcgem?: bool} $options Export options
+ * @param array{format?: string} $options Export options (format: 'xml' or 'jsonld')
  * @return array{payload: string, contentType: string, extension: string, generator: string}
  */
-function generateDatasetPayloadByResourceId(mysqli $connection, int $resourceId, array $options = []): array
+function generateDatasetPayloadByResourceId(int $resourceId, array $options = []): array
 {
+    global $connection;
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
-    $useIcgem = (bool) ($options['useIcgem'] ?? ($GLOBALS['showGGMsProperties'] ?? false));
+    $useIcgem = (bool) ($GLOBALS['showGGMsProperties'] ?? false);
 
     if ($downloadFormat === 'jsonld') {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
