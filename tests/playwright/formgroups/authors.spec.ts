@@ -1,6 +1,14 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 
+async function expectAuthorAffiliations(row, expectedNames: string[]) {
+  const chips = row.locator('[data-author-affiliation-chip]');
+  await expect(chips).toHaveCount(expectedNames.length);
+  for (const [index, expectedName] of expectedNames.entries()) {
+    await expect(chips.nth(index).locator('[data-author-affiliation-label]')).toHaveValue(expectedName);
+  }
+}
+
 const mockOrcidRecord = {
   person: {
     name: {
@@ -123,11 +131,9 @@ test.describe('Author(s) form group', () => {
     await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
 
-    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(2);
-    await expect(affiliationTags.nth(0)).toContainText('Brown University');
-    await expect(affiliationTags.nth(1)).toContainText('Yale University');
-    await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69');
+    const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
+    await expectAuthorAffiliations(authorRow, ['Brown University', 'Yale University']);
+    await expect(authorRow.locator('input[name="authorPersonRorIds[]"]')).toHaveValue('05p8bnz29,05rrcem69');
   });
 
   test('filters ended affiliations from ORCID preload', async ({ page }) => {
@@ -145,9 +151,9 @@ test.describe('Author(s) form group', () => {
     await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
 
-    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(0);
-    await expect(page.locator('#input-author-rorid')).toHaveValue('');
+    const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
+    await expectAuthorAffiliations(authorRow, []);
+    await expect(authorRow.locator('input[name="authorPersonRorIds[]"]')).toHaveValue('');
   });
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {

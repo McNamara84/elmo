@@ -168,11 +168,11 @@ async function addAuthorInstitution(
   // Fill institution name
   await institutionRow.locator('[id^="input-authorinstitution-name"]').fill(data.institutionName);
 
-  // Fill affiliation using tagify
-  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
-  await affiliationTagifyInput.click();
-  await affiliationTagifyInput.type(data.affiliation);
-  await page.keyboard.press('Enter');
+  const affiliationEditor = institutionRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 
 /**

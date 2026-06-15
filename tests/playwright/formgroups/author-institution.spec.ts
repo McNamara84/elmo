@@ -5,9 +5,8 @@ import { getTranslations } from '../utils';
 test.describe('Author institution entries in the Authors form group', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
-    
-    // Wait for Tagify to be initialized on the affiliation field
-    await page.waitForSelector('[data-authorinstitution-row] .tagify', { timeout: 10000 });
+
+    await page.waitForSelector('[data-authorinstitution-row] [data-author-affiliation-editor]', { timeout: 10000 });
   });
 
   let translations: ReturnType<typeof getTranslations>;
@@ -32,10 +31,10 @@ test.describe('Author institution entries in the Authors form group', () => {
     await expect(nameInput).toBeVisible();
     await expect(page.getByLabel('Author Institution name')).toBeVisible();
 
-    const affiliationTagify = firstRow.locator('.tagify');
-    const affiliationInteractiveInput = affiliationTagify.locator('.tagify__input');
-    await expect(affiliationTagify).toBeVisible();
-    await expect(affiliationInteractiveInput).toBeVisible();
+    const affiliationEditor = firstRow.locator('[data-author-affiliation-editor]');
+    await expect(affiliationEditor).toBeVisible();
+    await expect(affiliationEditor.locator('[data-author-affiliation-input]')).toBeVisible();
+    await expect(affiliationEditor.locator('[data-author-affiliation-add]')).toBeVisible();
 
     const affiliationLabel = formGroup.locator('label[for="input-authorinstitution-affiliation"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
@@ -62,7 +61,7 @@ test.describe('Author institution entries in the Authors form group', () => {
     const firstRow = rows.nth(0);
     const secondRow = rows.nth(1);
 
-    await expect(secondRow.locator('.tagify')).toBeVisible();
+    await expect(secondRow.locator('[data-author-affiliation-editor]')).toBeVisible();
 
     const firstNameId = await firstRow.locator('input[name="authorinstitutionName[]"]').getAttribute('id');
     const secondNameInput = secondRow.locator('input[name="authorinstitutionName[]"]');
@@ -99,36 +98,19 @@ test.describe('Author institution entries in the Authors form group', () => {
     const row = formGroup.locator('[data-authorinstitution-row]').first();
 
     const nameInput = row.locator('input[name="authorinstitutionName[]"]');
-    const affiliationTagify = row.locator('.tagify');
+    const affiliationEditor = row.locator('[data-author-affiliation-editor]');
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
 
-    // Add a tag programmatically to test the validation logic
-    await page.evaluate(() => {
-      const input: any = document.querySelector('#input-authorinstitution-affiliation');
-      if (input?._tagify) {
-        input._tagify.addTags([{
-          value: 'Helmholtz Centre Potsdam - GFZ',
-          id: 'https://ror.org/04z8jg394'
-        }]);
-      }
-    });
-    
-    // Wait for tag to be created and validation to trigger
-    await expect(affiliationTagify.locator('.tagify__tag')).toHaveCount(1, { timeout: 5000 });
+    await affiliationEditor.locator('[data-author-affiliation-input]').fill('Helmholtz Centre Potsdam - GFZ');
+    await affiliationEditor.locator('[data-author-affiliation-add]').click();
+    await expect(affiliationEditor.locator('[data-author-affiliation-chip]')).toHaveCount(1, { timeout: 5000 });
 
     await expect(nameInput).toHaveAttribute('required', 'required');
     await expect(nameInput).toHaveAttribute('aria-required', 'true');
 
-    // Remove the tag programmatically
-    await page.evaluate(() => {
-      const input: any = document.querySelector('#input-authorinstitution-affiliation');
-      if (input?._tagify) {
-        input._tagify.removeAllTags();
-      }
-    });
-    
-    await expect(affiliationTagify.locator('.tagify__tag')).toHaveCount(0, { timeout: 5000 });
+    await affiliationEditor.locator('[data-author-affiliation-remove]').click();
+    await expect(affiliationEditor.locator('[data-author-affiliation-chip]')).toHaveCount(0, { timeout: 5000 });
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
     await expect(nameInput).not.toHaveAttribute('aria-required', 'true');
