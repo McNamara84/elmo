@@ -12,9 +12,8 @@ const AFFIL_EDIT_SAVE  = '#button-affiliation-edit-save';
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
 /**
- * Types a search term in the first author's affiliation Tagify field, waits for
- * the autocomplete dropdown to show at least one result, clicks the first result,
- * and returns the selected tag's display value and ROR id read from the DOM.
+ * Searches in the first author's dedicated affiliation editor, selects the first
+ * result, and returns the selected label and short ROR id read from the DOM.
  */
 async function selectAffiliationFromDropdown(
   page: Page,
@@ -23,34 +22,29 @@ async function selectAffiliationFromDropdown(
   const authorRow = page
     .locator(`${AUTHOR_GROUP} [data-creator-row]`)
     .first();
+  const editor = authorRow.locator('[data-author-affiliation-editor]');
+  await expect(editor).toBeVisible({ timeout: 10_000 });
 
-  const tagifyInput = authorRow.locator('.tagify__input[title^="Affiliation"]');
-  await tagifyInput.scrollIntoViewIfNeeded();
-  await tagifyInput.click();
-  await tagifyInput.type(searchTerm);
+  const searchInput = editor.locator('[data-author-affiliation-input]');
+  await searchInput.scrollIntoViewIfNeeded();
+  await searchInput.fill(searchTerm);
+  await editor.locator('[data-author-affiliation-search]').click();
 
-  // Wait for the dropdown with at least one option (the API call may take a moment)
-  const dropdown = page.locator('.tagify__dropdown');
-  await expect(async () => {
-    await expect(dropdown).toBeVisible();
-    await expect(dropdown.locator('[role="option"]').first()).toBeVisible();
-  }).toPass({ timeout: 15_000 });
+  const firstResult = editor.locator('[data-author-affiliation-result]').first();
+  await expect(firstResult).toBeVisible({ timeout: 15_000 });
 
-  const initialTagCount = await authorRow.locator('tag').count();
-  await dropdown.locator('[role="option"]').first().click();
+  const selected = await firstResult.evaluate((element) => ({
+    value: element.getAttribute('data-author-affiliation-label-value') || '',
+    id: element.getAttribute('data-author-affiliation-ror-value') || '',
+  }));
 
-  // Wait for the new tag to appear
-  await expect(authorRow.locator('tag')).toHaveCount(initialTagCount + 1, {
+  const initialChipCount = await editor.locator('[data-author-affiliation-chip]').count();
+  await firstResult.click();
+  await expect(editor.locator('[data-author-affiliation-chip]')).toHaveCount(initialChipCount + 1, {
     timeout: 5_000,
   });
 
-  // Read tagify tag data from the DOM element (id = ROR URI, value = label)
-  const tagData = await authorRow.locator('tag').last().evaluate((el: any) => ({
-    value: el.__tagifyTagData?.value ?? '',
-    id:    el.__tagifyTagData?.id    ?? '',
-  }));
-
-  return tagData;
+  return selected;
 }
 
 /**
@@ -59,10 +53,10 @@ async function selectAffiliationFromDropdown(
  */
 async function injectAffiliationTag(
   page: Page,
-  authorRow: Locator,
+  row: Locator,
   tagData: { value: string; id: string },
 ) {
-  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
+  const affiliationInput = row.locator('input[id$="affiliation"], input[id$="affiliation-0"], input[id^="input-contributor-organisationaffiliation"]').first();
 
   await expect(async () => {
     const initialized = await affiliationInput.evaluate(
@@ -71,12 +65,12 @@ async function injectAffiliationTag(
     expect(initialized).toBe(true);
   }).toPass({ timeout: 10_000 });
 
-  const initialCount = await authorRow.locator('tag').count();
+  const initialCount = await row.locator('tag').count();
   await affiliationInput.evaluate(
     (el: any, data: { value: string; id: string }) => el._tagify.addTags([data]),
     tagData,
   );
-  await expect(authorRow.locator('tag')).toHaveCount(initialCount + 1, {
+  await expect(row.locator('tag')).toHaveCount(initialCount + 1, {
     timeout: 5_000,
   });
 }
@@ -90,17 +84,26 @@ async function editAffiliationLabel(
   currentLabel: string,
   newLabel: string,
 ) {
-  const tag = page.locator(`tag[title="${currentLabel}"]`);
-  await tag.locator('.tagify__tag__editBtn').click();
+  await page.evaluate(({ authorGroup, currentLabel, newLabel }) => {
+    const input = Array.from(document.querySelectorAll<HTMLInputElement>(`${authorGroup} [data-author-affiliation-label]`))
+      .find((element) => element.value === currentLabel);
+    if (!input) {
+      throw new Error(`Could not find author affiliation label input for ${currentLabel}`);
+    }
+    input.value = newLabel;
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    (window as any).authorStack?.updatePayload?.();
+  }, { authorGroup: AUTHOR_GROUP, currentLabel, newLabel });
 
-  const modal = page.locator(AFFIL_EDIT_MODAL);
-  await expect(modal).toBeVisible({ timeout: 5_000 });
+  await expect.poll(() => page.evaluate(({ authorGroup, label }) => {
+    return Array.from(document.querySelectorAll<HTMLInputElement>(`${authorGroup} [data-author-affiliation-label]`))
+      .some((input) => input.value === label);
+  }, { authorGroup: AUTHOR_GROUP, label: newLabel })).toBe(true);
+}
 
-  await page.locator(AFFIL_EDIT_INPUT).clear();
-  await page.locator(AFFIL_EDIT_INPUT).fill(newLabel);
-  await page.locator(AFFIL_EDIT_SAVE).click();
-
-  await expect(modal).toBeHidden({ timeout: 5_000 });
+function toFullRorId(rorId: string) {
+  return rorId.startsWith('http') ? rorId : `https://ror.org/${rorId}`;
 }
 
 /**
@@ -113,7 +116,9 @@ async function saveAndGetXml(page: Page, filename: string): Promise<string> {
     (async () => {
       await page.locator('#button-form-save').click();
       await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 10_000 });
+      await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5_000 });
       await page.locator('#input-saveas-filename').fill(filename);
+      await page.waitForTimeout(2100);
       await page.locator('#button-saveas-save').click();
     })(),
   ]);
@@ -169,18 +174,16 @@ test.describe('Affiliation tag label editing', () => {
 
       // ── Step 1: select an institution from the whitelist ───────────────────
       const selected = await selectAffiliationFromDropdown(page, 'tu berlin');
-      expect(selected.id, 'Whitelist tag must carry a ROR id').toMatch(
-        /^https:\/\/ror\.org\//,
-      );
+      expect(selected.id, 'Whitelist tag must carry a ROR id').toMatch(/^[a-z0-9]{9}$/);
 
       // ── Step 2: rename the tag via the pencil icon ─────────────────────────
       const editedLabel = `${selected.value} (edited)`;
       await editAffiliationLabel(page, selected.value, editedLabel);
 
-      // The renamed tag should now be visible with the new title
-      await expect(
-        page.locator(`tag[title="${editedLabel}"]`),
-      ).toBeVisible({ timeout: 5_000 });
+      await expect.poll(() => page.evaluate(({ authorGroup, label }) => {
+        return Array.from(document.querySelectorAll<HTMLInputElement>(`${authorGroup} [data-author-affiliation-label]`))
+          .some((input) => input.value === label);
+      }, { authorGroup: AUTHOR_GROUP, label: editedLabel })).toBe(true);
 
       // ── Step 3: save and read the downloaded XML ───────────────────────────
       const xml = await saveAndGetXml(page, 'affil-test-rortag-edit');
@@ -194,7 +197,7 @@ test.describe('Affiliation tag label editing', () => {
       expect(
         editedEntry?.id,
         'Edited tag must preserve its original ROR identifier',
-      ).toBe(selected.id);
+      ).toBe(toFullRorId(selected.id));
 
       // Free-text tag (added by completeMinimalDatasetForm): no ROR
       const freeTextEntry = affiliations.find(
@@ -222,20 +225,20 @@ test.describe('Affiliation tag label editing', () => {
     async ({ page }) => {
       await completeMinimalDatasetForm(page);
 
-      const authorRow = page
-        .locator(`${AUTHOR_GROUP} [data-creator-row]`)
+      const contributorInstitutionRow = page
+        .locator('#group-contributororganisation [contributors-row]')
         .first();
 
       // Inject a tag with a known ROR id directly via the Tagify JS API
       const ORIGINAL_LABEL = 'Technical University of Berlin';
       const ORIGINAL_ROR   = 'https://ror.org/01bj3aw27';
-      await injectAffiliationTag(page, authorRow, {
+      await injectAffiliationTag(page, contributorInstitutionRow, {
         value: ORIGINAL_LABEL,
         id:    ORIGINAL_ROR,
       });
 
       // Open the edit dialog
-      const tag = authorRow.locator(`tag[title="${ORIGINAL_LABEL}"]`);
+      const tag = contributorInstitutionRow.locator(`tag[title="${ORIGINAL_LABEL}"]`);
       await tag.locator('.tagify__tag__editBtn').click();
 
       const modal = page.locator(AFFIL_EDIT_MODAL);
@@ -250,13 +253,13 @@ test.describe('Affiliation tag label editing', () => {
 
       // The original tag must still be present with its original label
       await expect(
-        authorRow.locator(`tag[title="${ORIGINAL_LABEL}"]`),
+        contributorInstitutionRow.locator(`tag[title="${ORIGINAL_LABEL}"]`),
       ).toBeVisible({ timeout: 5_000 });
 
       await expect(
-        authorRow.locator('tags.tagify'),
+        contributorInstitutionRow.locator('tags.tagify').filter({ hasText: ORIGINAL_LABEL }),
         'Tagify container must still contain the original label',
-      ).toContainText(ORIGINAL_LABEL);
+      ).toHaveCount(1);
     },
   );
 });
