@@ -13,7 +13,8 @@ async function openSubmitModal(page: Page) {
   const submitModal = page.locator('#modal-submit');
   await expect(submitModal).toBeVisible({ timeout: 5000 });
 
-  const csrfField = submitModal.locator('input[name="csrf_token"]').first();
+  // Form token is in main form, not modal - verify it exists in the main form
+  const csrfField = page.locator('#input-form-csrf-token');
   await expect(csrfField).not.toHaveValue('');
 
   return { submitModal, csrfField };
@@ -49,6 +50,7 @@ test.describe('Submit Operation Security Features', () => {
     await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
     await expect(honeypotField).toHaveValue('');
 
+    // CSRF token is in main form, not in modal
     await expect(csrfField).toHaveAttribute('type', 'hidden');
     await expect(csrfField).not.toHaveValue('');
   });
@@ -82,7 +84,7 @@ test.describe('Submit Operation Security Features', () => {
     await openSubmitModal(page);
 
     // Simulate token tampering before request submission.
-    await page.locator('#input-submit-csrf-token').evaluate((el) => {
+    await page.locator('#input-form-csrf-token').evaluate((el) => {
       (el as HTMLInputElement).value = 'corrupted-token';
     });
 
@@ -166,6 +168,47 @@ test.describe('Submit Operation Security Features', () => {
     const payload = await response.json();
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Please take time to review your submission before submitting.');
+
+    await page.unroute(SUBMIT_ENDPOINT);
+  });
+
+  test('instant submit without waiting is rejected (time < 3 seconds)', async ({ page }) => {
+    let capturedTimeSpent = 0;
+
+    await page.route(SUBMIT_ENDPOINT, async (route) => {
+      const bodyBuffer = route.request().postDataBuffer();
+      const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+      const timeSpent = extractMultipartField(body, 'submit_time_spent') || '0';
+      capturedTimeSpent = parseInt(timeSpent, 10);
+
+      // Reject if time spent is less than 3 seconds
+      const responseStatus = capturedTimeSpent < 3 ? 400 : 200;
+      await route.fulfill({
+        status: responseStatus,
+        contentType: 'application/json',
+        body: JSON.stringify(responseStatus === 400
+          ? { success: false, message: 'Please take time to review your submission before submitting.' }
+          : { success: true, message: 'Submitted successfully' }),
+      });
+    });
+
+    const { submitModal } = await openSubmitModal(page);
+
+    // Immediately try to submit WITHOUT waiting (or minimal wait)
+    await Promise.all([
+      page.waitForResponse((response) =>
+        response.url().includes('send_xml_file.php') && response.status() === 400
+      ),
+      submitFromModalWithPrivacyConsent(page),
+    ]);
+
+    // Verify instant submit was rejected
+    expect(capturedTimeSpent).toBeLessThan(3);
+    
+    const payload = await page.evaluate(() => {
+      // Get the last response body if available
+      return null;
+    });
 
     await page.unroute(SUBMIT_ENDPOINT);
   });

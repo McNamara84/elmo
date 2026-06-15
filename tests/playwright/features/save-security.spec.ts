@@ -266,7 +266,7 @@ test.describe('Save Operation Security Features', () => {
       await openSaveModal(page);
       
       // Verify CSRF token was populated
-      await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('');
+      await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('');
 
       // Wait 2+ seconds to ensure time_spent >= 2
       await page.waitForTimeout(2100);
@@ -281,6 +281,43 @@ test.describe('Save Operation Security Features', () => {
 
       // Verify success notification appears
       await expect(page.locator('.alert-success')).toBeVisible();
+      await page.unroute(SAVE_ENDPOINT);
+    });
+
+    test('instant save without waiting is rejected (time < 2 seconds)', async ({ page }) => {
+      let capturedTimeSpent = 0;
+
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        const bodyBuffer = route.request().postDataBuffer();
+        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+        const timeSpent = extractMultipartField(body, 'save_time_spent') || '0';
+        capturedTimeSpent = parseInt(timeSpent, 10);
+
+        // Let backend decide - if time is very low, expect 400
+        const responseStatus = capturedTimeSpent < 2 ? 400 : 200;
+        await route.fulfill({
+          status: responseStatus,
+          contentType: 'application/json',
+          body: JSON.stringify(responseStatus === 400
+            ? { error: 'Please take time to review your metadata before saving.' }
+            : { success: true, message: 'File saved successfully' }),
+        });
+      });
+
+      await navigateToHome(page);
+      await openSaveModal(page);
+
+      // Immediately click save WITHOUT waiting
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 400
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      // Verify instant save was rejected
+      expect(capturedTimeSpent).toBeLessThan(2);
+      await expect(page.locator('.alert-danger')).toBeVisible();
       await page.unroute(SAVE_ENDPOINT);
     });
   });
