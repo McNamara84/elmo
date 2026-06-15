@@ -26,6 +26,15 @@ async function searchAffiliationsFromServer(query, limit = 20) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Refreshes all Tagify instances when translations are changed.
  * This function updates the placeholder text without destroying instances.
@@ -206,10 +215,32 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       enabled: true
     },
     templates: {
+      // The tag template needs to recreate the whole templates.tag string. There is no partial override.
+      // The key addition is the button  looking like a pencil - a symbol of editing
+      tag(tagData, ctrl) {
+        const safeValue = escapeHtml(tagData.value);
+
+        return `<tag title="${safeValue}"
+                     contenteditable='false'
+                     spellcheck='false'
+                     tabIndex="-1"
+                     class="${ctrl.settings.classNames.tag} ${tagData.class ? tagData.class : ''}"
+                     ${ctrl.getAttributes(tagData)}>
+          <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
+          <div>
+            <span class='tagify__tag-text'>${safeValue}</span>
+            <button type='button' class='tagify__tag__editBtn' tabindex='-1' aria-label='Edit affiliation'>
+              <i class='bi bi-pencil-fill' aria-hidden='true'></i>
+            </button>
+          </div>
+        </tag>`;
+      },
       dropdownItem(item) {
         // Build dropdown item using Tagify's standard approach but with custom content
-        const displayText = item.mappedValue || item.value || '';
-        const otherNames = item.other && Array.isArray(item.other) ? item.other.join(', ') : '';
+        const displayText = escapeHtml(item.mappedValue || item.value || '');
+        const otherNames = item.other && Array.isArray(item.other)
+          ? escapeHtml(item.other.join(', '))
+          : '';
         
         // Build HTML with all necessary Tagify attributes for proper selection handling
         let html = `<div ${this.getAttributes(item)}
@@ -327,6 +358,78 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   }
 
   /**
+   * Edit-icon click handler: opens the affiliation edit modal for the clicked tag.
+   * The original tag element and its full data (including the ROR id) are stored in
+   * module-level variables so the save handler can use them.
+   */
+  tagify.DOM.scope.addEventListener('click', function (e) {
+    const editBtn = e.target.closest('.tagify__tag__editBtn');
+    if (!editBtn) return;
+
+    e.stopPropagation();
+
+    const tagElm = editBtn.closest('tag');
+    if (!tagElm) return;
+
+    const tagData = tagElm.__tagifyTagData;
+    if (!tagData) return;
+
+    // Stash on the modal element so the save handler can reach them
+    const modalEl = document.getElementById('modal-affiliation-edit');
+    modalEl._editTagElm = tagElm;
+    modalEl._editTagData = tagData;
+
+    // Stamp the owning instance references onto the tag element for the save handler
+    tagElm._tagify_originalTagify = tagify;
+    tagElm._tagify_updateHiddenField = updateHiddenField;
+
+    const valueInput = document.getElementById('input-affiliation-edit-value');
+    valueInput.value = tagData.value;
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+
+    // Focus the input after the modal animation finishes
+    modalEl.addEventListener('shown.bs.modal', function focusOnShown() {
+      valueInput.select();
+      modalEl.removeEventListener('shown.bs.modal', focusOnShown);
+    });
+  });
+
+  /**
+   * Save handler for the affiliation edit modal.
+   * Clones the original tag data, replaces only the `value`, then calls
+   * tagify.replaceTag() so the ROR id is preserved in the background.
+   * The handler is registered only once (on the first autocompleteAffiliations call).
+   */
+  const saveBtn = document.getElementById('button-affiliation-edit-save');
+  if (saveBtn && !saveBtn._affiliEditHandlerAttached) {
+    saveBtn._affiliEditHandlerAttached = true;
+    saveBtn.addEventListener('click', function onAffilEditSave() {
+      const modalEl = document.getElementById('modal-affiliation-edit');
+      const tagElm = modalEl._editTagElm;
+      const originalData = modalEl._editTagData;
+
+      if (!tagElm || !originalData) return;
+
+      const newValue = document.getElementById('input-affiliation-edit-value').value.trim();
+      if (!newValue) return;
+
+      // Preserve all original properties (especially `id` / ROR URI) but update value
+      const newTagData = Object.assign({}, originalData, { value: newValue });
+
+      tagElm._tagify_originalTagify.replaceTag(tagElm, newTagData);
+
+      // Update hidden field of the owning Tagify instance
+      if (typeof tagElm._tagify_updateHiddenField === 'function') {
+        tagElm._tagify_updateHiddenField();
+      }
+
+      bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+    });
+  }
+
+  /**
    * Applies ARIA enhancements to the interactive Tagify input, ensuring that
    * assistive technologies are aware of the current required state.
    *
@@ -427,6 +530,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   // Store the Tagify instance in the DOM element for later access
   // Using _tagify prefix for consistency with other modules (roles.js, freekeywordTags.js, etc.)
   inputElement[0]._tagify = tagify;
+  // Expose updateHiddenField so clear.js can call it synchronously after removeAllTags()
+  tagify._updateHiddenField = updateHiddenField;
   syncStructuredAffiliations();
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();

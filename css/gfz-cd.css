@@ -46,9 +46,36 @@
 
 /* Footer styling for consistent appearance */
 footer.fixed-bottom {
-    background-color: var(--bs-body-bg, #fff);
-    border-top: 1px solid rgba(0, 0, 0, 0.1);
+    background: transparent !important;
+    background-color: transparent !important;
+    box-shadow: none;
+    border: 0;
     z-index: 1020;
+    width: 100%;
+}
+
+/* Desktop */
+body {
+    padding-bottom: 140px;
+}
+
+/* Tablets and smaller devices */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 220px;
+    }
+
+    footer.fixed-bottom {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+}
+
+/* Very small devices */
+@media (max-width: 480px) {
+    body {
+        padding-bottom: 260px;
+    }
 }
 
 /* Feedback Button */
@@ -643,4 +670,18 @@ header .ms-auto.d-flex {
   width: 140px;
   color: var(--bs-secondary);
   font-weight: 600;
+}
+
+/* Keep ORCID buttons aligned with the input height */
+#checkbox-author-contactperson+label,
+.orcid-search-btn,
+.orcid-help-icon {
+    min-height: calc(3.5rem + 2px);
+}
+
+.orcid-search-btn,
+.orcid-help-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }

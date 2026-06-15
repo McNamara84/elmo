@@ -403,6 +403,11 @@
         "searchButtonTitle": "ORCID nach Name suchen",
         "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
     },
+    "affiliationEdit": {
+        "title": "Zugehörigkeit bearbeiten",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
+    },
     "welcome": {
         "title": "Willkommen bei ELMO 😊",
         "paragraph1": "Willkommen bei ELMO – dem neuen Online-Metadateneditor der GFZ Data Services.",
