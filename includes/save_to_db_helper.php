@@ -107,3 +107,61 @@ function saveALL(array $postData, mysqli $connection): int {
         throw $e;
     }
 }
+
+/**
+ * Generate dataset export payload for a saved resource.
+ *
+ * @param mysqli $connection Active database connection
+ * @param int $resourceId Resource ID for export
+ * @param array{format?: string, useIcgem?: bool} $options Export options
+ * @return array{payload: string, contentType: string, extension: string, generator: string}
+ */
+function generateDatasetPayloadByResourceId(mysqli $connection, int $resourceId, array $options = []): array
+{
+    $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
+    $useIcgem = (bool) ($options['useIcgem'] ?? ($GLOBALS['showGGMsProperties'] ?? false));
+
+    if ($downloadFormat === 'jsonld') {
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+        $controller = new DatasetController();
+        $payload = (string) $controller->transformResourceToJsonLd($resourceId);
+
+        if ($payload === '') {
+            throw new RuntimeException("Download generation returned empty JSON-LD for resource {$resourceId}");
+        }
+
+        return [
+            'payload' => $payload,
+            'contentType' => 'application/ld+json',
+            'extension' => 'jsonld',
+            'generator' => 'dataset-jsonld',
+        ];
+    }
+
+    if ($downloadFormat !== 'xml') {
+        throw new InvalidArgumentException("Unsupported download format: {$downloadFormat}");
+    }
+
+    if ($useIcgem) {
+        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
+        $controller = new ICGEMController();
+        $payload = (string) $controller->createICGEMxml($resourceId);
+        $generator = 'icgem-xml';
+    } else {
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+        $controller = new DatasetController();
+        $payload = (string) $controller->envelopeXmlAsString($connection, $resourceId);
+        $generator = 'dataset-xml';
+    }
+
+    if ($payload === '') {
+        throw new RuntimeException("Download generation returned empty XML for resource {$resourceId}");
+    }
+
+    return [
+        'payload' => $payload,
+        'contentType' => 'application/xml',
+        'extension' => 'xml',
+        'generator' => $generator,
+    ];
+}

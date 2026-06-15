@@ -136,90 +136,62 @@ try {
     return;
 }
 // ===== Step 2: generate a file based on resource_id  =====
-
-/**
- * Generates and outputs a download for a dataset
- * 
- * Supports XML and JSON-LD generation based on the requested download format.
- * If filename is provided in $_POST, triggers file download.
- * 
- * @param int $resource_id The resource ID to generate output for
- * @return void Outputs XML or error response, may exit
- * @throws Exception If critical errors occur during generation
- */
-try {
-    global $connection, $showGGMsProperties;
-    
+if (isset($_POST['filename'])) {
     try {
-        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
-        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-    } catch (\Throwable $e) {
-        error_log("[SAVE] Error loading controllers: " . $e->getMessage());
-        throw new \RuntimeException('Could not initialize XML generator: ' . $e->getMessage(), 0, $e);
-    }
+        $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
+        $downloadFormat = strtolower($_POST['download_format'] ?? 'xml');
+        error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
 
-    // Only handle download when filename is in POST
-    if (!isset($_POST['filename'])) {
-        throw new \RuntimeException('Filename not provided');
-    }
-
-    $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
-    $downloadFormat = strtolower($_POST['download_format'] ?? 'xml');
-    error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
-
-    try {
-        $controller = new DatasetController();
-
-        if ($downloadFormat === 'jsonld') {
-            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
-            $filename = $baseFilename . '.jsonld';
-            $contentType = 'application/ld+json';
-        } else {
-            $ICGEMcontroller = new ICGEMController();
-            $payload = $showGGMsProperties
-                ? $ICGEMcontroller->createICGEMxml($resource_id)
-                : $controller->envelopeXmlAsString($connection, $resource_id);
-            $filename = $baseFilename . '.xml';
-            $contentType = 'application/xml';
-        }
-    } catch (\Throwable $e) {
-        error_log("[SAVE] Generation threw: " . $e->getMessage());
-        throw new \RuntimeException(
-            "Download generation failed for resource $resource_id: " . $e->getMessage(),
-            0,
-            $e
+        $generated = generateDatasetPayloadByResourceId(
+            $connection,
+            (int) $resource_id,
+            [
+                'format' => $downloadFormat,
+                'useIcgem' => (bool) ($showGGMsProperties ?? false),
+            ]
         );
-    }
 
-    if (!$payload) {
-        error_log("[SAVE] Generation returned empty for resource_id=$resource_id");
-        throw new \RuntimeException("Download generation returned empty result for resource $resource_id");
-    }
+        $filename = $baseFilename . '.' . $generated['extension'];
+        $payload = $generated['payload'];
+        $contentType = $generated['contentType'];
 
-    error_log("[SAVE] Payload generated successfully, length=" . strlen($payload) . " bytes");
+        error_log("[SAVE] Payload generated via {$generated['generator']}, length=" . strlen($payload) . " bytes");
 
-    // Flush any stale output buffers before sending the response
-    while (ob_get_level() > 0) {
-        ob_end_clean();
-    }
+        // Flush any stale output buffers before sending the response
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
 
-    // Set headers and send the body with explicit Content-Length
-    header('Content-Type: ' . $contentType);
-    header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Content-Length: ' . strlen($payload));
-    echo $payload;
-    flush();
-} catch (\Throwable $e) {
-    error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
-    // Flush any buffers from the failed generation attempt
-    while (ob_get_level() > 0) {
-        ob_end_clean();
+        // Set headers and send the body with explicit Content-Length
+        header('Content-Type: ' . $contentType);
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        header('Content-Length: ' . strlen($payload));
+        echo $payload;
+        flush();
+        return;
+    } catch (\Throwable $e) {
+        error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
+        // Flush any buffers from the failed generation attempt
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+        http_response_code(500);
+        $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
+        header('Content-Type: application/json');
+        header('Content-Length: ' . strlen($errorJson));
+        echo $errorJson;
+        flush();
+        return;
     }
-    http_response_code(500);
-    $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
-    header('Content-Type: application/json');
-    header('Content-Length: ' . strlen($errorJson));
-    echo $errorJson;
-    flush();
-    return;
 }
+
+// ===== Step 3: Return success response if no download was requested =====
+$successJson = json_encode([
+    'success' => true,
+    'resource_id' => $resource_id,
+    'message' => 'Data saved successfully'
+]);
+header('Content-Type: application/json');
+header('Content-Length: ' . strlen($successJson));
+echo $successJson;
+flush();

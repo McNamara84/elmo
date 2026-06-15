@@ -30,6 +30,7 @@ require_once __DIR__ . '/api/security.php';
 
 // Include required files
 require_once __DIR__ . '/settings.php';
+require_once __DIR__ . '/includes/save_to_db_helper.php';
 
 
 // Make global variables from settings.php available
@@ -474,43 +475,21 @@ try {
 
 
 
-    // Include the dataset controller to generate the file
     try {
-        require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
-        $datasetController = new DatasetController();
-    } catch (Exception $e) {
-        error_log("Error accessing DatasetController: function getResourceAsXml is not available. Exception: " . $e->getMessage());
+        $generated = generateDatasetPayloadByResourceId(
+            $connection,
+            (int) $resource_id,
+            [
+                'format' => 'xml',
+                'useIcgem' => (bool) ($showGGMsProperties ?? false),
+            ]
+        );
+        $xml_content = $generated['payload'];
+        error_log("send_xml_file.php: XML content ready via {$generated['generator']}");
+    } catch (\Throwable $e) {
+        error_log("send_xml_file.php: XML generation failed for resource_id {$resource_id}: " . $e->getMessage());
+        throw new Exception('Could not generate XML content for email attachment.', 0, $e);
     }
-    // Get XML content from API    
-    $protocol = isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? 'https://' : 'http://';
-    $base_url = $protocol . $_SERVER['HTTP_HOST'];
-    $project_path = rtrim(dirname($_SERVER['PHP_SELF']), '/');
-    $url = $base_url . $project_path . "/api/v2/dataset/export/" . $resource_id . "/all";
-
-    // Try to fetch via HTTP first
-    $xml_content = @file_get_contents($url);
-    if ($xml_content !== false) {
-        error_log("Submit: Fetched XML via API: $url");
-    } else {
-        error_log("Submit: File not found via the API. URL tried: $url. Turning to fallback logic -- generating the file on-the-fly");
-        try {
-            // The controller is already included, so we can use it.
-            $datasetController = new DatasetController();
-            // Generate XML directly in-memory
-            $xml_content = $datasetController->envelopeXmlAsString($connection, $resource_id);
-            // check for errors
-            if (empty($xml_content)) {
-                error_log("Submit: Failed to retrieve XML content from API and in-memory. Endpoint: $url");     
-            } else {
-                error_log("Submit: Successfully generated XML file in-memory for resource_id $resource_id.");
-            }
-        } catch (Exception $e) {
-            error_log("Submit: Error generating XML in-memory: " . $e->getMessage());
-            $xml_content = ''; // Set empty to continue
-        }
-    }
-
-    error_log("send_xml_file.php: XML content ready");
 
 
 // Simulation path: escape the actual email sending logic and return a success response
@@ -661,7 +640,8 @@ error_log("send_xml_file.php: simulateEmail = " . ($simulateEmail ? 'true' : 'fa
     error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
     $mail->send();
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
-} else 
+}
+
 try {
     $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
     sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
@@ -709,6 +689,18 @@ try {
                      "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
                      "Thank you for your understanding.\n" .
                      "ELMO team"
+    ]);
+}
+
+} catch (Exception $e) {
+    error_log("send_xml_file.php: Unexpected execution error: " . $e->getMessage());
+    http_response_code(500);
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => false,
+        'message' => 'Unexpected submission error.',
+        'resource_id' => $resource_id ?? null,
     ]);
 }
 
