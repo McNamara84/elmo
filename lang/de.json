@@ -167,7 +167,8 @@
         },
         "free": {
             "title": "Freie Schlagworte",
-            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas."
+            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas.",
+            "addCsv": "CSV-Datei Hochladen"
         },
         "searchPlaceholder": "Nach Schlagworte suchen..."
     },

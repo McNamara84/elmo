@@ -166,7 +166,8 @@
         },
         "free": {
             "title": "Free Keywords",
-            "placeholder": "Please enter keywords and separate them by a comma."
+            "placeholder": "Please enter keywords and separate them by a comma.",
+            "addCsv": "Upload CSV File"
         },
         "searchPlaceholder": "Search for keywords..."
     },

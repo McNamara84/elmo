@@ -167,7 +167,8 @@
         },
         "free": {
             "title": "Mots-clés libres",
-            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules."
+            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules.",
+            "addCsv": "Télécharger un fichier CSV"
         },
         "searchPlaceholder": "Rechercher des mots-clés..."
     },
