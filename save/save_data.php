@@ -143,11 +143,9 @@ if (isset($_POST['filename'])) {
         error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
 
         $generated = generateDatasetPayloadByResourceId(
-            $connection,
             (int) $resource_id,
             [
                 'format' => $downloadFormat,
-                'useIcgem' => (bool) ($showGGMsProperties ?? false),
             ]
         );
 
