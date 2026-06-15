@@ -310,7 +310,7 @@ describe('affiliations.js', () => {
     input._tagify._updateHiddenField();
     
     // Verify the hidden field contains the ROR ID
-    expect(hidden.value).toBe(originalRorId);
+    expect(hidden.value).toBe('01bj3aw27');
     
     // Simulate clicking the pencil icon (edit button)
     const tag = input._tagify.DOM.scope.querySelector('tag');
@@ -324,7 +324,7 @@ describe('affiliations.js', () => {
     const modalEl = document.getElementById('modal-affiliation-edit');
     const valueInput = document.getElementById('input-affiliation-edit-value');
     expect(modalEl._editTagData.value).toBe(originalLabel);
-    expect(modalEl._editTagData.id).toBe(originalRorId);
+    expect(modalEl._editTagData.id).toBe('01bj3aw27');
     expect(valueInput.value).toBe(originalLabel);
     
     // Simulate user editing the label
@@ -342,10 +342,10 @@ describe('affiliations.js', () => {
     
     // Verify the ROR ID is still in the Tagify value
     expect(input._tagify.value[0].value).toBe(newLabel);
-    expect(input._tagify.value[0].id).toBe(originalRorId);
+    expect(input._tagify.value[0].id).toBe('01bj3aw27');
     
     // Verify the hidden field still contains the original ROR ID
-    expect(hidden.value).toBe(originalRorId);
+    expect(hidden.value).toBe('01bj3aw27');
   });
 
   test('tag template escapes affiliation labels before rendering', () => {

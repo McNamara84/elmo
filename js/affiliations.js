@@ -381,7 +381,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
     // Stamp the owning instance references onto the tag element for the save handler
     tagElm._tagify_originalTagify = tagify;
-    tagElm._tagify_updateHiddenField = updateHiddenField;
+    tagElm._tagify_updateHiddenField = syncStructuredAffiliations;
 
     const valueInput = document.getElementById('input-affiliation-edit-value');
     valueInput.value = tagData.value;
@@ -531,7 +531,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   // Using _tagify prefix for consistency with other modules (roles.js, freekeywordTags.js, etc.)
   inputElement[0]._tagify = tagify;
   // Expose updateHiddenField so clear.js can call it synchronously after removeAllTags()
-  tagify._updateHiddenField = updateHiddenField;
+  tagify._updateHiddenField = syncStructuredAffiliations;
   syncStructuredAffiliations();
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();

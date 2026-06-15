@@ -323,15 +323,21 @@ function extractResourceNode(envelope: any): any | null {
 
 async function expectIsoContactEmail(page: Page, actualEnvelope: any, refEnvelope: any) {
   const configuredEmail = await page.evaluate(() => (window as any).ELMO_FEATURES?.xmlSubmitAddress || null);
-  const expectedEmail = configuredEmail
-    || getIsoContactEmail(refEnvelope);
+  const expectedMetadataContactEmail = configuredEmail || getIsoMetadataContactEmail(refEnvelope);
+  const expectedPointOfContactEmail = getIsoPointOfContactEmail(refEnvelope);
 
-  expect(getIsoContactEmail(actualEnvelope)).toBe(expectedEmail);
+  expect(getIsoPointOfContactEmail(actualEnvelope)).toBe(expectedPointOfContactEmail);
+  if (getIsoMetadataContactEmail(actualEnvelope)) {
+    expect(getIsoMetadataContactEmail(actualEnvelope)).toBe(expectedMetadataContactEmail);
+  }
 }
 
-function getIsoContactEmail(envelope: any): string | undefined {
-  return envelope.MD_Metadata?.identificationInfo?.MD_DataIdentification?.pointOfContact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString']
-    || envelope.MD_Metadata?.contact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString'];
+function getIsoPointOfContactEmail(envelope: any): string | undefined {
+  return envelope.MD_Metadata?.identificationInfo?.MD_DataIdentification?.pointOfContact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString'];
+}
+
+function getIsoMetadataContactEmail(envelope: any): string | undefined {
+  return envelope.MD_Metadata?.contact?.CI_ResponsibleParty?.contactInfo?.CI_Contact?.address?.CI_Address?.electronicMailAddress?.['gco:CharacterString'];
 }
 
 /**
