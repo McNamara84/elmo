@@ -2,9 +2,9 @@
 set -e
 
 # Give www-data ownership of the xml folder every start when present.
-if [ -d /var/www/html/xml ]; then
-  chown -R www-data:www-data /var/www/html/xml
-fi
+#if [ -d /var/www/html/xml ]; then
+#  chown -R www-data:www-data /var/www/html/xml
+#fi
 
 warn_missing_dir() {
   dir_path="$1"
@@ -31,7 +31,7 @@ if [ "${LOCAL_DEVELOPMENT}" = "true" ]; then
   if [ ! -f /var/www/html/settings.php ]; then
     echo "Local development: settings.php not found, creating from settings.elmo.php"
     cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-    chown www-data:www-data /var/www/html/settings.php
+    #chown www-data:www-data /var/www/html/settings.php
   else
     echo "Local development: keeping existing settings.php"
   fi
@@ -39,7 +39,7 @@ else
   # Production mode - always refresh settings.php for environment variable changes
   echo "Production mode: refreshing settings.php from settings.elmo.php"
   cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-  chown www-data:www-data /var/www/html/settings.php
+  #chown www-data:www-data /var/www/html/settings.php
 fi
 
 # Wait for the DB using mysqladmin ping (more reliable)
