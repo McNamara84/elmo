@@ -21,8 +21,7 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${ROOT_PASSWORD}"]
-      interval: 10s
+      test: ["CMD", "mysqladmin", "ping", "-h", "10.0.3.20", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]      interval: 10s
       timeout: 5s
       retries: 5
       start_period: 30s
