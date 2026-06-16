@@ -49,10 +49,6 @@ services:
       DB_INIT_MODE: drop_data
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
-      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: "true"
       SHOW_THESAURI: "true"
@@ -106,10 +102,6 @@ services:
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_MODE: "true"
-      SHOW_MSL_LABS: "true"
-      SHOW_MSL_VOCABS: "true"
-      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "true"
-      SHOW_MSL_LOGO: "true"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: "false"
       SHOW_THESAURI: "true"
@@ -164,10 +156,6 @@ services:
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for ICGEM (GGMs properties enabled)
       SHOW_MSL_MODE: "false"
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
-      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "true"
       SHOW_USED_INSTRUMENTS: "false"
       SHOW_THESAURI: "true"
@@ -221,10 +209,6 @@ services:
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for IGSN (minimal form - most form groups disabled)
       SHOW_MSL_MODE: "false"
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
-      SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: "true"
       SHOW_THESAURI: "false"
