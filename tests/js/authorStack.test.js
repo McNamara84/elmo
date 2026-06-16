@@ -396,6 +396,8 @@ describe('authorStack.js', () => {
 
     const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
     expect(editor.length).toBe(1);
+    expect(editor.parent().is('[data-author-fields]')).toBe(true);
+    expect(editor.prevAll('[data-author-type-switcher]').length).toBe(0);
     expect(editor.find('[data-author-affiliation-chip]').length).toBe(2);
     expect(editor.find('[data-author-affiliation-chip]').first().find('[data-author-affiliation-ror]').text()).toBe('04z8jg394');
     expect(editor.find('[data-author-affiliation-chip]').first().find('[data-author-affiliation-ror]').attr('aria-label')).toContain('04z8jg394');
@@ -424,5 +426,33 @@ describe('authorStack.js', () => {
 
     editor.find('[data-author-affiliation-remove]').last().trigger('click');
     expect(payload()[0].affiliations).toHaveLength(2);
+  });
+
+  test('searches affiliation suggestions while typing at least three characters', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockResolvedValue([
+      { label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }
+    ]);
+
+    try {
+      window.authorStack.addPerson();
+      const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
+      const input = editor.find('[data-author-affiliation-input]');
+
+      input.val('gf').trigger('input');
+      await jest.advanceTimersByTimeAsync(300);
+      expect(window.searchAffiliationsFromServer).not.toHaveBeenCalled();
+      expect(editor.find('[data-author-affiliation-results]').hasClass('d-none')).toBe(true);
+
+      input.val('gfz').trigger('input');
+      await jest.advanceTimersByTimeAsync(300);
+
+      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
+      expect(editor.find('[data-author-affiliation-result]').length).toBe(1);
+      expect(editor.find('[data-author-affiliation-result]').text()).toContain('GFZ Helmholtz Centre for Geosciences');
+    } finally {
+      delete window.searchAffiliationsFromServer;
+      jest.useRealTimers();
+    }
   });
 });

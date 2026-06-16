@@ -27,6 +27,10 @@ $(document).ready(function () {
     person: { affiliationName: 'personAffiliation[]', rorName: 'authorPersonRorIds[]' },
     institution: { affiliationName: 'institutionAffiliation[]', rorName: 'authorInstitutionRorIds[]' }
   };
+  const affiliationSearchMinLength = 3;
+  const affiliationSearchDebounceMs = 250;
+  const affiliationSearchTimers = new WeakMap();
+  let affiliationSearchRequestId = 0;
 
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -139,7 +143,8 @@ $(document).ready(function () {
   }
 
   function createAffiliationEditor() {
-    const editor = $('<div class="border-bottom p-2" data-author-affiliation-editor></div>');
+    const editor = $('<div class="col-12 mt-2" data-author-affiliation-editor></div>');
+    const panel = $('<div class="border rounded bg-body-tertiary p-3"></div>');
     const header = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
     const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
@@ -155,7 +160,8 @@ $(document).ready(function () {
 
     header.append(title, count);
     controls.append(input, searchButton, addButton);
-    return editor.append(header, list, controls, results);
+    panel.append(header, list, controls, results);
+    return editor.append(panel);
   }
 
   function getAffiliationFieldConfig(row) {
@@ -183,16 +189,18 @@ $(document).ready(function () {
 
   function ensureAffiliationEditor(row) {
     const editPanel = row.find('[data-author-edit-panel]').first();
+    const fieldsContainer = row.find('[data-author-fields]').first();
     hideLegacyAffiliationFields(row);
 
-    if (!editPanel.children('[data-author-affiliation-editor]').length) {
-      const switcher = editPanel.children('[data-author-type-switcher]').first();
-      const editor = createAffiliationEditor();
-      if (switcher.length) {
-        switcher.after(editor);
-      } else {
-        editPanel.prepend(editor);
-      }
+    let editor = row.find('[data-author-affiliation-editor]').first();
+    if (!editor.length) {
+      editor = createAffiliationEditor();
+    }
+
+    if (fieldsContainer.length && !editor.parent().is(fieldsContainer)) {
+      fieldsContainer.append(editor);
+    } else if (!fieldsContainer.length && !editor.parent().is(editPanel)) {
+      editPanel.append(editor);
     }
 
     renderAffiliationEditor(row);
@@ -606,14 +614,19 @@ $(document).ready(function () {
 
     const checkbox = row.find('input[name="contacts[]"]');
     const contactToggle = row.find(`label[for="${checkbox.attr('id')}"]`).first();
+    const contactToggleWrapper = contactToggle.closest('.input-group-append');
     const contactFields = row.find('.contact-person-input');
 
     function updateFields() {
+      contactToggleWrapper
+        .addClass('d-flex align-self-stretch')
+        .css('min-height', 'calc(3.5rem + 2px)');
       contactToggle
-        .addClass('btn btn-outline-primary d-inline-flex align-items-center gap-1')
+        .addClass('btn btn-outline-primary d-inline-flex align-items-center gap-1 h-100 mb-0')
         .removeClass('lh-sm round-corners-left con-reduce')
         .attr('data-author-contact-toggle', '')
         .removeAttr('aria-pressed')
+        .css('min-height', 'calc(3.5rem + 2px)')
         .toggleClass('active', checkbox.prop('checked'))
         .empty()
         .append('<i class="bi bi-person-lines-fill" aria-hidden="true"></i>')
@@ -823,14 +836,44 @@ $(document).ready(function () {
     const input = editor.find('[data-author-affiliation-input]').first();
     const query = String(input.val() || '').trim();
     const searchFunction = getAffiliationSearchFunction();
+    const requestId = ++affiliationSearchRequestId;
+    row.data('author-affiliation-search-request-id', requestId);
 
-    if (!searchFunction || query.length < 2) {
+    if (!searchFunction || query.length < affiliationSearchMinLength) {
       renderAffiliationSearchResults(row, []);
       return;
     }
 
     const results = await searchFunction(query, 20);
+    if (row.data('author-affiliation-search-request-id') !== requestId) {
+      return;
+    }
     renderAffiliationSearchResults(row, Array.isArray(results) ? results : []);
+  }
+
+  function scheduleAffiliationSearch(row) {
+    const inputElement = row.find('[data-author-affiliation-input]').get(0);
+    if (!inputElement) {
+      return;
+    }
+
+    const existingTimer = affiliationSearchTimers.get(inputElement);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    const query = String(inputElement.value || '').trim();
+    if (query.length < affiliationSearchMinLength) {
+      renderAffiliationSearchResults(row, []);
+      return;
+    }
+
+    const timer = setTimeout(function () {
+      searchAffiliations(row).catch(function (error) {
+        console.error('Affiliation search error:', error);
+      });
+    }, affiliationSearchDebounceMs);
+    affiliationSearchTimers.set(inputElement, timer);
   }
 
   function hasPersonContent(author) {
@@ -1234,6 +1277,10 @@ $(document).ready(function () {
 
   stack.on('input', '[data-author-affiliation-label]', function () {
     syncEditorAffiliations($(this).closest('[data-author-entry-row]'));
+  });
+
+  stack.on('input', '[data-author-affiliation-input]', function () {
+    scheduleAffiliationSearch($(this).closest('[data-author-entry-row]'));
   });
 
   stack.on('keydown', '[data-author-affiliation-input]', function (event) {
