@@ -45,6 +45,7 @@ class SaveHandler {
         this.$timeSpentField = $('#input-save-time-spent');
         this.$honeypotField = $('#input-information-website');
         this.modalOpenedAt = null;
+        this.saveFlowStartedAt = null;
         
         this.initializeEventListeners();
     }
@@ -115,6 +116,7 @@ class SaveHandler {
      * @param {string} [format='xml'] - Download format
      */
     async handleSave(format = 'xml') {
+        this.saveFlowStartedAt = Date.now();
         this.setCurrentFormat(format);
         this.updateSaveAsModal();
         this.showNotification('info',
@@ -159,11 +161,7 @@ class SaveHandler {
             return;
         }
 
-        // Calculate time spent filling the save modal (in seconds)
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
-        }
+        this.$timeSpentField.val(this.calculateTimeSpent());
 
         this.modals.saveAs.hide();
         await this.saveAndDownload(filename, this.currentFormat);
@@ -217,7 +215,12 @@ class SaveHandler {
                 body: formData
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const serverMessage = await this.extractErrorMessage(response);
+                throw Object.assign(new Error(`HTTP error! status: ${response.status}`), {
+                    userMessage: serverMessage
+                });
+            }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -247,8 +250,59 @@ class SaveHandler {
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,
-                translations.alerts.saveError);
+                error?.userMessage || translations.alerts.saveError);
         }
+    }
+
+    /**
+     * Calculate elapsed save interaction time in whole seconds.
+     * @returns {number}
+     */
+    calculateTimeSpent() {
+        const now = Date.now();
+        const startedAtCandidates = [this.modalOpenedAt, this.saveFlowStartedAt]
+            .filter((timestamp) => Number.isFinite(timestamp) && timestamp > 0);
+
+        if (!startedAtCandidates.length) {
+            return 0;
+        }
+
+        return Math.max(
+            0,
+            ...startedAtCandidates.map((timestamp) => Math.floor((now - timestamp) / 1000))
+        );
+    }
+
+    /**
+     * Extract a user-safe error message from a failed save response.
+     * @param {Response} response - Failed fetch response
+     * @returns {Promise<string|null>}
+     */
+    async extractErrorMessage(response) {
+        if (!response?.clone) {
+            return null;
+        }
+
+        try {
+            const clone = response.clone();
+            const contentType = clone.headers?.get?.('Content-Type')
+                || clone.headers?.get?.('content-type')
+                || '';
+
+            if (contentType.includes('application/json') && typeof clone.json === 'function') {
+                const payload = await clone.json();
+                return payload?.error || payload?.message || null;
+            }
+
+            if (typeof clone.text === 'function') {
+                const text = (await clone.text()).trim();
+                return text || null;
+            }
+        } catch (error) {
+            console.warn('Could not parse save error response:', error);
+        }
+
+        return null;
     }
 
     /**
