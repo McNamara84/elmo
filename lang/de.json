@@ -166,9 +166,15 @@
             "button": "Thesaurus öffnen"
         },
         "free": {
-            "title": "Freie Schlagworte",
-            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas.",
-            "addCsv": "CSV-Datei Hochladen"
+            "title": "Freie Schlagwörter",
+            "placeholder": "Bitte geben Sie Schlagwörter ein und trennen Sie diese durch ein Komma.",
+            "addCsv": "CSV-Datei hochladen",
+            "modalTitle": "CSV-Datei hochladen",
+            "modalDescription": "Laden Sie eine CSV-Datei hoch oder ziehen Sie sie hierher.",
+            "dropzone": "CSV-Datei hierher ziehen",
+            "selectFile": "oder zum Auswählen klicken",
+            "cancel": "Abbrechen",
+            "import": "Schlagwörter importieren"
         },
         "searchPlaceholder": "Nach Schlagworte suchen..."
     },

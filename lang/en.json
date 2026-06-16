@@ -167,7 +167,13 @@
         "free": {
             "title": "Free Keywords",
             "placeholder": "Please enter keywords and separate them by a comma.",
-            "addCsv": "Upload CSV File"
+            "addCsv": "Upload CSV File",
+            "modalTitle": "Upload CSV file",
+            "modalDescription": "Upload a CSV file or drag and drop it here.",
+            "dropzone": "Drag and drop a CSV file here",
+            "selectFile": "or click to select a file",
+            "cancel": "Cancel",
+            "import": "Import keywords"
         },
         "searchPlaceholder": "Search for keywords..."
     },

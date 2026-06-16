@@ -167,8 +167,14 @@
         },
         "free": {
             "title": "Mots-clés libres",
-            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules.",
-            "addCsv": "Télécharger un fichier CSV"
+            "placeholder": "Veuillez saisir des mots-clés et les séparer par une virgule.",
+            "addCsv": "Téléverser un fichier CSV",
+            "modalTitle": "Téléverser un fichier CSV",
+            "modalDescription": "Téléversez un fichier CSV ou glissez-déposez-le ici.",
+            "dropzone": "Glissez-déposez un fichier CSV ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "cancel": "Annuler",
+            "import": "Importer les mots-clés"
         },
         "searchPlaceholder": "Rechercher des mots-clés..."
     },
