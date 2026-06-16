@@ -289,15 +289,12 @@ class SaveHandler {
                 || clone.headers?.get?.('content-type')
                 || '';
 
-            if (contentType.includes('application/json') && typeof clone.json === 'function') {
-                const payload = await clone.json();
-                return payload?.error || payload?.message || null;
+            if (!contentType.includes('application/json') || typeof clone.json !== 'function') {
+                return null;
             }
 
-            if (typeof clone.text === 'function') {
-                const text = (await clone.text()).trim();
-                return text || null;
-            }
+            const payload = await clone.json();
+            return payload?.error || payload?.message || null;
         } catch (error) {
             console.warn('Could not parse save error response:', error);
         }

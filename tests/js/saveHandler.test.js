@@ -247,6 +247,27 @@ describe('saveHandler.js', () => {
     delete global.fetch;
   });
 
+  test('saveAndDownload keeps generic error message for plain text server errors', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      clone: jest.fn(() => ({
+        headers: {
+          get: jest.fn((name) => name.toLowerCase() === 'content-type' ? 'text/plain' : '')
+        },
+        text: jest.fn().mockResolvedValue('Internal Server Error')
+      }))
+    });
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset');
+
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+    delete global.fetch;
+  });
+
   test('saveAndDownload logs failure on HTTP error', async () => {
     global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
