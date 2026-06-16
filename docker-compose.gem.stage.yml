@@ -28,11 +28,6 @@ services:
       start_period: 30s
     security_opt:
       - no-new-privileges:true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
 
   web-gem:
     build:
@@ -81,12 +76,9 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM"
-    depends_on:
-      db:
-        condition: service_healthy
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://10.0.3.20:80/"]
+      test: ["CMD-SHELL", "pgrep apache2 > /dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -96,12 +88,6 @@ services:
       - storage_data:/var/www/html/storage
     security_opt:
       - no-new-privileges:true
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
-        memory: 512M
 
 volumes:
   xml_data:
