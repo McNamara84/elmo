@@ -30,6 +30,10 @@ test.describe('Authors redesign workflow', () => {
     await expect(personCard.locator('[data-author-type-badge]')).toContainText(/person/i);
     await expect(personCard.locator('[data-author-contact-badge]')).toContainText(/contact person/i);
     await expect(personCard.locator('[data-author-contact-toggle]')).toContainText(/contact person/i);
+    await expect.poll(() =>
+      personCard.locator('input[name="givennames[]"]').evaluate((input) => input.hasAttribute('required'))
+    ).toBe(false);
+    await expect(personCard.locator('label[for^="input-author-firstname"] .red-star')).toHaveCount(0);
     await expect(personCard.locator('[data-author-actions]')).toBeVisible();
     await expect(personCard.locator('[data-author-move-up]')).toBeVisible();
     await expect(personCard.locator('[data-author-move-down]')).toBeVisible();

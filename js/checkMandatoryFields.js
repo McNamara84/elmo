@@ -42,11 +42,11 @@ function validateContactPersonRequirements() {
 
         // Checks if the checkbox for Contact Person is checked
         var isCheckboxChecked = fields.checkbox.prop('checked');
+        fields.firstname.removeAttr('required').removeClass('js-required-on-submit');
 
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
-            fields.firstname.attr('required', 'required');
             fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
@@ -550,9 +550,9 @@ function isAuthorNameInput(target) {
 });
 
 /**
- * Validates the first author's last name and first name input fields.
- * - Marks each field as valid if it contains non-whitespace text.
- * - Marks each field as invalid if it is empty or contains only whitespace.
+ * Validates author name input fields.
+ * - Last name is mandatory and must contain non-whitespace text.
+ * - First name is optional, but any entered value is reflected in UI state.
  * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
  */
 function validateAuthorNameFields() {
@@ -571,7 +571,12 @@ function validateAuthorNameFields() {
         if (oldFeedback) oldFeedback.remove();
 
         const [section, key] = translationKey.split('.');
-        if (value.length === 0) {
+        const isOptionalFirstName = input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0;
+
+        if (value.length === 0 && isOptionalFirstName) {
+            input.setCustomValidity("");
+            input.removeAttribute('required');
+        } else if (value.length === 0) {
             input.classList.add('is-invalid');
             const message = (typeof translations !== 'undefined' && translations[section])
                 ? translations[section][key]

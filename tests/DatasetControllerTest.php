@@ -274,6 +274,41 @@ XML;
                 $this->assertStringNotContainsString('OldDb', $updatedXml);
         }
 
+        public function testAuthorPayloadXmlSupportsAuthorWithoutGivenname(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.MONONYM.PAYLOAD.XML</doi>
+    <Authors/>
+    <ContactPersons/>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'Sukarno',
+                                        'givenname' => '',
+                                        'orcid' => '',
+                                        'isContact' => true,
+                                        'email' => 'sukarno@example.com',
+                                        'website' => '',
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+
+                $this->assertSame('Sukarno', (string) $xml->Authors->Author->familyname);
+                $this->assertSame('', (string) $xml->Authors->Author->givenname);
+                $this->assertSame('Sukarno', (string) $xml->ContactPersons->ContactPerson->familyname);
+                $this->assertSame('', (string) $xml->ContactPersons->ContactPerson->givenname);
+        }
+
         public function testDataCiteTransformUsesUnifiedAuthorsInPayloadOrder(): void
         {
                 $sourceXml = $this->directAuthorSourceXml();
@@ -297,6 +332,20 @@ XML;
                 $this->assertSame('DirectFirst, Person', trim($contactContributors->item(0)->textContent));
         }
 
+        public function testDataCiteTransformSupportsAuthorWithoutGivenname(): void
+        {
+                $sourceXml = $this->mononymAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $this->assertSame('Sukarno', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:creatorName)')));
+                $this->assertSame(0, $xpath->query('//dc:creators/dc:creator/dc:givenName')->length);
+                $this->assertSame('Sukarno', trim($xpath->evaluate('string(//dc:contributors/dc:contributor[@contributorType="ContactPerson"]/dc:contributorName)')));
+        }
+
         public function testIsoTransformReadsUnifiedAuthorsInPayloadOrder(): void
         {
                 $sourceXml = $this->directAuthorSourceXml();
@@ -309,6 +358,21 @@ XML;
                         ],
                         $this->isoAuthorParties($isoXml)
                 );
+        }
+
+        public function testIsoTransformSupportsAuthorWithoutGivenname(): void
+        {
+                $sourceXml = $this->mononymAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => 'Sukarno', 'organisation' => 'Payload University'],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+                $this->assertStringContainsString('<gco:CharacterString>Sukarno</gco:CharacterString>', $isoXml);
+                $this->assertStringNotContainsString('Sukarno,', $isoXml);
         }
 
         public function testIsoTransformFallsBackToLegacyAuthorsInXmlOrder(): void
@@ -396,6 +460,32 @@ XML;
     </Authors>
     <ContactPersons>
         <ContactPerson><familyname>DirectFirst</familyname><givenname>Person</givenname><email>direct-first@example.com</email></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+        }
+
+        private function mononymAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.MONONYM.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-06-16</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Mononym Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Mononym author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname>Sukarno</familyname>
+            <givenname></givenname>
+            <Affiliations><Affiliation><name>Payload University</name><rorId>04z8jg394</rorId></Affiliation></Affiliations>
+        </Author>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>Sukarno</familyname><givenname></givenname><email>sukarno@example.com</email></ContactPerson>
     </ContactPersons>
 </Resource>
 XML;

@@ -10,6 +10,22 @@ http://www.altova.com/mapforce
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs">
 	<xsl:output method="xml" encoding="UTF-8" indent="yes"/>
+	<xsl:template name="person-display-name">
+		<xsl:param name="person"/>
+		<xsl:variable name="family" select="normalize-space($person/*[local-name()='familyname' and namespace-uri()=''])"/>
+		<xsl:variable name="given" select="normalize-space($person/*[local-name()='givenname' and namespace-uri()=''])"/>
+		<xsl:choose>
+			<xsl:when test="$family != '' and $given != ''">
+				<xsl:value-of select="concat($family, ', ', $given)"/>
+			</xsl:when>
+			<xsl:when test="$family != ''">
+				<xsl:value-of select="$family"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$given"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
@@ -34,11 +50,15 @@ http://www.altova.com/mapforce
 								<xsl:otherwise>
 									<creatorName>
 										<xsl:attribute name="nameType" namespace="">Personal</xsl:attribute>
-										<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+										<xsl:call-template name="person-display-name">
+											<xsl:with-param name="person" select="."/>
+										</xsl:call-template>
 									</creatorName>
-									<givenName>
-										<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
-									</givenName>
+									<xsl:if test="normalize-space(*[local-name()='givenname' and namespace-uri()='']) != ''">
+										<givenName>
+											<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
+										</givenName>
+									</xsl:if>
 									<familyName>
 										<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
 									</familyName>
@@ -76,11 +96,15 @@ http://www.altova.com/mapforce
 						<creator>
 							<creatorName>
 								<xsl:attribute name="nameType" namespace="">Personal</xsl:attribute>
-								<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+								<xsl:call-template name="person-display-name">
+									<xsl:with-param name="person" select="."/>
+								</xsl:call-template>
 							</creatorName>
-							<givenName>
-								<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
-							</givenName>
+							<xsl:if test="normalize-space(*[local-name()='givenname' and namespace-uri()='']) != ''">
+								<givenName>
+									<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
+								</givenName>
+							</xsl:if>
 							<familyName>
 								<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
 							</familyName>
@@ -213,11 +237,15 @@ http://www.altova.com/mapforce
 						<contributor>
 							<xsl:attribute name="contributorType" namespace="">ContactPerson</xsl:attribute>
 							<contributorName>
-								<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+								<xsl:call-template name="person-display-name">
+									<xsl:with-param name="person" select="."/>
+								</xsl:call-template>
 							</contributorName>
-							<givenName>
-								<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
-							</givenName>
+							<xsl:if test="normalize-space(*[local-name()='givenname' and namespace-uri()='']) != ''">
+								<givenName>
+									<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
+								</givenName>
+							</xsl:if>
 							<familyName>
 								<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
 							</familyName>

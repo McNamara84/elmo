@@ -74,6 +74,43 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         $this->assertEquals("03yrm5c26", $affiliationResult["rorId"], "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
     }
 
+    public function testSaveContactPersonWithMissingGivenname()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MONONYM.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Mononym Contact"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "familynames" => ["Sukarno"],
+            "givennames" => [""],
+            "orcids" => [""],
+            "cpEmail" => ["sukarno@example.com"],
+            "cpOnlineResource" => [""],
+            "personAffiliation" => [""],
+            "authorPersonRorIds" => [""]
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT familyname, givenname, email FROM Contact_Person WHERE email = ?");
+        $stmt->bind_param("s", $postData["cpEmail"][0]);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($result, "Die mononyme Contact Person wurde nicht gespeichert.");
+        $this->assertEquals("Sukarno", $result["familyname"]);
+        $this->assertEquals("", $result["givenname"]);
+        $this->assertEquals("sukarno@example.com", $result["email"]);
+    }
+
     /**
      * Test saving three fully populated contact persons
      *

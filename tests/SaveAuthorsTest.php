@@ -347,9 +347,6 @@ final class SaveAuthorsTest extends DatabaseTestCase
      */
     public function testSaveSinglePersonAuthorWithMissingGivenname()
     {
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage("No valid author data provided");
-
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.SINGLE.REQUIRED",
             "year" => 2023,
@@ -367,11 +364,20 @@ final class SaveAuthorsTest extends DatabaseTestCase
             "familynames" => ["OnlyLastName"],
             "givennames" => [""],
             "orcids" => [""],
-            "affiliation" => [],
-            "authorRorIds" => []
+            "personAffiliation" => [],
+            "authorPersonRorIds" => []
         ];
 
         saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT familyname, givenname FROM Author_person WHERE familyname = ?");
+        $stmt->bind_param("s", $authorData["familynames"][0]);
+        $stmt->execute();
+        $personResult = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotEmpty($personResult, "Der mononyme Autor wurde nicht in Author_person gespeichert.");
+        $this->assertEquals("OnlyLastName", $personResult["familyname"]);
+        $this->assertEquals("", $personResult["givenname"]);
     }
     public function testSaveSingleInstitutionAuthorWithMissingName()
     {

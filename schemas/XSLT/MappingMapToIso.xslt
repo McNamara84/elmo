@@ -11,6 +11,22 @@ http://www.altova.com/mapforce
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs">
 	<xsl:output method="xml" encoding="UTF-8" indent="yes"/>
 	<xsl:param name="contactEmail" select="'datapub@gfz.de'"/>
+	<xsl:template name="person-display-name">
+		<xsl:param name="person"/>
+		<xsl:variable name="family" select="normalize-space($person/*[local-name()='familyname' and namespace-uri()=''])"/>
+		<xsl:variable name="given" select="normalize-space($person/*[local-name()='givenname' and namespace-uri()=''])"/>
+		<xsl:choose>
+			<xsl:when test="$family != '' and $given != ''">
+				<xsl:value-of select="concat($family, ', ', $given)"/>
+			</xsl:when>
+			<xsl:when test="$family != ''">
+				<xsl:value-of select="$family"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$given"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<MD_Metadata xmlns="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:gsr="http://www.isotc211.org/2005/gsr" xmlns:gss="http://www.isotc211.org/2005/gss" xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -215,7 +231,9 @@ http://www.altova.com/mapforce
 															<CI_ResponsibleParty>
 																<individualName>
 																	<gco:CharacterString>
-																		<xsl:value-of select="concat($var_author_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var_author_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
+																		<xsl:call-template name="person-display-name">
+																			<xsl:with-param name="person" select="$var_author_cur"/>
+																		</xsl:call-template>
 																	</gco:CharacterString>
 																</individualName>
 																<organisationName>
@@ -244,7 +262,9 @@ http://www.altova.com/mapforce
 														<CI_ResponsibleParty>
 															<individualName>
 																<gco:CharacterString>
-																	<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+																	<xsl:call-template name="person-display-name">
+																		<xsl:with-param name="person" select="."/>
+																	</xsl:call-template>
 																</gco:CharacterString>
 															</individualName>
 															<role>
@@ -293,7 +313,9 @@ http://www.altova.com/mapforce
 															<CI_ResponsibleParty>
 																<individualName>
 																	<gco:CharacterString>
-																		<xsl:value-of select="concat($var_legacy_author_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var_legacy_author_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
+																		<xsl:call-template name="person-display-name">
+																			<xsl:with-param name="person" select="$var_legacy_author_cur"/>
+																		</xsl:call-template>
 																	</gco:CharacterString>
 																</individualName>
 																<organisationName>
@@ -322,7 +344,9 @@ http://www.altova.com/mapforce
 														<CI_ResponsibleParty>
 															<individualName>
 																<gco:CharacterString>
-																	<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+																	<xsl:call-template name="person-display-name">
+																		<xsl:with-param name="person" select="."/>
+																	</xsl:call-template>
 																</gco:CharacterString>
 															</individualName>
 															<role>
@@ -357,7 +381,9 @@ http://www.altova.com/mapforce
 									<CI_ResponsibleParty>
 										<individualName>
 											<gco:CharacterString>
-												<xsl:value-of select="concat($var12_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var12_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
+												<xsl:call-template name="person-display-name">
+													<xsl:with-param name="person" select="$var12_cur"/>
+												</xsl:call-template>
 											</gco:CharacterString>
 										</individualName>
 										<organisationName>
@@ -414,7 +440,9 @@ http://www.altova.com/mapforce
 								<CI_ResponsibleParty>
 									<individualName>
 										<gco:CharacterString>
-											<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+											<xsl:call-template name="person-display-name">
+												<xsl:with-param name="person" select="."/>
+											</xsl:call-template>
 										</gco:CharacterString>
 									</individualName>
 									<contactInfo>

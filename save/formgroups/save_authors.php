@@ -4,7 +4,8 @@ require_once __DIR__ . '/../validation.php';
 
 /**
  * Filters the input author data and returns only those authors 
- * who have both non-empty family (last) names and given (first) names.
+ * who have a non-empty family (last) name. Given (first) names are optional
+ * to support mononymous person authors.
  *
  * This is used to exclude incomplete author entries before saving to the database.
  *
@@ -27,14 +28,14 @@ function filterValidPersonAuthors(array $postData): array
         'authorPersonRorIds' => []
     ];
 
-    // If either familynames or givennames is missing or empty, return empty validAuthors
-    if (empty($postData['familynames']) || empty($postData['givennames'])) {
+    // If familynames is missing or empty, return empty validAuthors
+    if (empty($postData['familynames'])) {
         return $validAuthors;
     }
 
     // Extract input arrays or default empty arrays for optional fields
     $familynames = $postData['familynames'];
-    $givennames = $postData['givennames'];
+    $givennames = $postData['givennames'] ?? [];
     $orcids = $postData['orcids'] ?? [];
     $affiliations = $postData['personAffiliation'] ?? [];
     $rorids = $postData['authorPersonRorIds'] ?? [];
@@ -44,8 +45,8 @@ function filterValidPersonAuthors(array $postData): array
         // Get corresponding given name or empty string if not set
         $given = $givennames[$i] ?? '';
 
-        // Check if both family and given names are non-empty after trimming whitespace
-        if (trim($family) !== '' && trim($given) !== '') {
+        // Check if family name is non-empty after trimming whitespace
+        if (trim($family) !== '') {
             // Append trimmed valid fields to results arrays, safely handling optional data
             $validAuthors['familynames'][] = trim($family);
             $validAuthors['givennames'][] = trim($given);
@@ -71,17 +72,14 @@ function filterValidPersonAuthors(array $postData): array
  */
 function validatePersonAuthors(array $postData): bool
 {
-    if (empty($postData['familynames']) || empty($postData['givennames'])) {
+    if (empty($postData['familynames'])) {
         return false;
     }
 
     $familynames = $postData['familynames'];
-    $givennames = $postData['givennames'];
 
-    foreach ($familynames as $i => $family) {
-        $given = $givennames[$i] ?? '';
-
-        if (trim($family) !== '' && trim($given) !== '') {
+    foreach ($familynames as $family) {
+        if (trim($family) !== '') {
             return true;
         }
     }
@@ -201,7 +199,7 @@ function normalizeAuthorsFromPayload(array $payload): array
             $familyname = trim((string) ($author['familyname'] ?? $author['familyName'] ?? ''));
             $givenname = trim((string) ($author['givenname'] ?? $author['givenName'] ?? ''));
 
-            if ($familyname === '' || $givenname === '') {
+            if ($familyname === '') {
                 continue;
             }
 
@@ -392,7 +390,7 @@ function processAuthor($connection, $authorData): int
     $author_person_id = null;
     $author_institution_id = null;
 
-    if (!empty($authorData['familyname']) && !empty($authorData['givenname'])) {
+    if (!empty($authorData['familyname'])) {
         // 1. Save or find PERSON
         // Author_person.orcid is NOT NULL, so empty strings are stored as-is and = suffices
         $stmt = $connection->prepare("SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ? AND orcid = ?");

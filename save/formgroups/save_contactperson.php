@@ -85,7 +85,7 @@ function saveContactPersonEntry($connection, int $resource_id, array $author, st
         return;
     }
 
-    if (empty($email) || empty($familyname) || empty($givenname)) {
+    if (empty($email) || empty($familyname)) {
         return;
     }
 

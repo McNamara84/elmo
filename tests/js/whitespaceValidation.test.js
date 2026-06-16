@@ -41,8 +41,8 @@ describe('validateTitleField', () => {
             <div class="col">
               <div class="input-group has-validation">
                 <div class="form-floating">
-                  <input type="text" class="form-control js-required-on-submit"
-                    id="input-author-firstname" name="givennames[]" required />
+                  <input type="text" class="form-control"
+                    id="input-author-firstname" name="givennames[]" />
                   <label for="input-author-firstname">First Name</label>
                   <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
                 </div>
@@ -240,8 +240,8 @@ describe('validateAuthorNameFields', () => {
             <div class="col">
               <div class="input-group has-validation">
                 <div class="form-floating">
-                  <input type="text" class="form-control js-required-on-submit"
-                    id="input-author-firstname" name="givennames[]" required />
+                  <input type="text" class="form-control"
+                    id="input-author-firstname" name="givennames[]" />
                   <label for="input-author-firstname">First Name</label>
                   <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
                 </div>
@@ -314,9 +314,9 @@ describe('validateAuthorNameFields', () => {
     expect(lastname.classList.contains('is-invalid')).toBe(true);
   });
 
-  // --- First name validation ---
+  // --- Optional first name validation ---
 
-  test('rejects whitespace-only first name', () => {
+  test('accepts whitespace-only first name when last name is present', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = 'Doe';
@@ -324,12 +324,12 @@ describe('validateAuthorNameFields', () => {
 
     const result = window.validateAuthorNameFields();
 
-    expect(result).toBe(false);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(result).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
     expect(lastname.classList.contains('is-valid')).toBe(true);
   });
 
-  test('rejects empty first name', () => {
+  test('accepts empty first name when last name is present', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = 'Doe';
@@ -337,13 +337,13 @@ describe('validateAuthorNameFields', () => {
 
     const result = window.validateAuthorNameFields();
 
-    expect(result).toBe(false);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(result).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
   });
 
   // --- Both fields invalid ---
 
-  test('rejects both fields when both are whitespace-only', () => {
+  test('rejects last name only when both author name fields are whitespace-only', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = '   ';
@@ -353,7 +353,7 @@ describe('validateAuthorNameFields', () => {
 
     expect(result).toBe(false);
     expect(lastname.classList.contains('is-invalid')).toBe(true);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
   });
 
   // --- Both fields valid ---
@@ -400,7 +400,7 @@ describe('validateAuthorNameFields', () => {
 
   // --- Feedback element handling ---
 
-  test('creates feedback elements with correct data-translate attributes', () => {
+  test('creates feedback elements only for mandatory name fields', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = '   ';
@@ -415,8 +415,7 @@ describe('validateAuthorNameFields', () => {
 
     expect(lastnameFeedback).not.toBeNull();
     expect(lastnameFeedback.innerText).toBe(window.translations.general.lastNameInvalid);
-    expect(firstnameFeedback).not.toBeNull();
-    expect(firstnameFeedback.innerText).toBe(window.translations.general.firstNameInvalid);
+    expect(firstnameFeedback).toBeNull();
   });
 
   test('does not duplicate feedback elements on multiple validations', () => {
@@ -440,12 +439,12 @@ describe('validateAuthorNameFields', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
 
-    // First: both invalid
+    // First: last name invalid, first name optional
     lastname.value = '   ';
     firstname.value = '   ';
     window.validateAuthorNameFields();
     expect(lastname.classList.contains('is-invalid')).toBe(true);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
 
     // Then: both valid
     lastname.value = 'Doe';
@@ -459,7 +458,7 @@ describe('validateAuthorNameFields', () => {
 
   // --- setCustomValidity integration ---
 
-  test('sets customValidity so checkValidity() returns false for whitespace-only names', () => {
+  test('sets customValidity so checkValidity() returns false for whitespace-only mandatory last name only', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = '   ';
@@ -468,7 +467,7 @@ describe('validateAuthorNameFields', () => {
     window.validateAuthorNameFields();
 
     expect(lastname.checkValidity()).toBe(false);
-    expect(firstname.checkValidity()).toBe(false);
+    expect(firstname.checkValidity()).toBe(true);
   });
 
   test('clears customValidity for valid names so checkValidity() returns true', () => {
@@ -493,7 +492,7 @@ describe('validateAuthorNameFields', () => {
               <div class="invalid-feedback" data-translate="general.lastNameInvalid"></div>
             </div>
             <div class="input-group has-validation">
-              <input type="text" id="input-author-firstname-7" name="givennames[]" required>
+              <input type="text" id="input-author-firstname-7" name="givennames[]">
               <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
             </div>
           </div>
@@ -508,9 +507,9 @@ describe('validateAuthorNameFields', () => {
 
     expect(window.validateAuthorNameFields()).toBe(false);
     expect(lastname.checkValidity()).toBe(false);
-    expect(firstname.checkValidity()).toBe(false);
+    expect(firstname.checkValidity()).toBe(true);
     expect(lastname.classList.contains('is-invalid')).toBe(true);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
 
     lastname.value = 'Curie';
     firstname.value = 'Marie';
@@ -552,8 +551,8 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
             <div class="col">
               <div class="input-group has-validation">
                 <div class="form-floating">
-                  <input type="text" class="form-control js-required-on-submit"
-                    id="input-author-firstname" name="givennames[]" required />
+                  <input type="text" class="form-control"
+                    id="input-author-firstname" name="givennames[]" />
                 </div>
               </div>
             </div>
@@ -613,7 +612,7 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
     expect(form.checkValidity()).toBe(false);
   });
 
-  test('form checkValidity() fails when author names are whitespace-only', () => {
+  test('form checkValidity() fails when mandatory author last name is whitespace-only', () => {
     const form = document.getElementById('form-mde');
     const titleInput = document.getElementById('input-resourceinformation-title');
     const lastname = document.getElementById('input-author-lastname');
@@ -643,6 +642,24 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
     window.validateAuthorNameFields();
 
     expect(form.checkValidity()).toBe(true);
+  });
+
+  test('form checkValidity() passes when author first name is empty', () => {
+    const form = document.getElementById('form-mde');
+    const titleInput = document.getElementById('input-resourceinformation-title');
+    const lastname = document.getElementById('input-author-lastname');
+    const firstname = document.getElementById('input-author-firstname');
+
+    titleInput.value = 'Valid Dataset Title';
+    lastname.value = 'Sukarno';
+    firstname.value = '';
+
+    window.validateTitleField();
+    window.validateAuthorNameFields();
+
+    expect(form.checkValidity()).toBe(true);
+    expect(lastname.classList.contains('is-valid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
   });
 
   test('validateAllMandatoryFields does NOT mark empty title/author fields as invalid on its own', () => {
@@ -681,6 +698,6 @@ describe('validateTitleField and validateAuthorNameFields integration', () => {
 
     expect(titleInput.classList.contains('is-invalid')).toBe(true);
     expect(lastname.classList.contains('is-invalid')).toBe(true);
-    expect(firstname.classList.contains('is-invalid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(false);
   });
 });

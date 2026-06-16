@@ -179,7 +179,6 @@ function isCompletePayloadContact(author) {
     }
 
     return String(author.familyname || '').trim() !== '' &&
-        String(author.givenname || '').trim() !== '' &&
         String(author.email || '').trim() !== '';
 }
 

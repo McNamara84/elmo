@@ -129,6 +129,26 @@ describe('authorStack.js', () => {
     expect($('[data-author-contact-toggle]').first().text()).toContain('Contact person');
   });
 
+  test('serializes person author with empty given name', () => {
+    $('#button-author-add').trigger('click');
+    const person = $('[data-creator-row]').first();
+    person.find('input[name="familynames[]"]').val('Sukarno').trigger('input');
+    person.find('input[name="givennames[]"]').val('').trigger('input');
+    person.find('input[name="contacts[]"]').prop('checked', true).trigger('change');
+    person.find('input[name="cpEmail[]"]').val('sukarno@example.org').trigger('input');
+
+    expect(payload()).toEqual([
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Sukarno',
+        givenname: '',
+        isContact: true,
+        email: 'sukarno@example.org',
+      })
+    ]);
+    expect($('[data-author-summary-name]').first().text()).toBe('Sukarno');
+  });
+
   test('updates summary badges when translations are loaded', () => {
     window.elmo = {
       translate: jest.fn((key) => ({
