@@ -388,20 +388,40 @@ async function addAuthorAffiliations(row: Locator, affiliations: string[]): Prom
 async function ensureAuthorPersonRow(page: Page, index: number): Promise<Locator> {
   const rows = page.locator('#group-author [data-creator-row]');
   while (await rows.count() <= index) {
-    await page.locator('#button-author-add').click();
-    await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+    const previousCount = await rows.count();
+    await page.evaluate(() => {
+      const stack = (window as any).authorStack;
+      if (stack && typeof stack.addPerson === 'function') {
+        stack.addPerson();
+        return;
+      }
+
+      document.querySelector<HTMLElement>('#button-author-add')?.click();
+    });
+    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
   }
 
+  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
   return rows.nth(index);
 }
 
 async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Locator> {
   const rows = page.locator('#group-author [data-authorinstitution-row]');
   while (await rows.count() <= index) {
-    await page.locator('#button-authorinstitution-add').click();
-    await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+    const previousCount = await rows.count();
+    await page.evaluate(() => {
+      const stack = (window as any).authorStack;
+      if (stack && typeof stack.addInstitution === 'function') {
+        stack.addInstitution();
+        return;
+      }
+
+      document.querySelector<HTMLElement>('#button-authorinstitution-add')?.click();
+    });
+    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
   }
 
+  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
   return rows.nth(index);
 }
 
@@ -754,10 +774,9 @@ for (const testCase of TEST_CASES) {
     if (!fs.existsSync(testCase.referenceXmlPath)) {
       throw new Error(`[PREREQUISITE] Reference XML missing: ${testCase.referenceXmlPath}`);
     }
-    if (fs.existsSync(XML_ACTUAL_DIR)) {
-      fs.rmSync(XML_ACTUAL_DIR, { recursive: true, force: true });
-    }
     fs.mkdirSync(XML_ACTUAL_DIR, { recursive: true });
+    fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.xml`), { force: true });
+    fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.json`), { force: true });
   });
 
   // ── Step 1: parse validation ────────────────────────────────────────────
