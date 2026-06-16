@@ -173,6 +173,16 @@ if (groupStc) {
 /**
  * Validates if a Contact Person is selected from group of Authors.
  */
+function isCompletePayloadContact(author) {
+    if (!author || author.type !== 'person' || author.isContact !== true) {
+        return false;
+    }
+
+    return String(author.familyname || '').trim() !== '' &&
+        String(author.givenname || '').trim() !== '' &&
+        String(author.email || '').trim() !== '';
+}
+
 function validateContactPerson() {
     var payloadInput = document.querySelector('input[name="authorsPayload"]');
     var authorsPayload = null;
@@ -187,7 +197,7 @@ function validateContactPerson() {
 
     var isValid = Array.isArray(authorsPayload)
         ? authorsPayload.some(function (author) {
-            return author && author.type === 'person' && author.isContact === true;
+            return isCompletePayloadContact(author);
         })
         : $('input[name="contacts[]"]:checked').length > 0;
 

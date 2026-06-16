@@ -181,68 +181,164 @@ http://www.altova.com/mapforce
 										</dateType>
 									</CI_Date>
 								</date>
-								<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''][not(*[local-name()='institutionname' and namespace-uri()=''])]">
-									<xsl:variable name="var6_cur" select="."/>
-									<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
-										<xsl:variable name="var7_cur" select="."/>
-										<citedResponsibleParty>
-											<xsl:if test="$var6_cur/*[local-name()='orcid' and namespace-uri()='']">
-												<xsl:for-each select="$var6_cur/*[local-name()='orcid' and namespace-uri()='']">
-													<xsl:variable name="var8_cur" select="."/>
-													<xsl:attribute name="xlink:href">
-														<xsl:value-of select="concat('http://orcid.org/', .)"/>
-													</xsl:attribute>
-												</xsl:for-each>
-											</xsl:if>
-											<CI_ResponsibleParty>
-												<individualName>
-													<gco:CharacterString>
-														<xsl:value-of select="concat($var6_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var6_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
-													</gco:CharacterString>
-												</individualName>
-												<organisationName>
-													<gco:CharacterString>
-														<xsl:value-of select="*[local-name()='name' and namespace-uri()='']"/>
-													</gco:CharacterString>
-												</organisationName>
-												<role>
-													<CI_RoleCode>
-														<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
-														<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
-														<xsl:value-of select="'author'"/>
-													</CI_RoleCode>
-												</role>
-											</CI_ResponsibleParty>
-										</citedResponsibleParty>
-									</xsl:for-each>
-								</xsl:for-each>
-								<xsl:for-each select="(./*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()=''][not(*[local-name()='institutionname' and namespace-uri()=''])])[not(*[local-name()='Affiliations' and namespace-uri()=''])]">
-									<xsl:variable name="var9_filter" select="."/>
-									<citedResponsibleParty>
-										<xsl:if test="*[local-name()='orcid' and namespace-uri()='']">
-											<xsl:for-each select="*[local-name()='orcid' and namespace-uri()='']">
-												<xsl:variable name="var10_cur" select="."/>
-												<xsl:attribute name="xlink:href">
-													<xsl:value-of select="concat('http://orcid.org/', .)"/>
-												</xsl:attribute>
-											</xsl:for-each>
-										</xsl:if>
-										<CI_ResponsibleParty>
-											<individualName>
-												<gco:CharacterString>
-													<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
-												</gco:CharacterString>
-											</individualName>
-											<role>
-												<CI_RoleCode>
-													<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
-													<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
-													<xsl:value-of select="'author'"/>
-												</CI_RoleCode>
-											</role>
-										</CI_ResponsibleParty>
-									</citedResponsibleParty>
-								</xsl:for-each>
+								<xsl:choose>
+									<xsl:when test="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()='']">
+										<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[local-name()='Author' and namespace-uri()='']">
+											<xsl:variable name="var_author_cur" select="."/>
+											<xsl:choose>
+												<xsl:when test="string-length(normalize-space(*[local-name()='institutionname' and namespace-uri()=''])) &gt; 0">
+													<citedResponsibleParty>
+														<CI_ResponsibleParty>
+															<organisationName>
+																<gco:CharacterString>
+																	<xsl:value-of select="*[local-name()='institutionname' and namespace-uri()='']"/>
+																</gco:CharacterString>
+															</organisationName>
+															<role>
+																<CI_RoleCode>
+																	<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																	<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																	<xsl:value-of select="'author'"/>
+																</CI_RoleCode>
+															</role>
+														</CI_ResponsibleParty>
+													</citedResponsibleParty>
+												</xsl:when>
+												<xsl:when test="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
+													<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
+														<citedResponsibleParty>
+															<xsl:if test="string-length(normalize-space($var_author_cur/*[local-name()='orcid' and namespace-uri()=''])) &gt; 0">
+																<xsl:attribute name="xlink:href">
+																	<xsl:value-of select="concat('http://orcid.org/', normalize-space($var_author_cur/*[local-name()='orcid' and namespace-uri()='']))"/>
+																</xsl:attribute>
+															</xsl:if>
+															<CI_ResponsibleParty>
+																<individualName>
+																	<gco:CharacterString>
+																		<xsl:value-of select="concat($var_author_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var_author_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
+																	</gco:CharacterString>
+																</individualName>
+																<organisationName>
+																	<gco:CharacterString>
+																		<xsl:value-of select="*[local-name()='name' and namespace-uri()='']"/>
+																	</gco:CharacterString>
+																</organisationName>
+																<role>
+																	<CI_RoleCode>
+																		<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																		<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																		<xsl:value-of select="'author'"/>
+																	</CI_RoleCode>
+																</role>
+															</CI_ResponsibleParty>
+														</citedResponsibleParty>
+													</xsl:for-each>
+												</xsl:when>
+												<xsl:otherwise>
+													<citedResponsibleParty>
+														<xsl:if test="string-length(normalize-space(*[local-name()='orcid' and namespace-uri()=''])) &gt; 0">
+															<xsl:attribute name="xlink:href">
+																<xsl:value-of select="concat('http://orcid.org/', normalize-space(*[local-name()='orcid' and namespace-uri()='']))"/>
+															</xsl:attribute>
+														</xsl:if>
+														<CI_ResponsibleParty>
+															<individualName>
+																<gco:CharacterString>
+																	<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+																</gco:CharacterString>
+															</individualName>
+															<role>
+																<CI_RoleCode>
+																	<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																	<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																	<xsl:value-of select="'author'"/>
+																</CI_RoleCode>
+															</role>
+														</CI_ResponsibleParty>
+													</citedResponsibleParty>
+												</xsl:otherwise>
+											</xsl:choose>
+										</xsl:for-each>
+									</xsl:when>
+									<xsl:otherwise>
+										<xsl:for-each select="*[local-name()='Authors' and namespace-uri()='']/*[(local-name()='AuthorPerson' and namespace-uri()='') or (local-name()='AuthorInstitution' and namespace-uri()='')]">
+											<xsl:variable name="var_legacy_author_cur" select="."/>
+											<xsl:choose>
+												<xsl:when test="string-length(normalize-space(*[local-name()='institutionname' and namespace-uri()=''])) &gt; 0">
+													<citedResponsibleParty>
+														<CI_ResponsibleParty>
+															<organisationName>
+																<gco:CharacterString>
+																	<xsl:value-of select="*[local-name()='institutionname' and namespace-uri()='']"/>
+																</gco:CharacterString>
+															</organisationName>
+															<role>
+																<CI_RoleCode>
+																	<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																	<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																	<xsl:value-of select="'author'"/>
+																</CI_RoleCode>
+															</role>
+														</CI_ResponsibleParty>
+													</citedResponsibleParty>
+												</xsl:when>
+												<xsl:when test="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
+													<xsl:for-each select="*[local-name()='Affiliations' and namespace-uri()='']/*[local-name()='Affiliation' and namespace-uri()='']">
+														<citedResponsibleParty>
+															<xsl:if test="string-length(normalize-space($var_legacy_author_cur/*[local-name()='orcid' and namespace-uri()=''])) &gt; 0">
+																<xsl:attribute name="xlink:href">
+																	<xsl:value-of select="concat('http://orcid.org/', normalize-space($var_legacy_author_cur/*[local-name()='orcid' and namespace-uri()='']))"/>
+																</xsl:attribute>
+															</xsl:if>
+															<CI_ResponsibleParty>
+																<individualName>
+																	<gco:CharacterString>
+																		<xsl:value-of select="concat($var_legacy_author_cur/*[local-name()='familyname' and namespace-uri()=''], ', ', $var_legacy_author_cur/*[local-name()='givenname' and namespace-uri()=''])"/>
+																	</gco:CharacterString>
+																</individualName>
+																<organisationName>
+																	<gco:CharacterString>
+																		<xsl:value-of select="*[local-name()='name' and namespace-uri()='']"/>
+																	</gco:CharacterString>
+																</organisationName>
+																<role>
+																	<CI_RoleCode>
+																		<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																		<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																		<xsl:value-of select="'author'"/>
+																	</CI_RoleCode>
+																</role>
+															</CI_ResponsibleParty>
+														</citedResponsibleParty>
+													</xsl:for-each>
+												</xsl:when>
+												<xsl:otherwise>
+													<citedResponsibleParty>
+														<xsl:if test="string-length(normalize-space(*[local-name()='orcid' and namespace-uri()=''])) &gt; 0">
+															<xsl:attribute name="xlink:href">
+																<xsl:value-of select="concat('http://orcid.org/', normalize-space(*[local-name()='orcid' and namespace-uri()='']))"/>
+															</xsl:attribute>
+														</xsl:if>
+														<CI_ResponsibleParty>
+															<individualName>
+																<gco:CharacterString>
+																	<xsl:value-of select="concat(*[local-name()='familyname' and namespace-uri()=''], ', ', *[local-name()='givenname' and namespace-uri()=''])"/>
+																</gco:CharacterString>
+															</individualName>
+															<role>
+																<CI_RoleCode>
+																	<xsl:attribute name="codeList" namespace="">http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode</xsl:attribute>
+																	<xsl:attribute name="codeListValue" namespace="">author</xsl:attribute>
+																	<xsl:value-of select="'author'"/>
+																</CI_RoleCode>
+															</role>
+														</CI_ResponsibleParty>
+													</citedResponsibleParty>
+												</xsl:otherwise>
+											</xsl:choose>
+										</xsl:for-each>
+									</xsl:otherwise>
+								</xsl:choose>
 							</CI_Citation>
 						</citation>
 						<abstract>

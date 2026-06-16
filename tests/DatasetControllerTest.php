@@ -297,25 +297,73 @@ XML;
                 $this->assertSame('DirectFirst, Person', trim($contactContributors->item(0)->textContent));
         }
 
-        public function testIsoTransformReadsUnifiedPersonAuthorsWithoutBlankInstitutionAuthor(): void
+        public function testIsoTransformReadsUnifiedAuthorsInPayloadOrder(): void
         {
                 $sourceXml = $this->directAuthorSourceXml();
                 $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+                $this->assertSame(
+                        [
+                                ['individual' => 'DirectFirst, Person', 'organisation' => 'Payload University'],
+                                ['individual' => '', 'organisation' => 'Direct Institute'],
+                                ['individual' => 'DirectLast, Person', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+        }
+
+        public function testIsoTransformFallsBackToLegacyAuthorsInXmlOrder(): void
+        {
+                $sourceXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.LEGACY.AUTHOR.ISO</doi>
+    <year>2026</year>
+    <dateCreated>2026-05-28</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Legacy Author ISO Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Legacy author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <AuthorPerson>
+            <familyname>LegacyFirst</familyname>
+            <givenname>Person</givenname>
+            <Affiliations><Affiliation><name>Legacy University</name></Affiliation></Affiliations>
+        </AuthorPerson>
+        <AuthorInstitution><institutionname>Legacy Institute</institutionname></AuthorInstitution>
+        <AuthorPerson><familyname>LegacyLast</familyname><givenname>Person</givenname></AuthorPerson>
+    </Authors>
+</Resource>
+XML;
+
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => 'LegacyFirst, Person', 'organisation' => 'Legacy University'],
+                                ['individual' => '', 'organisation' => 'Legacy Institute'],
+                                ['individual' => 'LegacyLast, Person', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+        }
+
+        private function isoAuthorParties(string $isoXml): array
+        {
                 $dom = new \DOMDocument();
                 $dom->loadXML($isoXml);
                 $xpath = new \DOMXPath($dom);
                 $xpath->registerNamespace('gmd', 'http://www.isotc211.org/2005/gmd');
                 $xpath->registerNamespace('gco', 'http://www.isotc211.org/2005/gco');
 
-                $authorNames = [];
-                foreach ($xpath->query('//gmd:citedResponsibleParty/gmd:CI_ResponsibleParty/gmd:role/gmd:CI_RoleCode[@codeListValue="author"]/../../gmd:individualName/gco:CharacterString') as $authorName) {
-                        $text = trim($authorName->textContent);
-                        if ($text !== '') {
-                                $authorNames[] = $text;
-                        }
+                $parties = [];
+                foreach ($xpath->query('//gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode[@codeListValue="author"]]') as $party) {
+                        $parties[] = [
+                                'individual' => trim($xpath->evaluate('string(gmd:individualName/gco:CharacterString)', $party)),
+                                'organisation' => trim($xpath->evaluate('string(gmd:organisationName/gco:CharacterString)', $party)),
+                        ];
                 }
 
-                $this->assertSame(['DirectFirst, Person', 'DirectLast, Person'], $authorNames);
+                return $parties;
         }
 
         private function directAuthorSourceXml(): string

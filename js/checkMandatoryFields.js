@@ -506,15 +506,47 @@ function validateTitleField() {
     }
 }
 
-// Select the author name input elements
-const authorLastname = document.getElementById('input-author-lastname');
-const authorFirstname = document.getElementById('input-author-firstname');
-[authorLastname, authorFirstname].forEach(el => {
-    if (el) {
-        ['input', 'blur'].forEach(evt =>
-            el.addEventListener(evt, validateAuthorNameFields)
-        );
+function getAuthorNameFields() {
+    const stackFields = Array.from(document.querySelectorAll(
+        '[data-author-stack] [data-creator-row] input[name="familynames[]"], ' +
+        '[data-author-stack] [data-creator-row] input[name="givennames[]"]'
+    ));
+
+    if (stackFields.length > 0) {
+        return stackFields;
     }
+
+    const legacyFields = [
+        document.getElementById('input-author-lastname'),
+        document.getElementById('input-author-firstname')
+    ].filter(Boolean);
+
+    if (legacyFields.length > 0) {
+        return legacyFields;
+    }
+
+    return Array.from(document.querySelectorAll(
+        'input[name="familynames[]"], input[name="givennames[]"]'
+    ));
+}
+
+function getAuthorNameTranslationKey(input) {
+    return input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0
+        ? 'general.firstNameInvalid'
+        : 'general.lastNameInvalid';
+}
+
+function isAuthorNameInput(target) {
+    return target instanceof HTMLInputElement &&
+        (target.name === 'familynames[]' || target.name === 'givennames[]');
+}
+
+['input', 'blur'].forEach(evt => {
+    document.addEventListener(evt, function (event) {
+        if (isAuthorNameInput(event.target)) {
+            validateAuthorNameFields();
+        }
+    }, evt === 'blur');
 });
 
 /**
@@ -525,14 +557,11 @@ const authorFirstname = document.getElementById('input-author-firstname');
  */
 function validateAuthorNameFields() {
     let isValid = true;
-    const fields = [
-        { id: 'input-author-lastname', translationKey: 'general.lastNameInvalid' },
-        { id: 'input-author-firstname', translationKey: 'general.firstNameInvalid' }
-    ];
+    const fields = getAuthorNameFields();
 
-    fields.forEach(({ id, translationKey }) => {
-        const input = document.getElementById(id);
+    fields.forEach((input) => {
         if (!input) return;
+        const translationKey = getAuthorNameTranslationKey(input);
         const value = input.value.trim();
         const container = input.closest('.input-group') || input.parentElement;
 
