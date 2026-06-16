@@ -4,6 +4,33 @@ let SaveHandler;
 let $;
 let modalInstances;
 
+function createSaveHandlerFetchMock({
+  saveFilename = 'dataset.xml',
+  blob = new Blob(),
+  csrfRefreshToken = 'test-csrf-token-refreshed'
+} = {}) {
+  return jest.fn(function(url) {
+    if (url === 'save/save_data.php') {
+      return Promise.resolve({
+        ok: true,
+        headers: { get: function() { return `attachment; filename="${saveFilename}"`; } },
+        blob: function() {
+          return Promise.resolve(blob);
+        }
+      });
+    }
+
+    if (url === 'api/csrf_token.php') {
+      return Promise.resolve({
+        ok: true,
+        json: function() {
+          return Promise.resolve({ token: csrfRefreshToken });
+        }
+      });
+    }
+  });
+}
+
 function loadScript() {
   ({ SaveHandler } =
     requireFresh('../../js/saveHandler.js'));
@@ -15,6 +42,9 @@ describe('saveHandler.js', () => {
       <form id="form-mde">
         <input id="input-date-created">
         <input id="input-date-embargo">
+        <input id="input-form-csrf-token" value="test-csrf-token">
+        <input id="input-save-time-spent">
+        <input id="input-information-website">
         <div class="embargo-invalid"></div>
         <div id="group-author">
           <input type="checkbox" name="contacts[]" value="1">
@@ -132,12 +162,12 @@ describe('saveHandler.js', () => {
       flushPending: jest.fn().mockResolvedValue(),
       markManualSave: jest.fn().mockResolvedValue()
     };
-    const blobSpy = jest.fn().mockResolvedValue(new Blob(['<xml/>'], { type: 'application/xml' }));
     const revokeSpy = jest.fn();
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      blob: blobSpy
+    global.fetch = createSaveHandlerFetchMock({
+      saveFilename: 'dataset.xml',
+      blob: new Blob(['<xml/>'], { type: 'application/xml' })
     });
+    
     const originalCreate = window.URL.createObjectURL;
     const originalRevoke = window.URL.revokeObjectURL;
     window.URL.createObjectURL = jest.fn(() => 'blob:mock');
@@ -148,8 +178,12 @@ describe('saveHandler.js', () => {
 
     expect(autosave.flushPending).toHaveBeenCalled();
     expect(autosave.markManualSave).toHaveBeenCalled();
-    expect(global.fetch).toHaveBeenCalledWith('save/save_data.php', expect.objectContaining({ method: 'POST' }));
-  expect(global.fetch.mock.calls[0][1].body.get('download_format')).toBe('xml');
+    
+    // Find the save/download fetch call
+    const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(saveCall).toBeDefined();
+    expect(saveCall[1].method).toBe('POST');
+    expect(saveCall[1].body.get('download_format')).toBe('xml');
     expect(revokeSpy).toHaveBeenCalledWith('blob:mock');
 
     window.URL.createObjectURL = originalCreate;
@@ -164,10 +198,7 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload logs success event', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      blob: jest.fn().mockResolvedValue(new Blob())
-    });
+    global.fetch = createSaveHandlerFetchMock({ saveFilename: 'dataset.xml', blob: new Blob() });
     window.URL.createObjectURL = jest.fn();
     window.URL.revokeObjectURL = jest.fn();
 
@@ -180,12 +211,9 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload sends jsonld format and logs jsonld success', async () => {
-    global.fetch = jest.fn().mockResolvedValue({
-      ok: true,
-      headers: {
-        get: jest.fn(() => 'attachment; filename="dataset.jsonld"')
-      },
-      blob: jest.fn().mockResolvedValue(new Blob([], { type: 'application/ld+json' }))
+    global.fetch = createSaveHandlerFetchMock({
+      saveFilename: 'dataset.jsonld',
+      blob: new Blob([], { type: 'application/ld+json' })
     });
     window.URL.createObjectURL = jest.fn(() => 'blob:mock-jsonld');
     window.URL.revokeObjectURL = jest.fn();
@@ -193,13 +221,28 @@ describe('saveHandler.js', () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset', 'jsonld');
 
-    expect(global.fetch.mock.calls[0][1].body.get('download_format')).toBe('jsonld');
+    // Find the save/download fetch call
+    const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(saveCall).toBeDefined();
+    expect(saveCall[1].body.get('download_format')).toBe('jsonld');
     expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved json-ld file locally');
     delete global.fetch;
   });
 
   test('saveAndDownload logs failure on network error', async () => {
-    global.fetch = jest.fn().mockRejectedValue(new Error('Network failure'));
+    global.fetch = jest.fn(function(url) {
+      if (url === 'save/save_data.php') {
+        return Promise.reject(new Error('Network failure'));
+      }
+
+      if (url === 'api/csrf_token.php') {
+        return Promise.resolve({
+          ok: true,
+          json: function() { return Promise.resolve({ token: 'test-csrf-token' }); }
+        });
+      }
+    });
+    
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
@@ -209,7 +252,19 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload logs failure on HTTP error', async () => {
-    global.fetch = jest.fn().mockResolvedValue({ ok: false, status: 500 });
+    global.fetch = jest.fn(function(url) {
+      if (url === 'save/save_data.php') {
+        return Promise.resolve({ ok: false, status: 500 });
+      }
+
+      if (url === 'api/csrf_token.php') {
+        return Promise.resolve({
+          ok: true,
+          json: function() { return Promise.resolve({ token: 'test-csrf-token' }); }
+        });
+      }
+    });
+    
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
