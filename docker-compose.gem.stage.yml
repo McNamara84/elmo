@@ -34,6 +34,8 @@ services:
       dockerfile: Dockerfile.web
       target: prod
     pull_policy: build
+    ports:
+      - "6771:6771"
     network_mode: host
     environment:
       DB_HOST: 10.0.3.20
