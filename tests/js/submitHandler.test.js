@@ -672,12 +672,23 @@ describe('submitHandler.js', () => {
 
   test('validateContactPerson reads contact state from authorsPayload', () => {
     document.getElementById('group-author').innerHTML = `
-      <input type="hidden" name="authorsPayload" value='[{"type":"person","isContact":true}]'>
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
       <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
     `;
 
     expect(validateContactPerson()).toBe(true);
     expect($('#contact-person-error').length).toBe(0);
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('validateContactPerson rejects incomplete contacts in authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"   ","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
   });
 });

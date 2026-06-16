@@ -482,6 +482,43 @@ describe('validateAuthorNameFields', () => {
     expect(lastname.checkValidity()).toBe(true);
     expect(firstname.checkValidity()).toBe(true);
   });
+
+  test('validates dynamically suffixed author stack name fields', () => {
+    document.body.innerHTML = `
+      <form id="form-mde">
+        <div data-author-stack>
+          <div data-author-entry-row data-creator-row>
+            <div class="input-group has-validation">
+              <input type="text" id="input-author-lastname-7" name="familynames[]" required>
+              <div class="invalid-feedback" data-translate="general.lastNameInvalid"></div>
+            </div>
+            <div class="input-group has-validation">
+              <input type="text" id="input-author-firstname-7" name="givennames[]" required>
+              <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
+            </div>
+          </div>
+        </div>
+      </form>
+    `;
+
+    const lastname = document.getElementById('input-author-lastname-7');
+    const firstname = document.getElementById('input-author-firstname-7');
+    lastname.value = '   ';
+    firstname.value = '   ';
+
+    expect(window.validateAuthorNameFields()).toBe(false);
+    expect(lastname.checkValidity()).toBe(false);
+    expect(firstname.checkValidity()).toBe(false);
+    expect(lastname.classList.contains('is-invalid')).toBe(true);
+    expect(firstname.classList.contains('is-invalid')).toBe(true);
+
+    lastname.value = 'Curie';
+    firstname.value = 'Marie';
+
+    expect(window.validateAuthorNameFields()).toBe(true);
+    expect(lastname.checkValidity()).toBe(true);
+    expect(firstname.checkValidity()).toBe(true);
+  });
 });
 
 describe('validateTitleField and validateAuthorNameFields integration', () => {
