@@ -8,10 +8,8 @@
         <!-- Input field -->
         <div class="input-group input-margin-top-bottom">
           <label for="input-freekeyword" class="visually-hidden">Free Keyword</label>
-          <input type="text" class="form-control input-with-help input-right-no-round-corners" name="freekeywords[]"
-            id="input-freekeyword" value="" data-translate-placeholder="keywords.free.placeholder">
-          <span class="input-group-text"><i class="bi bi-question-circle-fill"
-              data-help-section-id="help-freeKeywords"></i>
+          <input type="text" class="form-control input-with-help input-right-no-round-corners" name="freekeywords[]" id="input-freekeyword" value="" data-translate-placeholder="keywords.free.placeholder">
+          <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-freeKeywords"></i>
           </span>
           <div class="col-auto p-2">
             <button type="button" class="btn btn-primary" id="button-add-csv" data-bs-toggle="modal"
@@ -32,21 +30,25 @@
     <div class="modal-content">
 
       <div class="modal-header">
-        <h2 class="modal-title fs-5" id="freeKeywordsCsvModalLabel">
-          Upload CSV for free keywords
+        <h2 class="modal-title fs-5" id="freeKeywordsCsvModalLabel" data-translate="keywords.free.modalTitle">
+          Upload CSV file
         </h2>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
 
       <div class="modal-body">
-        <p class="mb-3">
+        <p class="mb-3" data-translate="keywords.free.modalDescription">
           Upload a CSV file or drag and drop it here.
         </p>
 
         <label for="input-freekeywords-csv" id="freekeywords-csv-dropzone"
           class="border rounded p-4 w-100 text-center d-block" style="cursor: pointer;">
-          Drag and drop a CSV file here<br>
-          <span class="text-muted">or click to select a file</span>
+          <div data-translate="keywords.free.dropzone">
+            Drag and drop a CSV file here
+          </div>
+          <div class="text-muted" data-translate="keywords.free.selectFile">
+            Or click to select a file
+          </div>
         </label>
 
         <input type="file" id="input-freekeywords-csv" class="visually-hidden" accept=".csv,text/csv">
@@ -56,10 +58,11 @@
       </div>
 
       <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="keywords.free.cancel">
           Cancel
         </button>
-        <button type="button" class="btn btn-primary" id="button-confirm-csv-upload" disabled>
+        <button type="button" class="btn btn-primary" id="button-confirm-csv-upload" disabled
+          data-translate="keywords.free.import">
           Import keywords
         </button>
       </div>
