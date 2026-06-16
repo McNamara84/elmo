@@ -385,6 +385,26 @@ async function addAuthorAffiliations(row: Locator, affiliations: string[]): Prom
   }
 }
 
+async function ensureAuthorPersonRow(page: Page, index: number): Promise<Locator> {
+  const rows = page.locator('#group-author [data-creator-row]');
+  while (await rows.count() <= index) {
+    await page.locator('#button-author-add').click();
+    await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+  }
+
+  return rows.nth(index);
+}
+
+async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Locator> {
+  const rows = page.locator('#group-author [data-authorinstitution-row]');
+  while (await rows.count() <= index) {
+    await page.locator('#button-authorinstitution-add').click();
+    await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+  }
+
+  return rows.nth(index);
+}
+
 async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Wait for API-populated dropdowns ──────────────────────────────────────
   await page.waitForFunction(
@@ -435,7 +455,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Personal author (index 0) ──────────────────────────────────────────────
   if (data.personalCreators.length > 0) {
     const pc = data.personalCreators[0];
-    const authorRow = page.locator('#group-author [data-creator-row]').nth(0);
+    const authorRow = await ensureAuthorPersonRow(page, 0);
 
     // ORCID – set via evaluate to prevent the ORCID lookup from racing with our fills
     const orcidInput = authorRow.locator('[id^="input-author-orcid"]');
@@ -457,13 +477,13 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     if (await cpLabel.count() > 0) {
       await cpLabel.click();
       // Wait for email field to become visible
-      const emailField = page.locator('#input-contactperson-email').first();
+      const emailField = authorRow.locator('input[name="cpEmail[]"]');
       await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
         await emailField.fill(data.contactPersonEmail);
       }
       // Fill website if present
-      const websiteField = page.locator('#input-contactperson-website').first();
+      const websiteField = authorRow.locator('input[name="cpOnlineResource[]"]');
       await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
         await websiteField.fill(data.contactPersonWebsite);
@@ -474,7 +494,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Author institution (organisational creator, index 0) ──────────────────
   if (data.orgCreators.length > 0) {
     const oc = data.orgCreators[0];
-    const instRow = page.locator('[data-authorinstitution-row]').nth(0);
+    const instRow = await ensureAuthorInstitutionRow(page, 0);
     await instRow.locator('[id^="input-authorinstitution-name"]').fill(oc.name);
 
     if (oc.affiliations.length > 0) {
@@ -961,17 +981,8 @@ for (const testCase of TEST_CASES) {
     await expect(page.locator('#input-abstract'), 'abstract').toHaveValue('');
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue('');
 
-    // First author row should be empty
-    const firstAuthorRow = page.locator('#group-author [data-creator-row]').first();
-    await expect(firstAuthorRow.locator('[id^="input-author-lastname"]'), 'author lastName').toHaveValue('');
-    await expect(firstAuthorRow.locator('[id^="input-author-firstname"]'), 'author firstName').toHaveValue('');
-    await expect(firstAuthorRow.locator('[id^="input-author-orcid"]'), 'author ORCID').toHaveValue('');
-
-    // Contact person checkbox should be unchecked, email and website fields should be empty
-    const cpCheckbox = firstAuthorRow.locator('input[name="contacts[]"]');
-    await expect(cpCheckbox, 'contact person checkbox after clear').not.toBeChecked();
-    const cpEmailAfterClear = await firstAuthorRow.locator('input[name="cpEmail[]"]').inputValue().catch(() => '');
-    expect(cpEmailAfterClear, 'contactPersonEmail after clear').toBe('');
+    await expect(page.locator('#group-author [data-author-entry-row]'), 'authors after clear').toHaveCount(0);
+    await expect(page.locator('[data-author-summary-count]'), 'authors summary after clear').toContainText(/0\s+(entries|Einträge)/i);
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
     await expect(page.locator('#input-model-name'), 'modelName').toHaveValue('');
