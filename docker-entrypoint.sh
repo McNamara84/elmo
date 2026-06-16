@@ -44,25 +44,29 @@ fi
 
 # Wait for the DB using mysqladmin ping (more reliable)
 wait_for_db() {
-  echo "Waiting for MariaDB at ${DB_HOST}..."
-  until mysqladmin ping -h "${DB_HOST}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
+  local db_host="${DB_HOST:-db}"
+  local db_port="${DB_PORT:-3306}"
+  echo "Waiting for MariaDB at ${db_host}:${db_port}..."
+  until mysqladmin ping -h "${db_host}" -P "${db_port}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
     echo "... still waiting"
     sleep 2
   done
-  echo "MariaDB reachable"
+  echo "MariaDB reachable at ${db_host}:${db_port}"
 }
 
 wait_for_db
 
 # Create application database and user with read/write permissions if not exists
 echo "Configuring database and user..."
-mysql -h "${DB_HOST}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
+db_host="${DB_HOST:-db}"
+db_port="${DB_PORT:-3306}"
+mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
   CREATE DATABASE IF NOT EXISTS ${DB_NAME};
   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
   GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
   FLUSH PRIVILEGES;
 EOSQL
-echo "Database and user configured."
+echo "Database and user configured at ${db_host}:${db_port}."
 
 # Always run install.php after DB is reachable.
 INSTALL_ACTION="${INSTALL_ACTION:-basic}"
