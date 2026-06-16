@@ -55,6 +55,21 @@ async function uploadXmlAndWaitForTitles(page: import('@playwright/test').Page, 
   );
 }
 
+async function refreshFormCsrfToken(page: import('@playwright/test').Page): Promise<string> {
+  const token = await page.evaluate(async () => {
+    const response = await fetch('api/csrf_token.php');
+    const data = await response.json();
+    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
+    if (csrfField && data?.token) {
+      csrfField.value = String(data.token);
+    }
+    return data?.token ? String(data.token) : '';
+  });
+
+  expect(token).not.toBe('');
+  return token;
+}
+
 test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
@@ -142,10 +157,11 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
         
         // Wait for CSRF token to be fetched and populated
         await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+        await refreshFormCsrfToken(page);
         
         await page.locator('#input-saveas-filename').fill('test-two-titles');
-        // Wait 2+ seconds to meet backend minimum interaction time for save
-        await page.waitForTimeout(2100);
+        // Wait after token refresh to satisfy server-side interaction-time checks.
+        await page.waitForTimeout(2200);
         await page.locator('#button-saveas-save').click();
       })(),
     ]);

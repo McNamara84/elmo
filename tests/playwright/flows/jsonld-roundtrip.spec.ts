@@ -48,6 +48,21 @@ async function clearForm(page: import('@playwright/test').Page) {
   await expect(page.locator('input[name="title[]"]').first()).toHaveValue('', { timeout: 5000 });
 }
 
+async function refreshFormCsrfToken(page: import('@playwright/test').Page): Promise<string> {
+  const token = await page.evaluate(async () => {
+    const response = await fetch('api/csrf_token.php');
+    const data = await response.json();
+    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
+    if (csrfField && data?.token) {
+      csrfField.value = String(data.token);
+    }
+    return data?.token ? String(data.token) : '';
+  });
+
+  expect(token).not.toBe('');
+  return token;
+}
+
 async function saveJsonLd(page: import('@playwright/test').Page, filename: string, waitMs: number) {
   const saveAsModal = page.locator('#modal-saveas');
   let capturedBody = '';
@@ -72,8 +87,10 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
   await expect(page.locator('#label-saveas-modal')).toContainText(/JSON-LD/i);
   await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
   await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
+  await refreshFormCsrfToken(page);
   await page.locator('#input-saveas-filename').fill(filename);
-  await page.waitForTimeout(waitMs);
+  // Wait after token refresh so server-side interaction-time checks pass consistently.
+  await page.waitForTimeout(Math.max(waitMs, 2200));
   await page.locator('#button-saveas-save').click();
 
   await page.waitForResponse(
