@@ -6,6 +6,7 @@
 
 const {
   isValidOrcidChecksum,
+  extractOrcidIdentifier,
   formatOrcidInput,
   validateOrcidField,
   applyTranslationToElement
@@ -72,6 +73,20 @@ describe('isValidOrcidChecksum', () => {
   });
 });
 
+describe('extractOrcidIdentifier', () => {
+  test('extracts ORCID from https profile URL', () => {
+    expect(extractOrcidIdentifier('https://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
+  });
+
+  test('extracts ORCID from profile URL with trailing slash', () => {
+    expect(extractOrcidIdentifier('https://orcid.org/0000-0002-1694-233X/')).toBe('0000-0002-1694-233X');
+  });
+
+  test('keeps direct ORCID input unchanged', () => {
+    expect(extractOrcidIdentifier('0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
+  });
+});
+
 describe('formatOrcidInput', () => {
   test('formats raw digits with hyphens', () => {
     expect(formatOrcidInput('0000000218250097')).toBe('0000-0002-1825-0097');
@@ -95,6 +110,10 @@ describe('formatOrcidInput', () => {
 
   test('preserves trailing X from URL', () => {
     expect(formatOrcidInput('https://orcid.org/0000-0002-1694-233X')).toBe('0000-0002-1694-233X');
+  });
+
+  test('preserves trailing X from URL with trailing slash', () => {
+    expect(formatOrcidInput('https://orcid.org/0000-0002-1694-233X/')).toBe('0000-0002-1694-233X');
   });
 
   test('truncates input longer than 16 characters', () => {
