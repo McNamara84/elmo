@@ -74,22 +74,9 @@ function validateSaveSecurity($postData, $connection)
         ];
     }
 
-    // Security Check 4: Minimum interaction time (2 seconds for save, server-trusted)
-    $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            $connection,
-            'save',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
-        );
-        return [
-            'status' => false,
-            'message' => 'Please take time to review your metadata before saving.',
-            'code' => 400
-        ];
-    }
-
+    // Local downloads are still protected by CSRF, honeypot, and rate limiting.
+    // Do not enforce a minimum interaction time here: users often save
+    // immediately after reviewing/editing metadata in the main form.
 
     // Record this save for rate limiting
     recordRateLimit($connection, $clientIp, 'save');
