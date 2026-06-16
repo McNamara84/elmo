@@ -137,7 +137,7 @@
           <address>
             <CI_Address>
               <electronicMailAddress>
-                <gco:CharacterString>datapub@gfz.de</gco:CharacterString>
+                <gco:CharacterString>xmlsubmit@example.com</gco:CharacterString>
               </electronicMailAddress>
             </CI_Address>
           </address>

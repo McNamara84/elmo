@@ -6,21 +6,17 @@
  * The token is stored in the session and must be validated on form submission.
  */
 
-// Start session if not already started
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+// Start session BEFORE any output
+session_start();
+
+require_once __DIR__ . '/security.php';
 
 header('Content-Type: application/json');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 
-// Generate a new CSRF token
-$token = bin2hex(random_bytes(32));
-
-// Store in session
-$_SESSION['csrf_token'] = $token;
-$_SESSION['csrf_token_time'] = time();
+// Generate a new CSRF token using shared security utility
+$token = generateCsrfToken();
 
 echo json_encode([
     'success' => true,

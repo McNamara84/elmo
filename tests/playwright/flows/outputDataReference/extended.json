@@ -189,7 +189,7 @@
               "address": {
                 "CI_Address": {
                   "electronicMailAddress": {
-                    "gco:CharacterString": "datapub@gfz.de"
+                    "gco:CharacterString": "xmlsubmit@example.com"
                   }
                 }
               },
