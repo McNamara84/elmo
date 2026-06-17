@@ -179,6 +179,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var csvFileName = document.getElementById('freekeywords-csv-filename');
     var csvFeedback = document.getElementById('freekeywords-csv-feedback');
     var confirmCsvButton = document.getElementById('button-confirm-csv-upload');
+    var downloadCsvTestFilesButton = document.getElementById('button-download-csv-test-files');
 
     /**
      * Stores parsed CSV keywords until the user confirms the import
