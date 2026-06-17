@@ -187,7 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
     var parsedCsvKeywords = [];
 
     /**
-     * CSV feedback messages                                                                              (das sollte noch verbessert werden)
+     * CSV feedback messages
      */
     var csvMessages = {
         invalidFile: 'Please select a valid CSV file.',
@@ -196,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
     };
 
     /**
-     * Resets all temporary CSV-related state and UI in the modal.                                        (das sollte noch verbessert werden - die zweite datei könnte nicht hochgeladen werden)
+     * Resets all temporary CSV-related state and UI in the modal.
      *
      * @returns {void}
      */
@@ -226,8 +226,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
-     * Parses CSV text into a flat array of keyword strings.                                    (Er funktioniert gut für einfache Keyword-Dateien, aber nicht für komplizierte CSV-Sonderfälle mit Quotes, Escaping oder eingebetteten Kommas.)
-     * Splits on newlines, commas and semicolons and trims whitespace.                          (bei ernie noch mal anschauen, ob das so bleibt oder ob wir das noch verbessern wollen)
+     * Parses CSV text into a flat array of keyword strings.
+     * Splits on newlines, commas and semicolons and trims whitespace.
      *
      * @param {string} text
      * @returns {Array<string>}
@@ -327,7 +327,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 confirmCsvButton.disabled = false;
             }
 
-            setCsvFeedback(parsedCsvKeywords.length + ' keywords ready to import.', false);                  // sprachdateien hierfür wären auch noch schön
+            setCsvFeedback(parsedCsvKeywords.length + ' keywords ready to import.', false);
         };
 
         reader.onerror = function () {
