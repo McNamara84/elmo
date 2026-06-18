@@ -222,4 +222,76 @@ test.describe('Free Keywords Form Group', () => {
     expect(result.display).toBe('block');
     expect(result.whitelist).toEqual(CURATED_KEYWORDS.map(item => item.free_keyword));
   });
+
+  test('renders CSV upload modal with disabled confirm button initially', async ({ page }) => {
+    const modal = page.locator('#freeKeywordsCsvModal');
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+    const dropzone = page.locator('#freekeywords-csv-dropzone');
+
+    await expect(modal).toBeAttached();
+    await expect(fileInput).toBeAttached();
+    await expect(dropzone).toBeVisible();
+    await expect(confirmButton).toBeDisabled();
+  });
+
+  test('accepts a valid CSV file and enables confirm button', async ({ page }) => {
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const fileName = page.locator('#freekeywords-csv-filename');
+    const feedback = page.locator('#freekeywords-csv-feedback');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+
+    await fileInput.setInputFiles({
+      name: 'geoscience-keywords.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('rock mechanics, seismology\nInSAR; rock mechanics'),
+    });
+
+    await expect(fileName).toHaveText('geoscience-keywords.csv');
+    await expect(feedback).toContainText('keywords ready to import.');
+    await expect(confirmButton).toBeEnabled();
+  });
+
+  test('rejects a non-csv file upload', async ({ page }) => {
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const feedback = page.locator('#freekeywords-csv-feedback');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+
+    await fileInput.setInputFiles({
+      name: 'geoscience-keywords.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('seismology'),
+    });
+
+    await expect(feedback).toHaveText('Please select a valid CSV file.');
+    await expect(confirmButton).toBeDisabled();
+  });
+
+  test('imports CSV keywords into Tagify after confirm', async ({ page }) => {
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+
+    await fileInput.setInputFiles({
+      name: 'tectonics-keywords.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('fault creep, induced seismicity'),
+    });
+
+    await expect(confirmButton).toBeEnabled();
+    await confirmButton.click();
+
+    await page.waitForFunction(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
+      return Array.isArray(input?._tagify?.value) &&
+        input._tagify.value.some((tag: any) => tag.value === 'fault creep') &&
+        input._tagify.value.some((tag: any) => tag.value === 'induced seismicity');
+    });
+
+    const tagValues = await page.evaluate(() => {
+      const input = document.querySelector('#input-freekeyword') as any;
+      return input._tagify.value.map((tag: any) => tag.value);
+    });
+
+    expect(tagValues).toEqual(['fault creep', 'induced seismicity']);
+  });
 });
