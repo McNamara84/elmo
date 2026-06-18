@@ -25,7 +25,27 @@ class MockTagify {
 const flushPromises = () => new Promise(res => setTimeout(res, 0));
 
 function loadScript(ajaxImpl, translations = { keywords: { free: { placeholder: 'Placeholder' } } }) {
-  document.body.innerHTML = '<input id="input-freekeyword" data-translate-placeholder="keywords.free.placeholder">';
+  document.body.innerHTML = `<input id="input-freekeyword" data-translate-placeholder="keywords.free.placeholder">
+
+  <div class="modal fade" id="freeKeywordsCsvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <label for="input-freekeywords-csv" id="freekeywords-csv-dropzone"></label>
+          <input type="file" id="input-freekeywords-csv" class="visually-hidden" accept=".csv,text/csv">
+          <a id="button-download-csv-test-files"></a>
+          <div id="freekeywords-csv-filename"></div>
+          <div id="freekeywords-csv-feedback"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="button-confirm-csv-upload" disabled>
+            Import keywords
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
   const $ = require('jquery');
   global.$ = $;
   global.jQuery = $;
@@ -122,5 +142,88 @@ describe('freekeywordTags.js', () => {
       { value: 'EPOS' },
       { value: 'multi-scale laboratories' }
     ]);
+  });
+
+  test('accepts valid csv file from input change and enables confirm', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeywords-csv');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['ignored'], 'geoscience-keywords.csv', { type: 'text/csv' });
+    file.__mockText = 'rock mechanics, seismology\nInSAR; rock mechanics';
+
+    Object.defineProperty(input, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await flushPromises();
+    await flushPromises();
+
+    expect(fileName.textContent).toBe('geoscience-keywords.csv');
+    expect(feedback.textContent).toContain('keywords ready to import.');
+    expect(feedback.className).toContain('text-success');
+    expect(confirmBtn.disabled).toBe(false);
+  });
+
+  test('rejects invalid non-csv file', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeywords-csv');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['seismology'], 'geoscience-keywords.txt', { type: 'text/plain' });
+
+    Object.defineProperty(input, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+    expect(confirmBtn.disabled).toBe(true);
+  });
+
+  test('handles dropped csv file', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const dropzone = document.getElementById('freekeywords-csv-dropzone');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['ignored'], 'tectonics-keywords.csv', { type: 'text/csv' });
+    file.__mockText = 'fault creep, induced seismicity';
+
+    const dropEvent = new Event('drop', { bubbles: true });
+    dropEvent.preventDefault = jest.fn();
+    dropEvent.dataTransfer = { files: [file] };
+
+    dropzone.dispatchEvent(dropEvent);
+    await flushPromises();
+    await flushPromises();
+
+    expect(dropEvent.preventDefault).toHaveBeenCalled();
+    expect(fileName.textContent).toBe('tectonics-keywords.csv');
+    expect(feedback.textContent).toContain('keywords ready to import.');
+    expect(confirmBtn.disabled).toBe(false);
   });
 });
