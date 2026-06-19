@@ -406,7 +406,17 @@ class SubmitHandler {
 
         // Security fields live in the submit modal, so add them explicitly.
         submitData.set('submit_time_spent', this.$timeSpentField.val());
-        submitData.set('website', this.$honeypotField.val() || '');
+        
+        // Read honeypot value directly from DOM element
+        // jQuery's .val() doesn't read values set via direct property assignment (e.g., element.value = 'x')
+        let honeypotValue = '';
+        if (this.$honeypotField && this.$honeypotField.length > 0) {
+            const element = this.$honeypotField[0];
+            if (element && element.value) {
+                honeypotValue = element.value;
+            }
+        }
+        submitData.set('website', honeypotValue);
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
