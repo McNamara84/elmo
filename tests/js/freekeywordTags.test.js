@@ -263,4 +263,60 @@ describe('freekeywordTags.js', () => {
     expect(feedback.textContent).toBe('2 keywords ready to import.');
     expect(feedback.className).toContain('text-success');
   });
+
+  test('rejects a non-csv file even if the MIME type looks text-based', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['body { color: red; }'], 'styles.css', {
+      type: 'text/css'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(confirmButton.disabled).toBe(true);
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+  });
+
+  test('rejects a pdf file and keeps confirm button disabled', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+
+    const file = new File(['%PDF-1.4'], 'document.pdf', {
+      type: 'application/pdf'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(fileName.textContent).toBe('document.pdf');
+    expect(confirmButton.disabled).toBe(true);
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+  });
 });
