@@ -117,15 +117,31 @@ test.describe('CSRF Token Rotation Flow', () => {
     expect(tokenBeforeSave).toBe('form-token-1');
 
     await openSaveModal(page);
-    await Promise.all([
-      page.waitForResponse((response) => response.url().includes('/save/save_data.php') && response.status() === 400),
-      confirmSave(page),
-    ]);
+    // Force deterministic near-zero client elapsed time for first save attempt.
+    await page.evaluate(() => {
+      const originalNow = Date.now.bind(Date);
+      (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
+      Date.now = () => 0;
+    });
+    const firstSaveResponsePromise = page.waitForResponse((response) =>
+      response.url().includes('/save/save_data.php') && response.request().method() === 'POST'
+    );
+    await confirmSave(page);
+    const firstSaveResponse = await firstSaveResponsePromise;
+    expect(firstSaveResponse.status()).toBe(400);
 
     await expect(page.locator('.alert-danger')).toBeVisible();
 
     await expect.poll(async () => formCsrfField.inputValue()).toBe('form-token-2');
     await closeNotificationModalIfVisible(page);
+
+    await page.evaluate(() => {
+      const w = window as typeof window & { __originalDateNow?: () => number };
+      if (w.__originalDateNow) {
+        Date.now = w.__originalDateNow;
+        delete w.__originalDateNow;
+      }
+    });
 
     await openSaveModal(page);
     await page.waitForTimeout(2200);

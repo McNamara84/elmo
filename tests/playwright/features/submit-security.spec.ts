@@ -124,6 +124,8 @@ test.describe('Submit Operation Security Features', () => {
     const response = await responsePromise;
 
     expect(response.status()).toBe(403);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
   });
 
   test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
@@ -148,8 +150,9 @@ test.describe('Submit Operation Security Features', () => {
 
     // Freeze Date.now close to modal-open time so client sends a low time-spent value.
     await page.evaluate(() => {
-      const now = Date.now();
-      Date.now = () => now;
+      const originalNow = Date.now.bind(Date);
+      (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
+      Date.now = () => 0;
     });
 
     const responsePromise = page.waitForResponse((response) =>
@@ -168,6 +171,14 @@ test.describe('Submit Operation Security Features', () => {
     const payload = await response.json();
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Please take time to review your submission before submitting.');
+
+    await page.evaluate(() => {
+      const w = window as typeof window & { __originalDateNow?: () => number };
+      if (w.__originalDateNow) {
+        Date.now = w.__originalDateNow;
+        delete w.__originalDateNow;
+      }
+    });
 
     await page.unroute(SUBMIT_ENDPOINT);
   });
@@ -194,20 +205,30 @@ test.describe('Submit Operation Security Features', () => {
 
     const { submitModal } = await openSubmitModal(page);
 
+    // Force a deterministic near-zero client elapsed time for this test case.
+    await page.evaluate(() => {
+      const originalNow = Date.now.bind(Date);
+      (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
+      Date.now = () => 0;
+    });
+
     // Immediately try to submit WITHOUT waiting (or minimal wait)
-    await Promise.all([
-      page.waitForResponse((response) =>
-        response.url().includes('send_xml_file.php') && response.status() === 400
-      ),
-      submitFromModalWithPrivacyConsent(page),
-    ]);
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+    await submitFromModalWithPrivacyConsent(page);
+    const response = await responsePromise;
 
     // Verify instant submit was rejected
     expect(capturedTimeSpent).toBeLessThan(3);
-    
-    const payload = await page.evaluate(() => {
-      // Get the last response body if available
-      return null;
+    expect(response.status()).toBe(400);
+
+    await page.evaluate(() => {
+      const w = window as typeof window & { __originalDateNow?: () => number };
+      if (w.__originalDateNow) {
+        Date.now = w.__originalDateNow;
+        delete w.__originalDateNow;
+      }
     });
 
     await page.unroute(SUBMIT_ENDPOINT);
