@@ -1,3 +1,9 @@
+# Welcome to compose configuration for the ELMO-GEM environment!
+# This file is specific to: a. network_mode:host b. custom ports 6770 and 6771 
+# It uses Dockerfiles: .db for the db service and .web for the web-gem service
+# Dockerfile.db uses docker hrdened image. Make sure to update it, as DHIs don't support :latest tag.
+# Dockerfile.web uses a multi-stage build with dev and prod targets. The prod target is used here.
+
 services:
   db:
     build:
