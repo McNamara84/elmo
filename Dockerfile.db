@@ -6,4 +6,5 @@ ENV TZ=Europe/Berlin
 
 VOLUME ["/var/lib/mysql"]
 
-EXPOSE 3306
+# Overrides the default CMD to explicitly run on port 6770
+CMD ["mariadbd", "--port=6770"]
