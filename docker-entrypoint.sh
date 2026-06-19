@@ -57,6 +57,8 @@ wait_for_db() {
 wait_for_db
 
 # Create application database and user with read/write permissions if not exists
+# in MariaBD the users priveleges are tied to a specific host, so we need to explicitly create 
+# the same user on different hosts to allow connection in different scenarios. 
 echo "Configuring database and user..."
 db_host="${DB_HOST:-db}"
 db_port="${DB_PORT:-3306}"
@@ -64,6 +66,12 @@ mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
   CREATE DATABASE IF NOT EXISTS ${DB_NAME};
   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
   GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
+
+  CREATE USER IF NOT EXISTS '${DB_USER}'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
+  GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'localhost';
+  
+  CREATE USER IF NOT EXISTS '${DB_USER}'@'127.0.0.1' IDENTIFIED BY '${DB_PASSWORD}';
+  GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'127.0.0.1';
   FLUSH PRIVILEGES;
 EOSQL
 echo "Database and user configured at ${db_host}:${db_port}."
