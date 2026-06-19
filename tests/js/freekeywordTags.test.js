@@ -226,4 +226,41 @@ describe('freekeywordTags.js', () => {
     expect(feedback.textContent).toContain('keywords ready to import.');
     expect(confirmBtn.disabled).toBe(false);
   });
+
+  test('accepts a .csv file even when browser reports application/vnd.ms-excel', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    global.FileReader = jest.fn(function () {
+      this.readAsText = () => {
+        this.onload({
+          target: {
+            result: 'alpha,beta'
+          }
+        });
+      };
+    });
+
+    const file = new File(['alpha,beta'], 'keywords.csv', {
+      type: 'application/vnd.ms-excel'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(confirmButton.disabled).toBe(false);
+    expect(feedback.textContent).toBe('2 keywords ready to import.');
+    expect(feedback.className).toContain('text-success');
+  });
 });
