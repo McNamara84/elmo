@@ -5,23 +5,16 @@ services:
       dockerfile: Dockerfile.db
     pull_policy: build
     network_mode: host
-    command:
-      - mariadbd
-      - --bind-address=10.0.3.20
-      - --port=6770
-      - --ddl-log=OFF
-      - --skip-log-bin
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_PORT: 6770            # Forces MariaDB to use 6770
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "10.0.3.20", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]
       interval: 10s
       timeout: 5s
       retries: 5
