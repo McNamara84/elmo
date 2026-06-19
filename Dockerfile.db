@@ -6,5 +6,6 @@ ENV TZ=Europe/Berlin
 
 VOLUME ["/var/lib/mysql"]
 
+ENV MARIADB_PORT=3306
 # Overrides the default CMD to explicitly run on port 6770. This part makes the whole Dockerfile elmogem-specific.
-CMD ["mariadbd", "--port=6770"]
+CMD ["mariadbd", "--port=${MARIADB_PORT}"]

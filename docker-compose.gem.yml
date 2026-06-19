@@ -16,6 +16,7 @@ services:
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
+      MARIADB_PORT: 6770
       MYSQL_TCP_PORT: 6770          # Forces the underlying binary port
       TZ: Europe/Berlin
     restart: unless-stopped
@@ -43,6 +44,7 @@ services:
       DB_NAME: ${DB_NAME}
       ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
+      APACHE_PORT: 6771 # this is a port that apache will use to run the web server
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -74,7 +76,7 @@ services:
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "true"
-      INSTANCE_TITLE: "ELMO for ICGEM"
+      INSTANCE_TITLE: "ELMO for ICGEM (open beta testing)"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pgrep apache2 > /dev/null || exit 1"]
