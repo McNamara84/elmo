@@ -32,7 +32,8 @@ RUN a2enmod rewrite deflate headers expires
 
 # Define Apache listen port (default 80), can be overridden in docker-compose 
 ENV APACHE_PORT=80 
-RUN sed -i "s/Listen 80/Listen ${APACHE_PORT}/" /etc/apache2/ports.conf 
+# Use single quotes to make apache identify on runtime
+RUN sed -i 's/Listen 80/Listen ${APACHE_PORT}/' /etc/apache2/ports.conf 
 
 COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
 RUN a2enconf gzip
