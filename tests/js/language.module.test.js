@@ -437,4 +437,115 @@ describe('language module coverage', () => {
             }).not.toThrow();
         });
     });
+
+    describe('dropdownsReady event listener', () => {
+        beforeEach(() => {
+            window.resizeTitle = jest.fn();
+            window.adjustButtons = jest.fn();
+        });
+
+        afterEach(() => {
+            delete window.resizeTitle;
+            delete window.adjustButtons;
+        });
+
+        test('updates dropdown placeholders when translations are loaded', () => {
+            document.body.innerHTML += `
+                <select id="dropdown1">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                    <option value="1">Option 1</option>
+                </select>
+                <select id="dropdown2">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                    <option value="2">Option 2</option>
+                </select>
+            `;
+
+            window.setTranslations({
+                general: {
+                    logoTitle: 'ELMO',
+                    choose: 'Auswählen...'
+                }
+            });
+            languageModule.applyTranslations();
+
+            languageModule.handleDropdownsReady();
+
+            expect($('#dropdown1 option[data-translate="general.choose"]').text()).toBe('Auswählen...');
+            expect($('#dropdown2 option[data-translate="general.choose"]').text()).toBe('Auswählen...');
+        });
+
+        test('does nothing when translations are not loaded', () => {
+            document.body.innerHTML += `
+                <select id="dropdown3">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                </select>
+            `;
+
+            window.setTranslations(null);
+
+            languageModule.handleDropdownsReady();
+
+            expect($('#dropdown3 option[data-translate="general.choose"]').text()).toBe('Choose...');
+        });
+
+        test('does nothing when translations.general is undefined', () => {
+            document.body.innerHTML += `
+                <select id="dropdown4">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                </select>
+            `;
+
+            window.setTranslations({ other: { key: 'value' } });
+
+            languageModule.handleDropdownsReady();
+
+            expect($('#dropdown4 option[data-translate="general.choose"]').text()).toBe('Choose...');
+        });
+
+        test('does nothing when general.choose translation is missing', () => {
+            document.body.innerHTML += `
+                <select id="dropdown5">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                </select>
+            `;
+
+            window.setTranslations({
+                general: {
+                    logoTitle: 'ELMO'
+                    // 'choose' key is missing
+                }
+            });
+
+            languageModule.handleDropdownsReady();
+
+            expect($('#dropdown5 option[data-translate="general.choose"]').text()).toBe('Choose...');
+        });
+
+        test('only updates options with data-translate="general.choose" attribute', () => {
+            document.body.innerHTML += `
+                <select id="dropdown6">
+                    <option value="" data-translate="general.choose">Choose...</option>
+                    <option value="1">Regular Option</option>
+                </select>
+            `;
+
+            window.setTranslations({
+                general: {
+                    logoTitle: 'ELMO',
+                    choose: 'Auswählen...'
+                }
+            });
+            languageModule.applyTranslations();
+
+            languageModule.handleDropdownsReady();
+
+            expect($('#dropdown6 option[data-translate="general.choose"]').text()).toBe('Auswählen...');
+            expect($('#dropdown6 option[value="1"]').text()).toBe('Regular Option');
+        });
+
+        test('exports handleDropdownsReady function', () => {
+            expect(typeof languageModule.handleDropdownsReady).toBe('function');
+        });
+    });
 });

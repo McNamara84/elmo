@@ -703,7 +703,7 @@ final class ICGEMControllerTest extends TestCase
         // Create XML element with ICGEM namespace
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         // Call the insert method using reflection since it's protected
@@ -739,7 +739,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         // Call with null data
@@ -767,7 +767,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -795,7 +795,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -825,7 +825,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -927,7 +927,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -941,28 +941,36 @@ final class ICGEMControllerTest extends TestCase
         
         $this->assertCount(6, $sources);
         
-        // First source (Satellite)
+        // First source (Satellite) - check type attribute
+        $typeAttr = $sources[0]->attributes()['type'] ?? '';
+        $this->assertEquals('Satellite', (string)$typeAttr);
         $sourceChildren = $sources[0]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Satellite', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Satellite', (string)$sources[0]->attributes()['type']);
         $this->assertEquals('GRACE satellite data', (string)$sourceChildren->description);
         $this->assertEquals('GRACE', (string)$sourceChildren->satelliteValueName);
         $this->assertEquals('https://nasa.gov', (string)$sourceChildren->satelliteSchemeUri);
         
         // Second source (Ground data)
+        $typeAttr = $sources[1]->attributes()['type'] ?? '';
+        $this->assertEquals('Ground data', (string)$typeAttr);
         $sourceChildren = $sources[1]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Ground data', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Ground data', (string)$sources[1]->attributes()['type']);
         $this->assertEquals('Ground gravity', (string)$sourceChildren->description);
         $this->assertEquals('Terrestrial data', (string)$sourceChildren->groundDetail);
 
         // Third source (Altimetry)
+        $typeAttr = $sources[2]->attributes()['type'] ?? '';
+        $this->assertEquals('Altimetry', (string)$typeAttr);
         $sourceChildren = $sources[2]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Altimetry', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Altimetry', (string)$sources[2]->attributes()['type']);
         $this->assertEquals('Satellite altimetry data', (string)$sourceChildren->description);
         $this->assertEquals('Direct observations from altimetry satellites', (string)$sourceChildren->altimetryDetail);
 
         // Fourth source (Model)
+        $typeAttr = $sources[3]->attributes()['type'] ?? '';
+        $this->assertEquals('Model', (string)$typeAttr);
         $sourceChildren = $sources[3]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Model', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Model', (string)$sources[3]->attributes()['type']);
         $this->assertEquals('Reference model input', (string)$sourceChildren->description);
         $this->assertEquals('Global Gravitational Model', (string)$sourceChildren->modelDetail);
         $this->assertEquals('10.5880/icgem.2024.001', (string)$sourceChildren->identifier);
@@ -970,15 +978,19 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('ICGEM_Global_Model_2024', (string)$sourceChildren->name);
 
         // Fifth source (Terrain detail without compensation depth)
+        $typeAttr = $sources[4]->attributes()['type'] ?? '';
+        $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[4]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Elevation/Terrain', (string)$sources[4]->attributes()['type']);
         $this->assertEquals('Topography input', (string)$sourceChildren->description);
         $this->assertEquals('Bathymetry', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertSame('', (string)$sourceChildren->compensationDepth);
 
         // Sixth source (Terrain detail with compensation depth)
+        $typeAttr = $sources[5]->attributes()['type'] ?? '';
+        $this->assertEquals('Elevation/Terrain', (string)$typeAttr);
         $sourceChildren = $sources[5]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('Elevation/Terrain', (string)$sourceChildren->inputDataSourceType);
+        $this->assertEquals('Elevation/Terrain', (string)$sources[5]->attributes()['type']);
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);
@@ -991,7 +1003,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1025,7 +1037,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1066,7 +1078,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1081,8 +1093,8 @@ final class ICGEMControllerTest extends TestCase
         $this->assertCount(1, $tmpElements);
         
         $tmpChildren = $tmpElements[0]->children('http://icgem.gfz.de/schema');
-        $this->assertEquals('2002-01-01', (string)$tmpChildren->startDate);
-        $this->assertEquals('2023-12-31', (string)$tmpChildren->stopDate);
+        // Check temporalCoverage in EDTF format
+        $this->assertEquals('2002-01-01/2023-12-31', (string)$tmpChildren->temporalCoverage);
         $this->assertEquals('GFZ Potsdam', (string)$tmpChildren->generatingInstitution);
         $this->assertEquals('Release 01', (string)$tmpChildren->release);
     }
@@ -1100,7 +1112,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1136,7 +1148,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1165,7 +1177,7 @@ final class ICGEMControllerTest extends TestCase
     {
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:gravityFieldModel xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:gravityFieldModel xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1225,7 +1237,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
 
         $reflection = new \ReflectionClass($this->controller);
@@ -1286,7 +1298,7 @@ final class ICGEMControllerTest extends TestCase
 
         $xml = new \SimpleXMLElement(
             '<?xml version="1.0" encoding="UTF-8"?>' .
-            '<icgv:globalGravityProduct xmlns:icgv="http://icgem.gfz.de/schema"/>'
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
         );
         
         $reflection = new \ReflectionClass($this->controller);
@@ -1507,67 +1519,126 @@ EOT;
         $this->assertEquals('This is the main content', $result);
     }
 
-    /**
-     * Test cleanDataCiteSchemaLocation replaces Windows file paths
-     */
-    public function testCleanDataCiteSchemaLocationReplacesWindowsPaths(): void
-    {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
-        $method->setAccessible(true);
 
-        $xml = <<<EOT
-<?xml version="1.0"?>
-<root xsi:schemaLocation="file:C:\\Users\\user\\Documents\\DataCiteSchema46.xsd">
-  <element>data</element>
-</root>
+    /**
+     * Test injectFormatsIntoDataCiteXml adds formats element with correct namespace
+     */
+    public function testInjectFormatsIntoDataCiteXmlAddsFormatsElement(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+    <creators>
+        <creator>
+            <creatorName>John Doe</creatorName>
+        </creator>
+    </creators>
+</resource>
 EOT;
 
-        $result = $method->invoke($this->controller, $xml);
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'icgem2.0');
 
-        $this->assertStringNotContainsString('file:C\\', $result);
-        $this->assertStringNotContainsString('DataCiteSchema46.xsd', $result);
-        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
+        // Parse result and verify formats element exists
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', $ns);
+        
+        $formats = $xpath->query('//dc:formats');
+        $this->assertCount(1, $formats);
+        
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertCount(1, $format);
+        $this->assertEquals('icgem2.0', $format[0]->textContent);
     }
 
     /**
-     * Test cleanDataCiteSchemaLocation with multiple file paths
+     * Test injectFormatsIntoDataCiteXml escapes special characters in format value
      */
-    public function testCleanDataCiteSchemaLocationHandlesMultiplePaths(): void
+    public function testInjectFormatsIntoDataCiteXmlEscapesSpecialCharacters(): void
     {
-        $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
-        $method->setAccessible(true);
-
-        $xml = <<<EOT
-<?xml version="1.0"?>
-<root xsi:schemaLocation="file:D:\\path\\to\\DataCiteSchema46.xsd http://example.com file:/path/unix/DataCiteSchema46.xsd">
-</root>
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
 EOT;
 
-        $result = $method->invoke($this->controller, $xml);
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'format & type: <binary>');
 
-        // All file: paths should be replaced
-        $this->assertStringNotContainsString('file:', $result);
-        $this->assertStringContainsString('https://schema.datacite.org/meta/kernel-4.7/metadata.xsd', $result);
+        // < and & must be escaped in XML text content to produce valid XML
+        $this->assertStringContainsString('&amp;', $result);
+        $this->assertStringContainsString('&lt;', $result);
+        $this->assertStringNotContainsString('<binary>', $result);
+
+        // Verify the XML is valid and the value round-trips correctly
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertEquals('format & type: <binary>', $format[0]->textContent);
     }
 
     /**
-     * Test cleanDataCiteSchemaLocation with no file paths
+     * Test injectFormatsIntoDataCiteXml with empty format string
      */
-    public function testCleanDataCiteSchemaLocationWithNoFilePaths(): void
+    public function testInjectFormatsIntoDataCiteXmlWithEmptyFormat(): void
     {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
+EOT;
+
         $reflection = new \ReflectionClass($this->controller);
-        $method = $reflection->getMethod('cleanDataCiteSchemaLocation');
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
         $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, '');
 
-        $xml = '<?xml version="1.0"?><root xsi:schemaLocation="https://schema.datacite.org/meta/kernel-4.7/metadata.xsd"></root>';
+        // Should still add formats element, but with empty format child
+        $doc = new \DOMDocument();
+        $doc->loadXML($result);
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new \DOMXPath($doc);
+        $xpath->registerNamespace('dc', $ns);
+        
+        $format = $xpath->query('//dc:formats/dc:format');
+        $this->assertCount(1, $format);
+        $this->assertEquals('', $format[0]->textContent);
+    }
 
-        $result = $method->invoke($this->controller, $xml);
+    /**
+     * Test injectFormatsIntoDataCiteXml preserves default namespace (not prefixed)
+     */
+    public function testInjectFormatsIntoDataCiteXmlPreservesDefaultNamespace(): void
+    {
+        $dataciteXml = <<<EOT
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+    <identifier identifierType="DOI">10.5880/example</identifier>
+</resource>
+EOT;
 
-        // XML should remain unchanged
-        $this->assertEquals($xml, $result);
-            $this->assertStringContainsString('https://schema.datacite.org', $result);
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
+        $method->setAccessible(true);
+        $result = $method->invoke($this->controller, $dataciteXml, 'application/xml');
+
+        // Formats should NOT have a namespace prefix (should use default namespace)
+        $this->assertStringContainsString('<formats>', $result);
+        $this->assertStringContainsString('<format>', $result);
+        $this->assertStringNotContainsString('<dc:formats>', $result);
+        $this->assertStringNotContainsString('<dc:format>', $result);
     }
 
     /**
@@ -1667,4 +1738,293 @@ EOT;
         $sourceNs = $to->source->children('http://datacite.org/schema/kernel-4');
         $this->assertNotNull($sourceNs->new);
     }
+
+    // ============================================
+    // PART 4: insertContact TESTS
+    // ============================================
+
+    /**
+     * Helper: build a mock prepare/execute/get_result chain for contact-person loading.
+     *
+     * The first prepare() call is getContactPersons() and returns $rows via fetch_assoc.
+     * Subsequent prepare() calls are getContactPersonAffiliations() and return no rows.
+     * This avoids exhausting fetch_assoc return values when nested queries are executed.
+     *
+     * @param array<array<string,mixed>> $rows
+     */
+    private function mockContactPersonsQuery(array $rows): void
+    {
+        $contactStmt   = $this->createMock(\mysqli_stmt::class);
+        $contactResult = $this->createMock(\mysqli_result::class);
+        $affStmt       = $this->createMock(\mysqli_stmt::class);
+        $affResult     = $this->createMock(\mysqli_result::class);
+
+        $contactStmt->expects($this->any())->method('bind_param');
+        $contactStmt->expects($this->any())->method('execute');
+        $contactStmt->expects($this->any())->method('get_result')->willReturn($contactResult);
+
+        $index = 0;
+        $contactResult->expects($this->any())
+            ->method('fetch_assoc')
+            ->willReturnCallback(function () use ($rows, &$index) {
+                if ($index < count($rows)) {
+                    return $rows[$index++];
+                }
+                return null;
+            });
+
+        $affStmt->expects($this->any())->method('bind_param');
+        $affStmt->expects($this->any())->method('execute');
+        $affStmt->expects($this->any())->method('get_result')->willReturn($affResult);
+        $affResult->expects($this->any())
+            ->method('fetch_assoc')
+            ->willReturn(null);
+
+        $prepareCalls = 0;
+        $this->mockConnection->expects($this->any())
+            ->method('prepare')
+            ->willReturnCallback(function () use (&$prepareCalls, $contactStmt, $affStmt) {
+                $prepareCalls++;
+                return $prepareCalls === 1 ? $contactStmt : $affStmt;
+            });
+    }
+
+    /**
+     * Test insertContact creates grav:contact with address from email.
+     */
+    public function testInsertContactCreatesAddressFromEmail(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane.doe@example.com',
+                'website'          => null,
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ]
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $children = $xml->children($ns);
+        $this->assertCount(1, $children->contact, 'grav:contact element must be created');
+
+        $contactChildren = $children->contact->children($ns);
+        $this->assertCount(1, $contactChildren->address, 'One grav:address expected');
+        $this->assertEquals('jane.doe@example.com', (string)$contactChildren->address);
+    }
+
+    /**
+     * Test insertContact adds grav:onlineResource when website is present.
+     */
+    public function testInsertContactAddsOnlineResourceWhenWebsitePresent(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Smith',
+                'givenname'        => 'John',
+                'orcid'            => null,
+                'email'            => 'john.smith@gfz.de',
+                'website'          => 'https://www.gfz.de/john',
+                'contact_person_id' => 2,
+                'Resource_has_Contact_Person_id' => 2,
+            ]
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 2);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+        $this->assertCount(1, $contactChildren->address);
+        $this->assertEquals('john.smith@gfz.de', (string)$contactChildren->address);
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://www.gfz.de/john', (string)$contactChildren->onlineResource);
+    }
+
+    /**
+     * Test insertContact with multiple contact persons produces multiple address/onlineResource entries.
+     */
+    public function testInsertContactWithMultipleContactPersons(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane@example.com',
+                'website'          => 'https://jane.example.com',
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ],
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Bob',
+                'orcid'            => null,
+                'email'            => 'bob@example.com',
+                'website'          => null,
+                'contact_person_id' => 2,
+                'Resource_has_Contact_Person_id' => 2,
+            ],
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+
+        // Two address elements (one per person)
+        $this->assertCount(2, $contactChildren->address);
+        $this->assertEquals('jane@example.com', (string)$contactChildren->address[0]);
+        $this->assertEquals('bob@example.com',  (string)$contactChildren->address[1]);
+
+        // Only one onlineResource (second person has no website)
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://jane.example.com', (string)$contactChildren->onlineResource[0]);
+    }
+
+    /**
+     * Test insertContact creates empty grav:contact when no contact persons are stored.
+     */
+    public function testInsertContactCreatesEmptyContactWhenNoPersons(): void
+    {
+        $this->mockContactPersonsQuery([]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 99);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $children = $xml->children($ns);
+        // The element must still be created (schema requires it)
+        $this->assertCount(1, $children->contact);
+        // But no child elements inside it
+        $contactChildren = $children->contact->children($ns);
+        $this->assertCount(0, $contactChildren->address);
+        $this->assertCount(0, $contactChildren->onlineResource);
+    }
+
+    /**
+     * Test insertContact skips a person whose email is empty but still adds their website.
+     * (Addresses are only inserted when email is non-empty; websites are only inserted when non-empty.)
+     */
+    public function testInsertContactSkipsEmptyEmail(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Ghost',
+                'givenname'        => 'User',
+                'orcid'            => null,
+                'email'            => '',        // empty — should be skipped
+                'website'          => 'https://ghost.example.com',
+                'contact_person_id' => 3,
+                'Resource_has_Contact_Person_id' => 3,
+            ],
+            [
+                'familyname'       => 'Real',
+                'givenname'        => 'User',
+                'orcid'            => null,
+                'email'            => 'real@example.com',
+                'website'          => null,
+                'contact_person_id' => 4,
+                'Resource_has_Contact_Person_id' => 4,
+            ],
+        ]);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $method = $reflection->getMethod('insertContact');
+        $method->setAccessible(true);
+        $method->invoke($this->controller, $xml, 1);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $contactChildren = $xml->children($ns)->contact->children($ns);
+
+        // Only the second person's email should produce an address element
+        $this->assertCount(1, $contactChildren->address);
+        $this->assertEquals('real@example.com', (string)$contactChildren->address[0]);
+
+        // The first person's website should still be emitted
+        $this->assertCount(1, $contactChildren->onlineResource);
+        $this->assertEquals('https://ghost.example.com', (string)$contactChildren->onlineResource[0]);
+    }
+
+    /**
+     * Test insertContact is placed before harmonicCoefficientsModel in globalGravityProduct.
+     * This verifies the XSD sequence: contact → xs:choice (harmonicCoefficientsModel).
+     */
+    public function testInsertContactIsFirstChildOfGlobalGravityProduct(): void
+    {
+        $this->mockContactPersonsQuery([
+            [
+                'familyname'       => 'Doe',
+                'givenname'        => 'Jane',
+                'orcid'            => null,
+                'email'            => 'jane@example.com',
+                'website'          => null,
+                'contact_person_id' => 1,
+                'Resource_has_Contact_Person_id' => 1,
+            ]
+        ]);
+
+        $ns = 'http://icgem.gfz.de/schema';
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="' . $ns . '"/>'
+        );
+
+        // Simulate createICGEMxml order: insertContact first, then harmonicCoefficientsModel
+        $reflection = new \ReflectionClass($this->controller);
+        $insertContact = $reflection->getMethod('insertContact');
+        $insertContact->setAccessible(true);
+        $insertContact->invoke($this->controller, $xml, 1);
+
+        $xml->addChild('grav:harmonicCoefficientsModel', null, $ns);
+
+        $children = $xml->children($ns);
+        $names = [];
+        foreach ($children as $child) {
+            $names[] = $child->getName();
+        }
+
+        $this->assertSame('contact', $names[0], 'grav:contact must be the first child');
+        $this->assertSame('harmonicCoefficientsModel', $names[1]);
+    }
 }
+

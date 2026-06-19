@@ -126,14 +126,28 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="label-stc-map" data-translate="coverage.map">Map</h5>
+                    <i class="bi bi-question-circle-fill" data-help-section-id="help-stc-fg-map"></i>
                     <br>&nbsp;&nbsp;&nbsp;
                     <div data-translate="coverage.mapInfo">(Please choose coordinates with rectangle or marker)
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <label for="input-stc-map-search" class="form-label visually-hidden">Search for place names</label>
-                    <input type="text" id="input-stc-map-search" class="form-control mb-2" placeholder="Search for a place" data-translate-placeholder="coverage.mapSearch">
+                    <!-- Drawing toolbar (replaces deprecated Google Maps Drawing Library) -->
+                    <div id="map-drawing-toolbar" class="btn-group mb-2" role="toolbar" aria-label="Map drawing tools" style="display:none;">
+                        <button type="button" id="btn-draw-marker" class="btn btn-sm btn-outline-primary active" aria-pressed="true" title="Place Marker">
+                            <i class="bi bi-geo-alt-fill"></i> <span data-translate="coverage.markerTool">Marker</span>
+                        </button>
+                        <button type="button" id="btn-draw-rectangle" class="btn btn-sm btn-outline-primary" aria-pressed="false" title="Draw Rectangle">
+                            <i class="bi bi-bounding-box"></i> <span data-translate="coverage.rectangleTool">Rectangle</span>
+                        </button>
+                    </div>
+                    <!-- Place autocomplete search (replaces deprecated SearchBox) -->
+                    <div id="place-autocomplete-card" class="mb-2">
+                        <label for="input-stc-map-search" class="form-label visually-hidden">Search for place names</label>
+                        <gmp-place-autocomplete id="input-stc-map-search" placeholder="Search for a place" data-translate-placeholder="coverage.mapSearch">
+                        </gmp-place-autocomplete>
+                    </div>
                     <div class="map-panel" id="panel-stc-map">
                         <!-- Panel for loading google maps -->
                     </div>

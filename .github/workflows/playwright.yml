@@ -98,13 +98,27 @@ jobs:
             $conn = new mysqli($host, $username, $password, $database);
             return $conn;
         }
-        function getApiKey() {
-            $apiKeyGoogleMaps = '';
-            echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
+        $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: '';
+        $mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
+        function getSettings($setting) {
+            global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
+            header('Content-Type: application/json; charset=utf-8');
+            switch ($setting) {
+                case 'apiKey':
+                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps]);
+                    break;
+                case 'all':
+                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps, 'showMslLabs' => $showMslLabs]);
+                    break;
+                default:
+                    echo json_encode(['error' => 'Unknown setting']);
+                    break;
+            }
+            exit;
         }
         if (basename(__FILE__) == basename($_SERVER['PHP_SELF'])) {
-            if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-                getApiKey();
+            if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['setting'])) {
+                getSettings($_GET['setting']);
             }
         }
         $connection = connectDb();
@@ -125,9 +139,11 @@ jobs:
         // Feature toggles from environment variables (set per PHP server instance)
         $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'true', FILTER_VALIDATE_BOOLEAN);
 
+        $showMslMode = false;
         $showMslLabs = false;
         $showMslVocabs = false;
         $showMslLogo = false;
+        $showMslDefaultFreeKeywords = false;
         $showGGMsProperties = false;
         $showUsedInstruments = false;
         $showGcmdThesauri = true;
@@ -141,9 +157,7 @@ jobs:
         $xmlSubmitAddress = 'datapub@gfz.de';
 
         $envOverrides = [
-            'SHOW_MSL_LABS' => 'showMslLabs',
-            'SHOW_MSL_VOCABS' => 'showMslVocabs',
-            'SHOW_MSL_LOGO' => 'showMslLogo',
+            'SHOW_MSL_MODE' => 'showMslMode',
             'SHOW_GGMS_PROPERTIES' => 'showGGMsProperties',
             'SHOW_USED_INSTRUMENTS' => 'showUsedInstruments',
             'SHOW_GCMD_THESAURI' => 'showGcmdThesauri',
@@ -157,6 +171,13 @@ jobs:
                 $$varName = filter_var($envVal, FILTER_VALIDATE_BOOLEAN);
             }
         }
+
+        // Derive MSL-specific flags from central SHOW_MSL_MODE
+        $showMslLabs = $showMslMode;
+        $showMslVocabs = $showMslMode;
+        $showMslDefaultFreeKeywords = $showMslMode;
+        $showMslLogo = $showMslMode;
+
         EOF
 
     - name: Initialize database structure and lookup data
@@ -168,7 +189,7 @@ jobs:
     - name: Start PHP servers for all ELMO instances
       run: |
         # ELMO Standard (Port 8000)
-        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
@@ -178,7 +199,7 @@ jobs:
         echo $! > server-elmo.pid
 
         # ELMO-GEM (Port 8001)
-        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=true SHOW_USED_INSTRUMENTS=false \
         SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=true \
@@ -188,7 +209,7 @@ jobs:
         echo $! > server-gem.pid
 
         # ELMO-IGSN (Port 8002)
-        SHOW_MSL_LABS=false SHOW_MSL_VOCABS=false SHOW_MSL_LOGO=false \
+        SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_GCMD_THESAURI=false SHOW_FREE_KEYWORDS=false \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=false \
@@ -198,7 +219,7 @@ jobs:
         echo $! > server-igsn.pid
 
         # ELMO-MSL (Port 8003)
-        SHOW_MSL_LABS=true SHOW_MSL_VOCABS=true SHOW_MSL_LOGO=true \
+        SHOW_MSL_MODE=true \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=false \
         SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \

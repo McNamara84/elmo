@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../../../settings.php';
+if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
+require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 
 class DatasetController
 {
@@ -1154,6 +1157,13 @@ class DatasetController
             throw new Exception("Error during XSLT transformation.");
         }
 
+        // Post-process DataCite XML to strip empty elements that violate nonemptycontentStringType.
+        // The XSLT emits e.g. <givenName/>, <affiliation/>, <nameIdentifier/> even when source
+        // values are null/empty; DataCite schema (minLength=1) rejects those.
+        if ($format === 'datacite') {
+            $newXml = $this->stripEmptyDataciteElements($newXml);
+        }
+
         if ($download) {
             // Set headers for download and output the file
             header('Content-Type: application/xml');
@@ -1165,6 +1175,72 @@ class DatasetController
             // Return the XML string
             return $newXml;
         }
+    }
+
+    /**
+     * Transforms the DataCite XML export into compact JSON-LD.
+     *
+     * @param int $id The identifier of the resource.
+     * @return string JSON-LD representation of the DataCite export.
+     */
+    public function transformResourceToJsonLd(int $id): string
+    {
+        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
+        $service = new DataCiteJsonLdService();
+
+        return $service->convertXmlStringToJsonLd($dataciteXml);
+    }
+
+    /**
+     * Removes empty elements from a DataCite XML string that would violate the
+     * nonemptycontentStringType constraint (minLength=1).
+     *
+     * The XSLT transformation outputs optional elements like <givenName>, <familyName>,
+     * <affiliation>, and <nameIdentifier> unconditionally, even when the source value
+     * is null or an empty string. DataCite schema requires all of these to have
+     * non-empty text content. This method strips them after the fact so the XSLT
+     * (which carries a "do not modify" comment as it was MapForce-generated) does not
+     * need to be changed.
+     *
+     * Also removes empty <geoLocationPoint> elements (no pointLongitude/pointLatitude
+     * children) which arise when a SpatialTemporalCoverage row has only a description
+     * but no coordinates.
+     *
+     * @param string $xml Raw DataCite XML string.
+     * @return string Cleaned DataCite XML string.
+     */
+    private function stripEmptyDataciteElements(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml; // Return unchanged if unparseable
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        
+        // Elements whose text content must be non-empty per nonemptycontentStringType.
+        // Remove the element entirely when content is blank/whitespace-only.
+        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation'];
+        foreach ($leafElements as $tag) {
+            $nodes = $xpath->query("//dc:{$tag}"); 
+            foreach ($nodes as $node) {
+                if (trim($node->textContent) === '') {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+
+        // Remove <geoLocationPoint> that has no coordinate children — happens when
+        // a coverage row carries only a description (no lat/lon values).
+        $emptyPoints = $xpath->query('//dc:geoLocationPoint[not(dc:pointLongitude) or not(dc:pointLatitude)]');
+        foreach ($emptyPoints as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
     }
     
     /**
@@ -1204,7 +1280,7 @@ class DatasetController
         $scheme = strtolower($vars['scheme']);
 
         // Check for valid schema formats
-        $validSchemes = ['datacite', 'iso'];
+        $validSchemes = ['datacite', 'iso', 'jsonld'];
         if (!in_array($scheme, $validSchemes)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid metadata scheme. Supported schemes are: ' . implode(', ', $validSchemes)]);
@@ -1212,27 +1288,31 @@ class DatasetController
         }
 
         try {
-            $result = $this->transformAndSaveOrDownloadXml($id, $scheme, $download);
+            if ($scheme === 'jsonld') {
+                $result = $this->transformResourceToJsonLd($id);
+                $filename = "dataset_{$id}_jsonld.jsonld";
+                $contentType = 'application/ld+json; charset=utf-8';
+            } else {
+                $result = $this->transformAndSaveOrDownloadXml($id, $scheme, false);
+                $filename = "dataset_{$id}_{$scheme}.xml";
+                $contentType = 'application/xml; charset=utf-8';
+            }
 
             if ($download) {
                 // Ensure no output has been sent before headers
-                if (ob_get_level())
+                if (ob_get_level()) {
                     ob_end_clean();
+                }
 
-                $filename = "dataset_{$id}_{$scheme}.xml";
-
-                // Binary Transfer
-                header('Content-Type: application/octet-stream');
+                header('Content-Type: ' . $contentType);
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Content-Length: ' . strlen($result));
-                header('Content-Transfer-Encoding: binary');
-                header('Connection: close');
 
                 echo $result;
                 flush();
                 exit();
             } else {
-                header('Content-Type: application/xml; charset=utf-8');
+                header('Content-Type: ' . $contentType);
                 echo $result;
             }
         } catch (Exception $e) {

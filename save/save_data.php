@@ -1,54 +1,147 @@
 <?php
 /**
- * @description Handles dataset saving and XML file generation
+ * @description Handles dataset saving and XML file generation with security validations
  * 
  * This script processes form submissions for dataset metadata:
+ * - Validates CSRF token
+ * - Checks honeypot field
+ * - Enforces rate limiting for save operations
  * - Saves metadata to database
  * - Generates XML files
  * - Handles both initial save requests and file downloads
  * 
  * @requires settings.php
+ * @requires api/security.php
  * @requires formgroups/*.php
  */
 
-/**
- * Process form submission based on action type
- */
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Include required configuration and helper files
-    require_once __DIR__ . '/../settings.php';
-    require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
-    require_once __DIR__ . '/formgroups/save_authors.php';
-    require_once __DIR__ . '/formgroups/save_contactperson.php';
-    require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
-    require_once __DIR__ . '/formgroups/save_freekeywords.php';
-    require_once __DIR__ . '/formgroups/save_contributorpersons.php';
-    require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
-    require_once __DIR__ . '/formgroups/save_descriptions.php';
-    require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
-    require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
-    require_once __DIR__ . '/formgroups/save_relatedwork.php';
-    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
-    require_once __DIR__ . '/formgroups/save_fundingreferences.php';
-    // ICGEM related formgroups
-    require_once __DIR__ . '/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/formgroups/save_ggms_properties.php';
-    require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
-    require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+// Guard for PHPUnit
+if (defined('PHPUNIT_RUNNING')) {
+    return;
 }
 
+// Only process POST requests
+if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
+    exit();
+}
+
+require_once __DIR__ . '/../api/security.php';
+
+// Only load settings if connection not already injected (for testing)
+if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
+    require_once __DIR__ . '/../settings.php';
+}
+global $connection;
 /**
- * Generates and outputs XML for a dataset
+ * Validates security checks for save operations.
  * 
- * Attempts to generate XML via API call first, falls back to in-memory generation if needed.
+ * @param array $postData The POST data
+ * @param mysqli $connection Database connection for rate limiting
+ * @return array {status: bool, message: string|null, code: int}
+ */
+function validateSaveSecurity($postData, $connection)
+{
+    $clientIp = getClientIp();
+    
+    // Security Check 1: Honeypot
+    if (!validateHoneypot($postData['website'] ?? '')) {
+        logSuspiciousAttempt($connection, 'save', 'honeypot triggered', $clientIp);
+        return [
+            'status' => false,
+            'message' => 'Invalid request',
+            'code' => 400
+        ];
+    }
+    
+    // Security Check 2: CSRF Token validation
+    $submittedToken = $postData['csrf_token'] ?? '';
+    if (!validateCsrfToken($submittedToken)) {
+        logSuspiciousAttempt($connection, 'save', 'invalid csrf token', $clientIp);
+        return [
+            'status' => false,
+            'message' => 'Invalid request - CSRF token validation failed',
+            'code' => 403
+        ];
+    }
+    
+    // Security Check 3: Rate limiting
+    if (!checkRateLimit($connection, $clientIp, 'save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($connection, 'save', 'rate limit exceeded', $clientIp);
+        return [
+            'status' => false,
+            'message' => 'Too many save requests. Please try again later.',
+            'code' => 429
+        ];
+    }
+
+    // Security Check 4: Minimum interaction time (2 seconds for save, server-trusted)
+    $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $connection,
+            'save',
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
+        );
+        return [
+            'status' => false,
+            'message' => 'Please take time to review your metadata before saving.',
+            'code' => 400
+        ];
+    }
+
+
+    // Record this save for rate limiting
+    recordRateLimit($connection, $clientIp, 'save');
+
+    // Invalidate the used CSRF token only after all checks pass.
+    invalidateCsrfToken();
+    
+    return ['status' => true];
+}
+
+// Validate security first
+$securityCheck = validateSaveSecurity($_POST, $connection);
+if (!$securityCheck['status']) {
+    http_response_code($securityCheck['code'] ?? 400);
+    header('Content-Type: application/json');
+    echo json_encode(['error' => $securityCheck['message'] ?? 'Security validation failed']);
+    error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
+    exit();
+}
+
+// Include required files
+require_once __DIR__ . '/formgroups/save_resourceinformation_and_rights.php';
+require_once __DIR__ . '/formgroups/save_authors.php';
+require_once __DIR__ . '/formgroups/save_contactperson.php';
+require_once __DIR__ . '/formgroups/save_originatinglaboratory.php';
+require_once __DIR__ . '/formgroups/save_freekeywords.php';
+require_once __DIR__ . '/formgroups/save_contributorpersons.php';
+require_once __DIR__ . '/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/formgroups/save_descriptions.php';
+require_once __DIR__ . '/formgroups/save_thesauruskeywords.php';
+require_once __DIR__ . '/formgroups/save_spatialtemporalcoverage.php';
+require_once __DIR__ . '/formgroups/save_relatedwork.php';
+    require_once __DIR__ . '/formgroups/save_usedinstruments.php';
+require_once __DIR__ . '/formgroups/save_fundingreferences.php';
+// ICGEM related formgroups
+require_once __DIR__ . '/formgroups/save_ggms_definition.php';
+require_once __DIR__ . '/formgroups/save_ggms_properties.php';
+require_once __DIR__ . '/formgroups/save_ggms_datasources.php';
+require_once __DIR__ . '/formgroups/save_ggms_modeltypes.php';
+
+/**
+ * Generates and outputs a download for a dataset
+ * 
+ * Supports XML and JSON-LD generation based on the requested download format.
  * If filename is provided in $_POST, triggers file download.
  * 
- * @param int $resource_id The resource ID to generate XML for
+ * @param int $resource_id The resource ID to generate output for
  * @return void Outputs XML or error response, may exit
- * @throws Exception If critical errors occur during XML generation
+ * @throws Exception If critical errors occur during generation
  */
-if (!function_exists('generateAndOutputXml')) {
-function generateAndOutputXml($resource_id)
+if (!function_exists('generateAndOutputDownload')) {
+function generateAndOutputDownload($resource_id)
 {
     global $connection, $showGGMsProperties;
     
@@ -65,44 +158,54 @@ function generateAndOutputXml($resource_id)
         return;
     }
 
-    $filename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']) . '.xml';
-    error_log("[SAVE] Starting XML generation for resource_id=$resource_id, filename=$filename");
+    $baseFilename = preg_replace('/[^a-zA-Z0-9_-]/', '_', $_POST['filename']);
+    $downloadFormat = strtolower($_POST['download_format'] ?? 'xml');
+    error_log("[SAVE] Starting generation for resource_id=$resource_id, format=$downloadFormat");
 
     try {
         $controller = new DatasetController();
-        $ICGEMcontroller = new ICGEMController();
-        $xmlString = $showGGMsProperties
-            ? $ICGEMcontroller->createICGEMxml($resource_id)
-            : $controller->envelopeXmlAsString($connection, $resource_id);
+
+        if ($downloadFormat === 'jsonld') {
+            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
+            $filename = $baseFilename . '.jsonld';
+            $contentType = 'application/ld+json';
+        } else {
+            $ICGEMcontroller = new ICGEMController();
+            $payload = $showGGMsProperties
+                ? $ICGEMcontroller->createICGEMxml($resource_id)
+                : $controller->envelopeXmlAsString($connection, $resource_id);
+            $filename = $baseFilename . '.xml';
+            $contentType = 'application/xml';
+        }
     } catch (\Throwable $e) {
-        error_log("[SAVE] XML generation threw: " . $e->getMessage());
+        error_log("[SAVE] Generation threw: " . $e->getMessage());
         throw new \RuntimeException(
-            "XML generation failed for resource $resource_id: " . $e->getMessage(),
+            "Download generation failed for resource $resource_id: " . $e->getMessage(),
             0,
             $e
         );
     }
 
-    if (!$xmlString) {
-        error_log("[SAVE] XML generation returned empty for resource_id=$resource_id");
-        throw new \RuntimeException("XML generation returned empty result for resource $resource_id");
+    if (!$payload) {
+        error_log("[SAVE] Generation returned empty for resource_id=$resource_id");
+        throw new \RuntimeException("Download generation returned empty result for resource $resource_id");
     }
 
-    error_log("[SAVE] XML generated successfully, length=" . strlen($xmlString) . " bytes");
+    error_log("[SAVE] Payload generated successfully, length=" . strlen($payload) . " bytes");
 
     // Flush any stale output buffers before sending the response
     while (ob_get_level() > 0) {
         ob_end_clean();
     }
 
-    // Set headers and send the XML body with explicit Content-Length
-    header('Content-Type: application/xml');
+    // Set headers and send the body with explicit Content-Length
+    header('Content-Type: ' . $contentType);
     header('Content-Disposition: attachment; filename="' . $filename . '"');
-    header('Content-Length: ' . strlen($xmlString));
-    echo $xmlString;
+    header('Content-Length: ' . strlen($payload));
+    echo $payload;
     flush();
 }
-} // end function_exists('generateAndOutputXml')
+} // end function_exists('generateAndOutputDownload')
 
 /**
  * Existing functions dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
@@ -205,17 +308,17 @@ try {
     
     error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
     
-    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate XML =====
+    // ===== ONLY AFTER SUCCESSFUL COMMIT: Generate download =====
     try {
-        generateAndOutputXml($resource_id);
+        generateAndOutputDownload($resource_id);
     } catch (\Throwable $e) {
-        error_log("[SAVE] XML generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
-        // Flush any buffers from the failed XML attempt
+        error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
+        // Flush any buffers from the failed generation attempt
         while (ob_get_level() > 0) {
             ob_end_clean();
         }
         http_response_code(500);
-        $errorJson = json_encode(['error' => 'Data saved but XML generation failed: ' . $e->getMessage()]);
+        $errorJson = json_encode(['error' => 'Data saved but download generation failed: ' . $e->getMessage()]);
         header('Content-Type: application/json');
         header('Content-Length: ' . strlen($errorJson));
         echo $errorJson;

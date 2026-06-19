@@ -19,7 +19,7 @@ describe('headerResponsiveDesign module coverage', () => {
         // Set up DOM
         document.body.innerHTML = `
             <header>
-                <h1 id="headtitle">ELMO - Enhanced Laboratory Metadata Organizer</h1>
+                <h1 id="headtitle">ELMO - Enhanced Linked Metadata Organizer</h1>
                 <button class="btn" data-translate="general.save">
                     <i class="bi bi-save"></i> Save
                 </button>
@@ -32,7 +32,7 @@ describe('headerResponsiveDesign module coverage', () => {
         // Mock translations
         global.translations = {
             general: {
-                logoTitle: 'ELMO - Enhanced Laboratory Metadata Organizer',
+                logoTitle: 'ELMO - Enhanced Linked Metadata Organizer',
                 logoTitleShort: 'ELMO',
                 save: 'Save',
                 submit: 'Submit'
@@ -109,7 +109,7 @@ describe('headerResponsiveDesign module coverage', () => {
             headerModule.resizeTitle();
             
             const title = document.getElementById('headtitle');
-            expect(title.textContent).toBe('ELMO - Enhanced Laboratory Metadata Organizer');
+            expect(title.textContent).toBe('ELMO - Enhanced Linked Metadata Organizer');
             expect(title.style.fontSize).toBe('20px');
         });
 

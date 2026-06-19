@@ -7,9 +7,13 @@
 [![JS Coverage](https://codecov.io/gh/McNamara84/elmo/branch/main/graph/badge.svg?flag=javascript)](https://codecov.io/gh/McNamara84/elmo)
 [![Playwright Tests](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml/badge.svg)](https://github.com/McNamara84/elmo/actions/workflows/playwright.yml)
 
-# ELMO - Enhanced Laboratory Metadata Organizer
+# ELMO - Enhanced Linked Metadata Organizer
 
-The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema.
+The Enhanced Linked Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema and supports standardized DataCite JSON-LD for local save and reload workflows.
+
+# Citation
+
+Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., Elger, K: (2026) ELMO – Enhanced Linked Metadata Organizer. GFZ Data Services, https://doi.org/10.5880/GFZ.LIS.2026.001
 
 ## Table of contents
   - [Main Features](#main-features)
@@ -41,6 +45,7 @@ The Enhanced Laboratory Metadata Organizer (ELMO) is based on a student cooperat
 - Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
+- Local save and reload of standardized metadata as XML or JSON-LD.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
@@ -150,6 +155,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively.
+  - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
   - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
@@ -208,7 +214,7 @@ The following third-party dependencies are included in header.php and footer.htm
   For the design, responsiveness and dark mode.
 - [Bootstrap Icons 1](https://github.com/twbs/icons/releases)<br>
   For the icons used.
-- [jQuery 3](https://github.com/jquery/jquery/releases)<br>
+- [jQuery 4](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
   Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
@@ -218,8 +224,21 @@ The following third-party dependencies are included in header.php and footer.htm
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
   For displaying the dynamic and interactive API documentation in accordance with OpenAPI standard 3.1.
+- [Node.js](https://nodejs.org/)<br>
+  Runtime environment for running JavaScript tooling and scripts. Used for npm package management, running Jest and Playwright tests, and build automation. The version is specified in the .nvmrc file. 
 
-To install them: npm install
+ ### Managing Javascript dependencies
+ ELMO uses npm package manager. Files 'package.json' lists your project's dependencies and their allowed version ranges. It's the human-readable configuration. 'package-lock.json' lists all dependencies, even transitive ones (dependencies of dependencies). 'package.json' defines acceptable ranges of versions, while 'package-lock.json' locks the prescise package versions for reproducability. 
+ Here are the workflows that npm enables:
+
+#### Detecting vulnerabilities:
+npm audit 
+npm audit fix 
+
+#### Installing the newest versions:
+npm outdated 
+npm install
+
 </details>
 
 
@@ -1377,6 +1396,25 @@ The following table gives a quick overview on the occurences of the form fields 
   ## Architecture and Data Flow
   </summary>
 
+### JSON-LD Export and Import
+
+The JSON-LD workflow intentionally reuses the existing XML path instead of maintaining a separate field-mapping implementation.
+
+**Export flow**
+1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
+2. The save pipeline persists the current form state first, just like the XML workflow.
+3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
+4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+5. The download response is returned as `application/ld+json`.
+
+**Import flow**
+1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
+2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
+3. The converted XML is then handed to `loadXmlToForm()`.
+4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+
+This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
+
 The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
 
 **ASCII Data Flow Diagram**
@@ -1648,7 +1686,9 @@ npm test -- --watch # run in watch mode
 
 ### Playwright (End-to-End Tests)
 
-Playwright tests live in `tests/playwright/` and run against the four ELMO Docker instances:
+Playwright tests live in `tests/playwright/` 
+
+In CI - Github Actions they run against the four ELMO Docker instances:
 
 | Playwright Project | Browser | ELMO Instance | URL |
 |--------------------|---------|---------------|-----|
@@ -1656,6 +1696,8 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 | `webkit` | WebKit (Safari) | MSL Edition | `http://localhost:8081/` |
 | `firefox-gem` | Firefox | ICGEM Edition | `http://localhost:8082/` |
 | `firefox-igsn` | Firefox | IGSN Edition | `http://localhost:8083/` |
+
+Locally, 1 docker container is enough. The tests run using 4 configuration files (one for each variant).
 
 #### Prerequisites
 
@@ -1674,25 +1716,53 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 
 #### Running Playwright Tests
 
+**Running all tests at once:**
+
 ```bash
-# Run all tests (all browsers/projects)
+# Run all 4 variants sequentially on a single container (settings switched between variants)
+# This uses the default config (playwright.config.ts with workers:1)
 npx playwright test
+```
 
-# Run only one project (e.g. only Chromium / Standard instance)
-npx playwright test --project=chromium
+**Running a specific variant (recommended for development):**
 
+```bash
+# Fast parallel execution with full test scope for each variant:
+npx playwright test --config=playwright.generic.config.ts  # Standard DataCite edition
+npx playwright test --config=playwright.gem.config.ts      # ICGEM Global Geopotential Models
+npx playwright test --config=playwright.msl.config.ts      # MSL Multi-Scale Laboratories edition
+npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated GeoSample Metadata
+```
+
+**Running individual tests:**
+
+```bash
 # Run a specific test file
 npx playwright test tests/playwright/formgroups/authors.spec.ts
 
-# Run tests with visible browser (headed mode)
-npx playwright test --headed --project=chromium
+# Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
+npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
 
 # Run a single test by title
 npx playwright test -g "populates author details"
 
+# Run only one browser/project (e.g. only Chromium)
+npx playwright test --project=chromium
+
+# Run tests with visible browser (headed mode)
+npx playwright test --headed --project=chromium
+
 # Show the HTML report after a test run
 npx playwright show-report
 ```
+
+**Important:** When running tests for a specific variant locally, always pass the correct `--config` file:
+- **Generic tests:** `--config=playwright.generic.config.ts`
+- **GEM tests:** `--config=playwright.gem.config.ts`
+- **MSL tests:** `--config=playwright.msl.config.ts`
+- **IGSN tests:** `--config=playwright.igsn.config.ts`
+
+**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) for fast feedback during development. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), automatically switching `settings.php` between variants—this is what CI uses.
 
 #### Troubleshooting
 

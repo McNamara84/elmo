@@ -18,16 +18,19 @@ if (defined('PHPUNIT_RUNNING')) {
 // Enable error logging but suppress direct output to keep JSON responses clean
 error_reporting(E_ALL);
 ini_set('display_errors', 0);
+session_start();
 
 // Buffer output
 ob_start();
 
-error_log("send_xml_file.php: Script started");
+
+// Include security functions FIRST (before settings.php to avoid duplicate includes)
+require_once __DIR__ . '/api/security.php';
+
 
 // Include required files
 require_once __DIR__ . '/settings.php';
 
-error_log("send_xml_file.php: settings.php included");
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties, $showUsedInstruments;
@@ -89,6 +92,84 @@ function testGfzSmtpConnectivity(): bool {
         error_log("Port {$smtpPort} on {$smtpHost} is CLOSED or FILTERED. Error: {$errno} - {$errstr}");
         return false;
     }
+}
+/**
+ * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
+ * @param array<string, mixed> $postData POST data from form
+ * @param mysqli $connection Database connection
+ * @return void
+ * @throws Exception if validation fails
+ */
+function validateSubmitSecurity(array $postData, $connection): void {
+    // Get client IP
+    $clientIp = getClientIp();
+    
+    // Check 1: Honeypot - Silent rejection
+    if (!validateHoneypot($postData['website'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'honeypot triggered', $clientIp);
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Invalid submission detected.'
+        ]);
+        exit;
+    }
+
+    // Check 2: CSRF Token validation
+    if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
+        logSuspiciousAttempt($connection, 'submit', 'invalid csrf token', $clientIp);
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security token validation failed.'
+        ]);
+        exit;
+    }
+    
+    // Check 3: Rate limiting for submit (10 per hour)
+    if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($connection, 'submit', 'rate limit exceeded', $clientIp);
+        http_response_code(429);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Too many submission attempts. Please try again later.'
+        ]);
+        exit;
+    }
+    
+    // Check 4: Minimum time spent (server-trusted)
+    $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
+
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $connection,
+            'submit',
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
+        );
+        http_response_code(400);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Please take time to review your submission before submitting.'
+        ]);
+        exit;
+    }
+    
+    // All checks passed, record the rate limit
+    recordRateLimit($connection, $clientIp, 'submit');
+    
+    // Invalidate CSRF token after successful security validation
+    invalidateCsrfToken();
+    
+    error_log("send_xml_file.php: Submit security validation passed");
 }
 
 /**
@@ -157,10 +238,224 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     return $xmlFilename;
 }
 
+
+/**
+ * Extract title and unique researcher contacts from XML.
+ *
+ * @param string $xml_content Raw XML content.
+ * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
+ */
+function collectResearcherConfirmationDataFromXml(string $xml_content): array
+{
+    $title = '';
+    $contacts = [];
+    $seen = [];
+
+    // Stop early if XML is empty.
+    if (empty(trim($xml_content))) {
+        error_log("Researcher confirmation: XML content is empty.");
+        return [
+            'title' => $title,
+            'contacts' => $contacts,
+        ];
+    }
+
+    try {
+        // Parse XML content.
+        $xml = new SimpleXMLElement($xml_content);
+
+        // Read dataset title.
+        $titleNodes = $xml->xpath('//*[local-name()="title"]');
+        if (!empty($titleNodes)) {
+            $title = trim((string) $titleNodes[0]);
+        }
+
+        // Read all point of contact entries.
+        $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
+
+        foreach ($pointOfContactNodes ?: [] as $pointOfContactNode) {
+                $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
+                $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
+
+                $fullName = '';
+                $email = '';
+
+                // Extract raw name.
+                if (!empty($nameNodes)) {
+                    $fullName = trim((string) $nameNodes[0]);
+                }
+
+                // Extract raw email.
+                if (!empty($emailNodes)) {
+                    $email = trim((string) $emailNodes[0]);
+                }
+
+                // Fallback name.
+                if ($fullName === '') {
+                    $fullName = 'researcher';
+                }
+
+                // Convert "Last, First" to "First Last".
+                if (strpos($fullName, ',') !== false) {
+                    $nameParts = array_map('trim', explode(',', $fullName, 2));
+                    $familyName = $nameParts[0];
+                    $givenName = $nameParts[1] ?? '';
+                    $fullName = trim($givenName . ' ' . $familyName);
+                }
+
+                // Skip invalid email addresses.
+                if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    continue;
+                }
+
+                // Skip duplicate contacts.
+                $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
+                if (isset($seen[$key])) {
+                    continue;
+                }
+
+                $seen[$key] = true;
+                $contacts[] = [
+                    'fullName' => $fullName,
+                    'email' => $email,
+                ];
+            }
+
+        error_log('Researcher confirmation: Extracted ' . count($contacts) . ' contact(s) from XML.');
+    } catch (Exception $e) {
+        // Log XML parsing errors.
+        error_log("Researcher confirmation: Failed to parse XML. " . $e->getMessage());
+    }
+
+    return [
+        'title' => $title,
+        'contacts' => $contacts,
+    ];
+}
+
+
+/**
+ * Send confirmation emails to all researcher contacts.
+ *
+ * @param array{title?: string, contacts?: array<int, array{fullName?: string, email?: string}>} $researcherConfirmationData Prepared title and contact data.
+ * @param bool $simulateEmail Log email preview instead of sending.
+ * @return void
+ */
+function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): void
+{
+    $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
+    $contacts = $researcherConfirmationData['contacts'] ?? [];
+
+    if (empty($contacts)) {
+        error_log('Researcher confirmation: No contacts found.');
+        return;
+    }
+
+    $processedCount = 0;
+
+    foreach ($contacts as $contact) {
+        $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
+        $email = trim((string) ($contact['email'] ?? ''));
+
+        // Skip invalid email addresses.
+        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            error_log("Researcher confirmation: Invalid email for {$fullName}.");
+            continue;
+        }
+
+        // Static subject line.
+        $subject = 'Confirmation of your data submission to ELMO';
+
+        // Build HTML email body.
+        $htmlBody = '
+            <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
+            <p>Thank you for your data submission to ELMO.</p>
+            <p>Your data entry' . ($title !== '' ? ' titled "<strong>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</strong>"' : '') . ' has been received successfully.</p>
+            <p>The data curators will now review your submission. If further information is needed, they will contact you.</p>
+            <p>Best regards<br>ELMO</p>
+        ';
+
+        // Build plain text fallback.
+        $plainBody =
+            "Dear {$fullName},\n\n" .
+            "Thank you for your data submission to ELMO.\n" .
+            "Your data entry" . ($title !== '' ? " titled \"{$title}\"" : '') . " has been received successfully.\n" .
+            "The data curators will now review your submission. If further information is needed, they will contact you.\n\n" .
+            "Best regards\n" .
+            "ELMO";
+
+        if ($simulateEmail) {
+            $processedCount++;
+            continue;
+        }
+
+        try {
+            // Configure and send email.
+            $mail = new PHPMailer(true);
+
+            $mail->isSMTP();
+            // @phpstan-ignore constant.notFound
+            $mail->Host = SMTP_HOST;
+            // @phpstan-ignore constant.notFound
+            $mail->Port = SMTP_PORT;
+            // @phpstan-ignore constant.notFound
+            $mail->SMTPAuth = SMTP_AUTH;
+            // @phpstan-ignore constant.notFound
+            $mail->Username = SMTP_USERNAME;
+            // @phpstan-ignore constant.notFound
+            $mail->Password = SMTP_PASSWORD;
+
+            if (defined('SMTP_SECURE') && SMTP_SECURE) {
+                $mail->SMTPSecure = SMTP_SECURE;
+            }
+
+            $mail->CharSet = 'UTF-8';
+            // @phpstan-ignore constant.notFound
+            $mail->setFrom(MAIL_FROM_ADDRESS, 'ELMO');
+            $mail->addAddress($email, $fullName);
+            $mail->Subject = $subject;
+            $mail->isHTML(true);
+            $mail->Body = $htmlBody;
+            $mail->AltBody = $plainBody;
+            $mail->send();
+
+            $processedCount++;
+        } catch (Exception $e) {
+            // Log send failure.
+            error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
+        }
+    }
+
+    error_log('Researcher confirmation: ' . ($simulateEmail ? 'Simulated' : 'Sent') . ' ' . $processedCount . ' confirmation email(s).');
+}
 $resource_id = false; // Initialize to false (matches saveResourceInformationAndRights return type)
+
+// Initialize variables that may be used in error handling
+$dataUrl = '';
+$urgencyWeeks = null;
 
 try {
     error_log("send_xml_file.php: Try block started");
+    
+    // Validate security before saving any data
+    // Wrap in try-catch to ensure any validation errors return proper status codes
+    try {
+        validateSubmitSecurity($_POST, $connection);
+    } catch (\Exception $e) {
+        // Security validation threw an unexpected exception - return 403
+        error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
+        http_response_code(403);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Security validation failed.'
+        ]);
+        exit;
+    }
+    
+    error_log("send_xml_file.php: Security validation passed");
+    
     // Save all form components
     $resource_id = saveResourceInformationAndRights($connection, $_POST);
     saveAuthors($connection, $_POST, $resource_id);
@@ -176,10 +471,21 @@ try {
         saveUsedInstruments($connection, $_POST, $resource_id);
     }
     saveFundingReferences($connection, $_POST, $resource_id);
+    } catch (Exception $e) {
+        error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
+        http_response_code(500);
+        ob_clean();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => 'Save operation failed.'
+        ]);
+        exit;    
+    }
 
     error_log("send_xml_file.php: All data saved successfully");
 
-    // Get additional submission data from modal
+    // Get additional submission data from modal (updating initialized variables)
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
     $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
 
@@ -370,19 +676,32 @@ if (!$simulateEmail) {
     error_log("XML Submit: E-Mail erfolgreich über GFZ SMTP versendet!");
 } else {
     error_log("Warning: the email was not sent! You are strongly assuming you are in development right now! SIMULATE_EMAIL was set true - skipping SMTP and PHPMailer.");
-}
-
-    error_log("send_xml_file.php: About to return success");
-
-    // Clear any output buffers
+        // Clear any output buffers
     ob_clean();
 
     // Return success response
     header('Content-Type: application/json');
     echo json_encode([
         'success' => true,
+        'message' => '✓ SIMULATED: Email sending was skipped...',
+        'resource_id' => $resource_id,
+        'simulated' => true
+    ]);
+    exit;
+    }
+try {
+    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+    sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
+
+    // reached in the normal production flow 
+    error_log("send_xml_file.php: About to return success");
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
         'message' => 'Backend reports: XML submission email sent successfully.',
-        'resource_id' => $resource_id
+        'resource_id' => $resource_id,
+        'simulated' => false
     ]);
 
 } catch (Exception $e) {

@@ -142,6 +142,22 @@ function applyTranslations() {
 }
 
 /**
+ * Updates dropdown placeholder options when dropdowns are initialized after translations.
+ * Handles the race condition where dropdowns may be populated before translations load.
+ */
+function handleDropdownsReady() {
+    if (!translations || !translations.general) return;
+    const translatedText = getNestedValue(translations, 'general.choose');
+    if (!translatedText) return;
+
+    $('option[data-translate="general.choose"]').each(function () {
+        $(this).text(translatedText);
+    });
+}
+
+document.addEventListener('dropdownsReady', handleDropdownsReady);
+
+/**
  * Changes the application language and stores the selection
  * @param {string} lang - The language code to change to
  */
@@ -227,6 +243,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getBrowserLanguage,
         updateActiveLanguage,
         getNestedValue,
-        translatePlaceholders
+        translatePlaceholders,
+        handleDropdownsReady
     };
 }

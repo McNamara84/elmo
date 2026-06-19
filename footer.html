@@ -12,9 +12,13 @@
             data-translate="buttons.load" data-translate-tooltip="buttons.loadTooltip">
             Load
           </button>
-          <button type="submit" class="btn btn-warning m-0 m-md-1" form="form-mde" id="button-form-save" data-action="save"
+          <button type="submit" class="btn btn-warning m-0 m-md-1" form="form-mde" id="button-form-save" data-action="save-xml"
             data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
-            Save
+            Save as XML
+          </button>
+          <button type="submit" class="btn btn-outline-dark m-0 m-md-1" form="form-mde" id="button-form-save-jsonld" data-action="save-jsonld"
+            data-translate="buttons.saveAsJsonLd" data-translate-tooltip="buttons.saveAsJsonLdTooltip">
+            Save as JSON-LD
           </button>
           <button type="submit" class="btn btn-success m-0 m-md-1" form="form-mde" id="button-form-submit" data-action="submit"
             data-translate="buttons.submit" data-translate-tooltip="buttons.submitTooltip">
@@ -52,6 +56,7 @@
 
 
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<!-- If some thesauri need to be hidden in regards of ERNIE settings, they can be added to the "hiddenThesauri" array here -->
 <script>
 window.ELMO_FEATURES = {
     showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
@@ -64,6 +69,7 @@ window.ELMO_FEATURES = {
     showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
     showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
     showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? false); ?>,
+    hiddenThesauri: <?php echo json_encode($thesauriHiddenKeys ?? []); ?>,
     showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
     showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
     funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
@@ -125,8 +131,16 @@ window.ELMO_FEATURES = {
 <script src="js/clear.js"></script> 
 <!-- Upload Handler -->
 <script src="js/upload.js"></script>
+<!-- ICGEM XML mapping module -->
+<script src="js/mappingXmlToInputFields-icgem.js"></script>
 <!-- Mapping from XML file to input fields -->
 <script src="js/mappingXmlToInputFields.js"></script>
+<!-- DOI Lookup Service -->
+<script src="js/services/doiLookupService.js"></script>
+<!-- DOI Prefill: JSON → form mapping -->
+<script src="js/doiPrefill.js"></script>
+<!-- DOI Prefill: blur handler + modal -->
+<script src="js/eventhandlers/doiPrefillHandler.js"></script>
 <!-- Bootstrap 5 -->
 <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 <!-- select-Funktionen laden -->

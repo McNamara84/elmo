@@ -9,7 +9,7 @@
         "language": "Language"
     },
     "general": {
-        "logoTitle": "ELMO - Enhanced Laboratory Metadata Organizer 2.0",
+        "logoTitle": "ELMO - Enhanced Linked Metadata Organizer 2.0",
         "logoTitleShort": "ELMO 2.0",
         "choose": "Choose...",
         "valid": "Valid",
@@ -161,7 +161,8 @@
             "title": "Thesauri",
             "name": "Thesauri Keywords",
             "label": "Open thesaurus to choose keywords or start typing...",
-            "unavailable": "Thesaurus data currently unavailable."
+            "unavailable": "Thesaurus data currently unavailable.",
+            "button": "Open Thesaurus"
         },
         "free": {
             "title": "Free Keywords",
@@ -234,9 +235,9 @@
         "tideSystem": "Tide system",
         "tideSystemInvalid": "Please choose tide system.",
         "tideSystemOptions": {
-            "zeroTide": "zero tide",
-            "meanTide": "mean tide",
-            "tideFree": "tide free"
+            "zeroTide": "Zero-tide",
+            "meanTide": "Mean-tide",
+            "tideFree": "Tide-free"
         },
         "errors": "Errors",
         "errorsInvalid": "Please choose error type.",
@@ -266,8 +267,10 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save as",
-        "saveAsTooltip": "Save the current data or content under a new file name.",
+        "saveAs": "Save as XML",
+        "saveAsTooltip": "Save the current data or content as an XML file.",
+        "saveAsJsonLd": "Save as JSON-LD",
+        "saveAsJsonLdTooltip": "Save the current data or content as a JSON-LD file.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
@@ -300,23 +303,30 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here",
+            "modalTitle": "Load metadata file",
+            "title": "Select XML or JSON-LD file:",
+            "dropZoneInfo": "Drop XML or JSON-LD file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
             "errorToast": "Error loading file",
-            "invalidFileType": "Please upload an XML file.",
-            "errorProcessing": "Error processing XML file",
+            "invalidFileType": "Please upload an XML or JSON-LD file.",
+            "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
+        },
+        "icgemWrongApp": {
+            "title": "ICGEM Metadata File Detected",
+            "body": "Dear user,\n\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "close": "Close"
         },
         "changelog": {
             "title": "Changelog",
             "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
-            "aboutHeading": "About ELMO - Enhanced Laboratory Metadata Organizer"
+            "aboutHeading": "About ELMO - Enhanced Linked Metadata Organizer"
         },
         "save": {
             "title": "Save Metadata",
             "saveAs": "Save as XML",
+            "saveAsJsonLd": "Save as JSON-LD",
             "filename": "Filename",
             "save": "Save"
         },
@@ -335,7 +345,7 @@
             "title": "Submission not possible",
             "greeting": "Dear user,",
             "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
-            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as XML</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
             "fixHint": "Otherwise, please complete the fields marked in red and try again.",
             "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
             "close": "Close"
@@ -364,6 +374,19 @@
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
         "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
+    },
+    "doiPrefill": {
+        "modalTitle": "Pre-fill from DOI",
+        "modalMessage": "The following metadata was found for this DOI. Do you want to pre-fill the form? Existing entries will be overwritten.",
+        "confirm": "Apply",
+        "cancel": "Cancel",
+        "loading": "Looking up DOI…",
+        "versionHint": "Please check and adjust the version number if necessary.",
+        "previewTitle": "Title",
+        "previewAuthors": "Authors",
+        "previewType": "Resource Type",
+        "previewYear": "Publication Year",
+        "previewLicense": "License"
     }
 
 }

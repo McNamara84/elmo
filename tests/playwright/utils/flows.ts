@@ -465,6 +465,84 @@ async function addAuthor(
 export { exampleData };
 
 /**
+ * Fills all GGMs/ICGEM-specific fields with representative test values.
+ * Covers: Definition, Characteristics, all three Model Type sections,
+ * Data Sources (2 rows), and the Abstract description.
+ *
+ * Intended for both the clear-reset test and any future GGMs flow tests.
+ */
+export async function fillGEM(page: Page) {
+  const DS_ROW = '#group-datasources .row[data-source-row]';
+
+  // Wait for dynamically-loaded selects to be populated from the API
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+
+  // ── Definition ────────────────────────────────────────────────────────────
+  await page.locator('#input-celestial-body').selectOption('Moon of the Earth');
+  await page.locator('#input-model-name').fill('TEST_CLEAR_MODEL');
+
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+  await page.locator('#input-mathematical-representation').selectOption({ index: 1 });
+
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+  await page.locator('#input-file-format').selectOption({ index: 1 });
+
+  // ── Characteristics ───────────────────────────────────────────────────────
+  await page.locator('#input-tide-system').selectOption('Zero-tide');
+  await page.locator('#input-degree').fill('300');
+  await page.locator('#input-errors').selectOption('calibrated');
+  await page.locator('#input-error-handling-approach').fill('Calibration approach text');
+  await page.locator('#input-earth-gravity-constant').fill('3.986004415e14');
+
+  // ── Model Type: Static ────────────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Static');
+  await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
+  await page.locator('#checkbox-time-variable').check();
+  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  await page.locator('#input-static-description').fill('Static time-variable description');
+
+  // ── Model Type: Temporal ──────────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Temporal');
+  await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible();
+  await page.locator('#input-temporal-start').fill('2002-04-01');
+  await page.locator('#input-temporal-end').fill('2023-06-30');
+  await page.locator('#select-temporal-frequency-predef').selectOption('monthly');
+  await page.locator('#input-temporal-institution').fill('GFZ');
+  await page.locator('#input-release-number').fill('RL07');
+
+  // ── Model Type: Topographic ───────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Topographic');
+  await expect(page.locator('.visibility-modeltype-topographic')).toBeVisible();
+  await page.locator('#select-topo-layerapproach').selectOption('single-layer');
+  await page.locator('#select-topo-domain').selectOption('spatial');
+  await page.locator('#select-topo-approximation').selectOption('spherical');
+  await page.locator('#select-topo-density').selectOption('constant');
+  await page.locator('#input-topo-density-details').fill('2670 kg/m3');
+
+  // ── Data Sources – add a second row as type Model so dName[] is visible ───
+  await page.locator('#button-datasource-add').click();
+  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+
+  const secondRow = page.locator(DS_ROW).nth(1);
+  // Must select type M (Model) first: only M shows visibility-datasources-identifier
+  await secondRow.locator('select[name="datasource_type[]"]').selectOption('M');
+  await secondRow.locator('textarea[name="datasource_description[]"]').fill('Second source description');
+  await secondRow.locator('input[name="dName[]"]').fill('GRACE-FO');
+
+  // ── Descriptions ──────────────────────────────────────────────────────────
+  await page.locator('#input-abstract').fill('Test abstract for clear test');
+}
+
+/**
  * Simulates the Submit handler behavior for submit-only required fields.
  * This mirrors the real UI logic where `.js-required-on-submit` becomes `required`
  * only during Submit, not during Save.

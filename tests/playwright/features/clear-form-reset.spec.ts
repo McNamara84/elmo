@@ -56,8 +56,8 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
             <textarea id="input-abstract" name="abstract"></textarea>
           </div>
           <div>
-            <label for="input-datecreated">Date created*</label>
-            <input id="input-datecreated" name="dateCreated" type="text" />
+            <label for="input-date-created">Date created*</label>
+            <input id="input-date-created" name="dateCreated" type="text" />
           </div>
         </section>
 
@@ -337,7 +337,7 @@ test.describe('Metadata form reset', () => {
     await emailField.fill('example@gmail.com');
 
     await page.locator('#input-abstract').fill('Necessary abstract');
-    await page.locator('#input-datecreated').fill('2025-01-01');
+    await page.locator('#input-date-created').fill('2025-01-01');
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
     const firstAuthorRow = authorRows.first();

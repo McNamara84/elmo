@@ -267,14 +267,41 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
+      const $rows = $("div[data-creator-row]");
+
       if (personIndex === 0) {
-        // For the first person creator, use the first existing row in the form
+        // For the first person creator, use the first existing row in the form.
+        // If no row exists yet, create one first.
+        if ($rows.length === 0) {
+          $("#button-author-add").trigger("click");
+        }
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent person creators, simulate click on "add author" button to create new row
-        $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(personIndex);
+        // For subsequent person creators, add a new row and verify it exists.
+        const countBefore = $rows.length;
+        $("#button-author-add").trigger("click");
+        const countAfter = $("div[data-creator-row]").length;
+
+        if (countAfter <= countBefore) {
+          console.warn(
+            "processCreators: could not create new author row; skipping creator",
+            { givenName, familyName }
+          );
+          continue;
+        }
+
+        // Use the newly created last row rather than relying on a specific index.
+        $row = $("div[data-creator-row]").last();
       }
+
+      if (!$row || $row.length === 0) {
+        console.warn(
+          "processCreators: target author row not found; skipping creator",
+          { givenName, familyName }
+        );
+        continue;
+      }
+
       personIndex++;
 
       // Populate the personal author fields
@@ -1355,6 +1382,8 @@ function processFunders(xmlDoc, resolver) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
@@ -1470,8 +1499,11 @@ async function loadXmlToForm(xmlDoc) {
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
   }
-  // Process descriptions
-  processDescriptions(xmlDoc, resolver);
+  // For ICGEM schema files, descriptions use a section attribute (not DataCite descriptionType)
+  const isIcgem = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
+  if (!isIcgem) {
+    processDescriptions(xmlDoc, resolver);
+  }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
   // Process Keywords
@@ -1484,6 +1516,10 @@ async function loadXmlToForm(xmlDoc) {
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
+  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  if (isIcgem) {
+    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+  }
 }
 
 // Export for testing (CommonJS)

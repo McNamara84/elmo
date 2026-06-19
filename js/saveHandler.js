@@ -4,6 +4,21 @@
  * @requires jquery
  */
 
+const SAVE_FORMATS = {
+    xml: {
+        extension: 'xml',
+        modalTitleKey: 'saveAs',
+        fallbackTitle: 'Save as XML',
+        logLabel: 'xml file locally'
+    },
+    jsonld: {
+        extension: 'jsonld',
+        modalTitleKey: 'saveAsJsonLd',
+        fallbackTitle: 'Save as JSON-LD',
+        logLabel: 'json-ld file locally'
+    }
+};
+
 class SaveHandler {
     /**
      * Initialize save handler
@@ -18,8 +33,35 @@ class SaveHandler {
             saveAs: new bootstrap.Modal($(`#${saveAsModalId}`)[0]),
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
+        this.modalElements = {
+            title: document.getElementById('label-saveas-modal'),
+            extension: document.getElementById('saveas-extension')
+        };
         this.autosaveService = autosaveService;
+        this.currentFormat = 'xml';
+        
+        // Security fields
+        this.$csrfTokenField = $('#input-save-csrf-token');
+        this.$timeSpentField = $('#input-save-time-spent');
+        this.$honeypotField = $('#input-information-website');
+        this.modalOpenedAt = null;
+        
         this.initializeEventListeners();
+    }
+
+    /**
+     * Fetches a CSRF token from the server for form protection.
+     * @returns {Promise<string>} The CSRF token
+     */
+    async fetchCsrfToken() {
+        try {
+            const response = await fetch('api/csrf_token.php');
+            const data = await response.json();
+            return data.token || '';
+        } catch (error) {
+            console.error('Failed to fetch CSRF token:', error);
+            return '';
+        }
     }
 
     /**
@@ -36,8 +78,18 @@ class SaveHandler {
             }
         });
 
-        // Focus on input field
-        $('#modal-saveas').on('shown.bs.modal', () => {
+        // Focus on input field and fetch CSRF token
+        $('#modal-saveas').on('shown.bs.modal', async () => {
+            // Record when modal was opened for time-spent calculation
+            this.modalOpenedAt = Date.now();
+            
+            // Fetch fresh CSRF token
+            const token = await this.fetchCsrfToken();
+            this.$csrfTokenField.val(token);
+            
+            // Reset time spent for current modal interaction
+            this.$timeSpentField.val('0');
+            
             $('#input-saveas-filename').select();
         });
         $('#modal-saveas').on('keydown', (e) => {
@@ -60,8 +112,11 @@ class SaveHandler {
 
     /**
      * Handle save action
+     * @param {string} [format='xml'] - Download format
      */
-    async handleSave() {
+    async handleSave(format = 'xml') {
+        this.setCurrentFormat(format);
+        this.updateSaveAsModal();
         this.showNotification('info',
             translations.alerts.processingHeading,
             translations.alerts.preparingDownload);
@@ -104,15 +159,23 @@ class SaveHandler {
             return;
         }
 
+        // Calculate time spent filling the save modal (in seconds)
+        if (this.modalOpenedAt) {
+            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
+            this.$timeSpentField.val(timeSpent);
+        }
+
         this.modals.saveAs.hide();
-        await this.saveAndDownload(filename);
+        await this.saveAndDownload(filename, this.currentFormat);
     }
 
     /**
      * Save data and trigger download
      * @param {string} filename - Chosen filename
+     * @param {string} [format=this.currentFormat] - Download format
      */
-    async saveAndDownload(filename) {
+    async saveAndDownload(filename, format = this.currentFormat) {
+        const formatConfig = this.getFormatConfig(format);
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
@@ -141,6 +204,12 @@ class SaveHandler {
             
             const formData = new FormData(this.$form[0]);
             formData.append('filename', filename);
+            
+            // Append security fields
+            formData.append('csrf_token', this.$csrfTokenField.val());
+            formData.append('save_time_spent', this.$timeSpentField.val());
+            formData.append('website', this.$honeypotField.val());
+            formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');
 
             const response = await fetch('save/save_data.php', {
@@ -154,7 +223,7 @@ class SaveHandler {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${filename}.xml`;
+            a.download = this.resolveDownloadFilename(response, filename, formatConfig.extension);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -164,22 +233,79 @@ class SaveHandler {
                 await this.autosaveService.markManualSave();
             }
 
-            // Log successful save
-            await logEvent('save', 'user successfully saved xml file locally');
-
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
+
+            // Log successful save (fire-and-forget, must not delay the notification)
+            logEvent('save', `user successfully saved ${formatConfig.logLabel}`);
         } catch (error) {
             console.error('Error saving dataset:', error);
 
             // Log failed save
-            await logEvent('save', 'user FAILED to save xml file locally');
+            await logEvent('save', `user FAILED to save ${formatConfig.logLabel}`);
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,
                 translations.alerts.saveError);
         }
+    }
+
+    /**
+     * Normalize and store the current save format.
+     * @param {string} format - Requested format
+     */
+    setCurrentFormat(format) {
+        this.currentFormat = this.getFormatConfig(format).extension;
+    }
+
+    /**
+     * Return the config for a supported format.
+     * @param {string} format - Requested format
+     * @returns {{extension: string, modalTitleKey: string, fallbackTitle: string, logLabel: string}}
+     */
+    getFormatConfig(format) {
+        return SAVE_FORMATS[format] || SAVE_FORMATS.xml;
+    }
+
+    /**
+     * Update modal title and visible filename suffix for the active format.
+     */
+    updateSaveAsModal() {
+        const formatConfig = this.getFormatConfig(this.currentFormat);
+        const translatedTitle = translations?.modals?.save?.[formatConfig.modalTitleKey] || formatConfig.fallbackTitle;
+
+        if (this.modalElements.title) {
+            this.modalElements.title.textContent = translatedTitle;
+        }
+
+        if (this.modalElements.extension) {
+            this.modalElements.extension.textContent = `.${formatConfig.extension}`;
+        }
+    }
+
+    /**
+     * Resolve the downloaded filename from the response headers or format.
+     * @param {Response} response - Fetch response
+     * @param {string} filename - User-chosen base filename
+     * @param {string} extension - Fallback extension
+     * @returns {string}
+     */
+    resolveDownloadFilename(response, filename, extension) {
+        const contentDisposition = response?.headers?.get?.('Content-Disposition')
+            || response?.headers?.get?.('content-disposition')
+            || '';
+        const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+        if (encodedMatch && encodedMatch[1]) {
+            return decodeURIComponent(encodedMatch[1]);
+        }
+
+        const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+        if (plainMatch && plainMatch[1]) {
+            return plainMatch[1];
+        }
+
+        return `${filename}.${extension}`;
     }
 
     /**

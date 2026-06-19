@@ -81,7 +81,7 @@ function dropTables($connection)
         'Resource_has_Related_Work',
         'Funding_Reference',
         'Resource_has_Funding_Reference',
-        'Feedback_Rate_Limit',
+        'Rate_Limit',
         // ICGEM-specific variables to describe beautiful GGMs 
         'GGM_Properties',
         'Resource_has_GGM_Properties',
@@ -710,13 +710,14 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`data_source_id`) REFERENCES `Data_Sources`(`data_source_id`) ON DELETE CASCADE
         );",
 
-        // Feedback rate limiting table for spam protection
-        "Feedback_Rate_Limit" => "CREATE TABLE IF NOT EXISTS `Feedback_Rate_Limit` (
+        // Unified rate limiting table for spam protection across all actions (feedback, save, submit)
+        "Rate_Limit" => "CREATE TABLE IF NOT EXISTS `Rate_Limit` (
     `id` INT NOT NULL AUTO_INCREMENT,
+    `action` VARCHAR(50) NOT NULL,
     `ip_address` VARCHAR(45) NOT NULL,
     `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (`id`),
-    INDEX `idx_ip_time` (`ip_address`, `submitted_at`)
+    INDEX `idx_action_ip_time` (`action`, `ip_address`, `submitted_at`)
         );",
     ];
 

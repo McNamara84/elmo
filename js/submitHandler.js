@@ -217,6 +217,12 @@ class SubmitHandler {
         this.$selectedFileName = $('#selected-file-name');
         this.autosaveService = autosaveService;
 
+        // Security field references
+        this.$csrfTokenField = $('#input-submit-csrf-token');
+        this.$timeSpentField = $('#input-submit-time-spent');
+        this.$honeypotField = $('#modal-submit input[name="website"]').first();
+        this.modalOpenedAt = null;
+
         this.initializeEventListeners();
         this.initializeFileHandlers();
         this.$removeFileBtn.hide();
@@ -230,10 +236,15 @@ class SubmitHandler {
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
         this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
 
-        // Focus on input field
-        $('#modal-submit').on('shown.bs.modal', () => {
+        // Fetch CSRF token and reset security fields on modal open
+        $('#modal-submit').on('shown.bs.modal', async () => {
+            await this.fetchCsrfToken();
+            this.modalOpenedAt = Date.now();
+            this.$honeypotField.val('');
+            this.$timeSpentField.val('0');
             $('#input-submit-dataurl').select();
         });
+
         $('#modal-submit').on('keydown', (e) => {
             // KeyCode 13? (Enter)
             if (e.which === 13 || e.keyCode === 13) {
@@ -250,6 +261,23 @@ class SubmitHandler {
                 this.handleModalSubmit();
             }
         });
+    }
+
+    /**
+     * Fetch fresh CSRF token from the server
+     */
+    async fetchCsrfToken() {
+        try {
+            const response = await fetch('api/csrf_token.php');
+            const data = await response.json();
+            if (data.token) {
+                this.$csrfTokenField.val(data.token);
+            } else {
+                console.error('No token in response:', data);
+            }
+        } catch (error) {
+            console.error('Error fetching CSRF token:', error);
+        }
     }
 
     /**
@@ -298,6 +326,8 @@ class SubmitHandler {
             this.autosaveService.flushPending();
         }
         validateEmbargoDate();
+        validateTitleField();
+        validateAuthorNameFields();
         const temporalCoverageValid = validateAllTemporalCoverageRows();
         if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
             this.$form.addClass('was-validated');
@@ -337,7 +367,24 @@ class SubmitHandler {
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
+        
+        // Calculate time spent in modal
+        if (this.modalOpenedAt) {
+            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
+            this.$timeSpentField.val(timeSpent);
+        }
+        
         const submitData = new FormData(this.$form[0]);
+
+        // Explicitly add CSRF token (it's in the modal, not in the main form)
+        const csrfToken = this.$csrfTokenField.val();
+        if (csrfToken) {
+            submitData.set('csrf_token', csrfToken);
+        }
+
+        // Security fields live in the submit modal, so add them explicitly.
+        submitData.set('submit_time_spent', this.$timeSpentField.val());
+        submitData.set('website', this.$honeypotField.val() || '');
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());

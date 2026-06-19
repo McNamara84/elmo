@@ -27,6 +27,8 @@ $connection = connectDb();
 $apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
+// Google Maps Map ID (required for AdvancedMarkerElement)
+$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
 
@@ -46,8 +48,6 @@ $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 
-// having the MSL logo in the header:
-$showMslLogo = false;
 
 // Show Contributor Persons form group
 $showContributorPersons = true;
@@ -70,34 +70,31 @@ $showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
 
-// SETTINGS FOR EPOS MSL (Defaults: ELMO Variant = false)
-$showMslLabs = false;
-// URL to the source with all laboratories for MSL
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-// Show MSL vocabularies
-$showMslVocabs = false;
-// URL to the source with all vocabularies for MSL
-$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+// MSL-specific UI elements are disabled by default.
+$showMslLogo = false;
+$showMslLabs = false;
+$showMslVocabs = false;
 $showMslDefaultFreeKeywords = false;
 
-$envShowMslLabs   = getenv('SHOW_MSL_LABS');
-$envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
-$envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
-$envShowMslLogo = getenv('SHOW_MSL_LOGO');
+// MSL data sources.
+$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-if ($envShowMslLabs !== false) {
-    $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
+// Single source of truth for all MSL-specific features.
+$showMslMode = false;
+$envShowMslMode = getenv('SHOW_MSL_MODE');
+
+if ($envShowMslMode !== false) {
+    $showMslMode = filter_var($envShowMslMode, FILTER_VALIDATE_BOOLEAN);
 }
-if ($envShowMslVocabs !== false) {
-    $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
-}
-if ($envShowMslDefaultFreeKeywords !== false) {
-    $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
-}
-if ($envShowMslLogo !== false) {
-    $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
-}
+
+// Keep all MSL-related UI elements in sync with MSL mode.
+$showMslLabs = $showMslMode;
+$showMslVocabs = $showMslMode;
+$showMslDefaultFreeKeywords = $showMslMode;
+$showMslLogo = $showMslMode;
+
 
 // SETTINGS FOR PID4INST INSTRUMENTS
 // Show Used Instruments form group (PID4INST via ERNIE API)
@@ -161,20 +158,22 @@ $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
 function getSettings($setting)
 {
-    global $apiKeyGoogleMaps, $showMslLabs;
+    global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
 
     header('Content-Type: application/json; charset=utf-8');
 
     switch ($setting) {
         case 'apiKey':
             echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps
+                'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps
             ]);
             break;
 
         case 'all':
             echo json_encode([
                 'apiKey' => $apiKeyGoogleMaps,
+                'mapId' => $mapIdGoogleMaps,
                 'showMslLabs' => $showMslLabs
             ]);
             break;
