@@ -10,9 +10,7 @@ services:
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
-      MARIADB_PORT: 6770            # Forces MariaDB to use 6770
       MYSQL_TCP_PORT: 6770          # Forces the underlying binary port
-      MYSQL_UNIX_PORT: 6770         # Forces the internal socket tracking port
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
@@ -32,7 +30,7 @@ services:
     pull_policy: build
     network_mode: host
     environment:
-      DB_HOST: 10.0.3.20
+      DB_HOST: 127.0.0.1
       DB_PORT: 6770
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
