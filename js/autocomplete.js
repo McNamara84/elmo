@@ -164,8 +164,8 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
 function fillRowFromOrcidRecord(row, data, fieldMapping) {
   const familyName = data.person?.name?.['family-name']?.value || '';
   const givenName = data.person?.name?.['given-names']?.value || '';
-  row.find(fieldMapping.familyName).val(familyName);
-  row.find(fieldMapping.givenName).val(givenName);
+  row.find(fieldMapping.familyName).val(familyName).trigger('input').trigger('change');
+  row.find(fieldMapping.givenName).val(givenName).trigger('input').trigger('change');
 
   // Collect affiliations and ROR IDs
   const affiliationSet = new Set();

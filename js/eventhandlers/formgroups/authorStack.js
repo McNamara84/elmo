@@ -622,10 +622,11 @@ $(document).ready(function () {
         .addClass('d-flex align-self-stretch')
         .css('min-height', 'calc(3.5rem + 2px)');
       contactToggle
-        .addClass('btn btn-outline-primary d-inline-flex align-items-center gap-1 h-100 mb-0')
-        .removeClass('lh-sm round-corners-left con-reduce')
+        .addClass('btn d-inline-flex align-items-center gap-1 h-100 mb-0')
+        .removeClass('btn-outline-primary btn-primary btn-outline-warning btn-warning text-dark lh-sm round-corners-left con-reduce')
+        .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning text-dark')
         .attr('data-author-contact-toggle', '')
-        .removeAttr('aria-pressed')
+        .attr('aria-pressed', checkbox.prop('checked') ? 'true' : 'false')
         .css('min-height', 'calc(3.5rem + 2px)')
         .toggleClass('active', checkbox.prop('checked'))
         .empty()
