@@ -536,6 +536,49 @@ function getAuthorNameTranslationKey(input) {
         : 'general.lastNameInvalid';
 }
 
+function getAuthorNameRow(input) {
+    return input.closest('[data-creator-row]') || input.closest('.row');
+}
+
+function isNonEmptyAuthorValue(input) {
+    if (!input) {
+        return false;
+    }
+
+    if (input.type === 'checkbox' || input.type === 'radio') {
+        return input.checked;
+    }
+
+    const value = String(input.value || '');
+    return value !== '' && value !== '[]';
+}
+
+function authorNameRowHasContent(input) {
+    const row = getAuthorNameRow(input);
+    if (!row) {
+        return true;
+    }
+
+    return Array.from(row.querySelectorAll(
+        'input[name="familynames[]"], ' +
+        'input[name="givennames[]"], ' +
+        'input[name="orcids[]"], ' +
+        'input[name="contacts[]"], ' +
+        'input[name="cpEmail[]"], ' +
+        'input[name="cpOnlineResource[]"], ' +
+        'input[name="personAffiliation[]"], ' +
+        'input[name="authorPersonRorIds[]"]'
+    )).some(isNonEmptyAuthorValue);
+}
+
+function resetAuthorNameField(input, container, translationKey) {
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity("");
+
+    let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+    if (oldFeedback) oldFeedback.remove();
+}
+
 function isAuthorNameInput(target) {
     return target instanceof HTMLInputElement &&
         (target.name === 'familynames[]' || target.name === 'givennames[]');
@@ -575,6 +618,9 @@ function validateAuthorNameFields() {
 
         if (value.length === 0 && isOptionalFirstName) {
             input.setCustomValidity("");
+            input.removeAttribute('required');
+        } else if (value.length === 0 && !authorNameRowHasContent(input)) {
+            resetAuthorNameField(input, container, translationKey);
             input.removeAttribute('required');
         } else if (value.length === 0) {
             input.classList.add('is-invalid');
