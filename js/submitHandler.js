@@ -247,6 +247,9 @@ class SubmitHandler {
         this.$timeSpentField = $('#input-submit-time-spent');
         this.$honeypotField = $('#modal-submit input[name="website"]').first();
         this.modalOpenedAt = null;
+        this.submitSecurityDelayMs = 3200;
+        this.submitReadyAt = 0;
+        this.submitReadyTimer = null;
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -260,14 +263,33 @@ class SubmitHandler {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
         this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+        this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
+        document.addEventListener('authorsPayload:updated', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
 
         // Fetch CSRF token and reset security fields on modal open
         $('#modal-submit').on('shown.bs.modal', async () => {
+            this.resetSubmitSecurityDelay();
             await this.fetchCsrfToken();
             this.modalOpenedAt = Date.now();
+            this.submitReadyAt = this.modalOpenedAt + this.submitSecurityDelayMs;
             this.$honeypotField.val('');
             this.$timeSpentField.val('0');
+            this.scheduleSubmitReadyState();
             $('#input-submit-dataurl').select();
+        });
+
+        $('#modal-submit').on('hidden.bs.modal', () => {
+            this.clearSubmitReadyTimer();
+            this.submitReadyAt = 0;
+            this.toggleSubmitButton();
         });
 
         $('#modal-submit').on('keydown', (e) => {
@@ -338,9 +360,43 @@ class SubmitHandler {
     /**
      * Toggle submit button based on privacy checkbox
      */
+    clearSubmitReadyTimer() {
+        if (this.submitReadyTimer) {
+            clearTimeout(this.submitReadyTimer);
+            this.submitReadyTimer = null;
+        }
+    }
+
+    resetSubmitSecurityDelay() {
+        this.clearSubmitReadyTimer();
+        this.submitReadyAt = Number.POSITIVE_INFINITY;
+        this.toggleSubmitButton();
+    }
+
+    isSubmitSecurityDelaySatisfied() {
+        return !this.submitReadyAt || Date.now() >= this.submitReadyAt;
+    }
+
+    scheduleSubmitReadyState() {
+        this.clearSubmitReadyTimer();
+        const delay = Math.max(0, this.submitReadyAt - Date.now());
+
+        if (delay === 0) {
+            this.submitReadyAt = 0;
+            this.toggleSubmitButton();
+            return;
+        }
+
+        this.toggleSubmitButton();
+        this.submitReadyTimer = setTimeout(() => {
+            this.submitReadyAt = 0;
+            this.toggleSubmitButton();
+        }, delay);
+    }
+
     toggleSubmitButton() {
         const isChecked = $('#input-submit-privacycheck').is(':checked');
-        $('#button-submit-submit').prop('disabled', !isChecked);
+        $('#button-submit-submit').prop('disabled', !isChecked || !this.isSubmitSecurityDelaySatisfied());
     }
 
     /**
@@ -389,6 +445,11 @@ class SubmitHandler {
      * Handle modal submit
      */
     async handleModalSubmit() {
+        if (!this.isSubmitSecurityDelaySatisfied()) {
+            this.toggleSubmitButton();
+            return;
+        }
+
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }

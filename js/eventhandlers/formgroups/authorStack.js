@@ -716,7 +716,8 @@ $(document).ready(function () {
     const rorId = normalizeRorId(affiliation.rorId || '');
     const chip = $('<div class="border rounded bg-body p-2" data-author-affiliation-chip></div>')
       .attr('data-author-affiliation-index', String(index))
-      .attr('data-author-affiliation-ror-id', rorId);
+      .attr('data-author-affiliation-ror-id', rorId)
+      .attr('data-author-affiliation-original-label', label);
     const group = $('<div class="input-group input-group-sm"></div>');
     const moveUp = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-move-up></button>')
       .attr('aria-label', translate('authors.affiliationMoveUp', 'Move affiliation up'))
@@ -767,6 +768,24 @@ $(document).ready(function () {
     }).get().filter(function (affiliation) {
       return affiliation.label !== '' || affiliation.rorId !== '';
     });
+  }
+
+  function clearAffiliationRorIfLabelChanged(labelInput) {
+    const input = $(labelInput);
+    const chip = input.closest('[data-author-affiliation-chip]');
+    const originalLabel = chip.attr('data-author-affiliation-original-label') || '';
+    const currentLabel = String(input.val() || '').trim();
+
+    if (!originalLabel || currentLabel === originalLabel) {
+      return;
+    }
+
+    chip.attr('data-author-affiliation-ror-id', '');
+    chip.removeAttr('data-author-affiliation-original-label');
+    chip.find('[data-author-affiliation-ror]')
+      .text('')
+      .addClass('d-none')
+      .attr('aria-label', translate('authors.affiliationRorId', 'ROR ID'));
   }
 
   function syncEditorAffiliations(row) {
@@ -1277,10 +1296,11 @@ $(document).ready(function () {
   });
 
   stack.on('input', '[data-author-affiliation-label]', function () {
+    clearAffiliationRorIfLabelChanged(this);
     syncEditorAffiliations($(this).closest('[data-author-entry-row]'));
   });
 
-  stack.on('input', '[data-author-affiliation-input]', function () {
+  stack.on('input keyup search paste', '[data-author-affiliation-input]', function () {
     scheduleAffiliationSearch($(this).closest('[data-author-entry-row]'));
   });
 
