@@ -276,6 +276,32 @@ test.describe('Free Keywords Form Group', () => {
     await expect(confirmButton).toBeEnabled();
   });
 
+  test('rejects a CSV file larger than 1 MB', async ({ page }) => {
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const fileName = page.locator('#freekeywords-csv-filename');
+    const feedback = page.locator('#freekeywords-csv-feedback');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+
+    const line = 'very_long_free_keyword_for_geoscience_metadata_upload_limit_validation_test_case\n';
+    let content = '';
+
+    for (let i = 0; i < 25000; i++) {
+      content += line;
+    }
+
+    await fileInput.setInputFiles({
+      name: 'free-keywords-over-limit.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(content, 'utf8'),
+    });
+
+    await expect(fileName).toHaveText('free-keywords-over-limit.csv');
+    await expect(feedback).toHaveText(
+      'The selected CSV file is too large. Please upload a file smaller than 1 MB.'
+    );
+    await expect(confirmButton).toBeDisabled();
+  });
+
   test('rejects a non-csv file upload', async ({ page }) => {
     const fileInput = page.locator('#input-freekeywords-csv');
     const feedback = page.locator('#freekeywords-csv-feedback');
