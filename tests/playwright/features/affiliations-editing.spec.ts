@@ -102,9 +102,6 @@ async function editAffiliationLabel(
   }, { authorGroup: AUTHOR_GROUP, label: newLabel })).toBe(true);
 }
 
-function toFullRorId(rorId: string) {
-  return rorId.startsWith('http') ? rorId : `https://ror.org/${rorId}`;
-}
 
 /**
  * Opens the Save As modal, enters a filename, waits for the file download to
@@ -161,12 +158,12 @@ test.describe('Affiliation tag label editing', () => {
 
   /**
    * Test 1 – comprehensive:
-   * - A tag selected from the whitelist carries a ROR id in the XML.
-   * - Editing that tag's label preserves the original ROR id.
+   * - A tag selected from the whitelist initially carries a ROR id in the editor.
+   * - Editing that tag's label removes the original ROR id to avoid stale name/ROR pairs.
    * - A free-text tag (added without selecting from the dropdown) has no ROR id.
    */
   test(
-    'whitelist-selected affiliation has ROR; edited label preserves ROR; free-text tag has no ROR',
+    'whitelist-selected affiliation drops ROR after manual label edit; free-text tag has no ROR',
     async ({ page }) => {
       // Set up all required fields. completeMinimalDatasetForm adds one free-text
       // affiliation ('GFZ Helmholtz Centre for Geosciences', no ROR) for the author.
@@ -191,13 +188,13 @@ test.describe('Affiliation tag label editing', () => {
 
       // ── Assertions ─────────────────────────────────────────────────────────
 
-      // Edited tag: label must reflect the rename AND ROR must be the original one
+      // Edited tag: label must reflect the rename and no longer carry the stale ROR id
       const editedEntry = affiliations.find(a => a.label === editedLabel);
       expect(editedEntry, `Expected affiliation "${editedLabel}" in XML`).toBeDefined();
       expect(
         editedEntry?.id,
-        'Edited tag must preserve its original ROR identifier',
-      ).toBe(toFullRorId(selected.id));
+        'Edited tag must not keep the old ROR identifier after a manual label change',
+      ).toBeUndefined();
 
       // Free-text tag (added by completeMinimalDatasetForm): no ROR
       const freeTextEntry = affiliations.find(

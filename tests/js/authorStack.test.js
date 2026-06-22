@@ -149,6 +149,36 @@ describe('authorStack.js', () => {
     expect($('[data-author-summary-name]').first().text()).toBe('Sukarno');
   });
 
+  test('contact toggle label toggles fields, clears values, and avoids invalid aria-pressed', () => {
+    $('#button-author-add').trigger('click');
+    const person = $('[data-creator-row]').first();
+    const checkbox = person.find('input[name="contacts[]"]');
+    const toggle = person.find('[data-author-contact-toggle]');
+    const email = person.find('input[name="cpEmail[]"]');
+    const website = person.find('input[name="cpOnlineResource[]"]');
+
+    expect(toggle.attr('aria-pressed')).toBeUndefined();
+    expect(email.closest('.contact-person-input').css('display')).toBe('none');
+    expect(website.closest('.contact-person-input').css('display')).toBe('none');
+
+    toggle.trigger('click');
+
+    expect(checkbox.prop('checked')).toBe(true);
+    expect(toggle.attr('aria-pressed')).toBeUndefined();
+    expect(email.closest('.contact-person-input').css('display')).not.toBe('none');
+    expect(website.closest('.contact-person-input').css('display')).not.toBe('none');
+
+    email.val('contact@example.org');
+    website.val('https://example.org');
+    toggle.trigger('click');
+
+    expect(checkbox.prop('checked')).toBe(false);
+    expect(email.closest('.contact-person-input').css('display')).toBe('none');
+    expect(website.closest('.contact-person-input').css('display')).toBe('none');
+    expect(email.val()).toBe('');
+    expect(website.val()).toBe('');
+  });
+
   test('updates summary badges when translations are loaded', () => {
     window.elmo = {
       translate: jest.fn((key) => ({

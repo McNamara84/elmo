@@ -626,7 +626,7 @@ $(document).ready(function () {
         .removeClass('btn-outline-primary btn-primary btn-outline-warning btn-warning text-dark lh-sm round-corners-left con-reduce')
         .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning text-dark')
         .attr('data-author-contact-toggle', '')
-        .attr('aria-pressed', checkbox.prop('checked') ? 'true' : 'false')
+        .removeAttr('aria-pressed')
         .css('min-height', 'calc(3.5rem + 2px)')
         .toggleClass('active', checkbox.prop('checked'))
         .empty()
@@ -645,7 +645,7 @@ $(document).ready(function () {
     }
 
     checkbox.off('change.authorStack click.authorStack');
-    checkbox.on('change.authorStack click.authorStack', function () {
+    checkbox.on('change.authorStack', function () {
       updateFields();
       updatePayload();
     });
@@ -1283,6 +1283,13 @@ $(document).ready(function () {
 
     const row = button.closest('[data-author-entry-row]');
     switchEntryType(row, button.attr('data-author-type-option'));
+  });
+
+  stack.on('click', '[data-author-contact-toggle]', function (event) {
+    event.preventDefault();
+    const row = $(this).closest('[data-author-entry-row]');
+    const checkbox = row.find('input[name="contacts[]"]').first();
+    checkbox.prop('checked', !checkbox.prop('checked')).trigger('change');
   });
 
   stack.on('click', '[data-author-move-up], [data-author-move-down]', function (event) {
