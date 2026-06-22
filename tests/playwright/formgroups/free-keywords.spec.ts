@@ -252,6 +252,30 @@ test.describe('Free Keywords Form Group', () => {
     await expect(confirmButton).toBeEnabled();
   });
 
+  test('accepts a CSV file smaller than 1 MB', async ({ page }) => {
+    const fileInput = page.locator('#input-freekeywords-csv');
+    const fileName = page.locator('#freekeywords-csv-filename');
+    const feedback = page.locator('#freekeywords-csv-feedback');
+    const confirmButton = page.locator('#button-confirm-csv-upload');
+
+    const line = 'keyword_for_upload_test\n';
+    let content = '';
+
+    for (let i = 0; i < 5000; i++) {
+      content += line;
+    }
+
+    await fileInput.setInputFiles({
+      name: 'free-keywords-under-limit.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(content, 'utf8'),
+    });
+
+    await expect(fileName).toHaveText('free-keywords-under-limit.csv');
+    await expect(feedback).toContainText('keywords ready to import.');
+    await expect(confirmButton).toBeEnabled();
+  });
+
   test('rejects a non-csv file upload', async ({ page }) => {
     const fileInput = page.locator('#input-freekeywords-csv');
     const feedback = page.locator('#freekeywords-csv-feedback');
