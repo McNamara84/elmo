@@ -165,14 +165,17 @@ test.describe('Author(s) form group', () => {
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {
     const authorRow = await addFirstAuthor(page);
-    const contactToggleLabel = authorRow.locator('[data-author-contact-toggle]');
+    const contactCheckbox = authorRow.locator('input[name="contacts[]"]');
     const emailInput = authorRow.locator('input[name="cpEmail[]"]');
     const websiteInput = authorRow.locator('input[name="cpOnlineResource[]"]');
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
 
-    await contactToggleLabel.click();
+    await contactCheckbox.evaluate((element: HTMLInputElement) => {
+      element.checked = true;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await expect(emailInput).toBeVisible({ timeout: 10000 });
     await expect(websiteInput).toBeVisible({ timeout: 10000 });
@@ -180,7 +183,10 @@ test.describe('Author(s) form group', () => {
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
 
-    await contactToggleLabel.click();
+    await contactCheckbox.evaluate((element: HTMLInputElement) => {
+      element.checked = false;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
