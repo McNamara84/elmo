@@ -192,6 +192,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     var csvMessages = {
         invalidFile: 'Please select a valid CSV file.',
+        fileTooLarge: 'The selected CSV file is too large. Please upload a file smaller than 1 MB.',
         noKeywords: 'No keywords found in the CSV file.',
         readError: 'The file could not be read.'
     };
@@ -263,6 +264,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     /**
+    * Maximum allowed CSV file size in bytes.
+    * Prevents the browser from trying to parse very large files in memory.
+    */
+    var MAX_CSV_FILE_SIZE = 1024 * 1024;
+
+    /**
      * Handles a selected or dropped CSV file:
      * - validates the file type
      * - reads it as text
@@ -297,6 +304,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             setCsvFeedback(csvMessages.invalidFile, true);
+            return;
+        }
+
+        if (file.size > MAX_CSV_FILE_SIZE) {
+            parsedCsvKeywords = [];
+
+            if (confirmCsvButton) {
+                confirmCsvButton.disabled = true;
+            }
+
+            if (csvFileName) {
+                csvFileName.textContent = file.name;
+            }
+
+            setCsvFeedback(csvMessages.fileTooLarge, true);
             return;
         }
 
