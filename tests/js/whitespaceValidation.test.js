@@ -302,7 +302,7 @@ describe('validateAuthorNameFields', () => {
     expect(firstname.classList.contains('is-valid')).toBe(true);
   });
 
-  test('rejects empty last name', () => {
+  test('rejects empty last name when the person row contains other data', () => {
     const lastname = document.getElementById('input-author-lastname');
     const firstname = document.getElementById('input-author-firstname');
     lastname.value = '';
@@ -312,6 +312,20 @@ describe('validateAuthorNameFields', () => {
 
     expect(result).toBe(false);
     expect(lastname.classList.contains('is-invalid')).toBe(true);
+  });
+
+  test('keeps a completely empty newly added author row visually neutral', () => {
+    const lastname = document.getElementById('input-author-lastname');
+    const firstname = document.getElementById('input-author-firstname');
+    lastname.value = '';
+    firstname.value = '';
+
+    const result = window.validateAuthorNameFields();
+
+    expect(result).toBe(true);
+    expect(lastname.classList.contains('is-invalid')).toBe(false);
+    expect(lastname.hasAttribute('required')).toBe(false);
+    expect(lastname.checkValidity()).toBe(true);
   });
 
   // --- Optional first name validation ---

@@ -427,8 +427,9 @@ describe('authorStack.js', () => {
       .trigger('input');
     expect(payload()[0].affiliations[0]).toEqual({
       label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
-      rorId: '04z8jg394'
+      rorId: ''
     });
+    expect(editor.find('[data-author-affiliation-ror]').first().hasClass('d-none')).toBe(true);
 
     editor.find('[data-author-affiliation-input]').val('Visiting researcher, ETH Zürich (2025)').trigger('input');
     editor.find('[data-author-affiliation-add]').trigger('click');
@@ -470,6 +471,38 @@ describe('authorStack.js', () => {
       expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
       expect(editor.find('[data-author-affiliation-result]').length).toBe(1);
       expect(editor.find('[data-author-affiliation-result]').text()).toContain('GFZ Helmholtz Centre for Geosciences');
+    } finally {
+      delete window.searchAffiliationsFromServer;
+      jest.useRealTimers();
+    }
+  });
+
+  test('searches affiliations again after clearing a selected affiliation', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn((query) => Promise.resolve([
+      query === 'gfz'
+        ? { label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }
+        : { label: 'University of Potsdam', rorId: '03bnmw459' }
+    ]));
+
+    try {
+      window.authorStack.addPerson();
+      const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
+      const input = editor.find('[data-author-affiliation-input]');
+
+      input.val('gfz').trigger('input');
+      await jest.advanceTimersByTimeAsync(300);
+      editor.find('[data-author-affiliation-result]').first().trigger('click');
+      expect(payload()[0].affiliations).toEqual([{ label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }]);
+
+      editor.find('[data-author-affiliation-remove]').first().trigger('click');
+      expect(payload()).toEqual([]);
+
+      input.val('pot').trigger('input');
+      await jest.advanceTimersByTimeAsync(300);
+
+      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 20);
+      expect(editor.find('[data-author-affiliation-result]').text()).toContain('University of Potsdam');
     } finally {
       delete window.searchAffiliationsFromServer;
       jest.useRealTimers();

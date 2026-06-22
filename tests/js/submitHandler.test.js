@@ -176,6 +176,20 @@ describe('submitHandler.js', () => {
     expect($('#button-submit-submit').prop('disabled')).toBe(false);
   });
 
+  test('submit modal button stays disabled until the security review delay has elapsed', () => {
+    jest.useFakeTimers();
+    $('#input-submit-privacycheck').prop('checked', true);
+
+    handler.submitReadyAt = Date.now() + handler.submitSecurityDelayMs;
+    handler.scheduleSubmitReadyState();
+
+    expect($('#button-submit-submit').prop('disabled')).toBe(true);
+
+    jest.advanceTimersByTime(handler.submitSecurityDelayMs);
+
+    expect($('#button-submit-submit').prop('disabled')).toBe(false);
+  });
+
   test('clearFileInput resets file fields', () => {
     const input = $('#input-submit-datadescription')[0];
     Object.defineProperty(input, 'value', { writable: true, value: 'f.txt' });
@@ -701,5 +715,21 @@ describe('submitHandler.js', () => {
     expect(validateContactPerson()).toBe(false);
     expect($('#contact-person-error').length).toBe(1);
     expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+  });
+
+  test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+
+    document.querySelector('input[name="authorsPayload"]').value = '[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]';
+    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: [] } }));
+
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 });
