@@ -172,7 +172,7 @@
             "modalDescription": "Upload a CSV file or drag and drop it here.",
             "dropzone": "Drag and drop a CSV file here",
             "selectFile": "or click to select a file",
-            "downloadHint": "Not sure about the CSV format? Download the example file and use it as a guide.",
+            "downloadHint": "Not sure about the CSV format? Download the example file and use it as a template. Please use CSV files smaller than 1 MB.",
             "downloadSample": "Download example CSV file",
             "cancel": "Cancel",
             "import": "Import keywords"

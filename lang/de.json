@@ -173,7 +173,7 @@
             "modalDescription": "Laden Sie eine CSV-Datei hoch oder ziehen Sie sie hierher.",
             "dropzone": "CSV-Datei hierher ziehen",
             "selectFile": "oder zum Auswählen klicken",
-            "downloadHint": "Sie sind sich nicht sicher, wie das CSV-Format aussehen soll? Laden Sie die Beispieldatei herunter und verwenden Sie sie als Vorlage.",
+            "downloadHint": "Sie sind sich nicht sicher, wie das CSV-Format aussehen soll? Laden Sie die Beispieldatei herunter und verwenden Sie sie als Vorlage. Bitte verwenden Sie nur CSV-Dateien mit einer Größe von weniger als 1 MB.",
             "downloadSample": "Beispiel-CSV-Datei herunterladen",
             "cancel": "Abbrechen",
             "import": "Schlagwörter importieren"

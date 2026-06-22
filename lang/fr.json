@@ -173,7 +173,7 @@
             "modalDescription": "Téléversez un fichier CSV ou glissez-déposez-le ici.",
             "dropzone": "Glissez-déposez un fichier CSV ici",
             "selectFile": "ou cliquez pour sélectionner un fichier",
-            "downloadHint": "Vous ne savez pas à quoi doit ressembler le format CSV ? Téléchargez le fichier d’exemple et utilisez-le comme modèle.",
+            "downloadHint": "Vous ne savez pas à quoi doit ressembler le format CSV ? Téléchargez le fichier d’exemple et utilisez-le comme modèle. Veuillez utiliser des fichiers CSV de moins de 1 Mo.",
             "downloadSample": "Télécharger le fichier CSV d’exemple",
             "cancel": "Annuler",
             "import": "Importer les mots-clés"
