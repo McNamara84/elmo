@@ -771,6 +771,7 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - In the Elmo-MSL, the keywords `multi-scale laboratories` and `EPOS` are pre-filled as default values in this field but can be removed by the user.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/subject/#a-scheme)
   - Example values: `Seismic tremor`, `Acoustic Emission`
+  - Free keywords can be entered manually or imported from a CSV file via the Upload CSV File Button. Imported values are treated like manually entered keywords and must also be unique.
 
 ### Dates
 In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType dateType="Available">` for the Embargo and `dateType="Created"` for the Date created.

@@ -28,6 +28,6 @@ authors:
 
 title: "ELMO - Enhanced Linked Metadata Organizer"
 version: 2.0.1
-#doi: 10.5880/GFZ.LIS.2026.001
+doi: 10.5880/GFZ.LIS.2026.001
 date-released: 2026-05-13
 url: "https://github.com/McNamara84/elmo"
