@@ -191,7 +191,7 @@ class DatasetController
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
             // Prüfen: Ist es ein Person-Author?
-            if (!empty($row['familyname']) || !empty($row['givenname'])) {
+            if (!empty($row['familyname']) || !empty($row['givenname']) || !empty($row['orcid'])) {
                 $authors[] = [
                     'type' => 'person',
                     'familyname' => $row['familyname'],
@@ -734,7 +734,7 @@ class DatasetController
         foreach ($authors as $author) {
             $authorXml = null;
             
-            if (!empty($author['familyname']) || !empty($author['givenname'])) {
+            if (!empty($author['familyname']) || !empty($author['givenname']) || !empty($author['orcid'])) {
                 // Person
                 $authorXml = $authorsXml->addChild('AuthorPerson');
                 $authorXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));

@@ -95,8 +95,13 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->execute();
         $stmt->close();
 
-        // Insert Related Work (Relation id 1 = 'IsCitedBy', Identifier_Type id 4 = 'DOI' from install.php seed data)
-        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 4)");
+        // Insert Related Work
+        $relationId = $this->getRelationId('IsCitedBy');
+        $doiIdentifierTypeId = $this->getIdentifierTypeId('DOI');
+        $stmt = $conn->prepare("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', ?, ?)");
+        $stmt->bind_param('ii', $relationId, $doiIdentifierTypeId);
+        $stmt->execute();
+        $stmt->close();
         $stmt = $conn->prepare("INSERT INTO Resource_has_Related_Work (Resource_resource_id, Related_Work_related_work_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -126,17 +131,32 @@ final class DatasetControllerTest extends DatabaseTestCase
 
     private function getTitleTypeId(string $name): int
     {
-        $stmt = $this->connection->prepare('SELECT title_type_id FROM Title_Type WHERE name = ? LIMIT 1');
+        return $this->getLookupId('Title_Type', 'title_type_id', $name);
+    }
+
+    private function getRelationId(string $name): int
+    {
+        return $this->getLookupId('Relation', 'relation_id', $name);
+    }
+
+    private function getIdentifierTypeId(string $name): int
+    {
+        return $this->getLookupId('Identifier_Type', 'identifier_type_id', $name);
+    }
+
+    private function getLookupId(string $table, string $idColumn, string $name): int
+    {
+        $stmt = $this->connection->prepare("SELECT {$idColumn} FROM {$table} WHERE name = ? LIMIT 1");
         $stmt->bind_param('s', $name);
         $stmt->execute();
         $row = $stmt->get_result()->fetch_assoc();
         $stmt->close();
 
         if (!$row) {
-            throw new \RuntimeException("Title type '{$name}' is missing from test lookup data.");
+            throw new \RuntimeException("Lookup value '{$name}' is missing from {$table}.");
         }
 
-        return (int) $row['title_type_id'];
+        return (int) $row[$idColumn];
     }
     public function testGetTitlesReturnsCorrectStructure(): void
     {
