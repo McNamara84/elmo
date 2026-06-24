@@ -557,6 +557,7 @@ describe('authorStack.js', () => {
       jest.useRealTimers();
     }
   });
+
   test('searches affiliations again after clearing a selected affiliation', async () => {
     jest.useFakeTimers();
     window.searchAffiliationsFromServer = jest.fn((query) => Promise.resolve([

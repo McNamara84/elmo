@@ -3,9 +3,9 @@ require_once __DIR__ . '/save_affiliations.php';
 require_once __DIR__ . '/../validation.php';
 
 /**
- * Filters the input author data and returns only those authors 
- * who have a non-empty family (last) name. Given (first) names are optional
- * to support mononymous person authors.
+ * Filters the input author data and returns only person authors that provide
+ * at least one name part or an ORCID. Given (first) names are optional
+ * to support mononymous person authors and ORCID-only records.
  *
  * This is used to exclude empty author entries before saving to the database.
  *
@@ -15,7 +15,7 @@ require_once __DIR__ . '/../validation.php';
  *                        - orcids (optional array of strings)
  *                        - personAffiliation (optional array of strings)
  *                        - authorPersonRorIds (optional array of strings)
- * @return array Filtered author data arrays containing only complete entries.
+ * @return array Filtered author data arrays containing only non-empty entries.
  */
 function filterValidPersonAuthors(array $postData): array
 {

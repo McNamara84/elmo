@@ -41,9 +41,10 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->resourceId = (int) $conn->insert_id;
         $stmt->close();
 
-        // Insert Title (Title_Type id 2 = 'Main Title' from install.php seed data)
-        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 2, ?)");
-        $stmt->bind_param('i', $this->resourceId);
+        // Insert Title
+        $mainTitleTypeId = $this->getTitleTypeId('Main Title');
+        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', ?, ?)");
+        $stmt->bind_param('ii', $mainTitleTypeId, $this->resourceId);
         $stmt->execute();
         $stmt->close();
 
@@ -123,6 +124,20 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
     }
 
+    private function getTitleTypeId(string $name): int
+    {
+        $stmt = $this->connection->prepare('SELECT title_type_id FROM Title_Type WHERE name = ? LIMIT 1');
+        $stmt->bind_param('s', $name);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$row) {
+            throw new \RuntimeException("Title type '{$name}' is missing from test lookup data.");
+        }
+
+        return (int) $row['title_type_id'];
+    }
     public function testGetTitlesReturnsCorrectStructure(): void
     {
         $titles = $this->controller->getTitles($this->connection, $this->resourceId);
