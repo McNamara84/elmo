@@ -374,6 +374,47 @@ async function uploadSampleXml(page: Page) {
   await expect(toastMessage).toContainText('sample-upload.xml');
 }
 
+async function getUploadedPersonAffiliations(page: Page) {
+  return page.evaluate(() => {
+    const payloadInput = document.querySelector<HTMLInputElement>('input[name="authorsPayload"]');
+    if (payloadInput?.value) {
+      try {
+        const authors = JSON.parse(payloadInput.value);
+        if (Array.isArray(authors)) {
+          const person = authors.find((author: any) => author?.type === 'person' && Array.isArray(author.affiliations));
+          if (person) {
+            return person.affiliations.map((affiliation: any) => affiliation.label || affiliation.value || '').filter(Boolean);
+          }
+        }
+      } catch {
+        // Fall through to legacy field readers below.
+      }
+    }
+
+    const input = document.querySelector('input[name="personAffiliation[]"]') as any;
+    if (!input) {
+      return [];
+    }
+    if (input._tagify) {
+      return input._tagify.value.map((tag: any) => tag.value || tag.label || '').filter(Boolean);
+    }
+
+    const rawValue = String(input.value || '').trim();
+    if (!rawValue) {
+      return [];
+    }
+    try {
+      const parsed = JSON.parse(rawValue);
+      if (Array.isArray(parsed)) {
+        return parsed.map((tag: any) => tag.value || tag.label || '').filter(Boolean);
+      }
+    } catch {
+      // Legacy fallback stores comma-separated labels.
+    }
+    return rawValue.split(',').map((value) => value.trim()).filter(Boolean);
+  });
+}
+
 test.describe('XML Upload Mapping Flow', () => {
   test.beforeEach(async ({ page }) => {
     // Note: page.route() does NOT work for about:blank pages, so we mock
@@ -621,10 +662,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(orcid).toHaveValue('0000-0001-2345-6789');
 
     await expect
-      .poll(async () => page.evaluate(() => {
-        const input = document.querySelector('input[name="personAffiliation[]"]') as any;
-        return input?._tagify ? input._tagify.value.map((tag: any) => tag.value) : [];
-      }))
+      .poll(async () => getUploadedPersonAffiliations(page))
       .toEqual(['GFZ German Research Centre for Geosciences']);
 
     await expect
@@ -682,7 +720,7 @@ test.describe('XML Upload Mapping Flow', () => {
       expect(family.trim()).not.toBe('');
     }
 
-    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    const instRows = page.locator('#group-author [data-authorinstitution-row]');
     await expect(instRows).toHaveCount(1);
     await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
   });
@@ -705,7 +743,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(personRows.nth(0).locator('input[name="familynames[]"]')).toHaveValue('Smith');
     await expect(personRows.nth(0).locator('input[name="givennames[]"]')).toHaveValue('Alice');
 
-    const instRows = page.locator('#group-authorinstitution [data-authorinstitution-row]');
+    const instRows = page.locator('#group-author [data-authorinstitution-row]');
     await expect(instRows).toHaveCount(1);
     await expect(instRows.nth(0).locator('input[name="authorinstitutionName[]"]')).toHaveValue('ACME Research Corp');
   });

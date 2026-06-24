@@ -53,6 +53,10 @@ describe('autocomplete module coverage', () => {
             expect(typeof autocompleteModule.normalizeRorId).toBe('function');
         });
 
+        test('exports normalizeOrcidForLookup function', () => {
+            expect(typeof autocompleteModule.normalizeOrcidForLookup).toBe('function');
+        });
+
         test('exports collectAffiliation function', () => {
             expect(typeof autocompleteModule.collectAffiliation).toBe('function');
         });
@@ -82,6 +86,20 @@ describe('autocomplete module coverage', () => {
 
         test('adds prefix to ROR ID with different format', () => {
             expect(autocompleteModule.normalizeRorId('0abcd1234')).toBe('https://ror.org/0abcd1234');
+        });
+    });
+
+    describe('normalizeOrcidForLookup', () => {
+        test('formats a bare ORCID without hyphens', () => {
+            expect(autocompleteModule.normalizeOrcidForLookup('0000000218250097')).toBe('0000-0002-1825-0097');
+        });
+
+        test('strips an ORCID profile URL', () => {
+            expect(autocompleteModule.normalizeOrcidForLookup('https://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
+        });
+
+        test('preserves X checksum from profile URL with trailing slash', () => {
+            expect(autocompleteModule.normalizeOrcidForLookup('https://orcid.org/0000-0002-1694-233X/')).toBe('0000-0002-1694-233X');
         });
     });
 

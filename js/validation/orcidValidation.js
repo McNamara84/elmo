@@ -31,6 +31,19 @@ function isValidOrcidChecksum(orcid) {
 }
 
 /**
+ * Extracts a bare ORCID identifier from direct input or an ORCID profile URL.
+ *
+ * @param {string} value - The raw input value
+ * @returns {string} The detected ORCID candidate or the original value
+ */
+function extractOrcidIdentifier(value) {
+  const rawValue = String(value || '').trim();
+  const urlMatch = rawValue.match(/(?:https?:\/\/)?orcid\.org\/(\d{4}-?\d{4}-?\d{4}-?(?:\d{4}|\d{3}X))(?:[/?#].*)?$/i);
+
+  return urlMatch ? urlMatch[1] : rawValue;
+}
+
+/**
  * Formats a raw input value into ORCID format (XXXX-XXXX-XXXX-XXXX).
  * Strips ORCID URL prefixes, removes non-digit characters (except trailing X),
  * and inserts hyphens.
@@ -39,15 +52,11 @@ function isValidOrcidChecksum(orcid) {
  * @returns {string} The formatted ORCID string
  */
 function formatOrcidInput(value) {
-  // Strip ORCID URL prefixes
-  value = value.replace(/^https?:\/\/orcid\.org\//i, '');
+  value = extractOrcidIdentifier(value);
 
   // Separate possible trailing X
-  const upperValue = value.toUpperCase();
-  const hasTrailingX = upperValue.replace(/-/g, '').length > 0 &&
-    upperValue.replace(/-/g, '').slice(-1) === 'X';
-
-  // Remove all non-digit characters
+  const upperValue = value.toUpperCase().replace(/[^0-9X]/g, '');
+  const hasTrailingX = upperValue.length > 0 && upperValue.slice(-1) === 'X';
   let digits = value.replace(/[^\d]/g, '');
 
   // Re-add trailing X if it was present and we have at least 15 digits
@@ -175,6 +184,7 @@ document.addEventListener('input', function (e) {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     isValidOrcidChecksum,
+    extractOrcidIdentifier,
     formatOrcidInput,
     validateOrcidField,
     applyTranslationToElement

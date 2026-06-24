@@ -2,38 +2,55 @@
 <div class="accordion" id="accordion-changelog">
     <!-- Version 2.1.0 -->
     <div class="accordion-item">
-        <h2 class="accordion-header" id="heading-changelog-version14">
+        <h2 class="accordion-header" id="heading-changelog-version15">
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
-                data-bs-target="#collapse-changelog-version14" aria-expanded="true"
-                aria-controls="collapse-changelog-version14">
-                Version 2.1.0 - TBD
+                data-bs-target="#collapse-changelog-version15" aria-expanded="true"
+                aria-controls="collapse-changelog-version15">
+                Version 2.1.0 - 2026/07/14
             </button>
         </h2>
-        <div id="collapse-changelog-version14" class="accordion-collapse collapse show"
-            aria-labelledby="heading-changelog-version14" data-bs-parent="#accordion-changelog">
+        <div id="collapse-changelog-version15" class="accordion-collapse collapse show"
+            aria-labelledby="heading-changelog-version15" data-bs-parent="#accordion-changelog">
             <div class="accordion-body">
                 <ul>
                     <li><strong>Features:</strong>
                         <ul>
+                            <li>Redesigned the Authors form group by combining person and institution authors into one card-based Authors stack with ordering, contact marking, and affiliation handling</li>
+                            <li>Saving, submission and loading for JSON-LD metadata files on DataCite schema 4.7</li>
+                            <li>Saving, submission and loading for ICGEM metadata files on ICGEM schema 2.0</li>
                             <li>Automatic prefill of fields if a valid DOI is provided</li>
-                            <li>Separate local save actions for XML and JSON-LD metadata files</li>
-                            <li>Loading standardized DataCite JSON-LD files into the metadata editor</li>
-                            <li>ELMOGEM version has a special selection of the GCMD science keywords, that are relevant for gravity modelling</li>
-                            <li>ELMOGEM version ingests the file format from GGM metadata into the Datacite property</li>
-                            <li>ELMOGEM version can save the documents according to the ICGEM metadata schema</li>
-                            <li>ELMOGEM version: the documents according to the ICGEM metadata schema can be uploaded into the editor</li>
                             <li>Removed the Thesauri accordions and the connector lines in the keyword tree</li>
                             <li>Confirmation emails for researchers after successful metadata submission</li>
+                            <li>Optimzed selection of rectangle in spatial coverages</li>
                             <li>Spacio-temporal coverage: the selection of rectangle is optimised</li>
                             <li>Importing free keywords from CSV files via the “Add CSV” button</li>
                         </ul>
                     </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <!-- Version 2.0.9 -->
+    <div class="accordion-item">
+        <h2 class="accordion-header" id="heading-changelog-version14">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                data-bs-target="#collapse-changelog-version14" aria-expanded="false"
+                aria-controls="collapse-changelog-version14">
+                Version 2.0.9 - 2026/05/30
+            </button>
+        </h2>
+        <div id="collapse-changelog-version14" class="accordion-collapse collapse"
+            aria-labelledby="heading-changelog-version14" data-bs-parent="#accordion-changelog">
+            <div class="accordion-body">
+                <ul>
                     <li><strong>Fixes:</strong>
                         <ul>
                             <li>Fixed inconsistent placeholder language when auto-detecting browser language</li>
                             <li>Fixed inconsistent validation of title</li>
                             <li>Fixed the satellite input field to display suggestions instantly</li>
                             <li>Clarified save and upload labels for metadata file downloads and imports</li>
+                            <li>Enabled editing of affiliation labels while preserving ROR ID</li>
+                            <li>Various security fixes</li>
                         </ul>
                     </li>
                 </ul>

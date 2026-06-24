@@ -80,4 +80,14 @@ test.describe('Footer Tests', () => {
     await expect(elmoGuidePage).toHaveURL(/help\.php/);
     await elmoGuidePage.close();
   })
+
+  test('mobile fixed footer remains visible at page bottom', async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 812 }); // is the same size as the iPhone 11/12/13
+    await page.goto('', { waitUntil: 'domcontentloaded' });
+
+    await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+
+    const footer = page.locator('footer.fixed-bottom');
+    await expect(footer).toBeVisible();
+  });
 });

@@ -26,6 +26,15 @@ async function searchAffiliationsFromServer(query, limit = 20) {
   }
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
 /**
  * Refreshes all Tagify instances when translations are changed.
  * This function updates the placeholder text without destroying instances.
@@ -34,8 +43,6 @@ async function searchAffiliationsFromServer(query, limit = 20) {
  */
 function refreshTagifyInstances() {
   const allPairs = [
-    { input: "input-author-affiliation", hidden: "input-author-rorid" },
-    { input: "input-authorinstitution-affiliation", hidden: "input-author-institutionrorid" },
     { input: "input-contactperson-affiliation", hidden: "input-contactperson-rorid" },
     { input: "input-contributorpersons-affiliation", hidden: "input-contributor-personrorid" },
     { input: "input-contributor-organisationaffiliation", hidden: "input-contributor-organisationrorid" }
@@ -74,8 +81,6 @@ function refreshTagifyInstances() {
  * Uses server-side search instead of loading the full JSON file.
  */
 $(document).ready(function () {
-  autocompleteAffiliations("input-author-affiliation", "input-author-rorid");
-  autocompleteAffiliations("input-authorinstitution-affiliation", "input-author-institutionrorid");
   autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
   autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
   document.addEventListener('translationsLoaded', refreshTagifyInstances);
@@ -204,16 +209,38 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       position: 'all',
       highlightFirst: true
     },
-    editTags: false,
+    editTags: true,
     keepInvalidTags: false,
     autoComplete: {
       enabled: true
     },
     templates: {
+      // The tag template needs to recreate the whole templates.tag string. There is no partial override.
+      // The key addition is the button  looking like a pencil - a symbol of editing
+      tag(tagData, ctrl) {
+        const safeValue = escapeHtml(tagData.value);
+
+        return `<tag title="${safeValue}"
+                     contenteditable='false'
+                     spellcheck='false'
+                     tabIndex="-1"
+                     class="${ctrl.settings.classNames.tag} ${tagData.class ? tagData.class : ''}"
+                     ${ctrl.getAttributes(tagData)}>
+          <x title='' class='tagify__tag__removeBtn' role='button' aria-label='remove tag'></x>
+          <div>
+            <span class='tagify__tag-text'>${safeValue}</span>
+            <button type='button' class='tagify__tag__editBtn' tabindex='-1' aria-label='Edit affiliation'>
+              <i class='bi bi-pencil-fill' aria-hidden='true'></i>
+            </button>
+          </div>
+        </tag>`;
+      },
       dropdownItem(item) {
         // Build dropdown item using Tagify's standard approach but with custom content
-        const displayText = item.mappedValue || item.value || '';
-        const otherNames = item.other && Array.isArray(item.other) ? item.other.join(', ') : '';
+        const displayText = escapeHtml(item.mappedValue || item.value || '');
+        const otherNames = item.other && Array.isArray(item.other)
+          ? escapeHtml(item.other.join(', '))
+          : '';
         
         // Build HTML with all necessary Tagify attributes for proper selection handling
         let html = `<div ${this.getAttributes(item)}
@@ -266,7 +293,9 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
         // Update whitelist with server results
         tagify.whitelist = results.map(item => ({
           value: item.name,
-          id: item.id,
+          label: item.name,
+          id: normalizeRorId(item.id),
+          rorId: normalizeRorId(item.id),
           other: item.other
         }));
 
@@ -280,12 +309,124 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     }, 200);
   });
 
+  function normalizeRorId(value) {
+    if (!value) {
+      return '';
+    }
+
+    return String(value)
+      .trim()
+      .replace(/^https?:\/\/ror\.org\//, '');
+  }
+
+  function getTagLabel(tag) {
+    return String(tag.value || tag.label || tag.name || tag.mappedValue || '').trim();
+  }
+
+  function findWhitelistRorId(label) {
+    const whitelistMatch = tagify.whitelist.find(item => item.value === label || item.label === label || item.name === label);
+    return whitelistMatch ? normalizeRorId(whitelistMatch.rorId || whitelistMatch.id) : '';
+  }
+
+  function normalizeTag(tag) {
+    const label = getTagLabel(tag);
+    const rorId = normalizeRorId(tag.rorId || tag.id) || findWhitelistRorId(label);
+
+    tag.value = label;
+    tag.label = label;
+    tag.rorId = rorId;
+    tag.id = rorId;
+
+    return {
+      value: label,
+      label,
+      rorId,
+      id: rorId
+    };
+  }
+
   /**
-   * Updates the hidden input field with the IDs of the selected affiliations.
+   * Updates the visible Tagify field with structured affiliation data and the legacy hidden ROR ID CSV.
    */
-  function updateHiddenField() {
-    const allSelectedItems = tagify.value.map(tag => tag.id || "");
-    hiddenField.val(allSelectedItems.join(','));
+  function syncStructuredAffiliations() {
+    const structuredAffiliations = tagify.value
+      .map(normalizeTag)
+      .filter(tag => tag.value !== '' || tag.rorId !== '');
+
+    inputElement.val(JSON.stringify(structuredAffiliations));
+    hiddenField.val(structuredAffiliations.map(tag => tag.rorId).join(','));
+  }
+
+  /**
+   * Edit-icon click handler: opens the affiliation edit modal for the clicked tag.
+   * The original tag element and its full data (including the ROR id) are stored in
+   * module-level variables so the save handler can use them.
+   */
+  tagify.DOM.scope.addEventListener('click', function (e) {
+    const editBtn = e.target.closest('.tagify__tag__editBtn');
+    if (!editBtn) return;
+
+    e.stopPropagation();
+
+    const tagElm = editBtn.closest('tag');
+    if (!tagElm) return;
+
+    const tagData = tagElm.__tagifyTagData;
+    if (!tagData) return;
+
+    // Stash on the modal element so the save handler can reach them
+    const modalEl = document.getElementById('modal-affiliation-edit');
+    modalEl._editTagElm = tagElm;
+    modalEl._editTagData = tagData;
+
+    // Stamp the owning instance references onto the tag element for the save handler
+    tagElm._tagify_originalTagify = tagify;
+    tagElm._tagify_updateHiddenField = syncStructuredAffiliations;
+
+    const valueInput = document.getElementById('input-affiliation-edit-value');
+    valueInput.value = tagData.value;
+
+    const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    bsModal.show();
+
+    // Focus the input after the modal animation finishes
+    modalEl.addEventListener('shown.bs.modal', function focusOnShown() {
+      valueInput.select();
+      modalEl.removeEventListener('shown.bs.modal', focusOnShown);
+    });
+  });
+
+  /**
+   * Save handler for the affiliation edit modal.
+   * Clones the original tag data, replaces only the `value`, then calls
+   * tagify.replaceTag() so the ROR id is preserved in the background.
+   * The handler is registered only once (on the first autocompleteAffiliations call).
+   */
+  const saveBtn = document.getElementById('button-affiliation-edit-save');
+  if (saveBtn && !saveBtn._affiliEditHandlerAttached) {
+    saveBtn._affiliEditHandlerAttached = true;
+    saveBtn.addEventListener('click', function onAffilEditSave() {
+      const modalEl = document.getElementById('modal-affiliation-edit');
+      const tagElm = modalEl._editTagElm;
+      const originalData = modalEl._editTagData;
+
+      if (!tagElm || !originalData) return;
+
+      const newValue = document.getElementById('input-affiliation-edit-value').value.trim();
+      if (!newValue) return;
+
+      // Preserve all original properties (especially `id` / ROR URI) but update value
+      const newTagData = Object.assign({}, originalData, { value: newValue });
+
+      tagElm._tagify_originalTagify.replaceTag(tagElm, newTagData);
+
+      // Update hidden field of the owning Tagify instance
+      if (typeof tagElm._tagify_updateHiddenField === 'function') {
+        tagElm._tagify_updateHiddenField();
+      }
+
+      bootstrap.Modal.getOrCreateInstance(modalEl).hide();
+    });
   }
 
   /**
@@ -318,7 +459,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
     const nameInput = authorInstitutionRow.find('input[name="authorinstitutionName[]"]');
     const rawValue = (inputElement.val() || '').trim();
-    const hasAffiliations = tagify.value.length > 0 || rawValue.length > 0;
+    const hasRawAffiliationText = rawValue.length > 0 && rawValue !== '[]';
+    const hasAffiliations = tagify.value.length > 0 || hasRawAffiliationText;
 
     nameInput.each((_, element) => {
       applyAuthorInstitutionNameRequirement(element, hasAffiliations);
@@ -350,7 +492,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   // Event listener for when a tag is added
   tagify.on("add", function (e) {
-    updateHiddenField();
+    syncStructuredAffiliations();
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();
 
@@ -366,7 +508,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   // Event listener for when a tag is removed
   tagify.on("remove", function () {
-    updateHiddenField();
+    syncStructuredAffiliations();
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();
     if (typeof window.validateAllMandatoryFields === 'function') {
@@ -374,9 +516,23 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     }
   });
 
+  tagify.on("edit:updated", function () {
+    syncStructuredAffiliations();
+    scheduleRequirementSync();
+    syncAuthorInstitutionRequirement();
+  });
+
+  tagify.on("change", function () {
+    syncStructuredAffiliations();
+    scheduleRequirementSync();
+  });
+
   // Store the Tagify instance in the DOM element for later access
   // Using _tagify prefix for consistency with other modules (roles.js, freekeywordTags.js, etc.)
   inputElement[0]._tagify = tagify;
+  // Expose updateHiddenField so clear.js can call it synchronously after removeAllTags()
+  tagify._updateHiddenField = syncStructuredAffiliations;
+  syncStructuredAffiliations();
   updateTagifyAccessibilityState(false);
   scheduleRequirementSync();
   syncAuthorInstitutionRequirement();

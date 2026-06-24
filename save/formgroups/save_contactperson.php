@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/save_authors.php';
 require_once __DIR__ . '/save_affiliations.php';
 require_once __DIR__ . '/../validation.php';
 
@@ -25,6 +26,20 @@ require_once __DIR__ . '/../validation.php';
  */
 function saveContactPerson($connection, $postData, $resource_id)
 {
+    $action = $postData['action'] ?? 'save_and_download';
+    $payload = decodeAuthorsPayload($postData);
+
+    if ($payload !== null) {
+        foreach (normalizeAuthorsPayload($postData) as $author) {
+            if (($author['type'] ?? '') !== 'person' || ($author['isContact'] ?? false) !== true) {
+                continue;
+            }
+
+            saveContactPersonEntry($connection, $resource_id, $author, $action);
+        }
+        return;
+    }
+
     $familynames = $postData['familynames'] ?? [];
     $givennames = $postData['givennames'] ?? [];
     $orcids = $postData['orcids'] ?? [];
@@ -32,73 +47,75 @@ function saveContactPerson($connection, $postData, $resource_id)
     $websites = $postData['cpOnlineResource'] ?? [];
     $affiliations = $postData['personAffiliation'] ?? [];
     $rorIds = $postData['authorPersonRorIds'] ?? [];
-    $action = $postData['action'] ?? 'save_and_download';
 
     $maxLen = count($familynames);
 
     for ($i = 0; $i < $maxLen; $i++) {
-        // Extract the corresponding values for this row
-        $familyname = trim($familynames[$i] ?? '');
-        $givenname = trim($givennames[$i] ?? '');
-        $orcid = trim($orcids[$i] ?? '');
-        // Remove ORCID URL prefix if present (defense against frontend bypass)
-        $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+        saveContactPersonEntry($connection, $resource_id, [
+            'familyname' => $familynames[$i] ?? '',
+            'givenname' => $givennames[$i] ?? '',
+            'orcid' => $orcids[$i] ?? '',
+            'email' => $emails[$i] ?? '',
+            'website' => $websites[$i] ?? '',
+            'affiliation_data' => $affiliations[$i] ?? '',
+            'rorId_data' => $rorIds[$i] ?? ''
+        ], $action);
+    }
+}
 
-        // Validate ORCID checksum on submit
-        if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
-            throw new Exception("Invalid ORCID checksum: {$orcid}");
-        }
+function saveContactPersonEntry($connection, int $resource_id, array $author, string $action): void
+{
+    $familyname = trim((string) ($author['familyname'] ?? ''));
+    $givenname = trim((string) ($author['givenname'] ?? ''));
+    $orcid = trim((string) ($author['orcid'] ?? ''));
+    $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
 
-        $email = trim($emails[$i] ?? '');
-        $website = isset($websites[$i]) ? trim(preg_replace('#^https?://#', '', trim($websites[$i]))) : '';
-        // Normalize empty optional fields to NULL for consistent DB storage and duplicate detection
-        $orcid = $orcid !== '' ? $orcid : null;
-        $website = $website !== '' ? $website : null;
-        $affiliation_data = $affiliations[$i] ?? '';
-        $rorId_data = $rorIds[$i] ?? '';
+    if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
+        throw new Exception("Invalid ORCID checksum: {$orcid}");
+    }
 
-        // Skip completely empty entries (if no email and no other details)
-        if (empty($email) && empty($familyname) && empty($givenname) && empty($orcid) && empty($website)) {
-            continue;
-        }
+    $email = trim((string) ($author['email'] ?? ''));
+    $website = isset($author['website']) ? trim(preg_replace('#^https?://#', '', trim((string) $author['website']))) : '';
+    $orcid = $orcid !== '' ? $orcid : null;
+    $website = $website !== '' ? $website : null;
+    $affiliation_data = $author['affiliation_data'] ?? '';
+    $rorId_data = $author['rorId_data'] ?? '';
 
-        // If there's an email (whether or not other fields are filled), save as a contact person
-        if (!empty($email)&& !empty($familyname) && !empty($givenname)) {
-            // Check if a contact person with the exact data already exists
-            // Using <=> (NULL-safe equal) for orcid and website which can be NULL
-            $stmt = $connection->prepare("
-                SELECT contact_person_id FROM Contact_Person 
-                WHERE familyName = ? AND givenname = ? AND orcid <=> ? AND email = ? AND website <=> ?
-            ");
-            $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
-            $stmt->execute();
-            $result = $stmt->get_result();
+    if (empty($email) && empty($familyname) && empty($givenname) && empty($orcid) && empty($website)) {
+        return;
+    }
 
-            if ($result->num_rows > 0) {
-                // Exact match found, skip saving
-                $row = $result->fetch_assoc();
-                $contact_person_id = $row['contact_person_id'];
-                $stmt->close();
-            } else {
-                // No match found, insert new contact person
-                $stmt->close();
-                $stmt = $connection->prepare("INSERT INTO Contact_Person (familyName, givenname, orcid, email, website) VALUES (?, ?, ?, ?, ?)");
-                $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
-                $stmt->execute();
-                $contact_person_id = $stmt->insert_id;
-                $stmt->close();
-            }
+    if (empty($email) || empty($familyname)) {
+        return;
+    }
 
-            // Insert into Resource_has_Contact_Person
-            $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Contact_Person (Resource_resource_id, Contact_Person_contact_person_id) VALUES (?, ?)");
-            $stmt->bind_param("ii", $resource_id, $contact_person_id);
-            $stmt->execute();
-            $stmt->close();
+    $stmt = $connection->prepare("
+        SELECT contact_person_id FROM Contact_Person 
+        WHERE familyName = ? AND givenname = ? AND orcid <=> ? AND email = ? AND website <=> ?
+    ");
+    $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
+    $stmt->execute();
+    $result = $stmt->get_result();
 
-            // Save affiliations if any
-            if (!empty($affiliation_data) || !empty($rorId_data)) {
-                saveAffiliations($connection, $contact_person_id, $affiliation_data, $rorId_data, 'Contact_Person_has_Affiliation', 'Contact_Person_contact_person_id');
-            }
-        }
+    if ($result->num_rows > 0) {
+        $row = $result->fetch_assoc();
+        $contact_person_id = $row['contact_person_id'];
+        $stmt->close();
+    } else {
+        $stmt->close();
+        $stmt = $connection->prepare("INSERT INTO Contact_Person (familyName, givenname, orcid, email, website) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("sssss", $familyname, $givenname, $orcid, $email, $website);
+        $stmt->execute();
+        $contact_person_id = $stmt->insert_id;
+        $stmt->close();
+    }
+
+    $stmt = $connection->prepare("INSERT IGNORE INTO Resource_has_Contact_Person (Resource_resource_id, Contact_Person_contact_person_id) VALUES (?, ?)");
+    $stmt->bind_param("ii", $resource_id, $contact_person_id);
+    $stmt->execute();
+    $stmt->close();
+
+    if (!empty($affiliation_data) || !empty($rorId_data)) {
+        saveAffiliations($connection, $contact_person_id, $affiliation_data, $rorId_data, 'Contact_Person_has_Affiliation', 'Contact_Person_contact_person_id');
     }
 }

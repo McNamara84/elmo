@@ -260,6 +260,56 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(entry.roles).toContain('Role2');
         });
 
+
+    describe('processCreators', () => {
+        test('preserves imported ROR ids on Tagify tags', () => {
+            document.body.innerHTML = `
+                <div data-creator-row>
+                    <input name="familynames[]">
+                    <input name="givennames[]">
+                    <input name="orcids[]">
+                    <input name="personAffiliation[]">
+                    <input name="authorPersonRorIds[]">
+                    <input name="contacts[]" type="checkbox">
+                    <div class="contact-person-input"></div>
+                    <input name="cpEmail[]">
+                    <input name="cpOnlineResource[]">
+                </div>
+                <button id="button-author-add" type="button"></button>
+            `;
+
+            const tagifyInput = document.querySelector('input[name="personAffiliation[]"]');
+            tagifyInput._tagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            const xmlDoc = new DOMParser().parseFromString(`
+                <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                    <ns:creators>
+                        <ns:creator>
+                            <ns:creatorName nameType="Personal">Carberry, Josiah</ns:creatorName>
+                            <ns:givenName>Josiah</ns:givenName>
+                            <ns:familyName>Carberry</ns:familyName>
+                            <ns:affiliation affiliationIdentifier="https://ror.org/01bj3aw27">Technical University of Berlin</ns:affiliation>
+                            <ns:affiliation>Free Text Institute</ns:affiliation>
+                        </ns:creator>
+                    </ns:creators>
+                </ns:resource>
+            `, 'text/xml');
+
+            const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
+            mappingModule.processCreators(xmlDoc, resolver);
+
+            expect(tagifyInput._tagify.removeAllTags).toHaveBeenCalled();
+            expect(tagifyInput._tagify.addTags).toHaveBeenCalledWith([
+                { value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' },
+                { value: 'Free Text Institute' }
+            ]);
+            expect(document.querySelector('input[name="authorPersonRorIds[]"]').value).toBe('https://ror.org/01bj3aw27,');
+        });
+    });
         test('does not duplicate existing roles', () => {
             const map = new Map();
             map.set('key1', { 

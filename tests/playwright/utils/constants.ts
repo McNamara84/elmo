@@ -20,7 +20,7 @@ export const SELECTORS = {
   },
   formGroups: {
     authors: '#group-author',
-    authorInstitution: '#group-authorinstitution',
+    authorInstitution: '#group-author',
     contributorPersons: '#group-contributorperson',
     contributorInstitutions: '#group-contributororganisation',
     descriptions: '#group-description',

@@ -74,22 +74,9 @@ function validateSaveSecurity($postData, $connection)
         ];
     }
 
-    // Security Check 4: Minimum interaction time (2 seconds for save, server-trusted)
-    $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            $connection,
-            'save',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
-        );
-        return [
-            'status' => false,
-            'message' => 'Please take time to review your metadata before saving.',
-            'code' => 400
-        ];
-    }
-
+    // Local downloads are still protected by CSRF, honeypot, and rate limiting.
+    // Do not enforce a minimum interaction time here: users often save
+    // immediately after reviewing/editing metadata in the main form.
 
     // Record this save for rate limiting
     recordRateLimit($connection, $clientIp, 'save');
@@ -164,16 +151,18 @@ function generateAndOutputDownload($resource_id)
 
     try {
         $controller = new DatasetController();
+        require_once __DIR__ . '/../includes/author_payload_xml.php';
+        $sourceXml = buildResourceXmlWithAuthorPayload($connection, $controller, (int) $resource_id, $_POST);
 
         if ($downloadFormat === 'jsonld') {
-            $payload = $controller->transformResourceToJsonLd((int) $resource_id);
+            $payload = $controller->transformResourceToJsonLd((int) $resource_id, $sourceXml);
             $filename = $baseFilename . '.jsonld';
             $contentType = 'application/ld+json';
         } else {
             $ICGEMcontroller = new ICGEMController();
             $payload = $showGGMsProperties
-                ? $ICGEMcontroller->createICGEMxml($resource_id)
-                : $controller->envelopeXmlAsString($connection, $resource_id);
+                ? $ICGEMcontroller->createICGEMxml($resource_id, $sourceXml)
+                : $controller->envelopeXmlAsString($connection, $resource_id, $sourceXml);
             $filename = $baseFilename . '.xml';
             $contentType = 'application/xml';
         }

@@ -37,11 +37,19 @@ tests/
 debug/
 
 # Ignore language-specific patterns
+node_modules/
+vendor/
 __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
 .coverage
+coverage/
+coverage-*/
+coverage-report*/
+playwright-report*/
+test-results/
+storage/
 
 # Ignore project-specific patterns
 config.local.*

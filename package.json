@@ -7,38 +7,27 @@
     "jquery-ui": "^1.14.2",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
-    "swagger-ui-dist": "^5.32.5"
+    "swagger-ui-dist": "^5.32.6"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.11.2",
-    "@babel/preset-env": "^7.29.2",
-    "@playwright/test": "^1.59.1",
-    "@types/node": "^25.6.0",
-    "babel-jest": "^30.3.0",
-    "fast-xml-parser": "^5.7.2",
-    "jest": "^30.3.0",
-    "jest-environment-jsdom": "^30.3.0",
-    "nyc": "^18.0.0",
-    "playwright": "^1.59.1"
+    "@axe-core/playwright": "^4.11.3",
+    "@babel/preset-env": "^7.29.7",
+    "@playwright/test": "^1.60.0",
+    "@types/node": "^25.9.1",
+    "babel-jest": "^30.4.1",
+    "c8": "^11.0.0",
+    "fast-xml-parser": "^5.8.0",
+    "jest": "^30.4.2",
+    "jest-environment-jsdom": "^30.4.1",
+    "playwright": "^1.60.0"
   },
   "scripts": {
     "test": "jest",
     "test:e2e": "npx playwright test",
-    "test:e2e:coverage": "nyc --reporter=html --reporter=text npx playwright test"
+    "test:e2e:coverage": "c8 --reporter=html --reporter=text --reporter=lcov --reports-dir=coverage-e2e --include=js/**/*.js --exclude=node_modules/** --exclude=tests/** node ./node_modules/playwright/cli.js test --workers=1"
   },
-  "nyc": {
-    "include": [
-      "js/**/*.js"
-    ],
-    "exclude": [
-      "node_modules/**",
-      "tests/**"
-    ],
-    "reporter": [
-      "text",
-      "html",
-      "lcov"
-    ],
-    "report-dir": "coverage-e2e"
+  "overrides": {
+    "ws": "^8.21.0",
+    "yargs": "^18.0.0"
   }
 }

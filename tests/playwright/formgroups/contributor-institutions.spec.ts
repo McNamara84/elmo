@@ -229,7 +229,7 @@ test.describe('Contributor (Institutions) form group', () => {
       ]);
     });
 
-    await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('https://ror.org/019wvm592,https://ror.org/05p8bnz29');
+    await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('019wvm592,05p8bnz29');
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');

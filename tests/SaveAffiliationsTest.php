@@ -78,6 +78,66 @@ final class SaveAffiliationsTest extends DatabaseTestCase
         $this->assertEquals('98765432', $affiliation['rorId']);
     }
 
+    public function testSaveAffiliationsKeepsRorIdWhenLabelChanges(): void
+    {
+        $this->connection->query(
+            "INSERT INTO Affiliation (affiliation_id, name, rorId) VALUES (1001, 'GFZ Helmholtz Centre for Geosciences', '04z8jg394')"
+        );
+
+        $affiliationData = json_encode([
+            ['value' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany']
+        ]);
+
+        saveAffiliations(
+            $this->connection,
+            1000,
+            $affiliationData,
+            'https://ror.org/04z8jg394',
+            'Author_has_Affiliation',
+            'Author_author_id'
+        );
+
+        $result = $this->connection->query("SELECT name, rorId FROM Affiliation WHERE rorId = '04z8jg394' ORDER BY affiliation_id ASC");
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertSame(
+            [
+                [
+                    'name' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+                    'rorId' => '04z8jg394'
+                ]
+            ],
+            $rows,
+            'An edited affiliation label should update the row identified by the stable ROR ID instead of creating a duplicate.'
+        );
+    }
+
+    public function testSaveAffiliationsReadsStructuredRorIdFromAffiliationJson(): void
+    {
+        $affiliationData = json_encode([
+            [
+                'value' => 'Test Structured University',
+                'label' => 'Test Structured University',
+                'rorId' => 'https://ror.org/05abcde12'
+            ]
+        ]);
+
+        saveAffiliations(
+            $this->connection,
+            1000,
+            $affiliationData,
+            '',
+            'Author_has_Affiliation',
+            'Author_author_id'
+        );
+
+        $result = $this->connection->query("SELECT name, rorId FROM Affiliation WHERE name = 'Test Structured University'");
+        $row = $result->fetch_assoc();
+
+        $this->assertSame('Test Structured University', $row['name']);
+        $this->assertSame('05abcde12', $row['rorId']);
+    }
+
     public function testSaveAffiliationsHandlesMultipleAffiliations(): void
     {
         $affiliationData = json_encode([

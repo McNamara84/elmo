@@ -12,6 +12,41 @@ function normalizeRorId(rorId) {
 }
 
 /**
+ * Formats ORCID input for lookup, including values pasted as ORCID profile URLs.
+ *
+ * @param {string} value - Raw ORCID input value.
+ * @returns {string} Formatted ORCID identifier.
+ */
+function normalizeOrcidForLookup(value) {
+  if (typeof formatOrcidInput === 'function') {
+    return formatOrcidInput(value);
+  }
+
+  const rawValue = String(value || '').trim();
+  const urlMatch = rawValue.match(/(?:https?:\/\/)?orcid\.org\/(\d{4}-?\d{4}-?\d{4}-?(?:\d{4}|\d{3}X))(?:[/?#].*)?$/i);
+  const candidate = urlMatch ? urlMatch[1] : rawValue;
+  const upperValue = candidate.toUpperCase().replace(/[^0-9X]/g, '');
+  const hasTrailingX = upperValue.length > 0 && upperValue.slice(-1) === 'X';
+  let digits = candidate.replace(/[^\d]/g, '');
+
+  if (hasTrailingX && digits.length >= 15) {
+    digits = digits.slice(0, 15) + 'X';
+  }
+
+  digits = digits.slice(0, 16);
+
+  let formatted = '';
+  for (let i = 0; i < digits.length; i++) {
+    if (i > 0 && i % 4 === 0) {
+      formatted += '-';
+    }
+    formatted += digits[i];
+  }
+
+  return formatted;
+}
+
+/**
  * Reads an ORCID date part from either the API object format or a direct value.
  *
  * @param {Object|number|string|null|undefined} part - ORCID date part.
@@ -129,8 +164,8 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
 function fillRowFromOrcidRecord(row, data, fieldMapping) {
   const familyName = data.person?.name?.['family-name']?.value || '';
   const givenName = data.person?.name?.['given-names']?.value || '';
-  row.find(fieldMapping.familyName).val(familyName);
-  row.find(fieldMapping.givenName).val(givenName);
+  row.find(fieldMapping.familyName).val(familyName).trigger('input').trigger('change');
+  row.find(fieldMapping.givenName).val(givenName).trigger('input').trigger('change');
 
   // Collect affiliations and ROR IDs
   const affiliationSet = new Set();
@@ -151,21 +186,35 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
     processAffiliation(education);
   });
 
-  // Convert Set to array of objects for Tagify
-  const affiliationObjects = Array.from(affiliationSet).map(name => ({ value: name }));
+  const rorIdsArray = Array.from(rorIds);
+  const affiliationObjects = Array.from(affiliationSet).map((name, index) => {
+    const rorId = rorIdsArray[index] || '';
+    return {
+      value: name,
+      label: name,
+      rorId,
+      id: rorId
+    };
+  });
+  const tagifyObjects = affiliationObjects.map(affiliation => ({ value: affiliation.value }));
 
   // Set Tagify tags
   const affiliationInput = row.find(`input[id^="${fieldMapping.affiliation}"]`)[0];
   if (affiliationInput?._tagify) {
     affiliationInput._tagify.removeAllTags();
     if (affiliationObjects.length > 0) {
-      affiliationInput._tagify.addTags(affiliationObjects);
+      affiliationInput._tagify.addTags(tagifyObjects);
     }
   }
 
-  // Fill hidden ROR ID field
-  const rorIdsArray = Array.from(rorIds);
+  row.find(`input[id^="${fieldMapping.affiliation}"]`)
+    .val(JSON.stringify(affiliationObjects))
+    .trigger('input')
+    .trigger('change');
+
   row.find(`input[id^="${fieldMapping.rorId}"]`).val(rorIdsArray.join(','));
+
+  row.get(0)?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
 }
 
 /**
@@ -216,7 +265,8 @@ var CONTRIBUTOR_FIELD_MAPPING = {
 $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
   const orcidInput = $(this);
   const row = orcidInput.closest('[data-creator-row]');
-  const orcid = orcidInput.val();
+  const orcid = normalizeOrcidForLookup(orcidInput.val());
+  orcidInput.val(orcid);
 
   if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/) && isValidOrcidChecksum(orcid)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
@@ -259,7 +309,8 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
 $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () {
   const orcidInput = $(this);
   const row = orcidInput.closest('[contributor-person-row]');
-  const orcid = orcidInput.val();
+  const orcid = normalizeOrcidForLookup(orcidInput.val());
+  orcidInput.val(orcid);
 
   if (orcid.match(/^\d{4}-\d{4}-\d{4}-(\d{4}|\d{3}X)$/) && isValidOrcidChecksum(orcid)) {
     fetch(`https://pub.orcid.org/v3.0/${orcid}/record`, {
@@ -281,6 +332,7 @@ $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     normalizeRorId,
+    normalizeOrcidForLookup,
     parseOrcidDatePart,
     getAffiliationEndDate,
     isCurrentAffiliation,
