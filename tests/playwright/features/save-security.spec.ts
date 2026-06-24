@@ -32,6 +32,25 @@ function extractMultipartField(body: string, fieldName: string): string | null {
   return match ? match[1] : null;
 }
 
+/** Freeze Date.now so save_time_spent is deterministic regardless of page-load age. */
+async function freezeDateNow(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const originalNow = Date.now.bind(Date);
+    (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
+    Date.now = () => 0;
+  });
+}
+
+async function restoreDateNow(page: Page): Promise<void> {
+  await page.evaluate(() => {
+    const w = window as typeof window & { __originalDateNow?: () => number };
+    if (w.__originalDateNow) {
+      Date.now = w.__originalDateNow;
+      delete w.__originalDateNow;
+    }
+  });
+}
+
 test.describe('Save Operation Security Features', () => {
   test.describe('Honeypot field validation', () => {
     test('save form honeypot exists and starts empty', async ({ page }) => {
@@ -183,18 +202,25 @@ test.describe('Save Operation Security Features', () => {
       });
 
       await navigateToHome(page);
-
-      // Open modal and submit immediately (minimal time spent)
       await openSaveModal(page);
 
-      await Promise.all([
-        page.waitForResponse((response) =>
-          response.url().includes('save_data.php') && response.status() === 400
-        ),
-        page.locator('#button-saveas-save').click(),
-      ]);
+      // save_time_spent is measured from page load, not modal open — freeze the clock
+      // so the client sends a near-zero value even after navigation took several seconds.
+      await freezeDateNow(page);
 
-      await expect(page.locator('.alert-danger')).toBeVisible();
+      try {
+        await Promise.all([
+          page.waitForResponse((response) =>
+            response.url().includes('save_data.php') && response.status() === 400
+          ),
+          page.locator('#button-saveas-save').click(),
+        ]);
+
+        await expect(page.locator('.alert-danger')).toBeVisible();
+      } finally {
+        await restoreDateNow(page);
+      }
+
       await page.unroute(SAVE_ENDPOINT);
     });
   });
@@ -307,17 +333,22 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
       await openSaveModal(page);
 
-      // Immediately click save WITHOUT waiting
-      await Promise.all([
-        page.waitForResponse((response) =>
-          response.url().includes('save_data.php') && response.status() === 400
-        ),
-        page.locator('#button-saveas-save').click(),
-      ]);
+      await freezeDateNow(page);
 
-      // Verify instant save was rejected
-      expect(capturedTimeSpent).toBeLessThan(2);
-      await expect(page.locator('.alert-danger')).toBeVisible();
+      try {
+        await Promise.all([
+          page.waitForResponse((response) =>
+            response.url().includes('save_data.php') && response.status() === 400
+          ),
+          page.locator('#button-saveas-save').click(),
+        ]);
+
+        expect(capturedTimeSpent).toBeLessThan(2);
+        await expect(page.locator('.alert-danger')).toBeVisible();
+      } finally {
+        await restoreDateNow(page);
+      }
+
       await page.unroute(SAVE_ENDPOINT);
     });
   });
