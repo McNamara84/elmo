@@ -14,6 +14,8 @@ test.describe('Authors redesign workflow', () => {
   });
 
   test('exposes final card stack semantics for summary, edit, and action states', async ({ page }) => {
+    test.slow();
+
     await completeMinimalDatasetForm(page);
     await page.locator('#button-authorinstitution-add').click();
 

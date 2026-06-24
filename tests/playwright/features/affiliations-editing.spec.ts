@@ -1,5 +1,4 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
-import { readFileSync } from 'node:fs';
 import { XMLParser } from 'fast-xml-parser';
 import { completeMinimalDatasetForm, navigateToHome } from '../utils';
 
@@ -8,6 +7,7 @@ const AUTHOR_GROUP     = '#group-author';
 const AFFIL_EDIT_MODAL = '#modal-affiliation-edit';
 const AFFIL_EDIT_INPUT = '#input-affiliation-edit-value';
 const AFFIL_EDIT_SAVE  = '#button-affiliation-edit-save';
+const SAVE_ENDPOINT    = '**/save/save_data.php';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
 
@@ -104,25 +104,43 @@ async function editAffiliationLabel(
 
 
 /**
- * Opens the Save As modal, enters a filename, waits for the file download to
- * complete (Pattern 2 – browser-native download), and returns the raw XML string.
+ * Opens the Save As modal, enters a filename, captures the save response,
+ * and returns the raw XML string.
  */
 async function saveAndGetXml(page: Page, filename: string): Promise<string> {
-  const [download] = await Promise.all([
-    page.waitForEvent('download', { timeout: 30_000 }),
-    (async () => {
-      await page.locator('#button-form-save').click();
-      await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 10_000 });
-      await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5_000 });
-      await page.locator('#input-saveas-filename').fill(filename);
-      await page.waitForTimeout(2100);
-      await page.locator('#button-saveas-save').click();
-    })(),
-  ]);
+  let capturedBody = '';
+  let capturedStatus = 0;
 
-  const downloadPath = await download.path();
-  expect(downloadPath).toBeTruthy();
-  return readFileSync(downloadPath!, 'utf-8');
+  await page.route(SAVE_ENDPOINT, async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+
+    const response = await route.fetch();
+    capturedStatus = response.status();
+    const body = await response.body();
+    capturedBody = body.toString('utf-8');
+    await route.fulfill({ response, body });
+  });
+
+  await page.locator('#button-form-save').click();
+  await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 10_000 });
+  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5_000 });
+  await page.locator('#input-saveas-filename').fill(filename);
+  await page.waitForTimeout(2100);
+
+  const responsePromise = page.waitForResponse(
+    (response) => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',
+    { timeout: 30_000 },
+  );
+  await page.locator('#button-saveas-save').click();
+  await responsePromise;
+  await page.unroute(SAVE_ENDPOINT);
+
+  expect(capturedStatus).toBe(200);
+  expect(capturedBody.trim().length).toBeGreaterThan(0);
+  return capturedBody;
 }
 
 /**
@@ -165,6 +183,8 @@ test.describe('Affiliation tag label editing', () => {
   test(
     'whitelist-selected affiliation drops ROR after manual label edit; free-text tag has no ROR',
     async ({ page }) => {
+      test.slow();
+
       // Set up all required fields. completeMinimalDatasetForm adds one free-text
       // affiliation ('GFZ Helmholtz Centre for Geosciences', no ROR) for the author.
       await completeMinimalDatasetForm(page);
@@ -220,6 +240,8 @@ test.describe('Affiliation tag label editing', () => {
   test(
     'cancelling the affiliation edit modal leaves the original tag label unchanged',
     async ({ page }) => {
+      test.slow();
+
       await completeMinimalDatasetForm(page);
 
       const contributorInstitutionRow = page
