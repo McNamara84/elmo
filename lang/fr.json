@@ -202,7 +202,16 @@
         },
         "free": {
             "title": "Mots-clés libres",
-            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules."
+            "placeholder": "Veuillez saisir des mots-clés et les séparer par une virgule.",
+            "addCsv": "Téléverser un fichier CSV",
+            "modalTitle": "Téléverser un fichier CSV",
+            "modalDescription": "Téléversez un fichier CSV ou glissez-déposez-le ici.",
+            "dropzone": "Glissez-déposez un fichier CSV ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "downloadHint": "Vous ne savez pas à quoi doit ressembler le format CSV ? Téléchargez le fichier d’exemple et utilisez-le comme modèle. Veuillez utiliser des fichiers CSV de moins de 1 Mo.",
+            "downloadSample": "Télécharger le fichier CSV d’exemple",
+            "cancel": "Annuler",
+            "import": "Importer les mots-clés"
         },
         "searchPlaceholder": "Rechercher des mots-clés..."
     },

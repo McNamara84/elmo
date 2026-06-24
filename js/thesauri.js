@@ -838,6 +838,10 @@ $(document).ready(function () {
                     keywordConfigurations.push(entry);
                 });
 
+                if (typeof window.applyTranslations === 'function') {
+                    window.applyTranslations();
+                }
+
                 // Initialize Tagify for each configuration
                 keywordConfigurations.forEach(function (kc) {
                     if ($(kc.inputId).length) {
