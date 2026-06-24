@@ -100,6 +100,10 @@ describe('formatOrcidInput', () => {
     expect(formatOrcidInput('https://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
   });
 
+  test('strips ORCID URL prefix for the reported #698 ORCID', () => {
+    expect(formatOrcidInput('https://orcid.org/0009-0007-2910-0469')).toBe('0009-0007-2910-0469');
+  });
+
   test('strips ORCID URL prefix (http)', () => {
     expect(formatOrcidInput('http://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
   });

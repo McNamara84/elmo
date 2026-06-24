@@ -7,7 +7,7 @@ require_once __DIR__ . '/../validation.php';
  * who have a non-empty family (last) name. Given (first) names are optional
  * to support mononymous person authors.
  *
- * This is used to exclude incomplete author entries before saving to the database.
+ * This is used to exclude empty author entries before saving to the database.
  *
  * @param array $postData Input data containing arrays of author fields:
  *                        - familynames (array of strings)
@@ -44,13 +44,14 @@ function filterValidPersonAuthors(array $postData): array
     foreach ($familynames as $i => $family) {
         // Get corresponding given name or empty string if not set
         $given = $givennames[$i] ?? '';
+        $orcid = normalizeAuthorOrcid($orcids[$i] ?? '');
 
-        // Check if family name is non-empty after trimming whitespace
-        if (trim($family) !== '') {
+        // Keep person authors that provide at least a name part or an ORCID.
+        if (trim($family) !== '' || trim($given) !== '' || $orcid !== '') {
             // Append trimmed valid fields to results arrays, safely handling optional data
             $validAuthors['familynames'][] = trim($family);
             $validAuthors['givennames'][] = trim($given);
-            $validAuthors['orcids'][] = $orcids[$i] ?? '';
+            $validAuthors['orcids'][] = $orcid;
             $validAuthors['personAffiliation'][] = $affiliations[$i] ?? '';
             $validAuthors['authorPersonRorIds'][] = $rorids[$i] ?? '';
         }
@@ -144,6 +145,42 @@ function normalizeAuthorBoolean($value): bool
     return (bool) $value;
 }
 
+function formatAuthorOrcidIdentifier(string $value): string
+{
+    $upperValue = strtoupper($value);
+    $hasTrailingX = substr($upperValue, -1) === 'X';
+    $digits = preg_replace('/\D/', '', $value) ?? '';
+
+    if ($hasTrailingX && strlen($digits) >= 15) {
+        $digits = substr($digits, 0, 15) . 'X';
+    }
+
+    $digits = substr($digits, 0, 16);
+
+    if ($digits === '') {
+        return '';
+    }
+
+    return trim(chunk_split($digits, 4, '-'), '-');
+}
+
+function normalizeAuthorOrcid($orcid): string
+{
+    $orcid = trim((string) $orcid);
+
+    if ($orcid === '') {
+        return '';
+    }
+
+    if (preg_match('/(?:https?:\/\/)?orcid\.org\/(\d{4}-?\d{4}-?\d{4}-?(?:\d{4}|\d{3}X))(?:[\/?#].*)?$/i', $orcid, $matches) === 1) {
+        return formatAuthorOrcidIdentifier($matches[1]);
+    }
+
+    $orcid = preg_replace('/^https?:\/\/orcid\.org\//i', '', $orcid) ?? $orcid;
+
+    return rtrim(trim($orcid), '/');
+}
+
 function normalizeAuthorAffiliations($affiliations): array
 {
     if (!is_array($affiliations)) {
@@ -198,8 +235,9 @@ function normalizeAuthorsFromPayload(array $payload): array
         if ($type === 'person') {
             $familyname = trim((string) ($author['familyname'] ?? $author['familyName'] ?? ''));
             $givenname = trim((string) ($author['givenname'] ?? $author['givenName'] ?? ''));
+            $orcid = normalizeAuthorOrcid($author['orcid'] ?? '');
 
-            if ($familyname === '') {
+            if ($familyname === '' && $givenname === '' && $orcid === '') {
                 continue;
             }
 
@@ -207,7 +245,7 @@ function normalizeAuthorsFromPayload(array $payload): array
                 'type' => 'person',
                 'familyname' => $familyname,
                 'givenname' => $givenname,
-                'orcid' => trim((string) ($author['orcid'] ?? '')),
+                'orcid' => $orcid,
                 'institutionname' => null,
                 'isContact' => normalizeAuthorBoolean($author['isContact'] ?? false),
                 'email' => trim((string) ($author['email'] ?? '')),
@@ -265,7 +303,7 @@ function normalizeLegacyAuthors(array $postData): array
             'type' => 'person',
             'familyname' => trim($familyname),
             'givenname' => trim($filteredPersons['givennames'][$i] ?? ''),
-            'orcid' => trim($filteredPersons['orcids'][$i] ?? ''),
+            'orcid' => normalizeAuthorOrcid($filteredPersons['orcids'][$i] ?? ''),
             'institutionname' => null,
             'isContact' => false,
             'email' => '',
@@ -355,8 +393,7 @@ function saveAuthors($connection, $postData, $resource_id)
 
     try {
         foreach ($authors as $sortOrder => $author) {
-            $orcid = trim((string) ($author['orcid'] ?? ''));
-            $orcid = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $orcid);
+            $orcid = normalizeAuthorOrcid($author['orcid'] ?? '');
 
             if ($action === 'submit' && $orcid !== '' && !isValidOrcidChecksum($orcid)) {
                 throw new Exception("Invalid ORCID checksum: {$orcid}");
@@ -390,7 +427,12 @@ function processAuthor($connection, $authorData): int
     $author_person_id = null;
     $author_institution_id = null;
 
-    if (!empty($authorData['familyname'])) {
+    $hasPersonData = ($authorData['type'] ?? '') === 'person'
+        && (trim((string) ($authorData['familyname'] ?? '')) !== ''
+            || trim((string) ($authorData['givenname'] ?? '')) !== ''
+            || trim((string) ($authorData['orcid'] ?? '')) !== '');
+
+    if ($hasPersonData) {
         // 1. Save or find PERSON
         // Author_person.orcid is NOT NULL, so empty strings are stored as-is and = suffices
         $stmt = $connection->prepare("SELECT author_person_id FROM Author_person WHERE familyname = ? AND givenname = ? AND orcid = ?");

@@ -507,6 +507,56 @@ describe('authorStack.js', () => {
     }
   });
 
+  test('ignores stale affiliation search results after clearing input and searches again', async () => {
+    jest.useFakeTimers();
+    const deferredSearches = {};
+    function deferred() {
+      let resolve;
+      const promise = new Promise((resolvePromise) => {
+        resolve = resolvePromise;
+      });
+      return { promise, resolve };
+    }
+
+    window.searchAffiliationsFromServer = jest.fn((query) => {
+      deferredSearches[query] = deferred();
+      return deferredSearches[query].promise;
+    });
+
+    try {
+      window.authorStack.addPerson();
+      const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
+      const input = editor.find('[data-author-affiliation-input]');
+
+      input.val('gfz').trigger('input');
+      jest.advanceTimersByTime(300);
+      await Promise.resolve();
+      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
+
+      input.val('').trigger('input');
+      deferredSearches.gfz.resolve([{ label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }]);
+      await deferredSearches.gfz.promise;
+      await Promise.resolve();
+
+      expect(editor.find('[data-author-affiliation-result]').length).toBe(0);
+      expect(editor.find('[data-author-affiliation-results]').hasClass('d-none')).toBe(true);
+
+      input.val('pot').trigger('input');
+      jest.advanceTimersByTime(300);
+      await Promise.resolve();
+      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 20);
+
+      deferredSearches.pot.resolve([{ label: 'University of Potsdam', rorId: '03bnmw459' }]);
+      await deferredSearches.pot.promise;
+      await Promise.resolve();
+
+      expect(editor.find('[data-author-affiliation-result]').length).toBe(1);
+      expect(editor.find('[data-author-affiliation-result]').text()).toContain('University of Potsdam');
+    } finally {
+      delete window.searchAffiliationsFromServer;
+      jest.useRealTimers();
+    }
+  });
   test('searches affiliations again after clearing a selected affiliation', async () => {
     jest.useFakeTimers();
     window.searchAffiliationsFromServer = jest.fn((query) => Promise.resolve([

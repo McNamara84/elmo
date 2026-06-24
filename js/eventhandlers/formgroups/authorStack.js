@@ -805,6 +805,7 @@ $(document).ready(function () {
 
     affiliations.push(normalizedAffiliation);
     setRowAffiliations(row, affiliations);
+    invalidateAffiliationSearch(row);
     input.val('').trigger('focus');
     editor.find('[data-author-affiliation-results]').empty().addClass('d-none');
     updatePayload();
@@ -851,6 +852,10 @@ $(document).ready(function () {
     resultContainer.removeClass('d-none');
   }
 
+  function invalidateAffiliationSearch(row) {
+    row.data('author-affiliation-search-request-id', ++affiliationSearchRequestId);
+  }
+
   async function searchAffiliations(row) {
     const editor = row.find('[data-author-affiliation-editor]').first();
     const input = editor.find('[data-author-affiliation-input]').first();
@@ -884,11 +889,13 @@ $(document).ready(function () {
 
     const query = String(inputElement.value || '').trim();
     if (query.length < affiliationSearchMinLength) {
+      invalidateAffiliationSearch(row);
       renderAffiliationSearchResults(row, []);
       return;
     }
 
     const timer = setTimeout(function () {
+      affiliationSearchTimers.delete(inputElement);
       searchAffiliations(row).catch(function (error) {
         console.error('Affiliation search error:', error);
       });

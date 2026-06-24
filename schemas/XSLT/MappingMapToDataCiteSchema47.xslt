@@ -14,6 +14,7 @@ http://www.altova.com/mapforce
 		<xsl:param name="person"/>
 		<xsl:variable name="family" select="normalize-space($person/*[local-name()='familyname' and namespace-uri()=''])"/>
 		<xsl:variable name="given" select="normalize-space($person/*[local-name()='givenname' and namespace-uri()=''])"/>
+		<xsl:variable name="orcid" select="normalize-space($person/*[local-name()='orcid' and namespace-uri()=''])"/>
 		<xsl:choose>
 			<xsl:when test="$family != '' and $given != ''">
 				<xsl:value-of select="concat($family, ', ', $given)"/>
@@ -21,8 +22,11 @@ http://www.altova.com/mapforce
 			<xsl:when test="$family != ''">
 				<xsl:value-of select="$family"/>
 			</xsl:when>
-			<xsl:otherwise>
+			<xsl:when test="$given != ''">
 				<xsl:value-of select="$given"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$orcid"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
@@ -59,9 +63,11 @@ http://www.altova.com/mapforce
 											<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
 										</givenName>
 									</xsl:if>
-									<familyName>
-										<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
-									</familyName>
+									<xsl:if test="normalize-space(*[local-name()='familyname' and namespace-uri()='']) != ''">
+										<familyName>
+											<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
+										</familyName>
+									</xsl:if>
 									<xsl:for-each select="(./*[local-name()='orcid' and namespace-uri()=''])[((string-length(string(.)) &gt; 0) and boolean($var_author_cur/*[local-name()='orcid' and namespace-uri()='']))]">
 										<nameIdentifier>
 											<xsl:attribute name="nameIdentifierScheme" namespace="">ORCID</xsl:attribute>
@@ -105,9 +111,11 @@ http://www.altova.com/mapforce
 									<xsl:value-of select="*[local-name()='givenname' and namespace-uri()='']"/>
 								</givenName>
 							</xsl:if>
-							<familyName>
-								<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
-							</familyName>
+							<xsl:if test="normalize-space(*[local-name()='familyname' and namespace-uri()='']) != ''">
+								<familyName>
+									<xsl:value-of select="*[local-name()='familyname' and namespace-uri()='']"/>
+								</familyName>
+							</xsl:if>
 							<xsl:for-each select="(./*[local-name()='orcid' and namespace-uri()=''])[((string-length(string(.)) &gt; 0) and boolean($var3_cur/*[local-name()='orcid' and namespace-uri()='']))]">
 								<xsl:variable name="var4_filter" select="."/>
 								<nameIdentifier>

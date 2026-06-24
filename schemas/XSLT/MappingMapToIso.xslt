@@ -15,6 +15,7 @@ http://www.altova.com/mapforce
 		<xsl:param name="person"/>
 		<xsl:variable name="family" select="normalize-space($person/*[local-name()='familyname' and namespace-uri()=''])"/>
 		<xsl:variable name="given" select="normalize-space($person/*[local-name()='givenname' and namespace-uri()=''])"/>
+		<xsl:variable name="orcid" select="normalize-space($person/*[local-name()='orcid' and namespace-uri()=''])"/>
 		<xsl:choose>
 			<xsl:when test="$family != '' and $given != ''">
 				<xsl:value-of select="concat($family, ', ', $given)"/>
@@ -22,8 +23,11 @@ http://www.altova.com/mapforce
 			<xsl:when test="$family != ''">
 				<xsl:value-of select="$family"/>
 			</xsl:when>
-			<xsl:otherwise>
+			<xsl:when test="$given != ''">
 				<xsl:value-of select="$given"/>
+			</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$orcid"/>
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>

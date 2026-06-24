@@ -154,6 +154,41 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->assertEquals('0000-0001-2345-6789', $authors[0]['orcid']);
     }
 
+    public function testSaveAuthorsKeepsOrcidOnlyPersonAuthor(): void
+    {
+        $resourceId = $this->createResource('GFZ.TEST.EXPORT.ORCID.ONLY.AUTHOR', 'Test Export ORCID Only Author');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => '',
+                    'givenname' => '',
+                    'orcid' => 'https://orcid.org/0009-0007-2910-0469',
+                    'isContact' => false,
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => [''],
+            'givennames' => [''],
+            'orcids' => ['https://orcid.org/0009-0007-2910-0469'],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => [''],
+            'authorinstitutionName' => [],
+            'institutionAffiliation' => [],
+            'authorInstitutionRorIds' => []
+        ];
+
+        saveAuthors($this->connection, $authorData, $resourceId);
+
+        $xmlString = $this->controller->getResourceAsXml($this->connection, $resourceId);
+        $xml = new \SimpleXMLElement($xmlString);
+
+        $this->assertSame('', (string) $xml->Authors->AuthorPerson->familyname);
+        $this->assertSame('', (string) $xml->Authors->AuthorPerson->givenname);
+        $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->AuthorPerson->orcid);
+    }
+
     public function testResourceXmlPreservesMixedAuthorsPayloadOrder(): void
     {
         $resourceId = $this->createResource('GFZ.TEST.EXPORT.MIXED.AUTHORS', 'Test Export Mixed Authors');
@@ -309,6 +344,40 @@ XML;
                 $this->assertSame('', (string) $xml->ContactPersons->ContactPerson->givenname);
         }
 
+        public function testAuthorPayloadXmlSupportsOrcidOnlyAuthor(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.ORCID.ONLY.PAYLOAD.XML</doi>
+    <Authors/>
+    <ContactPersons/>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => '',
+                                        'givenname' => '',
+                                        'orcid' => 'https://orcid.org/0009-0007-2910-0469',
+                                        'isContact' => false,
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+
+                $this->assertSame('', (string) $xml->Authors->Author->familyname);
+                $this->assertSame('', (string) $xml->Authors->Author->givenname);
+                $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->Author->orcid);
+                $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->AuthorPerson->orcid);
+                $this->assertSame(0, $xml->ContactPersons->ContactPerson->count());
+        }
+
         public function testDataCiteTransformUsesUnifiedAuthorsInPayloadOrder(): void
         {
                 $sourceXml = $this->directAuthorSourceXml();
@@ -346,6 +415,20 @@ XML;
                 $this->assertSame('Sukarno', trim($xpath->evaluate('string(//dc:contributors/dc:contributor[@contributorType="ContactPerson"]/dc:contributorName)')));
         }
 
+        public function testDataCiteTransformSupportsOrcidOnlyAuthor(): void
+        {
+                $sourceXml = $this->orcidOnlyAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $this->assertSame('0009-0007-2910-0469', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:creatorName)')));
+                $this->assertSame('0009-0007-2910-0469', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:nameIdentifier[@nameIdentifierScheme="ORCID"])')));
+                $this->assertSame(0, $xpath->query('//dc:creators/dc:creator/dc:familyName')->length);
+        }
+
         public function testIsoTransformReadsUnifiedAuthorsInPayloadOrder(): void
         {
                 $sourceXml = $this->directAuthorSourceXml();
@@ -373,6 +456,20 @@ XML;
                 );
                 $this->assertStringContainsString('<gco:CharacterString>Sukarno</gco:CharacterString>', $isoXml);
                 $this->assertStringNotContainsString('Sukarno,', $isoXml);
+        }
+
+        public function testIsoTransformSupportsOrcidOnlyAuthor(): void
+        {
+                $sourceXml = $this->orcidOnlyAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => '0009-0007-2910-0469', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+                $this->assertStringContainsString('xlink:href="http://orcid.org/0009-0007-2910-0469"', $isoXml);
         }
 
         public function testIsoTransformFallsBackToLegacyAuthorsInXmlOrder(): void
@@ -487,6 +584,30 @@ XML;
     <ContactPersons>
         <ContactPerson><familyname>Sukarno</familyname><givenname></givenname><email>sukarno@example.com</email></ContactPerson>
     </ContactPersons>
+</Resource>
+XML;
+        }
+
+        private function orcidOnlyAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.ORCID.ONLY.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-06-24</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>ORCID Only Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>ORCID-only author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname></familyname>
+            <givenname></givenname>
+            <orcid>0009-0007-2910-0469</orcid>
+        </Author>
+    </Authors>
+    <ContactPersons/>
 </Resource>
 XML;
         }
