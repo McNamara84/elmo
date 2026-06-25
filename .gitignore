@@ -1,4 +1,5 @@
 settings.php
+playwright-variant-lock.php
 .vscode/
 .phpunit.result.cache
 .env
