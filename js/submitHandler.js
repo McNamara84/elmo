@@ -410,7 +410,11 @@ class SubmitHandler {
         validateTitleField();
         validateAuthorNameFields();
         const temporalCoverageValid = validateAllTemporalCoverageRows();
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
+        const authorAffiliationsValid = typeof globalThis !== 'undefined'
+            && typeof globalThis.validateAuthorAffiliationEditors === 'function'
+            ? globalThis.validateAuthorAffiliationEditors()
+            : true;
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {

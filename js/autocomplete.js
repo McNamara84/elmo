@@ -196,7 +196,7 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
       id: rorId
     };
   });
-  const tagifyObjects = affiliationObjects.map(affiliation => ({ value: affiliation.value }));
+  const tagifyObjects = affiliationObjects.map(affiliation => ({ ...affiliation }));
 
   // Set Tagify tags
   const affiliationInput = row.find(`input[id^="${fieldMapping.affiliation}"]`)[0];

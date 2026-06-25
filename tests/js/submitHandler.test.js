@@ -102,6 +102,7 @@ describe('submitHandler.js', () => {
     console.error.mockRestore();
     delete global.validateTitleField;
     delete global.validateAuthorNameFields;
+    delete global.validateAuthorAffiliationEditors;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -656,6 +657,21 @@ describe('submitHandler.js', () => {
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
     expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test('handleSubmit shows validation-failed modal when author affiliation labels are invalid', () => {
+    global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+
+    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
+    expect(modalSpy).toHaveBeenCalled();
   });
 
   test('handleSubmit shows validation-failed modal when contact person is missing', () => {
