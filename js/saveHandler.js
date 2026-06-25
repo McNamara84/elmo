@@ -199,8 +199,16 @@ class SaveHandler {
             });
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
-            
+
+            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
+                window.authorStack.updatePayload();
+            }
+
             const formData = new FormData(this.$form[0]);
+            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
+            if (authorsPayloadInput) {
+                formData.set('authorsPayload', authorsPayloadInput.value);
+            }
             formData.append('filename', filename);
             
             // Append security fields

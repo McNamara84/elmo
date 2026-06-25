@@ -464,8 +464,16 @@ class SubmitHandler {
             const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
             this.$timeSpentField.val(timeSpent);
         }
-        
+
+        if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
+            window.authorStack.updatePayload();
+        }
+
         const submitData = new FormData(this.$form[0]);
+        const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
+        if (authorsPayloadInput) {
+            submitData.set('authorsPayload', authorsPayloadInput.value);
+        }
 
         // Explicitly add CSRF token (it's in the modal, not in the main form)
         const csrfToken = this.$csrfTokenField.val();

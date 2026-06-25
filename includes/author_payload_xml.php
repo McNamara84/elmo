@@ -4,7 +4,7 @@ require_once __DIR__ . '/../save/formgroups/save_authors.php';
 
 function buildResourceXmlWithAuthorPayload($connection, $controller, int $resourceId, array $postData): ?string
 {
-    if (decodeAuthorsPayload($postData) === null) {
+    if (!hasNonemptyAuthorsPayload($postData)) {
         return null;
     }
 

@@ -3,7 +3,17 @@ require_once __DIR__ . '/../validation.php';
 
 if (!function_exists('isEmptyArray')) {
     function isEmptyArray($arr) {
-        return !isset($arr) || !is_array($arr) || count($arr) === 0;
+        if (!isset($arr) || !is_array($arr) || count($arr) === 0) {
+            return true;
+        }
+
+        foreach ($arr as $value) {
+            if (trim((string) $value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
@@ -48,6 +58,16 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         ];
         // Only validate on submit
         if ($action === 'submit') {
+            $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
+                          || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
+            $hasAnyData = $hasAnySpatial
+                       || (trim($entry['dateStart'] ?? '') !== '')
+                       || (trim($entry['dateEnd'] ?? '') !== '')
+                       || (trim($entry['description'] ?? '') !== '');
+            if (!$hasAnyData) {
+                continue;
+            }
+
             // Check required fields: latitudeMin and longitudeMin (0 is allowed, empty strings are not)
             if ((trim($entry['latitudeMin'] ?? '') === '') || (trim($entry['longitudeMin'] ?? '') === '')) {
                 $allSuccessful = false;

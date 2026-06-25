@@ -268,10 +268,10 @@ final class DatasetControllerTest extends DatabaseTestCase
         $xml = new \SimpleXMLElement($xmlString);
         $authorKeys = [];
 
-        foreach ($xml->Authors->children() as $authorNode) {
-            $authorKeys[] = $authorNode->getName() === 'AuthorPerson'
-                ? 'person:' . (string) $authorNode->familyname
-                : 'institution:' . (string) $authorNode->institutionname;
+        foreach ($xml->Authors->Author as $authorNode) {
+            $authorKeys[] = isset($authorNode->institutionname)
+                ? 'institution:' . (string) $authorNode->institutionname
+                : 'person:' . (string) $authorNode->familyname;
         }
 
         $this->assertSame(

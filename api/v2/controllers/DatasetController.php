@@ -733,31 +733,41 @@ class DatasetController
 
         foreach ($authors as $author) {
             $authorXml = null;
-            
-            if (!empty($author['familyname']) || !empty($author['givenname']) || !empty($author['orcid'])) {
-                // Person
+            $unifiedXml = null;
+
+            if (($author['type'] ?? '') === 'person' || !empty($author['familyname']) || !empty($author['givenname']) || !empty($author['orcid'])) {
+                $unifiedXml = $authorsXml->addChild('Author');
+                $unifiedXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
+                $unifiedXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
+                if (!empty($author['orcid'])) {
+                    $unifiedXml->addChild('orcid', htmlspecialchars($author['orcid']));
+                }
+
                 $authorXml = $authorsXml->addChild('AuthorPerson');
                 $authorXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
                 $authorXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
                 if (!empty($author['orcid'])) {
                     $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
                 }
-            } elseif (!empty($author['institutionname'])) {
-                // Institution
+            } elseif (($author['type'] ?? '') === 'institution' || !empty($author['institutionname'])) {
+                $unifiedXml = $authorsXml->addChild('Author');
+                $unifiedXml->addChild('institutionname', htmlspecialchars($author['institutionname'] ?? ''));
+
                 $authorXml = $authorsXml->addChild('AuthorInstitution');
-                $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname']));
+                $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname'] ?? ''));
             }
 
-            if (!empty($author['Affiliations']) && $authorXml !== null) {
-                $affiliationsXml = $authorXml->addChild('Affiliations');
-                foreach ($author['Affiliations'] as $affiliation) {
-                    $affiliationXml = $affiliationsXml->addChild('Affiliation');
-                    foreach ($affiliation as $key => $value) {
-                        // Skip adding <rorId> if it's empty or not set
-                        if ($key === 'rorId' && empty($value)) {
-                            continue;
+            if (!empty($author['Affiliations']) && $unifiedXml !== null && $authorXml !== null) {
+                foreach ([$unifiedXml, $authorXml] as $targetXml) {
+                    $affiliationsXml = $targetXml->addChild('Affiliations');
+                    foreach ($author['Affiliations'] as $affiliation) {
+                        $affiliationXml = $affiliationsXml->addChild('Affiliation');
+                        foreach ($affiliation as $key => $value) {
+                            if ($key === 'rorId' && empty($value)) {
+                                continue;
+                            }
+                            $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
                         }
-                        $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
                     }
                 }
             }

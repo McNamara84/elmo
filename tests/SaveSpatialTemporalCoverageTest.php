@@ -555,6 +555,55 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
+     * Tests that a completely empty STC row on submit is treated as optional.
+     *
+     * @return void
+     */
+    public function testSubmitWithEmptyStcRowIsOptional(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.EMPTY.STC.SUBMIT." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-06-25",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Empty STC Submit"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "action" => "submit",
+            "tscLatitudeMin" => [""],
+            "tscLatitudeMax" => [""],
+            "tscLongitudeMin" => [""],
+            "tscLongitudeMax" => [""],
+            "tscDescription" => [""],
+            "tscDateStart" => [""],
+            "tscTimeStart" => [""],
+            "tscDateEnd" => [""],
+            "tscTimeEnd" => [""],
+            "tscTimezone" => [""],
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Submit should succeed when STC row is completely empty.');
+
+        $stmt = $this->connection->prepare("
+            SELECT COUNT(*) as count
+            FROM Resource_has_Spatial_Temporal_Coverage
+            WHERE Resource_resource_id = ?
+        ");
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $count = $stmt->get_result()->fetch_assoc()['count'];
+
+        $this->assertEquals(0, $count, 'No STC should be saved for an empty row.');
+    }
+
+    /**
      * Tests saving STC with only coordinates and start date (minimal valid input).
      * 
      * This covers the scenario where a user only fills in the required coordinate
