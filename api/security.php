@@ -5,8 +5,7 @@
  * Central location for security functions used across the application:
  * - CSRF token generation and validation
  * - Honeypot validation
- * - Rate limiting for feedback, save, and submit operations
- * - Client IP detection
+ * - Session-scoped rate limiting for feedback, save, and submit operations
  */
 
 // Load environment variables from .env file
@@ -31,12 +30,13 @@ if (file_exists($envFile)) {
 // Rate limiting configuration (loaded from .env or defaults)
 define('RATE_LIMIT_FEEDBACK_MAX', (int) getenv('FEEDBACK_MAX_SUBMISSIONS') ?: 3);
 define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
-define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
+define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 30);
 define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
 define('RATE_LIMIT_SUSPICIOUS_LOG_MAX', (int) getenv('SUSPICIOUS_LOG_RATE_LIMIT') ?: 10);
 define('MIN_INTERACTION_SAVE_SECONDS', (int) getenv('SAVE_MIN_INTERACTION_SECONDS') ?: 2);
 define('MIN_INTERACTION_SUBMIT_SECONDS', (int) getenv('SUBMIT_MIN_INTERACTION_SECONDS') ?: 3);
 define('MIN_INTERACTION_FEEDBACK_SECONDS', (int) getenv('FEEDBACK_MIN_INTERACTION_SECONDS') ?: 2);
+define('RATE_LIMIT_SESSION_KEY', 'rate_limits');
 
 /**
  * Initializes session if not already started.
@@ -167,26 +167,6 @@ function validateHoneypot(string $honeypotValue): bool
 }
 
 /**
- * Gets the client IP address, considering proxies and forwarding headers.
- *
- * @return string The client IP address
- */
-function getClientIp(): string
-{
-    // Check for forwarded IP (behind proxy/load balancer)
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ips[0]);
-    }
-    
-    if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-        return $_SERVER['HTTP_X_REAL_IP'];
-    }
-    
-    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
-}
-
-/**
  * Returns the age of the current CSRF token in seconds.
  *
  * This can be used as a server-trustworthy interaction timer because
@@ -274,174 +254,101 @@ function getCsrfInteractionStartSessionKey(string $scope): string
 }
 
 /**
- * Checks whether the shared rate-limit storage is currently available.
+ * Normalizes a rate-limit action name for use as a session key segment.
  *
- * If storage is unavailable (missing DB connection/table), callers should
- * degrade gracefully instead of failing request processing.
- *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @return bool
+ * @param string $action
+ * @return string
  */
-function isRateLimitStorageAvailable($connection): bool
+function normalizeRateLimitAction(string $action): string
 {
-    // instanceof guards against null and non-mysqli values; enables fail-open when no DB is passed
-    if (!($connection instanceof \mysqli)) {
-        return false;
-    }
-
-    if ($connection->connect_errno) {
-        return false;
-    }
-
-    // No static cache: avoids stale results across test runs and parallel workers
-    try {
-        $result = $connection->query("SHOW TABLES LIKE 'Rate_Limit'");
-        if ($result === false) {
-            return false;
-        }
-
-        $available = $result->num_rows > 0;
-        $result->free();
-        return $available;
-    } catch (Throwable $exception) {
-        error_log('[SECURITY]: Rate limit storage check failed. We can\'t measure time_spent. We just let it pass. Message: ' . $exception->getMessage());
-        return false;
-    }
+    $normalized = preg_replace('/[^a-zA-Z0-9_-]/', '', $action) ?? '';
+    return $normalized !== '' ? $normalized : 'unknown';
 }
 
 /**
- * Checks if an IP address has exceeded rate limit for a given action type.
+ * Returns recent rate-limit timestamps for an action, pruning expired entries.
  *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $ipAddress The client IP address
- * @param string $actionType The action type ('feedback', 'save', 'submit')
- * @param int $maxRequests Maximum allowed requests in the time window
- * @param int $windowSeconds Time window in seconds (default 3600 = 1 hour)
- * @return bool True if within rate limit, false if exceeded
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $windowSeconds Rolling window length in seconds
+ * @return list<int>
  */
-function checkRateLimit(
-    $connection,
-    string $ipAddress,
-    string $actionType,
-    int $maxRequests = 3,
-    int $windowSeconds = 3600
-): bool
+function getSessionRateLimitTimestamps(string $action, int $windowSeconds): array
 {
-    // Fail-open: unavailable storage must not block user operations.
-    if (!isRateLimitStorageAvailable($connection)) {
-        return true;
-    }
-    /** @var \mysqli $connection */
+    initializeCsrfSession();
 
-    // Clean up old entries (older than 24 hours)
-    $cleanupSql = "DELETE FROM Rate_Limit WHERE submitted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-    if (mysqli_query($connection, $cleanupSql) === false) {
-        return true;
-    }
-    
-    // Count recent submissions from this IP for this action type
-    $stmt = $connection->prepare(
-        "SELECT COUNT(*) as count FROM Rate_Limit 
-         WHERE ip_address = ? AND action = ? AND submitted_at > DATE_SUB(NOW(), INTERVAL ? SECOND)"
-    );
-    if ($stmt === false) {
-        return true;
+    $actionKey = normalizeRateLimitAction($action);
+    $cutoff = time() - $windowSeconds;
+
+    $all = $_SESSION[RATE_LIMIT_SESSION_KEY] ?? [];
+    if (!is_array($all)) {
+        $all = [];
     }
 
-    $stmt->bind_param("ssi", $ipAddress, $actionType, $windowSeconds);
-    if (!$stmt->execute()) {
-        $stmt->close();
-        return true;
+    $timestamps = $all[$actionKey] ?? [];
+    if (!is_array($timestamps)) {
+        $timestamps = [];
     }
 
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $stmt->close();
-    
-    return ($row['count'] ?? 0) < $maxRequests;
+    $timestamps = array_values(array_filter(
+        $timestamps,
+        static fn($timestamp) => is_int($timestamp) && $timestamp > $cutoff
+    ));
+
+    $all[$actionKey] = $timestamps;
+    $_SESSION[RATE_LIMIT_SESSION_KEY] = $all;
+
+    return $timestamps;
 }
 
 /**
- * Records a submission for rate limiting purposes.
+ * Checks whether the current session is within the rate limit for an action.
  *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $ipAddress The client IP address
- * @param string $actionType The action type ('feedback', 'save', 'submit')
- * @return bool True if successfully recorded, false on error
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $maxRequests Maximum allowed requests in the rolling window
+ * @param int $windowSeconds Rolling window length in seconds
+ * @return bool True if within limit, false if exceeded
  */
-function recordRateLimit(
-    $connection,
-    string $ipAddress,
-    string $actionType
-): bool
+function checkSessionRateLimit(string $action, int $maxRequests, int $windowSeconds = 3600): bool
 {
-    if (!isRateLimitStorageAvailable($connection)) {
-        return false;
-    }
-    /** @var \mysqli $connection */
-
-    $stmt = $connection->prepare(
-        "INSERT INTO Rate_Limit (action, ip_address, submitted_at) VALUES (?, ?, NOW())"
-    );
-    if ($stmt === false) {
-        return false;
-    }
-
-    $stmt->bind_param("ss", $actionType, $ipAddress);
-    $success = $stmt->execute();
-    $stmt->close();
-    
-    return $success;
+    return count(getSessionRateLimitTimestamps($action, $windowSeconds)) < $maxRequests;
 }
 
 /**
- * Logs suspicious request attempts with an hourly cap per IP.
+ * Records a rate-limited event for the current session.
  *
- * Uses the existing Rate_Limit table with a dedicated action bucket
- * ("suspicious") so logging cannot flood application logs.
- *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $operation High-level operation name (save, submit, ...)
- * @param string $reason Rejection reason
- * @param string|null $ipAddress Optional client IP, auto-detected when omitted
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $windowSeconds Rolling window length used when pruning stale entries
  * @return void
  */
-function logSuspiciousAttempt(
-    $connection,
-    string $operation,
-    string $reason,
-    ?string $ipAddress = null
-): void
+function recordSessionRateLimit(string $action, int $windowSeconds = 3600): void
 {
-    $clientIp = $ipAddress ?: getClientIp();
-    // Sanitize operation and reason to prevent injection into logs or DB
+    getSessionRateLimitTimestamps($action, $windowSeconds);
+    $actionKey = normalizeRateLimitAction($action);
+    $_SESSION[RATE_LIMIT_SESSION_KEY][$actionKey][] = time();
+}
+
+/**
+ * Logs suspicious request attempts with a session-scoped hourly cap.
+ *
+ * @param string $operation High-level operation name (save, submit, ...)
+ * @param string $reason Rejection reason
+ * @return void
+ */
+function logSuspiciousAttempt(string $operation, string $reason): void
+{
     $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
     $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
-    $fallbackMessage = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}";
-
-    // If rate-limit storage is unavailable, log once without throttling.
-    if (!isRateLimitStorageAvailable($connection)) {
-        error_log($fallbackMessage);
-        return;
-    }
+    $message = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe})";
 
     try {
-        // Check if logging this attempt would exceed hourly cap; if so, skip to preserve disk space
-        if (!checkRateLimit(
-            $connection,
-            $clientIp,
-            'suspicious',
-            RATE_LIMIT_SUSPICIOUS_LOG_MAX,
-            RATE_LIMIT_WINDOW_SECONDS
-        )) {
+        if (!checkSessionRateLimit('suspicious', RATE_LIMIT_SUSPICIOUS_LOG_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
             return;
         }
 
-        error_log($fallbackMessage);
-        recordRateLimit($connection, $clientIp, 'suspicious');
+        error_log($message);
+        recordSessionRateLimit('suspicious', RATE_LIMIT_WINDOW_SECONDS);
     } catch (Throwable $exception) {
-        // Never break request handling because suspicious logging failed.
-        error_log($fallbackMessage . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
+        error_log($message . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
     }
 }
 ?>
