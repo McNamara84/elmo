@@ -51,9 +51,6 @@ describe('saveHandler.js', () => {
           <input type="checkbox" name="contacts[]" value="2">
         </div>
       </form>
-      <input id="input-save-csrf-token" type="hidden" value="token">
-      <input id="input-save-time-spent" type="hidden" value="0">
-      <input id="input-information-website" type="text" value="">
       <div id="modal-saveas">
         <h2 id="label-saveas-modal"></h2>
         <input id="input-saveas-filename">
@@ -136,18 +133,14 @@ describe('saveHandler.js', () => {
     expect(handler.saveAndDownload).toHaveBeenCalledWith('file', 'xml');
   });
 
-  test('handleSaveConfirm uses the longest active save timer', async () => {
+  test('calculateTimeSpent uses the longest active save timer', () => {
     jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:00:04Z'));
     const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
-    jest.spyOn(handler, 'saveAndDownload').mockResolvedValue();
 
-    $('#input-saveas-filename').val('file');
     handler.saveFlowStartedAt = new Date('2024-05-30T12:00:00Z').getTime();
     handler.modalOpenedAt = new Date('2024-05-30T12:00:03Z').getTime();
 
-    await handler.handleSaveConfirm();
-
-    expect($('#input-save-time-spent').val()).toBe('4');
+    expect(handler.calculateTimeSpent()).toBe(4);
   });
 
   test('handleSave updates modal state for jsonld', async () => {
