@@ -121,13 +121,14 @@ function saveALL(array $postData): int {
  *
  * @param mysqli $connection Active database connection
  * @param int $resourceId Resource ID for export
- * @param array{format?: string} $options Export options (format: 'xml' or 'jsonld')
+ * @param array{format?: string, postData?: array<string, mixed>} $options Export options (format: 'xml' or 'jsonld')
  * @return array{payload: string, contentType: string, extension: string, generator: string}
  */
 function generateDatasetPayloadByResourceId(int $resourceId, array $options = []): array
 {
     global $connection;
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
+    $postData = $options['postData'] ?? null;
     $useIcgem = (bool) ($GLOBALS['showGGMsProperties'] ?? false);
 
     if ($downloadFormat === 'jsonld') {
@@ -158,8 +159,15 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         $generator = 'icgem-xml';
     } else {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+        require_once __DIR__ . '/../includes/author_payload_xml.php';
         $controller = new DatasetController();
-        $payload = (string) $controller->envelopeXmlAsString($connection, $resourceId);
+
+        $sourceXml = null;
+        if (is_array($postData)) {
+            $sourceXml = buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData);
+        }
+
+        $payload = (string) $controller->envelopeXmlAsString($connection, $resourceId, $sourceXml);
         $generator = 'dataset-xml';
     }
 

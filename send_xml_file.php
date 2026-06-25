@@ -420,7 +420,7 @@ try {
     error_log("send_xml_file.php: All data saved successfully with Resource ID: " . $resource_id);
 
     // Step 2: Generate Payload File Structure
-    $payloadData = generateDatasetPayloadByResourceId($resource_id);
+    $payloadData = generateDatasetPayloadByResourceId($resource_id, ['postData' => $_POST]);
     $xml_content = $payloadData['payload'];
     error_log("send_xml_file.php: XML content payload generated successfully");
 

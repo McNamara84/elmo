@@ -133,6 +133,7 @@ if (isset($_POST['filename'])) {
             (int) $resource_id,
             [
                 'format' => $downloadFormat,
+                'postData' => $_POST,
             ]
         );
 
