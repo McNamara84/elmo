@@ -47,6 +47,7 @@ describe('autosaveService', () => {
     jest.useRealTimers();
     delete global.bootstrap;
     delete window.elmo;
+    delete window.authorStack;
   });
 
   test('throttles autosave cadence before persisting', async () => {
@@ -351,6 +352,40 @@ describe('autosaveService', () => {
 
     expect(givenNames).toEqual(['Ada', 'Grace']);
     expect(familyNames).toEqual(['Lovelace', 'Hopper']);
+  });
+
+  test('applyDraftValues restores authorsPayload through authorStack before legacy author arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input name="title" value="">
+      <input type="hidden" name="authorsPayload" value="[]">
+      <input name="familynames[]" value="">
+      <input name="givennames[]" value="">
+      <input name="contacts[]" type="checkbox" value="on">
+    `;
+    const payload = JSON.stringify([
+      { type: 'person', familyname: 'Payload', givenname: 'Author', isContact: true, affiliations: [] }
+    ]);
+    window.authorStack = { setAuthors: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      title: 'Recovered dataset',
+      authorsPayload: payload,
+      'familynames[]': ['Legacy'],
+      'givennames[]': ['Rows'],
+      'contacts[]': ['on']
+    });
+
+    expect(window.authorStack.setAuthors).toHaveBeenCalledWith(payload);
+    expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
+    expect(form.querySelector('input[name="familynames[]"]').value).toBe('');
+    expect(form.querySelector('input[name="contacts[]"]').checked).toBe(false);
   });
 
   test('restores draft when user accepts prompt', async () => {

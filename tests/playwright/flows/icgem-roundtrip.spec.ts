@@ -40,7 +40,7 @@
  *   the parsed reference values, so any casing difference will cause a false failure.
  */
 
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { navigateToHome } from '../utils';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -364,10 +364,67 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
 
 /**
  * Fills all form fields in the GEM variant app from the given parsed ICGEM data.
- * Multiple affiliations are injected via the Tagify JS API to avoid timing issues.
+ * Multiple affiliations are added through the dedicated Authors affiliation editor.
  * GCMD thesaurus keywords (subjects) are NOT filled here – they require a
  * complex tree-picker UI that is verified separately in the upload test.
  */
+async function addAuthorAffiliations(row: Locator, affiliations: string[]): Promise<void> {
+  if (affiliations.length === 0) {
+    return;
+  }
+
+  const editor = row.locator('[data-author-affiliation-editor]');
+  await expect(editor).toBeVisible({ timeout: 10_000 });
+
+  for (const affiliation of affiliations) {
+    await editor.locator('[data-author-affiliation-input]').fill(affiliation);
+    await editor.locator('[data-author-affiliation-add]').click();
+    await expect.poll(async () => editor.locator('[data-author-affiliation-label]').evaluateAll(
+      (inputs) => inputs.map((input) => (input as HTMLInputElement).value),
+    )).toContain(affiliation);
+  }
+}
+
+async function ensureAuthorPersonRow(page: Page, index: number): Promise<Locator> {
+  const rows = page.locator('#group-author [data-creator-row]');
+  while (await rows.count() <= index) {
+    const previousCount = await rows.count();
+    await page.evaluate(() => {
+      const stack = (window as any).authorStack;
+      if (stack && typeof stack.addPerson === 'function') {
+        stack.addPerson();
+        return;
+      }
+
+      document.querySelector<HTMLElement>('#button-author-add')?.click();
+    });
+    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
+  }
+
+  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+  return rows.nth(index);
+}
+
+async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Locator> {
+  const rows = page.locator('#group-author [data-authorinstitution-row]');
+  while (await rows.count() <= index) {
+    const previousCount = await rows.count();
+    await page.evaluate(() => {
+      const stack = (window as any).authorStack;
+      if (stack && typeof stack.addInstitution === 'function') {
+        stack.addInstitution();
+        return;
+      }
+
+      document.querySelector<HTMLElement>('#button-authorinstitution-add')?.click();
+    });
+    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
+  }
+
+  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
+  return rows.nth(index);
+}
+
 async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Wait for API-populated dropdowns ──────────────────────────────────────
   await page.waitForFunction(
@@ -418,7 +475,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Personal author (index 0) ──────────────────────────────────────────────
   if (data.personalCreators.length > 0) {
     const pc = data.personalCreators[0];
-    const authorRow = page.locator('#group-author [data-creator-row]').nth(0);
+    const authorRow = await ensureAuthorPersonRow(page, 0);
 
     // ORCID – set via evaluate to prevent the ORCID lookup from racing with our fills
     const orcidInput = authorRow.locator('[id^="input-author-orcid"]');
@@ -432,21 +489,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     await authorRow.locator('[id^="input-author-lastname"]').fill(pc.lastName);
     await authorRow.locator('[id^="input-author-firstname"]').fill(pc.firstName);
 
-    // Multiple affiliations – inject via Tagify API in a single call
-    const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
-    await expect(async () => {
-      const hasTagify = await affiliationInput.evaluate((el: unknown) => !!(el as Record<string, unknown>)._tagify);
-      expect(hasTagify, 'author affiliation Tagify instance').toBe(true);
-    }).toPass({ timeout: 10_000 });
-    const affiliationTags = pc.affiliations.map(v => ({ value: v }));
-    await affiliationInput.evaluate(
-      (el: unknown, tags: { value: string }[]) => { ((el as Record<string, unknown>)._tagify as { addTags(t: typeof tags): void }).addTags(tags); },
-      affiliationTags,
-    );
-    // Only wait for tagify tags if affiliations were actually added
-    if (affiliationTags.length > 0) {
-      await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5_000 });
-    }
+    await addAuthorAffiliations(authorRow, pc.affiliations);
 
     // Mark as contact person – click the <label> (Bootstrap btn-check hides the input;
     // clicking the input directly causes "label intercepts pointer events" error)
@@ -454,13 +497,13 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     if (await cpLabel.count() > 0) {
       await cpLabel.click();
       // Wait for email field to become visible
-      const emailField = page.locator('#input-contactperson-email').first();
+      const emailField = authorRow.locator('input[name="cpEmail[]"]');
       await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
         await emailField.fill(data.contactPersonEmail);
       }
       // Fill website if present
-      const websiteField = page.locator('#input-contactperson-website').first();
+      const websiteField = authorRow.locator('input[name="cpOnlineResource[]"]');
       await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
       if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
         await websiteField.fill(data.contactPersonWebsite);
@@ -471,17 +514,11 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Author institution (organisational creator, index 0) ──────────────────
   if (data.orgCreators.length > 0) {
     const oc = data.orgCreators[0];
-    const instRow = page.locator('[data-authorinstitution-row]').nth(0);
+    const instRow = await ensureAuthorInstitutionRow(page, 0);
     await instRow.locator('[id^="input-authorinstitution-name"]').fill(oc.name);
 
     if (oc.affiliations.length > 0) {
-      const instAffTagInput = instRow.locator('.tagify__input[title="Affiliation"]');
-      await instAffTagInput.click();
-      for (const aff of oc.affiliations) {
-        await instAffTagInput.type(aff);
-        await page.keyboard.press('Enter');
-        await page.waitForTimeout(200);
-      }
+      await addAuthorAffiliations(instRow, oc.affiliations);
     }
   }
 
@@ -737,10 +774,9 @@ for (const testCase of TEST_CASES) {
     if (!fs.existsSync(testCase.referenceXmlPath)) {
       throw new Error(`[PREREQUISITE] Reference XML missing: ${testCase.referenceXmlPath}`);
     }
-    if (fs.existsSync(XML_ACTUAL_DIR)) {
-      fs.rmSync(XML_ACTUAL_DIR, { recursive: true, force: true });
-    }
     fs.mkdirSync(XML_ACTUAL_DIR, { recursive: true });
+    fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.xml`), { force: true });
+    fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.json`), { force: true });
   });
 
   // ── Step 1: parse validation ────────────────────────────────────────────
@@ -964,17 +1000,8 @@ for (const testCase of TEST_CASES) {
     await expect(page.locator('#input-abstract'), 'abstract').toHaveValue('');
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue('');
 
-    // First author row should be empty
-    const firstAuthorRow = page.locator('#group-author [data-creator-row]').first();
-    await expect(firstAuthorRow.locator('[id^="input-author-lastname"]'), 'author lastName').toHaveValue('');
-    await expect(firstAuthorRow.locator('[id^="input-author-firstname"]'), 'author firstName').toHaveValue('');
-    await expect(firstAuthorRow.locator('[id^="input-author-orcid"]'), 'author ORCID').toHaveValue('');
-
-    // Contact person checkbox should be unchecked, email and website fields should be empty
-    const cpCheckbox = firstAuthorRow.locator('input[name="contacts[]"]');
-    await expect(cpCheckbox, 'contact person checkbox after clear').not.toBeChecked();
-    const cpEmailAfterClear = await firstAuthorRow.locator('input[name="cpEmail[]"]').inputValue().catch(() => '');
-    expect(cpEmailAfterClear, 'contactPersonEmail after clear').toBe('');
+    await expect(page.locator('#group-author [data-author-entry-row]'), 'authors after clear').toHaveCount(0);
+    await expect(page.locator('[data-author-summary-count]'), 'authors summary after clear').toContainText(/0\s+(entries|Einträge)/i);
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
     await expect(page.locator('#input-model-name'), 'modelName').toHaveValue('');
@@ -1081,10 +1108,12 @@ for (const testCase of TEST_CASES) {
       const orcidValue = await authorRow.locator('[id^="input-author-orcid"]').inputValue();
       expect(orcidValue, 'author ORCID').toContain(pc.orcid);
 
-      // Affiliations – verify all affiliations appear in Tagify tags
+      // Affiliations – verify all affiliations appear in the Authors affiliation editor
       if (pc.affiliations.length > 0) {
-        const tagContents = await authorRow.locator('.tagify__tag').allTextContents();
-        const combined = tagContents.join('\n');
+        const affiliationLabels = await authorRow.locator('[data-author-affiliation-label]').evaluateAll(
+          (inputs) => inputs.map((input) => (input as HTMLInputElement).value),
+        );
+        const combined = affiliationLabels.join('\n');
         for (const aff of pc.affiliations) {
           expect(combined, `author affiliation: "${aff}"`).toContain(aff);
         }
@@ -1095,12 +1124,12 @@ for (const testCase of TEST_CASES) {
     // Email is populated by populateIcgemContactPersons from grav:contact/grav:address.
     // The field becomes visible after the upload toggles the contact-person checkbox.
     await expect(
-      page.locator('#input-contactperson-email').first(),
+      page.locator('#group-author [data-creator-row]').first().locator('input[name="cpEmail[]"]'),
       'contactPersonEmail',
     ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
     if (parsedData.contactPersonWebsite) {
       await expect(
-        page.locator('#input-contactperson-website').first(),
+        page.locator('#group-author [data-creator-row]').first().locator('input[name="cpOnlineResource[]"]'),
         'contactPersonWebsite',
       ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
     }

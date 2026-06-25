@@ -106,7 +106,42 @@
         "licenseTitle": "Licence"
     },
     "authors": {
-        "title": "Auteur: Personnes",
+        "title": "Auteurs",
+        "stackTitle": "Auteurs",
+        "person": "Personne",
+        "institution": "Institution",
+        "typeSwitcherLabel": "Type d'auteur",
+        "typeSwitchLocked": "Le type ne peut être modifié que tant que cette entrée est vide.",
+        "addPerson": "Ajouter une personne",
+        "addInstitution": "Ajouter une institution",
+        "dragHandle": "Modifier l'ordre par glisser-déposer",
+        "removeEntry": "Supprimer une entrée d'auteur",
+        "editEntry": "Modifier l'entrée d'auteur",
+        "collapseEntry": "Replier l'entrée d'auteur",
+        "moveEntryUp": "Déplacer l'auteur vers le haut",
+        "moveEntryDown": "Déplacer l'auteur vers le bas",
+        "authorSingular": "auteur",
+        "authorPlural": "auteurs",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "contactSingular": "contact",
+        "contactPlural": "contacts",
+        "contactPersonSingular": "personne de contact",
+        "contactPersonPlural": "personnes de contact",
+        "contactPersonBadge": "Personne de contact",
+        "contactPersonLabel": "Personne de contact",
+        "markAsContact": "Marquer comme contact",
+        "contactRequired": "au moins 1 contact requis",
+        "entriesSummary": "{count} {label}",
+        "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
+        "affiliationAdd": "Ajouter une affiliation",
+        "affiliationEdit": "Modifier une affiliation",
+        "affiliationSearch": "Rechercher une affiliation dans ROR",
+        "affiliationMoveUp": "Déplacer l'affiliation vers le haut",
+        "affiliationMoveDown": "Déplacer l'affiliation vers le bas",
+        "affiliationRorId": "ID ROR",
+        "affiliationRemove": "Supprimer une affiliation",
         "affiliationInvalid": "Veuillez indiquer une affiliation.",
         "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution."
     },
@@ -167,7 +202,16 @@
         },
         "free": {
             "title": "Mots-clés libres",
-            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules."
+            "placeholder": "Veuillez saisir des mots-clés et les séparer par une virgule.",
+            "addCsv": "Téléverser un fichier CSV",
+            "modalTitle": "Téléverser un fichier CSV",
+            "modalDescription": "Téléversez un fichier CSV ou glissez-déposez-le ici.",
+            "dropzone": "Glissez-déposez un fichier CSV ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "downloadHint": "Vous ne savez pas à quoi doit ressembler le format CSV ? Téléchargez le fichier d’exemple et utilisez-le comme modèle. Veuillez utiliser des fichiers CSV de moins de 1 Mo.",
+            "downloadSample": "Télécharger le fichier CSV d’exemple",
+            "cancel": "Annuler",
+            "import": "Importer les mots-clés"
         },
         "searchPlaceholder": "Rechercher des mots-clés..."
     },
@@ -365,6 +409,11 @@
         "error": "Le service ORCID est temporairement indisponible. Veuillez réessayer plus tard.",
         "searchButtonTitle": "Rechercher ORCID par nom",
         "inputRequired": "Veuillez saisir au moins un prénom ou un nom."
+    },
+    "affiliationEdit": {
+        "title": "Modifier l'affiliation",
+        "save": "Enregistrer",
+        "cancel": "Annuler"
     },
     "welcome": {
         "title": "Bienvenue sur ELMO 😊",

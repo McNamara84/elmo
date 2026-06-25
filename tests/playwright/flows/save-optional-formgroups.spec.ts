@@ -51,8 +51,10 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     await page.fill('#input-resourceinformation-publicationyear', '2026');
 
     // Author - fill directly without ORCID lookup for speed
-    await page.fill('#input-author-lastname', 'TestLastName');
-    await page.fill('#input-author-firstname', 'TestFirstName');
+    await page.locator('#button-author-add').click();
+    const authorRow = page.locator('[data-creator-row]').first();
+    await authorRow.locator('input[name="familynames[]"]').fill('TestLastName');
+    await authorRow.locator('input[name="givennames[]"]').fill('TestFirstName');
 
     // Abstract
     await page.fill('#input-abstract', 'This is a test abstract for E2E testing.');

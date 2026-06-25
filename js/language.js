@@ -118,6 +118,28 @@ function applyTranslations() {
         }
     });
 
+    // Update title attributes and matching accessible labels
+    $('[data-translate-title]').each(function () {
+        const element = $(this);
+        const titleKey = element.data('translate-title');
+        const translatedTitle = getNestedValue(translations, titleKey);
+
+        if (translatedTitle) {
+            element.attr('title', translatedTitle);
+            element.attr('aria-label', translatedTitle);
+            element.attr('data-bs-original-title', translatedTitle);
+
+            if (window.bootstrap && typeof bootstrap.Tooltip === 'function' && typeof bootstrap.Tooltip.getInstance === 'function') {
+                const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+                if (tooltip) {
+                    tooltip.dispose();
+                    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+                    new bootstrap.Tooltip(element[0], { container: tooltipContainer });
+                }
+            }
+        }
+    });
+
     translatePlaceholders($("#group-stc").children().first());
 
     // Trigger necessary UI updates

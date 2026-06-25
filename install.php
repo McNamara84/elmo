@@ -425,6 +425,7 @@ function createDatabaseStructure($connection): array
     `Resource_has_Author_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Author_author_id` INT NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
     PRIMARY KEY (`Resource_has_Author_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),

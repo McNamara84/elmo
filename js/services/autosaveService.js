@@ -396,7 +396,9 @@ class AutosaveService {
       return;
     }
 
-    this.prepareArrayFields(values);
+    const skippedAuthorNames = this.restoreAuthorsPayload(values) ? this.getAuthorPayloadFieldNames() : new Set();
+
+    this.prepareArrayFields(values, skippedAuthorNames);
 
     const elements = Array.from(this.form.elements);
     const handledNames = new Set(Object.keys(values));
@@ -404,6 +406,10 @@ class AutosaveService {
 
     elements.forEach((element) => {
       if (!element.name || element.disabled) {
+        return;
+      }
+
+      if (skippedAuthorNames.has(element.name)) {
         return;
       }
 
@@ -439,6 +445,9 @@ class AutosaveService {
       if (!element.name || element.disabled) {
         return;
       }
+      if (skippedAuthorNames.has(element.name)) {
+        return;
+      }
       const type = (element.type || element.tagName).toLowerCase();
       if (!handledNames.has(element.name)) {
         if (type === 'checkbox' || type === 'radio') {
@@ -446,6 +455,40 @@ class AutosaveService {
         }
       }
     });
+  }
+
+  restoreAuthorsPayload(values) {
+    if (!values || !Object.prototype.hasOwnProperty.call(values, 'authorsPayload')) {
+      return false;
+    }
+
+    const authorStack = typeof window !== 'undefined' && window.authorStack && typeof window.authorStack.setAuthors === 'function'
+      ? window.authorStack
+      : null;
+
+    if (!authorStack) {
+      return false;
+    }
+
+    authorStack.setAuthors(values.authorsPayload);
+    return true;
+  }
+
+  getAuthorPayloadFieldNames() {
+    return new Set([
+      'authorsPayload',
+      'familynames[]',
+      'givennames[]',
+      'orcids[]',
+      'contacts[]',
+      'cpEmail[]',
+      'cpOnlineResource[]',
+      'personAffiliation[]',
+      'authorPersonRorIds[]',
+      'authorinstitutionName[]',
+      'institutionAffiliation[]',
+      'authorInstitutionRorIds[]'
+    ]);
   }
 
   serializeValues() {
@@ -507,13 +550,13 @@ class AutosaveService {
     return values;
   }
 
-  prepareArrayFields(values) {
+  prepareArrayFields(values, skippedNames = new Set()) {
     if (!this.form || !values) {
       return;
     }
 
     const repeatableEntries = Object.entries(values)
-      .filter(([name, value]) => this.isArrayFieldName(name) && Array.isArray(value) && value.length > 1)
+      .filter(([name, value]) => !skippedNames.has(name) && this.isArrayFieldName(name) && Array.isArray(value) && value.length > 1)
       .sort(([, valueA], [, valueB]) => valueB.length - valueA.length);
 
     repeatableEntries.forEach(([name, value]) => {

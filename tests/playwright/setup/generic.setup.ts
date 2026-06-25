@@ -24,7 +24,7 @@ setup('configure ELMO-GENERIC variant', async ({ page, baseURL }) => {
   // Note: Use waitForSelector with timeout=0 to verify absence (no timeout error)
   const ggmsElement = await page.locator('#group-ggmspropertiesessential').count();
   if (ggmsElement > 0) {
-    throw new Error('[VARIANT VERIFICATION FAILED] GEM: #group-ggmspropertiesessential should NOT be present, but found ' + ggmsElement + ' element(s). Settings not applied correctly.');
+    throw new Error('[VARIANT VERIFICATION FAILED] GENERIC: #group-ggmspropertiesessential should NOT be present, but found ' + ggmsElement + ' element(s). Settings not applied correctly.');
   }
   const mslElement = await page.locator('#group-originatinglaboratory').count();
   if (mslElement > 0) {

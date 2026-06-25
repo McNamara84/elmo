@@ -229,6 +229,7 @@ function getCsrfTokenAgeSeconds(string $scope = 'form'): int
 /**
  * Evaluates whether the interaction time meets a minimum threshold.
  *
+    unset($_SESSION['csrf_interaction_start_time']);
  * Uses a trust-preserving strategy by combining client-reported time with
  * server-measured CSRF token age and taking the lower bound when both exist.
  *

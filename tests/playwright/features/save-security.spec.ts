@@ -182,22 +182,19 @@ test.describe('Save Operation Security Features', () => {
     });
   });
 
-  test.describe('Time-spent validation on save', () => {
-    test('backend rejects save when time_spent is below threshold', async ({ page }) => {
+  test.describe('Time-spent field on save', () => {
+    test('save can proceed immediately while still sending time_spent', async ({ page }) => {
+      let submittedTimeSpent: string | null = null;
+
       await page.route(SAVE_ENDPOINT, async (route) => {
         const bodyBuffer = route.request().postDataBuffer();
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-        const timeSpent = extractMultipartField(body, 'save_time_spent');
-        const timeSpentSeconds = parseInt(timeSpent || '0', 10);
+        submittedTimeSpent = extractMultipartField(body, 'save_time_spent');
 
-        // Reject if time spent is below 2 seconds
-        const responseStatus = timeSpentSeconds < 2 ? 400 : 200;
         await route.fulfill({
-          status: responseStatus,
+          status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(responseStatus === 400
-            ? { error: 'insufficient time spent' }
-            : { success: true, message: 'Saved' }),
+          body: JSON.stringify({ success: true, message: 'Saved' }),
         });
       });
 
@@ -258,7 +255,7 @@ test.describe('Save Operation Security Features', () => {
   });
 
   test.describe('Successful save with all security checks passing', () => {
-    test('backend accepts save when honeypot empty, csrf valid, time sufficient, and not rate limited', async ({ page }) => {
+    test('backend accepts save when honeypot empty, csrf valid, and not rate limited', async ({ page }) => {
       await page.route(SAVE_ENDPOINT, async (route) => {
         const bodyBuffer = route.request().postDataBuffer();
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
@@ -266,11 +263,10 @@ test.describe('Save Operation Security Features', () => {
         // Verify all security fields are present
         const honeypot = extractMultipartField(body, 'website') || '';
         const csrfToken = extractMultipartField(body, 'csrf_token') || '';
-        const timeSpent = extractMultipartField(body, 'save_time_spent') || '0';
-        const timeSpentSeconds = parseInt(timeSpent, 10);
+        const timeSpent = extractMultipartField(body, 'save_time_spent');
 
-        // Accept if honeypot is empty, csrf exists, and time >= 2 seconds
-        const isValid = honeypot === '' && csrfToken && timeSpentSeconds >= 2;
+        // Accept if honeypot is empty, csrf exists, and the telemetry field is present
+        const isValid = honeypot === '' && csrfToken && timeSpent !== null;
         const responseStatus = isValid ? 200 : 400;
 
         await route.fulfill({

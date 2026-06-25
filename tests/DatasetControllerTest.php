@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace Tests;
 
+require_once __DIR__ . '/../save/formgroups/save_authors.php';
+require_once __DIR__ . '/../includes/author_payload_xml.php';
+
 /**
  * Test class for DatasetController
  * 
@@ -38,9 +41,10 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->resourceId = (int) $conn->insert_id;
         $stmt->close();
 
-        // Insert Title (Title_Type id 2 = 'Main Title' from install.php seed data)
-        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', 2, ?)");
-        $stmt->bind_param('i', $this->resourceId);
+        // Insert Title
+        $mainTitleTypeId = $this->getTitleTypeId('Main Title');
+        $stmt = $conn->prepare("INSERT INTO Title (text, Title_Type_fk, Resource_resource_id) VALUES ('Test Dataset Title', ?, ?)");
+        $stmt->bind_param('ii', $mainTitleTypeId, $this->resourceId);
         $stmt->execute();
         $stmt->close();
 
@@ -91,8 +95,13 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->execute();
         $stmt->close();
 
-        // Insert Related Work (Relation id 1 = 'IsCitedBy', Identifier_Type id 4 = 'DOI' from install.php seed data)
-        $conn->query("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', 1, 4)");
+        // Insert Related Work
+        $relationId = $this->getRelationId('IsCitedBy');
+        $doiIdentifierTypeId = $this->getIdentifierTypeId('DOI');
+        $stmt = $conn->prepare("INSERT INTO Related_Work (related_work_id, Identifier, relation_fk, identifier_type_fk) VALUES (1, '10.1234/test', ?, ?)");
+        $stmt->bind_param('ii', $relationId, $doiIdentifierTypeId);
+        $stmt->execute();
+        $stmt->close();
         $stmt = $conn->prepare("INSERT INTO Resource_has_Related_Work (Resource_resource_id, Related_Work_related_work_id) VALUES (?, 1)");
         $stmt->bind_param('i', $this->resourceId);
         $stmt->execute();
@@ -120,6 +129,35 @@ final class DatasetControllerTest extends DatabaseTestCase
         $stmt->close();
     }
 
+    private function getTitleTypeId(string $name): int
+    {
+        return $this->getLookupId('Title_Type', 'title_type_id', $name);
+    }
+
+    private function getRelationId(string $name): int
+    {
+        return $this->getLookupId('Relation', 'relation_id', $name);
+    }
+
+    private function getIdentifierTypeId(string $name): int
+    {
+        return $this->getLookupId('Identifier_Type', 'identifier_type_id', $name);
+    }
+
+    private function getLookupId(string $table, string $idColumn, string $name): int
+    {
+        $stmt = $this->connection->prepare("SELECT {$idColumn} FROM {$table} WHERE name = ? LIMIT 1");
+        $stmt->bind_param('s', $name);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        if (!$row) {
+            throw new \RuntimeException("Lookup value '{$name}' is missing from {$table}.");
+        }
+
+        return (int) $row[$idColumn];
+    }
     public function testGetTitlesReturnsCorrectStructure(): void
     {
         $titles = $this->controller->getTitles($this->connection, $this->resourceId);
@@ -150,6 +188,464 @@ final class DatasetControllerTest extends DatabaseTestCase
         $this->assertEquals('John', $authors[0]['givenname']);
         $this->assertEquals('0000-0001-2345-6789', $authors[0]['orcid']);
     }
+
+    public function testSaveAuthorsKeepsOrcidOnlyPersonAuthor(): void
+    {
+        $resourceId = $this->createResource('GFZ.TEST.EXPORT.ORCID.ONLY.AUTHOR', 'Test Export ORCID Only Author');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => '',
+                    'givenname' => '',
+                    'orcid' => 'https://orcid.org/0009-0007-2910-0469',
+                    'isContact' => false,
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => [''],
+            'givennames' => [''],
+            'orcids' => ['https://orcid.org/0009-0007-2910-0469'],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => [''],
+            'authorinstitutionName' => [],
+            'institutionAffiliation' => [],
+            'authorInstitutionRorIds' => []
+        ];
+
+        saveAuthors($this->connection, $authorData, $resourceId);
+
+        $xmlString = $this->controller->getResourceAsXml($this->connection, $resourceId);
+        $xml = new \SimpleXMLElement($xmlString);
+
+        $this->assertSame('', (string) $xml->Authors->AuthorPerson->familyname);
+        $this->assertSame('', (string) $xml->Authors->AuthorPerson->givenname);
+        $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->AuthorPerson->orcid);
+    }
+
+    public function testResourceXmlPreservesMixedAuthorsPayloadOrder(): void
+    {
+        $resourceId = $this->createResource('GFZ.TEST.EXPORT.MIXED.AUTHORS', 'Test Export Mixed Authors');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => 'XmlFirst',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => true,
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'institution',
+                    'institutionname' => 'Xml Institute',
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'person',
+                    'familyname' => 'XmlLast',
+                    'givenname' => 'Person',
+                    'orcid' => '',
+                    'isContact' => false,
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => ['XmlFirst', 'XmlLast'],
+            'givennames' => ['Person', 'Person'],
+            'orcids' => ['', ''],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', ''],
+            'authorinstitutionName' => ['Xml Institute'],
+            'institutionAffiliation' => [''],
+            'authorInstitutionRorIds' => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resourceId);
+
+        $xmlString = $this->controller->getResourceAsXml($this->connection, $resourceId);
+        $xml = new \SimpleXMLElement($xmlString);
+        $authorKeys = [];
+
+        foreach ($xml->Authors->Author as $authorNode) {
+            $authorKeys[] = isset($authorNode->institutionname)
+                ? 'institution:' . (string) $authorNode->institutionname
+                : 'person:' . (string) $authorNode->familyname;
+        }
+
+        $this->assertSame(
+            ['person:XmlFirst', 'institution:Xml Institute', 'person:XmlLast'],
+            $authorKeys,
+            'The internal Resource XML should preserve the mixed authorsPayload order.'
+        );
+    }
+
+        public function testAuthorPayloadReplacesResourceXmlAuthorsAndContactPersons(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.PAYLOAD.XML</doi>
+    <Authors>
+        <AuthorPerson><familyname>OldDb</familyname><givenname>Author</givenname></AuthorPerson>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>OldDb</familyname><givenname>Contact</givenname></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'DirectFirst',
+                                        'givenname' => 'Person',
+                                        'orcid' => '',
+                                        'isContact' => true,
+                                        'email' => 'direct-first@example.com',
+                                        'website' => 'https://direct-first.example.com',
+                                        'affiliations' => [
+                                                ['label' => 'Payload University', 'rorId' => '04z8jg394']
+                                        ]
+                                ],
+                                [
+                                        'type' => 'institution',
+                                        'institutionname' => 'Direct Institute',
+                                        'affiliations' => []
+                                ],
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'DirectLast',
+                                        'givenname' => 'Person',
+                                        'orcid' => '',
+                                        'isContact' => false,
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+                $authorKeys = [];
+
+                foreach ($xml->Authors->Author as $authorNode) {
+                        $authorKeys[] = isset($authorNode->institutionname)
+                                ? 'institution:' . (string) $authorNode->institutionname
+                                : 'person:' . (string) $authorNode->familyname;
+                }
+
+                $this->assertSame(
+                        ['person:DirectFirst', 'institution:Direct Institute', 'person:DirectLast'],
+                        $authorKeys
+                );
+                $this->assertSame('DirectFirst', (string) $xml->ContactPersons->ContactPerson->familyname);
+                $this->assertStringNotContainsString('OldDb', $updatedXml);
+        }
+
+        public function testAuthorPayloadXmlSupportsAuthorWithoutGivenname(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.MONONYM.PAYLOAD.XML</doi>
+    <Authors/>
+    <ContactPersons/>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => 'Sukarno',
+                                        'givenname' => '',
+                                        'orcid' => '',
+                                        'isContact' => true,
+                                        'email' => 'sukarno@example.com',
+                                        'website' => '',
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+
+                $this->assertSame('Sukarno', (string) $xml->Authors->Author->familyname);
+                $this->assertSame('', (string) $xml->Authors->Author->givenname);
+                $this->assertSame('Sukarno', (string) $xml->ContactPersons->ContactPerson->familyname);
+                $this->assertSame('', (string) $xml->ContactPersons->ContactPerson->givenname);
+        }
+
+        public function testAuthorPayloadXmlSupportsOrcidOnlyAuthor(): void
+        {
+                $resourceXml = <<<'XML'
+<?xml version="1.0"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.AUTHOR.ORCID.ONLY.PAYLOAD.XML</doi>
+    <Authors/>
+    <ContactPersons/>
+</Resource>
+XML;
+
+                $postData = [
+                        'authorsPayload' => json_encode([
+                                [
+                                        'type' => 'person',
+                                        'familyname' => '',
+                                        'givenname' => '',
+                                        'orcid' => 'https://orcid.org/0009-0007-2910-0469',
+                                        'isContact' => false,
+                                        'affiliations' => []
+                                ]
+                        ])
+                ];
+
+                $updatedXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+                $xml = new \SimpleXMLElement($updatedXml);
+
+                $this->assertSame('', (string) $xml->Authors->Author->familyname);
+                $this->assertSame('', (string) $xml->Authors->Author->givenname);
+                $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->Author->orcid);
+                $this->assertSame('0009-0007-2910-0469', (string) $xml->Authors->AuthorPerson->orcid);
+                $this->assertSame(0, $xml->ContactPersons->ContactPerson->count());
+        }
+
+        public function testDataCiteTransformUsesUnifiedAuthorsInPayloadOrder(): void
+        {
+                $sourceXml = $this->directAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $creatorNames = [];
+                foreach ($xpath->query('//dc:creators/dc:creator/dc:creatorName') as $creatorName) {
+                        $creatorNames[] = trim($creatorName->textContent);
+                }
+
+                $contactContributors = $xpath->query('//dc:contributors/dc:contributor[@contributorType="ContactPerson"]/dc:contributorName');
+
+                $this->assertSame(
+                        ['DirectFirst, Person', 'Direct Institute', 'DirectLast, Person'],
+                        $creatorNames
+                );
+                $this->assertSame('DirectFirst, Person', trim($contactContributors->item(0)->textContent));
+        }
+
+        public function testDataCiteTransformSupportsAuthorWithoutGivenname(): void
+        {
+                $sourceXml = $this->mononymAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $this->assertSame('Sukarno', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:creatorName)')));
+                $this->assertSame(0, $xpath->query('//dc:creators/dc:creator/dc:givenName')->length);
+                $this->assertSame('Sukarno', trim($xpath->evaluate('string(//dc:contributors/dc:contributor[@contributorType="ContactPerson"]/dc:contributorName)')));
+        }
+
+        public function testDataCiteTransformSupportsOrcidOnlyAuthor(): void
+        {
+                $sourceXml = $this->orcidOnlyAuthorSourceXml();
+                $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+                $dom = new \DOMDocument();
+                $dom->loadXML($dataciteXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
+
+                $this->assertSame('0009-0007-2910-0469', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:creatorName)')));
+                $this->assertSame('0009-0007-2910-0469', trim($xpath->evaluate('string(//dc:creators/dc:creator/dc:nameIdentifier[@nameIdentifierScheme="ORCID"])')));
+                $this->assertSame(0, $xpath->query('//dc:creators/dc:creator/dc:familyName')->length);
+        }
+
+        public function testIsoTransformReadsUnifiedAuthorsInPayloadOrder(): void
+        {
+                $sourceXml = $this->directAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+                $this->assertSame(
+                        [
+                                ['individual' => 'DirectFirst, Person', 'organisation' => 'Payload University'],
+                                ['individual' => '', 'organisation' => 'Direct Institute'],
+                                ['individual' => 'DirectLast, Person', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+        }
+
+        public function testIsoTransformSupportsAuthorWithoutGivenname(): void
+        {
+                $sourceXml = $this->mononymAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => 'Sukarno', 'organisation' => 'Payload University'],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+                $this->assertStringContainsString('<gco:CharacterString>Sukarno</gco:CharacterString>', $isoXml);
+                $this->assertStringNotContainsString('Sukarno,', $isoXml);
+        }
+
+        public function testIsoTransformSupportsOrcidOnlyAuthor(): void
+        {
+                $sourceXml = $this->orcidOnlyAuthorSourceXml();
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => '0009-0007-2910-0469', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+                $this->assertStringContainsString('xlink:href="http://orcid.org/0009-0007-2910-0469"', $isoXml);
+        }
+
+        public function testIsoTransformFallsBackToLegacyAuthorsInXmlOrder(): void
+        {
+                $sourceXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.LEGACY.AUTHOR.ISO</doi>
+    <year>2026</year>
+    <dateCreated>2026-05-28</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Legacy Author ISO Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Legacy author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <AuthorPerson>
+            <familyname>LegacyFirst</familyname>
+            <givenname>Person</givenname>
+            <Affiliations><Affiliation><name>Legacy University</name></Affiliation></Affiliations>
+        </AuthorPerson>
+        <AuthorInstitution><institutionname>Legacy Institute</institutionname></AuthorInstitution>
+        <AuthorPerson><familyname>LegacyLast</familyname><givenname>Person</givenname></AuthorPerson>
+    </Authors>
+</Resource>
+XML;
+
+                $isoXml = $this->controller->transformResourceXmlString($sourceXml, 'iso');
+
+                $this->assertSame(
+                        [
+                                ['individual' => 'LegacyFirst, Person', 'organisation' => 'Legacy University'],
+                                ['individual' => '', 'organisation' => 'Legacy Institute'],
+                                ['individual' => 'LegacyLast, Person', 'organisation' => ''],
+                        ],
+                        $this->isoAuthorParties($isoXml)
+                );
+        }
+
+        private function isoAuthorParties(string $isoXml): array
+        {
+                $dom = new \DOMDocument();
+                $dom->loadXML($isoXml);
+                $xpath = new \DOMXPath($dom);
+                $xpath->registerNamespace('gmd', 'http://www.isotc211.org/2005/gmd');
+                $xpath->registerNamespace('gco', 'http://www.isotc211.org/2005/gco');
+
+                $parties = [];
+                foreach ($xpath->query('//gmd:citedResponsibleParty/gmd:CI_ResponsibleParty[gmd:role/gmd:CI_RoleCode[@codeListValue="author"]]') as $party) {
+                        $parties[] = [
+                                'individual' => trim($xpath->evaluate('string(gmd:individualName/gco:CharacterString)', $party)),
+                                'organisation' => trim($xpath->evaluate('string(gmd:organisationName/gco:CharacterString)', $party)),
+                        ];
+                }
+
+                return $parties;
+        }
+
+        private function directAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.DIRECT.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-05-28</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Direct Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Direct author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname>DirectFirst</familyname>
+            <givenname>Person</givenname>
+            <Affiliations><Affiliation><name>Payload University</name><rorId>04z8jg394</rorId></Affiliation></Affiliations>
+        </Author>
+        <Author>
+            <institutionname>Direct Institute</institutionname>
+        </Author>
+        <Author>
+            <familyname>DirectLast</familyname>
+            <givenname>Person</givenname>
+        </Author>
+        <AuthorPerson><familyname>LegacyGrouped</familyname><givenname>ShouldNotBeUsed</givenname></AuthorPerson>
+        <AuthorInstitution><institutionname>Legacy Institution Should Not Be Used</institutionname></AuthorInstitution>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>DirectFirst</familyname><givenname>Person</givenname><email>direct-first@example.com</email></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+        }
+
+        private function mononymAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.MONONYM.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-06-16</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>Mononym Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>Mononym author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname>Sukarno</familyname>
+            <givenname></givenname>
+            <Affiliations><Affiliation><name>Payload University</name><rorId>04z8jg394</rorId></Affiliation></Affiliations>
+        </Author>
+    </Authors>
+    <ContactPersons>
+        <ContactPerson><familyname>Sukarno</familyname><givenname></givenname><email>sukarno@example.com</email></ContactPerson>
+    </ContactPersons>
+</Resource>
+XML;
+        }
+
+        private function orcidOnlyAuthorSourceXml(): string
+        {
+                return <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+    <doi>10.5880/GFZ.TEST.ORCID.ONLY.AUTHOR.XSLT</doi>
+    <year>2026</year>
+    <dateCreated>2026-06-24</dateCreated>
+    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <Language><code>en</code></Language>
+    <Titles><Title><text>ORCID Only Author XSLT Test</text><type>Main Title</type></Title></Titles>
+    <Descriptions><Description><description>ORCID-only author test abstract</description><type>Abstract</type></Description></Descriptions>
+    <Authors>
+        <Author>
+            <familyname></familyname>
+            <givenname></givenname>
+            <orcid>0009-0007-2910-0469</orcid>
+        </Author>
+    </Authors>
+    <ContactPersons/>
+</Resource>
+XML;
+        }
 
     public function testGetAuthorAffiliationsReturnsCorrectData(): void
     {

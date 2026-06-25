@@ -291,6 +291,27 @@
     </div>
   </div>
 <!-- Feedback Modal -->
+<!-- Affiliation Tag Edit Modal -->
+<div class="modal fade" id="modal-affiliation-edit" tabindex="-1" aria-labelledby="modal-affiliation-edit-label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-affiliation-edit-label" data-translate="affiliationEdit.title">Edit Affiliation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-floating">
+                    <input type="text" class="form-control" id="input-affiliation-edit-value" autocomplete="off" />
+                    <label for="input-affiliation-edit-value" data-translate="general.affiliation">Affiliation</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="affiliationEdit.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="button-affiliation-edit-save" data-translate="affiliationEdit.save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- ORCID Search Modal -->
 <div class="modal fade" id="modal-orcid-search" tabindex="-1" aria-labelledby="modal-orcid-search-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
