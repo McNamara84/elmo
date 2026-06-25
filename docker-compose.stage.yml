@@ -50,7 +50,7 @@ services:
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "true"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}      
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
@@ -103,7 +103,7 @@ services:
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_MODE: "true"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}  
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
@@ -157,7 +157,7 @@ services:
       # Flags for ICGEM (GGMs properties enabled)
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "true"
-      SHOW_USED_INSTRUMENTS: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
@@ -210,7 +210,7 @@ services:
       # Flags for IGSN (minimal form - most form groups disabled)
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "false"
       SHOW_FREE_KEYWORDS: "false"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
