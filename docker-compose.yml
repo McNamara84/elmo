@@ -33,7 +33,7 @@ services:
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL
       SHOW_MSL_MODE: "false"
-      SHOW_USED_INSTRUMENTS: "true"
+      SHOW_USED_INSTRUMENTS: "false"
       SIMULATE_EMAIL: "true"
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
