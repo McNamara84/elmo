@@ -504,6 +504,7 @@ try {
     }
 
     // Include the dataset controller to generate the file
+    $datasetController = null;
     try {
         require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
         $datasetController = new DatasetController();
@@ -541,6 +542,15 @@ try {
     }
 
     error_log("send_xml_file.php: XML content ready");
+
+    if (!empty($xml_content) && is_object($datasetController) && method_exists($datasetController, 'markDataCiteEnvelopeAsSubmitted')) {
+        try {
+            $xml_content = $datasetController->markDataCiteEnvelopeAsSubmitted($xml_content, date('Y-m-d'));
+            error_log("Submit: Marked DataCite XML with dateType=Submitted.");
+        } catch (Exception $e) {
+            error_log("Submit: Failed to add Submitted date to XML content: " . $e->getMessage());
+        }
+    }
 
 // Add simulation flag for development 
 // (set SIMULATE_EMAIL=true in env to skip the actual email sending)
