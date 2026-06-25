@@ -1198,6 +1198,7 @@ class DatasetController
 
         if ($format === 'datacite') {
             $newXml = $this->stripEmptyDataciteElements($newXml);
+            $newXml = $this->restoreDataCiteDateOnlyCoverageDates($newXml, $sourceXmlString);
         }
 
         return $newXml;
@@ -1342,6 +1343,100 @@ class DatasetController
         }
 
         return null;
+    }
+
+    private function restoreDataCiteDateOnlyCoverageDates(string $dataciteXml, string $sourceXml): string
+    {
+        $coverageIntervals = $this->extractDateOnlyCoverageIntervals($sourceXml);
+        if ($coverageIntervals === []) {
+            return $dataciteXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($dataciteXml)) {
+            return $dataciteXml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+
+        $resources = $xpath->query('//dc:resource');
+        foreach ($resources as $resource) {
+            if (!$resource instanceof DOMElement) {
+                continue;
+            }
+
+            $dates = $xpath->query('dc:dates', $resource)->item(0);
+            if (!$dates instanceof DOMElement) {
+                $dates = $dom->createElementNS($ns, 'dates');
+                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
+                if ($insertBefore !== null) {
+                    $resource->insertBefore($dates, $insertBefore);
+                } else {
+                    $resource->appendChild($dates);
+                }
+            }
+
+            $existingCoverageDates = [];
+            foreach ($xpath->query('dc:date[@dateType="Coverage"]', $dates) as $dateNode) {
+                $existingCoverageDates[] = trim($dateNode->textContent);
+            }
+
+            foreach ($coverageIntervals as $coverageInterval) {
+                if (in_array($coverageInterval, $existingCoverageDates, true)) {
+                    continue;
+                }
+
+                $date = $dom->createElementNS($ns, 'date', $coverageInterval);
+                $date->setAttribute('dateType', 'Coverage');
+                $dates->appendChild($date);
+                $existingCoverageDates[] = $coverageInterval;
+            }
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractDateOnlyCoverageIntervals(string $sourceXml): array
+    {
+        $dom = new DOMDocument();
+        if (!$dom->loadXML($sourceXml)) {
+            return [];
+        }
+
+        $xpath = new DOMXPath($dom);
+        $coverageNodes = $xpath->query('//*[local-name()="SpatialTemporalCoverage"]');
+        $coverageIntervals = [];
+
+        foreach ($coverageNodes as $coverageNode) {
+            $dateStart = $this->childTextByLocalName($xpath, $coverageNode, 'dateStart');
+            if ($dateStart === '') {
+                continue;
+            }
+
+            $timeStart = $this->childTextByLocalName($xpath, $coverageNode, 'timeStart');
+            $timeEnd = $this->childTextByLocalName($xpath, $coverageNode, 'timeEnd');
+            if ($timeStart !== '' || $timeEnd !== '') {
+                continue;
+            }
+
+            $dateEnd = $this->childTextByLocalName($xpath, $coverageNode, 'dateEnd');
+            $coverageIntervals[] = $dateStart . '/' . $dateEnd;
+        }
+
+        return $coverageIntervals;
+    }
+
+    private function childTextByLocalName(DOMXPath $xpath, DOMNode $contextNode, string $localName): string
+    {
+        $node = $xpath->query('./*[local-name()="' . $localName . '"]', $contextNode)->item(0);
+
+        return $node instanceof DOMNode ? trim($node->textContent) : '';
     }
 
     /**

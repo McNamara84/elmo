@@ -65,6 +65,36 @@ describe('Issue #880 STC date-only XML import', () => {
     expect(result.endTime).toBe('');
     expect(result.timezoneOffset).toBe('');
   });
+
+  test('date-only temporal fields do not select a timezone', () => {
+    document.body.innerHTML = `
+      <div tsc-row>
+        <input name="tscDateStart[]" value="" />
+        <input name="tscTimeStart[]" value="" />
+        <input name="tscDateEnd[]" value="" />
+        <input name="tscTimeEnd[]" value="" />
+        <select name="tscTimezone[]">
+          <option value=""></option>
+          <option value="1">UTC +01:00</option>
+        </select>
+      </div>
+    `;
+
+    const $ = require('jquery');
+    const ctx = loadMappingModule({ $ });
+    const $row = $('[tsc-row]');
+
+    ctx.fillTemporalFields($row, {
+      startDate: '2026-06-12',
+      startTime: '',
+      endDate: '',
+      endTime: '',
+      timezoneOffset: '',
+    });
+
+    expect(document.querySelector('input[name="tscDateStart[]"]').value).toBe('2026-06-12');
+    expect(document.querySelector('select[name="tscTimezone[]"]').value).toBe('');
+  });
 });
 
 describe('Issue #1108 ICGEM Date Created XML import', () => {

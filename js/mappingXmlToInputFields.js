@@ -1254,6 +1254,10 @@ function fillTemporalFields($row, temporalData) {
   }
   $row.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
 
+  if (!temporalData.timezoneOffset) {
+    return;
+  }
+
   const timezoneField = $row.find('select[name="tscTimezone[]"]');
   timezoneField.find("option").each(function () {
     if ($(this).text().includes(temporalData.timezoneOffset)) {
@@ -1748,6 +1752,7 @@ if (typeof module !== 'undefined' && module.exports) {
         parseTemporalData,
         getGeoLocationData,
         fillSpatialFields,
+        fillTemporalFields,
         processUsedInstruments,
         processDescriptions,
         processRelatedWorks,
