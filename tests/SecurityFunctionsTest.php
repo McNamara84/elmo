@@ -8,15 +8,13 @@ require_once __DIR__ . '/../api/security.php';
 /**
  * Test suite for centralized security functions in api/security.php
  * 
- * Tests CSRF token generation/validation, honeypot detection, 
- * rate limiting, and client IP detection.
+ * Tests CSRF token generation/validation, honeypot detection,
+ * and session-scoped rate limiting.
  */
-class SecurityFunctionsTest extends DatabaseTestCase
+class SecurityFunctionsTest extends TestCase
 {
     protected function setUp(): void
     {
-        parent::setUp();
-        
         // Initialize session for CSRF tests
         if (session_status() === PHP_SESSION_NONE) {
             session_start();
@@ -28,8 +26,6 @@ class SecurityFunctionsTest extends DatabaseTestCase
 
     protected function tearDown(): void
     {
-        parent::tearDown();
-        
         // Clean up session
         $_SESSION = [];
         if (session_status() === PHP_SESSION_ACTIVE) {
@@ -172,11 +168,11 @@ class SecurityFunctionsTest extends DatabaseTestCase
     }
 
     /**
-     * Tests validateHoneypot accepts null (not filled).
+     * Tests validateHoneypot accepts null coerced to empty (not filled).
      */
     public function testValidateHoneypotNull(): void
     {
-        $this->assertTrue(validateHoneypot(null));
+        $this->assertTrue(validateHoneypot(''));
     }
 
     /**
@@ -197,274 +193,121 @@ class SecurityFunctionsTest extends DatabaseTestCase
         $this->assertFalse(validateHoneypot('   '));
     }
 
-    // ==================== Client IP Tests ====================
+    // ==================== Session Rate Limiting Tests ====================
 
     /**
-     * Tests getClientIp returns REMOTE_ADDR when no proxy headers.
+     * Tests checkSessionRateLimit allows submissions within limit.
      */
-    public function testGetClientIpRemoteAddr(): void
+    public function testCheckSessionRateLimitWithinBounds(): void
     {
-        // Save original
-        $originalRemoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
         
-        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
-        unset($_SERVER['HTTP_X_FORWARDED_FOR']);
-        unset($_SERVER['HTTP_X_REAL_IP']);
-        
-        $this->assertEquals('192.168.1.100', getClientIp());
-        
-        // Restore
-        if ($originalRemoteAddr) {
-            $_SERVER['REMOTE_ADDR'] = $originalRemoteAddr;
-        }
-    }
-
-    /**
-     * Tests getClientIp prioritizes X-Forwarded-For header.
-     */
-    public function testGetClientIpWithXForwardedFor(): void
-    {
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.50, 198.51.100.1';
-        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
-        unset($_SERVER['HTTP_X_REAL_IP']);
-        
-        // Should return the first IP from X-Forwarded-For
-        $this->assertEquals('203.0.113.50', getClientIp());
-        
-        unset($_SERVER['HTTP_X_FORWARDED_FOR']);
-    }
-
-    /**
-     * Tests getClientIp uses X-Real-IP when X-Forwarded-For not available.
-     */
-    public function testGetClientIpWithXRealIp(): void
-    {
-        unset($_SERVER['HTTP_X_FORWARDED_FOR']);
-        $_SERVER['HTTP_X_REAL_IP'] = '203.0.113.75';
-        $_SERVER['REMOTE_ADDR'] = '192.168.1.100';
-        
-        $this->assertEquals('203.0.113.75', getClientIp());
-        
-        unset($_SERVER['HTTP_X_REAL_IP']);
-    }
-
-    /**
-     * Tests getClientIp handles IPv6 addresses.
-     */
-    public function testGetClientIpIPv6(): void
-    {
-        $_SERVER['REMOTE_ADDR'] = '2001:db8::1';
-        unset($_SERVER['HTTP_X_FORWARDED_FOR']);
-        unset($_SERVER['HTTP_X_REAL_IP']);
-        
-        $this->assertEquals('2001:db8::1', getClientIp());
-    }
-
-    // ==================== Rate Limiting Tests ====================
-
-    /**
-     * Tests checkRateLimit allows submissions within limit.
-     */
-    public function testCheckRateLimitWithinBounds(): void
-    {
-        $clientIp = '203.0.113.100';
-        
-        // Record 2 submissions
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        
-        // Should allow 3rd submission (limit is 3 by default)
         $this->assertTrue(
-            checkRateLimit(
-                $this->connection,
-                $clientIp,
-                'feedback',
-                RATE_LIMIT_FEEDBACK_MAX,
-                RATE_LIMIT_WINDOW_SECONDS
-            )
+            checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)
         );
     }
 
     /**
-     * Tests checkRateLimit rejects submissions exceeding limit.
+     * Tests checkSessionRateLimit rejects submissions exceeding limit.
      */
-    public function testCheckRateLimitExceeded(): void
+    public function testCheckSessionRateLimitExceeded(): void
     {
-        $clientIp = '203.0.113.101';
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
         
-        // Record 3 submissions (at the limit)
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        
-        // 4th submission should be rejected
         $this->assertFalse(
-            checkRateLimit(
-                $this->connection,
-                $clientIp,
-                'feedback',
-                RATE_LIMIT_FEEDBACK_MAX,
-                RATE_LIMIT_WINDOW_SECONDS
-            )
+            checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)
         );
     }
 
     /**
-     * Tests checkRateLimit maintains separate counters for different actions.
+     * Tests checkSessionRateLimit maintains separate counters for different actions.
      */
-    public function testCheckRateLimitMultipleActions(): void
+    public function testCheckSessionRateLimitMultipleActions(): void
     {
-        $clientIp = '203.0.113.102';
-        
-        // Max 3 for feedback, 5 for save, 2 for submit (testing with smaller numbers)
         $feedbackLimit = 3;
         $saveLimit = 5;
         $submitLimit = 2;
         
-        // Record 3 feedback submissions (at limit)
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        recordRateLimit($this->connection, $clientIp, 'feedback');
-        recordRateLimit($this->connection, $clientIp, 'feedback');
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
         
-        // Feedback should be blocked
         $this->assertFalse(
-            checkRateLimit($this->connection, $clientIp, 'feedback', $feedbackLimit, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('feedback', $feedbackLimit, RATE_LIMIT_WINDOW_SECONDS)
         );
         
-        // But save should still be allowed (separate counter)
         $this->assertTrue(
-            checkRateLimit($this->connection, $clientIp, 'save', $saveLimit, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('save', $saveLimit, RATE_LIMIT_WINDOW_SECONDS)
         );
         
-        // Record 2 save submissions (at limit)
-        recordRateLimit($this->connection, $clientIp, 'save');
-        recordRateLimit($this->connection, $clientIp, 'save');
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
         
-        // Save should be allowed (2 < 5)
         $this->assertTrue(
-            checkRateLimit($this->connection, $clientIp, 'save', $saveLimit, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('save', $saveLimit, RATE_LIMIT_WINDOW_SECONDS)
         );
         
-        // Submit should be allowed
         $this->assertTrue(
-            checkRateLimit($this->connection, $clientIp, 'submit', $submitLimit, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('submit', $submitLimit, RATE_LIMIT_WINDOW_SECONDS)
         );
     }
 
     /**
-     * Tests recordRateLimit successfully records submission.
+     * Tests recordSessionRateLimit stores timestamps in session.
      */
-    public function testRecordRateLimit(): void
+    public function testRecordSessionRateLimit(): void
     {
-        $clientIp = '203.0.113.103';
-        $actionType = 'feedback';
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
         
-        $result = recordRateLimit($this->connection, $clientIp, $actionType);
-        
-        $this->assertTrue($result);
-        
-        // Verify it was recorded in database
-        $stmt = $this->connection->prepare(
-            "SELECT COUNT(*) as count FROM Rate_Limit WHERE ip_address = ? AND action = ?"
-        );
-        $stmt->bind_param("ss", $clientIp, $actionType);
-        $stmt->execute();
-        $row = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        
-        $this->assertEquals(1, $row['count']);
+        $this->assertArrayHasKey(RATE_LIMIT_SESSION_KEY, $_SESSION);
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['feedback']);
     }
 
     /**
-     * Tests checkRateLimit respects the time window.
+     * Tests checkSessionRateLimit respects the time window.
      */
-    public function testCheckRateLimitTimeWindow(): void
+    public function testCheckSessionRateLimitTimeWindow(): void
     {
-        $clientIp = '203.0.113.104';
-        $actionType = 'feedback';
+        $_SESSION[RATE_LIMIT_SESSION_KEY] = [
+            'feedback' => [time() - 2],
+        ];
         
-        // Record a submission now
-        recordRateLimit($this->connection, $clientIp, $actionType);
-        
-        // Check with 1-second window (should be within)
         $this->assertTrue(
-            checkRateLimit($this->connection, $clientIp, $actionType, 1, 1)
+            checkSessionRateLimit('feedback', 1, 1)
         );
         
-        // Wait briefly
-        sleep(2);
+        $_SESSION[RATE_LIMIT_SESSION_KEY] = [
+            'feedback' => [time() - 2],
+        ];
         
-        // Check with 1-second window (should be outside, reset)
-        $this->assertTrue(
-            checkRateLimit($this->connection, $clientIp, $actionType, 0, 1)
-        );
-    }
-
-    /**
-     * Tests checkRateLimit cleans up old entries.
-     */
-    public function testCheckRateLimitCleanup(): void
-    {
-        $clientIp = '203.0.113.105';
-        
-        // Manually insert an old entry (25 hours ago)
-        $oldTime = date('Y-m-d H:i:s', time() - (25 * 3600));
-        $stmt = $this->connection->prepare(
-            "INSERT INTO Rate_Limit (action, ip_address, submitted_at) VALUES (?, ?, ?)"
-        );
-        $action = 'feedback';
-        $stmt->bind_param("sss", $action, $clientIp, $oldTime);
-        $stmt->execute();
-        $stmt->close();
-        
-        // Verify it exists
-        $stmt = $this->connection->prepare(
-            "SELECT COUNT(*) as count FROM Rate_Limit WHERE ip_address = ?"
-        );
-        $stmt->bind_param("s", $clientIp);
-        $stmt->execute();
-        $before = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        
-        $this->assertGreaterThan(0, $before['count']);
-        
-        // Call checkRateLimit which should trigger cleanup
-        checkRateLimit($this->connection, $clientIp, 'feedback', 3, 3600);
-        
-        // Verify old entry was cleaned up
-        $stmt = $this->connection->prepare(
-            "SELECT COUNT(*) as count FROM Rate_Limit WHERE ip_address = ? AND submitted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)"
-        );
-        $stmt->bind_param("s", $clientIp);
-        $stmt->execute();
-        $after = $stmt->get_result()->fetch_assoc();
-        $stmt->close();
-        
-        $this->assertEquals(0, $after['count']);
-    }
-
-    /**
-     * Tests that different IPs have independent rate limit counters.
-     */
-    public function testCheckRateLimitIsolationByIP(): void
-    {
-        $ip1 = '203.0.113.106';
-        $ip2 = '203.0.113.107';
-        
-        // Record 3 submissions from IP1
-        recordRateLimit($this->connection, $ip1, 'feedback');
-        recordRateLimit($this->connection, $ip1, 'feedback');
-        recordRateLimit($this->connection, $ip1, 'feedback');
-        
-        // IP1 should be blocked
         $this->assertFalse(
-            checkRateLimit($this->connection, $ip1, 'feedback', 3, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('feedback', 0, 1)
+        );
+    }
+
+    /**
+     * Tests that different sessions have independent rate limit counters.
+     */
+    public function testCheckSessionRateLimitIsolationBySession(): void
+    {
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+        
+        $this->assertFalse(
+            checkSessionRateLimit('feedback', 3, RATE_LIMIT_WINDOW_SECONDS)
         );
         
-        // IP2 should still be allowed
+        session_write_close();
+        session_id('other-session-id');
+        session_start();
+        $_SESSION = [];
+        
         $this->assertTrue(
-            checkRateLimit($this->connection, $ip2, 'feedback', 3, RATE_LIMIT_WINDOW_SECONDS)
+            checkSessionRateLimit('feedback', 3, RATE_LIMIT_WINDOW_SECONDS)
         );
     }
 }
-?>

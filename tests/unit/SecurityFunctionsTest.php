@@ -5,9 +5,8 @@
  * Tests core security features:
  * - CSRF token validation, generation, and invalidation
  * - Honeypot validation for bot detection
- * - Client IP detection from various headers
- * - recordRateLimit fail-open behavior
- * - logSuspiciousAttempt sanitization and fallback
+ * - Session-scoped rate limiting
+ * - logSuspiciousAttempt sanitization and throttling
  */
 
 namespace Tests\Unit;
@@ -16,8 +15,6 @@ use PHPUnit\Framework\TestCase;
 
 class SecurityFunctionsTest extends TestCase
 {
-    private string $testIp = '192.168.1.100';
-
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -33,7 +30,6 @@ class SecurityFunctionsTest extends TestCase
     protected function tearDown(): void
     {
         $_SESSION = [];
-        unset($_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['HTTP_X_REAL_IP']);
     }
 
     // ========== CSRF Token Tests ==========
@@ -138,7 +134,7 @@ class SecurityFunctionsTest extends TestCase
     public function getCsrfTokenAgeSeconds_ReturnsElapsedTime(): void
     {
         generateCsrfToken();
-        $_SESSION['csrf_token_time'] = time() - 5;
+        $_SESSION['csrf_interaction_start_time'] = time() - 5;
         
         $age = getCsrfTokenAgeSeconds();
         $this->assertGreaterThanOrEqual(4, $age);
@@ -172,71 +168,20 @@ class SecurityFunctionsTest extends TestCase
         $this->assertFalse(validateHoneypot('   '));
     }
 
-    // ========== Client IP Detection Tests ==========
+    // ========== Session Rate Limit Tests ==========
 
-    /**
-     * @test
-     * IP detection prioritizes forwarded headers (X-Forwarded-For, X-Real-IP).
-     */
-    public function getClientIp_UsesRemoteAddr(): void
+    /** @test */
+    public function checkSessionRateLimit_AllowsWithinLimit(): void
     {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $this->assertEquals('10.0.0.1', getClientIp());
-    }
-
-    /**
-     * @test
-     */
-    public function getClientIp_PrefersXForwardedFor(): void
-    {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.5, 198.51.100.1';
-
-        $this->assertEquals('203.0.113.5', getClientIp());
-    }
-
-    /**
-     * @test
-     */
-    public function getClientIp_UsesXRealIp(): void
-    {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $_SERVER['HTTP_X_REAL_IP'] = '192.0.2.1';
-
-        $this->assertEquals('192.0.2.1', getClientIp());
-    }
-
-    // ========== Rate Limit Storage: Fail-Open Tests ==========
-
-    /**
-     * @test
-     * All rate-limit functions degrade gracefully (fail-open) when storage is unavailable.
-     */
-    public function isRateLimitStorageAvailable_FalseForNullConnection(): void
-    {
-        $this->assertFalse(isRateLimitStorageAvailable(null));
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        $this->assertTrue(checkSessionRateLimit('save', 2, RATE_LIMIT_WINDOW_SECONDS));
     }
 
     /** @test */
-    public function isRateLimitStorageAvailable_FalseForNonMysqliObject(): void
+    public function recordSessionRateLimit_StoresTimestampInSession(): void
     {
-        $this->assertFalse(isRateLimitStorageAvailable(new \stdClass()));
-    }
-
-    // ========== recordRateLimit Tests ==========
-
-    /** @test */
-    public function recordRateLimit_ReturnsFalseForNullConnection(): void
-    {
-        $result = recordRateLimit(null, $this->testIp, 'save');
-        $this->assertFalse($result);
-    }
-
-    /** @test */
-    public function recordRateLimit_ReturnsFalseForInvalidConnection(): void
-    {
-        $result = recordRateLimit(new \stdClass(), $this->testIp, 'submit');
-        $this->assertFalse($result);
+        recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['submit']);
     }
 
     // ========== logSuspiciousAttempt Tests ==========
@@ -262,27 +207,25 @@ class SecurityFunctionsTest extends TestCase
 
     /**
      * @test
-     * When no DB is available the function must not throw and must write to error_log.
      */
-    public function logSuspiciousAttempt_FallsBackToErrorLogWhenNoConnection(): void
+    public function logSuspiciousAttempt_WritesToErrorLog(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'save', 'honeypot filled', $this->testIp);
+        logSuspiciousAttempt('save', 'honeypot filled');
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringContainsString('[SECURITY]', $content);
         $this->assertStringContainsString('Suspicious save attempt', $content);
-        $this->assertStringContainsString($this->testIp, $content);
+        $this->assertStringNotContainsString('IP', $content);
     }
 
     /** @test */
     public function logSuspiciousAttempt_SanitizesSpecialCharsInOperation(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'save/op@attack!', 'reason', $this->testIp);
+        logSuspiciousAttempt('save/op@attack!', 'reason');
         $content = $this->readAndCleanLog($logFile);
 
-        // Dangerous chars must be replaced with underscores in the log line
         $this->assertStringContainsString('save_op_attack_', $content);
         $this->assertStringNotContainsString('save/op@attack!', $content);
     }
@@ -291,7 +234,7 @@ class SecurityFunctionsTest extends TestCase
     public function logSuspiciousAttempt_SanitizesControlCharsInReason(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'submit', "invalid\x00token\x1Fvalue", $this->testIp);
+        logSuspiciousAttempt('submit', "invalid\x00token\x1Fvalue");
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringNotContainsString("\x00", $content);
@@ -299,21 +242,10 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
-    public function logSuspiciousAttempt_UsesProvidedIpAddress(): void
-    {
-        $customIp = '10.0.0.50';
-        $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'submit', 'csrf invalid', $customIp);
-        $content = $this->readAndCleanLog($logFile);
-
-        $this->assertStringContainsString($customIp, $content);
-    }
-
-    /** @test */
-    public function logSuspiciousAttempt_DoesNotThrowOnInvalidConnection(): void
+    public function logSuspiciousAttempt_DoesNotThrow(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(new \stdClass(), 'submit', 'test', $this->testIp);
+        logSuspiciousAttempt('submit', 'test');
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringContainsString('[SECURITY]', $content);

@@ -3,7 +3,7 @@
  * Script for handling feedback email submission using PHPMailer with GFZ SMTP
  * 
  * Security measures implemented:
- * - Rate limiting: Max 3 submissions per IP per hour
+ * - Rate limiting: Max submissions per session per hour
  * - Honeypot field: Hidden field that bots tend to fill
  * - CSRF token: Validates request origin
  */
@@ -138,8 +138,7 @@ function sendFeedbackMail(
             . $feedbackQuestion7 . "\n\n"
             . "---\n"
             . "Eingereicht am: " . date('d.m.Y H:i:s') . "\n"
-            . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System') . "\n"
-            . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unbekannt');
+            . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System');
         
         error_log("Sende E-Mail über GFZ SMTP ({$smtpHost}:{$smtpPort}) an {$feedbackAddress}");
         $mail->send();
@@ -181,15 +180,10 @@ function sendFeedbackMail(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
-    // Get database connection from settings.php
-    global $connection;
-    
-    $clientIp = getClientIp();
-    
     // Security Check 1: Honeypot
     if (!validateHoneypot($_POST['website'] ?? '')) {
         // Silently reject but return fake success to not alert the bot
-        error_log("Feedback blocked: Honeypot triggered from IP {$clientIp}");
+        error_log('Feedback blocked: Honeypot triggered');
         echo json_encode(['success' => true, 'message' => 'Feedback erfolgreich gesendet!']);
         exit;
     }
@@ -197,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Security Check 2: CSRF Token
     $submittedToken = $_POST['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken, 'feedback')) {
-        error_log("Feedback blocked: Invalid CSRF token from IP {$clientIp}");
+        error_log('Feedback blocked: Invalid CSRF token');
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
 
@@ -205,22 +199,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $timeCheck = evaluateInteractionTime((int) ($_POST['feedback_time_spent'] ?? 0), max(3, MIN_INTERACTION_FEEDBACK_SECONDS), 'feedback');
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
-            $connection,
             'feedback',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
         );
         sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
     }
     
     // Security Check 4: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        error_log("Feedback blocked: Rate limit exceeded for IP {$clientIp}");
+    if (!checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        error_log('Feedback blocked: Rate limit exceeded');
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
     }
     
     // All security checks passed - record this submission
-    recordRateLimit($connection, $clientIp, 'feedback');
+    recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
 
     // Invalidate used feedback token.
     invalidateScopedCsrfToken('feedback');
