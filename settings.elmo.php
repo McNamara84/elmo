@@ -135,6 +135,13 @@ if ($envShowRelatedWork !== false) {
     $showRelatedWork = filter_var($envShowRelatedWork, FILTER_VALIDATE_BOOLEAN);
 }
 
+// Playwright variant setup writes this lock file after env overrides so local
+// Docker env vars (SHOW_GGMS_PROPERTIES, SHOW_MSL_MODE, etc.) cannot override
+// the active test variant on a single shared container.
+if (is_readable(__DIR__ . '/playwright-variant-lock.php')) {
+    require __DIR__ . '/playwright-variant-lock.php';
+}
+
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 

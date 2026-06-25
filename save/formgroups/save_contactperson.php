@@ -27,10 +27,8 @@ require_once __DIR__ . '/../validation.php';
 function saveContactPerson($connection, $postData, $resource_id)
 {
     $action = $postData['action'] ?? 'save_and_download';
-    $payload = decodeAuthorsPayload($postData);
-
-    if ($payload !== null) {
-        foreach (normalizeAuthorsPayload($postData) as $author) {
+    if (hasNonemptyAuthorsPayload($postData)) {
+        foreach (normalizeAuthorsFromPayload(decodeAuthorsPayload($postData)) as $author) {
             if (($author['type'] ?? '') !== 'person' || ($author['isContact'] ?? false) !== true) {
                 continue;
             }
