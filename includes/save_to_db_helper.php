@@ -103,8 +103,6 @@ function saveALL(array $postData): int {
         }
         
         error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
-
-        $connection->commit();
         return $resource_id;
     } catch (Exception $e) {
         $connection->rollback();
