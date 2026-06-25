@@ -262,14 +262,12 @@ class SubmitHandler {
     }
 
     /**
-     * Fetch fresh CSRF token from the server
-     * @param {{ refresh?: boolean }} [options]
+     * Fetch CSRF token from the server
      * @returns {Promise<string>}
      */
-    async fetchCsrfToken({ refresh = false } = {}) {
+    async fetchCsrfToken() {
         try {
-            const query = refresh ? '?refresh=1' : '';
-            const response = await fetch(`api/csrf_token.php${query}`, {
+            const response = await fetch('api/csrf_token.php', {
                 credentials: 'include'
             });
             const data = await response.json();
@@ -296,18 +294,6 @@ class SubmitHandler {
         }
 
         return token;
-    }
-
-    /**
-     * Fetch and store a new form CSRF token, then reset form timing baseline.
-     * @returns {Promise<void>}
-     */
-    async refreshFormCsrfToken() {
-        const token = await this.fetchCsrfToken({ refresh: true });
-        if (token) {
-            this.$csrfTokenField.val(token);
-            this.formStartedAt = Date.now();
-        }
     }
 
     /**
@@ -490,9 +476,6 @@ class SubmitHandler {
             },
             error: (xhr, textStatus, errorThrown) => {
                 this.handleAjaxError(xhr, textStatus, errorThrown);
-            },
-            complete: () => {
-                this.refreshFormCsrfToken();
             }
         });
     }

@@ -160,9 +160,6 @@ function validateSubmitSecurity(array $postData): void {
     // All checks passed, record the rate limit
     recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
     
-    // Invalidate CSRF token after successful security validation
-    invalidateCsrfToken();
-    
     error_log("send_xml_file.php: Submit security validation passed");
 }
 

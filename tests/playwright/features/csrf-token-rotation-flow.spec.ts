@@ -30,41 +30,39 @@ async function closeNotificationModalIfVisible(page: Page): Promise<void> {
 async function confirmSave(page: Page): Promise<void> {
   const filenameField = page.locator('#input-saveas-filename');
   if (!(await filenameField.inputValue())) {
-    await filenameField.fill('dataset_playwright_token_rotation');
+    await filenameField.fill('dataset_playwright_token_persistence');
   }
   await page.locator('#button-saveas-save').click();
 }
 
-test.describe('CSRF Token Rotation Flow', () => {
-  test('form token exists, rotates after save/submit, and save time gate works after rotation', async ({ page }) => {
-    let formTokenCounter = 0;
-    let feedbackTokenCounter = 0;
+test.describe('CSRF Token Session Flow', () => {
+  test('form token is issued once and reused across save and submit', async ({ page }) => {
+    let formTokenFetchCount = 0;
 
     await page.route(CSRF_ENDPOINT, async (route) => {
       const requestUrl = new URL(route.request().url());
       const scope = requestUrl.searchParams.get('scope') || 'form';
 
       if (scope === 'feedback') {
-        feedbackTokenCounter += 1;
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
           body: JSON.stringify({
             success: true,
-            token: `feedback-token-${feedbackTokenCounter}`,
+            token: 'feedback-token-1',
             scope,
           }),
         });
         return;
       }
 
-      formTokenCounter += 1;
+      formTokenFetchCount += 1;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify({
           success: true,
-          token: `form-token-${formTokenCounter}`,
+          token: 'form-token-1',
           scope: 'form',
         }),
       });
@@ -112,12 +110,9 @@ test.describe('CSRF Token Rotation Flow', () => {
 
     const formCsrfField = page.locator('#input-form-csrf-token');
     await expect(formCsrfField).toHaveValue('form-token-1');
-
-    const tokenBeforeSave = await formCsrfField.inputValue();
-    expect(tokenBeforeSave).toBe('form-token-1');
+    expect(formTokenFetchCount).toBe(1);
 
     await openSaveModal(page);
-    // Force deterministic near-zero client elapsed time for first save attempt.
     await page.evaluate(() => {
       const originalNow = Date.now.bind(Date);
       (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
@@ -131,8 +126,8 @@ test.describe('CSRF Token Rotation Flow', () => {
     expect(firstSaveResponse.status()).toBe(400);
 
     await expect(page.locator('.alert-danger')).toBeVisible();
-
-    await expect.poll(async () => formCsrfField.inputValue()).toBe('form-token-2');
+    await expect(formCsrfField).toHaveValue('form-token-1');
+    expect(formTokenFetchCount).toBe(1);
     await closeNotificationModalIfVisible(page);
 
     await page.evaluate(() => {
@@ -151,7 +146,8 @@ test.describe('CSRF Token Rotation Flow', () => {
     ]);
 
     await expect(page.locator('.alert-success')).toBeVisible();
-    await expect.poll(async () => formCsrfField.inputValue()).toBe('form-token-3');
+    await expect(formCsrfField).toHaveValue('form-token-1');
+    expect(formTokenFetchCount).toBe(1);
     await closeNotificationModalIfVisible(page);
 
     await completeMinimalDatasetForm(page);
@@ -164,7 +160,8 @@ test.describe('CSRF Token Rotation Flow', () => {
       page.locator('#button-submit-submit').click(),
     ]);
 
-    await expect.poll(async () => formCsrfField.inputValue()).toBe('form-token-4');
+    await expect(formCsrfField).toHaveValue('form-token-1');
+    expect(formTokenFetchCount).toBe(1);
 
     await page.unroute(CSRF_ENDPOINT);
     await page.unroute(SAVE_ENDPOINT);

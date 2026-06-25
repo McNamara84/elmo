@@ -359,21 +359,6 @@ function loadReferenceXml(testName: string): any {
   return JSON.parse(jsonContent);
 }
 
-async function refreshFormCsrfToken(page: Page): Promise<string> {
-  const token = await page.evaluate(async () => {
-    const response = await fetch('api/csrf_token.php');
-    const data = await response.json();
-    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
-    if (csrfField && data.token) {
-      csrfField.value = data.token;
-    }
-    return (data && data.token) ? String(data.token) : '';
-  });
-
-  expect(token).not.toBe('');
-  return token;
-}
-
 /**
  * Captures XML from the save response and saves it for verification.
  * 
@@ -403,15 +388,14 @@ async function downloadAndSaveXml(
   const saveModal = page.locator('#modal-saveas');
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
-  // Wait for initial token and then refresh it to align browser field + server session state.
+  // Wait for CSRF token to be fetched on page load.
   await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-  await refreshFormCsrfToken(page);
 
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
-  // Wait 2+ seconds after token refresh to satisfy server-side interaction-time check.
+  // Wait to satisfy server-side minimum interaction time for save.
   await page.waitForTimeout(2200);
 
   const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });

@@ -210,9 +210,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     
     // All security checks passed - record this submission
     recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
-
-    // Invalidate used feedback token.
-    invalidateScopedCsrfToken('feedback');
     
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';

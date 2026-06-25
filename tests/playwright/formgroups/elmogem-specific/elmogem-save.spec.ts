@@ -42,21 +42,6 @@ const FILE_FORMATS_MOCK = [
   { id: 2, name: 'icgem2.0', description: 'icgem2.0 format' },
 ];
 
-async function refreshFormCsrfToken(page: import('@playwright/test').Page): Promise<string> {
-  const token = await page.evaluate(async () => {
-    const response = await fetch('api/csrf_token.php');
-    const data = await response.json();
-    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
-    if (csrfField && data?.token) {
-      csrfField.value = String(data.token);
-    }
-    return data?.token ? String(data.token) : '';
-  });
-
-  expect(token).not.toBe('');
-  return token;
-}
-
 test.describe('ELMO-GEM save', () => {
 
   test.beforeEach(async ({ page }) => {
@@ -110,13 +95,12 @@ test.describe('ELMO-GEM save', () => {
     
     // Wait for CSRF token to be fetched and populated
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     
     await page.getByRole('textbox', { name: 'Filename' }).click();
     await page.getByRole('textbox', { name: 'Filename' }).dblclick();
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_save_with_incoplete_info');
     const downloadPromise = page.waitForEvent('download');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(2200);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
@@ -150,11 +134,10 @@ test.describe('ELMO-GEM save', () => {
     
     // Wait for CSRF token to be fetched and populated
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_datase_with_data_sources');
     const downloadPromise = page.waitForEvent('download');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(2200);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
@@ -193,11 +176,10 @@ test.describe('ELMO-GEM save', () => {
     
     // Wait for CSRF token to be fetched and populated
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_sparse');
     const downloadPromise = page.waitForEvent('download');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(2200);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
@@ -237,11 +219,10 @@ test.describe('ELMO-GEM save', () => {
     
     // Wait for CSRF token to be fetched and populated
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_isostasy');
     const downloadPromise = page.waitForEvent('download');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(2200);
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;

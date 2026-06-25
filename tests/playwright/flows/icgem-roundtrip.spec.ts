@@ -648,22 +648,10 @@ async function downloadAndSaveIcgemXml(
   // Wait for CSRF token to be fetched and populated
   await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
 
-  // Force-refresh form token to keep hidden field and session token in sync in CI.
-  const refreshedToken = await page.evaluate(async () => {
-    const response = await fetch('api/csrf_token.php');
-    const data = await response.json();
-    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
-    if (csrfField && data?.token) {
-      csrfField.value = String(data.token);
-    }
-    return data?.token ? String(data.token) : '';
-  });
-  expect(refreshedToken).not.toBe('');
-
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
-  // Wait after token refresh to satisfy server-side interaction-time checks.
+  // Wait to satisfy server-side minimum interaction time for save.
   await page.waitForTimeout(2200);
 
   await page.locator('#button-saveas-save').click();

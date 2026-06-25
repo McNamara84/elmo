@@ -89,9 +89,6 @@ function validateSaveSecurity($postData)
     // Record this save for rate limiting
     recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
 
-    // Invalidate used form token so client must fetch a fresh one.
-    invalidateCsrfToken();
-
     return ['status' => true];
 }
 

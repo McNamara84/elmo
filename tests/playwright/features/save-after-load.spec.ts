@@ -14,21 +14,6 @@ const BENIGN_CONSOLE_PATTERNS = [
   /503 \(Service Unavailable\)/,
 ];
 
-async function refreshFormCsrfToken(page: import('@playwright/test').Page): Promise<string> {
-  const token = await page.evaluate(async () => {
-    const response = await fetch('api/csrf_token.php');
-    const data = await response.json();
-    const csrfField = document.getElementById('input-form-csrf-token') as HTMLInputElement | null;
-    if (csrfField && data.token) {
-      csrfField.value = data.token;
-    }
-    return (data && data.token) ? String(data.token) : '';
-  });
-
-  expect(token).not.toBe('');
-  return token;
-}
-
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
     // Collect unexpected console errors for assertion at end of test
@@ -55,9 +40,8 @@ test.describe('Save after Load – Issue #1043', () => {
     const saveAsModal = page.locator('#modal-saveas');
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-test');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(3200);
     await page.locator('#button-saveas-save').click();
 
@@ -139,9 +123,8 @@ test.describe('Save after Load – Issue #1043', () => {
     await page.locator('#button-form-save').click();
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    await refreshFormCsrfToken(page);
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-resaved');
-    // Wait after token refresh to satisfy server-side interaction-time checks.
+    // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(3200);
     await page.locator('#button-saveas-save').click();
 
