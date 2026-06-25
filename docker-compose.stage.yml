@@ -210,7 +210,7 @@ services:
       # Flags for IGSN (minimal form - most form groups disabled)
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: "true"
+      SHOW_USED_INSTRUMENTS: "false"
       SHOW_THESAURI: "false"
       SHOW_FREE_KEYWORDS: "false"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
