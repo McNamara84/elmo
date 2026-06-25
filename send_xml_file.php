@@ -178,12 +178,13 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
  * Extract title and unique researcher contacts from XML.
  *
  * @param string $xml_content Raw XML content.
- * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
+ * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>}
  */
 function collectResearcherConfirmationDataFromXml(string $xml_content): array
 {
     $title = '';
     $contacts = [];
+    $invalidContacts = [];
     $seen = [];
 
     // Stop early if XML is empty.
@@ -192,6 +193,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
         return [
             'title' => $title,
             'contacts' => $contacts,
+            'invalidContacts' => $invalidContacts,
         ];
     }
 
@@ -240,6 +242,10 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
 
                 // Skip invalid email addresses.
                 if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                    $invalidContacts[] = [
+                        'fullName' => $fullName,
+                        'email' => $email === '' ? '(empty)' : $email,
+                    ];
                     continue;
                 }
 
@@ -265,6 +271,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
     return [
         'title' => $title,
         'contacts' => $contacts,
+        'invalidContacts' => $invalidContacts,
     ];
 }
 
@@ -272,8 +279,9 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
  * Send confirmation emails to all researcher contacts.
  *
  * @param array{title?: string, contacts?: array<int, array{fullName?: string, email?: string}>} $researcherConfirmationData
+ * @return array{sent: int, failed: array<int, array{fullName: string, email: string, error: string}>}
  */
-function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): void {
+function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): array {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
     
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
@@ -281,10 +289,11 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 
     if (empty($contacts)) {
         error_log('Researcher confirmation: No contacts found.');
-        return;
+        return ['sent' => 0, 'failed' => []];
     }
 
     $processedCount = 0;
+    $failed = [];
 
     foreach ($contacts as $contact) {
         $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
@@ -292,6 +301,11 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             error_log("Researcher confirmation: Invalid email for {$fullName}.");
+            $failed[] = [
+                'fullName' => $fullName,
+                'email' => $email === '' ? '(empty)' : $email,
+                'error' => 'invalid email address',
+            ];
             continue;
         }
 
@@ -342,10 +356,17 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             $processedCount++;
         } catch (Exception $e) {
             error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
+            $failed[] = [
+                'fullName' => $fullName,
+                'email' => $email,
+                'error' => $e->getMessage(),
+            ];
         }
     }
 
     error_log('Researcher confirmation: ' . ($simulateEmail ? 'Simulated' : 'Sent') . ' ' . $processedCount . ' confirmation email(s).');
+
+    return ['sent' => $processedCount, 'failed' => $failed];
 }
 
 // Initialize execution variables
@@ -421,12 +442,53 @@ try {
     }
     
     // Step 3: Production Live System Email Delivery
+    $researcherConfirmationData = [
+        'title' => '',
+        'contacts' => [],
+        'invalidContacts' => [],
+    ];
+
+    // --- PREP: payload readiness and SMTP connectivity ---
     try {
         if (!testGfzSmtpConnectivity()) {
             throw new Exception("GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.");
         }
 
-        // --- PIPELINE PART A: DISPATCH TO CURATORS ---
+        if (empty(trim($xml_content))) {
+            throw new Exception("Generated XML payload is empty.");
+        }
+
+        $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+    } catch (Exception $e) {
+        error_log("XML Submit Prep Error: " . $e->getMessage());
+
+        $urgencyText = $urgencyWeeks ?? 'not set';
+        $dataUrlText = $dataUrl ?: 'not provided';
+        error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
+                  "==================================================\n" .
+                  "📄 Resource ID: {$resource_id}\n" .
+                  "⏰ Urgency: {$urgencyText}\n" .
+                  "🔗 Data URL: {$dataUrlText}\n" .
+                  "🚨 Error on submission: " . $e->getMessage() . "\n" .
+                  "==================================================");
+
+        ob_clean();
+        http_response_code(500);
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => false,
+            'message' => "Sorry, we encountered an error when preparing the email:\n\n" .
+                         $e->getMessage() . "\n\n" .
+                         "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
+                         "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
+                         "Thank you for your understanding.\n" .
+                         "ELMO team"
+        ]);
+        return;
+    }
+
+    // --- PIPELINE PART A: DISPATCH TO CURATORS ---
+    try {
         $mail = new PHPMailer(true);
         $mail->isSMTP();
         $mail->Host = $smtpHost;
@@ -481,6 +543,20 @@ try {
         $priorityText = getPriorityText($urgencyWeeks);
         $dataUrlText = $dataUrl ? $dataUrl : "not provided";
 
+        $contactEmails = array_map(
+            static fn(array $contact): string => $contact['email'],
+            $researcherConfirmationData['contacts']
+        );
+        $contactEmailsText = !empty($contactEmails)
+            ? implode(', ', $contactEmails)
+            : 'not provided';
+        $contactEmailsHtml = !empty($contactEmails)
+            ? implode(', ', array_map(
+                static fn(string $email): string => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+                $contactEmails
+            ))
+            : 'not provided';
+
         $htmlBody = "
             <h2>Neue Metadaten-Einreichung von ELMO</h2>
             <p>Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:</p>
@@ -488,6 +564,7 @@ try {
                 <li><strong>Ressource ID in ELMO Datenbank:</strong> {$resource_id}</li>
                 <li><strong>Priorität:</strong> {$urgencyText} ({$priorityText})</li>
                 <li><strong>URL zu den Daten:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "nicht angegeben") . "</li>
+                <li><strong>Contact email addresses provided by the author(s):</strong> {$contactEmailsHtml}</li>
                 <li><strong>Eingereicht am:</strong> " . date('d.m.Y H:i:s') . "</li>
             </ul>
             <p>Ich habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.</p>
@@ -496,7 +573,7 @@ try {
             <p><small>Diese E-Mail wurde automatisch von ELMO generiert.</small></p>
         ";
 
-        $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
+        $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
 
         $mail->isHTML(true);
         $mail->Subject = "Neue ELMO Metadaten-Einreichung (ID: {$resource_id}, Priorität: {$priorityText})";
@@ -506,24 +583,8 @@ try {
         error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
         $mail->send();
         error_log("XML Submit: Curator mail sent successfully.");
-
-        // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
-        $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
-        sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
-
-        // All paths cleared cleanly
-        error_log("send_xml_file.php: Processing complete. Outputting success JSON.");
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => 'Backend reports: XML submission and confirmation emails sent successfully.',
-            'resource_id' => $resource_id,
-            'simulated' => false
-        ]);
-
     } catch (Exception $e) {
-        error_log("XML Submit Mailer Error: " . $e->getMessage());
+        error_log("XML Submit Curator Mail Error: " . $e->getMessage());
         
         // Failover recovery block logging
         $urgencyText = $urgencyWeeks ?? 'not set';
@@ -548,7 +609,56 @@ try {
                          "Thank you for your understanding.\n" .
                          "ELMO team"
         ]);
+        return;
     }
+
+    // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
+    $researcherWarnings = [];
+
+    if (!empty($researcherConfirmationData['invalidContacts'])) {
+        $invalidAddresses = array_map(
+            static fn(array $contact): string => $contact['fullName'] . ' <' . $contact['email'] . '>',
+            $researcherConfirmationData['invalidContacts']
+        );
+        $warningMessage = 'WARNING: The data is sent to curators, but the contact adresses: '
+            . implode(', ', $invalidAddresses)
+            . ' were invalid!';
+        error_log($warningMessage);
+        $researcherWarnings[] = $warningMessage;
+    }
+
+    try {
+        $researcherSendResult = sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
+
+        foreach ($researcherSendResult['failed'] as $failedContact) {
+            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
+                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
+                . $failedContact['error'];
+            error_log($warningMessage);
+            $researcherWarnings[] = $warningMessage;
+        }
+    } catch (Exception $e) {
+        $warningMessage = 'WARNING: The data is sent to curators, but researcher confirmation emails failed: '
+            . $e->getMessage();
+        error_log($warningMessage);
+        $researcherWarnings[] = $warningMessage;
+    }
+
+    $successMessage = empty($researcherWarnings)
+        ? 'Backend reports: XML submission and confirmation emails sent successfully.'
+        : 'Backend reports: XML submission sent to curators successfully. Some researcher confirmation emails could not be sent.';
+
+    // All paths cleared cleanly
+    error_log("send_xml_file.php: Processing complete. Outputting success JSON.");
+    ob_clean();
+    header('Content-Type: application/json');
+    echo json_encode([
+        'success' => true,
+        'message' => $successMessage,
+        'resource_id' => $resource_id,
+        'simulated' => false,
+        'researcher_warnings' => $researcherWarnings,
+    ]);
 
 } catch (Exception $e) {
     error_log("send_xml_file.php: Unexpected execution error: " . $e->getMessage());
