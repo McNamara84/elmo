@@ -66,13 +66,37 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
             $this->assertSame(1, $this->countStcRelations($resourceId));
 
             $stc = $this->fetchLinkedStc($resourceId);
-            $this->assertSame('-90', $stc['latitudeMin']);
-            $this->assertSame('90', $stc['latitudeMax']);
-            $this->assertSame('-180', $stc['longitudeMin']);
-            $this->assertSame('180', $stc['longitudeMax']);
+            $this->assertSame(-90.0, (float) $stc['latitudeMin']);
+            $this->assertSame(90.0, (float) $stc['latitudeMax']);
+            $this->assertSame(-180.0, (float) $stc['longitudeMin']);
+            $this->assertSame(180.0, (float) $stc['longitudeMax']);
             $this->assertSame('Global spatial coverage', $stc['description']);
             $this->assertNull($stc['dateStart']);
             $this->assertNull($stc['dateEnd']);
+        } finally {
+            $this->restoreGlobal('showGGMsProperties', $previous);
+        }
+    }
+
+    public function testElmoGemSubmitRejectsTimedStcWithoutDatesForIssue1068(): void
+    {
+        $previous = $GLOBALS['showGGMsProperties'] ?? null;
+        $GLOBALS['showGGMsProperties'] = true;
+
+        try {
+            $resourceId = $this->createResource(
+                'GFZ.TEST.ISSUE.1068.GEM.TIME.NO.DATES',
+                'Issue 1068 GEM Time Without Dates'
+            );
+            $postData = $this->spatialOnlyPostData();
+            $postData['tscTimeStart'] = ['08:00'];
+            $postData['tscTimeEnd'] = ['09:00'];
+            $postData['tscTimezone'] = ['UTC'];
+
+            $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
+
+            $this->assertFalse($result, 'ELMO-GEM submit should reject time values without matching dates.');
+            $this->assertSame(0, $this->countStcRelations($resourceId));
         } finally {
             $this->restoreGlobal('showGGMsProperties', $previous);
         }

@@ -127,8 +127,8 @@ function validateContributorOrganisationRequirements() {
  *
  * The function ensures:
  * - If all fields are empty, none will be required.
- * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
- * - If latMin, longMin, or description is filled, those fields along with dateStart and dateEnd become required.
+ * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, and, outside ELMO-GEM, dateStart/dateEnd become required.
+ * - If latMin, longMin, or description is filled, those fields and, outside ELMO-GEM, dateStart/dateEnd become required.
  * - If dateStart or dateEnd is filled, they along with latMin, longMin, and description become required.
  * - Time fields (timeStart, timeEnd) are always optional unless one of them is filled.
  * - If timeStart or timeEnd is filled, both time fields, dates, and timezone become required.
@@ -142,6 +142,7 @@ function validateSpatialTemporalCoverageRequirements() {
     var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
     var allRows = group.find('[tsc-row]');
 
+    var isElmoGem = Boolean(window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties);
     // Process each row independently
     allRows.each(function () {
         var row = $(this);
@@ -162,17 +163,29 @@ function validateSpatialTemporalCoverageRequirements() {
 
         // _______________________________________________________________________
 
-        // Bounding box dependencies -> dates required but time optional
+        // Bounding box dependencies -> dates required outside ELMO-GEM but time optional
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend']
+            var boundingBoxRequiredFields = ['latmin', 'longmin', 'latmax', 'longmax', 'description'];
+
+            if (!isElmoGem) {
+                boundingBoxRequiredFields = boundingBoxRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            boundingBoxRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
 
-        // If any of latmin/longmin/description is filled -> dates required, time optional
+        // If any of latmin/longmin/description is filled -> dates required outside ELMO-GEM, time optional
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend']
+            var spatialRequiredFields = ['latmin', 'longmin', 'description'];
+
+            if (!isElmoGem) {
+                spatialRequiredFields = spatialRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            spatialRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
