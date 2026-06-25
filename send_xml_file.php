@@ -96,17 +96,15 @@ function testGfzSmtpConnectivity(): bool {
 /**
  * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
  * @param array<string, mixed> $postData POST data from form
- * @param mysqli $connection Database connection
  * @return void
  * @throws Exception if validation fails
  */
-function validateSubmitSecurity(array $postData, $connection): void {
-    // Get client IP
-    $clientIp = getClientIp();
-    
+function validateSubmitSecurity(array $postData): void {
+    initializeCsrfSession();
+
     // Check 1: Honeypot - Silent rejection
     if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt($connection, 'submit', 'honeypot triggered', $clientIp);
+        logSuspiciousAttempt('submit', 'honeypot triggered');
         http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
@@ -119,7 +117,7 @@ function validateSubmitSecurity(array $postData, $connection): void {
 
     // Check 2: CSRF Token validation
     if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
-        logSuspiciousAttempt($connection, 'submit', 'invalid csrf token', $clientIp);
+        logSuspiciousAttempt('submit', 'invalid csrf token');
         http_response_code(403);
         ob_clean();
         header('Content-Type: application/json');
@@ -130,9 +128,9 @@ function validateSubmitSecurity(array $postData, $connection): void {
         exit;
     }
     
-    // Check 3: Rate limiting for submit (10 per hour)
-    if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt($connection, 'submit', 'rate limit exceeded', $clientIp);
+    // Check 3: Rate limiting
+    if (!checkSessionRateLimit('submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt('submit', 'rate limit exceeded');
         http_response_code(429);
         ob_clean();
         header('Content-Type: application/json');
@@ -148,10 +146,8 @@ function validateSubmitSecurity(array $postData, $connection): void {
 
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
-            $connection,
             'submit',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
         );
         http_response_code(400);
         ob_clean();
@@ -164,7 +160,7 @@ function validateSubmitSecurity(array $postData, $connection): void {
     }
     
     // All checks passed, record the rate limit
-    recordRateLimit($connection, $clientIp, 'submit');
+    recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
     
     // Invalidate CSRF token after successful security validation
     invalidateCsrfToken();
@@ -440,7 +436,7 @@ try {
     // Validate security before saving any data
     // Wrap in try-catch to ensure any validation errors return proper status codes
     try {
-        validateSubmitSecurity($_POST, $connection);
+        validateSubmitSecurity($_POST);
     } catch (\Exception $e) {
         // Security validation threw an unexpected exception - return 403
         error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());

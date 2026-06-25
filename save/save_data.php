@@ -36,16 +36,15 @@ global $connection;
  * Validates security checks for save operations.
  * 
  * @param array $postData The POST data
- * @param mysqli $connection Database connection for rate limiting
  * @return array {status: bool, message: string|null, code: int}
  */
-function validateSaveSecurity($postData, $connection)
+function validateSaveSecurity($postData)
 {
-    $clientIp = getClientIp();
-    
+    initializeCsrfSession();
+
     // Security Check 1: Honeypot
     if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt($connection, 'save', 'honeypot triggered', $clientIp);
+        logSuspiciousAttempt('save', 'honeypot triggered');
         return [
             'status' => false,
             'message' => 'Invalid request',
@@ -56,7 +55,7 @@ function validateSaveSecurity($postData, $connection)
     // Security Check 2: CSRF Token validation
     $submittedToken = $postData['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
-        logSuspiciousAttempt($connection, 'save', 'invalid csrf token', $clientIp);
+        logSuspiciousAttempt('save', 'invalid csrf token');
         return [
             'status' => false,
             'message' => 'Invalid request - CSRF token validation failed',
@@ -65,8 +64,8 @@ function validateSaveSecurity($postData, $connection)
     }
     
     // Security Check 3: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt($connection, 'save', 'rate limit exceeded', $clientIp);
+    if (!checkSessionRateLimit('save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt('save', 'rate limit exceeded');
         return [
             'status' => false,
             'message' => 'Too many save requests. Please try again later.',
@@ -78,10 +77,8 @@ function validateSaveSecurity($postData, $connection)
     $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
-            $connection,
             'save',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
         );
         return [
             'status' => false,
@@ -92,7 +89,7 @@ function validateSaveSecurity($postData, $connection)
 
 
     // Record this save for rate limiting
-    recordRateLimit($connection, $clientIp, 'save');
+    recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
 
     // Invalidate used form token so client must fetch a fresh one.
     invalidateCsrfToken();
@@ -101,7 +98,7 @@ function validateSaveSecurity($postData, $connection)
 }
 
 // Validate security first
-$securityCheck = validateSaveSecurity($_POST, $connection);
+$securityCheck = validateSaveSecurity($_POST);
 if (!$securityCheck['status']) {
     http_response_code($securityCheck['code'] ?? 400);
     header('Content-Type: application/json');
