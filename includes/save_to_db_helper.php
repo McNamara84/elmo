@@ -11,13 +11,18 @@ require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
-require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
-global $showGGMsProperties;
-if ($showGGMsProperties) {
-    require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
+
+global $showGGMsProperties, $showMslMode;
+
+if ($showGGMsProperties ?? false) {
     require_once __DIR__ . '/../save/formgroups/save_ggms_definition.php';
-    require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
     require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
+}
+
+if ($showMslMode ?? false) {
+    require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
 }
 /**
  * Existing functions (included above) dont alwys throw an exception, but sometimes just return false. This won't interrupt the save process
@@ -51,7 +56,7 @@ function executeSaveFunction($callback, ...$args)
 
 // includes all save functions and executes them with database connection
 function saveALL(array $postData): int {
-    global $connection, $showMslLabs, $showContributorPersons, $showContributorInstitutions;
+    global $connection, $showMslMode, $showContributorPersons, $showContributorInstitutions;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
     
@@ -63,7 +68,7 @@ function saveALL(array $postData): int {
         error_log("[💿SAVE]:the id generated is " . $resource_id);
         executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
         executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
-        if ($showMslLabs) {
+        if ($showMslMode ?? false) {
             executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
         }
         if ($showContributorPersons) {
@@ -91,7 +96,7 @@ function saveALL(array $postData): int {
         if ($showFundingReference) {
             executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
         }
-        if ($showGGMsProperties) {
+        if ($showGGMsProperties ?? false) {
             executeSaveFunction('saveGGMsDefinition', $connection, $_POST, $resource_id);
             executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
             executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
