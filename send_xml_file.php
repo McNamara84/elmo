@@ -424,7 +424,7 @@ try {
     $xml_content = $payloadData['payload'];
     error_log("send_xml_file.php: XML content payload generated successfully");
 
-    if (($payloadData['generator'] ?? '') === 'dataset-xml') {
+    if ($payloadData['generator'] === 'dataset-xml') {
         try {
             require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
             $datasetController = new DatasetController();
