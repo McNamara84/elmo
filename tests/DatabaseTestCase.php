@@ -202,7 +202,6 @@ abstract class DatabaseTestCase extends TestCase
             'Originating_Laboratory_has_Affiliation',
             'Free_Keywords',
             'Affiliation',
-            'Rate_Limit',
             'Title',
             'Description',
             'Spatial_Temporal_Coverage',
