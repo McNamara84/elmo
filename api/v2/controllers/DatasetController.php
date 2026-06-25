@@ -1319,6 +1319,13 @@ class DatasetController
         return $dom->saveXML();
     }
 
+    /**
+     * Finds the first DataCite child that must follow <dates> in schema order.
+     *
+     * @param DOMXPath $xpath XPath configured with the DataCite namespace.
+     * @param DOMElement $resource DataCite resource element.
+     * @return DOMNode|null Node before which <dates> should be inserted.
+     */
     private function findDataCiteDatesInsertBefore(DOMXPath $xpath, DOMElement $resource): ?DOMNode
     {
         $followingDateElements = [
@@ -1345,6 +1352,13 @@ class DatasetController
         return null;
     }
 
+    /**
+     * Restores date-only STC coverage intervals that the generated XSLT omits.
+     *
+     * @param string $dataciteXml Transformed DataCite XML.
+     * @param string $sourceXml Source resource XML used for the transformation.
+     * @return string DataCite XML with date-only Coverage dates preserved.
+     */
     private function restoreDataCiteDateOnlyCoverageDates(string $dataciteXml, string $sourceXml): string
     {
         $coverageIntervals = $this->extractDateOnlyCoverageIntervals($sourceXml);
@@ -1432,6 +1446,14 @@ class DatasetController
         return $coverageIntervals;
     }
 
+    /**
+     * Reads the trimmed text of a direct child selected by local-name.
+     *
+     * @param DOMXPath $xpath XPath helper.
+     * @param DOMNode $contextNode Parent node to search below.
+     * @param string $localName Local element name to read.
+     * @return string Trimmed child text, or an empty string when absent.
+     */
     private function childTextByLocalName(DOMXPath $xpath, DOMNode $contextNode, string $localName): string
     {
         $node = $xpath->query('./*[local-name()="' . $localName . '"]', $contextNode)->item(0);
@@ -1491,6 +1513,12 @@ class DatasetController
         return $dom->saveXML();
     }
 
+    /**
+     * Removes empty ISO creation date nodes generated from an optional Date Created.
+     *
+     * @param string $xml Raw ISO XML string.
+     * @return string Cleaned ISO XML string.
+     */
     private function stripEmptyIsoCreationDates(string $xml): string
     {
         $dom = new DOMDocument();
