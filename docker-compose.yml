@@ -32,11 +32,8 @@ services:
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL
-      SHOW_MSL_LABS: "false"
-      SHOW_MSL_VOCABS: "false"
-      SHOW_MSL_DEFAULT_FREE_KEYWORDS: "false"
-      SHOW_MSL_LOGO: "false"
-      SHOW_USED_INSTRUMENTS: "true"
+      SHOW_MSL_MODE: "false"
+      SHOW_USED_INSTRUMENTS: "false"
       SIMULATE_EMAIL: "true"
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
@@ -49,6 +46,22 @@ services:
       - .:/var/www/html
       - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
 
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.60.0-noble
+    profiles:
+      - test
+    init: true
+    ipc: host
+    extra_hosts:
+      - "hostmachine:host-gateway"
+    working_dir: /work
+    depends_on:
+      - web
+    environment:
+      BASE_URL: http://hostmachine:8080/
+    volumes:
+      - .:/work
+      - ./playwright-report:/work/playwright-report
 
 volumes:
   db_data:

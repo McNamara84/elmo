@@ -23,6 +23,101 @@ function getTagify(el) {
   return el?._tagify ?? null;
 }
 
+function getAuthorStackController() {
+  return typeof window !== 'undefined' && window.authorStack && typeof window.authorStack.setAuthors === 'function'
+    ? window.authorStack
+    : null;
+}
+
+function normalizeRorId(value) {
+  return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
+}
+
+function extractCreatorOrcid(creator) {
+  if (!Array.isArray(creator.nameIdentifiers)) {
+    return '';
+  }
+
+  const orcidEntry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
+  return orcidEntry ? (orcidEntry.nameIdentifier || '').replace('https://orcid.org/', '') : '';
+}
+
+function extractAffiliationsPayload(creator) {
+  if (!Array.isArray(creator.affiliation)) {
+    return [];
+  }
+
+  return creator.affiliation
+    .map(affiliation => {
+      if (typeof affiliation === 'string') {
+        return { label: affiliation, rorId: '' };
+      }
+
+      return {
+        label: affiliation.name || affiliation.value || '',
+        rorId: normalizeRorId(affiliation.affiliationIdentifier || affiliation.rorId || affiliation.id || '')
+      };
+    })
+    .filter(affiliation => affiliation.label !== '' || affiliation.rorId !== '');
+}
+
+function buildAuthorsPayloadFromCreators(creators) {
+  return creators
+    .map(creator => {
+      const givenname = creator.givenName || '';
+      const familyname = creator.familyName || '';
+      const nameType = creator.nameType || '';
+      const creatorName = creator.name || '';
+      const affiliations = extractAffiliationsPayload(creator);
+
+      if (givenname || familyname || nameType === 'Personal') {
+        return {
+          type: 'person',
+          familyname,
+          givenname,
+          orcid: extractCreatorOrcid(creator),
+          isContact: false,
+          email: '',
+          website: '',
+          affiliations
+        };
+      }
+
+      if (creatorName || nameType === 'Organizational') {
+        return {
+          type: 'institution',
+          institutionname: creatorName,
+          affiliations
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean);
+}
+
+function normalizeNameKey(familyName, givenName) {
+  return `${String(familyName || '').trim().toLowerCase()}\u0000${String(givenName || '').trim().toLowerCase()}`;
+}
+
+function getCurrentAuthorsPayload(authorStack) {
+  if (authorStack && typeof authorStack.collectPayload === 'function') {
+    return authorStack.collectPayload();
+  }
+
+  const payloadInput = document.querySelector('input[name="authorsPayload"]');
+  if (!payloadInput || !payloadInput.value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(payloadInput.value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
 /**
  * Decodes HTML entities in a string (e.g. "&gt;" → ">").
  * DataCite subjects may contain HTML-encoded characters.
@@ -191,6 +286,15 @@ async function prefillTitles(titles) {
 function prefillCreators(creators) {
   if (!Array.isArray(creators) || creators.length === 0) return;
 
+  const authorStack = getAuthorStackController();
+  if (authorStack) {
+    const authors = buildAuthorsPayloadFromCreators(creators);
+    if (authors.length > 0) {
+      authorStack.setAuthors(authors);
+      return;
+    }
+  }
+
   let personIndex = 0;
 
   creators.forEach(creator => {
@@ -227,6 +331,10 @@ function prefillCreators(creators) {
       let $row;
       if (personIndex === 0) {
         $row = $('div[data-creator-row]').eq(0);
+        if (!$row.length) {
+          $('#button-author-add').click();
+          $row = $('div[data-creator-row]').last();
+        }
       } else {
         $('#button-author-add').click();
         $row = $('div[data-creator-row]').eq(personIndex);
@@ -237,16 +345,23 @@ function prefillCreators(creators) {
       $row.find('input[name="familynames[]"]').val(familyName);
       $row.find('input[name="givennames[]"]').val(givenName);
 
+      const affiliationValues = affiliations.map((affiliation, index) => ({
+        value: affiliation,
+        label: affiliation,
+        rorId: rorIds[index] || '',
+        id: rorIds[index] || ''
+      }));
       const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
       const tagify = getTagify(tagifyInput);
       if (tagify) {
         tagify.removeAllTags();
-        tagify.addTags(affiliations.map(a => ({ value: a })));
+        tagify.addTags(affiliationValues);
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
       } else if (tagifyInput) {
-        $(tagifyInput).val(affiliations.join(','));
+        $(tagifyInput).val(JSON.stringify(affiliationValues));
         $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
       }
+      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
 
       // Reset contact person fields
       $row.find('input[name="contacts[]"]').prop('checked', false);
@@ -271,13 +386,22 @@ function prefillCreators(creators) {
 
       $instRow.find('input[name="authorinstitutionName[]"]').val(creatorName);
 
+      const affiliationValues = affiliations.map((affiliation, index) => ({
+        value: affiliation,
+        label: affiliation,
+        rorId: rorIds[index] || '',
+        id: rorIds[index] || ''
+      }));
       const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
       const tagify = getTagify(tagifyInput);
       if (tagify) {
         tagify.removeAllTags();
-        tagify.addTags(affiliations.map(a => ({ value: a })));
+        tagify.addTags(affiliationValues);
+      } else if (tagifyInput) {
+        $(tagifyInput).val(JSON.stringify(affiliationValues));
       }
       $instRow.find('input[name="authorInstitutionRorIds[]"]').val(rorIds.join(','));
+      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
     }
   });
 }
@@ -676,6 +800,49 @@ async function prefillRights(rightsList) {
  */
 async function prefillContactPersons(creators, lookupService) {
   if (!Array.isArray(creators) || !lookupService) return;
+
+  const authorStack = getAuthorStackController();
+  if (authorStack) {
+    const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
+    let changed = false;
+
+    const promises = creators.map(creator => {
+      const givenName = creator.givenName || '';
+      const familyName = creator.familyName || '';
+      if (!givenName && !familyName) return Promise.resolve();
+
+      const orcid = extractCreatorOrcid(creator);
+
+      return lookupService.lookupContacts({ orcid, familyname: familyName, givenname: givenName })
+        .then(contact => {
+          if (!contact || (!contact.email && !contact.website)) {
+            return;
+          }
+
+          const creatorKey = normalizeNameKey(familyName, givenName);
+          const author = authors.find(candidate => (
+            candidate.type === 'person' && normalizeNameKey(candidate.familyname, candidate.givenname) === creatorKey
+          ));
+
+          if (!author) {
+            return;
+          }
+
+          author.isContact = true;
+          if (contact.email) author.email = contact.email;
+          if (contact.website) author.website = contact.website;
+          changed = true;
+        })
+        .catch(() => { /* best-effort: silently ignore lookup failures */ });
+    });
+
+    await Promise.all(promises);
+
+    if (changed) {
+      authorStack.setAuthors(authors);
+    }
+    return;
+  }
 
   const $rows = $('div[data-creator-row]');
   const promises = [];

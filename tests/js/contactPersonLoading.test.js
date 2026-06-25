@@ -155,6 +155,38 @@ describe('processContactPersons (ISO)', () => {
     expect($secondRow.find('input[name="cpEmail[]"]').val()).toBe('');
   });
 
+  test('updates only matching person payload when authorStack is available', () => {
+    const setAuthors = jest.fn();
+    window.authorStack = {
+      collectPayload: jest.fn(() => [
+        { type: 'institution', institutionname: 'Doe', affiliations: [] },
+        { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+      ]),
+      setAuthors,
+    };
+    const xmlDoc = makeIsoXml({
+      familyName: 'Doe',
+      givenName: 'Jane',
+      email: 'jane@example.com',
+      website: 'https://example.com/jane',
+    });
+
+    mappingModule.processContactPersons(xmlDoc);
+
+    expect(setAuthors).toHaveBeenCalledWith([
+      { type: 'institution', institutionname: 'Doe', affiliations: [] },
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        isContact: true,
+        email: 'jane@example.com',
+        website: 'https://example.com/jane',
+      }),
+    ]);
+    delete window.authorStack;
+  });
+
   test('matches names case-insensitively', () => {
     const xmlDoc = makeIsoXml({
       familyName: 'doe',

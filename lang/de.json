@@ -106,7 +106,42 @@
         "licenseTitle": "Lizenz"
     },
     "authors": {
-        "title": "Autor: Personen",
+        "title": "Autorinnen und Autoren",
+        "stackTitle": "Autorinnen und Autoren",
+        "person": "Person",
+        "institution": "Institution",
+        "typeSwitcherLabel": "Autorentyp",
+        "typeSwitchLocked": "Der Typ kann nur geändert werden, solange dieser Eintrag leer ist.",
+        "addPerson": "Person hinzufügen",
+        "addInstitution": "Institution hinzufügen",
+        "dragHandle": "Reihenfolge per Drag & Drop ändern",
+        "removeEntry": "Autoreneintrag entfernen",
+        "editEntry": "Autoreneintrag bearbeiten",
+        "collapseEntry": "Autoreneintrag einklappen",
+        "moveEntryUp": "Autoreneintrag nach oben verschieben",
+        "moveEntryDown": "Autoreneintrag nach unten verschieben",
+        "authorSingular": "Autoreneintrag",
+        "authorPlural": "Autoreneinträge",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "contactSingular": "Kontakt",
+        "contactPlural": "Kontakte",
+        "contactPersonSingular": "Kontaktperson",
+        "contactPersonPlural": "Kontaktpersonen",
+        "contactPersonBadge": "Kontaktperson",
+        "contactPersonLabel": "Kontaktperson",
+        "markAsContact": "Als Kontakt markieren",
+        "contactRequired": "mindestens 1 Kontakt erforderlich",
+        "entriesSummary": "{count} {label}",
+        "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
+        "affiliationAdd": "Affiliation hinzufügen",
+        "affiliationEdit": "Affiliation bearbeiten",
+        "affiliationSearch": "Affiliation in ROR suchen",
+        "affiliationMoveUp": "Affiliation nach oben verschieben",
+        "affiliationMoveDown": "Affiliation nach unten verschieben",
+        "affiliationRorId": "ROR-ID",
+        "affiliationRemove": "Affiliation entfernen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
         "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
     },
@@ -166,8 +201,17 @@
             "button": "Thesaurus öffnen"
         },
         "free": {
-            "title": "Freie Schlagworte",
-            "placeholder": "Bitte geben Sie Schlagworte ein und trennen Sie diese durch Kommas."
+            "title": "Freie Schlagwörter",
+            "placeholder": "Bitte geben Sie Schlagwörter ein und trennen Sie diese durch ein Komma.",
+            "addCsv": "CSV-Datei hochladen",
+            "modalTitle": "CSV-Datei hochladen",
+            "modalDescription": "Laden Sie eine CSV-Datei hoch oder ziehen Sie sie hierher.",
+            "dropzone": "CSV-Datei hierher ziehen",
+            "selectFile": "oder zum Auswählen klicken",
+            "downloadHint": "Sie sind sich nicht sicher, wie das CSV-Format aussehen soll? Laden Sie die Beispieldatei herunter und verwenden Sie sie als Vorlage. Bitte verwenden Sie nur CSV-Dateien mit einer Größe von weniger als 1 MB.",
+            "downloadSample": "Beispiel-CSV-Datei herunterladen",
+            "cancel": "Abbrechen",
+            "import": "Schlagwörter importieren"
         },
         "searchPlaceholder": "Nach Schlagworte suchen..."
     },
@@ -368,6 +412,11 @@
         "error": "Der ORCID-Dienst ist vorübergehend nicht erreichbar. Bitte versuchen Sie es später erneut.",
         "searchButtonTitle": "ORCID nach Name suchen",
         "inputRequired": "Bitte geben Sie mindestens einen Vor- oder Nachnamen ein."
+    },
+    "affiliationEdit": {
+        "title": "Zugehörigkeit bearbeiten",
+        "save": "Speichern",
+        "cancel": "Abbrechen"
     },
     "welcome": {
         "title": "Willkommen bei ELMO 😊",

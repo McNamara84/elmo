@@ -482,6 +482,45 @@ function populateIcgemContactPersons(xmlDoc) {
     const email   = i < addressSnap.snapshotLength ? addressSnap.snapshotItem(i).textContent.trim() : '';
     const website = i < onlineSnap.snapshotLength  ? onlineSnap.snapshotItem(i).textContent.trim()  : '';
 
+    contactPersons[i].email = email;
+    contactPersons[i].website = website;
+  }
+
+  if (window.authorStack && typeof window.authorStack.collectPayload === 'function' && typeof window.authorStack.setAuthors === 'function') {
+    const authors = window.authorStack.collectPayload().map(author => ({ ...author }));
+
+    contactPersons.forEach(({ familyName, givenName, email, website }) => {
+      if ((!email && !website) || (!familyName && !givenName)) return;
+
+      const normFamily = familyName.toLowerCase();
+      const normGiven = givenName.toLowerCase();
+      let author = authors.find(candidate => candidate.type === 'person'
+        && String(candidate.familyname || '').trim().toLowerCase() === normFamily
+        && String(candidate.givenname || '').trim().toLowerCase() === normGiven);
+
+      if (!author) {
+        author = {
+          type: 'person',
+          familyname: familyName,
+          givenname: givenName,
+          orcid: '',
+          affiliations: []
+        };
+        authors.push(author);
+      }
+
+      author.isContact = true;
+      author.email = email || author.email || '';
+      author.website = website || author.website || '';
+    });
+
+    window.authorStack.setAuthors(authors);
+    return;
+  }
+
+  for (let i = 0; i < contactPersons.length; i++) {
+    const { familyName, givenName, email, website } = contactPersons[i];
+
     if (!email && !website) continue;
     if (!familyName && !givenName) continue;
 

@@ -213,6 +213,43 @@ describe('autocomplete.js', () => {
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/0arefcase1');
   });
 
+  test('author ORCID blur normalizes profile URL and fetches the ORCID record', async () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Reference' },
+          'given-names': { value: 'Case' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Expected Current Affiliation', '0arefcase1')
+          ]
+        }
+      }
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const orcidInput = $('#group-author input[name="orcids[]"]');
+    orcidInput.val('https://orcid.org/0000-0001-5140-8602').trigger('blur');
+    await flushPromises();
+    await flushPromises();
+
+    expect(orcidInput.val()).toBe('0000-0001-5140-8602');
+    expect(fetch).toHaveBeenCalledWith('https://pub.orcid.org/v3.0/0000-0001-5140-8602/record', {
+      headers: {
+        Accept: 'application/vnd.orcid+json'
+      }
+    });
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('Reference');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('Case');
+    expect(affInput._tagify.value).toEqual([{ value: 'Expected Current Affiliation' }]);
+  });
+
   test('author ORCID blur keeps two current affiliations', async () => {
     const data = {
       person: {
@@ -403,6 +440,43 @@ describe('autocomplete.js', () => {
     expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Anna');
     expect(affInput._tagify.value).toEqual([{ value: 'Lab B' }]);
     expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/0anewlab1');
+  });
+
+  test('contributor ORCID blur normalizes profile URL with X checksum and fetches the ORCID record', async () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Smith' },
+          'given-names': { value: 'Anna' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Lab B', '0anewlab1')
+          ]
+        }
+      }
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const affInput = document.getElementById('input-contributorpersons-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const orcidInput = $('#group-contributorperson input[name="cbORCID[]"]');
+    orcidInput.val('https://orcid.org/0000-0002-1694-233X/').trigger('blur');
+    await flushPromises();
+    await flushPromises();
+
+    expect(orcidInput.val()).toBe('0000-0002-1694-233X');
+    expect(fetch).toHaveBeenCalledWith('https://pub.orcid.org/v3.0/0000-0002-1694-233X/record', {
+      headers: {
+        Accept: 'application/vnd.orcid+json'
+      }
+    });
+    expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Smith');
+    expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Anna');
+    expect(affInput._tagify.value).toEqual([{ value: 'Lab B' }]);
   });
 
   test('fillRowFromOrcidRecord fills author row with name and affiliations', () => {

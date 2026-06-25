@@ -8,7 +8,7 @@ const KEY_SECTIONS = [
   'main#main-content',
   'form#form-mde',
   '[data-translate="resourceInfo.title"]',
-  '[data-translate="authors.title"]',
+  '[data-translate="authors.stackTitle"]',
   'footer.footer',
   '#button-form-submit',
 ];

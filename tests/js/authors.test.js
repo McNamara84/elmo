@@ -1,55 +1,56 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('author.js', () => {
+describe('authorStack person authors', () => {
   let $;
+
+  function loadAuthorStackScript() {
+    let script = fs.readFileSync(
+      path.resolve(__dirname, '../../js/eventhandlers/formgroups/authorStack.js'),
+      'utf8'
+    );
+    script = script.replace(/^import.*$/gm, '');
+    script = script.replace('$(document).ready(function () {', '(function () {');
+    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
+    window.eval(script);
+  }
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="group-author">
-        <div class="row" data-creator-row>
-          <!-- Contact Person + ORCID -->
-          <div class="col-12 col-sm-12 col-md-5 col-lg-3 p-1">
-            <div class="input-group has-validation">
-              <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
-              <label for="checkbox-author-contactperson">Contact Person</label>
-              <div class="form-floating flex-grow-1">
-                <input type="text" id="input-author-orcid" name="orcids[]" />
-                <label for="input-author-orcid">ORCID</label>
-              </div>
-              <span class="input-group-text">
-                <i class="bi bi-question-circle-fill"></i>
-              </span>
+      <span data-author-summary-count>0 entries</span>
+      <span data-author-contact-summary>at least 1 contact required</span>
+      <input type="hidden" id="authors-payload" name="authorsPayload" value="[]">
+      <div id="group-author" data-author-stack-shell>
+        <div id="group-author-stack" data-author-stack>
+          <div class="row" data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
+            <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" checked>
+            <label for="checkbox-author-contactperson">Contact Person</label>
+            <input id="input-author-orcid" name="orcids[]" value="0000-0001-2345-6789">
+            <label for="input-author-orcid">ORCID</label>
+            <input id="input-author-lastname" name="familynames[]" value="Doe">
+            <label for="input-author-lastname">Last Name</label>
+            <input id="input-author-firstname" name="givennames[]" value="Jane">
+            <label for="input-author-firstname">First Name</label>
+            <input id="input-author-affiliation" name="personAffiliation[]" value='[{"value":"GFZ"}]'>
+            <input id="input-author-rorid" name="authorPersonRorIds[]" value="https://ror.org/04z8jg394">
+            <button type="button" class="drag-handle"></button>
+            <button type="button" id="button-author-add" class="addAuthor" data-author-add-type="person">+</button>
+            <div class="contact-person-input">
+              <input id="input-contactperson-email" name="cpEmail[]" value="jane@example.org">
+              <label for="input-contactperson-email">Email</label>
+            </div>
+            <div class="contact-person-input">
+              <input id="input-contactperson-website" name="cpOnlineResource[]" value="https://example.org/jane">
+              <label for="input-contactperson-website">Website</label>
             </div>
           </div>
-          <!-- Lastname -->
-          <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
-            <input type="text" id="input-author-lastname" name="familynames[]" value="Doe" />
-          </div>
-
-          <!-- Firstname -->
-          <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
-            <input type="text" id="input-author-firstname" name="givennames[]" value="John" />
-          </div>
-
-          <!-- Affiliation -->
-          <div class="col-10 col-sm-11 col-md-10 col-lg-4 p-1">
-            <input type="text" id="input-author-affiliation" name="personAffiliation[]" value="Some Affil" />
-            <input type="hidden" id="input-author-rorid" name="authorPersonRorIds[]" value="123" />
-          </div>
-
-          <!-- Add Button -->
-          <div class="col-2 col-sm-1 col-md-1 col-lg-1 p-1">
-            <button type="button" id="button-author-add" class="addAuthor">+</button>
-          </div>
-          <!-- Email -->
-          <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 contact-person-input">
-            <input type="email" id="input-contactperson-email" name="cpEmail[]" value="test@example.com" />
-          </div>
-
-          <!-- Website -->
-          <div class="col-12 col-sm-12 col-md-6 col-lg-5 p-1 contact-person-input">
-            <input type="text" id="input-contactperson-website" name="cpOnlineResource[]" value="https://example.com" />
+          <div class="row" data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
+            <input id="input-authorinstitution-name" name="authorinstitutionName[]">
+            <label for="input-authorinstitution-name">Institution</label>
+            <input id="input-authorinstitution-affiliation" name="institutionAffiliation[]">
+            <input id="input-author-institutionrorid" name="authorInstitutionRorIds[]">
+            <button type="button" class="drag-handle"></button>
+            <button type="button" id="button-authorinstitution-add" class="addauthorinstitution" data-author-add-type="institution">+</button>
           </div>
         </div>
       </div>
@@ -60,87 +61,82 @@ describe('author.js', () => {
     window.$ = $;
     window.jQuery = $;
 
-    // Mock jQuery UI sortable as No-Op in the test environment since drag-and-drop is not needed and not supported in jsdom, so that method calls do not fail.
-    $.fn.sortable = jest.fn(() => $);
+    $.fn.sortable = jest.fn(function () {
+      return this;
+    });
 
-
-    // Mock functions
     window.createRemoveButton = jest.fn(() => $('<button type="button" class="removeButton"></button>'));
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.translateClonedRow = jest.fn();
     window.autocompleteAffiliations = jest.fn();
-    window.affiliationsData = [{ id: '1', name: 'Inst' }];
+    window.affiliationsData = [{ id: '04z8jg394', name: 'GFZ' }];
+    window.bootstrap = { Tooltip: jest.fn() };
 
-    // Load the script
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/author.js'),
-      'utf8'
-    );
-    script = script.replace(/^import.*$/gm, '');
-    script = script.replace('$(document).ready(function () {', '(function () {');
-    script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
-    window.eval(script);
-
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    loadAuthorStackScript();
   });
 
   afterEach(() => {
     jest.restoreAllMocks();
-    jest.clearAllTimers();
+    delete window.elmo;
   });
 
-  test('fügt neue Autoren-Zeile hinzu', () => {
+  function payload() {
+    return JSON.parse(document.querySelector('input[name="authorsPayload"]').value);
+  }
+
+  test('keeps an existing person author and serializes it through authorsPayload', () => {
+    expect($('[data-author-card]').length).toBe(1);
+    expect(payload()).toEqual([
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        orcid: '0000-0001-2345-6789',
+        isContact: true,
+        email: 'jane@example.org',
+        website: 'https://example.org/jane'
+      })
+    ]);
+    expect(payload()[0].affiliations).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
+    expect($('[data-author-summary-count]').text()).toBe('1 entry');
+  });
+
+  test('adds a clean person author card from the combined stack', () => {
     $('#button-author-add').trigger('click');
 
-    const rows = $('#group-author .row');
+    const rows = $('[data-creator-row]');
     expect(rows.length).toBe(2);
 
     const newRow = rows.last();
-
-    // IDs correctly adjusted
-    expect(newRow.find('#input-author-orcid-1').length).toBe(1);
-    expect(newRow.find('#input-author-lastname-1').length).toBe(1);
-    expect(newRow.find('#input-author-firstname-1').length).toBe(1);
-    expect(newRow.find('#input-author-affiliation-1').length).toBe(1);
-    expect(newRow.find('#input-author-rorid-1').length).toBe(1);
-    expect(newRow.find('#input-contactperson-email-1').length).toBe(1);
-    expect(newRow.find('#input-contactperson-website-1').length).toBe(1);
-    expect(newRow.find('#checkbox-author-contactperson-1').length).toBe(1);
-    expect(newRow.find("label[for='checkbox-author-contactperson-1']").length).toBe(1);
-    expect(newRow.find('.removeButton').length).toBe(1);
-
-    // Fields cleared
-    expect(newRow.find('input[type="text"], input[type="email"]').filter(function () { return $(this).val(); }).length).toBe(0);
-    expect(newRow.find('#input-author-rorid-1').val()).toBe('');
-    expect(newRow.find('#checkbox-author-contactperson-1').prop('checked')).toBe(false);
-
-    // Add button replaced by remove button
+    expect(newRow.find('input[name="familynames[]"]').attr('id')).toMatch(/^input-author-lastname-\d+$/);
+    expect(newRow.find('input[name="givennames[]"]').attr('id')).toMatch(/^input-author-firstname-\d+$/);
+    expect(newRow.find('input[name="cpEmail[]"]').attr('id')).toMatch(/^input-contactperson-email-\d+$/);
+    expect(newRow.find('label[for^="input-author-lastname-"]').length).toBe(1);
+    expect(newRow.find('label[for^="input-author-firstname-"]').length).toBe(1);
+    expect(newRow.find('[data-author-remove]').length).toBe(1);
     expect(newRow.find('#button-author-add').length).toBe(0);
+    expect(newRow.find('input[name="familynames[]"]').val()).toBe('');
+    expect(newRow.find('input[name="givennames[]"]').val()).toBe('');
+    expect(newRow.find('input[name="contacts[]"]').prop('checked')).toBe(false);
+    expect(newRow.find('[data-author-affiliation-editor]').length).toBe(1);
 
-    // Helper functions called
-    expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalledTimes(1);
-    expect(window.createRemoveButton).toHaveBeenCalledTimes(1);
+    newRow.find('input[name="familynames[]"]').val('Curie').trigger('input');
+    newRow.find('input[name="givennames[]"]').val('Marie').trigger('input');
 
-    // Sortable refresh called after adding row
-    expect($.fn.sortable).toHaveBeenCalledWith("refresh");
-
-    // Autocomplete initialized
-    expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      'input-author-affiliation-1',
-      'input-author-rorid-1',
-      window.affiliationsData
-    );
-
-    // Test removal
-    newRow.find('.removeButton').trigger('click');
-    expect($('#group-author .row').length).toBe(1);
+    expect(payload().map((author) => author.familyname)).toEqual(['Doe', 'Curie']);
+    expect(window.replaceHelpButtonInClonedRows).toHaveBeenCalled();
+    expect($.fn.sortable).toHaveBeenCalledWith('refresh');
   });
 
-  test('initialisiert Sortable mit Drag-Handle-Unterstützung für Buttons', () => {
-    expect($.fn.sortable).toHaveBeenCalledTimes(1);
-    expect($.fn.sortable.mock.calls[0][0]).toMatchObject({
-      handle: '.drag-handle',
-      cancel: 'input, textarea, select, option'
-    });
+  test('removing a new person card preserves the original author values', () => {
+    $('#button-author-add').trigger('click');
+    $('[data-creator-row]').last().find('[data-author-remove]').trigger('click');
+
+    const originalRow = $('[data-creator-row]').first();
+    expect($('[data-creator-row]').length).toBe(1);
+    expect(originalRow.find('input[name="familynames[]"]').val()).toBe('Doe');
+    expect(originalRow.find('input[name="givennames[]"]').val()).toBe('Jane');
+    expect(originalRow.find('input[name="personAffiliation[]"]').val()).toBe('[{"value":"GFZ"}]');
+    expect(payload()).toHaveLength(1);
   });
 });
