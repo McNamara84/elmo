@@ -328,9 +328,15 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     return whitelistMatch ? normalizeRorId(whitelistMatch.rorId || whitelistMatch.id) : '';
   }
 
-  function normalizeTag(tag) {
+  function getHiddenRorIds() {
+    return String(hiddenField.val() || '')
+      .split(',')
+      .map(normalizeRorId);
+  }
+
+  function normalizeTag(tag, fallbackRorId = '') {
     const label = getTagLabel(tag);
-    const rorId = normalizeRorId(tag.rorId || tag.id) || findWhitelistRorId(label);
+    const rorId = normalizeRorId(tag.rorId || tag.id) || normalizeRorId(fallbackRorId) || findWhitelistRorId(label);
 
     tag.value = label;
     tag.label = label;
@@ -348,9 +354,10 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   /**
    * Updates the visible Tagify field with structured affiliation data and the legacy hidden ROR ID CSV.
    */
-  function syncStructuredAffiliations() {
+  function syncStructuredAffiliations(options = {}) {
+    const fallbackRorIds = options.preserveExistingRorIds ? getHiddenRorIds() : [];
     const structuredAffiliations = tagify.value
-      .map(normalizeTag)
+      .map((tag, index) => normalizeTag(tag, fallbackRorIds[index] || ''))
       .filter(tag => tag.value !== '' || tag.rorId !== '');
 
     inputElement.val(JSON.stringify(structuredAffiliations));
@@ -517,7 +524,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   });
 
   tagify.on("edit:updated", function () {
-    syncStructuredAffiliations();
+    syncStructuredAffiliations({ preserveExistingRorIds: true });
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();
   });

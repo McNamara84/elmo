@@ -457,9 +457,10 @@ describe('authorStack.js', () => {
       .trigger('input');
     expect(payload()[0].affiliations[0]).toEqual({
       label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
-      rorId: ''
+      rorId: '04z8jg394'
     });
-    expect(editor.find('[data-author-affiliation-ror]').first().hasClass('d-none')).toBe(true);
+    expect(editor.find('[data-author-affiliation-ror]').first().hasClass('d-none')).toBe(false);
+    expect(editor.find('[data-author-affiliation-ror]').first().text()).toBe('04z8jg394');
 
     editor.find('[data-author-affiliation-input]').val('Visiting researcher, ETH Zürich (2025)').trigger('input');
     editor.find('[data-author-affiliation-add]').trigger('click');
@@ -477,6 +478,41 @@ describe('authorStack.js', () => {
 
     editor.find('[data-author-affiliation-remove]').last().trigger('click');
     expect(payload()[0].affiliations).toHaveLength(2);
+  });
+
+  test('keeps a ROR affiliation invalid but intact when its label is emptied', () => {
+    window.authorStack.setAuthors([
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        affiliations: [
+          { label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }
+        ]
+      }
+    ]);
+
+    const editor = $('[data-author-card]').first().find('[data-author-affiliation-editor]');
+    const chip = editor.find('[data-author-affiliation-chip]').first();
+    const labelInput = chip.find('[data-author-affiliation-label]');
+
+    labelInput.val('').trigger('input');
+
+    expect(payload()[0].affiliations[0]).toEqual({
+      label: '',
+      rorId: '04z8jg394'
+    });
+    expect(chip.find('[data-author-affiliation-ror]').text()).toBe('04z8jg394');
+    expect(chip.find('[data-author-affiliation-ror]').hasClass('d-none')).toBe(false);
+    expect(labelInput.hasClass('is-invalid')).toBe(true);
+    expect(labelInput[0].checkValidity()).toBe(false);
+    expect(window.validateAuthorAffiliationEditors()).toBe(false);
+
+    chip.find('[data-author-affiliation-remove]').trigger('click');
+
+    expect(payload()[0].affiliations).toEqual([]);
+    expect($('[data-author-affiliation-chip]').length).toBe(0);
+    expect(window.validateAuthorAffiliationEditors()).toBe(true);
   });
 
   test('searches affiliation suggestions while typing at least three characters', async () => {

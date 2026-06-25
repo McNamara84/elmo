@@ -517,6 +517,8 @@ $(document).ready(function () {
 
     if (options.render !== false) {
       renderAffiliationEditor(row);
+    } else {
+      validateAffiliationEditor(row);
     }
 
     return normalizedAffiliations;
@@ -728,7 +730,10 @@ $(document).ready(function () {
       .prop('disabled', index === count - 1)
       .append('<i class="bi bi-chevron-down" aria-hidden="true"></i>');
     const labelInput = $('<input type="text" class="form-control" data-author-affiliation-label>')
-      .attr('aria-label', translate('authors.affiliationEdit', 'Edit affiliation'))
+      .attr({
+        'aria-label': translate('authors.affiliationEdit', 'Edit affiliation'),
+        required: 'required'
+      })
       .val(label);
     const rorSegment = $('<span class="input-group-text small" data-author-affiliation-ror></span>')
       .attr('aria-label', rorId ? `${translate('authors.affiliationRorId', 'ROR ID')} ${rorId}` : translate('authors.affiliationRorId', 'ROR ID'))
@@ -738,8 +743,12 @@ $(document).ready(function () {
       .attr('aria-label', translate('authors.affiliationRemove', 'Remove affiliation'))
       .append('<i class="bi bi-x-lg" aria-hidden="true"></i>');
 
+    const invalidFeedback = $('<div class="invalid-feedback mt-1" data-author-affiliation-invalid></div>');
+
     group.append(moveUp, moveDown, labelInput, rorSegment, remove);
-    return chip.append(group);
+    chip.append(group, invalidFeedback);
+    validateAffiliationChip(chip);
+    return chip;
   }
 
   function renderAffiliationEditor(row) {
@@ -770,26 +779,65 @@ $(document).ready(function () {
     });
   }
 
-  function clearAffiliationRorIfLabelChanged(labelInput) {
-    const input = $(labelInput);
-    const chip = input.closest('[data-author-affiliation-chip]');
-    const originalLabel = chip.attr('data-author-affiliation-original-label') || '';
-    const currentLabel = String(input.val() || '').trim();
+  function getAffiliationInvalidMessage() {
+    return translate('authors.affiliationInvalid', 'Please provide an affiliation.');
+  }
 
-    if (!originalLabel || currentLabel === originalLabel) {
-      return;
+  function validateAffiliationChip(chip) {
+    const labelInput = chip.find('[data-author-affiliation-label]').first();
+    const inputElement = labelInput.get(0);
+    const feedback = chip.find('[data-author-affiliation-invalid]').first();
+    const label = String(labelInput.val() || '').trim();
+    const isInvalid = label === '';
+    const message = isInvalid ? getAffiliationInvalidMessage() : '';
+
+    labelInput.toggleClass('is-invalid', isInvalid);
+    chip.toggleClass('border-danger', isInvalid);
+
+    if (inputElement) {
+      inputElement.setCustomValidity(message);
+      if (isInvalid) {
+        inputElement.setAttribute('aria-invalid', 'true');
+      } else {
+        inputElement.removeAttribute('aria-invalid');
+      }
     }
 
-    chip.attr('data-author-affiliation-ror-id', '');
-    chip.removeAttr('data-author-affiliation-original-label');
-    chip.find('[data-author-affiliation-ror]')
-      .text('')
-      .addClass('d-none')
-      .attr('aria-label', translate('authors.affiliationRorId', 'ROR ID'));
+    feedback
+      .text(message)
+      .toggleClass('d-block', isInvalid)
+      .toggleClass('d-none', !isInvalid);
+
+    return !isInvalid;
+  }
+
+  function validateAffiliationEditor(row) {
+    let isValid = true;
+
+    row.find('[data-author-affiliation-chip]').each(function () {
+      if (!validateAffiliationChip($(this))) {
+        isValid = false;
+      }
+    });
+
+    return isValid;
+  }
+
+  function validateAuthorAffiliationEditors() {
+    let isValid = true;
+
+    stack.children('[data-author-entry-row]').each(function () {
+      if (!validateAffiliationEditor($(this))) {
+        isValid = false;
+      }
+    });
+
+    return isValid;
   }
 
   function syncEditorAffiliations(row) {
     setRowAffiliations(row, readEditorAffiliations(row), { render: false });
+    validateAffiliationEditor(row);
     updatePayload();
   }
 
@@ -1310,7 +1358,6 @@ $(document).ready(function () {
   });
 
   stack.on('input', '[data-author-affiliation-label]', function () {
-    clearAffiliationRorIfLabelChanged(this);
     syncEditorAffiliations($(this).closest('[data-author-entry-row]'));
   });
 
@@ -1424,12 +1471,15 @@ $(document).ready(function () {
     updateSummary(collectPayload());
   });
 
+  window.validateAuthorAffiliationEditors = validateAuthorAffiliationEditors;
+
   window.authorStack = {
     addPerson: function () { return addRow('person'); },
     addInstitution: function () { return addRow('institution'); },
     setAuthors,
     updatePayload,
-    collectPayload
+    collectPayload,
+    validateAffiliationEditors: validateAuthorAffiliationEditors
   };
 
   updatePayload();

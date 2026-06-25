@@ -58,6 +58,8 @@ describe('saveHandler.js', () => {
       alerts: {
         processingHeading: 'procH',
         preparingDownload: 'prepD',
+        validationErrorheading: 'vh',
+        validationError: 've',
         filenameErrorHeading: 'fh',
         filenameError: 'fe',
         successHeading: 'sh',
@@ -80,6 +82,7 @@ describe('saveHandler.js', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    delete global.validateAuthorAffiliationEditors;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -131,6 +134,20 @@ describe('saveHandler.js', () => {
     expect($('#saveas-extension').text()).toBe('.jsonld');
     expect($('#input-saveas-filename').val()).toBe('dataset_20240530_123456');
     expect(modalInstances[0].show).toHaveBeenCalled();
+  });
+
+  test('handleSave blocks download flow when author affiliation labels are invalid', async () => {
+    global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'generateFilename').mockResolvedValue('dataset_20240530_123456');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleSave('xml');
+
+    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
+    expect(handler.generateFilename).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenCalledWith('danger', 'vh', 've');
+    expect(modalInstances[0].show).not.toHaveBeenCalled();
   });
 
   test('showNotification updates modal and hides on actions', () => {

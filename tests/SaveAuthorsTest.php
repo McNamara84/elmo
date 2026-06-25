@@ -1212,6 +1212,53 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $this->assertEquals($legacyId, $rows[0]['author_person_id'], 'The pre-existing legacy author ID should be reused.');
     }
 
+    public function testSaveAuthorsPayloadPreservesEditedAffiliationLabelAndRorId(): void
+    {
+        $resource_id = $this->createResource('GFZ.TEST.AUTHOR.EDITED.AFFILIATION.ROR', 'Test Edited Affiliation ROR');
+
+        $authorData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => 'EditedAffiliation',
+                    'givenname' => 'Author',
+                    'orcid' => '',
+                    'isContact' => false,
+                    'affiliations' => [
+                        [
+                            'label' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+                            'rorId' => 'https://ror.org/04z8jg394'
+                        ]
+                    ]
+                ]
+            ]),
+            'familynames' => ['EditedAffiliation'],
+            'givennames' => ['Author'],
+            'orcids' => [''],
+            'personAffiliation' => [''],
+            'authorPersonRorIds' => ['']
+        ];
+
+        saveAuthors($this->connection, $authorData, $resource_id);
+
+        $stmt = $this->connection->prepare(
+            'SELECT af.name, af.rorId
+             FROM Affiliation af
+             JOIN Author_has_Affiliation aha ON af.affiliation_id = aha.Affiliation_affiliation_id
+             JOIN Author a ON aha.Author_author_id = a.author_id
+             JOIN Author_person ap ON a.Author_Person_author_person_id = ap.author_person_id
+             WHERE ap.familyname = ? AND ap.givenname = ?'
+        );
+        $familyname = 'EditedAffiliation';
+        $givenname = 'Author';
+        $stmt->bind_param('ss', $familyname, $givenname);
+        $stmt->execute();
+        $affiliation = $stmt->get_result()->fetch_assoc();
+
+        $this->assertSame('GFZ Helmholtz Centre for Geosciences, Potsdam, Germany', $affiliation['name']);
+        $this->assertSame('04z8jg394', $affiliation['rorId']);
+    }
+
     public function testSaveAuthorsPreservesMixedAuthorsPayloadOrder(): void
     {
         $resource_id = $this->createResource('GFZ.TEST.MIXED.AUTHOR.PAYLOAD.ORDER', 'Test Mixed Author Payload Order');

@@ -217,6 +217,31 @@ describe('affiliations.js', () => {
     ]);
   });
 
+  test('editing an affiliation label restores the ROR ID from the hidden field when Tagify drops it', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.addTags([{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }]);
+    input._tagify._updateHiddenField();
+    expect(hidden.value).toBe('04z8jg394');
+
+    input._tagify.value[0] = {
+      value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany'
+    };
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
+  });
+
   /**
    * Checks that the remove event clears tags when no contact person is specified.
    */
