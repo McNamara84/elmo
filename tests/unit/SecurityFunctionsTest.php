@@ -106,6 +106,17 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    public function getOrCreateScopedCsrfToken_ReusesExistingToken(): void
+    {
+        $first = getOrCreateScopedCsrfToken('form');
+        $second = getOrCreateScopedCsrfToken('form');
+
+        $this->assertSame($first, $second);
+    }
+
+    /**
+     * @test
+     */
     public function generateCsrfToken_StoresTimeInSession(): void
     {
         $beforeTime = time();

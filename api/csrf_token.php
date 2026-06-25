@@ -2,7 +2,8 @@
 /**
  * CSRF Token Generator Endpoint
  * 
- * Generates and returns a CSRF token for form protection.
+ * Returns the current CSRF token for form protection, creating one only when
+ * missing or expired. Pass refresh=1 to force a new token (e.g. after save).
  * The token is stored in the session and must be validated on form submission.
  */
 
@@ -15,12 +16,16 @@ header('Content-Type: application/json');
 header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 
-// Generate a new CSRF token using shared security utility
 $scope = isset($_GET['scope']) ? (string) $_GET['scope'] : 'form';
-$token = generateScopedCsrfToken($scope);
+$refresh = isset($_GET['refresh']) && (string) $_GET['refresh'] === '1';
+$normalizedScope = normalizeCsrfScope($scope);
+
+$token = $refresh
+    ? generateScopedCsrfToken($normalizedScope)
+    : getOrCreateScopedCsrfToken($normalizedScope);
 
 echo json_encode([
     'success' => true,
     'token' => $token,
-    'scope' => normalizeCsrfScope($scope)
+    'scope' => $normalizedScope
 ]);

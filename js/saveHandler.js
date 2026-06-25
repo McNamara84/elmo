@@ -51,11 +51,15 @@ class SaveHandler {
 
     /**
      * Fetches a CSRF token from the server for form protection.
+     * @param {{ refresh?: boolean }} [options]
      * @returns {Promise<string>} The CSRF token
      */
-    async fetchCsrfToken() {
+    async fetchCsrfToken({ refresh = false } = {}) {
         try {
-            const response = await fetch('api/csrf_token.php');
+            const query = refresh ? '?refresh=1' : '';
+            const response = await fetch(`api/csrf_token.php${query}`, {
+                credentials: 'include'
+            });
             const data = await response.json();
             return data.token || '';
         } catch (error) {
@@ -178,7 +182,7 @@ class SaveHandler {
      * @returns {Promise<void>}
      */
     async refreshFormCsrfToken() {
-        const token = await this.fetchCsrfToken();
+        const token = await this.fetchCsrfToken({ refresh: true });
         if (token) {
             this.$csrfTokenField.val(token);
             this.formStartedAt = Date.now();
@@ -233,6 +237,7 @@ class SaveHandler {
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',
+                credentials: 'include',
                 body: formData
             });
 

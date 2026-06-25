@@ -39,12 +39,12 @@ define('MIN_INTERACTION_FEEDBACK_SECONDS', (int) getenv('FEEDBACK_MIN_INTERACTIO
 define('RATE_LIMIT_SESSION_KEY', 'rate_limits');
 
 /**
- * Initializes session if not already started.
- * Must be called before any session operations.
+ * Ensures the PHP application session is active.
+ * Used by CSRF validation and session-based rate limiting.
  *
  * @return void
  */
-function initializeCsrfSession(): void
+function ensureAppSession(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -70,7 +70,7 @@ function generateCsrfToken(): string
  */
 function generateScopedCsrfToken(string $scope): string
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
     $normalizedScope = normalizeCsrfScope($scope);
     $tokenKey = getCsrfTokenSessionKey($normalizedScope);
@@ -86,6 +86,45 @@ function generateScopedCsrfToken(string $scope): string
 }
 
 /**
+ * Returns whether a scoped CSRF token exists and is still within its lifetime.
+ *
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return bool
+ */
+function isScopedCsrfTokenValid(string $scope): bool
+{
+    ensureAppSession();
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
+    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
+    $sessionToken = $_SESSION[$tokenKey] ?? '';
+    $tokenTime = (int) ($_SESSION[$tokenTimeKey] ?? 0);
+
+    return !empty($sessionToken) && (time() - $tokenTime <= 3600);
+}
+
+/**
+ * Returns the current scoped CSRF token or creates one when missing or expired.
+ *
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return string
+ */
+function getOrCreateScopedCsrfToken(string $scope): string
+{
+    ensureAppSession();
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
+
+    if (isScopedCsrfTokenValid($scope)) {
+        return (string) $_SESSION[$tokenKey];
+    }
+
+    return generateScopedCsrfToken($scope);
+}
+
+/**
  * Validates a CSRF token from a POST request.
  * Checks for token existence, validity, and expiration (1 hour).
  *
@@ -94,7 +133,7 @@ function generateScopedCsrfToken(string $scope): string
  */
 function validateCsrfToken(string $submittedToken, string $scope = 'form'): bool
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
     $normalizedScope = normalizeCsrfScope($scope);
     $tokenKey = getCsrfTokenSessionKey($normalizedScope);
@@ -146,7 +185,7 @@ function invalidateCsrfToken(): void
  */
 function invalidateScopedCsrfToken(string $scope): void
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
     $normalizedScope = normalizeCsrfScope($scope);
     unset($_SESSION[getCsrfTokenSessionKey($normalizedScope)]);
@@ -176,7 +215,7 @@ function validateHoneypot(string $honeypotValue): bool
  */
 function getCsrfTokenAgeSeconds(string $scope = 'form'): int
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
     $normalizedScope = normalizeCsrfScope($scope);
     $interactionStart = (int) ($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] ?? 0);
@@ -274,7 +313,7 @@ function normalizeRateLimitAction(string $action): string
  */
 function getSessionRateLimitTimestamps(string $action, int $windowSeconds): array
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
     $actionKey = normalizeRateLimitAction($action);
     $cutoff = time() - $windowSeconds;

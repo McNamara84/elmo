@@ -20,7 +20,7 @@ function createSaveHandlerFetchMock({
       });
     }
 
-    if (url === 'api/csrf_token.php') {
+    if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
       return Promise.resolve({
         ok: true,
         json: function() {
@@ -235,7 +235,7 @@ describe('saveHandler.js', () => {
         return Promise.reject(new Error('Network failure'));
       }
 
-      if (url === 'api/csrf_token.php') {
+      if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
         return Promise.resolve({
           ok: true,
           json: function() { return Promise.resolve({ token: 'test-csrf-token' }); }
@@ -257,14 +257,14 @@ describe('saveHandler.js', () => {
         return Promise.resolve({ ok: false, status: 500 });
       }
 
-      if (url === 'api/csrf_token.php') {
+      if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
         return Promise.resolve({
           ok: true,
           json: function() { return Promise.resolve({ token: 'test-csrf-token' }); }
         });
       }
     });
-    
+
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 

@@ -18,7 +18,9 @@ $(document).ready(function () {
   const FEEDBACK_MIN_SECONDS = 3;
   async function fetchFeedbackCsrfToken() {
     try {
-      const response = await fetch('api/csrf_token.php?scope=feedback');
+      const response = await fetch('api/csrf_token.php?scope=feedback', {
+        credentials: 'include'
+      });
       const data = await response.json();
       return data.token || '';
     } catch (error) {

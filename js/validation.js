@@ -15,7 +15,7 @@ async function initializeFormCsrfToken() {
   }
 
   try {
-    const response = await fetch('api/csrf_token.php');
+    const response = await fetch('api/csrf_token.php', { credentials: 'include' });
     const data = await response.json();
     if (data.token) {
       csrfField.value = data.token;

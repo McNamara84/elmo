@@ -100,8 +100,6 @@ function testGfzSmtpConnectivity(): bool {
  * @throws Exception if validation fails
  */
 function validateSubmitSecurity(array $postData): void {
-    initializeCsrfSession();
-
     // Check 1: Honeypot - Silent rejection
     if (!validateHoneypot($postData['website'] ?? '')) {
         logSuspiciousAttempt('submit', 'honeypot triggered');

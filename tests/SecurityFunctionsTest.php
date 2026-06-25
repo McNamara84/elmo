@@ -73,6 +73,30 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /**
+     * Tests getOrCreateScopedCsrfToken reuses a valid token.
+     */
+    public function testGetOrCreateScopedCsrfTokenReusesValidToken(): void
+    {
+        $token1 = getOrCreateScopedCsrfToken('form');
+        $token2 = getOrCreateScopedCsrfToken('form');
+
+        $this->assertSame($token1, $token2);
+    }
+
+    /**
+     * Tests getOrCreateScopedCsrfToken creates a new token after expiration.
+     */
+    public function testGetOrCreateScopedCsrfTokenRegeneratesWhenExpired(): void
+    {
+        $token1 = getOrCreateScopedCsrfToken('form');
+        $_SESSION['csrf_token_time'] = time() - 3661;
+
+        $token2 = getOrCreateScopedCsrfToken('form');
+
+        $this->assertNotSame($token1, $token2);
+    }
+
+    /**
      * Tests validateCsrfToken accepts a valid token.
      */
     public function testValidateCsrfTokenSuccess(): void

@@ -14,9 +14,6 @@ require 'vendor/autoload.php';
 require __DIR__ . '/api/security.php';
 include __DIR__ . '/settings.php';
 
-// Initialize session for CSRF validation
-initializeCsrfSession();
-
 /**
  * Sends a JSON error response and exits.
  *

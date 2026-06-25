@@ -40,8 +40,6 @@ global $connection;
  */
 function validateSaveSecurity($postData)
 {
-    initializeCsrfSession();
-
     // Security Check 1: Honeypot
     if (!validateHoneypot($postData['website'] ?? '')) {
         logSuspiciousAttempt('save', 'honeypot triggered');
