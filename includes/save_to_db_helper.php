@@ -11,6 +11,7 @@ require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
+require_once __DIR__ . '/../save/formgroups/save_originatinglaboratory.php';
 global $showGGMsProperties;
 if ($showGGMsProperties) {
     require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
