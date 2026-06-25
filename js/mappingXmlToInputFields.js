@@ -1339,10 +1339,14 @@ function processDescriptions(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processDates(xmlDoc, resolver) {
-  const dateNodes = xmlDoc.evaluate("//ns:dates/ns:date", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = Array.from(xmlDoc.getElementsByTagName("*")).filter((node) => (
+    node.localName === "date" &&
+    node.parentElement?.localName === "dates" &&
+    (!node.namespaceURI || node.namespaceURI === "http://datacite.org/schema/kernel-4")
+  ));
 
-  for (let i = 0; i < dateNodes.snapshotLength; i++) {
-    const dateNode = dateNodes.snapshotItem(i);
+  for (let i = 0; i < dateNodes.length; i++) {
+    const dateNode = dateNodes[i];
     const dateType = dateNode.getAttribute("dateType");
     const dateValue = dateNode.textContent.trim();
 
@@ -1745,6 +1749,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getOrCreatePersonRow,
         processContributors,
         processIndividualContributor,
+        processDates,
         updateContributorMap,
         getTagifyInstance,
         populateFormWithContributors,
