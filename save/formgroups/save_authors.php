@@ -348,11 +348,18 @@ function normalizeLegacyAuthors(array $postData): array
     return $authors;
 }
 
+function hasNonemptyAuthorsPayload(array $postData): bool
+{
+    $payload = decodeAuthorsPayload($postData);
+
+    return is_array($payload) && count($payload) > 0;
+}
+
 function normalizeAuthorsPayload(array $postData): array
 {
     $payload = decodeAuthorsPayload($postData);
 
-    if ($payload !== null) {
+    if (is_array($payload) && count($payload) > 0) {
         return normalizeAuthorsFromPayload($payload);
     }
 
