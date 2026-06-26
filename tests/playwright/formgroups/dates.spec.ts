@@ -30,13 +30,13 @@ test.describe('Dates form group', () => {
     await expect(page.locator(selectors.embargoHelpIcon)).toBeVisible();
 
     await expect(createdInput).toHaveAttribute('type', 'date');
-    await expect(createdInput).toHaveJSProperty('required', true);
+    await expect(createdInput).toHaveJSProperty('required', false);
     await expect(createdInput).toHaveAttribute('min', '1900-01-01');
     await expect(createdInput).toHaveAttribute('max', '2100-12-31');
 
     const createdLabel = page.locator(selectors.createdLabel);
     await expect(createdLabel).toContainText('Date created');
-    await expect(createdLabel.locator('.red-star')).toHaveText('*');
+    await expect(createdLabel.locator('.red-star')).toHaveCount(0);
 
     const createdFeedback = page.locator(`${selectors.createdInput} ~ .invalid-feedback`);
     await expect(createdFeedback).toBeHidden();
