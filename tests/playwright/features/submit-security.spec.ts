@@ -103,7 +103,7 @@ test.describe('Submit Operation Security Features', () => {
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Security token validation failed');
   });
-  test('backend rejects submit when honeypot field is filled', async ({ page }) => {
+  test('backend rejects submit when modal honeypot field is filled', async ({ page }) => {
     const { submitModal } = await openSubmitModal(page);
 
     const honeypot = submitModal.locator('input[name="website"]').first();
@@ -113,6 +113,29 @@ test.describe('Submit Operation Security Features', () => {
     // open animation completes — shown.bs.modal resets the field to empty on open.
     await page.waitForTimeout(3200);
     await honeypot.fill('I am a bot');
+
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+
+    await submitFromModalWithPrivacyConsent(page);
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(400);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
+    expect(payload.message).toContain('Invalid submission detected');
+  });
+
+  test('backend rejects submit when main-form honeypot field is filled', async ({ page }) => {
+    await completeMinimalDatasetForm(page);
+    await page.locator('#input-information-website').fill('I am a bot');
+
+    await page.locator('#button-form-submit').click();
+    await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
+    await page.check('#input-submit-privacycheck');
+
+    await page.waitForTimeout(3200);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'

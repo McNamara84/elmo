@@ -245,7 +245,8 @@ class SubmitHandler {
         // Security field references
         this.$csrfTokenField = $('#input-form-csrf-token');
         this.$timeSpentField = $('#input-submit-time-spent');
-        this.$honeypotField = $('#modal-submit input[name="website"]').first();
+        this.$mainHoneypotField = $('#input-information-website');
+        this.$modalHoneypotField = $('#modal-submit input[name="website"]').first();
         this.formStartedAt = Date.now();
         this.submitSecurityDelayMs = 3200;
         this.submitReadyAt = 0;
@@ -276,7 +277,7 @@ class SubmitHandler {
 
         // Reset modal-scoped fields on open
         $('#modal-submit').on('shown.bs.modal', () => {
-            this.$honeypotField.val('');
+            this.$modalHoneypotField.val('');
             this.$timeSpentField.val('0');
             this.scheduleSubmitReadyState();
             $('#input-submit-dataurl').select();
@@ -495,17 +496,17 @@ class SubmitHandler {
 
         // Security fields live in the submit modal, so add them explicitly.
         submitData.set('submit_time_spent', this.$timeSpentField.val());
-        
-        // Read honeypot value directly from DOM element
-        // jQuery's .val() doesn't read values set via direct property assignment (e.g., element.value = 'x')
-        let honeypotValue = '';
-        if (this.$honeypotField && this.$honeypotField.length > 0) {
-            const element = this.$honeypotField[0];
+
+        // Backend validates one honeypot field — send whichever trap was filled.
+        const mainHoneypot = (this.$mainHoneypotField.val() || '').toString().trim();
+        let modalHoneypot = '';
+        if (this.$modalHoneypotField && this.$modalHoneypotField.length > 0) {
+            const element = this.$modalHoneypotField[0];
             if (element && element.value) {
-                honeypotValue = element.value;
+                modalHoneypot = String(element.value).trim();
             }
         }
-        submitData.set('website', honeypotValue);
+        submitData.set('website', mainHoneypot || modalHoneypot);
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
