@@ -23,8 +23,8 @@ include_once __DIR__ . '/settings.php';
 include_once __DIR__ . '/includes/feature_toggles.php';
 
 require_once __DIR__ . '/api/security.php';
-ensureAppSession();
-$formCsrfToken = getOrCreateScopedCsrfToken('form');
+ensureAppSession(); // for rate limiting based. on session
+$formCsrfToken = getOrCreateScopedCsrfToken('form'); // for CSRF protection
 
 // Treat requests without query parameters as "new records"
 $isNewRecord = empty($_GET);
