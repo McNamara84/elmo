@@ -25,8 +25,8 @@ async function initializeFormCsrfToken() {
   }
 }
 
-$(() => {
-  initializeFormCsrfToken();
+$(async () => {
+  await initializeFormCsrfToken();
 
   const autosaveService = new AutosaveService('form-mde', {
     statusElementId: 'autosave-status',
