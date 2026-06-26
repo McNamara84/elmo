@@ -115,6 +115,11 @@ test.describe('Save Operation Security Features', () => {
       let capturedBody = '';
 
       await page.route(SAVE_ENDPOINT, async (route) => {
+        if (route.request().method() !== 'POST') {
+          await route.fallback();
+          return;
+        }
+
         const bodyBuffer = route.request().postDataBuffer();
         capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
 
@@ -129,7 +134,9 @@ test.describe('Save Operation Security Features', () => {
       await openSaveModal(page);
 
       await Promise.all([
-        page.waitForRequest(SAVE_ENDPOINT),
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.request().method() === 'POST'
+        ),
         page.locator('#button-saveas-save').click(),
       ]);
 
@@ -191,10 +198,14 @@ test.describe('Save Operation Security Features', () => {
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
         submittedTimeSpent = extractMultipartField(body, 'save_time_spent');
 
+        const timeSpent = parseInt(submittedTimeSpent || '0', 10);
+        const responseStatus = timeSpent < 2 ? 400 : 200;
         await route.fulfill({
-          status: 200,
+          status: responseStatus,
           contentType: 'application/json',
-          body: JSON.stringify({ success: true, message: 'Saved' }),
+          body: JSON.stringify(responseStatus === 400
+            ? { error: 'Please take time to review your metadata before saving.' }
+            : { success: true, message: 'Saved' }),
         });
       });
 
@@ -213,6 +224,7 @@ test.describe('Save Operation Security Features', () => {
           page.locator('#button-saveas-save').click(),
         ]);
 
+        expect(parseInt(submittedTimeSpent || '0', 10)).toBeLessThan(2);
         await expect(page.locator('.alert-danger')).toBeVisible();
       } finally {
         await restoreDateNow(page);
@@ -284,7 +296,7 @@ test.describe('Save Operation Security Features', () => {
       // Ensure honeypot is empty (should be by default)
       await expect(honeypot).toHaveValue('');
 
-      // Open modal - this fetches fresh CSRF token
+      // Open modal — form CSRF token was issued with the page load
       await openSaveModal(page);
       
       // Verify CSRF token was populated
