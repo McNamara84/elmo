@@ -106,12 +106,9 @@ test.describe('Submit Operation Security Features', () => {
   test('backend rejects submit when honeypot field is filled', async ({ page }) => {
     const { submitModal } = await openSubmitModal(page);
 
-    // Simulate bot filling honeypot before request submission.
     const honeypot = submitModal.locator('input[name="website"]').first();
     await honeypot.waitFor({ state: 'attached' });
-    await honeypot.evaluate((el) => {
-      (el as HTMLInputElement).value = 'I am a bot';
-    });
+    await honeypot.fill('I am a bot');
 
     // Wait 3+ seconds to meet backend minimum interaction time for submit
     await page.waitForTimeout(3100);
@@ -123,9 +120,10 @@ test.describe('Submit Operation Security Features', () => {
     await submitFromModalWithPrivacyConsent(page);
     const response = await responsePromise;
 
-    expect(response.status()).toBe(403);
+    expect(response.status()).toBe(400);
     const payload = await response.json();
     expect(payload.success).toBe(false);
+    expect(payload.message).toContain('Invalid submission detected');
   });
 
   test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
