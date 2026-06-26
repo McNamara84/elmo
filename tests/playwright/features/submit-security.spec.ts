@@ -108,10 +108,11 @@ test.describe('Submit Operation Security Features', () => {
 
     const honeypot = submitModal.locator('input[name="website"]').first();
     await honeypot.waitFor({ state: 'attached' });
-    await honeypot.fill('I am a bot');
 
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
+    // Wait for backend minimum interaction time. Fill honeypot only after the modal
+    // open animation completes — shown.bs.modal resets the field to empty on open.
+    await page.waitForTimeout(3200);
+    await honeypot.fill('I am a bot');
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
