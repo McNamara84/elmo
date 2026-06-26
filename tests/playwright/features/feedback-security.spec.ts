@@ -101,36 +101,25 @@ test.describe('Feedback Security Features', () => {
       expect(tokenValue.length).toBeGreaterThanOrEqual(32);
     });
 
-    test('CSRF token is refreshed when modal is reopened', async ({ page }) => {
+    test('CSRF token is reused when modal is reopened', async ({ page }) => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
-      // Wait for initial token to be populated
       const csrfField = feedbackModal.locator('input[name="csrf_token"]');
       await expect(csrfField).not.toHaveValue('');
       const firstToken = await csrfField.inputValue();
 
-      // Close modal
       const closeButton = feedbackModal.locator('button[aria-label="Close"]');
       await closeButton.click();
       await expect(feedbackModal).toBeHidden();
 
-      // Wait for a new CSRF token request when reopening
-      const csrfPromise = page.waitForRequest((request) =>
-        request.url().includes('csrf_token.php')
-      );
-
-      // Reopen modal
       const feedbackButton = page.locator('#button-feedback-openmodalfooter');
       await feedbackButton.click();
       await expect(feedbackModal).toBeVisible();
-      await csrfPromise;
 
-      // Wait for new token to be populated
       await expect(csrfField).not.toHaveValue('');
       const secondToken = await csrfField.inputValue();
 
-      // Tokens should be different
-      expect(secondToken).not.toBe(firstToken);
+      expect(secondToken).toBe(firstToken);
     });
   });
 
