@@ -24,7 +24,9 @@ export async function completeMinimalDatasetForm(page: Page) {
     affiliation: 'GFZ Helmholtz Centre for Geosciences',
   });
 
-  await page.getByText('ContactPerson?').click();
+  const contactToggle = page.locator(`${SELECTORS.formGroups.authors} [data-author-contact-toggle]`).first();
+  await expect(contactToggle).toBeVisible();
+  await contactToggle.click();
 
   const emailField = page.getByRole('textbox', { name: 'Email address*' });
   await expect(emailField).toBeVisible();
@@ -153,11 +155,9 @@ async function addAuthorInstitution(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  while (await page.locator('[data-authorinstitution-row]').count() <= index) {
     await page.locator('#button-authorinstitution-add').click();
-    // Wait for the new author institution row to be visible
-    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible' });
+    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific author institution row
@@ -166,11 +166,11 @@ async function addAuthorInstitution(
   // Fill institution name
   await institutionRow.locator('[id^="input-authorinstitution-name"]').fill(data.institutionName);
 
-  // Fill affiliation using tagify
-  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
-  await affiliationTagifyInput.click();
-  await affiliationTagifyInput.type(data.affiliation);
-  await page.keyboard.press('Enter');
+  const affiliationEditor = institutionRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 
 /**
@@ -416,7 +416,7 @@ async function addAuthor(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
+  while (await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).count() <= index) {
     await page.locator('#button-author-add').click();
     await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
@@ -444,23 +444,11 @@ async function addAuthor(
   await firstNameField.fill(data.firstName);
   await expect(firstNameField).toHaveValue(data.firstName);
 
-  // Add affiliation tag via Tagify API directly (more reliable than type+Enter
-  // because Tagify's async API search can block Enter key processing during loading state)
-  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
-  await expect(async () => {
-    const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
-    expect(hasTagify).toBe(true);
-  }).toPass({ timeout: 10000 });
-
-  await affiliationInput.evaluate((el: any, affiliation: string) => {
-    el._tagify.addTags([{ value: affiliation }]);
-  }, data.affiliation);
-
-  // Wait for the tagify tag element to appear in the DOM
-  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
-
-  // Brief settle time so the next addAuthor call doesn't race with Tagify rendering
-  await page.waitForTimeout(200);
+  const affiliationEditor = authorRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 export { exampleData };
 

@@ -650,7 +650,12 @@ describe('orcidSearch.js', () => {
       expect($('input[name="familynames[]"]').val()).toBe('Curie');
       expect($('input[name="givennames[]"]').val()).toBe('Marie');
       // Check affiliations
-      expect(affInput._tagify.value).toEqual([{ value: 'Sorbonne University' }]);
+      expect(affInput._tagify.value).toEqual([{
+        value: 'Sorbonne University',
+        label: 'Sorbonne University',
+        rorId: 'https://ror.org/02en5vm52',
+        id: 'https://ror.org/02en5vm52'
+      }]);
       expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/02en5vm52');
     });
 
@@ -700,7 +705,12 @@ describe('orcidSearch.js', () => {
       expect($('input[name="cbORCID[]"]').val()).toBe('0000-0002-7777-8888');
       expect($('input[name="cbPersonLastname[]"]').val()).toBe('Turing');
       expect($('input[name="cbPersonFirstname[]"]').val()).toBe('Alan');
-      expect(affInput._tagify.value).toEqual([{ value: 'University of Cambridge' }]);
+      expect(affInput._tagify.value).toEqual([{
+        value: 'University of Cambridge',
+        label: 'University of Cambridge',
+        rorId: 'https://ror.org/01aaaa111',
+        id: 'https://ror.org/01aaaa111'
+      }]);
       expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/01aaaa111');
     });
 

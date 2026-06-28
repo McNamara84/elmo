@@ -14,7 +14,11 @@ class MockTagify {
     this.settings = options;
     this.whitelist = options.whitelist || [];
     this.value = [];
-    this.DOM = { input: { style: { width: '' } } };
+    const scopeEl = document.createElement('div');
+    this.DOM = { 
+      input: { style: { width: '' } },
+      scope: scopeEl
+    };
     this.dropdown = { hide: jest.fn(), show: jest.fn() };
     this._callbacks = {};
   }
@@ -24,15 +28,42 @@ class MockTagify {
   addTags(items) {
     const arr = Array.isArray(items) ? items : [items];
     arr.forEach(item => {
+      let tagData;
       if (typeof item === 'string') {
-        this.value.push({ value: item });
+        tagData = { value: item };
       } else {
-        this.value.push(item);
+        tagData = item;
       }
+      this.value.push(tagData);
+      
+      // Render the tag to the DOM
+      const tag = document.createElement('tag');
+      tag.setAttribute('title', tagData.value);
+      tag.__tagifyTagData = tagData;
+      
+      const tagText = document.createElement('span');
+      tagText.className = 'tagify__tag-text';
+      tagText.textContent = tagData.value;
+      
+      const editBtn = document.createElement('button');
+      editBtn.type = 'button';
+      editBtn.className = 'tagify__tag__editBtn';
+      editBtn.setAttribute('aria-label', 'Edit affiliation');
+      const icon = document.createElement('i');
+      icon.className = 'bi bi-pencil-fill';
+      editBtn.appendChild(icon);
+      
+      const div = document.createElement('div');
+      div.appendChild(tagText);
+      div.appendChild(editBtn);
+      tag.appendChild(div);
+      
+      this.DOM.scope.appendChild(tag);
     });
   }
   removeAllTags() {
     this.value = [];
+    this.DOM.scope.innerHTML = '';
   }
   loading(state) {
     this._loading = state;
@@ -46,6 +77,20 @@ class MockTagify {
     }
     if (this._callbacks[event]) {
       this._callbacks[event]({ detail });
+    }
+  }
+  replaceTag(tagElm, newTagData) {
+    // Find the tag in value array and update it
+    const idx = this.value.findIndex(t => t.value === tagElm.__tagifyTagData.value);
+    if (idx >= 0) {
+      this.value[idx] = newTagData;
+      tagElm.__tagifyTagData = newTagData;
+      // Update the displayed text
+      const textSpan = tagElm.querySelector('.tagify__tag-text');
+      if (textSpan) {
+        textSpan.textContent = newTagData.value;
+      }
+      tagElm.setAttribute('title', newTagData.value);
     }
   }
 }
@@ -70,6 +115,10 @@ describe('affiliations.js', () => {
       <input id="input-contributor-organisationaffiliation" />
       <input id="input-contributor-organisationrorid" />
       <input id="contact-person-field" />
+      <div id="modal-affiliation-edit">
+        <input id="input-affiliation-edit-value" />
+        <button id="button-affiliation-edit-save"></button>
+      </div>
     `;
 
     $ = require('jquery');
@@ -89,6 +138,16 @@ describe('affiliations.js', () => {
     );
 
     window.applyTagifyAccessibilityAttributes = jest.fn();
+
+    // Mock bootstrap.Modal
+    global.bootstrap = {
+      Modal: {
+        getOrCreateInstance: jest.fn((el) => ({
+          show: jest.fn(),
+          hide: jest.fn()
+        }))
+      }
+    };
 
     ({ autocompleteAffiliations, refreshTagifyInstances, searchAffiliationsFromServer } = requireFresh('../../js/affiliations.js'));
   });
@@ -132,6 +191,55 @@ describe('affiliations.js', () => {
     // Adding unknown value should close dropdown
     input._tagify.trigger('add', { data: { value: 'Unknown' } });
     expect(input._tagify.dropdown.hide).toHaveBeenCalled();
+  });
+
+  test('editing an affiliation label keeps the structured ROR ID', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.whitelist = [{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }];
+    input._tagify.trigger('add', {
+      data: { value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }
+    });
+
+    input._tagify.value[0].value = 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany';
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
+  });
+
+  test('editing an affiliation label restores the ROR ID from the hidden field when Tagify drops it', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.addTags([{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }]);
+    input._tagify._updateHiddenField();
+    expect(hidden.value).toBe('04z8jg394');
+
+    input._tagify.value[0] = {
+      value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany'
+    };
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
   });
 
   /**
@@ -199,8 +307,8 @@ describe('affiliations.js', () => {
    * Ensures refreshTagifyInstances updates placeholder and keeps tags.
    */
   test('refreshTagifyInstances updates placeholder and keeps tags', () => {
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
-    const input = document.getElementById('input-author-affiliation');
+    autocompleteAffiliations('input-contributorpersons-affiliation', 'input-contributor-personrorid');
+    const input = document.getElementById('input-contributorpersons-affiliation');
     input._tagify.addTags({ value: 'First', id: '1' });
 
     global.translations = { general: { affiliation: 'Zugehörigkeit' } };
@@ -208,6 +316,78 @@ describe('affiliations.js', () => {
 
     expect(input._tagify.settings.placeholder).toBe('Zugehörigkeit');
     expect(input._tagify.value[0].value).toBe('First');
+  });
+
+  /**
+   * Tests the ROR ID preservation when editing a tag's label.
+   * Opens the edit modal, changes the label, saves, and verifies the ROR ID remains unchanged.
+   */
+  test('editing a tag label preserves its ROR identifier', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+    
+    // Add a tag with a known ROR ID
+    const originalRorId = 'https://ror.org/01bj3aw27';
+    const originalLabel = 'Technical University of Berlin';
+    input._tagify.addTags([{ value: originalLabel, id: originalRorId }]);
+    // Manually call updateHiddenField since addTags doesn't trigger the "add" event in the mock
+    input._tagify._updateHiddenField();
+    
+    // Verify the hidden field contains the ROR ID
+    expect(hidden.value).toBe('01bj3aw27');
+    
+    // Simulate clicking the pencil icon (edit button)
+    const tag = input._tagify.DOM.scope.querySelector('tag');
+    expect(tag).toBeTruthy();
+    
+    const editBtn = tag.querySelector('.tagify__tag__editBtn');
+    const clickEvent = new MouseEvent('click', { bubbles: true });
+    editBtn.dispatchEvent(clickEvent);
+    
+    // Verify modal was populated with original data
+    const modalEl = document.getElementById('modal-affiliation-edit');
+    const valueInput = document.getElementById('input-affiliation-edit-value');
+    expect(modalEl._editTagData.value).toBe(originalLabel);
+    expect(modalEl._editTagData.id).toBe('01bj3aw27');
+    expect(valueInput.value).toBe(originalLabel);
+    
+    // Simulate user editing the label
+    const newLabel = 'Technical University of Berlin (Edited)';
+    valueInput.value = newLabel;
+    
+    // Simulate clicking the save button
+    const saveBtn = document.getElementById('button-affiliation-edit-save');
+    saveBtn.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    
+    // Verify the tag's label was updated
+    const updatedTag = input._tagify.DOM.scope.querySelector('tag');
+    const tagText = updatedTag.querySelector('.tagify__tag-text').textContent;
+    expect(tagText).toBe(newLabel);
+    
+    // Verify the ROR ID is still in the Tagify value
+    expect(input._tagify.value[0].value).toBe(newLabel);
+    expect(input._tagify.value[0].id).toBe('01bj3aw27');
+    
+    // Verify the hidden field still contains the original ROR ID
+    expect(hidden.value).toBe('01bj3aw27');
+  });
+
+  test('tag template escapes affiliation labels before rendering', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const maliciousLabel = '"><img src=x onerror=alert(1)>';
+
+    const html = input._tagify.settings.templates.tag(
+      { value: maliciousLabel },
+      {
+        settings: { classNames: { tag: 'tagify__tag' } },
+        getAttributes: () => ''
+      }
+    );
+
+    expect(html).toContain('&quot;&gt;&lt;img src=x onerror=alert(1)&gt;');
+    expect(html).not.toContain(maliciousLabel);
   });
 
   /**

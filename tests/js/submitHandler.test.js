@@ -102,6 +102,7 @@ describe('submitHandler.js', () => {
     console.error.mockRestore();
     delete global.validateTitleField;
     delete global.validateAuthorNameFields;
+    delete global.validateAuthorAffiliationEditors;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -173,6 +174,20 @@ describe('submitHandler.js', () => {
   test('toggleSubmitButton enables button when checked', () => {
     $('#input-submit-privacycheck').prop('checked', true);
     handler.toggleSubmitButton();
+    expect($('#button-submit-submit').prop('disabled')).toBe(false);
+  });
+
+  test('submit modal button stays disabled until the security review delay has elapsed', () => {
+    jest.useFakeTimers();
+    $('#input-submit-privacycheck').prop('checked', true);
+
+    handler.submitReadyAt = Date.now() + handler.submitSecurityDelayMs;
+    handler.scheduleSubmitReadyState();
+
+    expect($('#button-submit-submit').prop('disabled')).toBe(true);
+
+    jest.advanceTimersByTime(handler.submitSecurityDelayMs);
+
     expect($('#button-submit-submit').prop('disabled')).toBe(false);
   });
 
@@ -644,6 +659,21 @@ describe('submitHandler.js', () => {
     expect(notifSpy).not.toHaveBeenCalled();
   });
 
+  test('handleSubmit shows validation-failed modal when author affiliation labels are invalid', () => {
+    global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+
+    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
+    expect(modalSpy).toHaveBeenCalled();
+  });
+
   test('handleSubmit shows validation-failed modal when contact person is missing', () => {
     // Temporarily override checkValidity to return true (form fields are valid)
     // but validateContactPerson will return false (no checkbox checked)
@@ -668,5 +698,54 @@ describe('submitHandler.js', () => {
     const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
+  });
+
+  test('validateContactPerson reads contact state from authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('validateContactPerson accepts contact author without given name', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Sukarno","givenname":"","email":"sukarno@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('validateContactPerson rejects incomplete contacts in authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"   ","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+  });
+
+  test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+
+    document.querySelector('input[name="authorsPayload"]').value = '[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]';
+    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: [] } }));
+
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 });

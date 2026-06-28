@@ -204,7 +204,7 @@ $(document).ready(function () {
     const contributorRow = btn.closest('[contributor-person-row]');
 
     if (authorRow.length) {
-      const index = authorRow.index();
+      const index = $('#group-author [data-creator-row]').index(authorRow);
       document.getElementById('orcid-search-context-group').value = 'author';
       document.getElementById('orcid-search-context-row-index').value = index;
     } else if (contributorRow.length) {

@@ -897,13 +897,13 @@ class ICGEMController extends DatasetController
      * @return string The combined XML as a string with envelope containing DataCite and ICGEM children.
      * @throws Exception If GGM data is missing or data fetching fails.
      */
-    public function createICGEMxml(int $id): string
+    public function createICGEMxml(int $id, ?string $sourceXmlString = null): string
     {
         // 1. Fetch GGM data (may be null/incomplete during partial saves; validation is done at submit time)
         $ggmData = $this->getGGMData($this->connection, $id);
         
         // 2. Get DataCite XML as string
-        $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite");
+        $dataciteXmlString = $this->transformAndSaveOrDownloadXml($id, "datacite", false, $sourceXmlString);
         $dataciteXmlString = $this->cleanDataCiteSchemaLocation($dataciteXmlString);
         
         // 2a. Inject file format into DataCite if available

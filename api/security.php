@@ -60,6 +60,11 @@ function initializeCsrfSession(): void
 function generateCsrfToken(): string
 {
     initializeCsrfSession();
+
+    // Keep a stable interaction start timestamp across token refreshes.
+    if (!isset($_SESSION['csrf_interaction_start_time'])) {
+        $_SESSION['csrf_interaction_start_time'] = time();
+    }
     
     $token = bin2hex(random_bytes(32));
     $_SESSION['csrf_token'] = $token;
@@ -162,17 +167,18 @@ function getClientIp(): string
 function getCsrfTokenAgeSeconds(): int
 {
     initializeCsrfSession();
-    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
-    if ($tokenTime <= 0) {
+    $interactionStartTime = (int) ($_SESSION['csrf_interaction_start_time'] ?? 0);
+    if ($interactionStartTime <= 0) {
         return 0;
     }
 
-    return max(0, time() - $tokenTime);
+    return max(0, time() - $interactionStartTime);
 }
 
 /**
  * Evaluates whether the interaction time meets a minimum threshold.
  *
+    unset($_SESSION['csrf_interaction_start_time']);
  * Uses a trust-preserving strategy by combining client-reported time with
  * server-measured CSRF token age and taking the lower bound when both exist.
  *
