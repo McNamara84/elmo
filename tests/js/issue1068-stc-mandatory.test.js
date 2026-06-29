@@ -15,6 +15,16 @@ describe('Issue #1068 ELMO-GEM spatial-only STC validation', () => {
     document.body.innerHTML = `
       <div id="group-stc">
         <div class="row" tsc-row tsc-row-id="1">
+          <label for="input-stc-latmin_1">Latitude Min</label>
+          <label for="input-stc-latmax_1" class="visually-hidden">Latitude Max</label>
+          <label for="input-stc-longmin_1">Longitude Min</label>
+          <label for="input-stc-longmax_1" class="visually-hidden">Longitude Max</label>
+          <label for="input-stc-description">Description</label>
+          <label for="input-stc-datestart">Start Date</label>
+          <label for="input-stc-dateend">End Date</label>
+          <label for="input-stc-timestart" class="visually-hidden">Start Time</label>
+          <label for="input-stc-timeend" class="visually-hidden">End Time</label>
+          <label for="input-stc-timezone">Timezone</label>
           <input type="text" id="input-stc-latmin_1" name="tscLatitudeMin[]" />
           <input type="text" id="input-stc-latmax_1" name="tscLatitudeMax[]" />
           <input type="text" id="input-stc-longmin_1" name="tscLongitudeMin[]" />
@@ -114,5 +124,45 @@ describe('Issue #1068 ELMO-GEM spatial-only STC validation', () => {
     expect($('#input-stc-timestart').prop('required')).toBe(true);
     expect($('#input-stc-timeend').prop('required')).toBe(true);
     expect($('#input-stc-timezone').prop('required')).toBe(true);
+  });
+
+  test('visually marks dynamically required STC fields before submit', () => {
+    $('#input-stc-longmax_1').val('14');
+
+    window.validateSpatialTemporalCoverageRequirements();
+
+    expect($('#input-stc-latmin_1').attr('aria-required')).toBe('true');
+    expect($('#input-stc-latmin_1').hasClass('border-danger')).toBe(true);
+    expect($('label[for="input-stc-latmin_1"] .stc-required-marker').text()).toBe('*');
+
+    expect($('#input-stc-longmin_1').attr('aria-required')).toBe('true');
+    expect($('#input-stc-longmin_1').hasClass('border-danger')).toBe(true);
+    expect($('label[for="input-stc-longmin_1"] .stc-required-marker').text()).toBe('*');
+
+    expect($('#input-stc-longmax_1').attr('aria-required')).toBe('true');
+    expect($('#input-stc-longmax_1').hasClass('border-danger')).toBe(false);
+    expect($('label[for="input-stc-longmax_1"] .stc-required-marker').length).toBe(0);
+
+    expect($('#input-stc-description').attr('aria-required')).toBe('true');
+    expect($('#input-stc-description').hasClass('border-danger')).toBe(true);
+    expect($('label[for="input-stc-description"] .stc-required-marker').text()).toBe('*');
+
+    expect($('#input-stc-datestart').attr('aria-required')).toBe('true');
+    expect($('#input-stc-datestart').hasClass('border-danger')).toBe(true);
+    expect($('label[for="input-stc-datestart"] .stc-required-marker').text()).toBe('*');
+
+    expect($('#input-stc-dateend').attr('aria-required')).toBe('true');
+    expect($('#input-stc-dateend').hasClass('border-danger')).toBe(true);
+    expect($('label[for="input-stc-dateend"] .stc-required-marker').text()).toBe('*');
+
+    $('#input-stc-longmax_1').val('');
+    window.validateSpatialTemporalCoverageRequirements();
+
+    expect($('#input-stc-latmin_1').attr('aria-required')).toBeUndefined();
+    expect($('#input-stc-latmin_1').hasClass('border-danger')).toBe(false);
+    expect($('label[for="input-stc-latmin_1"] .stc-required-marker').length).toBe(0);
+    expect($('#input-stc-datestart').attr('aria-required')).toBeUndefined();
+    expect($('#input-stc-datestart').hasClass('border-danger')).toBe(false);
+    expect($('label[for="input-stc-datestart"] .stc-required-marker').length).toBe(0);
   });
 });

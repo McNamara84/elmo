@@ -123,6 +123,95 @@ function validateContributorOrganisationRequirements() {
 
 
 /**
+ * Escapes an element ID for use in a label[for=...] selector.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeStcLabelSelector(value) {
+    if (typeof window !== 'undefined' && window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(value);
+    }
+
+    if ($.escapeSelector) {
+        return $.escapeSelector(value);
+    }
+
+    return String(value).replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
+}
+
+/**
+ * Adds or removes the required marker next to the visible label of a dynamic STC field.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredLabelMarker(inputElement, isRequired) {
+    var inputId = inputElement.getAttribute('id');
+    if (!inputId) {
+        return;
+    }
+
+    var labelSelector = 'label[for="' + escapeStcLabelSelector(inputId) + '"]';
+    var row = $(inputElement).closest('[tsc-row]');
+    var labels = row.length ? row.find(labelSelector) : $(labelSelector);
+    labels.each(function () {
+        var label = $(this);
+        if (label.hasClass('visually-hidden')) {
+            label.children('.stc-required-marker').remove();
+            return;
+        }
+
+        var marker = label.children('.stc-required-marker');
+        if (isRequired) {
+            if (!marker.length) {
+                label.append('<span class="red-star stc-required-marker" aria-hidden="true">*</span>');
+            }
+        } else {
+            marker.remove();
+        }
+    });
+}
+
+/**
+ * Applies the visual and accessibility state for an STC field that is required on submit.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredVisualCue(inputElement, isRequired) {
+    var input = $(inputElement);
+    var value = String(input.val() || '').trim();
+
+    input.toggleClass('stc-required-on-submit', isRequired);
+    input.toggleClass('border-danger', isRequired && value === '');
+
+    if (isRequired) {
+        input.attr('aria-required', 'true');
+    } else {
+        input.removeAttr('aria-required');
+    }
+
+    updateStcRequiredLabelMarker(inputElement, isRequired);
+}
+
+/**
+ * Synchronizes visual required cues for all fields in one STC row.
+ *
+ * @param {Object.<string, JQuery>} inputs
+ * @returns {void}
+ */
+function updateStcRowRequiredVisualCues(inputs) {
+    Object.values(inputs).forEach(function (input) {
+        input.each(function () {
+            updateStcRequiredVisualCue(this, $(this).hasClass('js-required-on-submit'));
+        });
+    });
+}
+
+/**
  * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
  *
  * The function ensures:
@@ -153,7 +242,10 @@ function validateSpatialTemporalCoverageRequirements() {
         fields.forEach(function (field) {
             inputs[field] = row.find('[id^="input-stc-' + field + '"]');
             filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
-            inputs[field].removeAttr('required').removeClass('js-required-on-submit');
+            inputs[field].removeAttr('required')
+                .removeAttr('aria-required')
+                .removeClass('js-required-on-submit stc-required-on-submit border-danger');
+            inputs[field].each(function () { updateStcRequiredLabelMarker(this, false); });
         });
 
         // If all fields are empty, skip this row
@@ -206,6 +298,8 @@ function validateSpatialTemporalCoverageRequirements() {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
+
+        updateStcRowRequiredVisualCues(inputs);
     });
 }
 
@@ -920,7 +1014,7 @@ $(document).on('blur',
     'input[name="tscLongitudeMin[]"],' +
     'input[name="tscLatitudeMin[]"],' +
     'input[name="tscLatitudeMax[]"],' +
-    'input[name="tscDescription[]"],' +
+    'textarea[name="tscDescription[]"],' +
     'input[name="tscDateStart[]"],' +
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +
