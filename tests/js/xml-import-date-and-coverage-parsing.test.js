@@ -49,7 +49,7 @@ function loadMappingModule(contextOverrides = {}) {
 const dataciteResolver = (prefix) =>
   prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
 
-describe('Issue #880 STC date-only XML import', () => {
+describe('STC date-only XML import', () => {
   test('open Coverage interval is parsed as start date with empty end date', () => {
     const ctx = loadMappingModule();
     const xmlDoc = new DOMParser().parseFromString(
@@ -97,7 +97,7 @@ describe('Issue #880 STC date-only XML import', () => {
   });
 });
 
-describe('Issue #1108 ICGEM Date Created XML import', () => {
+describe('ICGEM Date Created XML import', () => {
   beforeEach(() => {
     document.body.innerHTML = `
       <input name="dateCreated" value="" />

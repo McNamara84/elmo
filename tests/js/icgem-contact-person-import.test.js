@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-describe('Issue #1108 ICGEM contact person creation', () => {
+describe('ICGEM contact person import', () => {
   let $;
   let icgemModule;
 

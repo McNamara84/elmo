@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { simulateSubmitValidation } = require('./utils');
 
-describe('Issue #1068 ELMO-GEM spatial-only STC validation', () => {
+describe('Spatial and temporal coverage submit requirements', () => {
   let $;
 
   function loadCheckMandatoryFields() {

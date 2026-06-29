@@ -1,6 +1,6 @@
 const { requireFresh } = require('./utils');
 
-describe('Issue #929 submit date validation', () => {
+describe('Submit handler date validation', () => {
   let $;
   let validateEmbargoDate;
 
