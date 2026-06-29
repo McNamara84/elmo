@@ -181,6 +181,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var confirmCsvButton = document.getElementById('button-confirm-csv-upload');
     var downloadCsvTestFilesButton = document.getElementById('button-download-csv-test-files');
 
+    if (downloadCsvTestFilesButton) {
+        var path = window.location.pathname || '/';
+        var segments = path.split('/').filter(Boolean);
+        var editorBase = segments.length > 0 ? '/' + segments[0] : '';
+
+        var href = window.location.origin + editorBase + '/test_data/free-keywords-example.csv';
+        downloadCsvTestFilesButton.href = href;
+    }
+
     /**
      * Stores parsed CSV keywords until the user confirms the import
      * @type {Array}
