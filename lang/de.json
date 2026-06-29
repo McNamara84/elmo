@@ -220,7 +220,7 @@
         "created": "Erstellungsdatum",
         "dateInvalid": "Bitte geben Sie ein gültiges Datum zwischen 01.01.1900 und 31.12.2100 ein!",
         "embargoUntil": "Embargo bis (nur nach Absprache)",
-        "embargoDateError": "Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein."
+        "embargoDateError": "Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein, wenn ein Erstellungsdatum angegeben wurde."
     },
     "coverage": {
         "title": "Räumliche und zeitliche Abdeckung",

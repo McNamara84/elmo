@@ -271,6 +271,44 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     expect(timezoneOptionCount).toBeGreaterThan(1);
   });
 
+  test('highlights dynamically required STC fields before submit', async ({ page }) => {
+    const longMax = page.locator('#input-stc-longmax_1');
+    const latMin = page.locator('#input-stc-latmin_1');
+    const longMin = page.locator('#input-stc-longmin_1');
+    const description = page.locator('#input-stc-description');
+    const startDate = page.locator('#input-stc-datestart');
+
+    await longMax.fill('14');
+    await longMax.blur();
+
+    await expect(latMin).toHaveAttribute('aria-required', 'true');
+    await expect(latMin).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-latmin_1"] .stc-required-marker')).toHaveText('*');
+
+    await expect(longMin).toHaveAttribute('aria-required', 'true');
+    await expect(longMin).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-longmin_1"] .stc-required-marker')).toHaveText('*');
+
+    await expect(description).toHaveAttribute('aria-required', 'true');
+    await expect(description).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-description"] .stc-required-marker')).toHaveText('*');
+
+    await expect(startDate).toHaveAttribute('aria-required', 'true');
+    await expect(startDate).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-datestart"] .stc-required-marker')).toHaveText('*');
+
+    await expect(longMax).toHaveAttribute('aria-required', 'true');
+    await expect(longMax).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-longmax_1"] .stc-required-marker')).toHaveCount(0);
+
+    await longMax.fill('');
+    await longMax.blur();
+
+    await expect(latMin).not.toHaveAttribute('aria-required', 'true');
+    await expect(latMin).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-latmin_1"] .stc-required-marker')).toHaveCount(0);
+  });
+
   test('allows adding and removing coverage rows while maintaining timezone selections', async ({ page }) => {
     await page.waitForFunction(() => typeof (window as any).deleteDrawnOverlaysForRow === 'function');
     await page.evaluate(() => {
@@ -293,12 +331,23 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await timezoneSelect.selectOption(targetValue);
     const chosenValue = await timezoneSelect.inputValue();
 
+    const firstRowLongMax = page.locator('#input-stc-longmax_1');
+    await firstRowLongMax.fill('14');
+    await firstRowLongMax.blur();
+    await expect(page.locator('#input-stc-latmin_1')).toHaveClass(/border-danger/);
+
     await page.locator('#button-stc-add').click();
     const rows = page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [tsc-row]`);
     await expect(rows).toHaveCount(2);
 
     const secondRowTimezone = page.locator('[tsc-row-id="2"] select[name="tscTimezone[]"]');
     await expect(secondRowTimezone).toHaveValue(chosenValue);
+
+    const secondRowLatMin = page.locator('[tsc-row-id="2"] #input-stc-latmin_2');
+    await expect(page.locator('[tsc-row-id="2"] label[for="input-stc-latmin_2"]')).toBeVisible();
+    await expect(secondRowLatMin).not.toHaveAttribute('aria-required', 'true');
+    await expect(secondRowLatMin).not.toHaveClass(/border-danger/);
+    await expect(page.locator('[tsc-row-id="2"] label[for="input-stc-latmin_2"] .stc-required-marker')).toHaveCount(0);
 
     const description = page.locator('[tsc-row-id="2"] textarea[name="tscDescription[]"]');
     await description.fill('Secondary region focus.');
