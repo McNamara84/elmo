@@ -14,24 +14,25 @@ $(document).ready(function () {
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
   const timeSpentField = $("#input-feedback-time-spent");
-  const feedbackCsrfTokenField = $("#input-feedback-csrf-token");
-  const FEEDBACK_MIN_SECONDS = 3;
-  async function fetchFeedbackCsrfToken() {
-    try {
-      const response = await fetch('api/csrf_token.php?scope=feedback', {
-        credentials: 'include'
-      });
-      const data = await response.json();
-      return data.token || '';
-    } catch (error) {
-      console.error('Failed to fetch feedback CSRF token:', error);
-      return '';
-    }
-  }
-
+  const csrfTokenField = $("#input-feedback-csrf-token");
 
   // Track when the modal was opened for minimum time validation
   let modalOpenedAt = null;
+
+  /**
+   * Fetches a CSRF token from the server for form protection.
+   * @returns {Promise<string>} The CSRF token
+   */
+  async function fetchCsrfToken() {
+    try {
+      const response = await fetch('api/csrf_token.php');
+      const data = await response.json();
+      return data.token || '';
+    } catch (error) {
+      console.error('Failed to fetch CSRF token:', error);
+      return '';
+    }
+  }
 
   /**
    * Applies or removes a boolean attribute while ensuring an empty string value for accessibility checks.
@@ -60,26 +61,10 @@ $(document).ready(function () {
     if (modalOpenedAt) {
       const timeSpent = Math.floor((Date.now() - modalOpenedAt) / 1000);
       timeSpentField.val(timeSpent);
-
-      if (timeSpent < FEEDBACK_MIN_SECONDS) {
-        applyBooleanAttribute(statusPanel, "hidden", false)
-          .attr("role", "alert")
-          .attr("aria-live", "assertive")
-          .attr("aria-atomic", "true")
-          .html(
-            '<div class="alert alert-warning">Please spend at least 3 seconds in the feedback form before sending.</div>'
-          );
-        return;
-      }
     }
 
     // Form and data setup
-    const feedbackDataArray = feedbackForm.serializeArray();
-    feedbackDataArray.push({
-      name: 'csrf_token',
-      value: (feedbackCsrfTokenField.val() || '').toString()
-    });
-    const feedbackData = $.param(feedbackDataArray);
+    const feedbackData = feedbackForm.serialize();
 
     // Disable the button and show a loading spinner
     sendButton
@@ -158,14 +143,15 @@ $(document).ready(function () {
     .on('show.bs.modal', async function () {
       // Record when modal was opened for time-spent calculation
       modalOpenedAt = Date.now();
-
-      const feedbackToken = await fetchFeedbackCsrfToken();
-      feedbackCsrfTokenField.val(feedbackToken);
-
+      
+      // Fetch fresh CSRF token
+      const token = await fetchCsrfToken();
+      csrfTokenField.val(token);
+      
       feedbackForm[0].reset();
       // Reset time spent field after form reset
       timeSpentField.val('0');
-      feedbackCsrfTokenField.val(feedbackToken);
+      csrfTokenField.val(token);
       
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
       thankYouMessage.hide();

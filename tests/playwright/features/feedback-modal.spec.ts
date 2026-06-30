@@ -35,7 +35,7 @@ function computeContrastRatio(foreground: string, background: string) {
 }
 
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
-const DEFAULT_NETWORK_DELAY_MS = 500;
+const DEFAULT_NETWORK_DELAY_MS = 150;
 
 function delay(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -120,7 +120,6 @@ test.describe('Feedback modal interactions', () => {
     );
 
     await expect(sendButton).toBeEnabled();
-    await page.waitForTimeout(3100);
     await sendButton.click();
 
     await expect(sendButton).toBeDisabled();
@@ -225,7 +224,6 @@ test.describe('Feedback modal interactions', () => {
       response.url().includes('send_feedback_mail.php')
     );
 
-    await page.waitForTimeout(3100);
     await sendButton.click();
     await expect(sendButton).toBeDisabled();
 

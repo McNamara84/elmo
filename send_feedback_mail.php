@@ -3,7 +3,7 @@
  * Script for handling feedback email submission using PHPMailer with GFZ SMTP
  * 
  * Security measures implemented:
- * - Rate limiting: Max submissions per session per hour
+ * - Rate limiting: Max 3 submissions per IP per hour
  * - Honeypot field: Hidden field that bots tend to fill
  * - CSRF token: Validates request origin
  */
@@ -13,6 +13,9 @@ use PHPMailer\PHPMailer\Exception;
 require 'vendor/autoload.php';
 require __DIR__ . '/api/security.php';
 include __DIR__ . '/settings.php';
+
+// Initialize session for CSRF validation
+initializeCsrfSession();
 
 /**
  * Sends a JSON error response and exits.
@@ -135,7 +138,8 @@ function sendFeedbackMail(
             . $feedbackQuestion7 . "\n\n"
             . "---\n"
             . "Eingereicht am: " . date('d.m.Y H:i:s') . "\n"
-            . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System');
+            . "Von: " . ($_SERVER['HTTP_HOST'] ?? 'ELMO System') . "\n"
+            . "IP: " . ($_SERVER['REMOTE_ADDR'] ?? 'Unbekannt');
         
         error_log("Sende E-Mail über GFZ SMTP ({$smtpHost}:{$smtpPort}) an {$feedbackAddress}");
         $mail->send();
@@ -177,39 +181,49 @@ function sendFeedbackMail(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
+    // Get database connection from settings.php
+    global $connection;
+    
+    $clientIp = getClientIp();
+    
     // Security Check 1: Honeypot
     if (!validateHoneypot($_POST['website'] ?? '')) {
         // Silently reject but return fake success to not alert the bot
-        error_log('Feedback blocked: Honeypot triggered');
+        error_log("Feedback blocked: Honeypot triggered from IP {$clientIp}");
         echo json_encode(['success' => true, 'message' => 'Feedback erfolgreich gesendet!']);
         exit;
     }
     
     // Security Check 2: CSRF Token
     $submittedToken = $_POST['csrf_token'] ?? '';
-    if (!validateCsrfToken($submittedToken, 'feedback')) {
-        error_log('Feedback blocked: Invalid CSRF token');
+    if (!validateCsrfToken($submittedToken)) {
+        error_log("Feedback blocked: Invalid CSRF token from IP {$clientIp}");
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
 
     // Security Check 3: Minimum interaction time
-    $timeCheck = evaluateInteractionTime((int) ($_POST['feedback_time_spent'] ?? 0), max(3, MIN_INTERACTION_FEEDBACK_SECONDS), 'feedback');
+    $timeCheck = evaluateInteractionTime((int) ($_POST['feedback_time_spent'] ?? 0), MIN_INTERACTION_FEEDBACK_SECONDS);
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
+            $connection,
             'feedback',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
+            $clientIp
         );
         sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
     }
     
     // Security Check 4: Rate limiting
-    if (!checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        error_log('Feedback blocked: Rate limit exceeded');
+    if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        error_log("Feedback blocked: Rate limit exceeded for IP {$clientIp}");
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
     }
     
     // All security checks passed - record this submission
-    recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+    recordRateLimit($connection, $clientIp, 'feedback');
+    
+    // Invalidate the used CSRF token
+    invalidateCsrfToken();
     
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';
