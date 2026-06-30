@@ -43,7 +43,6 @@ class SaveHandler {
         // Security fields
         this.$csrfTokenField = $('#input-form-csrf-token');
         this.$honeypotField = $('#input-information-website');
-        this.formStartedAt = Date.now(); // used for page-event log only
         
         this.initializeEventListeners();
     }
@@ -244,7 +243,6 @@ class SaveHandler {
             formData.append('filename', filename);
 
             const csrfToken = await this.ensureCsrfToken();
-            const elapsedSeconds = Math.max(0, (Date.now() - this.formStartedAt) / 1000);
 
             // Append security fields
             formData.set('csrf_token', csrfToken);
@@ -282,19 +280,8 @@ class SaveHandler {
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
-
-            // Reset log timer so the next save shows time-since-last-save, not time-since-page-load
-            this.formStartedAt = Date.now();
-
-            // Log successful save (fire-and-forget, must not delay the notification)
-            logEvent('save', `user successfully saved ${formatConfig.logLabel}`, elapsedSeconds.toFixed(1));
         } catch (error) {
             console.error('Error saving dataset:', error);
-
-            const failedElapsedSeconds = Math.max(0, (Date.now() - this.formStartedAt) / 1000);
-
-            // Log failed save
-            await logEvent('save', `user FAILED to save ${formatConfig.logLabel}`, failedElapsedSeconds.toFixed(1));
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,

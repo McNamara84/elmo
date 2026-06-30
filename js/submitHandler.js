@@ -251,7 +251,6 @@ class SubmitHandler {
         this.$csrfTokenField = $('#input-form-csrf-token');
         this.$mainHoneypotField = $('#input-information-website');
         this.$modalHoneypotField = $('#modal-submit input[name="website"]').first();
-        this.formStartedAt = Date.now(); // used for page-event log only
 
         this.initializeEventListeners();
         this.initializeFileHandlers();

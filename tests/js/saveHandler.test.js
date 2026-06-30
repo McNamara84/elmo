@@ -102,7 +102,6 @@ describe('saveHandler.js', () => {
         }
       }
     };
-    global.logEvent = jest.fn().mockResolvedValue();
     loadScript();
   });
 
@@ -223,7 +222,7 @@ describe('saveHandler.js', () => {
     expect(mod.SaveHandler).toBeDefined();
   });
 
-  test('saveAndDownload logs success event', async () => {
+  test('saveAndDownload completes download on success', async () => {
     global.fetch = createSaveHandlerFetchMock({ saveFilename: 'dataset.xml', blob: new Blob() });
     window.URL.createObjectURL = jest.fn();
     window.URL.revokeObjectURL = jest.fn();
@@ -231,12 +230,11 @@ describe('saveHandler.js', () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally', expect.any(String));
-    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    expect(window.URL.createObjectURL).toHaveBeenCalled();
     delete global.fetch;
   });
 
-  test('saveAndDownload sends jsonld format and logs jsonld success', async () => {
+  test('saveAndDownload sends jsonld format', async () => {
     global.fetch = createSaveHandlerFetchMock({
       saveFilename: 'dataset.jsonld',
       blob: new Blob([], { type: 'application/ld+json' })
@@ -251,11 +249,10 @@ describe('saveHandler.js', () => {
     const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
     expect(saveCall).toBeDefined();
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved json-ld file locally', expect.any(String));
     delete global.fetch;
   });
 
-  test('saveAndDownload logs failure on network error', async () => {
+  test('saveAndDownload surfaces network errors', async () => {
     global.fetch = jest.fn(function(url) {
       if (url === 'save/save_data.php') {
         return Promise.reject(new Error('Network failure'));
@@ -270,14 +267,14 @@ describe('saveHandler.js', () => {
     });
     
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
     await handler.saveAndDownload('dataset');
 
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally', expect.any(String));
-    expect(global.logEvent).toHaveBeenCalledTimes(1);
+    expect(handler.showNotification).toHaveBeenCalledWith('danger', 'eh', 'se');
     delete global.fetch;
   });
 
-  test('saveAndDownload shows server validation message when provided', async () => {
+  test('saveAndDownload surfaces HTTP errors', async () => {
     const serverMessage = 'Please take time to review your metadata before saving.';
     global.fetch = jest.fn().mockResolvedValue({
       ok: false,
@@ -317,28 +314,6 @@ describe('saveHandler.js', () => {
     await handler.saveAndDownload('dataset');
 
     expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
-    delete global.fetch;
-  });
-
-  test('saveAndDownload logs failure on HTTP error', async () => {
-    global.fetch = jest.fn(function(url) {
-      if (url === 'save/save_data.php') {
-        return Promise.resolve({ ok: false, status: 500 });
-      }
-
-      if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
-        return Promise.resolve({
-          ok: true,
-          json: function() { return Promise.resolve({ token: 'test-csrf-token' }); }
-        });
-      }
-    });
-
-    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
-    await handler.saveAndDownload('dataset');
-
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally', expect.any(String));
-    expect(global.logEvent).toHaveBeenCalledTimes(1);
     delete global.fetch;
   });
 });
