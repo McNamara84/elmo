@@ -80,7 +80,7 @@ function generateScopedCsrfToken(string $scope): string
     $token = bin2hex(random_bytes(32));
     $_SESSION[$tokenKey] = $token;
     $_SESSION[$tokenTimeKey] = time();
-    $_SESSION[$interactionStartKey] = time();
+    $_SESSION[$interactionStartKey] = microtime(true);
 
     return $token;
 }
@@ -206,50 +206,63 @@ function validateHoneypot(string $honeypotValue): bool
 }
 
 /**
- * Returns the age of the current CSRF token in seconds.
+ * Records the current time as the start of the user's interaction for a given scope.
  *
- * This can be used as a server-trustworthy interaction timer because
- * the interaction start timestamp is set when the form CSRF token is initialized.
+ * Call this on every full page load. The interaction start is completely independent
+ * of the CSRF token — it tracks when the user opened the page, even when the token
+ * is reused across reloads within its one-hour lifetime.
  *
- * @return int Age in seconds, or 0 if no token timestamp is available
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return void
  */
-function getCsrfTokenAgeSeconds(string $scope = 'form'): int
+function resetPageInteractionTime(string $scope = 'form'): void
 {
     ensureAppSession();
 
     $normalizedScope = normalizeCsrfScope($scope);
-    $interactionStart = (int) ($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] ?? 0);
-    if ($interactionStart <= 0) {
-        return 0;
-    }
-
-    return max(0, time() - $interactionStart);
+    $_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] = microtime(true);
 }
 
 /**
- * Evaluates whether the interaction time meets a minimum threshold.
+ * Returns how many seconds have elapsed since the user loaded the current page.
  *
-    unset($_SESSION['csrf_interaction_start_time']);
- * Uses a trust-preserving strategy by combining client-reported time with
- * server-measured CSRF token age and taking the lower bound when both exist.
+ * The timestamp is written to the session by resetPageInteractionTime() on every
+ * full page load, so it always reflects the current visit — even when the CSRF
+ * token is reused within its one-hour lifetime.
  *
- * @param int $reportedTimeSpentSeconds Client-reported interaction time
- * @param int $minimumSeconds Required minimum interaction time
- * @return array{isValid: bool, effectiveSeconds: int, clientSeconds: int, serverSeconds: int, minimumSeconds: int}
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return float Elapsed seconds (sub-second precision), or 0.0 if not set
  */
-function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeconds, string $scope = 'form'): array
+function getPageInteractionAgeSeconds(string $scope = 'form'): float
 {
-    $clientSeconds = max(0, $reportedTimeSpentSeconds);
-    $serverSeconds = getCsrfTokenAgeSeconds($scope);
-    $effectiveSeconds = $clientSeconds > 0
-        ? min($clientSeconds, $serverSeconds)
-        : $serverSeconds;
+    ensureAppSession();
+
+    $normalizedScope = normalizeCsrfScope($scope);
+    $interactionStart = (float) ($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] ?? 0.0);
+    if ($interactionStart <= 0.0) {
+        return 0.0;
+    }
+
+    return max(0.0, microtime(true) - $interactionStart);
+}
+
+/**
+ * Evaluates whether the server-measured page interaction time meets a minimum.
+ *
+ * Only the server-side session timer is used; client-reported values are
+ * ignored to prevent manipulation.
+ *
+ * @param float $minimumSeconds Required minimum interaction time in seconds
+ * @param string $scope Token scope (e.g. form, feedback)
+ * @return array{isValid: bool, effectiveSeconds: float, minimumSeconds: float}
+ */
+function evaluateInteractionTime(float $minimumSeconds, string $scope = 'form'): array
+{
+    $effectiveSeconds = getPageInteractionAgeSeconds($scope);
 
     return [
         'isValid' => $effectiveSeconds >= $minimumSeconds,
         'effectiveSeconds' => $effectiveSeconds,
-        'clientSeconds' => $clientSeconds,
-        'serverSeconds' => $serverSeconds,
         'minimumSeconds' => $minimumSeconds,
     ];
 }
