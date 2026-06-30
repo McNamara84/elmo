@@ -41,69 +41,58 @@ global $connection;
  * @param array $postData The POST data
  * @return array {status: bool, message: string|null, code: int}
  */
-function validateSaveSecurity($postData)
+function validateSaveSecurity($postData): void
 {
     // Security Check 1: Honeypot
     if (!validateHoneypot($postData['website'] ?? '')) {
         logSuspiciousAttempt('save', 'honeypot triggered');
-        return [
-            'status' => false,
-            'message' => 'Invalid request',
-            'code' => 400
-        ];
+        http_response_code(400);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Invalid request']);
+        exit;
     }
-    
+
     // Security Check 2: CSRF Token validation
     $submittedToken = $postData['csrf_token'] ?? '';
     if (!validateCsrfToken($submittedToken)) {
         logSuspiciousAttempt('save', 'invalid csrf token');
-        return [
-            'status' => false,
-            'message' => 'Invalid request - CSRF token validation failed',
-            'code' => 403
-        ];
+        http_response_code(400);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Invalid request - CSRF token validation failed']);
+        exit;
     }
-    
+
     // Security Check 3: Rate limiting
     if (!checkSessionRateLimit('save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
         logSuspiciousAttempt('save', 'rate limit exceeded');
-        return [
-            'status' => false,
-            'message' => 'Too many save requests. Please try again later.',
-            'code' => 429
-        ];
+        http_response_code(400);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Too many save requests. Please try again later.']);
+        exit;
     }
 
-    // Security Check 4: Minimum interaction time (2 seconds for save, server-trusted)
-    $timeCheck = evaluateInteractionTime((int) ($postData['save_time_spent'] ?? 0), MIN_INTERACTION_SAVE_SECONDS);
+    // Security Check 4: Minimum interaction time (2 seconds for save, server-only)
+    $timeCheck = evaluateInteractionTime(MIN_INTERACTION_SAVE_SECONDS);
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
             'save',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)"
         );
-        return [
-            'status' => false,
-            'message' => 'Please take time to review your metadata before saving.',
-            'code' => 400
-        ];
+        http_response_code(400);
+        header('Content-Type: application/json');
+        echo json_encode(['error' => 'Please take time to review your metadata before saving.']);
+        exit;
     }
 
-
-    // Record this save for rate limiting
+    // All checks passed — record rate limit and reset interaction timer
     recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
-
-    return ['status' => true];
+    resetPageInteractionTime('form');
 }
 
-// Validate security first
-$securityCheck = validateSaveSecurity($_POST);
-if (!$securityCheck['status']) {
-    http_response_code($securityCheck['code'] ?? 400);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => $securityCheck['message'] ?? 'Security validation failed']);
-    error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
-    return;
-}
+// ========= EXECUTION PIPELINE =========
+
+// Step 0: Security Validation — exits on any failure
+validateSaveSecurity($_POST);
 // ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';

@@ -87,7 +87,7 @@ function validateSubmitSecurity(array $postData): void {
     // Check 2: CSRF Token validation
     if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
         logSuspiciousAttempt('submit', 'invalid csrf token');
-        http_response_code(403);
+        http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Security token validation failed.']);
@@ -97,19 +97,19 @@ function validateSubmitSecurity(array $postData): void {
     // Check 3: Rate limiting
     if (!checkSessionRateLimit('submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
         logSuspiciousAttempt('submit', 'rate limit exceeded');
-        http_response_code(429);
+        http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Too many submission attempts. Please try again later.']);
         exit;
     }
 
-    // Check 4: Minimum time spent
-    $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
+    // Check 4: Minimum time spent (server-only)
+    $timeCheck = evaluateInteractionTime(MIN_INTERACTION_SUBMIT_SECONDS);
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
             'submit',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)"
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)"
         );
         http_response_code(400);
         ob_clean();
@@ -118,10 +118,11 @@ function validateSubmitSecurity(array $postData): void {
         exit;
     }
     
-    // All checks passed, record the rate limit
+    // All checks passed — record rate limit and reset interaction timer
     recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
-    
-    error_log("send_xml_file.php: Submit security validation passed");
+    resetPageInteractionTime('form');
+
+    error_log(sprintf("send_xml_file.php: Submit security validation passed | Time spent: %.1f seconds", $timeCheck['effectiveSeconds']));
 }
 
 /**
@@ -382,11 +383,13 @@ try {
     } catch (\Exception $e) {
         // Security validation threw an unexpected exception - return 403
         error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
-        http_response_code(403);
+        http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Security validation failed.']);
         exit;
+    } finally {
+        resetPageInteractionTime('form'); // reset timing interaction to limit the next submission. 
     }
 
     // Capture and clean post values
