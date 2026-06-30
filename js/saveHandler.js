@@ -45,6 +45,7 @@ class SaveHandler {
         this.$timeSpentField = $('#input-save-time-spent');
         this.$honeypotField = $('#input-information-website');
         this.modalOpenedAt = null;
+        this.saveFlowStartedAt = null;
         
         this.initializeEventListeners();
     }
@@ -115,7 +116,11 @@ class SaveHandler {
      * @param {string} [format='xml'] - Download format
      */
     async handleSave(format = 'xml') {
+        this.saveFlowStartedAt = Date.now();
         this.setCurrentFormat(format);
+        if (!this.validateAuthorAffiliationsForSave()) {
+            return;
+        }
         this.updateSaveAsModal();
         this.showNotification('info',
             translations.alerts.processingHeading,
@@ -125,6 +130,29 @@ class SaveHandler {
             $('#input-saveas-filename').val(suggestedFilename);
             this.modals.saveAs.show();
         }
+    }
+
+    validateAuthorAffiliationsForSave() {
+        const validator = typeof globalThis !== 'undefined'
+            ? globalThis.validateAuthorAffiliationEditors
+            : null;
+
+        if (typeof validator !== 'function' || validator()) {
+            return true;
+        }
+
+        const firstInvalid = this.$form.find('[data-author-affiliation-label].is-invalid').first();
+        if (firstInvalid.length > 0 && firstInvalid[0]) {
+            firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid[0].focus();
+        }
+
+        this.showNotification(
+            'danger',
+            translations.alerts.validationErrorheading || translations.alerts.errorHeading,
+            translations.alerts.validationError || translations.alerts.saveError
+        );
+        return false;
     }
 
     /**
@@ -159,11 +187,7 @@ class SaveHandler {
             return;
         }
 
-        // Calculate time spent filling the save modal (in seconds)
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
-        }
+        this.$timeSpentField.val(this.calculateTimeSpent());
 
         this.modals.saveAs.hide();
         await this.saveAndDownload(filename, this.currentFormat);
@@ -201,8 +225,16 @@ class SaveHandler {
             });
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
-            
+
+            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
+                window.authorStack.updatePayload();
+            }
+
             const formData = new FormData(this.$form[0]);
+            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
+            if (authorsPayloadInput) {
+                formData.set('authorsPayload', authorsPayloadInput.value);
+            }
             formData.append('filename', filename);
             
             // Append security fields
@@ -217,7 +249,12 @@ class SaveHandler {
                 body: formData
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const serverMessage = await this.extractErrorMessage(response);
+                throw Object.assign(new Error(`HTTP error! status: ${response.status}`), {
+                    userMessage: serverMessage
+                });
+            }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
@@ -247,8 +284,56 @@ class SaveHandler {
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,
-                translations.alerts.saveError);
+                error?.userMessage || translations.alerts.saveError);
         }
+    }
+
+    /**
+     * Calculate elapsed save interaction time in whole seconds.
+     * @returns {number}
+     */
+    calculateTimeSpent() {
+        const now = Date.now();
+        const startedAtCandidates = [this.modalOpenedAt, this.saveFlowStartedAt]
+            .filter((timestamp) => Number.isFinite(timestamp) && timestamp > 0);
+
+        if (!startedAtCandidates.length) {
+            return 0;
+        }
+
+        return Math.max(
+            0,
+            ...startedAtCandidates.map((timestamp) => Math.floor((now - timestamp) / 1000))
+        );
+    }
+
+    /**
+     * Extract a user-safe error message from a failed save response.
+     * @param {Response} response - Failed fetch response
+     * @returns {Promise<string|null>}
+     */
+    async extractErrorMessage(response) {
+        if (!response?.clone) {
+            return null;
+        }
+
+        try {
+            const clone = response.clone();
+            const contentType = clone.headers?.get?.('Content-Type')
+                || clone.headers?.get?.('content-type')
+                || '';
+
+            if (!contentType.includes('application/json') || typeof clone.json !== 'function') {
+                return null;
+            }
+
+            const payload = await clone.json();
+            return payload?.error || payload?.message || null;
+        } catch (error) {
+            console.warn('Could not parse save error response:', error);
+        }
+
+        return null;
     }
 
     /**

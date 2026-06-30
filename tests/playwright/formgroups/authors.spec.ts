@@ -1,6 +1,21 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 
+async function expectAuthorAffiliations(row, expectedNames: string[]) {
+  const chips = row.locator('[data-author-affiliation-chip]');
+  await expect(chips).toHaveCount(expectedNames.length);
+  for (const [index, expectedName] of expectedNames.entries()) {
+    await expect(chips.nth(index).locator('[data-author-affiliation-label]')).toHaveValue(expectedName);
+  }
+}
+
+async function addFirstAuthor(page) {
+  await page.locator('#button-author-add').click();
+  const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
+  await expect(authorRow).toBeVisible();
+  return authorRow;
+}
+
 const mockOrcidRecord = {
   person: {
     name: {
@@ -117,17 +132,15 @@ test.describe('Author(s) form group', () => {
       });
     });
 
-    await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-    await page.getByRole('textbox', { name: 'Last Name*' }).click();
+    const authorRow = await addFirstAuthor(page);
+    await authorRow.locator('input[name="orcids[]"]').fill('0000-0002-1825-0097');
+    await authorRow.locator('input[name="familynames[]"]').click();
 
-    await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
-    await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
+    await expect(authorRow.locator('input[name="familynames[]"]')).toHaveValue('Carberry');
+    await expect(authorRow.locator('input[name="givennames[]"]')).toHaveValue('Josiah');
 
-    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(2);
-    await expect(affiliationTags.nth(0)).toContainText('Brown University');
-    await expect(affiliationTags.nth(1)).toContainText('Yale University');
-    await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29,https://ror.org/05rrcem69');
+    await expectAuthorAffiliations(authorRow, ['Brown University', 'Yale University']);
+    await expect(authorRow.locator('input[name="authorPersonRorIds[]"]')).toHaveValue('05p8bnz29,05rrcem69');
   });
 
   test('filters ended affiliations from ORCID preload', async ({ page }) => {
@@ -139,26 +152,30 @@ test.describe('Author(s) form group', () => {
       });
     });
 
-    await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
-    await page.getByRole('textbox', { name: 'Last Name*' }).click();
+    const authorRow = await addFirstAuthor(page);
+    await authorRow.locator('input[name="orcids[]"]').fill('0000-0002-1825-0097');
+    await authorRow.locator('input[name="familynames[]"]').click();
 
-    await expect(page.getByRole('textbox', { name: 'Last Name*' })).toHaveValue('Carberry');
-    await expect(page.getByRole('textbox', { name: 'First Name*' })).toHaveValue('Josiah');
+    await expect(authorRow.locator('input[name="familynames[]"]')).toHaveValue('Carberry');
+    await expect(authorRow.locator('input[name="givennames[]"]')).toHaveValue('Josiah');
 
-    const affiliationTags = page.locator(`${SELECTORS.formGroups.authors} tag`);
-    await expect(affiliationTags).toHaveCount(0);
-    await expect(page.locator('#input-author-rorid')).toHaveValue('');
+    await expectAuthorAffiliations(authorRow, []);
+    await expect(authorRow.locator('input[name="authorPersonRorIds[]"]')).toHaveValue('');
   });
 
   test('shows contact person fields when toggled and clears them when disabled', async ({ page }) => {
-    const contactToggleLabel = page.locator('label[for="checkbox-author-contactperson"]');
-    const emailInput = page.locator('#input-contactperson-email');
-    const websiteInput = page.locator('#input-contactperson-website');
+    const authorRow = await addFirstAuthor(page);
+    const contactCheckbox = authorRow.locator('input[name="contacts[]"]');
+    const emailInput = authorRow.locator('input[name="cpEmail[]"]');
+    const websiteInput = authorRow.locator('input[name="cpOnlineResource[]"]');
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
 
-    await contactToggleLabel.click();
+    await contactCheckbox.evaluate((element: HTMLInputElement) => {
+      element.checked = true;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await expect(emailInput).toBeVisible({ timeout: 10000 });
     await expect(websiteInput).toBeVisible({ timeout: 10000 });
@@ -166,7 +183,10 @@ test.describe('Author(s) form group', () => {
     await emailInput.fill('contact@example.com');
     await websiteInput.fill('https://example.com/profile');
 
-    await contactToggleLabel.click();
+    await contactCheckbox.evaluate((element: HTMLInputElement) => {
+      element.checked = false;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+    });
 
     await expect(emailInput).toBeHidden();
     await expect(websiteInput).toBeHidden();
@@ -177,6 +197,7 @@ test.describe('Author(s) form group', () => {
   test('allows managing multiple authors independently', async ({ page }) => {
     const addAuthorButton = page.locator('#button-author-add');
 
+    await addAuthorButton.click();
     await addAuthorButton.click();
 
     const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
@@ -212,13 +233,14 @@ test.describe('Author(s) form group', () => {
       return route.fulfill({ status: 200, body: '{}' });
     });
 
-    const lastName = page.getByRole('textbox', { name: 'Last Name*' });
-    const firstName = page.getByRole('textbox', { name: 'First Name*' });
+    const authorRow = await addFirstAuthor(page);
+    const lastName = authorRow.locator('input[name="familynames[]"]');
+    const firstName = authorRow.locator('input[name="givennames[]"]');
 
     await lastName.fill('Existing');
     await firstName.fill('Author');
 
-    await page.locator('#input-author-orcid').fill('1234');
+    await authorRow.locator('input[name="orcids[]"]').fill('1234');
     await firstName.click();
 
     expect(requestTriggered).toBe(false);
@@ -227,7 +249,8 @@ test.describe('Author(s) form group', () => {
   });
 
   test('accepts valid international author last names', async ({ page }) => {
-    const lastName = page.locator('#input-author-lastname');
+    const authorRow = await addFirstAuthor(page);
+    const lastName = authorRow.locator('input[name="familynames[]"]');
 
     let isValid: boolean;
 
@@ -269,7 +292,8 @@ test.describe('Author(s) form group', () => {
 
 
   test('rejects author last names with digits or forbidden symbols', async ({ page }) => {
-    const lastName = page.locator('#input-author-lastname');
+    const authorRow = await addFirstAuthor(page);
+    const lastName = authorRow.locator('input[name="familynames[]"]');
 
     let isValid: boolean;
 

@@ -75,11 +75,6 @@ include_once "../settings.php";
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
-                        <?php if ($showAuthorInstitution ?? true): ?>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors Institution</a> 
-                        </li>
-                        <?php endif; ?> 
                         <?php if ($showMslLabs ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
@@ -350,12 +345,19 @@ include_once "../settings.php";
             <div id="help-authors" class="section-content">
                 <div id="help-authors-fg">
                     <h3>Author(s)</h3>
-                    <p> Please enter authors of the dataset here by entering their last and first name without any
-                        titles. Ideally you provide an ORCID. Entering an ORCID loads
-                        data from the corresponding ORCID profile. To add more authors, use the "add" button on the
-                        right. The order of the authors can be changed using drag & drop. </p>
-                    <p><strong>Please mark at least one author as contact person.</strong> (Person with knowledge of
-                        how to access, troubleshoot, or otherwise field issues related to the resource.)</p>
+                    <p>Please enter all authors of the dataset in this shared card stack. Person authors require a last
+                        name, may add an optional first name, and may include an ORCID. Entering an ORCID loads data
+                        from the corresponding
+                        ORCID profile when available. Institution authors use the institution name field and can be
+                        added to the same ordered list.</p>
+                    <p>Use the add person and add institution buttons to create more cards. Each card can be expanded
+                        or collapsed with the edit button. Empty cards can be switched between person and institution;
+                        once author data has been entered, the selected type is locked to protect the existing fields.</p>
+                    <p>The order of person and institution authors can be changed together using drag & drop or the
+                        move up and move down buttons. This order is used for saving and XML export.</p>
+                    <p><strong>Please mark at least one person author as contact person.</strong> The status badge in
+                        the Authors header shows whether a contact person is still required. Contact details are only
+                        available for person authors.</p>
                 </div>
                 <div id="help-author-orcid">
                     <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../logos/orcid.logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='logos/orcid.logo.png';"></a></h4>
@@ -374,25 +376,40 @@ include_once "../settings.php";
                 </div>
                 <div id="help-author-affiliation">
                     <h4>Affiliation</h4>
-                    <p>The organisational or institutional affiliation of the creator.</p>
-                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
-                        among the available options, it can be entered manually.</p>
+                    <p>The organisational or institutional affiliation of a person or institution author.</p>
+                    <p>Use the affiliation editor inside each author card to search for ROR-based affiliations, add the
+                        selected result, edit the displayed label, reorder affiliations, or remove them. If the required
+                        affiliation is not among the available options, it can be entered manually as free text.</p>
+                    <p>Editing an affiliation label preserves its ROR ID, so it is not analogous to adding a second
+                        affiliation.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
-                        and consistent attribution.
+                        and consistent attribution. When a ROR result is selected, the displayed affiliation label may
+                        be edited while the stored ROR ID remains attached to that affiliation.
                         For more information about ROR, visit <a href="https://ror.org"
                             target="_blank">https://ror.org</a>.</p>
+                </div>
+                <div id="help-author-institution-fg">
+                    <h4>Institution author(s)</h4>
+                    <p>Institution authors are organizations, projects, or groups that should appear as authors of the
+                        dataset. Add them with the institution button in the Authors form group. The institution name
+                        identifies the author; affiliations describe related departments, institutes, or subunits.</p>
+                    <p><strong>Note on the difference between Organization Name and Affiliation:</strong><br> The
+                        <strong>Organization Name</strong> refers to the institution or organization listed as the
+                        author. An <strong>Affiliation</strong>, on the other hand, describes a specific connection
+                        within or between organizations. Multiple organizations can be represented by the same
+                        affiliation, and one organization can have several affiliations.</p>
                 </div>
                 <div id="help-contactperson-email">
                     <h4>Contact Person(s)</h4>
                     <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
                         to
-                        the resource. May also be "Point of Contact" in organisation that controls access to the
-                        resource. Please enter at least one contact person.</p>
-                    <p>After filling in the list of authors, the Contact Person can be selected by simply
-                        clicking the button on the left. The email address of the author, who is labelled as the
-                        contact person, must also be provided. The specification of a website is optional.</p>
+                        the resource. May also be "Point of Contact" in an organisation that controls access to the
+                        resource. Please select at least one person author as contact person.</p>
+                    <p>After filling in the list of authors, the Contact Person can be selected by clicking the button
+                        in the person author card. The email address of the author who is labelled as the contact
+                        person must also be provided. The specification of a website is optional.</p>
                     <h5>Email</h5>
                     <p>Please provide a valid email address (e.g. name@institution.org). This address
                         may be used by others to contact the responsible person for questions about the dataset.</p>
@@ -407,19 +424,6 @@ include_once "../settings.php";
                     <p><strong>Optional field.</strong></p>
                 </div>
             </div>
-            <!-- formgroup authors Institution -->
-            <?php if ($showAuthorInstitution ?? true): ?>
-            <div id="help-authors-institution" class="section-content">
-                <div id="help-author-institution-fg">
-                    <h3>Author Institution(s)</h3>
-                    <p>This optional section allows you to enter an institution or organization as the author. This is useful, for example, when the publication was created by a group, project, or institution rather than by individual persons. </p>
-                    <p>Please provide the organization name in the required field. You may optionally add one or more affiliations (e.g., departments, working groups). As you type, suggestions will appear, but you can also enter custom affiliations manually.</p>
-                    <p><strong>Note on the difference between Organization Name and Affiliation:</strong><br> The <strong>Organization Name</strong> refers to the institution or organization listed as the author. An <strong>Affiliation</strong>, on the other hand, describes a specific connection within or between organizations – for example, a department, institute, or subunit. Multiple organizations can be represented by the same affiliation, and conversely, one organization can have several affiliations. </p>
-                </div>
-            </div>
-            <div class="section-divider"></div>
-            <hr>
-            <?php endif; ?>
             <!-- formgroup originating laboratory -->
             <?php if ($showMslLabs ?? false): ?>
             <div id="help-originatinglaboratory" class="section-content">
@@ -676,6 +680,10 @@ include_once "../settings.php";
                     <p>The organisational or institutional affiliation of the Institution.</p>
                     <p>It is recommended to select the affiliation from the list. If the required affiliation is not
                         among the available options, it can be entered manually.</p>
+                    <p>You can edit the label of an affiliation by clicking on the edit icon on the right side of it.
+                        Please note that editing the label of one institution preserves its ROR ID, so it is not
+                        analogous to adding a second affiliation. To add a new affiliation, just type in the
+                        white free space near the input field.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
@@ -876,7 +884,8 @@ include_once "../settings.php";
                     They allow for individual description and categorization of your content and improve its
                     discoverability.
                     Before adding a free keyword, please check if a suitable term already exists in one of the
-                    thesauri above.</p>
+                    thesauri above.
+                    For larger sets of keywords, you can also import free keywords from a CSV file using the Upload CSV File option.</p>
             </div>
             <div class="section-divider"></div>
             <hr>

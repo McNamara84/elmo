@@ -168,6 +168,13 @@ describe('language module coverage', () => {
             expect(input.attr('placeholder')).toBe('Translated Placeholder');
         });
 
+        test('updates title and aria-label attributes', () => {
+            languageModule.applyTranslations();
+            const titleElement = $('[data-translate-title="test.title"]');
+            expect(titleElement.attr('title')).toBe('Translated Title');
+            expect(titleElement.attr('aria-label')).toBe('Translated Title');
+        });
+
         test('calls resizeTitle after applying translations', () => {
             languageModule.applyTranslations();
             expect(window.resizeTitle).toHaveBeenCalled();

@@ -3,9 +3,20 @@
  */
 function setupContactPersonListener() {
     // When the checkbox for "Contact Person" is toggled (checked/unchecked), call validateContactPersonRequirements
-    $('#group-author').on('change', '[id^="checkbox-author-contactperson"]', function () {
+    const authorContainer = $('[data-author-stack]').length ? $('[data-author-stack]') : $('#group-author');
+    authorContainer.on('change', '[id^="checkbox-author-contactperson"]', function () {
         validateContactPersonRequirements();  // Re-run the validateContactPersonRequirements function whenever the checkbox state changes
     });
+}
+
+function getPersonAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-creator-row]');
+    return stackRows.length ? stackRows : $('#group-author').children('.row');
+}
+
+function getInstitutionAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-authorinstitution-row]');
+    return stackRows.length ? stackRows : $('#group-authorinstitution').children('.row');
 }
 
 /**
@@ -18,7 +29,7 @@ function setupContactPersonListener() {
  */
 function validateContactPersonRequirements() {
     // Loops through each row in the "group-author" container
-    $('#group-author').children('.row').each(function () {
+    getPersonAuthorRows().each(function () {
         var row = $(this);
 
         // Defines the relevant fields for the Contact Person section
@@ -31,11 +42,11 @@ function validateContactPersonRequirements() {
 
         // Checks if the checkbox for Contact Person is checked
         var isCheckboxChecked = fields.checkbox.prop('checked');
+        fields.firstname.removeAttr('required').removeClass('js-required-on-submit');
 
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
-            fields.firstname.attr('required', 'required');
             fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
@@ -342,7 +353,7 @@ function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
 }
 
 function validateAuthorInstitutionRequirements() {
-    $('#group-authorinstitution').children('.row').each(function () {
+    getInstitutionAuthorRows().each(function () {
         var row = $(this);
         // Defines the relevant fields for the Author-Institution section
         var fields = {
@@ -350,11 +361,22 @@ function validateAuthorInstitutionRequirements() {
             authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
         };
 
-        // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
+        // Check whether the Author-Institution-Affiliation field has a visible value, JSON affiliations, or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
+        var hasStructuredAffiliations = false;
+        if (affVal.charAt(0) === '[') {
+            try {
+                var parsedAffiliations = JSON.parse(affVal);
+                hasStructuredAffiliations = Array.isArray(parsedAffiliations) && parsedAffiliations.some(function (affiliation) {
+                    return String(affiliation?.label || affiliation?.value || affiliation?.name || '').trim() !== '';
+                });
+            } catch (error) {
+                hasStructuredAffiliations = false;
+            }
+        }
         var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?._tagify;
         var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
-        var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
+        var isauthorinstitutionAffiliationFilled = (affVal !== '' && affVal !== '[]') || hasStructuredAffiliations || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         fields.authorinstitutionName.each(function () {
@@ -484,33 +506,105 @@ function validateTitleField() {
     }
 }
 
-// Select the author name input elements
-const authorLastname = document.getElementById('input-author-lastname');
-const authorFirstname = document.getElementById('input-author-firstname');
-[authorLastname, authorFirstname].forEach(el => {
-    if (el) {
-        ['input', 'blur'].forEach(evt =>
-            el.addEventListener(evt, validateAuthorNameFields)
-        );
+function getAuthorNameFields() {
+    const stackFields = Array.from(document.querySelectorAll(
+        '[data-author-stack] [data-creator-row] input[name="familynames[]"], ' +
+        '[data-author-stack] [data-creator-row] input[name="givennames[]"]'
+    ));
+
+    if (stackFields.length > 0) {
+        return stackFields;
     }
+
+    const legacyFields = [
+        document.getElementById('input-author-lastname'),
+        document.getElementById('input-author-firstname')
+    ].filter(Boolean);
+
+    if (legacyFields.length > 0) {
+        return legacyFields;
+    }
+
+    return Array.from(document.querySelectorAll(
+        'input[name="familynames[]"], input[name="givennames[]"]'
+    ));
+}
+
+function getAuthorNameTranslationKey(input) {
+    return input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0
+        ? 'general.firstNameInvalid'
+        : 'general.lastNameInvalid';
+}
+
+function getAuthorNameRow(input) {
+    return input.closest('[data-creator-row]') || input.closest('.row');
+}
+
+function isNonEmptyAuthorValue(input) {
+    if (!input) {
+        return false;
+    }
+
+    if (input.type === 'checkbox' || input.type === 'radio') {
+        return input.checked;
+    }
+
+    const value = String(input.value || '');
+    return value !== '' && value !== '[]';
+}
+
+function authorNameRowHasContent(input) {
+    const row = getAuthorNameRow(input);
+    if (!row) {
+        return true;
+    }
+
+    return Array.from(row.querySelectorAll(
+        'input[name="familynames[]"], ' +
+        'input[name="givennames[]"], ' +
+        'input[name="orcids[]"], ' +
+        'input[name="contacts[]"], ' +
+        'input[name="cpEmail[]"], ' +
+        'input[name="cpOnlineResource[]"], ' +
+        'input[name="personAffiliation[]"], ' +
+        'input[name="authorPersonRorIds[]"]'
+    )).some(isNonEmptyAuthorValue);
+}
+
+function resetAuthorNameField(input, container, translationKey) {
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity("");
+
+    let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+    if (oldFeedback) oldFeedback.remove();
+}
+
+function isAuthorNameInput(target) {
+    return target instanceof HTMLInputElement &&
+        (target.name === 'familynames[]' || target.name === 'givennames[]');
+}
+
+['input', 'blur'].forEach(evt => {
+    document.addEventListener(evt, function (event) {
+        if (isAuthorNameInput(event.target)) {
+            validateAuthorNameFields();
+        }
+    }, evt === 'blur');
 });
 
 /**
- * Validates the first author's last name and first name input fields.
- * - Marks each field as valid if it contains non-whitespace text.
- * - Marks each field as invalid if it is empty or contains only whitespace.
+ * Validates author name input fields.
+ * - Last name is mandatory and must contain non-whitespace text.
+ * - First name is optional, but any entered value is reflected in UI state.
  * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
  */
 function validateAuthorNameFields() {
     let isValid = true;
-    const fields = [
-        { id: 'input-author-lastname', translationKey: 'general.lastNameInvalid' },
-        { id: 'input-author-firstname', translationKey: 'general.firstNameInvalid' }
-    ];
+    const fields = getAuthorNameFields();
 
-    fields.forEach(({ id, translationKey }) => {
-        const input = document.getElementById(id);
+    fields.forEach((input) => {
         if (!input) return;
+        const translationKey = getAuthorNameTranslationKey(input);
         const value = input.value.trim();
         const container = input.closest('.input-group') || input.parentElement;
 
@@ -520,7 +614,15 @@ function validateAuthorNameFields() {
         if (oldFeedback) oldFeedback.remove();
 
         const [section, key] = translationKey.split('.');
-        if (value.length === 0) {
+        const isOptionalFirstName = input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0;
+
+        if (value.length === 0 && isOptionalFirstName) {
+            input.setCustomValidity("");
+            input.removeAttribute('required');
+        } else if (value.length === 0 && !authorNameRowHasContent(input)) {
+            resetAuthorNameField(input, container, translationKey);
+            input.removeAttribute('required');
+        } else if (value.length === 0) {
             input.classList.add('is-invalid');
             const message = (typeof translations !== 'undefined' && translations[section])
                 ? translations[section][key]

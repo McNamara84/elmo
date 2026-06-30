@@ -40,6 +40,7 @@ describe('doiPrefill.js', () => {
 
   afterEach(() => {
     document.body.innerHTML = '';
+    delete window.authorStack;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -263,10 +264,87 @@ describe('doiPrefill.js', () => {
       expect($('input[name="authorinstitutionName[]"]').val()).toBe('World Research Institute');
     });
 
+    test('sends mixed creators to authorStack when available', () => {
+      const setAuthors = jest.fn();
+      window.authorStack = { setAuthors };
+
+      mod.prefillCreators([
+        {
+          givenName: 'Jane',
+          familyName: 'Doe',
+          nameType: 'Personal',
+          nameIdentifiers: [
+            { nameIdentifier: 'https://orcid.org/0000-0001-2345-6789', nameIdentifierScheme: 'ORCID' },
+          ],
+          affiliation: [{ name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' }],
+        },
+        {
+          name: 'World Research Institute',
+          nameType: 'Organizational',
+          affiliation: [{ name: 'Helmholtz', affiliationIdentifier: 'https://ror.org/03qjp1d79' }],
+        },
+      ]);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: 'person',
+          familyname: 'Doe',
+          givenname: 'Jane',
+          orcid: '0000-0001-2345-6789',
+          affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
+        }),
+        expect.objectContaining({
+          type: 'institution',
+          institutionname: 'World Research Institute',
+          affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }],
+        }),
+      ]);
+    });
+
     test('handles empty/null input gracefully', () => {
       mod.prefillCreators(null);
       mod.prefillCreators([]);
       expect($('input[name="familynames[]"]').val()).toBe('');
+    });
+  });
+
+  describe('prefillContactPersons', () => {
+    test('updates matching person payload from lookup results when authorStack is available', async () => {
+      const setAuthors = jest.fn();
+      window.authorStack = {
+        collectPayload: jest.fn(() => [
+          { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+          { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
+        ]),
+        setAuthors,
+      };
+      const lookupService = {
+        lookupContacts: jest.fn().mockResolvedValue({
+          email: 'jane@example.org',
+          website: 'https://example.org/jane',
+        }),
+      };
+
+      await mod.prefillContactPersons([
+        { familyName: 'Doe', givenName: 'Jane', nameIdentifiers: [] },
+      ], lookupService);
+
+      expect(lookupService.lookupContacts).toHaveBeenCalledWith({
+        orcid: '',
+        familyname: 'Doe',
+        givenname: 'Jane',
+      });
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: 'person',
+          familyname: 'Doe',
+          givenname: 'Jane',
+          isContact: true,
+          email: 'jane@example.org',
+          website: 'https://example.org/jane',
+        }),
+        { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
+      ]);
     });
   });
 

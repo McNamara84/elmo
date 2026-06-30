@@ -23,6 +23,7 @@ final class ResearcherConfirmationTest extends TestCase
 
         $this->assertSame('', $result['title']);
         $this->assertSame([], $result['contacts']);
+        $this->assertSame([], $result['invalidContacts']);
     }
 
     /**
@@ -74,6 +75,9 @@ final class ResearcherConfirmationTest extends TestCase
         $result = collectResearcherConfirmationDataFromXml($xml);
 
         $this->assertSame([], $result['contacts']);
+        $this->assertCount(1, $result['invalidContacts']);
+        $this->assertSame('John Doe', $result['invalidContacts'][0]['fullName']);
+        $this->assertSame('invalid-email', $result['invalidContacts'][0]['email']);
     }
 
     /**
@@ -113,9 +117,10 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, true);
 
-        $this->addToAssertionCount(1);
+        $this->assertSame(1, $result['sent']);
+        $this->assertSame([], $result['failed']);
     }
 
     /**
@@ -133,8 +138,10 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, true);
 
-        $this->addToAssertionCount(1);
+        $this->assertSame(0, $result['sent']);
+        $this->assertCount(1, $result['failed']);
+        $this->assertSame('invalid email address', $result['failed'][0]['error']);
     }
 }

@@ -75,10 +75,6 @@ include $baseDir . 'formgroups/resourceInformation.html';
 include $baseDir . 'formgroups/honeypot.html';
 
 include $baseDir . 'formgroups/authors.html';
-
-if ($showAuthorInstitution) {
-    include("formgroups/authorInstitution.html");
-}
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsDefinition.html';
     include $baseDir . 'formgroups/GGMsAltimetryModels.html';

@@ -21,6 +21,9 @@ describe('saveHandler.js', () => {
           <input type="checkbox" name="contacts[]" value="2">
         </div>
       </form>
+      <input id="input-save-csrf-token" type="hidden" value="token">
+      <input id="input-save-time-spent" type="hidden" value="0">
+      <input id="input-information-website" type="text" value="">
       <div id="modal-saveas">
         <h2 id="label-saveas-modal"></h2>
         <input id="input-saveas-filename">
@@ -55,6 +58,8 @@ describe('saveHandler.js', () => {
       alerts: {
         processingHeading: 'procH',
         preparingDownload: 'prepD',
+        validationErrorheading: 'vh',
+        validationError: 've',
         filenameErrorHeading: 'fh',
         filenameError: 'fe',
         successHeading: 'sh',
@@ -77,6 +82,7 @@ describe('saveHandler.js', () => {
 
   afterEach(() => {
     jest.useRealTimers();
+    delete global.validateAuthorAffiliationEditors;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -103,6 +109,20 @@ describe('saveHandler.js', () => {
     expect(handler.saveAndDownload).toHaveBeenCalledWith('file', 'xml');
   });
 
+  test('handleSaveConfirm uses the longest active save timer', async () => {
+    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:00:04Z'));
+    const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
+    jest.spyOn(handler, 'saveAndDownload').mockResolvedValue();
+
+    $('#input-saveas-filename').val('file');
+    handler.saveFlowStartedAt = new Date('2024-05-30T12:00:00Z').getTime();
+    handler.modalOpenedAt = new Date('2024-05-30T12:00:03Z').getTime();
+
+    await handler.handleSaveConfirm();
+
+    expect($('#input-save-time-spent').val()).toBe('4');
+  });
+
   test('handleSave updates modal state for jsonld', async () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     jest.spyOn(handler, 'generateFilename').mockResolvedValue('dataset_20240530_123456');
@@ -114,6 +134,20 @@ describe('saveHandler.js', () => {
     expect($('#saveas-extension').text()).toBe('.jsonld');
     expect($('#input-saveas-filename').val()).toBe('dataset_20240530_123456');
     expect(modalInstances[0].show).toHaveBeenCalled();
+  });
+
+  test('handleSave blocks download flow when author affiliation labels are invalid', async () => {
+    global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'generateFilename').mockResolvedValue('dataset_20240530_123456');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleSave('xml');
+
+    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
+    expect(handler.generateFilename).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenCalledWith('danger', 'vh', 've');
+    expect(modalInstances[0].show).not.toHaveBeenCalled();
   });
 
   test('showNotification updates modal and hides on actions', () => {
@@ -205,6 +239,49 @@ describe('saveHandler.js', () => {
 
     expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
     expect(global.logEvent).toHaveBeenCalledTimes(1);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload shows server validation message when provided', async () => {
+    const serverMessage = 'Please take time to review your metadata before saving.';
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 400,
+      clone: jest.fn(() => ({
+        headers: {
+          get: jest.fn((name) => name.toLowerCase() === 'content-type' ? 'application/json' : '')
+        },
+        json: jest.fn().mockResolvedValue({ error: serverMessage })
+      }))
+    });
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset');
+
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', serverMessage);
+    delete global.fetch;
+  });
+
+  test('saveAndDownload keeps generic error message for plain text server errors', async () => {
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: false,
+      status: 500,
+      clone: jest.fn(() => ({
+        headers: {
+          get: jest.fn((name) => name.toLowerCase() === 'content-type' ? 'text/plain' : '')
+        },
+        text: jest.fn().mockResolvedValue('Internal Server Error')
+      }))
+    });
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset');
+
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
     delete global.fetch;
   });
 
