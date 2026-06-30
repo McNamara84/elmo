@@ -3,7 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
-import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';
+import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
@@ -51,6 +51,13 @@ $(document).ready(function () {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
         const rules = validationRules[selectedType];
+
+        const platformInput = row.find('input[name="satellite_platform[]"]');
+        if (selectedType === 'S') {
+            platformInput.addClass('js-required-on-submit');
+        } else {
+            platformInput.removeClass('js-required-on-submit').removeAttr('required');
+        }
 
         if (!rules) return;
 
@@ -395,6 +402,7 @@ $(document).ready(function () {
 
     datasourcePlatformsModal.on('show.bs.modal', function () {
         resetDatasourcePlatformSearch();
+        ensureThesaurusLoaded('satellitePlatforms');
     });
 
     datasourcePlatformsModal.on('hidden.bs.modal', function () {

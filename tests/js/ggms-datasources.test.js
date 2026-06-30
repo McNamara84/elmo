@@ -42,7 +42,8 @@ function transformThesauriScript(source) {
   script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
   script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
   script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
+  script = script.replace('export function ensureThesaurusLoaded', 'function ensureThesaurusLoaded');
+  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
   return script;
 }
 
@@ -125,7 +126,9 @@ describe('ggms-datasources.js', () => {
               {
                 id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
                 text: 'Space-based Platforms',
-                children: [ { id: 'sat', text: 'Satellite' } ]
+                children: [
+                  { id: 'earth-obs', text: 'Earth Observation Satellites', children: [ { id: 'sat', text: 'GRACE' } ] }
+                ]
               },
               { id: 'ground', text: 'Ground-based Platforms' }
             ]
@@ -157,6 +160,23 @@ describe('ggms-datasources.js', () => {
           };
           build(this.data, null);
           this.selected = [];
+          this.opened = [];
+        }
+        get_node(id) {
+          const node = this.map[id];
+          if (!node) return { id, parents: [] };
+          const parents = [];
+          let cur = node.parent;
+          while (cur) {
+            parents.unshift(cur.id);
+            cur = cur.parent;
+          }
+          return { id: node.id, text: node.text, parents: ['#'].concat(parents) };
+        }
+        open_node(id) {
+          if (!this.opened.includes(id)) {
+            this.opened.push(id);
+          }
         }
         get_selected() {
           return this.selected;
@@ -205,6 +225,7 @@ describe('ggms-datasources.js', () => {
           if (arg === 'get_selected') return inst.get_selected(arg2);
           if (arg === 'deselect_node') { inst.deselect_node(arg2); return this; }
           if (arg === 'select_node') { inst.select_node(arg2); return this; }
+          if (arg === 'open_node') { inst.open_node(arg2); return this; }
         } else if (typeof arg === 'object') {
           const inst = new JsTreeMock(this, arg);
           this.data('jstree', inst);
@@ -244,7 +265,7 @@ describe('ggms-datasources.js', () => {
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
-    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput } = window.__thesauriTestExports;');
+    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
@@ -277,6 +298,18 @@ describe('ggms-datasources.js', () => {
     expect(row.children('.visibility-datasources-details').css('display')).toBe('none');
     expect(row.children('.visibility-datasources-satellite').css('display')).not.toBe('none');
     expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
+  });
+
+  test('adds js-required-on-submit to platform input when type is Satellite', () => {
+    const row = $('#group-datasources .row').first();
+    const platformInput = row.find('input[name="satellite_platform[]"]');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
+
+    row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
   });
 
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {
@@ -421,6 +454,15 @@ describe('ggms-datasources.js', () => {
     $('#input-platforms-thesaurussearch-ds').val('Ground');
     $('#modal-platforms-datasource').trigger('hidden.bs.modal');
     expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
+  });
+
+  test('pre-opens Space-based Platforms and Earth Observation Satellites after thesaurus load', () => {
+    openDatasourceModal(document.getElementById('button-datasource-platforms'));
+
+    const tree = $('#jstree-platforms-datasource').jstree(true);
+    expect(tree).toBeTruthy();
+    expect(tree.opened).toContain('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
+    expect(tree.opened).toContain('earth-obs');
   });
 
   test('remove button deletes row', () => {

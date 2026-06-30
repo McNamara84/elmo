@@ -89,7 +89,8 @@ export const THESAURUS_CONFIG = {
         searchInputId: '#input-platforms-thesaurussearch-ds',
         selectedListId: 'selected-keywords-platforms-ds',
         stateKey: 'satellitePlatforms',
-        dynamicOnly: true
+        dynamicOnly: true,
+        initialOpenNodeTexts: ['Earth Observation Satellites']
     }
 };
 
@@ -126,6 +127,38 @@ function hideLoadingSpinner(jsTreeId) {
 }
 
 /**
+ * Expands jsTree nodes after the datasource platforms thesaurus loads.
+ * Opens the configured root subtree first, then any initialOpenNodeTexts entries.
+ *
+ * @param {Object} config - Thesaurus configuration.
+ */
+function expandInitialTreeNodes(config) {
+    if (!config.initialOpenNodeTexts || config.initialOpenNodeTexts.length === 0) return;
+
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree || typeof tree.open_node !== 'function') return;
+
+    if (config.rootNodeId) {
+        tree.open_node(config.rootNodeId);
+    }
+
+    config.initialOpenNodeTexts.forEach(function (text) {
+        const node = tree.get_json('#', { flat: true }).find(function (n) {
+            return n.text === text;
+        });
+        if (!node) return;
+
+        const parents = tree.get_node(node.id).parents || [];
+        parents.forEach(function (parentId) {
+            if (parentId !== '#') {
+                tree.open_node(parentId);
+            }
+        });
+        tree.open_node(node.id);
+    });
+}
+
+/**
  * Loads thesaurus vocabulary data on demand.
  * Triggered when a modal is opened for the first time OR when
  * a Tagify input field receives focus.
@@ -153,6 +186,20 @@ function loadThesaurusOnDemand(config) {
             </div>
         `);
     });
+}
+
+/**
+ * Ensures a thesaurus config is loaded, resolving a config key when needed.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ */
+export function ensureThesaurusLoaded(configKeyOrConfig) {
+    const config = typeof configKeyOrConfig === 'string'
+        ? (ensureConfigRegistered(configKeyOrConfig) || THESAURUS_CONFIG[configKeyOrConfig])
+        : configKeyOrConfig;
+    if (config) {
+        loadThesaurusOnDemand(config);
+    }
 }
 
 /**
@@ -355,6 +402,8 @@ function loadKeywordsForConfig(config, response) {
             if (node) tree.select_node(node.id);
         });
     }
+
+    expandInitialTreeNodes(config);
 }
 
 /** Returns the shared state key for a thesaurus config. */
@@ -401,6 +450,7 @@ function ensureConfigRegistered(configKey) {
     const registeredConfig = {
         apiEndpoint: config.apiEndpoint,
         rootNodeId: config.rootNodeId,
+        initialOpenNodeTexts: config.initialOpenNodeTexts,
         modalId: config.modalId,
         jsTreeId: config.jsTreeId,
         searchInputId: config.searchInputId,
