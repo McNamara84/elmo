@@ -32,25 +32,6 @@ function extractMultipartField(body: string, fieldName: string): string | null {
   return match ? match[1] : null;
 }
 
-/** Freeze Date.now so save_time_spent is deterministic regardless of page-load age. */
-async function freezeDateNow(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const originalNow = Date.now.bind(Date);
-    (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
-    Date.now = () => 0;
-  });
-}
-
-async function restoreDateNow(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    const w = window as typeof window & { __originalDateNow?: () => number };
-    if (w.__originalDateNow) {
-      Date.now = w.__originalDateNow;
-      delete w.__originalDateNow;
-    }
-  });
-}
-
 test.describe('Save Operation Security Features', () => {
   test.describe('Honeypot field validation', () => {
     test('save form honeypot exists and starts empty', async ({ page }) => {
@@ -111,7 +92,7 @@ test.describe('Save Operation Security Features', () => {
   });
 
   test.describe('Security fields in save operation', () => {
-    test('save request includes expected hidden security fields', async ({ page }) => {
+    test('save request includes CSRF and honeypot fields but not client-side time', async ({ page }) => {
       let capturedBody = '';
 
       await page.route(SAVE_ENDPOINT, async (route) => {
@@ -141,9 +122,10 @@ test.describe('Save Operation Security Features', () => {
       ]);
 
       expect(capturedBody).toContain('name="csrf_token"');
-      expect(capturedBody).toContain('name="save_time_spent"');
       expect(capturedBody).toContain('name="website"');
       expect(extractMultipartField(capturedBody, 'csrf_token')).toBeTruthy();
+      // Timing is server-only — client must NOT send save_time_spent
+      expect(capturedBody).not.toContain('name="save_time_spent"');
 
       await page.unroute(SAVE_ENDPOINT);
     });
@@ -163,7 +145,7 @@ test.describe('Save Operation Security Features', () => {
     test('backend rejects save when token is invalid', async ({ page }) => {
       await page.route(SAVE_ENDPOINT, async (route) => {
         await route.fulfill({
-          status: 403,
+          status: 400,
           contentType: 'application/json',
           body: JSON.stringify({ error: 'Invalid request - CSRF token validation failed' }),
         });
@@ -172,14 +154,13 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
 
       await openSaveModal(page);
-      // Corrupt the main form token
       await page.locator('#input-form-csrf-token').evaluate((el) => {
         (el as HTMLInputElement).value = 'corrupted-token';
       });
 
       await Promise.all([
         page.waitForResponse((response) =>
-          response.url().includes('save_data.php') && response.status() === 403
+          response.url().includes('save_data.php') && response.status() === 400
         ),
         page.locator('#button-saveas-save').click(),
       ]);
@@ -189,56 +170,12 @@ test.describe('Save Operation Security Features', () => {
     });
   });
 
-  test.describe('Time-spent field on save', () => {
-    test('save can proceed immediately while still sending time_spent', async ({ page }) => {
-      let submittedTimeSpent: string | null = null;
-
-      await page.route(SAVE_ENDPOINT, async (route) => {
-        const bodyBuffer = route.request().postDataBuffer();
-        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-        submittedTimeSpent = extractMultipartField(body, 'save_time_spent');
-
-        const timeSpent = parseInt(submittedTimeSpent || '0', 10);
-        const responseStatus = timeSpent < 2 ? 400 : 200;
-        await route.fulfill({
-          status: responseStatus,
-          contentType: 'application/json',
-          body: JSON.stringify(responseStatus === 400
-            ? { error: 'Please take time to review your metadata before saving.' }
-            : { success: true, message: 'Saved' }),
-        });
-      });
-
-      await navigateToHome(page);
-      await openSaveModal(page);
-
-      // save_time_spent is measured from page load, not modal open — freeze the clock
-      // so the client sends a near-zero value even after navigation took several seconds.
-      await freezeDateNow(page);
-
-      try {
-        await Promise.all([
-          page.waitForResponse((response) =>
-            response.url().includes('save_data.php') && response.status() === 400
-          ),
-          page.locator('#button-saveas-save').click(),
-        ]);
-
-        expect(parseInt(submittedTimeSpent || '0', 10)).toBeLessThan(2);
-        await expect(page.locator('.alert-danger')).toBeVisible();
-      } finally {
-        await restoreDateNow(page);
-      }
-
-      await page.unroute(SAVE_ENDPOINT);
-    });
-  });
 
   test.describe('Rate limiting on save operations', () => {
-    test('shows rate limit error message when server returns 429', async ({ page }) => {
+    test('shows rate limit error message when server returns 400', async ({ page }) => {
       await page.route(SAVE_ENDPOINT, async (route) => {
         await route.fulfill({
-          status: 429,
+          status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
             success: false,
@@ -246,13 +183,13 @@ test.describe('Save Operation Security Features', () => {
           }),
         });
       });
-      
+
       await navigateToHome(page);
 
       await openSaveModal(page);
       await Promise.all([
         page.waitForResponse((response) =>
-          response.url().includes('save_data.php') && response.status() === 429
+          response.url().includes('save_data.php') && response.status() === 400
         ),
         page.locator('#button-saveas-save').click(),
       ]);
@@ -267,45 +204,29 @@ test.describe('Save Operation Security Features', () => {
   });
 
   test.describe('Successful save with all security checks passing', () => {
-    test('backend accepts save when honeypot empty, csrf valid, and not rate limited', async ({ page }) => {
+    test('backend accepts save when honeypot empty and csrf valid', async ({ page }) => {
       await page.route(SAVE_ENDPOINT, async (route) => {
         const bodyBuffer = route.request().postDataBuffer();
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-        
-        // Verify all security fields are present
+
         const honeypot = extractMultipartField(body, 'website') || '';
         const csrfToken = extractMultipartField(body, 'csrf_token') || '';
-        const timeSpent = extractMultipartField(body, 'save_time_spent');
-
-        // Accept if honeypot is empty, csrf exists, and the telemetry field is present
-        const isValid = honeypot === '' && csrfToken && timeSpent !== null;
-        const responseStatus = isValid ? 200 : 400;
+        const isValid = honeypot === '' && csrfToken.length > 0;
 
         await route.fulfill({
-          status: responseStatus,
+          status: isValid ? 200 : 400,
           contentType: 'application/json',
-          body: JSON.stringify(responseStatus === 200
+          body: JSON.stringify(isValid
             ? { success: true, message: 'File saved successfully' }
             : { error: 'Security validation failed' }),
         });
       });
 
       await navigateToHome(page);
-
-      const honeypot = page.locator('#input-information-website');
-      // Ensure honeypot is empty (should be by default)
-      await expect(honeypot).toHaveValue('');
-
-      // Open modal — form CSRF token was issued with the page load
+      await expect(page.locator('#input-information-website')).toHaveValue('');
       await openSaveModal(page);
-      
-      // Verify CSRF token was populated
       await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('');
 
-      // Wait 2+ seconds to ensure time_spent >= 2
-      await page.waitForTimeout(2100);
-
-      // Click save and wait for success response
       await Promise.all([
         page.waitForResponse((response) =>
           response.url().includes('save_data.php') && response.status() === 200
@@ -313,50 +234,7 @@ test.describe('Save Operation Security Features', () => {
         page.locator('#button-saveas-save').click(),
       ]);
 
-      // Verify success notification appears
       await expect(page.locator('.alert-success')).toBeVisible();
-      await page.unroute(SAVE_ENDPOINT);
-    });
-
-    test('instant save without waiting is rejected (time < 2 seconds)', async ({ page }) => {
-      let capturedTimeSpent = 0;
-
-      await page.route(SAVE_ENDPOINT, async (route) => {
-        const bodyBuffer = route.request().postDataBuffer();
-        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-        const timeSpent = extractMultipartField(body, 'save_time_spent') || '0';
-        capturedTimeSpent = parseInt(timeSpent, 10);
-
-        // Let backend decide - if time is very low, expect 400
-        const responseStatus = capturedTimeSpent < 2 ? 400 : 200;
-        await route.fulfill({
-          status: responseStatus,
-          contentType: 'application/json',
-          body: JSON.stringify(responseStatus === 400
-            ? { error: 'Please take time to review your metadata before saving.' }
-            : { success: true, message: 'File saved successfully' }),
-        });
-      });
-
-      await navigateToHome(page);
-      await openSaveModal(page);
-
-      await freezeDateNow(page);
-
-      try {
-        await Promise.all([
-          page.waitForResponse((response) =>
-            response.url().includes('save_data.php') && response.status() === 400
-          ),
-          page.locator('#button-saveas-save').click(),
-        ]);
-
-        expect(capturedTimeSpent).toBeLessThan(2);
-        await expect(page.locator('.alert-danger')).toBeVisible();
-      } finally {
-        await restoreDateNow(page);
-      }
-
       await page.unroute(SAVE_ENDPOINT);
     });
   });

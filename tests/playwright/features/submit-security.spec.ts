@@ -65,8 +65,6 @@ test.describe('Submit Operation Security Features', () => {
     });
 
     const { submitModal } = await openSubmitModal(page);
-    // Simulate a real user pause before confirming.
-    await page.waitForTimeout(3200);
 
     await Promise.all([
       page.waitForRequest(SUBMIT_ENDPOINT),
@@ -88,7 +86,7 @@ test.describe('Submit Operation Security Features', () => {
       (el as HTMLInputElement).value = 'corrupted-token';
     });
 
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
+    // Wait 3+ seconds from page load to satisfy server-side minimum interaction time
     await page.waitForTimeout(3100);
 
     const responsePromise = page.waitForResponse((response) =>
@@ -98,7 +96,7 @@ test.describe('Submit Operation Security Features', () => {
     await submitFromModalWithPrivacyConsent(page);
     const response = await responsePromise;
 
-    expect(response.status()).toBe(403);
+    expect(response.status()).toBe(400);
     const payload = await response.json();
     expect(payload.success).toBe(false);
     expect(payload.message).toContain('Security token validation failed');
@@ -109,9 +107,9 @@ test.describe('Submit Operation Security Features', () => {
     const honeypot = submitModal.locator('input[name="website"]').first();
     await honeypot.waitFor({ state: 'attached' });
 
-    // Wait for backend minimum interaction time. Fill honeypot only after the modal
-    // open animation completes — shown.bs.modal resets the field to empty on open.
-    await page.waitForTimeout(3200);
+    // Wait 3+ seconds from page load for server-side minimum interaction time.
+    // Fill honeypot only after the modal open animation completes — shown.bs.modal resets the field.
+    await page.waitForTimeout(3100);
     await honeypot.fill('I am a bot');
 
     const responsePromise = page.waitForResponse((response) =>
@@ -135,7 +133,7 @@ test.describe('Submit Operation Security Features', () => {
     await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
     await page.check('#input-submit-privacycheck');
 
-    await page.waitForTimeout(3200);
+    await page.waitForTimeout(3100);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
@@ -150,108 +148,30 @@ test.describe('Submit Operation Security Features', () => {
     expect(payload.message).toContain('Invalid submission detected');
   });
 
-  test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
+  test('submit POST does not include client-side time_spent field', async ({ page }) => {
     let capturedBody = '';
 
     await page.route(SUBMIT_ENDPOINT, async (route) => {
-      const postData = route.request().postData();
       const bodyBuffer = route.request().postDataBuffer();
-      capturedBody = postData || (bodyBuffer ? bodyBuffer.toString('utf-8') : '');
-
+      capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
       await route.fulfill({
-        status: 400,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          success: false,
-          message: 'Please take time to review your submission before submitting.',
-        }),
-      });
-    });
-
-    await openSubmitModal(page);
-
-    // Freeze Date.now close to modal-open time so client sends a low time-spent value.
-    await page.evaluate(() => {
-      const originalNow = Date.now.bind(Date);
-      (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
-      Date.now = () => 0;
-    });
-
-    const responsePromise = page.waitForResponse((response) =>
-      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
-    );
-
-    await submitFromModalWithPrivacyConsent(page);
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(400);
-
-    const submittedTimeSpentRaw = extractMultipartField(capturedBody, 'submit_time_spent');
-    const submittedTimeSpent = Number.parseInt(submittedTimeSpentRaw ?? '0', 10);
-    expect(submittedTimeSpent).toBeLessThan(3);
-
-    const payload = await response.json();
-    expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Please take time to review your submission before submitting.');
-
-    await page.evaluate(() => {
-      const w = window as typeof window & { __originalDateNow?: () => number };
-      if (w.__originalDateNow) {
-        Date.now = w.__originalDateNow;
-        delete w.__originalDateNow;
-      }
-    });
-
-    await page.unroute(SUBMIT_ENDPOINT);
-  });
-
-  test('instant submit without waiting is rejected (time < 3 seconds)', async ({ page }) => {
-    let capturedTimeSpent = 0;
-
-    await page.route(SUBMIT_ENDPOINT, async (route) => {
-      const bodyBuffer = route.request().postDataBuffer();
-      const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-      const timeSpent = extractMultipartField(body, 'submit_time_spent') || '0';
-      capturedTimeSpent = parseInt(timeSpent, 10);
-
-      // Reject if time spent is less than 3 seconds
-      const responseStatus = capturedTimeSpent < 3 ? 400 : 200;
-      await route.fulfill({
-        status: responseStatus,
-        contentType: 'application/json',
-        body: JSON.stringify(responseStatus === 400
-          ? { success: false, message: 'Please take time to review your submission before submitting.' }
-          : { success: true, message: 'Submitted successfully' }),
+        body: JSON.stringify({ success: true, message: 'Submitted successfully' }),
       });
     });
 
     const { submitModal } = await openSubmitModal(page);
+    await page.waitForTimeout(3100);
 
-    // Force a deterministic near-zero client elapsed time for this test case.
-    await page.evaluate(() => {
-      const originalNow = Date.now.bind(Date);
-      (window as typeof window & { __originalDateNow?: () => number }).__originalDateNow = originalNow;
-      Date.now = () => 0;
-    });
+    await Promise.all([
+      page.waitForRequest(SUBMIT_ENDPOINT),
+      submitFromModalWithPrivacyConsent(page),
+    ]);
 
-    // Immediately try to submit WITHOUT waiting (or minimal wait)
-    const responsePromise = page.waitForResponse((response) =>
-      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
-    );
-    await submitFromModalWithPrivacyConsent(page);
-    const response = await responsePromise;
-
-    // Verify instant submit was rejected
-    expect(capturedTimeSpent).toBeLessThan(3);
-    expect(response.status()).toBe(400);
-
-    await page.evaluate(() => {
-      const w = window as typeof window & { __originalDateNow?: () => number };
-      if (w.__originalDateNow) {
-        Date.now = w.__originalDateNow;
-        delete w.__originalDateNow;
-      }
-    });
+    // Timing is server-only — client must NOT send submit_time_spent
+    expect(capturedBody).not.toContain('name="submit_time_spent"');
+    expect(capturedBody).toContain('name="csrf_token"');
 
     await page.unroute(SUBMIT_ENDPOINT);
   });

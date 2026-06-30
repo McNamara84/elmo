@@ -43,7 +43,6 @@ describe('saveHandler.js', () => {
         <input id="input-date-created">
         <input id="input-date-embargo">
         <input id="input-form-csrf-token" value="test-csrf-token">
-        <input id="input-save-time-spent">
         <input id="input-information-website">
         <div class="embargo-invalid"></div>
         <div id="group-author">
@@ -232,7 +231,7 @@ describe('saveHandler.js', () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally');
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved xml file locally', expect.any(String));
     expect(global.logEvent).toHaveBeenCalledTimes(1);
     delete global.fetch;
   });
@@ -252,7 +251,7 @@ describe('saveHandler.js', () => {
     const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
     expect(saveCall).toBeDefined();
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved json-ld file locally');
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user successfully saved json-ld file locally', expect.any(String));
     delete global.fetch;
   });
 
@@ -273,7 +272,7 @@ describe('saveHandler.js', () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally', expect.any(String));
     expect(global.logEvent).toHaveBeenCalledTimes(1);
     delete global.fetch;
   });
@@ -338,7 +337,7 @@ describe('saveHandler.js', () => {
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     await handler.saveAndDownload('dataset');
 
-    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally');
+    expect(global.logEvent).toHaveBeenCalledWith('save', 'user FAILED to save xml file locally', expect.any(String));
     expect(global.logEvent).toHaveBeenCalledTimes(1);
     delete global.fetch;
   });

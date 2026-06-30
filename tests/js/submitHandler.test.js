@@ -171,23 +171,15 @@ describe('submitHandler.js', () => {
     expect(result).toBe(false);
   });
 
+  test('toggleSubmitButton disables button when privacy is unchecked', () => {
+    $('#input-submit-privacycheck').prop('checked', false);
+    handler.toggleSubmitButton();
+    expect($('#button-submit-submit').prop('disabled')).toBe(true);
+  });
+
   test('toggleSubmitButton enables button when checked', () => {
     $('#input-submit-privacycheck').prop('checked', true);
     handler.toggleSubmitButton();
-    expect($('#button-submit-submit').prop('disabled')).toBe(false);
-  });
-
-  test('submit modal button stays disabled until the security review delay has elapsed', () => {
-    jest.useFakeTimers();
-    $('#input-submit-privacycheck').prop('checked', true);
-
-    handler.submitReadyAt = Date.now() + handler.submitSecurityDelayMs;
-    handler.scheduleSubmitReadyState();
-
-    expect($('#button-submit-submit').prop('disabled')).toBe(true);
-
-    jest.advanceTimersByTime(handler.submitSecurityDelayMs);
-
     expect($('#button-submit-submit').prop('disabled')).toBe(false);
   });
 

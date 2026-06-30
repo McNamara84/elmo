@@ -42,9 +42,8 @@ class SaveHandler {
         
         // Security fields
         this.$csrfTokenField = $('#input-form-csrf-token');
-        this.$timeSpentField = $('#input-save-time-spent');
         this.$honeypotField = $('#input-information-website');
-        this.formStartedAt = Date.now();
+        this.formStartedAt = Date.now(); // used for page-event log only
         
         this.initializeEventListeners();
     }
@@ -80,10 +79,8 @@ class SaveHandler {
             }
         });
 
-        // Focus on input field and reset modal-scoped fields
+        // Focus on filename input when modal opens
         $('#modal-saveas').on('shown.bs.modal', () => {
-            this.$timeSpentField.val('0');
-            
             $('#input-saveas-filename').select();
         });
         $('#modal-saveas').on('keydown', (e) => {
@@ -247,11 +244,10 @@ class SaveHandler {
             formData.append('filename', filename);
 
             const csrfToken = await this.ensureCsrfToken();
-            const elapsedSeconds = Math.max(0, Math.floor((Date.now() - this.formStartedAt) / 1000));
-            
+            const elapsedSeconds = Math.max(0, (Date.now() - this.formStartedAt) / 1000);
+
             // Append security fields
             formData.set('csrf_token', csrfToken);
-            formData.set('save_time_spent', String(elapsedSeconds));
             formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');
@@ -287,13 +283,18 @@ class SaveHandler {
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
 
+            // Reset log timer so the next save shows time-since-last-save, not time-since-page-load
+            this.formStartedAt = Date.now();
+
             // Log successful save (fire-and-forget, must not delay the notification)
-            logEvent('save', `user successfully saved ${formatConfig.logLabel}`);
+            logEvent('save', `user successfully saved ${formatConfig.logLabel}`, elapsedSeconds.toFixed(1));
         } catch (error) {
             console.error('Error saving dataset:', error);
 
+            const failedElapsedSeconds = Math.max(0, (Date.now() - this.formStartedAt) / 1000);
+
             // Log failed save
-            await logEvent('save', `user FAILED to save ${formatConfig.logLabel}`);
+            await logEvent('save', `user FAILED to save ${formatConfig.logLabel}`, failedElapsedSeconds.toFixed(1));
 
             this.showNotification('danger',
                 translations.alerts.errorHeading,
