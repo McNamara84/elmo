@@ -433,7 +433,9 @@ function populateIcgemContactPersons(xmlDoc) {
 
   function resolver(prefix) {
     if (prefix === 'icgv') return ICGEM_NAMESPACE_URI;
+    if (prefix === 'grav') return ICGEM_NAMESPACE_URI;
     if (prefix === 'dc') return daceNs;
+    if (prefix === 'dace') return daceNs;
     return null;
   }
 
@@ -450,46 +452,143 @@ function populateIcgemContactPersons(xmlDoc) {
     return n ? n.textContent.trim() : '';
   }
 
+  function childElementsByLocalName(context, localName) {
+    return Array.from(context.children || []).filter((node) => node.localName === localName);
+  }
+
+  function descendantElementsByLocalName(context, localName) {
+    if (!context || typeof context.getElementsByTagName !== 'function') {
+      return [];
+    }
+
+    return Array.from(context.getElementsByTagName('*')).filter((node) => (
+      node.localName === localName
+    ));
+  }
+
+  function normalizeOrcid(value) {
+    return String(value || '').trim().replace(/^https?:\/\/orcid\.org\//, '');
+  }
+
+  function normalizeRorId(value) {
+    return String(value || '').trim().replace(/^https?:\/\/ror\.org\//, '');
+  }
+
+  function readAffiliations(contributorNode) {
+    return ['personAffiliation', 'affiliation']
+      .flatMap((localName) => childElementsByLocalName(contributorNode, localName))
+      .map((node) => ({
+        label: node.textContent.trim(),
+        rorId: normalizeRorId(node.getAttribute('affiliationIdentifier'))
+      }))
+      .filter((affiliation) => affiliation.label || affiliation.rorId);
+  }
+
+  function readOrcid(contributorNode) {
+    const orcidNode = childElementsByLocalName(contributorNode, 'nameIdentifier').find((node) => (
+      String(node.getAttribute('nameIdentifierScheme') || '').toUpperCase() === 'ORCID'
+    ));
+
+    return normalizeOrcid(orcidNode ? orcidNode.textContent : '');
+  }
+
+  function collectContactDetails(contactNode) {
+    const details = [];
+    let current = null;
+
+    Array.from(contactNode.children || []).forEach((node) => {
+      const value = node.textContent.trim();
+      if (!value) return;
+
+      if (node.localName === 'address') {
+        current = { email: value, website: '' };
+        details.push(current);
+        return;
+      }
+
+      if (node.localName === 'onlineResource') {
+        if (!current || current.website) {
+          current = { email: '', website: value };
+          details.push(current);
+          return;
+        }
+        current.website = value;
+      }
+    });
+
+    return details;
+  }
+
+  function applyAffiliationsToRow($row, affiliations) {
+    if (!affiliations.length) return;
+
+    const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
+    if (tagifyInput && tagifyInput._tagify) {
+      tagifyInput._tagify.removeAllTags();
+      tagifyInput._tagify.addTags(affiliations.map((affiliation) => ({
+        value: affiliation.label,
+        label: affiliation.label,
+        rorId: affiliation.rorId
+      })));
+    } else {
+      $row.find('input[name="personAffiliation[]"]').val(affiliations.map((affiliation) => affiliation.label).join(','));
+    }
+
+    $row.find('input[name="authorPersonRorIds[]"]').val(affiliations.map((affiliation) => affiliation.rorId).join(','));
+  }
+
   // Locate globalGravityProduct
-  const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//globalGravityProduct', xmlDoc);
+  const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//grav:globalGravityProduct', xmlDoc)
+    || descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
   if (!ggpNode) return;
 
   // Find grav:contact and read emails (addresses) and websites (onlineResources).
   // These are in the same positional order as the ContactPerson contributors
   // in the DataCite resource section.
-  const contactNode = xpFirst('icgv:contact | contact', ggpNode);
+  const contactNode = xpFirst('icgv:contact | grav:contact', ggpNode)
+    || childElementsByLocalName(ggpNode, 'contact')[0];
   if (!contactNode) return;
 
-  const addressSnap = xpAll('icgv:address | address', contactNode);
-  const onlineSnap  = xpAll('icgv:onlineResource | onlineResource', contactNode);
-
-  if (addressSnap.snapshotLength === 0 && onlineSnap.snapshotLength === 0) return;
+  const contactDetails = collectContactDetails(contactNode);
+  if (contactDetails.length === 0) return;
 
   // Get ContactPerson contributors from the DataCite resource for name-based row matching.
   // These are listed in the same order as grav:contact addresses/onlineResources.
-  const allContribs = xpAll('.//dc:contributors/dc:contributor | .//contributors/contributor', xmlDoc);
-  const contactPersons = [];
-  for (let i = 0; i < allContribs.snapshotLength; i++) {
-    const node = allContribs.snapshotItem(i);
-    if (node.getAttribute('contributorType') !== 'ContactPerson') continue;
-    const familyName = nodeText('dc:familyName | familyName', node);
-    const givenName  = nodeText('dc:givenName  | givenName',  node);
-    contactPersons.push({ familyName, givenName });
+  const prefixedContribs = xpAll('.//dc:contributors/dc:contributor | .//dace:contributors/dace:contributor', xmlDoc);
+  let contributorNodes = [];
+  for (let i = 0; i < prefixedContribs.snapshotLength; i++) {
+    contributorNodes.push(prefixedContribs.snapshotItem(i));
   }
 
-  for (let i = 0; i < contactPersons.length; i++) {
-    const { familyName, givenName } = contactPersons[i];
-    const email   = i < addressSnap.snapshotLength ? addressSnap.snapshotItem(i).textContent.trim() : '';
-    const website = i < onlineSnap.snapshotLength  ? onlineSnap.snapshotItem(i).textContent.trim()  : '';
+  if (contributorNodes.length === 0) {
+    contributorNodes = descendantElementsByLocalName(xmlDoc, 'contributor')
+      .filter((node) => node.parentElement?.localName === 'contributors');
+  }
 
-    contactPersons[i].email = email;
-    contactPersons[i].website = website;
+  const contactPersons = [];
+  contributorNodes.forEach((node) => {
+    if (node.getAttribute('contributorType') !== 'ContactPerson') return;
+    const familyName = nodeText('dc:familyName | dace:familyName | familyName', node);
+    const givenName  = nodeText('dc:givenName  | dace:givenName  | givenName',  node);
+    contactPersons.push({
+      familyName,
+      givenName,
+      orcid: readOrcid(node),
+      affiliations: readAffiliations(node)
+    });
+  });
+
+  for (let i = 0; i < contactPersons.length; i++) {
+    const detail = contactDetails[i] || { email: '', website: '' };
+
+    contactPersons[i].email = detail.email;
+    contactPersons[i].website = detail.website;
   }
 
   if (window.authorStack && typeof window.authorStack.collectPayload === 'function' && typeof window.authorStack.setAuthors === 'function') {
     const authors = window.authorStack.collectPayload().map(author => ({ ...author }));
 
-    contactPersons.forEach(({ familyName, givenName, email, website }) => {
+    contactPersons.forEach(({ familyName, givenName, orcid, affiliations, email, website }) => {
       if ((!email && !website) || (!familyName && !givenName)) return;
 
       const normFamily = familyName.toLowerCase();
@@ -510,6 +609,8 @@ function populateIcgemContactPersons(xmlDoc) {
       }
 
       author.isContact = true;
+      author.orcid = orcid || author.orcid || '';
+      if (affiliations.length) author.affiliations = affiliations;
       author.email = email || author.email || '';
       author.website = website || author.website || '';
     });
@@ -519,20 +620,32 @@ function populateIcgemContactPersons(xmlDoc) {
   }
 
   for (let i = 0; i < contactPersons.length; i++) {
-    const { familyName, givenName, email, website } = contactPersons[i];
+    const { familyName, givenName, orcid, affiliations, email, website } = contactPersons[i];
 
     if (!email && !website) continue;
     if (!familyName && !givenName) continue;
 
     const normFamily = familyName.toLowerCase();
     const normGiven  = givenName.toLowerCase();
-    const $row = $('div[data-creator-row]').filter(function () {
+    let $row = $('div[data-creator-row]').filter(function () {
       const rf = ($('input[name="familynames[]"]', this).val() || '').trim().toLowerCase();
       const rg = ($('input[name="givennames[]"]', this).val() || '').trim().toLowerCase();
       return rf === normFamily && rg === normGiven;
     }).first();
 
-    if (!$row.length) continue;
+    if (!$row.length) {
+      const countBefore = $('div[data-creator-row]').length;
+      $('#button-author-add').trigger('click');
+      const $rows = $('div[data-creator-row]');
+      if ($rows.length <= countBefore) {
+        console.warn('populateIcgemContactPersons: could not create author row for contact person', { familyName, givenName });
+        continue;
+      }
+
+      $row = $rows.last();
+      $row.find('input[name="familynames[]"]').val(familyName);
+      $row.find('input[name="givennames[]"]').val(givenName);
+    }
 
     // Ensure the contact-person toggle is active and fields are visible.
     // The toggle handler fires on "click", not "change", so we must explicitly
@@ -542,6 +655,8 @@ function populateIcgemContactPersons(xmlDoc) {
 
     if (email)   $row.find('input[name="cpEmail[]"]').val(email);
     if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
+    if (orcid)   $row.find('input[name="orcids[]"]').val(orcid);
+    applyAffiliationsToRow($row, affiliations);
   }
 }
 

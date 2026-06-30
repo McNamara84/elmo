@@ -30,13 +30,13 @@ test.describe('Dates form group', () => {
     await expect(page.locator(selectors.embargoHelpIcon)).toBeVisible();
 
     await expect(createdInput).toHaveAttribute('type', 'date');
-    await expect(createdInput).toHaveJSProperty('required', true);
+    await expect(createdInput).toHaveJSProperty('required', false);
     await expect(createdInput).toHaveAttribute('min', '1900-01-01');
     await expect(createdInput).toHaveAttribute('max', '2100-12-31');
 
     const createdLabel = page.locator(selectors.createdLabel);
     await expect(createdLabel).toContainText('Date created');
-    await expect(createdLabel.locator('.red-star')).toHaveText('*');
+    await expect(createdLabel.locator('.red-star')).toHaveCount(0);
 
     const createdFeedback = page.locator(`${selectors.createdInput} ~ .invalid-feedback`);
     await expect(createdFeedback).toBeHidden();
@@ -62,8 +62,8 @@ test.describe('Dates form group', () => {
     await embargoInput.dispatchEvent('change');
 
     await expect(embargoInput).toHaveClass(/is-invalid/);
-    await expect(embargoFeedback).toHaveText('Embargo date must be after or equal to the creation date.');
-    await expect(embargoInput).toHaveJSProperty('validationMessage', 'Embargo date must be after or equal to the creation date.');
+    await expect(embargoFeedback).toHaveText('Embargo date must be after or equal to the creation date when a creation date is provided.');
+    await expect(embargoInput).toHaveJSProperty('validationMessage', 'Embargo date must be after or equal to the creation date when a creation date is provided.');
 
     await embargoInput.fill('2024-03-18');
     await embargoInput.dispatchEvent('change');
@@ -102,8 +102,8 @@ test.describe('Dates form group', () => {
     await embargoInput.fill('2024-04-01');
     await embargoInput.dispatchEvent('change');
 
-    await expect(embargoFeedback).toHaveText('Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein.');
-    await expect(embargoInput).toHaveJSProperty('validationMessage', 'Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein.');
+    await expect(embargoFeedback).toHaveText('Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein, wenn ein Erstellungsdatum angegeben wurde.');
+    await expect(embargoInput).toHaveJSProperty('validationMessage', 'Das Embargodatum muss nach oder gleich dem Erstellungsdatum sein, wenn ein Erstellungsdatum angegeben wurde.');
 
     await openLanguageMenu(page);
     await page.locator(selectors.englishLanguageOption).click();

@@ -111,6 +111,9 @@ class SaveHandler {
     async handleSave(format = 'xml') {
         this.saveFlowStartedAt = Date.now();
         this.setCurrentFormat(format);
+        if (!this.validateAuthorAffiliationsForSave()) {
+            return;
+        }
         this.updateSaveAsModal();
         this.showNotification('info',
             translations.alerts.processingHeading,
@@ -120,6 +123,29 @@ class SaveHandler {
             $('#input-saveas-filename').val(suggestedFilename);
             this.modals.saveAs.show();
         }
+    }
+
+    validateAuthorAffiliationsForSave() {
+        const validator = typeof globalThis !== 'undefined'
+            ? globalThis.validateAuthorAffiliationEditors
+            : null;
+
+        if (typeof validator !== 'function' || validator()) {
+            return true;
+        }
+
+        const firstInvalid = this.$form.find('[data-author-affiliation-label].is-invalid').first();
+        if (firstInvalid.length > 0 && firstInvalid[0]) {
+            firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid[0].focus();
+        }
+
+        this.showNotification(
+            'danger',
+            translations.alerts.validationErrorheading || translations.alerts.errorHeading,
+            translations.alerts.validationError || translations.alerts.saveError
+        );
+        return false;
     }
 
     /**

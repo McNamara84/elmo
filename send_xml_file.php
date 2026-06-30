@@ -48,13 +48,13 @@ error_log("send_xml_file.php: PHPMailer included");
  */
 function testGfzSmtpConnectivity(): bool {
     global $smtpHost, $smtpPort;
-    
+
     error_log("=== GFZ SMTP Connectivity Test (XML Submit) ===");
-    
+
     // DNS test
     $ip = gethostbyname($smtpHost);
     error_log("DNS Resolution: {$smtpHost} -> {$ip}");
-    
+
     // Port test
     $connection = @fsockopen($smtpHost, $smtpPort, $errno, $errstr, 10);
     if ($connection) {
@@ -93,7 +93,7 @@ function validateSubmitSecurity(array $postData): void {
         echo json_encode(['success' => false, 'message' => 'Security token validation failed.']);
         exit;
     }
-    
+
     // Check 3: Rate limiting
     if (!checkSessionRateLimit('submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
         logSuspiciousAttempt('submit', 'rate limit exceeded');
@@ -103,7 +103,7 @@ function validateSubmitSecurity(array $postData): void {
         echo json_encode(['success' => false, 'message' => 'Too many submission attempts. Please try again later.']);
         exit;
     }
-    
+
     // Check 4: Minimum time spent
     $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
     if (!$timeCheck['isValid']) {
@@ -164,7 +164,7 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
 
     $currentDateTime = date('Y-m-d_H-i-s');
     $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
-    
+
     $mail->addStringAttachment($xml_content, $xmlFilename);
     error_log("XML attachment added: " . $xmlFilename);
 
@@ -280,7 +280,7 @@ function collectResearcherConfirmationDataFromXml(string $xml_content): array
  */
 function sendResearcherConfirmationEmails(array $researcherConfirmationData, bool $simulateEmail = false): array {
     global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
-    
+
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
 
@@ -335,10 +335,10 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
             $mail->CharSet = 'UTF-8';
             $mail->setFrom($smtpSender, 'ELMO System');
             $mail->addAddress($email, $fullName);
-            
+
             $mail->Subject = 'Confirmation of your data submission to ELMO';
             $mail->isHTML(true);
-            
+
             $mail->Body = '
                 <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
                 <p>Thank you for your data submission to ELMO.</p>
@@ -375,7 +375,7 @@ $resource_id = null;
 
 try {
     error_log("send_xml_file.php: Try block started");
-    
+
     // Step 0: Security Validation
     try {
         validateSubmitSecurity($_POST);
@@ -402,7 +402,7 @@ try {
             throw new Exception("Invalid data URL provided");
         }
     }
-    
+
     // Step 1: Save transaction structures
     try {
         $resource_id = saveALL($_POST);
@@ -412,7 +412,7 @@ try {
         ob_clean();
         header('Content-Type: application/json');
         echo json_encode(['success' => false, 'message' => 'Save operation failed.']);
-        return;    
+        return;
     }
 
     error_log("send_xml_file.php: All data saved successfully with Resource ID: " . $resource_id);
@@ -421,6 +421,17 @@ try {
     $payloadData = generateDatasetPayloadByResourceId($resource_id, ['postData' => $_POST]);
     $xml_content = $payloadData['payload'];
     error_log("send_xml_file.php: XML content payload generated successfully");
+
+    if ($payloadData['generator'] === 'dataset-xml') {
+        try {
+            require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
+            $datasetController = new DatasetController();
+            $xml_content = $datasetController->markDataCiteEnvelopeAsSubmitted($xml_content, date('Y-m-d'));
+            error_log("Submit: Marked DataCite XML with dateType=Submitted.");
+        } catch (Exception $e) {
+            error_log("Submit: Failed to add Submitted date to XML content: " . $e->getMessage());
+        }
+    }
 
     // Feature toggles for simulation path
     include_once __DIR__ . '/includes/feature_toggles.php';
@@ -438,7 +449,7 @@ try {
         ]);
         return;
     }
-    
+
     // Step 3: Production Live System Email Delivery
     $researcherConfirmationData = [
         'title' => '',
@@ -521,14 +532,14 @@ try {
                 'application/msword',
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
             ];
-            
+
             if (!in_array($fileType, $allowedTypes)) {
                 throw new Exception("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
             }
             if ($uploadedFile['size'] > 10 * 1024 * 1024) {
                 throw new Exception("File size exceeds maximum limit of 10MB.");
             }
-            
+
             $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
             $mail->addAttachment($uploadedFile['tmp_name'], "data_description_" . $resource_id . "." . $fileExtension);
             error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
@@ -583,7 +594,7 @@ try {
         error_log("XML Submit: Curator mail sent successfully.");
     } catch (Exception $e) {
         error_log("XML Submit Curator Mail Error: " . $e->getMessage());
-        
+
         // Failover recovery block logging
         $urgencyText = $urgencyWeeks ?? 'not set';
         $dataUrlText = $dataUrl ?: 'not provided';
@@ -594,13 +605,13 @@ try {
                   "🔗 Data URL: {$dataUrlText}\n" .
                   "🚨 Error on submission: " . $e->getMessage() . "\n" .
                   "==================================================");
-        
+
         ob_clean();
         http_response_code(500);
         header('Content-Type: application/json');
         echo json_encode([
             'success' => false,
-            'message' => "Sorry, we encountered an error when sending the email:\n\n" . 
+            'message' => "Sorry, we encountered an error when sending the email:\n\n" .
                          $e->getMessage() . "\n\n" .
                          "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
                          "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .

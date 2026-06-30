@@ -218,8 +218,20 @@ function normalizeTimeForComparison($timeValue)
  */
 function validateSTCDependencies($entry)
 {
-    // If timeStart is given, timeEnd must also be given
-    if (!empty($entry['timeStart']) && empty($entry['timeEnd'])) {
+    $hasTimeStart = trim((string) ($entry['timeStart'] ?? '')) !== '';
+    $hasTimeEnd = trim((string) ($entry['timeEnd'] ?? '')) !== '';
+
+    // If a time value is given, a full date/time/zone set is required.
+    if (
+        ($hasTimeStart || $hasTimeEnd) &&
+        (
+            !$hasTimeStart ||
+            !$hasTimeEnd ||
+            trim((string) ($entry['dateStart'] ?? '')) === '' ||
+            trim((string) ($entry['dateEnd'] ?? '')) === '' ||
+            trim((string) ($entry['timezone'] ?? '')) === ''
+        )
+    ) {
         return false;
     }
 

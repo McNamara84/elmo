@@ -123,12 +123,101 @@ function validateContributorOrganisationRequirements() {
 
 
 /**
+ * Escapes an element ID for use in a label[for=...] selector.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeStcLabelSelector(value) {
+    if (typeof window !== 'undefined' && window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(value);
+    }
+
+    if ($.escapeSelector) {
+        return $.escapeSelector(value);
+    }
+
+    return String(value).replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
+}
+
+/**
+ * Adds or removes the required marker next to the visible label of a dynamic STC field.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredLabelMarker(inputElement, isRequired) {
+    var inputId = inputElement.getAttribute('id');
+    if (!inputId) {
+        return;
+    }
+
+    var labelSelector = 'label[for="' + escapeStcLabelSelector(inputId) + '"]';
+    var row = $(inputElement).closest('[tsc-row]');
+    var labels = row.length ? row.find(labelSelector) : $(labelSelector);
+    labels.each(function () {
+        var label = $(this);
+        if (label.hasClass('visually-hidden')) {
+            label.children('.stc-required-marker').remove();
+            return;
+        }
+
+        var marker = label.children('.stc-required-marker');
+        if (isRequired) {
+            if (!marker.length) {
+                label.append('<span class="red-star stc-required-marker" aria-hidden="true">*</span>');
+            }
+        } else {
+            marker.remove();
+        }
+    });
+}
+
+/**
+ * Applies the visual and accessibility state for an STC field that is required on submit.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredVisualCue(inputElement, isRequired) {
+    var input = $(inputElement);
+    var value = String(input.val() || '').trim();
+
+    input.toggleClass('stc-required-on-submit', isRequired);
+    input.toggleClass('border-danger', isRequired && value === '');
+
+    if (isRequired) {
+        input.attr('aria-required', 'true');
+    } else {
+        input.removeAttr('aria-required');
+    }
+
+    updateStcRequiredLabelMarker(inputElement, isRequired);
+}
+
+/**
+ * Synchronizes visual required cues for all fields in one STC row.
+ *
+ * @param {Object.<string, JQuery>} inputs
+ * @returns {void}
+ */
+function updateStcRowRequiredVisualCues(inputs) {
+    Object.values(inputs).forEach(function (input) {
+        input.each(function () {
+            updateStcRequiredVisualCue(this, $(this).hasClass('js-required-on-submit'));
+        });
+    });
+}
+
+/**
  * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
  *
  * The function ensures:
  * - If all fields are empty, none will be required.
- * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
- * - If latMin, longMin, or description is filled, those fields along with dateStart and dateEnd become required.
+ * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, and, outside ELMO-GEM, dateStart/dateEnd become required.
+ * - If latMin, longMin, or description is filled, those fields and, outside ELMO-GEM, dateStart/dateEnd become required.
  * - If dateStart or dateEnd is filled, they along with latMin, longMin, and description become required.
  * - Time fields (timeStart, timeEnd) are always optional unless one of them is filled.
  * - If timeStart or timeEnd is filled, both time fields, dates, and timezone become required.
@@ -142,6 +231,7 @@ function validateSpatialTemporalCoverageRequirements() {
     var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
     var allRows = group.find('[tsc-row]');
 
+    var isElmoGem = Boolean(window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties);
     // Process each row independently
     allRows.each(function () {
         var row = $(this);
@@ -152,7 +242,10 @@ function validateSpatialTemporalCoverageRequirements() {
         fields.forEach(function (field) {
             inputs[field] = row.find('[id^="input-stc-' + field + '"]');
             filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
-            inputs[field].removeAttr('required').removeClass('js-required-on-submit');
+            inputs[field].removeAttr('required')
+                .removeAttr('aria-required')
+                .removeClass('js-required-on-submit stc-required-on-submit border-danger');
+            inputs[field].each(function () { updateStcRequiredLabelMarker(this, false); });
         });
 
         // If all fields are empty, skip this row
@@ -162,17 +255,29 @@ function validateSpatialTemporalCoverageRequirements() {
 
         // _______________________________________________________________________
 
-        // Bounding box dependencies -> dates required but time optional
+        // Bounding box dependencies -> dates required outside ELMO-GEM but time optional
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend']
+            var boundingBoxRequiredFields = ['latmin', 'longmin', 'latmax', 'longmax', 'description'];
+
+            if (!isElmoGem) {
+                boundingBoxRequiredFields = boundingBoxRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            boundingBoxRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
 
-        // If any of latmin/longmin/description is filled -> dates required, time optional
+        // If any of latmin/longmin/description is filled -> dates required outside ELMO-GEM, time optional
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend']
+            var spatialRequiredFields = ['latmin', 'longmin', 'description'];
+
+            if (!isElmoGem) {
+                spatialRequiredFields = spatialRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            spatialRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
@@ -193,6 +298,8 @@ function validateSpatialTemporalCoverageRequirements() {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
+
+        updateStcRowRequiredVisualCues(inputs);
     });
 }
 
@@ -907,7 +1014,7 @@ $(document).on('blur',
     'input[name="tscLongitudeMin[]"],' +
     'input[name="tscLatitudeMin[]"],' +
     'input[name="tscLatitudeMax[]"],' +
-    'input[name="tscDescription[]"],' +
+    'textarea[name="tscDescription[]"],' +
     'input[name="tscDateStart[]"],' +
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +

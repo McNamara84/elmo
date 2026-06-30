@@ -7,13 +7,18 @@ function validateEmbargoDate() {
     const dateEmbargoInput = document.getElementById('input-date-embargo');
     const embargoInvalidFeedback = document.querySelector('.embargo-invalid');
 
-    const dateCreated = new Date(dateCreatedInput.value);
-    const dateEmbargo = new Date(dateEmbargoInput.value);
-
-    if (!dateEmbargoInput.value) {
+    if (!dateEmbargoInput || !dateEmbargoInput.value) {
         resetFieldState(dateEmbargoInput, embargoInvalidFeedback);
         return true;
     }
+
+    if (!dateCreatedInput || !dateCreatedInput.value) {
+        setValidState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
+    }
+
+    const dateCreated = new Date(dateCreatedInput.value);
+    const dateEmbargo = new Date(dateEmbargoInput.value);
 
     if (dateCreated > dateEmbargo) {
         setInvalidState(dateEmbargoInput, embargoInvalidFeedback, translations.dates.embargoDateError);
@@ -425,7 +430,11 @@ class SubmitHandler {
         validateTitleField();
         validateAuthorNameFields();
         const temporalCoverageValid = validateAllTemporalCoverageRows();
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
+        const authorAffiliationsValid = typeof globalThis !== 'undefined'
+            && typeof globalThis.validateAuthorAffiliationEditors === 'function'
+            ? globalThis.validateAuthorAffiliationEditors()
+            : true;
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {

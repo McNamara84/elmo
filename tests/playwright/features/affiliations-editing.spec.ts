@@ -1,6 +1,6 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { XMLParser } from 'fast-xml-parser';
-import { completeMinimalDatasetForm, navigateToHome } from '../utils';
+import { completeMinimalDatasetForm, navigateToHome, runAxeAudit } from '../utils';
 
 // ─── selectors ────────────────────────────────────────────────────────────────
 const AUTHOR_GROUP     = '#group-author';
@@ -177,11 +177,11 @@ test.describe('Affiliation tag label editing', () => {
   /**
    * Test 1 – comprehensive:
    * - A tag selected from the whitelist initially carries a ROR id in the editor.
-   * - Editing that tag's label removes the original ROR id to avoid stale name/ROR pairs.
+   * - Editing that tag's label preserves the original ROR id.
    * - A free-text tag (added without selecting from the dropdown) has no ROR id.
    */
   test(
-    'whitelist-selected affiliation drops ROR after manual label edit; free-text tag has no ROR',
+    'whitelist-selected affiliation preserves ROR after manual label edit; free-text tag has no ROR',
     async ({ page }) => {
       test.slow();
 
@@ -208,13 +208,13 @@ test.describe('Affiliation tag label editing', () => {
 
       // ── Assertions ─────────────────────────────────────────────────────────
 
-      // Edited tag: label must reflect the rename and no longer carry the stale ROR id
+      // Edited tag: label must reflect the rename and keep the selected ROR id
       const editedEntry = affiliations.find(a => a.label === editedLabel);
       expect(editedEntry, `Expected affiliation "${editedLabel}" in XML`).toBeDefined();
       expect(
         editedEntry?.id,
-        'Edited tag must not keep the old ROR identifier after a manual label change',
-      ).toBeUndefined();
+        'Edited tag must keep its ROR identifier after a manual label change',
+      ).toBe(`https://ror.org/${selected.id}`);
 
       // Free-text tag (added by completeMinimalDatasetForm): no ROR
       const freeTextEntry = affiliations.find(
@@ -228,6 +228,42 @@ test.describe('Affiliation tag label editing', () => {
         freeTextEntry?.id,
         'Free-text affiliation must not carry an affiliationIdentifier',
       ).toBeUndefined();
+    },
+  );
+
+  test(
+    'empty edited author affiliation label blocks save and keeps ROR visible',
+    async ({ page }) => {
+      test.slow();
+
+      await completeMinimalDatasetForm(page);
+
+      const selected = await selectAffiliationFromDropdown(page, 'tu berlin');
+      await editAffiliationLabel(page, selected.value, '');
+
+      const authorRow = page.locator(`${AUTHOR_GROUP} [data-creator-row]`).first();
+      const chip = authorRow
+        .locator(`[data-author-affiliation-chip][data-author-affiliation-ror-id="${selected.id}"]`)
+        .first();
+      const labelInput = chip.locator('[data-author-affiliation-label]');
+      const rorSegment = chip.locator('[data-author-affiliation-ror]');
+
+      await expect(labelInput).toHaveValue('');
+      await expect(rorSegment).toBeVisible();
+      await expect(rorSegment).toHaveText(selected.id);
+
+      await page.locator('#button-form-save').click();
+
+      await expect(page.locator('#modal-saveas')).not.toBeVisible();
+      await expect(labelInput).toHaveClass(/is-invalid/);
+      await expect(labelInput).toHaveAttribute('aria-invalid', 'true');
+      await expect(chip.locator('[data-author-affiliation-invalid]')).toBeVisible();
+      await expect(rorSegment).toBeVisible();
+      await expect(rorSegment).toHaveText(selected.id);
+
+      await runAxeAudit(page, {
+        configure: (builder) => builder.include(AUTHOR_GROUP),
+      });
     },
   );
 
