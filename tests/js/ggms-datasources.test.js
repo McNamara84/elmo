@@ -80,7 +80,7 @@ describe('ggms-datasources.js', () => {
             <input class="input-with-help" />
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
-          <input id="input-datasource-platforms-0" name="satellite_platform[]" />
+          <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
           <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
             <button class="addDataSource"></button>
@@ -173,9 +173,12 @@ describe('ggms-datasources.js', () => {
           }
           return { id: node.id, text: node.text, parents: ['#'].concat(parents) };
         }
-        open_node(id) {
+        open_node(id, callback) {
           if (!this.opened.includes(id)) {
             this.opened.push(id);
+          }
+          if (typeof callback === 'function') {
+            callback();
           }
         }
         get_selected() {
@@ -229,6 +232,7 @@ describe('ggms-datasources.js', () => {
         } else if (typeof arg === 'object') {
           const inst = new JsTreeMock(this, arg);
           this.data('jstree', inst);
+          this.trigger('ready.jstree');
           return this;
         }
         return this;
@@ -303,12 +307,15 @@ describe('ggms-datasources.js', () => {
   test('adds js-required-on-submit to platform input when type is Satellite', () => {
     const row = $('#group-datasources .row').first();
     const platformInput = row.find('input[name="satellite_platform[]"]');
+    expect(platformInput.hasClass('form-control')).toBe(true);
     expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(platformInput.prop('required')).toBe(false);
 
     row.find('select[name="datasource_type[]"]').val('G').trigger('change');
     expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
 
     row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    expect(platformInput.hasClass('form-control')).toBe(true);
     expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
   });
 

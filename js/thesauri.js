@@ -129,6 +129,7 @@ function hideLoadingSpinner(jsTreeId) {
 /**
  * Expands jsTree nodes after the datasource platforms thesaurus loads.
  * Opens the configured root subtree first, then any initialOpenNodeTexts entries.
+ * Uses chained open_node callbacks because jsTree expands asynchronously.
  *
  * @param {Object} config - Thesaurus configuration.
  */
@@ -138,24 +139,29 @@ function expandInitialTreeNodes(config) {
     const tree = $(config.jsTreeId).jstree(true);
     if (!tree || typeof tree.open_node !== 'function') return;
 
+    const nodesToOpen = [];
+
     if (config.rootNodeId) {
-        tree.open_node(config.rootNodeId);
+        nodesToOpen.push(config.rootNodeId);
     }
 
     config.initialOpenNodeTexts.forEach(function (text) {
         const node = tree.get_json('#', { flat: true }).find(function (n) {
             return n.text === text;
         });
-        if (!node) return;
-
-        const parents = tree.get_node(node.id).parents || [];
-        parents.forEach(function (parentId) {
-            if (parentId !== '#') {
-                tree.open_node(parentId);
-            }
-        });
-        tree.open_node(node.id);
+        if (node && !nodesToOpen.includes(node.id)) {
+            nodesToOpen.push(node.id);
+        }
     });
+
+    function openNext(index) {
+        if (index >= nodesToOpen.length) return;
+        tree.open_node(nodesToOpen[index], function () {
+            openNext(index + 1);
+        });
+    }
+
+    openNext(0);
 }
 
 /**
@@ -335,6 +341,21 @@ function loadKeywordsForConfig(config, response) {
         tagifyInstance.settings.enforceWhitelist = true;
     });
 
+    $(config.jsTreeId).one('ready.jstree', function () {
+        expandInitialTreeNodes(config);
+
+        const activeTagify = getActiveTagifyForState(state);
+        if (activeTagify && activeTagify.value && activeTagify.value.length) {
+            var currentValues = activeTagify.value.map(v => v.value);
+            currentValues.forEach(function (val) {
+                var tree = $(config.jsTreeId).jstree(true);
+                if (!tree) return;
+                var node = findNodeByPath(tree, val);
+                if (node) tree.select_node(node.id);
+            });
+        }
+    });
+
     // Initialize jsTree
     $(config.jsTreeId).jstree({
         core: {
@@ -390,20 +411,6 @@ function loadKeywordsForConfig(config, response) {
             }
         }
     });
-
-    // Initial sync: if the active input already has tags, select corresponding nodes
-    const activeTagify = getActiveTagifyForState(state);
-    if (activeTagify && activeTagify.value && activeTagify.value.length) {
-        var currentValues = activeTagify.value.map(v => v.value);
-        currentValues.forEach(function (val) {
-            var tree = $(config.jsTreeId).jstree(true);
-            if (!tree) return;
-            var node = findNodeByPath(tree, val);
-            if (node) tree.select_node(node.id);
-        });
-    }
-
-    expandInitialTreeNodes(config);
 }
 
 /** Returns the shared state key for a thesaurus config. */
