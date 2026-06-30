@@ -201,14 +201,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
 
-    // Security Check 3: Minimum interaction time
-    $timeCheck = evaluateInteractionTime((int) ($_POST['feedback_time_spent'] ?? 0), MIN_INTERACTION_FEEDBACK_SECONDS);
+    // Security Check 3: Minimum interaction time (server-only)
+    $timeCheck = evaluateInteractionTime((float) MIN_INTERACTION_FEEDBACK_SECONDS, 'feedback');
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
-            $connection,
             'feedback',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)"
         );
         sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
     }
@@ -219,9 +217,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
     }
     
-    // All security checks passed - record this submission
+    // All security checks passed - record this submission and reset the interaction timer
+    // so the next send also requires MIN_INTERACTION_FEEDBACK_SECONDS to elapse.
     recordRateLimit($connection, $clientIp, 'feedback');
-    
+    resetPageInteractionTime('feedback');
+
     // Invalidate the used CSRF token
     invalidateCsrfToken();
     
