@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { transformThesauriScript } = require('./utils');
 
 class MockTagify {
   constructor(el, settings) {
@@ -35,16 +36,11 @@ class MockTagify {
   }
 }
 
-function transformThesauriScript(source) {
-  let script = source;
-  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
-  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
-  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
-  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
-  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script = script.replace('export function ensureThesaurusLoaded', 'function ensureThesaurusLoaded');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
-  return script;
+function transformThesauriScriptForDatasources(source) {
+  return transformThesauriScript(
+    source,
+    'getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; }',
+  );
 }
 
 describe('ggms-datasources.js', () => {
@@ -269,7 +265,7 @@ describe('ggms-datasources.js', () => {
     });
 
     const thesauriScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(transformThesauriScript(thesauriScript));
+    window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
