@@ -18,6 +18,10 @@
     --placeholder-color-focus: rgba(var(--bs-body-color-rgb), .65) !important;
 }
 
+.tagify.is-invalid {
+    border-color: var(--bs-form-invalid-border-color, #dc3545) !important;
+}
+
 /* Prevents the help button from "growing" when invalid-feedback is displayed */
 .input-group .input-group-append .input-group-text {
     border-top-left-radius: 0;

@@ -66,6 +66,8 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
 
   test('satellite platform input is js-required-on-submit and becomes required on Submit', async ({ page }) => {
     const platformInput = page.locator('#input-datasource-platforms');
+    const tagifyWrapper = page.locator('.visibility-datasources-satellite .tagify');
+    const invalidFeedback = page.locator('.visibility-datasources-satellite .invalid-feedback');
 
     await expect(platformInput).toHaveClass(/form-control/);
     await expect(platformInput).toHaveClass(/js-required-on-submit/);
@@ -74,5 +76,8 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
     await page.locator('#button-form-submit').click();
 
     await expect(platformInput).toHaveAttribute('required', 'required');
+    await expect(tagifyWrapper).toHaveClass(/is-invalid/);
+    await expect(invalidFeedback).toBeVisible();
+    await expect(invalidFeedback).toContainText('Please provide satellite in this field.');
   });
 });

@@ -72,7 +72,12 @@ describe('ggms-datasources.js', () => {
           <div class="col-md-5 visibility-datasources-basic"><textarea name="datasource_description[]"></textarea></div>
           <div class="col-md-3 visibility-datasources-details"><select name="datasource_details[]"></select></div>
           <div class="col-md-12 visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
-          <div class="col-md-3 visibility-datasources-satellite">sat</div>
+          <div class="col-md-3 visibility-datasources-satellite">
+            <div class="input-group has-validation">
+              <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
+              <div class="invalid-feedback" data-translate="dataSources.satellitePlatformInvalid">Please provide satellite in this field.</div>
+            </div>
+          </div>
           <div class="col-md-6 visibility-datasources-identifier"><input name="dName[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><input name="dIdentifier[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
@@ -80,7 +85,6 @@ describe('ggms-datasources.js', () => {
             <input class="input-with-help" />
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
-          <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
           <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
             <button class="addDataSource"></button>
@@ -240,7 +244,7 @@ describe('ggms-datasources.js', () => {
     })($);
 
     global.Tagify = MockTagify;
-    global.translations = { keywords: { thesaurus: { label: 'initial' } } };
+    global.translations = { keywords: { thesaurus: { label: 'initial' } }, dataSources: { satellitePlatformInvalid: 'Please provide satellite in this field.' } };
     window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
 
     const originalIs = $.fn.is;
@@ -317,6 +321,17 @@ describe('ggms-datasources.js', () => {
     row.find('select[name="datasource_type[]"]').val('S').trigger('change');
     expect(platformInput.hasClass('form-control')).toBe(true);
     expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
+  });
+
+  test('validateSatellitePlatformFields marks empty satellite platform as invalid', () => {
+    const input = $('input[name="satellite_platform[]"]')[0];
+    expect(window.validateSatellitePlatformFields()).toBe(false);
+    expect(input.classList.contains('is-invalid')).toBe(true);
+    expect(input.validationMessage).toBe('Please provide satellite in this field.');
+
+    input._tagify.addTags([{ value: 'Space-based Platforms > GRACE' }]);
+    expect(window.validateSatellitePlatformFields()).toBe(true);
+    expect(input.classList.contains('is-invalid')).toBe(false);
   });
 
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {

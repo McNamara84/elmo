@@ -272,7 +272,8 @@
         "identifierType": "Identifier type",
         "identifierInvalid": "Please enter a valid identifier.",
         "modelName": "Model name",
-        "compensationDepth": "Compensation depth (in meters)"
+        "compensationDepth": "Compensation depth (in meters)",
+        "satellitePlatformInvalid": "Please provide satellite in this field."
     },
     "technical": {
         "title": "Technical",

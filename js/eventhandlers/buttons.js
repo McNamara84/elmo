@@ -142,6 +142,10 @@ $(document).ready(function () {
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
+        const tagifyEl = el.closest('.tagify') || el.parentElement?.querySelector('.tagify');
+        if (tagifyEl) {
+          tagifyEl.classList.remove('is-invalid');
+        }
       });
     }
 
@@ -165,6 +169,10 @@ $(document).ready(function () {
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');
       });
+
+      if (typeof window.validateSatellitePlatformFields === 'function') {
+        window.validateSatellitePlatformFields();
+      }
 
       // Validation is handled by submitHandler.handleSubmit() in validation.js.
       // The form has novalidate, so no native browser validation occurs.

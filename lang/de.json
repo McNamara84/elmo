@@ -273,7 +273,8 @@
         "identifierType": "Identifikatortyp",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
-        "compensationDepth": "Ausgleichstiefe (in Metern)"
+        "compensationDepth": "Ausgleichstiefe (in Metern)",
+        "satellitePlatformInvalid": "Bitte geben Sie ein Satellit in dieses Feld ein."
     },
     "technical": {
         "title": "Technische Angaben",
