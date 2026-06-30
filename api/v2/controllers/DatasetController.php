@@ -1192,8 +1192,13 @@ class DatasetController
             throw new Exception("Error during XSLT transformation.");
         }
 
+        if ($format === 'iso') {
+            $newXml = $this->stripEmptyIsoCreationDates($newXml);
+        }
+
         if ($format === 'datacite') {
             $newXml = $this->stripEmptyDataciteElements($newXml);
+            $newXml = $this->restoreDataCiteDateOnlyCoverageDates($newXml, $sourceXmlString);
         }
 
         return $newXml;
@@ -1239,11 +1244,229 @@ class DatasetController
     }
 
     /**
+     * Adds or updates the DataCite Submitted date in an already generated XML envelope.
+     *
+     * Normal exports intentionally do not call this method. It is used by the real
+     * submit flow after XML generation so saved drafts and API downloads are not
+     * marked as submitted.
+     *
+     * @param string $xml Raw DataCite XML or all-format envelope XML.
+     * @param string|null $submissionDate Date to write as YYYY-MM-DD; defaults to today.
+     * @return string XML with exactly one DataCite Submitted date per DataCite resource.
+     */
+    public function markDataCiteEnvelopeAsSubmitted(string $xml, ?string $submissionDate = null): string
+    {
+        $submissionDate = $submissionDate ?: date('Y-m-d');
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+
+        $resources = $xpath->query('//dc:resource');
+        foreach ($resources as $resource) {
+            if (!$resource instanceof DOMElement) {
+                continue;
+            }
+
+            $dates = $xpath->query('dc:dates', $resource)->item(0);
+            if (!$dates instanceof DOMElement) {
+                $dates = $dom->createElementNS($ns, 'dates');
+                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
+                if ($insertBefore !== null) {
+                    $resource->insertBefore($dates, $insertBefore);
+                } else {
+                    $resource->appendChild($dates);
+                }
+            }
+
+            $submittedDate = null;
+            $duplicates = [];
+            $submittedDates = $xpath->query('dc:date[@dateType="Submitted"]', $dates);
+            foreach ($submittedDates as $dateNode) {
+                if (!$dateNode instanceof DOMElement) {
+                    continue;
+                }
+                if ($submittedDate === null) {
+                    $submittedDate = $dateNode;
+                    continue;
+                }
+                $duplicates[] = $dateNode;
+            }
+
+            foreach ($duplicates as $duplicate) {
+                $duplicate->parentNode->removeChild($duplicate);
+            }
+
+            if (!$submittedDate instanceof DOMElement) {
+                $submittedDate = $dom->createElementNS($ns, 'date');
+                $submittedDate->setAttribute('dateType', 'Submitted');
+                $dates->appendChild($submittedDate);
+            }
+
+            while ($submittedDate->firstChild) {
+                $submittedDate->removeChild($submittedDate->firstChild);
+            }
+            $submittedDate->setAttribute('dateType', 'Submitted');
+            $submittedDate->appendChild($dom->createTextNode($submissionDate));
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Finds the first DataCite child that must follow <dates> in schema order.
+     *
+     * @param DOMXPath $xpath XPath configured with the DataCite namespace.
+     * @param DOMElement $resource DataCite resource element.
+     * @return DOMNode|null Node before which <dates> should be inserted.
+     */
+    private function findDataCiteDatesInsertBefore(DOMXPath $xpath, DOMElement $resource): ?DOMNode
+    {
+        $followingDateElements = [
+            'language',
+            'alternateIdentifiers',
+            'relatedIdentifiers',
+            'sizes',
+            'formats',
+            'version',
+            'rightsList',
+            'descriptions',
+            'geoLocations',
+            'fundingReferences',
+            'relatedItems'
+        ];
+
+        foreach ($followingDateElements as $elementName) {
+            $node = $xpath->query("dc:{$elementName}", $resource)->item(0);
+            if ($node instanceof DOMNode) {
+                return $node;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Restores date-only STC coverage intervals that the generated XSLT omits.
+     *
+     * @param string $dataciteXml Transformed DataCite XML.
+     * @param string $sourceXml Source resource XML used for the transformation.
+     * @return string DataCite XML with date-only Coverage dates preserved.
+     */
+    private function restoreDataCiteDateOnlyCoverageDates(string $dataciteXml, string $sourceXml): string
+    {
+        $coverageIntervals = $this->extractDateOnlyCoverageIntervals($sourceXml);
+        if ($coverageIntervals === []) {
+            return $dataciteXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($dataciteXml)) {
+            return $dataciteXml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+
+        $resources = $xpath->query('//dc:resource');
+        foreach ($resources as $resource) {
+            if (!$resource instanceof DOMElement) {
+                continue;
+            }
+
+            $dates = $xpath->query('dc:dates', $resource)->item(0);
+            if (!$dates instanceof DOMElement) {
+                $dates = $dom->createElementNS($ns, 'dates');
+                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
+                if ($insertBefore !== null) {
+                    $resource->insertBefore($dates, $insertBefore);
+                } else {
+                    $resource->appendChild($dates);
+                }
+            }
+
+            $existingCoverageDates = [];
+            foreach ($xpath->query('dc:date[@dateType="Coverage"]', $dates) as $dateNode) {
+                $existingCoverageDates[] = trim($dateNode->textContent);
+            }
+
+            foreach ($coverageIntervals as $coverageInterval) {
+                if (in_array($coverageInterval, $existingCoverageDates, true)) {
+                    continue;
+                }
+
+                $date = $dom->createElementNS($ns, 'date', $coverageInterval);
+                $date->setAttribute('dateType', 'Coverage');
+                $dates->appendChild($date);
+                $existingCoverageDates[] = $coverageInterval;
+            }
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractDateOnlyCoverageIntervals(string $sourceXml): array
+    {
+        $dom = new DOMDocument();
+        if (!$dom->loadXML($sourceXml)) {
+            return [];
+        }
+
+        $xpath = new DOMXPath($dom);
+        $coverageNodes = $xpath->query('//*[local-name()="SpatialTemporalCoverage"]');
+        $coverageIntervals = [];
+
+        foreach ($coverageNodes as $coverageNode) {
+            $dateStart = $this->childTextByLocalName($xpath, $coverageNode, 'dateStart');
+            if ($dateStart === '') {
+                continue;
+            }
+
+            $timeStart = $this->childTextByLocalName($xpath, $coverageNode, 'timeStart');
+            $timeEnd = $this->childTextByLocalName($xpath, $coverageNode, 'timeEnd');
+            if ($timeStart !== '' || $timeEnd !== '') {
+                continue;
+            }
+
+            $dateEnd = $this->childTextByLocalName($xpath, $coverageNode, 'dateEnd');
+            $coverageIntervals[] = $dateStart . '/' . $dateEnd;
+        }
+
+        return $coverageIntervals;
+    }
+
+    /**
+     * Reads the trimmed text of a direct child selected by local-name.
+     *
+     * @param DOMXPath $xpath XPath helper.
+     * @param DOMNode $contextNode Parent node to search below.
+     * @param string $localName Local element name to read.
+     * @return string Trimmed child text, or an empty string when absent.
+     */
+    private function childTextByLocalName(DOMXPath $xpath, DOMNode $contextNode, string $localName): string
+    {
+        $node = $xpath->query('./*[local-name()="' . $localName . '"]', $contextNode)->item(0);
+
+        return $node instanceof DOMNode ? trim($node->textContent) : '';
+    }
+
+    /**
      * Removes empty elements from a DataCite XML string that would violate the
      * nonemptycontentStringType constraint (minLength=1).
      *
      * The XSLT transformation outputs optional elements like <givenName>, <familyName>,
-     * <affiliation>, and <nameIdentifier> unconditionally, even when the source value
+     * <affiliation>, <nameIdentifier>, and <date> unconditionally, even when the source value
      * is null or an empty string. DataCite schema requires all of these to have
      * non-empty text content. This method strips them after the fact so the XSLT
      * (which carries a "do not modify" comment as it was MapForce-generated) does not
@@ -1268,9 +1491,9 @@ class DatasetController
         $xpath = new DOMXPath($dom);
         $xpath->registerNamespace('dc', $ns);
         
-        // Elements whose text content must be non-empty per nonemptycontentStringType.
+        // Elements whose text content must be non-empty per DataCite schema constraints.
         // Remove the element entirely when content is blank/whitespace-only.
-        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation'];
+        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation', 'date'];
         foreach ($leafElements as $tag) {
             $nodes = $xpath->query("//dc:{$tag}"); 
             foreach ($nodes as $node) {
@@ -1289,7 +1512,34 @@ class DatasetController
 
         return $dom->saveXML();
     }
-    
+
+    /**
+     * Removes empty ISO creation date nodes generated from an optional Date Created.
+     *
+     * @param string $xml Raw ISO XML string.
+     * @return string Cleaned ISO XML string.
+     */
+    private function stripEmptyIsoCreationDates(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('gmd', 'http://www.isotc211.org/2005/gmd');
+        $xpath->registerNamespace('gco', 'http://www.isotc211.org/2005/gco');
+
+        $emptyCreationDates = $xpath->query(
+            '//gmd:date[gmd:CI_Date[gmd:date/gco:Date[normalize-space(.) = ""] and gmd:dateType/gmd:CI_DateTypeCode[@codeListValue="creation"]]]'
+        );
+        foreach ($emptyCreationDates as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
+    }
     /**
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *

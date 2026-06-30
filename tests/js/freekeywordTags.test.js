@@ -319,4 +319,34 @@ describe('freekeywordTags.js', () => {
     expect(feedback.textContent).toBe('Please select a valid CSV file.');
     expect(feedback.className).toContain('text-danger');
   });
+
+  test('builds the correct download link in ELMO', () => {
+    window.history.pushState({}, 'ELMO test', '/elmo/');
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const downloadLink = document.getElementById('button-download-csv-test-files');
+
+    expect(downloadLink.href).toBe(
+      'http://localhost/elmo/test_data/free-keywords-example.csv'
+    );
+  });
+
+  test('builds the correct download link in ELMO MSL for a complex path', () => {
+    window.history.pushState({}, 'ELMO MSL test', '/elmo-msl/some/page');
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const downloadLink = document.getElementById('button-download-csv-test-files');
+
+    expect(downloadLink.href).toBe(
+      'http://localhost/elmo-msl/test_data/free-keywords-example.csv'
+    );
+  });
 });

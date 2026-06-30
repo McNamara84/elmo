@@ -6,7 +6,7 @@ import exampleData from './inputDataEndToEnd.json';
 /**
  * Fills in the minimal required fields for a dataset form.
  * Completes: publication year, resource type, language, title, author details (ORCID, name),
- * affiliation, contact person email, abstract, and date created.
+ * affiliation, contact person email, abstract, and a Date Created value for stable exports.
  * @param {Page} page - The Playwright page object to interact with
  * @returns {Promise<void>}
  */
@@ -33,7 +33,7 @@ export async function completeMinimalDatasetForm(page: Page) {
   await emailField.fill('example@gmail.com');
 
   await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
-  await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
+  await page.locator('#input-date-created').fill('2025-01-01');
 }
 
 /**
