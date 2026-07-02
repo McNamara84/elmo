@@ -23,8 +23,7 @@ include_once __DIR__ . '/settings.php';
 include_once __DIR__ . '/includes/feature_toggles.php';
 
 require_once __DIR__ . '/api/security.php';
-ensureAppSession(); // for rate limiting based. on session
-$formCsrfToken = getOrCreateScopedCsrfToken('form'); // for CSRF protection
+ensureAppSession(); // for rate limiting based on session
 resetPageInteractionTime('form'); // mark when this page visit began
 
 // Treat requests without query parameters as "new records"

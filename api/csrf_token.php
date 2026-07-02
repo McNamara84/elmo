@@ -17,12 +17,6 @@ $scope = isset($_GET['scope']) ? (string) $_GET['scope'] : 'form';
 $normalizedScope = normalizeCsrfScope($scope);
 $token = getOrCreateScopedCsrfToken($normalizedScope);
 
-// For non-form scopes (e.g. feedback), this endpoint is called when the modal opens.
-// Reset the interaction timer so the minimum-time check measures from this moment.
-if ($normalizedScope !== 'form') {
-    resetPageInteractionTime($normalizedScope);
-}
-
 echo json_encode([
     'success' => true,
     'token' => $token,

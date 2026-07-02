@@ -4,6 +4,8 @@
  * @requires jquery
  */
 
+import { fetchAndStoreCsrfToken, CSRF_SCOPES } from './services/csrfTokenService.js';
+
 const SAVE_FORMATS = {
     xml: {
         extension: 'xml',
@@ -41,27 +43,9 @@ class SaveHandler {
         this.currentFormat = 'xml';
         
         // Security fields
-        this.$csrfTokenField = $('#input-form-csrf-token');
         this.$honeypotField = $('#input-information-website');
         
         this.initializeEventListeners();
-    }
-
-    /**
-     * Fetches a CSRF token from the server for form protection.
-     * @returns {Promise<string>} The CSRF token
-     */
-    async fetchCsrfToken() {
-        try {
-            const response = await fetch('api/csrf_token.php', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            return data.token || '';
-        } catch (error) {
-            console.error('Failed to fetch CSRF token:', error);
-            return '';
-        }
     }
 
     /**
@@ -181,24 +165,6 @@ class SaveHandler {
     }
 
     /**
-     * Ensure that the form-level CSRF token is available.
-     * @returns {Promise<string>} The CSRF token string or empty string on failure.
-     */
-    async ensureCsrfToken() {
-        let token = (this.$csrfTokenField.val() || '').toString();
-        if (token) {
-            return token;
-        }
-
-        token = await this.fetchCsrfToken();
-        if (token) {
-            this.$csrfTokenField.val(token);
-        }
-
-        return token;
-    }
-
-    /**
      * Save data and trigger download
      * @param {string} filename - Chosen filename
      * @param {string} [format=this.currentFormat] - Download format
@@ -242,9 +208,8 @@ class SaveHandler {
             }
             formData.append('filename', filename);
 
-            const csrfToken = await this.ensureCsrfToken();
+            const csrfToken = await fetchAndStoreCsrfToken(CSRF_SCOPES.form);
 
-            // Append security fields
             formData.set('csrf_token', csrfToken);
             formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);

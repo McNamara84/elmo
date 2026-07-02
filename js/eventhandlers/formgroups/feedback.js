@@ -4,6 +4,12 @@
  * @module feedback
  */
 
+import {
+  fetchAndStoreCsrfToken,
+  startScopedInteraction,
+  CSRF_SCOPES,
+} from '../../services/csrfTokenService.js';
+
 $(document).ready(function () {
   /**
    * Event handler for the "Send Feedback" button click.
@@ -18,21 +24,6 @@ $(document).ready(function () {
 
   // Track when the modal was opened for minimum time validation
   let modalOpenedAt = null;
-
-  /**
-   * Fetches a CSRF token from the server for form protection.
-   * @returns {Promise<string>} The CSRF token
-   */
-  async function fetchCsrfToken() {
-    try {
-      const response = await fetch('api/csrf_token.php');
-      const data = await response.json();
-      return data.token || '';
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
-      return '';
-    }
-  }
 
   /**
    * Applies or removes a boolean attribute while ensuring an empty string value for accessibility checks.
@@ -54,7 +45,7 @@ $(document).ready(function () {
     return $elements;
   }
 
-  sendButton.click(function (event) {
+  sendButton.click(async function (event) {
     event.preventDefault();
 
     // Calculate time spent filling the form (in seconds)
@@ -62,9 +53,6 @@ $(document).ready(function () {
       const timeSpent = Math.floor((Date.now() - modalOpenedAt) / 1000);
       timeSpentField.val(timeSpent);
     }
-
-    // Form and data setup
-    const feedbackData = feedbackForm.serialize();
 
     // Disable the button and show a loading spinner
     sendButton
@@ -78,6 +66,11 @@ $(document).ready(function () {
     feedbackForm.attr("aria-busy", "true");
     applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
     applyBooleanAttribute(statusPanel, "hidden", true);
+
+    const token = await fetchAndStoreCsrfToken(CSRF_SCOPES.feedback);
+    csrfTokenField.val(token);
+
+    const feedbackData = feedbackForm.serialize();
 
     // Send AJAX POST request
     $.ajax({
@@ -141,18 +134,13 @@ $(document).ready(function () {
 
   $('#modal-feedback')
     .on('show.bs.modal', async function () {
-      // Record when modal was opened for time-spent calculation
       modalOpenedAt = Date.now();
-      
-      // Fetch fresh CSRF token
-      const token = await fetchCsrfToken();
-      csrfTokenField.val(token);
-      
+      await startScopedInteraction(CSRF_SCOPES.feedback);
+
       feedbackForm[0].reset();
-      // Reset time spent field after form reset
       timeSpentField.val('0');
-      csrfTokenField.val(token);
-      
+      csrfTokenField.val('');
+
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
       thankYouMessage.hide();
       applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");

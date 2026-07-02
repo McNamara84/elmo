@@ -1,7 +1,10 @@
+import { fetchAndStoreCsrfToken, CSRF_SCOPES } from './services/csrfTokenService.js';
+
 /**
  * Validates that the embargo date is not before the creation date.
  * @returns {boolean} True if the dates are valid, false otherwise.
  */
+
 function validateEmbargoDate() {
     const dateCreatedInput = document.getElementById('input-date-created');
     const dateEmbargoInput = document.getElementById('input-date-embargo');
@@ -248,7 +251,6 @@ class SubmitHandler {
         this.autosaveService = autosaveService;
 
         // Security field references
-        this.$csrfTokenField = $('#input-form-csrf-token');
         this.$mainHoneypotField = $('#input-information-website');
         this.$modalHoneypotField = $('#modal-submit input[name="website"]').first();
 
@@ -301,41 +303,6 @@ class SubmitHandler {
                 this.handleModalSubmit();
             }
         });
-    }
-
-    /**
-     * Fetch CSRF token from the server
-     * @returns {Promise<string>}
-     */
-    async fetchCsrfToken() {
-        try {
-            const response = await fetch('api/csrf_token.php', {
-                credentials: 'include'
-            });
-            const data = await response.json();
-            return data.token || '';
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
-            return '';
-        }
-    }
-
-    /**
-     * Ensure that the form-level CSRF token is available.
-     * @returns {Promise<string>} The CSRF token string or empty string on failure.
-     */
-    async ensureCsrfToken() {
-        let token = (this.$csrfTokenField.val() || '').toString();
-        if (token) {
-            return token;
-        }
-
-        token = await this.fetchCsrfToken();
-        if (token) {
-            this.$csrfTokenField.val(token);
-        }
-
-        return token;
     }
 
     /**
@@ -440,8 +407,8 @@ class SubmitHandler {
             submitData.set('authorsPayload', authorsPayloadInput.value);
         }
 
-        // Ensure the single form-level CSRF token is present.
-        const csrfToken = await this.ensureCsrfToken();
+        // Ensure the form-level CSRF token is present.
+        const csrfToken = await fetchAndStoreCsrfToken(CSRF_SCOPES.form);
         if (csrfToken) {
             submitData.set('csrf_token', csrfToken.toString());
         }
