@@ -59,69 +59,44 @@ function ensureAppSession(): void
  */
 function generateCsrfToken(): string
 {
-    return generateScopedCsrfToken('form');
-}
-
-/**
- * Generates a new CSRF token for a specific scope and stores it in the session.
- *
- * @param string $scope Token scope (e.g. form, feedback)
- * @return string
- */
-function generateScopedCsrfToken(string $scope): string
-{
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
-    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
-    $interactionStartKey = getCsrfInteractionStartSessionKey($normalizedScope);
-
     $token = bin2hex(random_bytes(32));
-    $_SESSION[$tokenKey] = $token;
-    $_SESSION[$tokenTimeKey] = time();
-    $_SESSION[$interactionStartKey] = microtime(true);
+    $_SESSION['csrf_token'] = $token;
+    $_SESSION['csrf_token_time'] = time();
 
     return $token;
 }
 
 /**
- * Returns whether a scoped CSRF token exists and is still within its lifetime.
+ * Returns whether the session CSRF token exists and is still within its lifetime.
  *
- * @param string $scope Token scope (e.g. form, feedback)
  * @return bool
  */
-function isScopedCsrfTokenValid(string $scope): bool
+function isCsrfTokenValid(): bool
 {
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
-    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
-    $sessionToken = $_SESSION[$tokenKey] ?? '';
-    $tokenTime = (int) ($_SESSION[$tokenTimeKey] ?? 0);
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
 
     return !empty($sessionToken) && (time() - $tokenTime <= 3600);
 }
 
 /**
- * Returns the current scoped CSRF token or creates one when missing or expired.
+ * Returns the current CSRF token or creates one when missing or expired.
  *
- * @param string $scope Token scope (e.g. form, feedback)
  * @return string
  */
-function getOrCreateScopedCsrfToken(string $scope): string
+function getOrCreateCsrfToken(): string
 {
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
-
-    if (isScopedCsrfTokenValid($scope)) {
-        return (string) $_SESSION[$tokenKey];
+    if (isCsrfTokenValid()) {
+        return (string) $_SESSION['csrf_token'];
     }
 
-    return generateScopedCsrfToken($scope);
+    return generateCsrfToken();
 }
 
 /**
@@ -131,34 +106,26 @@ function getOrCreateScopedCsrfToken(string $scope): string
  * @param string $submittedToken The token from the form submission
  * @return bool True if token is valid, false otherwise
  */
-function validateCsrfToken(string $submittedToken, string $scope = 'form'): bool
+function validateCsrfToken(string $submittedToken): bool
 {
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $tokenKey = getCsrfTokenSessionKey($normalizedScope);
-    $tokenTimeKey = getCsrfTokenTimeSessionKey($normalizedScope);
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
     
-    $sessionToken = $_SESSION[$tokenKey] ?? '';
-    $tokenTime = (int) ($_SESSION[$tokenTimeKey] ?? 0);
-    
-    // Token must exist in session and submitted form
     if (empty($submittedToken) || empty($sessionToken)) {
         return false;
     }
     
     try {
-        // Token must match (timing-safe comparison)
         if (!hash_equals($sessionToken, $submittedToken)) {
             return false;
         }
     } catch (\ValueError $e) {
-        // Token format invalid (e.g., mismatched lengths)
         error_log("CSRF token validation error: " . $e->getMessage());
         return false;
     }
     
-    // Token must not be older than 1 hour
     if (time() - $tokenTime > 3600) {
         return false;
     }
@@ -168,29 +135,26 @@ function validateCsrfToken(string $submittedToken, string $scope = 'form'): bool
 
 /**
  * Invalidates the current CSRF token by removing it from session.
- * Should be called after a successful form submission.
  *
  * @return void
  */
 function invalidateCsrfToken(): void
 {
-    invalidateScopedCsrfToken('form');
+    ensureAppSession();
+
+    unset($_SESSION['csrf_token']);
+    unset($_SESSION['csrf_token_time']);
 }
 
 /**
- * Invalidates a CSRF token for a specific scope.
+ * Reads the submitted CSRF token from request data.
  *
- * @param string $scope Token scope (e.g. form, feedback)
- * @return void
+ * @param array<string, mixed> $requestData
+ * @return string
  */
-function invalidateScopedCsrfToken(string $scope): void
+function getSubmittedCsrfToken(array $requestData): string
 {
-    ensureAppSession();
-
-    $normalizedScope = normalizeCsrfScope($scope);
-    unset($_SESSION[getCsrfTokenSessionKey($normalizedScope)]);
-    unset($_SESSION[getCsrfTokenTimeSessionKey($normalizedScope)]);
-    unset($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)]);
+    return (string) ($requestData['csrf-token'] ?? $requestData['csrf_token'] ?? '');
 }
 
 /**
@@ -208,37 +172,35 @@ function validateHoneypot(string $honeypotValue): bool
 /**
  * Records the current time as the start of the user's interaction for a given scope.
  *
- * Call this on every full page load. The interaction start is completely independent
- * of the CSRF token — it tracks when the user opened the page, even when the token
- * is reused across reloads within its one-hour lifetime.
+ * Call this on every full page load. The interaction start is independent
+ * of the CSRF token — it tracks when the user opened the page.
  *
- * @param string $scope Token scope (e.g. form, feedback)
+ * @param string $scope Interaction scope (form or feedback)
  * @return void
  */
 function resetPageInteractionTime(string $scope = 'form'): void
 {
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] = microtime(true);
+    $normalizedScope = normalizeInteractionScope($scope);
+    $_SESSION[getInteractionStartSessionKey($normalizedScope)] = microtime(true);
 }
 
 /**
  * Returns how many seconds have elapsed since the user loaded the current page.
  *
  * The timestamp is written to the session by resetPageInteractionTime() on every
- * full page load, so it always reflects the current visit — even when the CSRF
- * token is reused within its one-hour lifetime.
+ * full page load, so it always reflects the current visit.
  *
- * @param string $scope Token scope (e.g. form, feedback)
+ * @param string $scope Interaction scope (form or feedback)
  * @return float Elapsed seconds (sub-second precision), or 0.0 if not set
  */
 function getPageInteractionAgeSeconds(string $scope = 'form'): float
 {
     ensureAppSession();
 
-    $normalizedScope = normalizeCsrfScope($scope);
-    $interactionStart = (float) ($_SESSION[getCsrfInteractionStartSessionKey($normalizedScope)] ?? 0.0);
+    $normalizedScope = normalizeInteractionScope($scope);
+    $interactionStart = (float) ($_SESSION[getInteractionStartSessionKey($normalizedScope)] ?? 0.0);
     if ($interactionStart <= 0.0) {
         return 0.0;
     }
@@ -253,7 +215,7 @@ function getPageInteractionAgeSeconds(string $scope = 'form'): float
  * ignored to prevent manipulation.
  *
  * @param float $minimumSeconds Required minimum interaction time in seconds
- * @param string $scope Token scope (e.g. form, feedback)
+ * @param string $scope Interaction scope (form or feedback)
  * @return array{isValid: bool, effectiveSeconds: float, minimumSeconds: float}
  */
 function evaluateInteractionTime(float $minimumSeconds, string $scope = 'form'): array
@@ -268,12 +230,12 @@ function evaluateInteractionTime(float $minimumSeconds, string $scope = 'form'):
 }
 
 /**
- * Normalizes allowed CSRF scopes.
+ * Normalizes allowed interaction timer scopes.
  *
  * @param string $scope
  * @return string
  */
-function normalizeCsrfScope(string $scope): string
+function normalizeInteractionScope(string $scope): string
 {
     $normalized = strtolower(trim($scope));
     return in_array($normalized, ['form', 'feedback'], true) ? $normalized : 'form';
@@ -283,27 +245,9 @@ function normalizeCsrfScope(string $scope): string
  * @param string $scope
  * @return string
  */
-function getCsrfTokenSessionKey(string $scope): string
+function getInteractionStartSessionKey(string $scope): string
 {
-    return $scope === 'form' ? 'csrf_token' : 'csrf_token_' . $scope;
-}
-
-/**
- * @param string $scope
- * @return string
- */
-function getCsrfTokenTimeSessionKey(string $scope): string
-{
-    return $scope === 'form' ? 'csrf_token_time' : 'csrf_token_time_' . $scope;
-}
-
-/**
- * @param string $scope
- * @return string
- */
-function getCsrfInteractionStartSessionKey(string $scope): string
-{
-    return $scope === 'form' ? 'csrf_interaction_start_time' : 'csrf_interaction_start_time_' . $scope;
+    return $scope === 'form' ? 'interaction_start_time' : 'interaction_start_time_' . $scope;
 }
 
 /**
