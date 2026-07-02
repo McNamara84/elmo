@@ -14,8 +14,7 @@ require 'vendor/autoload.php';
 require __DIR__ . '/api/security.php';
 include __DIR__ . '/settings.php';
 
-// Initialize session for CSRF validation
-initializeCsrfSession();
+ensureAppSession();
 
 /**
  * Sends a JSON error response and exits.
@@ -195,7 +194,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     
     // Security Check 2: CSRF Token
-    $submittedToken = $_POST['csrf_token'] ?? '';
+    $submittedToken = getSubmittedCsrfToken($_POST);
     if (!validateCsrfToken($submittedToken)) {
         error_log("Feedback blocked: Invalid CSRF token from IP {$clientIp}");
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
@@ -222,9 +221,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     recordRateLimit($connection, $clientIp, 'feedback');
     resetPageInteractionTime('feedback');
 
-    // Invalidate the used CSRF token
-    invalidateCsrfToken();
-    
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';
     $feedbackQuestion3 = $_POST['feedbackQuestion3'] ?? '';

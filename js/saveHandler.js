@@ -4,7 +4,7 @@
  * @requires jquery
  */
 
-import { fetchAndStoreCsrfToken, CSRF_SCOPES } from './services/csrfTokenService.js';
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -208,9 +208,9 @@ class SaveHandler {
             }
             formData.append('filename', filename);
 
-            const csrfToken = await fetchAndStoreCsrfToken(CSRF_SCOPES.form);
+            const csrfToken = await fetchAndStoreCsrfToken('form');
 
-            formData.set('csrf_token', csrfToken);
+            formData.set('csrf-token', csrfToken);
             formData.append('website', this.$honeypotField.val());
             formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');

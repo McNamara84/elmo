@@ -85,7 +85,7 @@ function validateSubmitSecurity(array $postData): void {
     }
 
     // Check 2: CSRF Token validation
-    if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
+    if (!validateCsrfToken(getSubmittedCsrfToken($postData))) {
         logSuspiciousAttempt('submit', 'invalid csrf token');
         http_response_code(400);
         ob_clean();

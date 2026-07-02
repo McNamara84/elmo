@@ -1,4 +1,4 @@
-import { fetchAndStoreCsrfToken, CSRF_SCOPES } from './services/csrfTokenService.js';
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -408,9 +408,9 @@ class SubmitHandler {
         }
 
         // Ensure the form-level CSRF token is present.
-        const csrfToken = await fetchAndStoreCsrfToken(CSRF_SCOPES.form);
+        const csrfToken = await fetchAndStoreCsrfToken('form');
         if (csrfToken) {
-            submitData.set('csrf_token', csrfToken.toString());
+            submitData.set('csrf-token', csrfToken.toString());
         }
 
         // Backend validates one honeypot field — send whichever trap was filled.
