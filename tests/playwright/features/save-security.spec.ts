@@ -15,8 +15,7 @@ async function openSaveModal(page: Page) {
 
   const saveModal = page.locator('#modal-saveas');
   await expect(saveModal).toBeVisible();
-  // Form token is in main form, not modal - verify it exists and has a value
-  await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('');
+  await expect(page.locator('#input-csrf-token')).toHaveValue('');
 
   const filenameField = page.locator('#input-saveas-filename');
   if (!(await filenameField.inputValue())) {
@@ -121,9 +120,9 @@ test.describe('Save Operation Security Features', () => {
         page.locator('#button-saveas-save').click(),
       ]);
 
-      expect(capturedBody).toContain('name="csrf_token"');
+      expect(capturedBody).toContain('name="csrf-token"');
       expect(capturedBody).toContain('name="website"');
-      expect(extractMultipartField(capturedBody, 'csrf_token')).toBeTruthy();
+      expect(extractMultipartField(capturedBody, 'csrf-token')).toBeTruthy();
       // Timing is server-only — client must NOT send save_time_spent
       expect(capturedBody).not.toContain('name="save_time_spent"');
 
@@ -136,13 +135,36 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
             
       // Check for hidden CSRF field in main form (not in modal)
-      const csrfField = page.locator('#input-form-csrf-token');
+      const csrfField = page.locator('#input-csrf-token');
       
       await expect(csrfField).toHaveAttribute('type', 'hidden');
-      await expect(csrfField).not.toHaveValue('');
+      await expect(csrfField).toHaveValue('');
+    });
+
+    test('CSRF token is fetched when save is committed', async ({ page }) => {
+      await navigateToHome(page);
+
+      const csrfPromise = page.waitForRequest((request) =>
+        request.url().includes('csrf_token.php')
+      );
+
+      await openSaveModal(page);
+      await Promise.all([
+        csrfPromise,
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      await expect(page.locator('#input-csrf-token')).not.toHaveValue('');
     });
 
     test('backend rejects save when token is invalid', async ({ page }) => {
+      await page.route('**/api/csrf_token.php', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, token: 'corrupted-token' }),
+        });
+      });
       await page.route(SAVE_ENDPOINT, async (route) => {
         await route.fulfill({
           status: 400,
@@ -154,9 +176,6 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
 
       await openSaveModal(page);
-      await page.locator('#input-form-csrf-token').evaluate((el) => {
-        (el as HTMLInputElement).value = 'corrupted-token';
-      });
 
       await Promise.all([
         page.waitForResponse((response) =>
@@ -166,6 +185,7 @@ test.describe('Save Operation Security Features', () => {
       ]);
 
       await expect(page.locator('.alert-danger')).toBeVisible();
+      await page.unroute('**/api/csrf_token.php');
       await page.unroute(SAVE_ENDPOINT);
     });
   });
@@ -210,7 +230,7 @@ test.describe('Save Operation Security Features', () => {
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
 
         const honeypot = extractMultipartField(body, 'website') || '';
-        const csrfToken = extractMultipartField(body, 'csrf_token') || '';
+        const csrfToken = extractMultipartField(body, 'csrf-token') || '';
         const isValid = honeypot === '' && csrfToken.length > 0;
 
         await route.fulfill({
@@ -225,7 +245,6 @@ test.describe('Save Operation Security Features', () => {
       await navigateToHome(page);
       await expect(page.locator('#input-information-website')).toHaveValue('');
       await openSaveModal(page);
-      await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('');
 
       await Promise.all([
         page.waitForResponse((response) =>

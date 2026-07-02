@@ -106,10 +106,10 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
-    public function getOrCreateScopedCsrfToken_ReusesExistingToken(): void
+    public function getOrCreateCsrfToken_ReusesExistingToken(): void
     {
-        $first = getOrCreateScopedCsrfToken('form');
-        $second = getOrCreateScopedCsrfToken('form');
+        $first = getOrCreateCsrfToken();
+        $second = getOrCreateCsrfToken();
 
         $this->assertSame($first, $second);
     }
@@ -144,7 +144,7 @@ class SecurityFunctionsTest extends TestCase
      */
     public function getPageInteractionAgeSeconds_ReturnsElapsedTime(): void
     {
-        $_SESSION['csrf_interaction_start_time'] = microtime(true) - 5.0;
+        $_SESSION['interaction_start_time'] = microtime(true) - 5.0;
 
         $age = getPageInteractionAgeSeconds();
         $this->assertGreaterThanOrEqual(4.9, $age);
@@ -156,9 +156,8 @@ class SecurityFunctionsTest extends TestCase
      */
     public function resetPageInteractionTime_ResetsTimerRegardlessOfTokenState(): void
     {
-        $_SESSION['csrf_interaction_start_time'] = microtime(true) - 442.0;
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
 
-        // Resets even with no CSRF token in session.
         resetPageInteractionTime('form');
         $this->assertLessThanOrEqual(0.1, getPageInteractionAgeSeconds());
     }
@@ -168,8 +167,8 @@ class SecurityFunctionsTest extends TestCase
      */
     public function resetPageInteractionTime_DoesNotRotateExistingToken(): void
     {
-        $token = getOrCreateScopedCsrfToken('form');
-        $_SESSION['csrf_interaction_start_time'] = microtime(true) - 442.0;
+        $token = getOrCreateCsrfToken();
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
 
         resetPageInteractionTime('form');
 
@@ -182,7 +181,7 @@ class SecurityFunctionsTest extends TestCase
      */
     public function evaluateInteractionTime_UsesOnlyServerTimer(): void
     {
-        $_SESSION['csrf_interaction_start_time'] = microtime(true) - 10.0;
+        $_SESSION['interaction_start_time'] = microtime(true) - 10.0;
 
         $result = evaluateInteractionTime(2.0);
 
@@ -196,12 +195,46 @@ class SecurityFunctionsTest extends TestCase
      */
     public function evaluateInteractionTime_RejectsWhenTooFast(): void
     {
-        $_SESSION['csrf_interaction_start_time'] = microtime(true) - 0.5;
+        $_SESSION['interaction_start_time'] = microtime(true) - 0.5;
 
         $result = evaluateInteractionTime(2.0);
 
         $this->assertFalse($result['isValid']);
         $this->assertLessThan(2.0, $result['effectiveSeconds']);
+    }
+
+    /**
+     * @test
+     */
+    public function generateCsrfToken_DoesNotResetInteractionTimer(): void
+    {
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
+
+        generateCsrfToken();
+
+        $this->assertGreaterThanOrEqual(441.0, getPageInteractionAgeSeconds());
+    }
+
+    /**
+     * @test
+     */
+    public function getSubmittedCsrfToken_ReadsHyphenatedFieldName(): void
+    {
+        $this->assertSame(
+            'token-value',
+            getSubmittedCsrfToken(['csrf-token' => 'token-value'])
+        );
+    }
+
+    /**
+     * @test
+     */
+    public function getSubmittedCsrfToken_FallsBackToLegacyUnderscoreName(): void
+    {
+        $this->assertSame(
+            'legacy-token',
+            getSubmittedCsrfToken(['csrf_token' => 'legacy-token'])
+        );
     }
 
     // ========== Honeypot Tests ==========

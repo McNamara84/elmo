@@ -71,7 +71,6 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
   await expect(saveAsModal).toBeVisible({ timeout: 10000 });
   await expect(page.locator('#label-saveas-modal')).toContainText(/JSON-LD/i);
   await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
-  await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
   await page.locator('#input-saveas-filename').fill(filename);
   // Wait to satisfy server-side minimum interaction time for save.
   await page.waitForTimeout(Math.max(waitMs, 2200));

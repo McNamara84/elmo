@@ -73,25 +73,25 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /**
-     * Tests getOrCreateScopedCsrfToken reuses a valid token.
+     * Tests getOrCreateCsrfToken reuses a valid token.
      */
-    public function testGetOrCreateScopedCsrfTokenReusesValidToken(): void
+    public function testGetOrCreateCsrfTokenReusesValidToken(): void
     {
-        $token1 = getOrCreateScopedCsrfToken('form');
-        $token2 = getOrCreateScopedCsrfToken('form');
+        $token1 = getOrCreateCsrfToken();
+        $token2 = getOrCreateCsrfToken();
 
         $this->assertSame($token1, $token2);
     }
 
     /**
-     * Tests getOrCreateScopedCsrfToken creates a new token after expiration.
+     * Tests getOrCreateCsrfToken creates a new token after expiration.
      */
-    public function testGetOrCreateScopedCsrfTokenRegeneratesWhenExpired(): void
+    public function testGetOrCreateCsrfTokenRegeneratesWhenExpired(): void
     {
-        $token1 = getOrCreateScopedCsrfToken('form');
+        $token1 = getOrCreateCsrfToken();
         $_SESSION['csrf_token_time'] = time() - 3661;
 
-        $token2 = getOrCreateScopedCsrfToken('form');
+        $token2 = getOrCreateCsrfToken();
 
         $this->assertNotSame($token1, $token2);
     }

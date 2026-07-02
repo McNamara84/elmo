@@ -39,7 +39,6 @@ test.describe('Save after Load – Issue #1043', () => {
 
     const saveAsModal = page.locator('#modal-saveas');
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-test');
     // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(3200);
@@ -122,7 +121,6 @@ test.describe('Save after Load – Issue #1043', () => {
     const secondDownloadPromise = page.waitForEvent('download', { timeout: 30000 });
     await page.locator('#button-form-save').click();
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-resaved');
     // Wait to satisfy server-side minimum interaction time for save.
     await page.waitForTimeout(3200);

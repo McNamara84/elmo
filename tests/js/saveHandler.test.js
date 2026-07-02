@@ -42,7 +42,7 @@ describe('saveHandler.js', () => {
       <form id="form-mde">
         <input id="input-date-created">
         <input id="input-date-embargo">
-        <input id="input-form-csrf-token" value="test-csrf-token">
+        <input id="input-csrf-token" value="test-csrf-token">
         <input id="input-information-website">
         <div class="embargo-invalid"></div>
         <div id="group-author">

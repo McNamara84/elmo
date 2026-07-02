@@ -402,8 +402,6 @@ async function downloadAndSaveXml(
   await saveModal.waitFor({ state: 'visible', timeout: 5000 });
 
   // Wait for CSRF token to be fetched on page load.
-  await expect(page.locator('#input-form-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-
   // Fill filename
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);

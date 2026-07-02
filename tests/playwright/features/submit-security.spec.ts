@@ -14,8 +14,8 @@ async function openSubmitModal(page: Page) {
   await expect(submitModal).toBeVisible({ timeout: 5000 });
 
   // Form token is in main form, not modal - verify it exists in the main form
-  const csrfField = page.locator('#input-form-csrf-token');
-  await expect(csrfField).not.toHaveValue('');
+  const csrfField = page.locator('#input-csrf-token');
+  await expect(csrfField).toHaveValue('');
 
   return { submitModal, csrfField };
 }
@@ -52,7 +52,7 @@ test.describe('Submit Operation Security Features', () => {
 
     // CSRF token is in main form, not in modal
     await expect(csrfField).toHaveAttribute('type', 'hidden');
-    await expect(csrfField).not.toHaveValue('');
+    await expect(csrfField).toHaveValue('');
   });
 
   test('normal submit with privacy consent succeeds', async ({ page }) => {
@@ -79,12 +79,15 @@ test.describe('Submit Operation Security Features', () => {
   });
 
   test('backend rejects submit when CSRF token is corrupted', async ({ page }) => {
-    await openSubmitModal(page);
-
-    // Simulate token tampering before request submission.
-    await page.locator('#input-form-csrf-token').evaluate((el) => {
-      (el as HTMLInputElement).value = 'corrupted-token';
+    await page.route('**/api/csrf_token.php', async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, token: 'corrupted-token' }),
+      });
     });
+
+    await openSubmitModal(page);
 
     // Wait 3+ seconds from page load to satisfy server-side minimum interaction time
     await page.waitForTimeout(3100);
@@ -171,7 +174,7 @@ test.describe('Submit Operation Security Features', () => {
 
     // Timing is server-only — client must NOT send submit_time_spent
     expect(capturedBody).not.toContain('name="submit_time_spent"');
-    expect(capturedBody).toContain('name="csrf_token"');
+    expect(capturedBody).toContain('name="csrf-token"');
 
     await page.unroute(SUBMIT_ENDPOINT);
   });
