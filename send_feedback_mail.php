@@ -3,7 +3,7 @@
  * Script for handling feedback email submission using PHPMailer with GFZ SMTP
  * 
  * Security measures implemented:
- * - Rate limiting: Max 3 submissions per IP per hour
+ * - Session-scoped rate limiting: Max 3 submissions per session per hour
  * - Honeypot field: Hidden field that bots tend to fill
  * - CSRF token: Validates request origin
  */
@@ -180,15 +180,10 @@ function sendFeedbackMail(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
-    // Get database connection from settings.php
-    global $connection;
-    
-    $clientIp = getClientIp();
-    
     // Security Check 1: Honeypot
     if (!validateHoneypot($_POST['website'] ?? '')) {
         // Silently reject but return fake success to not alert the bot
-        error_log("Feedback blocked: Honeypot triggered from IP {$clientIp}");
+        error_log('Feedback blocked: Honeypot triggered');
         echo json_encode(['success' => true, 'message' => 'Feedback erfolgreich gesendet!']);
         exit;
     }
@@ -196,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Security Check 2: CSRF Token
     $submittedToken = getSubmittedCsrfToken($_POST);
     if (!validateCsrfToken($submittedToken)) {
-        error_log("Feedback blocked: Invalid CSRF token from IP {$clientIp}");
+        error_log('Feedback blocked: Invalid CSRF token');
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
 
@@ -210,15 +205,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
     }
     
-    // Security Check 4: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        error_log("Feedback blocked: Rate limit exceeded for IP {$clientIp}");
+    // Security Check 4: Session-scoped rate limiting
+    if (!checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt('feedback', 'rate limit exceeded');
         sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
     }
     
     // All security checks passed - record this submission and reset the interaction timer
     // so the next send also requires MIN_INTERACTION_FEEDBACK_SECONDS to elapse.
-    recordRateLimit($connection, $clientIp, 'feedback');
+    recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
     resetPageInteractionTime('feedback');
 
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
