@@ -164,15 +164,19 @@ test.describe('Submit Operation Security Features', () => {
       });
     });
 
-    const { submitModal } = await openSubmitModal(page);
+    await openSubmitModal(page);
     await page.waitForTimeout(3100);
 
     await Promise.all([
-      page.waitForRequest(SUBMIT_ENDPOINT),
+      page.waitForResponse(
+        (response) =>
+          response.url().includes('send_xml_file.php') &&
+          response.request().method() === 'POST'
+      ),
       submitFromModalWithPrivacyConsent(page),
     ]);
 
-    // Timing is server-only — client must NOT send submit_time_spent
+    expect(capturedBody.length).toBeGreaterThan(0);
     expect(capturedBody).not.toContain('name="submit_time_spent"');
     expect(capturedBody).toContain('name="csrf-token"');
 

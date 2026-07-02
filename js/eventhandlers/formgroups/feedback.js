@@ -15,10 +15,7 @@ $(document).ready(function () {
   const sendButton = $("#button-feedback-send");
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
-  const timeSpentField = $("#input-feedback-time-spent");
   const csrfTokenField = $("#input-feedback-csrf-token");
-
-  let modalOpenedAt = null;
 
   function applyBooleanAttribute($elements, attributeName, isActive) {
     $elements.each((_, element) => {
@@ -34,11 +31,6 @@ $(document).ready(function () {
 
   sendButton.click(async function (event) {
     event.preventDefault();
-
-    if (modalOpenedAt) {
-      const timeSpent = Math.floor((Date.now() - modalOpenedAt) / 1000);
-      timeSpentField.val(timeSpent);
-    }
 
     sendButton
       .prop("disabled", true)
@@ -114,11 +106,9 @@ $(document).ready(function () {
 
   $('#modal-feedback')
     .on('show.bs.modal', async function () {
-      modalOpenedAt = Date.now();
       await startInteraction(INTERACTION_SCOPES.feedback);
 
       feedbackForm[0].reset();
-      timeSpentField.val('0');
       csrfTokenField.val('');
 
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });

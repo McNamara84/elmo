@@ -2,17 +2,14 @@ import { test, expect, type Page } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 
 const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
+const CSRF_ENDPOINT = '**/api/csrf_token.php';
 const INTERACTION_ENDPOINT = '**/api/interaction_start.php';
 
-/**
- * Helper function to navigate to the feedback modal
- */
 async function navigateToFeedbackModal(page: Page) {
   await navigateToHome(page);
 
   const feedbackButton = page.locator('#button-feedback-openmodalfooter');
   await expect(feedbackButton).toBeVisible();
-
   await feedbackButton.click();
 
   const feedbackModal = page.locator(SELECTORS.modals.feedback);
@@ -22,15 +19,21 @@ async function navigateToFeedbackModal(page: Page) {
   return { feedbackButton, feedbackModal };
 }
 
-/**
- * Fill all feedback form textareas with test content
- */
 async function fillFeedbackForm(page: Page) {
   const textareas = page.locator('textarea[name^="feedbackQuestion"]');
   const count = await textareas.count();
   for (let index = 0; index < count; index++) {
     await textareas.nth(index).fill(`Test feedback answer ${index + 1}`);
   }
+}
+
+function parseSubmissionFields(postData: string): Record<string, string> {
+  const params = new URLSearchParams(postData);
+  const fields: Record<string, string> = {};
+  for (const [key, value] of params.entries()) {
+    fields[key] = value;
+  }
+  return fields;
 }
 
 test.describe('Feedback Security Features', () => {
@@ -61,7 +64,7 @@ test.describe('Feedback Security Features', () => {
   });
 
   test.describe('CSRF token protection', () => {
-    test('CSRF token field exists in the form', async ({ page }) => {
+    test('CSRF token field exists and is empty while the modal is open', async ({ page }) => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
       const csrfField = feedbackModal.locator('input[name="csrf-token"]');
@@ -70,19 +73,27 @@ test.describe('Feedback Security Features', () => {
       await expect(csrfField).toHaveValue('');
     });
 
-    test('interaction timer starts when modal opens', async ({ page }) => {
+    test('opening the modal starts the interaction timer but does not fetch a CSRF token', async ({ page }) => {
       await navigateToHome(page);
 
+      let csrfRequestCount = 0;
+      await page.route(CSRF_ENDPOINT, async (route) => {
+        csrfRequestCount += 1;
+        await route.continue();
+      });
+
       const interactionPromise = page.waitForRequest((request) =>
-        request.url().includes('interaction_start.php')
+        request.url().includes('interaction_start.php?scope=feedback')
       );
 
-      const feedbackButton = page.locator('#button-feedback-openmodalfooter');
-      await feedbackButton.click();
-
-      const feedbackModal = page.locator(SELECTORS.modals.feedback);
-      await expect(feedbackModal).toBeVisible();
+      await page.locator('#button-feedback-openmodalfooter').click();
+      await expect(page.locator(SELECTORS.modals.feedback)).toBeVisible();
       await interactionPromise;
+
+      expect(csrfRequestCount).toBe(0);
+      await expect(page.locator('#input-feedback-csrf-token')).toHaveValue('');
+
+      await page.unroute(CSRF_ENDPOINT);
     });
 
     test('CSRF token is fetched when feedback is sent', async ({ page }) => {
@@ -103,21 +114,17 @@ test.describe('Feedback Security Features', () => {
       const csrfPromise = page.waitForRequest((request) =>
         request.url().includes('csrf_token.php')
       );
-
       const sendButton = feedbackModal.locator('#button-feedback-send');
-      await Promise.all([
-        csrfPromise,
-        sendButton.click(),
-      ]);
+
+      await Promise.all([csrfPromise, sendButton.click()]);
 
       await expect(csrfField).not.toHaveValue('');
-      const tokenValue = await csrfField.inputValue();
-      expect(tokenValue.length).toBeGreaterThanOrEqual(32);
+      expect((await csrfField.inputValue()).length).toBeGreaterThanOrEqual(32);
 
       await page.unroute(FEEDBACK_ENDPOINT);
     });
 
-    test('CSRF token is reused when feedback is sent again in the same session', async ({ page }) => {
+    test('CSRF token is cleared when the modal is reopened and reused on the next send', async ({ page }) => {
       await page.route(FEEDBACK_ENDPOINT, async (route) => {
         await route.fulfill({
           status: 200,
@@ -126,59 +133,47 @@ test.describe('Feedback Security Features', () => {
         });
       });
 
-      const { feedbackModal } = await navigateToFeedbackModal(page);
+      const { feedbackModal, feedbackButton } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
 
       const csrfField = feedbackModal.locator('input[name="csrf-token"]');
       const sendButton = feedbackModal.locator('#button-feedback-send');
 
       await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
         page.waitForRequest((request) => request.url().includes('csrf_token.php')),
         sendButton.click(),
       ]);
       const firstToken = await csrfField.inputValue();
+      expect(firstToken.length).toBeGreaterThanOrEqual(32);
 
-      const feedbackButton = page.locator('#button-feedback-openmodalfooter');
+      await feedbackModal.locator('button[aria-label="Close"]').click();
+      await expect(feedbackModal).toBeHidden();
+
       await feedbackButton.click();
       await expect(feedbackModal).toBeVisible();
-      await fillFeedbackForm(page);
+      await expect(csrfField).toHaveValue('');
 
+      await fillFeedbackForm(page);
       await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
         page.waitForRequest((request) => request.url().includes('csrf_token.php')),
         sendButton.click(),
       ]);
-      const secondToken = await csrfField.inputValue();
 
+      const secondToken = await csrfField.inputValue();
       expect(secondToken).toBe(firstToken);
 
       await page.unroute(FEEDBACK_ENDPOINT);
     });
   });
 
-  test.describe('Time-spent tracking', () => {
-    test('time_spent hidden field exists in the form', async ({ page }) => {
-      const { feedbackModal } = await navigateToFeedbackModal(page);
+  test.describe('Server-side interaction timing', () => {
+    test('feedback POST does not include client-side time fields', async ({ page }) => {
+      let capturedFields: Record<string, string> = {};
 
-      const timeSpentField = feedbackModal.locator('input[name="feedback_time_spent"]');
-      await expect(timeSpentField).toBeAttached();
-      await expect(timeSpentField).toHaveAttribute('type', 'hidden');
-    });
-
-    test('time_spent is initially 0', async ({ page }) => {
-      const { feedbackModal } = await navigateToFeedbackModal(page);
-
-      const timeSpentField = feedbackModal.locator('input[name="feedback_time_spent"]');
-      const initialValue = await timeSpentField.inputValue();
-      expect(initialValue).toBe('0');
-    });
-
-    test('time_spent is updated when form is submitted', async ({ page }) => {
-      let capturedTimeSpent = '0';
       await page.route(FEEDBACK_ENDPOINT, async (route) => {
-        const postData = route.request().postData() || '';
-        const params = new URLSearchParams(postData);
-        capturedTimeSpent = params.get('feedback_time_spent') || '0';
-
+        capturedFields = parseSubmissionFields(route.request().postData() || '');
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -188,33 +183,25 @@ test.describe('Feedback Security Features', () => {
 
       const { feedbackModal } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
-      await page.waitForTimeout(2000);
 
-      const sendButton = feedbackModal.locator('#button-feedback-send');
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
+        feedbackModal.locator('#button-feedback-send').click(),
+      ]);
 
-      await sendButton.click();
-      await responsePromise;
-
-      const timeSpentNum = parseInt(capturedTimeSpent, 10);
-      expect(timeSpentNum).toBeGreaterThanOrEqual(1);
+      expect(capturedFields).not.toHaveProperty('feedback_time_spent');
+      expect(capturedFields).not.toHaveProperty('time_spent');
 
       await page.unroute(FEEDBACK_ENDPOINT);
     });
   });
 
   test.describe('Rate limiting protection', () => {
-    test('form includes all required security fields in submission', async ({ page }) => {
+    test('form includes required security fields in submission', async ({ page }) => {
       let capturedFields: Record<string, string> = {};
-      await page.route(FEEDBACK_ENDPOINT, async (route) => {
-        const postData = route.request().postData() || '';
-        const params = new URLSearchParams(postData);
-        for (const [key, value] of params.entries()) {
-          capturedFields[key] = value;
-        }
 
+      await page.route(FEEDBACK_ENDPOINT, async (route) => {
+        capturedFields = parseSubmissionFields(route.request().postData() || '');
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
@@ -225,19 +212,16 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
 
-      const sendButton = feedbackModal.locator('#button-feedback-send');
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
-
-      await sendButton.click();
-      await responsePromise;
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
+        feedbackModal.locator('#button-feedback-send').click(),
+      ]);
 
       expect(capturedFields).toHaveProperty('csrf-token');
-      expect(capturedFields).toHaveProperty('feedback_time_spent');
       expect(capturedFields).toHaveProperty('website');
       expect(capturedFields['website']).toBe('');
       expect(capturedFields['csrf-token'].length).toBeGreaterThan(0);
+      expect(capturedFields).not.toHaveProperty('feedback_time_spent');
 
       await page.unroute(FEEDBACK_ENDPOINT);
     });
@@ -257,16 +241,12 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
 
-      const sendButton = feedbackModal.locator('#button-feedback-send');
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
+        feedbackModal.locator('#button-feedback-send').click(),
+      ]);
 
-      await sendButton.click();
-      await responsePromise;
-
-      const statusPanel = feedbackModal.locator('#panel-feedback-status');
-      const errorAlert = statusPanel.locator('.alert-danger');
+      const errorAlert = feedbackModal.locator('#panel-feedback-status .alert-danger');
       await expect(errorAlert).toBeVisible();
       await expect(errorAlert).toContainText('zu viele Anfragen');
 
@@ -288,16 +268,12 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
 
-      const sendButton = feedbackModal.locator('#button-feedback-send');
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
+        feedbackModal.locator('#button-feedback-send').click(),
+      ]);
 
-      await sendButton.click();
-      await responsePromise;
-
-      const statusPanel = feedbackModal.locator('#panel-feedback-status');
-      const errorAlert = statusPanel.locator('.alert-danger');
+      const errorAlert = feedbackModal.locator('#panel-feedback-status .alert-danger');
       await expect(errorAlert).toBeVisible();
       await expect(errorAlert).toContainText('Ungültige Anfrage');
 
@@ -307,7 +283,7 @@ test.describe('Feedback Security Features', () => {
     test('shows time validation error when form submitted too quickly', async ({ page }) => {
       await page.route(FEEDBACK_ENDPOINT, async (route) => {
         await route.fulfill({
-          status: 429,
+          status: 400,
           contentType: 'application/json',
           body: JSON.stringify({
             success: false,
@@ -319,16 +295,12 @@ test.describe('Feedback Security Features', () => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
       await fillFeedbackForm(page);
 
-      const sendButton = feedbackModal.locator('#button-feedback-send');
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('send_feedback_mail.php')
-      );
+      await Promise.all([
+        page.waitForResponse((response) => response.url().includes('send_feedback_mail.php')),
+        feedbackModal.locator('#button-feedback-send').click(),
+      ]);
 
-      await sendButton.click();
-      await responsePromise;
-
-      const statusPanel = feedbackModal.locator('#panel-feedback-status');
-      const errorAlert = statusPanel.locator('.alert-danger');
+      const errorAlert = feedbackModal.locator('#panel-feedback-status .alert-danger');
       await expect(errorAlert).toBeVisible();
       await expect(errorAlert).toContainText('zu schnell');
 
