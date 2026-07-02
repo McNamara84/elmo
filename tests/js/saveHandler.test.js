@@ -42,7 +42,7 @@ describe('saveHandler.js', () => {
       <form id="form-mde">
         <input id="input-date-created">
         <input id="input-date-embargo">
-        <input id="input-csrf-token" value="test-csrf-token">
+        <input id="input-csrf-token" name="csrf-token" value="">
         <input id="input-information-website">
         <div class="embargo-invalid"></div>
         <div id="group-author">
@@ -220,6 +220,55 @@ describe('saveHandler.js', () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
     expect(mod.SaveHandler).toBeDefined();
+  });
+
+  describe('on-demand CSRF token', () => {
+    test('saveAndDownload fetches a token before posting when the field starts empty', async () => {
+      const csrfToken = 'fetched-on-save-token';
+      global.fetch = createSaveHandlerFetchMock({ csrfRefreshToken: csrfToken });
+      window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+      window.URL.revokeObjectURL = jest.fn();
+
+      expect(document.getElementById('input-csrf-token').value).toBe('');
+
+      const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+      await handler.saveAndDownload('dataset');
+
+      const csrfCall = global.fetch.mock.calls.find(
+        (call) => typeof call[0] === 'string' && call[0].startsWith('api/csrf_token.php')
+      );
+      const saveCall = global.fetch.mock.calls.find((call) => call[0] === 'save/save_data.php');
+
+      expect(csrfCall).toBeDefined();
+      expect(saveCall).toBeDefined();
+      expect(global.fetch.mock.calls.indexOf(csrfCall)).toBeLessThan(
+        global.fetch.mock.calls.indexOf(saveCall)
+      );
+      expect(saveCall[1].body.get('csrf-token')).toBe(csrfToken);
+      expect(document.getElementById('input-csrf-token').value).toBe(csrfToken);
+
+      delete global.fetch;
+    });
+
+    test('saveAndDownload replaces a stale field value with the freshly fetched token', async () => {
+      document.getElementById('input-csrf-token').value = 'stale-token';
+
+      global.fetch = createSaveHandlerFetchMock({ csrfRefreshToken: 'fresh-save-token' });
+      window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+      window.URL.revokeObjectURL = jest.fn();
+
+      const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+      await handler.saveAndDownload('dataset');
+
+      const saveCall = global.fetch.mock.calls.find((call) => call[0] === 'save/save_data.php');
+      expect(global.fetch.mock.calls.some(
+        (call) => typeof call[0] === 'string' && call[0].startsWith('api/csrf_token.php')
+      )).toBe(true);
+      expect(saveCall[1].body.get('csrf-token')).toBe('fresh-save-token');
+      expect(document.getElementById('input-csrf-token').value).toBe('fresh-save-token');
+
+      delete global.fetch;
+    });
   });
 
   test('saveAndDownload completes download on success', async () => {

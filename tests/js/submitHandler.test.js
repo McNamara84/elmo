@@ -740,4 +740,94 @@ describe('submitHandler.js', () => {
     expect($('#contact-person-error').length).toBe(0);
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
+
+  describe('on-demand CSRF token', () => {
+    beforeEach(() => {
+      if (!document.getElementById('input-csrf-token')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" id="input-csrf-token" name="csrf-token" value="">'
+        );
+      } else {
+        document.getElementById('input-csrf-token').value = '';
+      }
+
+      if (!document.getElementById('input-information-website')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" id="input-information-website" name="website" value="">'
+        );
+      }
+
+      if (!document.getElementById('input-submit-urgency')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          `
+            <input type="hidden" id="input-submit-urgency" value="2">
+            <input type="hidden" id="input-submit-dataurl" value="">
+          `
+        );
+      }
+
+      const modalSubmit = document.getElementById('modal-submit');
+      if (modalSubmit && !modalSubmit.querySelector('input[name="website"]')) {
+        modalSubmit.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" name="website" value="">'
+        );
+      }
+
+      handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
+    });
+
+    test('handleModalSubmit fetches a token before submitting when the field starts empty', async () => {
+      const csrfToken = 'fetched-on-submit-token';
+      global.fetch = jest.fn((url) => {
+        if (url === 'api/csrf_token.php') {
+          return Promise.resolve({
+            json: async () => ({ token: csrfToken }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'api/csrf_token.php',
+        { credentials: 'include' }
+      );
+      expect(document.getElementById('input-csrf-token').value).toBe(csrfToken);
+      expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe(csrfToken);
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
+    test('handleModalSubmit replaces a stale field value with the freshly fetched token', async () => {
+      document.getElementById('input-csrf-token').value = 'stale-submit-token';
+
+      global.fetch = jest.fn((url) => {
+        if (url === 'api/csrf_token.php') {
+          return Promise.resolve({
+            json: async () => ({ token: 'fresh-submit-token' }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe('fresh-submit-token');
+      expect(document.getElementById('input-csrf-token').value).toBe('fresh-submit-token');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+  });
 });
