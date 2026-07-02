@@ -53,7 +53,7 @@ function validateSaveSecurity($postData): void
     }
 
     // Security Check 2: CSRF Token validation
-    $submittedToken = $postData['csrf_token'] ?? '';
+    $submittedToken = getSubmittedCsrfToken($postData);
     if (!validateCsrfToken($submittedToken)) {
         logSuspiciousAttempt('save', 'invalid csrf token');
         http_response_code(400);
