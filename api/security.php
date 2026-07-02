@@ -122,7 +122,6 @@ function validateCsrfToken(string $submittedToken): bool
             return false;
         }
     } catch (\ValueError $e) {
-        error_log("CSRF token validation error: " . $e->getMessage());
         return false;
     }
     

@@ -381,8 +381,7 @@ try {
     try {
         validateSubmitSecurity($_POST);
     } catch (\Exception $e) {
-        // Security validation threw an unexpected exception - return 403
-        error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
+        logSuspiciousAttempt('submit', 'validation exception: ' . $e->getMessage());
         http_response_code(400);
         ob_clean();
         header('Content-Type: application/json');

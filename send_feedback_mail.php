@@ -183,7 +183,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Security Check 1: Honeypot
     if (!validateHoneypot($_POST['website'] ?? '')) {
         // Silently reject but return fake success to not alert the bot
-        error_log('Feedback blocked: Honeypot triggered');
+        logSuspiciousAttempt('feedback', 'honeypot triggered');
         echo json_encode(['success' => true, 'message' => 'Feedback erfolgreich gesendet!']);
         exit;
     }
@@ -191,7 +191,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Security Check 2: CSRF Token
     $submittedToken = getSubmittedCsrfToken($_POST);
     if (!validateCsrfToken($submittedToken)) {
-        error_log('Feedback blocked: Invalid CSRF token');
+        logSuspiciousAttempt('feedback', 'invalid csrf token');
         sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
     }
 
