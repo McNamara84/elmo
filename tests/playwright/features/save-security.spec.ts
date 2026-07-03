@@ -33,10 +33,12 @@ function extractMultipartField(body: string, fieldName: string): string | null {
 
 test.describe('Save Operation Security Features', () => {
   test.describe('Honeypot field validation', () => {
-    test('save form honeypot exists and starts empty', async ({ page }) => {
+    test('main form honeypot exists and starts empty', async ({ page }) => {
       await navigateToHome(page);
 
+      // Included from formgroups/honeypot.html — saveHandler reads #input-information-website
       const honeypotField = page.locator('#input-information-website');
+      await expect(honeypotField).toHaveAttribute('name', 'website');
       await expect(honeypotField).toHaveAttribute('tabindex', '-1');
       await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
       await expect(honeypotField).toHaveValue('');
