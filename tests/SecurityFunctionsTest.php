@@ -291,6 +291,71 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /**
+     * Tests recordSessionRateLimit appends a new timestamp on each call.
+     */
+    public function testRecordSessionRateLimitIncrementsCount(): void
+    {
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+
+        $this->assertCount(2, $_SESSION[RATE_LIMIT_SESSION_KEY]['save']);
+    }
+
+    /**
+     * Tests getSessionRateLimitTimestamps drops entries outside the rolling window.
+     */
+    public function testGetSessionRateLimitTimestampsPrunesExpired(): void
+    {
+        $_SESSION[RATE_LIMIT_SESSION_KEY] = [
+            'submit' => [time() - 7200, time() - 10],
+        ];
+
+        $timestamps = getSessionRateLimitTimestamps('submit', RATE_LIMIT_WINDOW_SECONDS);
+
+        $this->assertCount(1, $timestamps);
+        $this->assertSame($_SESSION[RATE_LIMIT_SESSION_KEY]['submit'], $timestamps);
+    }
+
+    /**
+     * Tests checkSessionRateLimit blocks at exactly the configured maximum.
+     */
+    public function testCheckSessionRateLimitBlocksAtMax(): void
+    {
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+
+        $this->assertTrue(checkSessionRateLimit('save', 3, RATE_LIMIT_WINDOW_SECONDS));
+        $this->assertFalse(checkSessionRateLimit('save', 2, RATE_LIMIT_WINDOW_SECONDS));
+    }
+
+    /**
+     * Tests save, submit, and feedback counters are independent in one session.
+     */
+    public function testCheckSessionRateLimitPerActionBuckets(): void
+    {
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
+        recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
+
+        $this->assertTrue(checkSessionRateLimit('save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS));
+        $this->assertTrue(checkSessionRateLimit('submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS));
+        $this->assertTrue(checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS));
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['save']);
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['submit']);
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['feedback']);
+    }
+
+    /**
+     * Tests normalizeRateLimitAction sanitizes unsafe action keys.
+     */
+    public function testNormalizeRateLimitActionSanitizesKey(): void
+    {
+        recordSessionRateLimit('save/inject!', RATE_LIMIT_WINDOW_SECONDS);
+
+        $this->assertArrayHasKey('saveinject', $_SESSION[RATE_LIMIT_SESSION_KEY]);
+    }
+
+    /**
      * Tests checkSessionRateLimit respects the time window.
      */
     public function testCheckSessionRateLimitTimeWindow(): void
