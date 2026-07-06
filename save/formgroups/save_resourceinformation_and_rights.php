@@ -13,7 +13,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  *                          - action (string): Either 'submit' or 'save_and_download'
  *                          - doi (string|null): The DOI of the resource
  *                          - year (int): Publication year
- *                          - dateCreated (string): Creation date
+ *                          - dateCreated (string|null): Creation date
  *                          - dateEmbargo (string|null): Embargo date
  *                          - resourcetype (int): Resource type ID
  *                          - version (float|null): Version number
@@ -34,7 +34,7 @@ function saveResourceInformationAndRights($connection, $postData)
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'dateCreated', 'resourcetype'];
+            $requiredFields = ['year', 'resourcetype'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {

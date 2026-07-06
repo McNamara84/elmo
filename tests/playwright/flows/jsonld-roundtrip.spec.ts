@@ -114,7 +114,7 @@ test.describe('JSON-LD roundtrip flow', () => {
     await expect(page.locator('input[name="givennames[]"]').first()).toHaveValue('Josiah');
     await expect(page.locator('input[name="familynames[]"]').first()).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'Abstract*' })).toHaveValue('Necessary abstract');
-    await expect(page.getByRole('textbox', { name: 'Date created*' })).toHaveValue('2025-01-01');
+    await expect(page.locator('#input-date-created')).toHaveValue('2025-01-01');
 
     if (await uploadModal.isVisible().catch(() => false)) {
       await page.evaluate(() => {

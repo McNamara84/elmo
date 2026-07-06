@@ -52,7 +52,7 @@ services:
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}      
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
@@ -108,7 +108,7 @@ services:
       # Flags for MSL (MSL-specific vocabularies enabled)
       SHOW_MSL_MODE: "true"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}  
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"

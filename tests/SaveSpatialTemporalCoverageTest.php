@@ -240,14 +240,11 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
-     * Tests that empty date values are treated as no STC data (optional).
-     * 
-     * When tscDateStart is empty, the function treats it as "no STC data provided"
-     * and returns true without saving anything (STC is optional).
+     * Tests that spatial-only submit data is rejected outside ELMO-GEM.
      *
      * @return void
      */
-    public function testEmptyDateStartTreatedAsOptional()
+    public function testSubmitRejectsSpatialOnlyCoverageOutsideElmoGem()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.DATE",
@@ -277,10 +274,9 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
-        // Function returns true because STC is optional when no date is provided
-        $this->assertTrue($result, 'The function should return true (STC is optional).');
+        $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC without temporal coverage.');
 
-        // No STC should be saved since no valid temporal data was provided
+        // No STC should be saved since the submitted row is incomplete for non-GEM.
         $stmt = $this->connection->prepare("
             SELECT COUNT(*) as count 
             FROM Resource_has_Spatial_Temporal_Coverage 
@@ -290,7 +286,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(0, $count, 'No STC should be saved when dateStart is empty.');
+        $this->assertEquals(0, $count, 'No STC should be saved when dateStart is empty outside ELMO-GEM.');
     }
 
     /**

@@ -796,16 +796,16 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - Free keywords can be entered manually or imported from a CSV file via the Upload CSV File Button. Imported values are treated like manually entered keywords and must also be unique.
 
 ### Dates
-In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType dateType="Available">` for the Embargo and `dateType="Created"` for the Date created.
-In the ISO scheme: The data from Date created are mapped to `<date>`, while Embargo until are mapped to `<gml:endPosition>`.
+In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType="Available"` for the Embargo, `dateType="Created"` for Date created when it is provided, and `dateType="Submitted"` added automatically only when the dataset is submitted.
+In the ISO scheme: The data from Date created are mapped to `<date>` when provided, while Embargo until is mapped to `<gml:endPosition>`.
 
 - Date created
   
   This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
   - Data type: Date
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
-  - Restrictions: This field must be a valid calendar date
+  - Restrictions: Optional field. If provided, this field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#created)
   - Example values: `2024-06-05` `1999-04-07`
 
@@ -1374,7 +1374,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *language*                                |                    1                    |                  --                   | `<subject xml:lang>`                                                                                                                                                        |
 |                            | **Free Keyword**                          |                   0-n                   |                  0-n                  | `<subject>`                                                                                                                                                                 |
 | Dates                      |                                           |                                         |                                       | `<date>`                                                                                                                                                                    |
-|                            | **Date created**                          |                    1                    |                  0-n                  | `<date dateType="Created">`                                                                                                                                                 |
+|                            | **Date created**                          |                   0-1                   |                  0-n                  | `<date dateType="Created">` when provided; `<date dateType="Submitted">` is added automatically on submit                                                                  |
 |                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
 | Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
 |                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
@@ -1522,7 +1522,7 @@ Clicking Submit activates all validation rules and dynamic requirements. The for
 - **Always required on submit**
 
 The metadata editor has some fields that are always required for a valid submission, independent of dynamic rules:
-**Publication Year**, **Resource Type**, **Language of dataset**, At least one **main Title**, **Author Lastname**, **Author Firstname**, **Abstract (Descriptions)** and **Date created**
+**Publication Year**, **Resource Type**, **Language of dataset**, At least one **main Title**, **Author Lastname**, **Author Firstname** and **Abstract (Descriptions)**
 
 Depending on the chosen dataset type or page, additional fields may be required (for example, ICGEM‑specific properties for Global Geopotential Models).
 

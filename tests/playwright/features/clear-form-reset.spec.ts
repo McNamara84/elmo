@@ -56,7 +56,7 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
             <textarea id="input-abstract" name="abstract"></textarea>
           </div>
           <div>
-            <label for="input-date-created">Date created*</label>
+            <label for="input-date-created">Date created</label>
             <input id="input-date-created" name="dateCreated" type="text" />
           </div>
         </section>
