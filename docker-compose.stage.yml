@@ -14,7 +14,10 @@ services:
       - internal
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: dev
     ports:
       - "8080:80"
     environment:
@@ -71,7 +74,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-msl:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: dev
     ports:
       - "8081:80"
     environment:
@@ -125,7 +131,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-gem:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: dev
     ports:
       - "8082:80"
     environment:
@@ -179,7 +188,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-igsn:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: dev
     ports:
       - "8083:80"
     environment:

@@ -16,8 +16,9 @@ function connectDb()
     $username = getenv('DB_USER') ?: "your_database_username";
     $password = getenv('DB_PASSWORD') ?: "your_database_password";
     $database = getenv('DB_NAME') ?: "your_database_name";
-    $conn = new mysqli($host, $username, $password, $database);
-    return $conn;
+    $port = getenv('DB_PORT') ? (int)getenv('DB_PORT') : 3306; #if the port is provided explicitly, it will overwrite the default 3306
+
+    return new mysqli($host, $username, $password, $database, $port);
 }
 
 // Establish the database connection

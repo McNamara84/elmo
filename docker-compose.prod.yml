@@ -14,7 +14,9 @@ services:
       - internal
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.legacy
     ports:
       - "8080:80"
     environment:
@@ -69,7 +71,9 @@ services:
       - "traefik.docker.network=traefik"
 
   web-msl:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.legacy
     ports:
       - "8081:80"
     environment:

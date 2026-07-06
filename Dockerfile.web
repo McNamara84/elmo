@@ -1,0 +1,114 @@
+# syntax=docker/dockerfile:1.7
+
+# ====== Stage 1: Base ======
+FROM php:8.5-apache-bookworm AS base
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Install build dependencies (update+install together for caching)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates \
+        curl \
+        libxml2-dev \
+        libxslt-dev \
+        libzip-dev \
+        mariadb-client
+
+# Clean apt cache
+RUN rm -rf /var/lib/apt/lists/*
+
+# Install PHP extensions
+RUN docker-php-ext-install -j"$(nproc)" \
+    mysqli \
+    pdo_mysql \
+    xsl \
+    zip
+
+# Configure Apache
+ENV APACHE_DOCUMENT_ROOT=/var/www/html
+RUN sed -ri "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/000-default.conf
+RUN a2enmod rewrite deflate headers expires
+
+# Define Apache listen port (default 80), can be overridden in docker-compose 
+ENV APACHE_PORT=80 
+# Use single quotes to make apache identify on runtime
+RUN sed -i 's/Listen 80/Listen ${APACHE_PORT}/' /etc/apache2/ports.conf 
+
+COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
+RUN a2enconf gzip
+
+WORKDIR /var/www/html
+
+# ====== Stage 2: Dev ======
+FROM base AS dev
+
+# Install Node.js prerequisites (update+install together)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends ca-certificates curl gnupg
+
+# Setup NodeSource repository (all in one RUN for atomicity)
+RUN mkdir -p /etc/apt/keyrings && \
+    curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_24.x nodistro main" > /etc/apt/sources.list.d/nodesource.list
+
+# Install Node.js (update+install together)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*
+
+# Install Composer
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+
+# Install project dependencies
+COPY composer.json composer.lock package.json package-lock.json ./
+RUN composer install --prefer-dist --no-interaction --no-scripts
+RUN npm install
+
+# Setup entrypoint
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
+
+# ====== Stage 3: Builder ======
+FROM dev AS builder
+
+WORKDIR /var/www/html
+COPY . .
+
+RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
+RUN npm install --omit=dev
+
+# ====== Stage 4: Prod ======
+FROM base AS prod
+
+ARG DEBIAN_FRONTEND=noninteractive
+
+# Package management - SPLIT for debugging
+RUN apt-get update
+RUN apt-get purge -y libxml2-dev libxslt-dev libzip-dev
+RUN apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip4
+RUN apt-get autoremove -y --purge
+RUN rm -rf /var/lib/apt/lists/*
+
+# User and directory setup
+RUN useradd -r -u 1000 -g www-data appuser
+RUN mkdir -p /var/www/html/xml /var/www/html/storage
+RUN chown -R appuser:www-data /var/www/html
+
+WORKDIR /var/www/html
+
+# Copy built assets
+COPY --from=builder --chown=appuser:www-data /var/www/html /var/www/html
+
+# Copy entrypoint
+COPY --chown=appuser:www-data docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+USER appuser
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+CMD ["apache2-foreground"]
