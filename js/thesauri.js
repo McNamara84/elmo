@@ -1097,6 +1097,7 @@ $(document).ready(function () {
             var thesaurusKeywordstagify = new Tagify(input, {
                 whitelist: state.whitelist,
                 enforceWhitelist: false,
+                delimiters: null,
                 placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
                 dropdown: {
                     maxItems: 50,
@@ -1107,6 +1108,7 @@ $(document).ready(function () {
                 editTags: false
             });
             input._tagify = thesaurusKeywordstagify;
+            input.tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
             state.tagifyInstances.add(thesaurusKeywordstagify);
 
