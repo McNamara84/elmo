@@ -17,7 +17,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-      target: dev
+      target: prod
     ports:
       - "8080:80"
     environment:
@@ -44,7 +44,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Database install routine
@@ -77,7 +77,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-      target: dev
+      target: prod
     ports:
       - "8081:80"
     environment:
@@ -103,7 +103,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL (MSL-specific vocabularies enabled)
@@ -134,7 +134,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-      target: dev
+      target: prod
     ports:
       - "8082:80"
     environment:
@@ -160,7 +160,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for ICGEM (GGMs properties enabled)
@@ -191,7 +191,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.web
-      target: dev
+      target: prod
     ports:
       - "8083:80"
     environment:
@@ -217,6 +217,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for IGSN (minimal form - most form groups disabled)
