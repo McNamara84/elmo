@@ -345,16 +345,24 @@ function loadKeywordsForConfig(config, response) {
     });
 
     // Initial sync: if the active input already has tags, select corresponding nodes
-    const activeTagify = getActiveTagifyForState(state);
-    if (activeTagify && activeTagify.value && activeTagify.value.length) {
-        var currentValues = activeTagify.value.map(v => v.value);
-        currentValues.forEach(function (val) {
-            var tree = $(config.jsTreeId).jstree(true);
-            if (!tree) return;
-            var node = findNodeByPath(tree, val);
-            if (node) tree.select_node(node.id);
+    $(config.jsTreeId).one("ready.jstree", function () {
+        const activeTagify = getActiveTagifyForState(state);
+        if (!activeTagify || !activeTagify.value || !activeTagify.value.length) return;
+
+        state.selectedPaths = new Set(activeTagify.value.map(v => v.value));
+
+        const tree = $(config.jsTreeId).jstree(true);
+        if (!tree) return;
+
+        activeTagify.value.forEach(function (tag) {
+            const node = findNodeByPath(tree, tag.value);
+            if (node) {
+                tree.select_node(node.id);
+            }
         });
-    }
+
+        updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
+    });
 }
 
 /** Returns the shared state key for a thesaurus config. */
