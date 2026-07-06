@@ -32,13 +32,13 @@ RUN a2enmod rewrite deflate headers expires
 
 # Define Apache listen port (default 80), can be overridden in docker-compose 
 ENV APACHE_PORT=80 
+WORKDIR /var/www/html
+
 # Use single quotes to make apache identify on runtime
 RUN sed -i 's/Listen 80/Listen ${APACHE_PORT}/' /etc/apache2/ports.conf 
 
 COPY docker/apache-gzip.conf /etc/apache2/conf-available/gzip.conf
 RUN a2enconf gzip
-
-WORKDIR /var/www/html
 
 # ====== Stage 2: Dev ======
 FROM base AS dev
@@ -67,6 +67,9 @@ COPY composer.json composer.lock package.json package-lock.json ./
 RUN composer install --prefer-dist --no-interaction --no-scripts
 RUN npm install
 
+# Copy application code (can be overridden by a volume mount in local dev)
+COPY . .
+
 # Setup entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
@@ -76,18 +79,16 @@ CMD ["apache2-foreground"]
 # ====== Stage 3: Builder ======
 FROM dev AS builder
 
-WORKDIR /var/www/html
-COPY . .
-
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
-RUN npm install --omit=dev
+# npm build for production assets can be done here.
 
 # ====== Stage 4: Prod ======
+# skips dev dependencies and build tools, copies pre-compiled dependencies from builder.
 FROM base AS prod
 
 ARG DEBIAN_FRONTEND=noninteractive
 
-# Package management - SPLIT for debugging
+# Package management
 RUN apt-get update
 RUN apt-get purge -y libxml2-dev libxslt-dev libzip-dev
 RUN apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip4
@@ -98,8 +99,6 @@ RUN rm -rf /var/lib/apt/lists/*
 RUN useradd -r -u 1000 -g www-data appuser
 RUN mkdir -p /var/www/html/xml /var/www/html/storage
 RUN chown -R appuser:www-data /var/www/html
-
-WORKDIR /var/www/html
 
 # Copy built assets
 COPY --from=builder --chown=appuser:www-data /var/www/html /var/www/html
