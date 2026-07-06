@@ -1365,8 +1365,10 @@ function processDates(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processKeywords(xmlDoc, resolver) {
+  // Collect all subject nodes from the XML
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
+  // Map each keyword group to its Tagify instance (if available)
   const tagifyMap = {
     free: document.querySelector("#input-freekeyword")?._tagify || null,
     msl: document.querySelector("#input-mslkeyword")?._tagify || null,
@@ -1377,6 +1379,7 @@ function processKeywords(xmlDoc, resolver) {
     gemet: document.querySelector("#input-gemet")?._tagify || null,
   };
 
+  // Keep only initialized Tagify fields
   const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
@@ -1384,6 +1387,7 @@ function processKeywords(xmlDoc, resolver) {
     return;
   }
 
+  // Clear existing tags before importing new ones
   allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
   function buildTagData(subjectNode) {
@@ -1413,6 +1417,7 @@ function processKeywords(xmlDoc, resolver) {
     };
   }
 
+  // Resolve which form group a subject belongs to
   function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
       return "gcmdScience";
@@ -1451,6 +1456,7 @@ function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
+    // Ignore keywords if the target form group is disabled
     if (!targetTagify) {
       continue;
     }
