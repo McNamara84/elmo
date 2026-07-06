@@ -1,4 +1,4 @@
-FROM dhi.io/mariadb:11
+FROM mariadb:11
 
 ENV TZ=Europe/Berlin
 
