@@ -1365,38 +1365,28 @@ function processDates(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processKeywords(xmlDoc, resolver) {
-  const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
-  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
-  const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-platforms");
-  const tagifyInputInstruments = document.querySelector("#input-instruments");
-  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
-  const tagifyInputGemet = document.querySelector("#input-gemet");
+  const tagifyMap = {
+    free: document.querySelector("#input-freekeyword")?._tagify || null,
+    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+    gcmdScience: document.querySelector("#input-sciencekeyword")?._tagify || null,
+    gcmdPlatforms: document.querySelector("#input-platforms")?._tagify || null,
+    gcmdInstruments: document.querySelector("#input-instruments")?._tagify || null,
+    chronostrat: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+    gemet: document.querySelector("#input-gemet")?._tagify || null,
+  };
 
-  // Always-present inputs
-  const tagifyInputMsl = document.querySelector("#input-mslkeyword");
-  const tagifyInputFree = document.querySelector("#input-freekeyword");
+  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
-  if (!tagifyInputFree?._tagify) {
-    console.error("Free keyword Tagify instance is not properly initialized.");
+  if (allTagifyInstances.length === 0) {
+    console.error("No Tagify instance is properly initialized.");
     return;
   }
 
-  const tagifyFree = tagifyInputFree._tagify;
-  const tagifyMsl = tagifyInputMsl?._tagify;
+  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
-  // Clear existing tags on all available inputs
-  tagifyFree.removeAllTags();
-  tagifyMsl?.removeAllTags();
-  tagifyInputGCMD?._tagify?.removeAllTags();
-  tagifyInputPlatforms?._tagify?.removeAllTags();
-  tagifyInputInstruments?._tagify?.removeAllTags();
-  tagifyInputChronostrat?._tagify?.removeAllTags();
-  tagifyInputGemet?._tagify?.removeAllTags();
-
-  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-    const subjectNode = subjectNodes.snapshotItem(i);
+  function buildTagData(subjectNode) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
     const schemeURI = subjectNode.getAttribute("schemeURI") || "";
     const valueURI = subjectNode.getAttribute("valueURI") || "";
@@ -1409,40 +1399,63 @@ function processKeywords(xmlDoc, resolver) {
       schemeURI: schemeURI,
       id: valueURI,
     };
+
     if (language) {
       tagData.language = language;
     }
 
-    // Route tag to appropriate Tagify instance based on schemeURI
+    return {
+      subjectScheme,
+      schemeURI,
+      valueURI,
+      keyword,
+      tagData,
+    };
+  }
+
+  function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (
-      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
-      subjectScheme === "International Chronostratigraphic Chart" ||
-      subjectScheme === "Chronostratigraphic Chart"
-    ) {
-      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (
-      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
-      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
-      subjectScheme?.includes("GEMET")
-    ) {
-      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      if (tagifyMsl) tagifyMsl.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else {
-      tagifyFree.addTags([tagData]);
+      return "gcmdScience";
     }
+
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
+      return "gcmdPlatforms";
+    }
+
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
+      return "gcmdInstruments";
+    }
+
+    if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
+      return "chronostrat";
+    }
+
+    if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/"
+    ) {
+      return "gemet";
+    }
+
+    if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
+      return "msl";
+    }
+
+    return "free";
+  }
+
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
+
+    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
+    const targetTagify = tagifyMap[targetGroup];
+
+    if (!targetTagify) {
+      continue;
+    }
+
+    targetTagify.addTags([tagData]);
   }
 }
 
