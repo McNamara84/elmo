@@ -700,4 +700,150 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
         });
     });
+
+    describe('processKeywords', () => {
+        const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
+        test('routes free keywords to the free keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+        `;
+
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject>Test Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(freeTagify.removeAllTags).toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Test Keyword' })
+            ]);
+        });
+
+        test('routes MSL keywords to the MSL keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-mslkeyword">
+        `;
+
+            const mslTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-mslkeyword')._tagify = mslTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://epos-msl.uu.nl/voc/laboratories/123">msl Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(mslTagify.removeAllTags).toHaveBeenCalled();
+            expect(mslTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'msl Keyword' })
+            ]);
+        });
+
+        test('routes GCMD science keywords to the science keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
+        });
+
+        test('routes chronostrat keywords to the chronostratigraphy field', () => {
+            document.body.innerHTML = `
+            <input id="input-chronostratigraphy">
+        `;
+
+            const chronostratTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-chronostratigraphy')._tagify = chronostratTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="http://resource.geosciml.org/vocabulary/timescale/gts2020">one > two > chronostratigraphy</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(chronostratTagify.removeAllTags).toHaveBeenCalled();
+            expect(chronostratTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'one > two > chronostratigraphy' })
+            ]);
+        });
+
+        test('ignores keywords when the target field is not available', () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+        `;
+
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                    <ns:subject>Custom Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(freeTagify.removeAllTags).toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledTimes(1);
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Custom Keyword' })
+            ]);
+        });
+    });
 });
