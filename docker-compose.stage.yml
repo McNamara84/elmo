@@ -71,6 +71,11 @@ services:
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      # Shared API responses cache: all variants see the same cached responses.
+      - api_cache_volume:/var/www/html/storage/cache
+      # Variant-specific drafts: keep each container's draft data isolated.
+      - web_drafts:/var/www/html/storage/drafts
 
   web-msl:
     build:
@@ -128,6 +133,9 @@ services:
       - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
       - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_msl_drafts:/var/www/html/storage/drafts
 
   web-gem:
     build:
@@ -186,6 +194,9 @@ services:
       - "traefik.http.middlewares.elmo-gem-stripprefix.stripprefix.prefixes=/elmo-gem"
       - "traefik.http.services.elmo-gem-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_gem_drafts:/var/www/html/storage/drafts
 
   web-igsn:
     build:
@@ -245,9 +256,17 @@ services:
       - "traefik.http.middlewares.elmo-igsn-stripprefix.stripprefix.prefixes=/elmo-igsn"
       - "traefik.http.services.elmo-igsn-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_igsn_drafts:/var/www/html/storage/drafts
 
 volumes:
   db_data:
+  api_cache_volume:
+  web_drafts:
+  web_msl_drafts:
+  web_gem_drafts:
+  web_igsn_drafts:
 
 networks:
   internal:
