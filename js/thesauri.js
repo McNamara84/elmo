@@ -349,6 +349,7 @@ function loadKeywordsForConfig(config, response) {
         const activeTagify = getActiveTagifyForState(state);
         if (!activeTagify || !activeTagify.value || !activeTagify.value.length) return;
 
+        // Sync jsTree selection from current Tagify values (store paths as a Set)
         state.selectedPaths = new Set(activeTagify.value.map(v => v.value));
 
         const tree = $(config.jsTreeId).jstree(true);
