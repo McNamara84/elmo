@@ -1383,7 +1383,7 @@ function processKeywords(xmlDoc, resolver) {
   const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
-    console.error("No Tagify instance is properly initialized.");
+    console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
     return;
   }
 
