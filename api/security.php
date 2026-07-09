@@ -188,8 +188,9 @@ function resetPageInteractionTime(string $scope = 'form'): void
 /**
  * Returns how many seconds have elapsed since the user loaded the current page.
  *
- * The timestamp is written to the session by resetPageInteractionTime() on every
- * full page load, so it always reflects the current visit.
+ * Pure read: does not create or reset the timer. The timestamp is written by
+ * resetPageInteractionTime() on page load or when evaluateInteractionTime()
+ * restores a missing session timer.
  *
  * @param string $scope Interaction scope (form or feedback)
  * @return float Elapsed seconds (sub-second precision), or 0.0 if not set
@@ -208,23 +209,51 @@ function getPageInteractionAgeSeconds(string $scope = 'form'): float
 }
 
 /**
+ * Ensures an interaction timer exists for the scope, seeding it when missing.
+ *
+ * Used when session state was lost (container restart, stale tab) so the first
+ * protected action can fail once and later retries succeed after the minimum wait.
+ *
+ * @param string $scope Interaction scope (form or feedback)
+ * @return bool True when the timer was missing and was just initialized
+ */
+function ensureInteractionTimer(string $scope = 'form'): bool
+{
+    ensureAppSession();
+
+    $normalizedScope = normalizeInteractionScope($scope);
+    $sessionKey = getInteractionStartSessionKey($normalizedScope);
+    if ((float) ($_SESSION[$sessionKey] ?? 0.0) > 0.0) {
+        return false;
+    }
+
+    resetPageInteractionTime($normalizedScope);
+
+    return true;
+}
+
+/**
  * Evaluates whether the server-measured page interaction time meets a minimum.
  *
  * Only the server-side session timer is used; client-reported values are
- * ignored to prevent manipulation.
+ * ignored to prevent manipulation. When the timer is missing, it is seeded
+ * before measuring so a retry after the minimum wait can succeed.
  *
  * @param float $minimumSeconds Required minimum interaction time in seconds
  * @param string $scope Interaction scope (form or feedback)
- * @return array{isValid: bool, effectiveSeconds: float, minimumSeconds: float}
+ * @return array{isValid: bool, effectiveSeconds: float, minimumSeconds: float, timerWasMissing: bool}
  */
 function evaluateInteractionTime(float $minimumSeconds, string $scope = 'form'): array
 {
-    $effectiveSeconds = getPageInteractionAgeSeconds($scope);
+    $normalizedScope = normalizeInteractionScope($scope);
+    $timerWasMissing = ensureInteractionTimer($normalizedScope);
+    $effectiveSeconds = getPageInteractionAgeSeconds($normalizedScope);
 
     return [
         'isValid' => $effectiveSeconds >= $minimumSeconds,
         'effectiveSeconds' => $effectiveSeconds,
         'minimumSeconds' => $minimumSeconds,
+        'timerWasMissing' => $timerWasMissing,
     ];
 }
 
@@ -328,10 +357,15 @@ function recordSessionRateLimit(string $action, int $windowSeconds = 3600): void
  *
  * @param string $operation High-level operation name (save, submit, ...)
  * @param string $reason Rejection reason
+ * @param bool $timerWasMissing When true, the interaction timer was just restored after missing session state — skip logging
  * @return void
  */
-function logSuspiciousAttempt(string $operation, string $reason): void
+function logSuspiciousAttempt(string $operation, string $reason, bool $timerWasMissing = false): void
 {
+    if ($timerWasMissing) {
+        return;
+    }
+
     $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
     $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
     $message = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe})";

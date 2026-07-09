@@ -109,7 +109,8 @@ function validateSubmitSecurity(array $postData): void {
     if (!$timeCheck['isValid']) {
         logSuspiciousAttempt(
             'submit',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)"
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
+            $timeCheck['timerWasMissing']
         );
         http_response_code(400);
         ob_clean();
