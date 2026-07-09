@@ -381,4 +381,116 @@ function logSuspiciousAttempt(string $operation, string $reason, bool $timerWasM
         error_log($message . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
     }
 }
+
+/**
+ * Validates all security checks for a given operation context and exits on failure.
+ *
+ * Handles honeypot, CSRF, rate limiting, and minimum interaction time in order.
+ * On success, records the rate-limit event and resets the interaction timer.
+ * All error responses use the format: {'success': false, 'message': '...'}.
+ *
+ * @param string $context One of 'feedback', 'save', or 'submit'
+ * @param array<string, mixed> $postData The POST data
+ * @return void Exits immediately on any security failure
+ */
+function validateRequestSecurity(string $context, array $postData): void
+{
+    $configs = [
+        'feedback' => [
+            'rateLimitMax'        => RATE_LIMIT_FEEDBACK_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_FEEDBACK_SECONDS,
+            'interactionScope'    => 'feedback',
+            'resetScope'          => 'feedback',
+            'tooFastMessage'      => 'Form filled out too quickly. Please take more time.',
+            'csrfHttpCode'        => 403,
+            'rateLimitHttpCode'   => 429,
+            'honeypotFakeSuccess' => true,
+        ],
+        'save' => [
+            'rateLimitMax'        => RATE_LIMIT_SAVE_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_SAVE_SECONDS,
+            'interactionScope'    => 'form',
+            'resetScope'          => 'form',
+            'tooFastMessage'      => 'Please take time to review your metadata before saving.',
+            'csrfHttpCode'        => 400,
+            'rateLimitHttpCode'   => 400,
+            'honeypotFakeSuccess' => false,
+        ],
+        'submit' => [
+            'rateLimitMax'        => RATE_LIMIT_SUBMIT_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_SUBMIT_SECONDS,
+            'interactionScope'    => 'form',
+            'resetScope'          => 'form',
+            'tooFastMessage'      => 'Please take time to review your submission before submitting.',
+            'csrfHttpCode'        => 400,
+            'rateLimitHttpCode'   => 400,
+            'honeypotFakeSuccess' => false,
+        ],
+    ];
+
+    $cfg = $configs[$context] ?? $configs['save'];
+
+    $flushBuffers = static function (): void {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+    };
+
+    // Check 1: Honeypot
+    if (!validateHoneypot($postData['website'] ?? '')) {
+        logSuspiciousAttempt($context, 'honeypot triggered');
+        $flushBuffers();
+        header('Content-Type: application/json');
+        if ($cfg['honeypotFakeSuccess']) {
+            // Silently return fake success to not alert the bot
+            echo json_encode(['success' => true, 'message' => 'Feedback successfully sent']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+        exit;
+    }
+
+    // Check 2: CSRF Token
+    if (!validateCsrfToken(getSubmittedCsrfToken($postData))) {
+        logSuspiciousAttempt($context, 'invalid csrf token');
+        http_response_code($cfg['csrfHttpCode']);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid request. Please reload the page and try again.']);
+        exit;
+    }
+
+    // Check 3: Rate limiting
+    if (!checkSessionRateLimit($context, $cfg['rateLimitMax'], RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($context, 'rate limit exceeded');
+        http_response_code($cfg['rateLimitHttpCode']);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Too many requests. Please try again later.']);
+        exit;
+    }
+
+    // Check 4: Minimum interaction time
+    $timeCheck = evaluateInteractionTime($cfg['minSeconds'], $cfg['interactionScope']);
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $context,
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
+            $timeCheck['timerWasMissing']
+        );
+        http_response_code(400);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        $message = $timeCheck['timerWasMissing']
+            ? 'Sorry, we had an issue with your session. Please try again. The page reload is not necessary.'
+            : $cfg['tooFastMessage'];
+        echo json_encode(['success' => false, 'message' => $message]);
+        exit;
+    }
+
+    // All checks passed — record rate limit and reset interaction timer
+    recordSessionRateLimit($context, RATE_LIMIT_WINDOW_SECONDS);
+    resetPageInteractionTime($cfg['resetScope']);
+}
 ?>

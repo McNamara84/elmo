@@ -68,65 +68,6 @@ function testGfzSmtpConnectivity(): bool {
 }
 
 /**
- * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
- * @param array<string, mixed> $postData POST data from form
- * @return void
- * @throws Exception if validation fails
- */
-function validateSubmitSecurity(array $postData): void {
-    // Check 1: Honeypot - Silent rejection
-    if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt('submit', 'honeypot triggered');
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Invalid submission detected.']);
-        exit;
-    }
-
-    // Check 2: CSRF Token validation
-    if (!validateCsrfToken(getSubmittedCsrfToken($postData))) {
-        logSuspiciousAttempt('submit', 'invalid csrf token');
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Security token validation failed.']);
-        exit;
-    }
-
-    // Check 3: Rate limiting
-    if (!checkSessionRateLimit('submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt('submit', 'rate limit exceeded');
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Too many submission attempts. Please try again later.']);
-        exit;
-    }
-
-    // Check 4: Minimum time spent (server-only)
-    $timeCheck = evaluateInteractionTime(MIN_INTERACTION_SUBMIT_SECONDS);
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            'submit',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
-            $timeCheck['timerWasMissing']
-        );
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Please take time to review your submission before submitting.']);
-        exit;
-    }
-    
-    // All checks passed — record rate limit and reset interaction timer
-    recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
-    resetPageInteractionTime('form');
-
-    error_log(sprintf("send_xml_file.php: Submit security validation passed | Time spent: %.1f seconds", $timeCheck['effectiveSeconds']));
-}
-
-/**
  * Convert weeks to priority text
  */
 function getPriorityText(?int $weeks): string {
@@ -379,18 +320,7 @@ try {
     error_log("send_xml_file.php: Try block started");
 
     // Step 0: Security Validation
-    try {
-        validateSubmitSecurity($_POST);
-    } catch (\Exception $e) {
-        logSuspiciousAttempt('submit', 'validation exception: ' . $e->getMessage());
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Security validation failed.']);
-        exit;
-    } finally {
-        resetPageInteractionTime('form'); // reset timing interaction to limit the next submission. 
-    }
+    validateRequestSecurity('submit', $_POST);
 
     // Capture and clean post values
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;

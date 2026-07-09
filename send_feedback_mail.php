@@ -16,20 +16,6 @@ include __DIR__ . '/settings.php';
 
 ensureAppSession();
 
-/**
- * Sends a JSON error response and exits.
- *
- * @param string $message The error message
- * @param int $httpCode The HTTP status code
- * @return void
- */
-function sendErrorResponse(string $message, int $httpCode = 429): void
-{
-    http_response_code($httpCode);
-    echo json_encode(['success' => false, 'message' => $message]);
-    exit;
-}
-
 function testGfzSmtpConnectivity(): bool {
     global $smtpHost, $smtpPort;
     
@@ -74,7 +60,7 @@ function sendFeedbackMail(
     error_log("ELMO Version for Feedback: {$elmoVersion}");
     // Network test before sending
     if (!testGfzSmtpConnectivity()) {
-        echo json_encode(['success' => false, 'message' => 'GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.']);
+        echo json_encode(['success' => false, 'message' => 'Sorry, we had an issue connecting to the Email SMTP server. You can reach out to us directly per email.']);
         return;
     }
     
@@ -180,42 +166,7 @@ function sendFeedbackMail(
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
     
-    // Security Check 1: Honeypot
-    if (!validateHoneypot($_POST['website'] ?? '')) {
-        // Silently reject but return fake success to not alert the bot
-        logSuspiciousAttempt('feedback', 'honeypot triggered');
-        echo json_encode(['success' => true, 'message' => 'Feedback erfolgreich gesendet!']);
-        exit;
-    }
-    
-    // Security Check 2: CSRF Token
-    $submittedToken = getSubmittedCsrfToken($_POST);
-    if (!validateCsrfToken($submittedToken)) {
-        logSuspiciousAttempt('feedback', 'invalid csrf token');
-        sendErrorResponse('Ungültige Anfrage. Bitte laden Sie die Seite neu und versuchen Sie es erneut.', 403);
-    }
-
-    // Security Check 3: Minimum interaction time (server-only)
-    $timeCheck = evaluateInteractionTime((float) MIN_INTERACTION_FEEDBACK_SECONDS, 'feedback');
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            'feedback',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
-            $timeCheck['timerWasMissing']
-        );
-        sendErrorResponse('Formular zu schnell ausgefüllt. Bitte nehmen Sie sich etwas mehr Zeit.', 400);
-    }
-    
-    // Security Check 4: Session-scoped rate limiting
-    if (!checkSessionRateLimit('feedback', RATE_LIMIT_FEEDBACK_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt('feedback', 'rate limit exceeded');
-        sendErrorResponse('Sie haben zu viele Anfragen gesendet. Bitte versuchen Sie es in einer Stunde erneut.', 429);
-    }
-    
-    // All security checks passed - record this submission and reset the interaction timer
-    // so the next send also requires MIN_INTERACTION_FEEDBACK_SECONDS to elapse.
-    recordSessionRateLimit('feedback', RATE_LIMIT_WINDOW_SECONDS);
-    resetPageInteractionTime('feedback');
+    validateRequestSecurity('feedback', $_POST);
 
     $feedbackQuestion1 = $_POST['feedbackQuestion1'] ?? '';
     $feedbackQuestion2 = $_POST['feedbackQuestion2'] ?? '';

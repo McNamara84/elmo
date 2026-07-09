@@ -33,67 +33,10 @@ if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
 }
 global $connection;
 
-// ===== Step 0: Security check  =====
-
-/**
- * Validates security checks for save operations.
- * 
- * @param array $postData The POST data
- * @return array {status: bool, message: string|null, code: int}
- */
-function validateSaveSecurity($postData): void
-{
-    // Security Check 1: Honeypot
-    if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt('save', 'honeypot triggered');
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Invalid request']);
-        exit;
-    }
-
-    // Security Check 2: CSRF Token validation
-    $submittedToken = getSubmittedCsrfToken($postData);
-    if (!validateCsrfToken($submittedToken)) {
-        logSuspiciousAttempt('save', 'invalid csrf token');
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Invalid request - CSRF token validation failed']);
-        exit;
-    }
-
-    // Security Check 3: Rate limiting
-    if (!checkSessionRateLimit('save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt('save', 'rate limit exceeded');
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Too many save requests. Please try again later.']);
-        exit;
-    }
-
-    // Security Check 4: Minimum interaction time (2 seconds for save, server-only)
-    $timeCheck = evaluateInteractionTime(MIN_INTERACTION_SAVE_SECONDS);
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            'save',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
-            $timeCheck['timerWasMissing']
-        );
-        http_response_code(400);
-        header('Content-Type: application/json');
-        echo json_encode(['error' => 'Please take time to review your metadata before saving.']);
-        exit;
-    }
-
-    // All checks passed — record rate limit and reset interaction timer
-    recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
-    resetPageInteractionTime('form');
-}
-
 // ========= EXECUTION PIPELINE =========
 
 // Step 0: Security Validation — exits on any failure
-validateSaveSecurity($_POST);
+validateRequestSecurity('save', $_POST);
 // ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
