@@ -201,6 +201,49 @@ class SecurityFunctionsTest extends TestCase
 
         $this->assertFalse($result['isValid']);
         $this->assertLessThan(2.0, $result['effectiveSeconds']);
+        $this->assertFalse($result['timerWasMissing']);
+    }
+
+    /**
+     * @test
+     */
+    public function evaluateInteractionTime_SeedsTimerWhenMissing(): void
+    {
+        $_SESSION = [];
+
+        $result = evaluateInteractionTime(3.0);
+
+        $this->assertFalse($result['isValid']);
+        $this->assertTrue($result['timerWasMissing']);
+        $this->assertLessThan(3.0, $result['effectiveSeconds']);
+        $this->assertArrayHasKey('interaction_start_time', $_SESSION);
+    }
+
+    /**
+     * @test
+     */
+    public function evaluateInteractionTime_AllowsRetryAfterTimerWasRestored(): void
+    {
+        $_SESSION = [];
+
+        evaluateInteractionTime(3.0);
+        $_SESSION['interaction_start_time'] = microtime(true) - 3.5;
+
+        $result = evaluateInteractionTime(3.0);
+
+        $this->assertTrue($result['isValid']);
+        $this->assertFalse($result['timerWasMissing']);
+    }
+
+    /**
+     * @test
+     */
+    public function getPageInteractionAgeSeconds_DoesNotSeedMissingTimer(): void
+    {
+        $_SESSION = [];
+
+        $this->assertSame(0.0, getPageInteractionAgeSeconds());
+        $this->assertArrayNotHasKey('interaction_start_time', $_SESSION);
     }
 
     /**
