@@ -45,7 +45,7 @@ test.describe('Submit Operation Security Features', () => {
   test('submit modal exposes honeypot + CSRF fields and honeypot starts empty', async ({ page }) => {
     const { submitModal, csrfField } = await openSubmitModal(page);
 
-    const honeypotField = submitModal.locator('input[name="website"]').first();
+    const honeypotField = submitModal.locator('#input-submit-please-fill-in-this-field');
     await expect(honeypotField).toHaveAttribute('tabindex', '-1');
     await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
     await expect(honeypotField).toHaveValue('');
@@ -107,7 +107,7 @@ test.describe('Submit Operation Security Features', () => {
   test('backend rejects submit when modal honeypot field is filled', async ({ page }) => {
     const { submitModal } = await openSubmitModal(page);
 
-    const honeypot = submitModal.locator('input[name="website"]').first();
+    const honeypot = submitModal.locator('#input-submit-please-fill-in-this-field');
     await honeypot.waitFor({ state: 'attached' });
 
     // Wait 3+ seconds from page load for server-side minimum interaction time.
@@ -130,7 +130,7 @@ test.describe('Submit Operation Security Features', () => {
 
   test('backend rejects submit when main-form honeypot field is filled', async ({ page }) => {
     await completeMinimalDatasetForm(page);
-    await page.locator('#input-information-website').fill('I am a bot');
+    await page.locator('#input-please-fill-in-this-field').fill('I am a bot');
 
     await page.locator('#button-form-submit').click();
     await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });

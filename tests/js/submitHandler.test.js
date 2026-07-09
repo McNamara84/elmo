@@ -752,10 +752,10 @@ describe('submitHandler.js', () => {
         document.getElementById('input-csrf-token').value = '';
       }
 
-      if (!document.getElementById('input-information-website')) {
+      if (!document.getElementById('input-please-fill-in-this-field')) {
         document.body.insertAdjacentHTML(
           'beforeend',
-          '<input type="hidden" id="input-information-website" name="website" value="">'
+          '<input type="hidden" id="input-please-fill-in-this-field" name="please-fill-in-this-field" value="">'
         );
       }
 
@@ -770,10 +770,10 @@ describe('submitHandler.js', () => {
       }
 
       const modalSubmit = document.getElementById('modal-submit');
-      if (modalSubmit && !modalSubmit.querySelector('input[name="website"]')) {
+      if (modalSubmit && !document.getElementById('input-submit-please-fill-in-this-field')) {
         modalSubmit.insertAdjacentHTML(
           'beforeend',
-          '<input type="hidden" name="website" value="">'
+          '<input type="hidden" id="input-submit-please-fill-in-this-field" name="please-fill-in-this-field" value="">'
         );
       }
 

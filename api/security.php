@@ -157,6 +157,17 @@ function getSubmittedCsrfToken(array $requestData): string
 }
 
 /**
+ * Returns the honeypot field value from POST data.
+ *
+ * @param array<string, mixed> $requestData
+ * @return string
+ */
+function getSubmittedHoneypotValue(array $requestData): string
+{
+    return (string) ($requestData['please-fill-in-this-field'] ?? '');
+}
+
+/**
  * Validates the honeypot field to detect bots.
  * Honeypot should be empty for legitimate users.
  *
@@ -437,7 +448,7 @@ function validateRequestSecurity(string $context, array $postData): void
     };
 
     // Check 1: Honeypot
-    if (!validateHoneypot($postData['website'] ?? '')) {
+    if (!validateHoneypot(getSubmittedHoneypotValue($postData))) {
         logSuspiciousAttempt($context, 'honeypot triggered');
         $flushBuffers();
         header('Content-Type: application/json');

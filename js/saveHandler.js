@@ -43,7 +43,7 @@ class SaveHandler {
         this.currentFormat = 'xml';
         
         // Security fields
-        this.$honeypotField = $('#input-information-website');
+        this.$honeypotField = $('#input-please-fill-in-this-field');
         
         this.initializeEventListeners();
     }
@@ -211,7 +211,10 @@ class SaveHandler {
             const csrfToken = await fetchAndStoreCsrfToken('form');
 
             formData.set('csrf-token', csrfToken);
-            formData.append('website', this.$honeypotField.val());
+            const honeypotEl = this.$honeypotField[0];
+            if (honeypotEl?.name) {
+                formData.append(honeypotEl.name, this.$honeypotField.val());
+            }
             formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');
 

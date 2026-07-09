@@ -251,8 +251,8 @@ class SubmitHandler {
         this.autosaveService = autosaveService;
 
         // Security field references
-        this.$mainHoneypotField = $('#input-information-website');
-        this.$modalHoneypotField = $('#modal-submit input[name="website"]').first();
+        this.$mainHoneypotField = $('#input-please-fill-in-this-field');
+        this.$modalHoneypotField = $('#input-submit-please-fill-in-this-field');
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -422,7 +422,10 @@ class SubmitHandler {
                 modalHoneypot = String(element.value).trim();
             }
         }
-        submitData.set('website', mainHoneypot || modalHoneypot);
+        const honeypotField = this.$mainHoneypotField[0] || this.$modalHoneypotField[0];
+        if (honeypotField?.name) {
+            submitData.set(honeypotField.name, mainHoneypot || modalHoneypot);
+        }
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());

@@ -280,6 +280,21 @@ class SecurityFunctionsTest extends TestCase
         );
     }
 
+    /**
+     * @test
+     */
+    public function getSubmittedHoneypotValue_ReadsConfiguredFieldName(): void
+    {
+        $this->assertSame(
+            '',
+            getSubmittedHoneypotValue(['please-fill-in-this-field' => ''])
+        );
+        $this->assertSame(
+            'bot',
+            getSubmittedHoneypotValue(['please-fill-in-this-field' => 'bot'])
+        );
+    }
+
     // ========== Honeypot Tests ==========
 
     /**

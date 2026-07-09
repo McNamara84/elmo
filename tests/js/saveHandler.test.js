@@ -43,7 +43,7 @@ describe('saveHandler.js', () => {
         <input id="input-date-created">
         <input id="input-date-embargo">
         <input id="input-csrf-token" name="csrf-token" value="">
-        <input id="input-information-website">
+        <input id="input-please-fill-in-this-field" name="please-fill-in-this-field">
         <div class="embargo-invalid"></div>
         <div id="group-author">
           <input type="checkbox" name="contacts[]" value="1">

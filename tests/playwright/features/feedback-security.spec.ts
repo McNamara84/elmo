@@ -41,7 +41,7 @@ test.describe('Feedback Security Features', () => {
     test('honeypot field exists but is hidden from view', async ({ page }) => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
-      const honeypotField = feedbackModal.locator('input[name="website"]');
+      const honeypotField = feedbackModal.locator('#input-feedback-please-fill-in-this-field');
       await expect(honeypotField).toBeAttached();
 
       const honeypotContainer = honeypotField.locator('..');
@@ -57,7 +57,7 @@ test.describe('Feedback Security Features', () => {
     test('honeypot field has correct attributes to prevent autofill', async ({ page }) => {
       const { feedbackModal } = await navigateToFeedbackModal(page);
 
-      const honeypotField = feedbackModal.locator('input[name="website"]');
+      const honeypotField = feedbackModal.locator('#input-feedback-please-fill-in-this-field');
       await expect(honeypotField).toHaveAttribute('tabindex', '-1');
       await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
     });
@@ -218,8 +218,8 @@ test.describe('Feedback Security Features', () => {
       ]);
 
       expect(capturedFields).toHaveProperty('csrf-token');
-      expect(capturedFields).toHaveProperty('website');
-      expect(capturedFields['website']).toBe('');
+      expect(capturedFields).toHaveProperty('please-fill-in-this-field');
+      expect(capturedFields['please-fill-in-this-field']).toBe('');
       expect(capturedFields['csrf-token'].length).toBeGreaterThan(0);
       expect(capturedFields).not.toHaveProperty('feedback_time_spent');
 

@@ -36,9 +36,8 @@ test.describe('Save Operation Security Features', () => {
     test('main form honeypot exists and starts empty', async ({ page }) => {
       await navigateToHome(page);
 
-      // Included from formgroups/honeypot.html — saveHandler reads #input-information-website
-      const honeypotField = page.locator('#input-information-website');
-      await expect(honeypotField).toHaveAttribute('name', 'website');
+      const honeypotField = page.locator('#input-please-fill-in-this-field');
+      await expect(honeypotField).toHaveAttribute('name', 'please-fill-in-this-field');
       await expect(honeypotField).toHaveAttribute('tabindex', '-1');
       await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
       await expect(honeypotField).toHaveValue('');
@@ -47,7 +46,7 @@ test.describe('Save Operation Security Features', () => {
     test('honeypot value is not cleared when save modal opens', async ({ page }) => {
       await navigateToHome(page);
 
-      const honeypot = page.locator('#input-information-website');
+      const honeypot = page.locator('#input-please-fill-in-this-field');
       await honeypot.fill('bot-filled-value');
 
       await openSaveModal(page);
@@ -60,7 +59,7 @@ test.describe('Save Operation Security Features', () => {
       await page.route(SAVE_ENDPOINT, async (route) => {
         const bodyBuffer = route.request().postDataBuffer();
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
-        submittedWebsite = extractMultipartField(body, 'website') || '';
+        submittedWebsite = extractMultipartField(body, 'please-fill-in-this-field') || '';
 
         const responseStatus = submittedWebsite ? 400 : 200;
         await route.fulfill({
@@ -74,7 +73,7 @@ test.describe('Save Operation Security Features', () => {
 
       await navigateToHome(page);
 
-      const honeypot = page.locator('#input-information-website');
+      const honeypot = page.locator('#input-please-fill-in-this-field');
       await honeypot.fill('bot-value');
       await openSaveModal(page);
 
@@ -123,7 +122,7 @@ test.describe('Save Operation Security Features', () => {
       ]);
 
       expect(capturedBody).toContain('name="csrf-token"');
-      expect(capturedBody).toContain('name="website"');
+      expect(capturedBody).toContain('name="please-fill-in-this-field"');
       expect(extractMultipartField(capturedBody, 'csrf-token')).toBeTruthy();
       // Timing is server-only — client must NOT send save_time_spent
       expect(capturedBody).not.toContain('name="save_time_spent"');
@@ -231,7 +230,7 @@ test.describe('Save Operation Security Features', () => {
         const bodyBuffer = route.request().postDataBuffer();
         const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
 
-        const honeypot = extractMultipartField(body, 'website') || '';
+        const honeypot = extractMultipartField(body, 'please-fill-in-this-field') || '';
         const csrfToken = extractMultipartField(body, 'csrf-token') || '';
         const isValid = honeypot === '' && csrfToken.length > 0;
 
@@ -245,7 +244,7 @@ test.describe('Save Operation Security Features', () => {
       });
 
       await navigateToHome(page);
-      await expect(page.locator('#input-information-website')).toHaveValue('');
+      await expect(page.locator('#input-please-fill-in-this-field')).toHaveValue('');
       await openSaveModal(page);
 
       await Promise.all([
