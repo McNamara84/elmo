@@ -14,10 +14,22 @@ async function commitSave(page: import('@playwright/test').Page, filename: strin
   const filenameField = page.locator('#input-saveas-filename');
   await filenameField.fill(filename);
 
+  const csrfField = page.locator('#input-csrf-token');
+
+  // Wait for the full save flow — not just the CSRF request start. The token is
+  // written to the field only after csrf_token.php responds; save_data.php must
+  // also finish before the handler completes.
   await Promise.all([
-    page.waitForRequest((request) => request.url().includes('csrf_token.php')),
+    page.waitForResponse((response) =>
+      response.url().includes('csrf_token.php') && response.ok()
+    ),
+    page.waitForResponse((response) =>
+      response.url().includes('save_data.php') && response.request().method() === 'POST'
+    ),
     page.locator('#button-saveas-save').click(),
   ]);
+
+  await expect(csrfField).not.toHaveValue('');
 }
 
 test.describe('CSRF token on demand', () => {
