@@ -102,7 +102,7 @@ test.describe('Submit Operation Security Features', () => {
     expect(response.status()).toBe(400);
     const payload = await response.json();
     expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Security token validation failed');
+    expect(payload.message).toBe('Invalid request. Please reload the page and try again.');
   });
   test('backend rejects submit when modal honeypot field is filled', async ({ page }) => {
     const { submitModal } = await openSubmitModal(page);
@@ -125,7 +125,7 @@ test.describe('Submit Operation Security Features', () => {
     expect(response.status()).toBe(400);
     const payload = await response.json();
     expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Invalid submission detected');
+    expect(payload.message).toBe('Invalid request.');
   });
 
   test('backend rejects submit when main-form honeypot field is filled', async ({ page }) => {
@@ -148,7 +148,7 @@ test.describe('Submit Operation Security Features', () => {
     expect(response.status()).toBe(400);
     const payload = await response.json();
     expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Invalid submission detected');
+    expect(payload.message).toBe('Invalid request.');
   });
 
   test('submit POST does not include client-side time_spent field', async ({ page }) => {
