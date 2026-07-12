@@ -1,3 +1,4 @@
+import { parseGfcFiles } from '../../fileUpload.js';
 /**
  * @fileOverview This script handles the conditional visibility of reference system fields
  * in the GGMs Technical form group based on mathematical representation selection.
@@ -188,3 +189,42 @@ function initializeTechnicalFields() {
 
 // Export function for potential use by other modules
 window.initializeTechnicalFields = initializeTechnicalFields;
+
+
+/**
+ * 
+ * @param {*} file 
+ * according to the format description, product_type 1 "gravity_field"
+modelname 1 name of the model (usually the respective filename without the extension
+“.gfc”)
+earth_gravity_constant 1 gravitational constant times mass of the earth [m3s-2]
+radius 1 reference radius of the spherical harmonic development [m]
+max_degree 1 maximum degree of the spherical harmonic development
+errors 1 either "no", "calibrated", “formal” or both "calibrated_and_formal" errors
+are included
+end_of_head 0 The position of this keyword defines the end of the header
+Case dependent keywords number of
+parameters meaning of parameters
+format 1
+“icgem1.0” or “icgem2.0”
+This parameter with the value “icgem2.0” is mandatory in case the time
+variable coefficients gfct and the associated parameters trnd, asin
+respective acos are given piecewise for dedicated periods. Otherwise, this
+parameter is optional and may be given with the value “icgem1.0”
+optional keywords number of
+parameters meaning of parameters
+begin_of_head 0 The position of this keyword indicates the begin of the header section.
+All preceding lines are comments.
+tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (default)
+norm 1 either "fully_normalized" (=default) or "unnormalized"
+ */
+async function populateParsedFields(file) {
+    const parser = new GFCParser();
+    const parsedHeader = await parser.parseGfcFiles(file);
+    // populate the form fields based on the file header
+    $('#input-tide-system').val(parsedHeader.header['tide-system'] || '');
+    $('#input-degree').val(parsedHeader.header['degree'] || '');
+    $('#input-errors').val(parsedHeader.header['errors'] || '').triggerChange();
+    $('#input-radius').val(parsedHeader.header['radius'] || '');
+    $('#input-earth-gravity-constant').val(parsedHeader.header['earth-gravity-constant'] || '');
+}
