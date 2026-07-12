@@ -7,31 +7,34 @@ class Parser {
         const fileExtension = fileName.split('.').pop().toLowerCase();
         return { name: fileName, extension: fileExtension };
     }
-    // stri
-    limitFileSize(file, maxSizeInMB, strict = true) {
-        if (file.size > maxSizeInMB * 1024 * 1024) {
-            if (strict) {
-                throw new Error(`File size exceeds the limit of ${maxSizeInMB} MB.`);
-            } else {
-                return false;
-            }
-        }
-        return true;
-    }
 
-    // Return a Promise instead of taking a callback
-    readFile(file) {
+
+    readFile(file, maxSizeInMB = 1, strict = true) {
         return new Promise((resolve, reject) => {
-            // Create a NEW reader per file to avoid shared-state bugs
             const reader = new FileReader();
             
-            // Resolve the promise when successful
             reader.onload = (event) => resolve(event.target.result);
-            
-            // Reject the promise on failure
             reader.onerror = (event) => reject(new Error(`Error reading file: ${event.target.error}`));
             
-            reader.readAsText(file);
+            let blobToRead = file;
+
+            // If a size limit is provided, handle the strict/non-strict logic
+            if (maxSizeInMB) {
+                const maxBytes = maxSizeInMB * 1024 * 1024;
+                
+                if (file.size > maxBytes) {
+                    if (strict) {
+                        // Use reject() inside a Promise instead of throw
+                        return reject(new Error(`File size exceeds the limit of ${maxSizeInMB} MB.`));
+                    } else {
+                        // The magic happens here: gently ignore the rest of the file
+                        blobToRead = file.slice(0, maxBytes);
+                    }
+                }
+            }
+            
+            // readAsText works perfectly on sliced Blobs
+            reader.readAsText(blobToRead);
         });
     }
 }
@@ -50,7 +53,6 @@ class CSVParser extends Parser {
         }
 
         // READ
-        // We pause execution here until the Promise resolves
         const text = await this.readFile(file); 
         
         // PARSE
@@ -78,8 +80,7 @@ class GFCParser extends Parser {
     async parseGfcFiles(file) {
         try {
             // 1. Read the file contents as text
-            const text = await this.readFile(file);
-            
+            const text = await this.readFile(file, strict = false);
             // 2. Split the text into an array of lines (handling both \r\n and \n)
             const lines = text.split(/\r?\n/);
             
