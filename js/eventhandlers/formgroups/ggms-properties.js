@@ -1,4 +1,4 @@
-import { parseGfcFiles } from '../../fileUpload.js';
+import { parseGfcFiles, extractSections, parseRecords } from '../../fileUpload.js';
 /**
  * @fileOverview This script handles the conditional visibility of reference system fields
  * in the GGMs Technical form group based on mathematical representation selection.
@@ -190,7 +190,28 @@ function initializeTechnicalFields() {
 // Export function for potential use by other modules
 window.initializeTechnicalFields = initializeTechnicalFields;
 
+// FUNCTIONALITY FOR AUTO POPULATING this form group from a file or text
 
+getHeaderFromFile = async function(file) {
+    try {
+        const parsedData = await parseGfcFiles(file);
+        return parsedData.header;
+    } catch (error) {
+        console.error("Error parsing GFC file:", error);
+        throw error;
+    }
+};
+
+getHeaderFromText = async function(text) {
+    try {
+        const lines = text.split(/\r?\n/);
+        const { headerLines } = extractSections(lines);
+        return parseRecords(headerLines);
+    } catch (error) {
+        console.error("Error parsing GFC text:", error);
+        throw error;
+    }
+};
 /**
  * 
  * @param {*} file 
@@ -218,13 +239,13 @@ All preceding lines are comments.
 tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (default)
 norm 1 either "fully_normalized" (=default) or "unnormalized"
  */
-async function populateParsedFields(file) {
+async function populateParsedFields(dict) {
     const parser = new GFCParser();
-    const parsedHeader = await parser.parseGfcFiles(file);
+    
     // populate the form fields based on the file header
-    $('#input-tide-system').val(parsedHeader.header['tide-system'] || '');
-    $('#input-degree').val(parsedHeader.header['degree'] || '');
-    $('#input-errors').val(parsedHeader.header['errors'] || '').triggerChange();
-    $('#input-radius').val(parsedHeader.header['radius'] || '');
-    $('#input-earth-gravity-constant').val(parsedHeader.header['earth-gravity-constant'] || '');
+    $('#input-tide-system').val(dict['tide-system'] || '');
+    $('#input-degree').val(dict['degree'] || '');
+    $('#input-errors').val(dict['errors'] || '').triggerChange();
+    $('#input-radius').val(dict['radius'] || '');
+    $('#input-earth-gravity-constant').val(dict['earth-gravity-constant'] || '');
 }
