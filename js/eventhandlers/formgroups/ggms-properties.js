@@ -122,6 +122,85 @@ function updateReferenceSystemVisibility() {
 }
 
 
+// FUNCTIONALITY FOR AUTO POPULATING this form group from a file or text
+
+async function getHeaderFromFile(file) {
+    try {
+        const parsedData = await parseGfcFiles(file);
+        return parsedData.header;
+    } catch (error) {
+        console.error("Error parsing GFC file:", error);
+        throw error;
+    }
+}
+
+async function getHeaderFromText(text) {
+    try {
+        const lines = text.split(/\r?\n/);
+        const { headerLines } = extractSections(lines);
+        const linesToParse = headerLines.length > 0 ? headerLines : lines;
+        return parseRecords(linesToParse);
+    } catch (error) {
+        console.error("Error parsing GFC text:", error);
+        throw error;
+    }
+}
+
+async function mergeGfcHeaders(file, text) {
+    let header = {};
+    if (file) {
+        header = await getHeaderFromFile(file);
+    }
+    if (text) {
+        header = { ...header, ...(await getHeaderFromText(text)) };
+    }
+    return header;
+}
+
+/**
+ * 
+ * @param {*} file 
+ * according to the format description, product_type 1 "gravity_field"
+modelname 1 name of the model (usually the respective filename without the extension
+“.gfc”)
+earth_gravity_constant 1 gravitational constant times mass of the earth [m3s-2]
+radius 1 reference radius of the spherical harmonic development [m]
+max_degree 1 maximum degree of the spherical harmonic development
+errors 1 either "no", "calibrated", “formal” or both "calibrated_and_formal" errors
+are included
+end_of_head 0 The position of this keyword defines the end of the header
+Case dependent keywords number of
+parameters meaning of parameters
+format 1
+“icgem1.0” or “icgem2.0”
+This parameter with the value “icgem2.0” is mandatory in case the time
+variable coefficients gfct and the associated parameters trnd, asin
+respective acos are given piecewise for dedicated periods. Otherwise, this
+parameter is optional and may be given with the value “icgem1.0”
+optional keywords number of
+parameters meaning of parameters
+begin_of_head 0 The position of this keyword indicates the begin of the header section.
+All preceding lines are comments.
+tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (default)
+norm 1 either "fully_normalized" (=default) or "unnormalized"
+ */
+async function populateParsedFields(dict) {
+    // populate the form fields based on the file header
+    if (dict.tide_system) {
+        const tideMap = { zero_tide: 'Zero-tide', tide_free: 'Tide-free', mean_tide: 'Mean-tide' };
+        const tideKey = dict.tide_system.trim().toLowerCase().replace(/-/g, '_');
+        $('#input-tide-system').val(tideMap[tideKey] || '');
+    }
+    $('#input-degree').val(dict.max_degree || dict.degree || '');
+    const errors = (dict.errors || '').trim().toLowerCase();
+    if (errors && errors !== 'n/a') {
+        $('#input-errors').val(errors === 'calibrated_and_formal' ? 'calibrated' : errors).trigger('change');
+    }
+    $('#input-radius').val(dict.radius || '');
+    $('#input-earth-gravity-constant').val(dict.earth_gravity_constant || '');
+}
+
+
 // Initialize when document is ready
 $(document).ready(function() {
     // validate scientific notation inputs    
@@ -191,13 +270,7 @@ $(document).ready(function() {
         }
 
         try {
-            let header = {};
-            if (file) {
-                header = await getHeaderFromFile(file);
-            }
-            if (text) {
-                header = { ...header, ...(await getHeaderFromText(text)) };
-            }
+            const header = await mergeGfcHeaders(file, text);
             populateParsedFields(header);
             $('#modal-ggms-gfc-upload').modal('hide');
         } catch (error) {
@@ -252,68 +325,7 @@ function initializeTechnicalFields() {
 
 // Export function for potential use by other modules
 window.initializeTechnicalFields = initializeTechnicalFields;
-
-// FUNCTIONALITY FOR AUTO POPULATING this form group from a file or text
-
-getHeaderFromFile = async function(file) {
-    try {
-        const parsedData = await parseGfcFiles(file);
-        return parsedData.header;
-    } catch (error) {
-        console.error("Error parsing GFC file:", error);
-        throw error;
-    }
-};
-
-getHeaderFromText = async function(text) {
-    try {
-        const lines = text.split(/\r?\n/);
-        const { headerLines } = extractSections(lines);
-        const linesToParse = headerLines.length > 0 ? headerLines : lines;
-        return parseRecords(linesToParse);
-    } catch (error) {
-        console.error("Error parsing GFC text:", error);
-        throw error;
-    }
-};
-/**
- * 
- * @param {*} file 
- * according to the format description, product_type 1 "gravity_field"
-modelname 1 name of the model (usually the respective filename without the extension
-“.gfc”)
-earth_gravity_constant 1 gravitational constant times mass of the earth [m3s-2]
-radius 1 reference radius of the spherical harmonic development [m]
-max_degree 1 maximum degree of the spherical harmonic development
-errors 1 either "no", "calibrated", “formal” or both "calibrated_and_formal" errors
-are included
-end_of_head 0 The position of this keyword defines the end of the header
-Case dependent keywords number of
-parameters meaning of parameters
-format 1
-“icgem1.0” or “icgem2.0”
-This parameter with the value “icgem2.0” is mandatory in case the time
-variable coefficients gfct and the associated parameters trnd, asin
-respective acos are given piecewise for dedicated periods. Otherwise, this
-parameter is optional and may be given with the value “icgem1.0”
-optional keywords number of
-parameters meaning of parameters
-begin_of_head 0 The position of this keyword indicates the begin of the header section.
-All preceding lines are comments.
-tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (default)
-norm 1 either "fully_normalized" (=default) or "unnormalized"
- */
-async function populateParsedFields(dict) {
-    // populate the form fields based on the file header
-    if (dict.tide_system) {
-        const tideMap = { zero_tide: 'Zero-tide', tide_free: 'Tide-free', mean_tide: 'Mean-tide' };
-        $('#input-tide-system').val(tideMap[dict.tide_system.trim().toLowerCase()] || '');
-    }
-    $('#input-degree').val(dict.max_degree || dict.degree || '');
-    const errors = (dict.errors || '').trim().toLowerCase();
-    if (errors && errors !== 'n/a') {
-        $('#input-errors').val(errors === 'calibrated_and_formal' ? 'calibrated' : errors).trigger('change');
-    }
-    $('#input-radius').val(dict.radius || '');
-    $('#input-earth-gravity-constant').val(dict.earth_gravity_constant || '');
-}
+window.getHeaderFromFile = getHeaderFromFile;
+window.getHeaderFromText = getHeaderFromText;
+window.mergeGfcHeaders = mergeGfcHeaders;
+window.populateParsedFields = populateParsedFields;
