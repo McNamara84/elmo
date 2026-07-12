@@ -75,7 +75,7 @@ class GFCParser extends Parser {
      * 
      * @param {File} file - The file object from an HTML input
      */
-    async parse(file) {
+    async parseGfcFiles(file) {
         try {
             // 1. Read the file contents as text
             const text = await this.readFile(file);
@@ -110,7 +110,13 @@ class GFCParser extends Parser {
         for (let i = 0; i < lines.length; i++) {
             const line = lines[i];
             const strippedLine = line.trim();
-
+            line = line.replace(/={4,}|-{4,}/g, ""); // Remove lines with 4 or more '=' or '-'
+            
+            if (strippedLine.startsWith("modelname")) {
+                inHeader = true;
+                headerLines.push(line)
+                continue;
+            }
             if (strippedLine.startsWith("begin_of_head")) {
                 inHeader = true;
                 continue;
@@ -135,30 +141,6 @@ class GFCParser extends Parser {
         return { headerLines, commentLines };
     }
 
-    handleMissingHead(lines) {
-        let headerLines = [];
-        let commentLines = [];
-        
-        // Regex: starts with 1+ word characters, followed by 3+ spaces
-        const headerPattern = /^\w+\s{3,}/;
-
-        for (const line of lines) {
-            const strippedLine = line.trim();
-
-            if (strippedLine.startsWith("key")) {
-                break;
-            }
-
-            if (headerPattern.test(strippedLine)) {
-                headerLines.push(line);
-            } else {
-                commentLines.push(this.cleanComment(line));
-            }
-        }
-
-        return { headerLines, commentLines };
-    }
-
     parseRecords(lines) {
         const records = {};
 
@@ -168,9 +150,6 @@ class GFCParser extends Parser {
             if (stripped.startsWith("#") || !stripped) {
                 continue;
             }
-
-            // JavaScript doesn't have Python's `split(maxsplit=1)`.
-            // Instead, we use a regex to capture the first word, and everything after it.
             // Match group 1 (\S+): The keyword
             // Match group 2 (.*): The parameters
             const match = stripped.match(/^(\S+)\s*(.*)$/);
@@ -183,28 +162,5 @@ class GFCParser extends Parser {
         }
 
         return records;
-    }
-
-    retrieveDOIs(comment) {
-        // Regex to find DOIs with the global flag 'g' to find all matches
-        const doiPattern = /\b(?:https:\/\/doi\.org\/|doi)\S+/g;
-        const matches = comment.match(doiPattern) || [];
-        
-        // Clean up trailing punctuation (JS equivalent of rstrip)
-        const cleanedDois = matches.map(doi => doi.replace(/[.)!/]+$/, ''));
-        
-        // Format into XML-like strings
-        const doisTags = cleanedDois.map(doi => `<DOI>${doi}</DOI>`).join("");
-        
-        return `<DOIs>${doisTags}</DOIs>`;
-    }
-
-    cleanComment(comment) {
-        // Remove structural dividers
-        let cleaned = comment.replace(/(===+|---+|\*\*\*+)/g, '');
-        // Replace commas with semicolons
-        cleaned = cleaned.replace(/,/g, ';');
-        
-        return cleaned;
     }
 }
