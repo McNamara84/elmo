@@ -108,13 +108,13 @@ class GFCParser extends Parser {
         let inHeader = false;
 
         for (let i = 0; i < lines.length; i++) {
-            const line = lines[i];
+            let line = lines[i];
             const strippedLine = line.trim();
-            line = line.replace(/={4,}|-{4,}/g, ""); // Remove lines with 4 or more '=' or '-'
-            
+            line = line.replace(/={4,}|-{4,}/g, "");
+
             if (strippedLine.startsWith("modelname")) {
                 inHeader = true;
-                headerLines.push(line)
+                headerLines.push(line);
                 continue;
             }
             if (strippedLine.startsWith("begin_of_head")) {
@@ -130,7 +130,7 @@ class GFCParser extends Parser {
                 }
                 continue;
             }
-            
+
             if (inHeader) {
                 headerLines.push(line);
             } else {
@@ -141,26 +141,85 @@ class GFCParser extends Parser {
         return { headerLines, commentLines };
     }
 
+    handleMissingHead(lines) {
+        let headerLines = [];
+        let commentLines = [];
+        let inHeader = false;
+
+        for (let i = 0; i < lines.length; i++) {
+            let line = lines[i];
+            const strippedLine = line.trim();
+            line = line.replace(/={4,}|-{4,}/g, "");
+
+            if (strippedLine.startsWith("key")) {
+                break;
+            }
+
+            if (
+                strippedLine.startsWith("begin_of_head") ||
+                strippedLine.startsWith("modelname") ||
+                strippedLine.startsWith("product_type")
+            ) {
+                inHeader = true;
+            }
+
+            if (strippedLine.startsWith("begin_of_head")) {
+                continue;
+            }
+
+            if (inHeader && strippedLine) {
+                headerLines.push(line);
+            } else if (!inHeader) {
+                commentLines.push(this.cleanComment(line));
+            }
+        }
+
+        return { headerLines, commentLines };
+    }
+
+    cleanComment(line) {
+        const trimmed = line.trim();
+        if (!trimmed) {
+            return '';
+        }
+        return `${trimmed}\n`;
+    }
+
     parseRecords(lines) {
         const records = {};
 
         for (const line of lines) {
             const stripped = line.trim();
-            
+
             if (stripped.startsWith("#") || !stripped) {
                 continue;
             }
-            // Match group 1 (\S+): The keyword
-            // Match group 2 (.*): The parameters
+
             const match = stripped.match(/^(\S+)\s*(.*)$/);
-            
+
             if (match) {
                 const keyword = match[1];
                 const parameters = match[2] || "";
-                records[keyword] = parameters;
+                records[keyword] = parameters.trim();
             }
         }
 
         return records;
     }
 }
+
+const gfcParser = new GFCParser();
+
+export async function parseGfcFiles(file) {
+    return gfcParser.parseGfcFiles(file);
+}
+
+export function extractSections(lines) {
+    return gfcParser.extractSections(lines);
+}
+
+export function parseRecords(lines) {
+    return gfcParser.parseRecords(lines);
+}
+
+export { GFCParser, CSVParser, Parser };
