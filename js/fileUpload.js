@@ -80,7 +80,7 @@ class GFCParser extends Parser {
     async parseGfcFiles(file) {
         try {
             // 1. Read the file contents as text
-            const text = await this.readFile(file, strict = false);
+            const text = await this.readFile(file, 1, false);
             // 2. Split the text into an array of lines (handling both \r\n and \n)
             const lines = text.split(/\r?\n/);
             
