@@ -110,7 +110,7 @@ class GFCParser extends Parser {
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
             const strippedLine = line.trim();
-            line = line.replace(/={4,}|-{4,}/g, "");
+            line = line.replace(/={4,}|-{4,}/g, ""); // Remove lines with 4 or more '=' or '-'
 
             if (strippedLine.startsWith("modelname")) {
                 inHeader = true;
@@ -149,7 +149,7 @@ class GFCParser extends Parser {
         for (let i = 0; i < lines.length; i++) {
             let line = lines[i];
             const strippedLine = line.trim();
-            line = line.replace(/={4,}|-{4,}/g, "");
+            line = line.replace(/={4,}|-{4,}/g, ""); // Remove lines with 4 or more '=' or '-'
 
             if (strippedLine.startsWith("key")) {
                 break;
@@ -194,13 +194,14 @@ class GFCParser extends Parser {
             if (stripped.startsWith("#") || !stripped) {
                 continue;
             }
-
+            // Match group 1 (\S+): The keyword
+            // Match group 2 (.*): The parameters
             const match = stripped.match(/^(\S+)\s*(.*)$/);
 
             if (match) {
                 const keyword = match[1];
                 const parameters = match[2] || "";
-                records[keyword] = parameters.trim();
+                records[keyword] = parameters;
             }
         }
 

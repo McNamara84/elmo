@@ -21,7 +21,7 @@ async function fillMetadataFromGfc(page: import('@playwright/test').Page) {
 test.describe('GFC model file upload – GGMs Properties', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
-    await expect(page.locator('#group-ggmsproperties')).toBeVisible();
+    await expect(page.locator('#button-ggms-gfc-upload')).toBeVisible();
   });
 
   test('shows upload button and opens modal with file drop zone and text field', async ({ page }) => {

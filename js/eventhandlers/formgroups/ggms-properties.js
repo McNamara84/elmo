@@ -174,6 +174,69 @@ $(document).ready(function() {
     $(document).on('change', '#input-mathematical-representation', function() {
         updateReferenceSystemVisibility();
     });
+
+    // GFC upload modal (GGMsProperties)
+    const gfcDropZone = $('#panel-ggms-gfc-dropfile');
+    const gfcFileInput = $('#input-ggms-gfc-file');
+
+    $('#button-ggms-gfc-fill-metadata').on('click', async function () {
+        $('#ggms-gfc-upload-status').addClass('d-none').text('');
+
+        const file = gfcFileInput[0].files[0];
+        const text = $('#textarea-ggms-gfc-header-text').val().trim();
+
+        if (!file && !text) {
+            $('#ggms-gfc-upload-status').removeClass('d-none').text('Please upload a GFC file or paste header text.');
+            return;
+        }
+
+        try {
+            let header = {};
+            if (file) {
+                header = await getHeaderFromFile(file);
+            }
+            if (text) {
+                header = { ...header, ...(await getHeaderFromText(text)) };
+            }
+            populateParsedFields(header);
+            $('#modal-ggms-gfc-upload').modal('hide');
+        } catch (error) {
+            console.error('Error filling metadata from GFC:', error);
+            $('#ggms-gfc-upload-status').removeClass('d-none').text('Error processing GFC file');
+        }
+    });
+
+    gfcDropZone.on('dragover', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        gfcDropZone.addClass('border-primary');
+    });
+
+    gfcDropZone.on('dragleave', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        gfcDropZone.removeClass('border-primary');
+    });
+
+    gfcDropZone.on('drop', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        gfcDropZone.removeClass('border-primary');
+
+        const file = event.originalEvent.dataTransfer.files[0];
+        if (file && file.name.toLowerCase().endsWith('.gfc')) {
+            const dataTransfer = new DataTransfer();
+            dataTransfer.items.add(file);
+            gfcFileInput[0].files = dataTransfer.files;
+        }
+    });
+
+    $('#modal-ggms-gfc-upload').on('hidden.bs.modal', function () {
+        gfcFileInput.val('');
+        $('#textarea-ggms-gfc-header-text').val('');
+        $('#ggms-gfc-upload-status').addClass('d-none').text('');
+        gfcDropZone.removeClass('border-primary');
+    });
 });
 
 /**
@@ -206,7 +269,8 @@ getHeaderFromText = async function(text) {
     try {
         const lines = text.split(/\r?\n/);
         const { headerLines } = extractSections(lines);
-        return parseRecords(headerLines);
+        const linesToParse = headerLines.length > 0 ? headerLines : lines;
+        return parseRecords(linesToParse);
     } catch (error) {
         console.error("Error parsing GFC text:", error);
         throw error;
@@ -240,12 +304,16 @@ tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (def
 norm 1 either "fully_normalized" (=default) or "unnormalized"
  */
 async function populateParsedFields(dict) {
-    const parser = new GFCParser();
-    
     // populate the form fields based on the file header
-    $('#input-tide-system').val(dict['tide-system'] || '');
-    $('#input-degree').val(dict['degree'] || '');
-    $('#input-errors').val(dict['errors'] || '').triggerChange();
-    $('#input-radius').val(dict['radius'] || '');
-    $('#input-earth-gravity-constant').val(dict['earth-gravity-constant'] || '');
+    if (dict.tide_system) {
+        const tideMap = { zero_tide: 'Zero-tide', tide_free: 'Tide-free', mean_tide: 'Mean-tide' };
+        $('#input-tide-system').val(tideMap[dict.tide_system.trim().toLowerCase()] || '');
+    }
+    $('#input-degree').val(dict.max_degree || dict.degree || '');
+    const errors = (dict.errors || '').trim().toLowerCase();
+    if (errors && errors !== 'n/a') {
+        $('#input-errors').val(errors === 'calibrated_and_formal' ? 'calibrated' : errors).trigger('change');
+    }
+    $('#input-radius').val(dict.radius || '');
+    $('#input-earth-gravity-constant').val(dict.earth_gravity_constant || '');
 }

@@ -103,9 +103,8 @@ describe('ggms-properties.js', () => {
     window.$ = $;
     window.jQuery = $;
     
-    // Load the script (strip ES module import – mocked via fileUpload.js in browser)
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-properties.js'), 'utf8');
-    script = script.replace(/^import .*;\n/m, '');
+    // Load the script (usually this would be done by converting the import in the test environment)
+    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-properties.js'), 'utf8');    
     script = script.replace('$(document).ready(function() {', '(function() {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
