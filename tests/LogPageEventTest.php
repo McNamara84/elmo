@@ -56,6 +56,27 @@ final class LogPageEventTest extends TestCase
         $this->assertStringContainsString("Timestamp: $timestamp", $logs[0]);
     }
 
+    public function testLogsEventWithTimeSpent(): void
+    {
+        $logs = [];
+
+        handle_log_page_event(
+            [
+                'event' => 'save',
+                'status' => 'user successfully saved xml file locally',
+                'timestamp' => '2026-06-30T14:24:01.166Z',
+                'time_spent' => '12.4',
+            ],
+            ['REQUEST_METHOD' => 'POST'],
+            function (string $message) use (&$logs): void {
+                $logs[] = $message;
+            }
+        );
+
+        $this->assertNotEmpty($logs, 'Expected logger to be called.');
+        $this->assertStringContainsString('Time spent: 12.4 seconds', $logs[0]);
+    }
+
     public function testSanitizesStatusParameter(): void
     {
         $logs = [];

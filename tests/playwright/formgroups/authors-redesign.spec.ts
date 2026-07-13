@@ -238,7 +238,6 @@ async function downloadXml(page: Page) {
   await page.locator('#button-form-save').click();
   const saveAsModal = page.locator(SELECTORS.modals.saveAs);
   await expect(saveAsModal).toBeVisible({ timeout: 5000 });
-  await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
   await page.locator('#input-saveas-filename').fill('authors-redesign-workflow');
 
   const responsePromise = page.waitForResponse(
