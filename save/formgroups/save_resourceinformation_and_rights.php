@@ -52,6 +52,7 @@ function saveResourceInformationAndRights($connection, $postData)
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
         if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'], $action)) {
+            error_log("[SAVE] Failed to save titles for resource_id: $resource_id");
             return false;
         }
 
@@ -315,6 +316,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
 
         // (only for submit action): Validate the title type exists in the database
         if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
+            error_log("Invalid title type ID provided: $title_type_int. Skipping this title.");
             continue;
         }
 
@@ -329,7 +331,11 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
     }
 
     if (empty($uniqueTitles)) {
-        return $action !== 'submit';
+        if ($action !== 'submit') {
+            return true;
+        }
+        error_log("[SAVE] Failed to save titles: no valid unique titles provided for resource_id: $resource_id");
+        return false;
     }
 
     foreach ($uniqueTitles as $title) {

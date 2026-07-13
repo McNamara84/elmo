@@ -35,7 +35,16 @@ if (!function_exists('handle_log_page_event')) {
         $statusRaw = $post['status'] ?? '';
         $statusSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $statusRaw);
 
+        $timeSpentRaw = $post['time_spent'] ?? '';
+        $timeSpentSafe = '';
+        if ($timeSpentRaw !== '' && is_numeric($timeSpentRaw)) {
+            $timeSpentSafe = number_format((float) $timeSpentRaw, 1, '.', '');
+        }
+
         $logMessage = "[PAGE_EVENT📝] Type: {$eventSafe} | Message: {$statusSafe} | Timestamp: {$timestampSafe}";
+        if ($timeSpentSafe !== '') {
+            $logMessage .= " | Time spent: {$timeSpentSafe} seconds";
+        }
         ($logger ?? 'error_log')($logMessage);
 
         return [

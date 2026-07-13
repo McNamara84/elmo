@@ -40,8 +40,8 @@ test.describe('Save after Load – Issue #1043', () => {
     const saveAsModal = page.locator('#modal-saveas');
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-test');
-    // Wait 3+ seconds to meet backend minimum interaction time for save (generously increased)
-    await page.waitForTimeout(3100);
+    // Wait to satisfy server-side minimum interaction time for save.
+    await page.waitForTimeout(3200);
     await page.locator('#button-saveas-save').click();
 
     const download = await downloadPromise;
@@ -122,8 +122,8 @@ test.describe('Save after Load – Issue #1043', () => {
     await page.locator('#button-form-save').click();
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-resaved');
-    // Wait 3+ seconds to meet backend minimum interaction time for save (generously increased)
-    await page.waitForTimeout(3100);
+    // Wait to satisfy server-side minimum interaction time for save.
+    await page.waitForTimeout(3200);
     await page.locator('#button-saveas-save').click();
 
     const secondDownload = await secondDownloadPromise;

@@ -1,7 +1,10 @@
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+
 /**
  * Validates that the embargo date is not before the creation date.
  * @returns {boolean} True if the dates are valid, false otherwise.
  */
+
 function validateEmbargoDate() {
     const dateCreatedInput = document.getElementById('input-date-created');
     const dateEmbargoInput = document.getElementById('input-date-embargo');
@@ -248,13 +251,8 @@ class SubmitHandler {
         this.autosaveService = autosaveService;
 
         // Security field references
-        this.$csrfTokenField = $('#input-submit-csrf-token');
-        this.$timeSpentField = $('#input-submit-time-spent');
-        this.$honeypotField = $('#modal-submit input[name="website"]').first();
-        this.modalOpenedAt = null;
-        this.submitSecurityDelayMs = 3200;
-        this.submitReadyAt = 0;
-        this.submitReadyTimer = null;
+        this.$mainHoneypotField = $('#input-please-fill-in-this-field');
+        this.$modalHoneypotField = $('#input-submit-please-fill-in-this-field');
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -279,21 +277,13 @@ class SubmitHandler {
             }
         });
 
-        // Fetch CSRF token and reset security fields on modal open
-        $('#modal-submit').on('shown.bs.modal', async () => {
-            this.resetSubmitSecurityDelay();
-            await this.fetchCsrfToken();
-            this.modalOpenedAt = Date.now();
-            this.submitReadyAt = this.modalOpenedAt + this.submitSecurityDelayMs;
-            this.$honeypotField.val('');
-            this.$timeSpentField.val('0');
-            this.scheduleSubmitReadyState();
+        // Reset modal-scoped fields on open
+        $('#modal-submit').on('shown.bs.modal', () => {
+            this.$modalHoneypotField.val('');
             $('#input-submit-dataurl').select();
         });
 
         $('#modal-submit').on('hidden.bs.modal', () => {
-            this.clearSubmitReadyTimer();
-            this.submitReadyAt = 0;
             this.toggleSubmitButton();
         });
 
@@ -313,23 +303,6 @@ class SubmitHandler {
                 this.handleModalSubmit();
             }
         });
-    }
-
-    /**
-     * Fetch fresh CSRF token from the server
-     */
-    async fetchCsrfToken() {
-        try {
-            const response = await fetch('api/csrf_token.php');
-            const data = await response.json();
-            if (data.token) {
-                this.$csrfTokenField.val(data.token);
-            } else {
-                console.error('No token in response:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
-        }
     }
 
     /**
@@ -365,43 +338,9 @@ class SubmitHandler {
     /**
      * Toggle submit button based on privacy checkbox
      */
-    clearSubmitReadyTimer() {
-        if (this.submitReadyTimer) {
-            clearTimeout(this.submitReadyTimer);
-            this.submitReadyTimer = null;
-        }
-    }
-
-    resetSubmitSecurityDelay() {
-        this.clearSubmitReadyTimer();
-        this.submitReadyAt = Number.POSITIVE_INFINITY;
-        this.toggleSubmitButton();
-    }
-
-    isSubmitSecurityDelaySatisfied() {
-        return !this.submitReadyAt || Date.now() >= this.submitReadyAt;
-    }
-
-    scheduleSubmitReadyState() {
-        this.clearSubmitReadyTimer();
-        const delay = Math.max(0, this.submitReadyAt - Date.now());
-
-        if (delay === 0) {
-            this.submitReadyAt = 0;
-            this.toggleSubmitButton();
-            return;
-        }
-
-        this.toggleSubmitButton();
-        this.submitReadyTimer = setTimeout(() => {
-            this.submitReadyAt = 0;
-            this.toggleSubmitButton();
-        }, delay);
-    }
-
     toggleSubmitButton() {
         const isChecked = $('#input-submit-privacycheck').is(':checked');
-        $('#button-submit-submit').prop('disabled', !isChecked || !this.isSubmitSecurityDelaySatisfied());
+        $('#button-submit-submit').prop('disabled', !isChecked);
     }
 
     /**
@@ -454,19 +393,8 @@ class SubmitHandler {
      * Handle modal submit
      */
     async handleModalSubmit() {
-        if (!this.isSubmitSecurityDelaySatisfied()) {
-            this.toggleSubmitButton();
-            return;
-        }
-
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
-        }
-        
-        // Calculate time spent in modal
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
         }
 
         if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
@@ -479,15 +407,25 @@ class SubmitHandler {
             submitData.set('authorsPayload', authorsPayloadInput.value);
         }
 
-        // Explicitly add CSRF token (it's in the modal, not in the main form)
-        const csrfToken = this.$csrfTokenField.val();
+        // Ensure the form-level CSRF token is present.
+        const csrfToken = await fetchAndStoreCsrfToken('form');
         if (csrfToken) {
-            submitData.set('csrf_token', csrfToken);
+            submitData.set('csrf-token', csrfToken.toString());
         }
 
-        // Security fields live in the submit modal, so add them explicitly.
-        submitData.set('submit_time_spent', this.$timeSpentField.val());
-        submitData.set('website', this.$honeypotField.val() || '');
+        // Backend validates one honeypot field — send whichever trap was filled.
+        const mainHoneypot = (this.$mainHoneypotField.val() || '').toString().trim();
+        let modalHoneypot = '';
+        if (this.$modalHoneypotField && this.$modalHoneypotField.length > 0) {
+            const element = this.$modalHoneypotField[0];
+            if (element && element.value) {
+                modalHoneypot = String(element.value).trim();
+            }
+        }
+        const honeypotField = this.$mainHoneypotField[0] || this.$modalHoneypotField[0];
+        if (honeypotField?.name) {
+            submitData.set(honeypotField.name, mainHoneypot || modalHoneypot);
+        }
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());

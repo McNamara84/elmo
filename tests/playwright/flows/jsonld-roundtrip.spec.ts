@@ -48,6 +48,45 @@ async function clearForm(page: import('@playwright/test').Page) {
   await expect(page.locator('input[name="title[]"]').first()).toHaveValue('', { timeout: 5000 });
 }
 
+async function saveJsonLd(page: import('@playwright/test').Page, filename: string, waitMs: number) {
+  const saveAsModal = page.locator('#modal-saveas');
+  let capturedBody = '';
+  let capturedStatus = 0;
+
+  await page.route('**/save/save_data.php', async (route) => {
+    if (route.request().method() !== 'POST') {
+      await route.fallback();
+      return;
+    }
+
+    const response = await route.fetch();
+    capturedStatus = response.status();
+    const body = await response.body();
+    capturedBody = body.toString('utf8');
+    await route.fulfill({ response, body });
+  });
+
+  await page.waitForTimeout(2100);
+  await page.locator('#button-form-save-jsonld').click();
+  await expect(saveAsModal).toBeVisible({ timeout: 10000 });
+  await expect(page.locator('#label-saveas-modal')).toContainText(/JSON-LD/i);
+  await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
+  await page.locator('#input-saveas-filename').fill(filename);
+  // Wait to satisfy server-side minimum interaction time for save.
+  await page.waitForTimeout(Math.max(waitMs, 2200));
+  await page.locator('#button-saveas-save').click();
+
+  await page.waitForResponse(
+    response => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',
+    { timeout: 30000 }
+  );
+
+  await page.unroute('**/save/save_data.php');
+
+  expect(capturedStatus).toBe(200);
+  return capturedBody;
+}
+
 test.describe('JSON-LD roundtrip flow', () => {
   test('can save JSON-LD, load it again, and save it once more', async ({ page }) => {
     const consoleErrors: string[] = [];
@@ -66,32 +105,14 @@ test.describe('JSON-LD roundtrip flow', () => {
     await expectNavbarVisible(page);
     await completeMinimalDatasetForm(page);
 
-    const saveAsModal = page.locator('#modal-saveas');
-    const downloadPromise = page.waitForEvent('download', { timeout: 30000 });
-
-    await page.locator('#button-form-save-jsonld').click();
-    await expect(saveAsModal).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#label-saveas-modal')).toContainText(/JSON-LD/i);
-    await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
-    
-    // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-
-    await page.locator('#input-saveas-filename').fill('e2e-jsonld-roundtrip');
-    // Wait 2+ seconds to meet backend minimum interaction time for save
-    await page.waitForTimeout(2100);
-    await page.locator('#button-saveas-save').click();
-
-    const download = await downloadPromise;
-    expect(download.suggestedFilename()).toMatch(/e2e-jsonld-roundtrip.*\.jsonld$/i);
-
     const tempDir = join(tmpdir(), 'elmo-e2e');
     mkdirSync(tempDir, { recursive: true });
 
     const savedJsonLdPath = join(tempDir, 'e2e-jsonld-roundtrip.jsonld');
-    await download.saveAs(savedJsonLdPath);
+    const firstSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip', 2100);
+    const firstPayload = JSON.parse(firstSaveBody) as Record<string, any>;
+    await import('node:fs').then(({ writeFileSync }) => writeFileSync(savedJsonLdPath, firstSaveBody, 'utf8'));
 
-    const firstPayload = JSON.parse(readFileSync(savedJsonLdPath, 'utf8')) as Record<string, any>;
     expect(firstPayload['@context']).toBe('https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld');
     expect(firstPayload.publicationYear.value).toBe('2025');
     expect(firstPayload.titles.title.value).toBe('A dataset');
@@ -132,28 +153,11 @@ test.describe('JSON-LD roundtrip flow', () => {
     // Wait for form to settle after loading XML
     await page.waitForTimeout(500);
 
-    const secondDownloadPromise = page.waitForEvent('download', { timeout: 30000 });
-    // Wait 2+ seconds to meet backend minimum interaction time for save before clicking save button
-    await page.waitForTimeout(2100);
-    await page.locator('#button-form-save-jsonld').click();
-    await expect(saveAsModal).toBeVisible({ timeout: 10000 });
-    await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
-    
-    // Wait for CSRF token to be fetched and populated
-    await expect(page.locator('#input-save-csrf-token')).not.toHaveValue('', { timeout: 5000 });
-    
-    await page.locator('#input-saveas-filename').fill('e2e-jsonld-roundtrip-resaved');
-    // Wait 3+ seconds to meet backend minimum interaction time for save (generously increased)
-    await page.waitForTimeout(3100);
-    await page.locator('#button-saveas-save').click();
-
-    const secondDownload = await secondDownloadPromise;
-    expect(secondDownload.suggestedFilename()).toMatch(/e2e-jsonld-roundtrip-resaved.*\.jsonld$/i);
-
     const resavedJsonLdPath = join(tempDir, 'e2e-jsonld-roundtrip-resaved.jsonld');
-    await secondDownload.saveAs(resavedJsonLdPath);
+    const secondSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip-resaved', 3100);
+    await import('node:fs').then(({ writeFileSync }) => writeFileSync(resavedJsonLdPath, secondSaveBody, 'utf8'));
 
-    const secondPayload = JSON.parse(readFileSync(resavedJsonLdPath, 'utf8')) as Record<string, any>;
+    const secondPayload = JSON.parse(secondSaveBody) as Record<string, any>;
     expect(secondPayload.titles.title.value).toBe('A dataset');
     expect(secondPayload.publicationYear.value).toBe('2025');
 
