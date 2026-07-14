@@ -10,6 +10,20 @@ $(document).ready(function () {
   /** @type {?Function} PinElement constructor, set after library load */
   var PinElement = null;
 
+  function debugLog(message, data) {
+    console.log("[ELMO Map]", message, data || {});
+  }
+
+  function debugError(message, error, data) {
+    console.error("[ELMO Map ERROR]", message, {
+      message: error && error.message ? error.message : null,
+      name: error && error.name ? error.name : null,
+      stack: error && error.stack ? error.stack : null,
+      context: data || {}
+    });
+  }
+
+
   /**
    * Standard rectangle style options used for all drawn rectangles.
    * @type {Object}
@@ -30,6 +44,10 @@ $(document).ready(function () {
     var $currentRow = $(this).closest("[tsc-row]");
     var rowId = $currentRow.attr("tsc-row-id");
 
+    debugLog("map modal open clicked", {
+      rowId: rowId
+    });
+
     // Store current row reference and ID in the modal
     $("#modal-stc-map")
       .data("current-row", $currentRow)
@@ -37,6 +55,11 @@ $(document).ready(function () {
 
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
+      debugLog("modal shown", {
+        rowId: rowId,
+        hasMap: !!map
+      });
+
       google.maps.event.trigger(map, "resize");
 
       var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
@@ -44,9 +67,23 @@ $(document).ready(function () {
       var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
       var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
 
+      debugLog("modal row coordinates", {
+        rowId: rowId,
+        latMin: latMin,
+        lngMin: lngMin,
+        latMax: latMax,
+        lngMax: lngMax
+      });
+
       if (latMin && lngMin) {
         // Ensure overlay exists for this row (may not if coords were set programmatically)
         var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
+
+        debugLog("existing overlay check", {
+          rowId: rowId,
+          hasOverlay: hasOverlay
+        });
+
         if (!hasOverlay) {
           updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
         } else {
@@ -54,6 +91,10 @@ $(document).ready(function () {
         }
       } else {
         // No coordinates yet – reset to whole-planet view
+        debugLog("resetting map to default world view", {
+          rowId: rowId
+        });
+
         map.setCenter({ lat: 20, lng: 0 });
         map.setZoom(2);
       }
@@ -67,12 +108,18 @@ $(document).ready(function () {
   $("#button-stc-cancelpanel").click(function () {
     var $currentRow = $("#modal-stc-map").data("current-row");
     if ($currentRow && $currentRow.length) {
+      var rowId = $currentRow.attr("tsc-row-id");
+
+      debugLog("cancel coordinates clicked", {
+        rowId: rowId
+      });
+
       $currentRow.find("[id^=input-stc-latmax]").val("");
       $currentRow.find("[id^=input-stc-longmax]").val("");
       $currentRow.find("[id^=input-stc-latmin]").val("");
       $currentRow.find("[id^=input-stc-longmin]").val("");
 
-      var rowId = $currentRow.attr("tsc-row-id");
+
       deleteDrawnOverlaysForRow(rowId);
     }
   });
@@ -82,6 +129,7 @@ $(document).ready(function () {
    * Hides the map modal.
    */
   $("#button-stc-sendcoords").click(function () {
+    debugLog("send coordinates clicked; closing modal");
     $("#modal-stc-map").modal("hide");
   });
 
@@ -132,10 +180,16 @@ $(document).ready(function () {
     var btnRect = document.getElementById("btn-draw-rectangle");
 
     if (btnMarker) {
-      btnMarker.addEventListener("click", function () { self.setMode("marker"); });
+      btnMarker.addEventListener("click", function () {
+        debugLog("drawing mode button clicked", { mode: "marker" });
+        self.setMode("marker");
+      });
     }
     if (btnRect) {
-      btnRect.addEventListener("click", function () { self.setMode("rectangle"); });
+      btnRect.addEventListener("click", function () {
+        debugLog("drawing mode button clicked", { mode: "rectangle" });
+        self.setMode("rectangle");
+      });
     }
 
     this._updateToolbarUI();
@@ -161,6 +215,7 @@ $(document).ready(function () {
     this.startLatLng = null;
 
     this.mode = mode;
+    debugLog("drawing mode changed", { mode: mode });
     this._updateToolbarUI();
     this._map.setOptions({
       draggableCursor: mode ? "crosshair" : null
@@ -201,6 +256,7 @@ $(document).ready(function () {
         // Cancel the pending drawing action; Google Maps handles the zoom via dblclick.
         clearTimeout(self._clickTimer);
         self._clickTimer = null;
+        debugLog("map double click detected; pending drawing action cancelled");
         return;
       }
 
@@ -208,16 +264,39 @@ $(document).ready(function () {
       self._clickTimer = setTimeout(function () {
         self._clickTimer = null;
         if (self.mode === "marker") {
-          var marker = new AdvancedMarkerElement({
-            position: latLng,
-            map: self._map
+          debugLog("marker drawing click resolved", {
+            lat: latLng.lat(),
+            lng: latLng.lng(),
+            hasAdvancedMarkerElement: !!AdvancedMarkerElement
           });
-          self._emit("markercomplete", marker);
+
+          try {
+            var marker = new AdvancedMarkerElement({
+              position: latLng,
+              map: self._map
+            });
+            debugLog("advanced marker created from click", {
+              lat: latLng.lat(),
+              lng: latLng.lng()
+            });
+            self._emit("markercomplete", marker);
+          } catch (error) {
+            debugError("failed to create advanced marker from click", error, {
+              lat: latLng.lat(),
+              lng: latLng.lng()
+            });
+          }
         } else if (self.mode === "rectangle") {
           if (self.rectState === null) {
             // First click: anchor the first corner and show a preview rectangle
             self.rectState = "started";
             self.startLatLng = latLng;
+
+            debugLog("rectangle drawing started", {
+              lat: latLng.lat(),
+              lng: latLng.lng()
+            });
+
             self.previewRect = new google.maps.Rectangle({
               bounds: new google.maps.LatLngBounds(latLng, latLng),
               strokeColor: RECTANGLE_STYLE.strokeColor,
@@ -243,6 +322,12 @@ $(document).ready(function () {
             rect.setBounds(new google.maps.LatLngBounds(sw, ne));
             self.previewRect = null;
             self.startLatLng = null;
+
+            debugLog("rectangle drawing completed", {
+              sw: { lat: sw.lat(), lng: sw.lng() },
+              ne: { lat: ne.lat(), lng: ne.lng() }
+            });
+
             self._emit("rectanglecomplete", rect);
           }
         }
@@ -275,6 +360,8 @@ $(document).ready(function () {
       }
       self.rectState = null;
       self.startLatLng = null;
+
+      debugLog("rectangle drawing cancelled via right click");
     });
   };
 
@@ -298,6 +385,9 @@ $(document).ready(function () {
    * @private
    */
   DrawingController.prototype._emit = function (event, data) {
+    debugLog("drawing event emitted", {
+      event: event
+    });
     (this._listeners[event] || []).forEach(function (cb) { cb(data); });
   };
 
@@ -313,17 +403,34 @@ $(document).ready(function () {
    * @returns {google.maps.marker.AdvancedMarkerElement} The created marker.
    */
   function createLabeledMarker(position, label) {
-    var pin = new PinElement({
-      glyphText: label,
-      glyphColor: "white",
-      background: "#FF0000",
-      borderColor: "#CC0000"
+    debugLog("createLabeledMarker called", {
+      label: label,
+      hasMap: !!map,
+      hasPinElement: !!PinElement,
+      hasAdvancedMarkerElement: !!AdvancedMarkerElement,
+      position: typeof position.lat === "function"
+        ? { lat: position.lat(), lng: position.lng() }
+        : position
     });
-    return new AdvancedMarkerElement({
-      position: position,
-      map: map,
-      content: pin
-    });
+
+    try {
+      var pin = new PinElement({
+        glyphText: label,
+        glyphColor: "white",
+        background: "#FF0000",
+        borderColor: "#CC0000"
+      });
+      return new AdvancedMarkerElement({
+        position: position,
+        map: map,
+        content: pin
+      });
+    } catch (error) {
+      debugError("createLabeledMarker failed", error, {
+        label: label
+      });
+      throw error;
+    }
   }
 
   /**
@@ -333,13 +440,26 @@ $(document).ready(function () {
    * @param {string} newLabel - The new label text.
    */
   function updateMarkerLabel(marker, newLabel) {
-    var pin = new PinElement({
-      glyphText: newLabel,
-      glyphColor: "white",
-      background: "#FF0000",
-      borderColor: "#CC0000"
+    debugLog("updateMarkerLabel called", {
+      newLabel: newLabel,
+      hasMarker: !!marker,
+      hasPinElement: !!PinElement
     });
-    marker.content = pin;
+
+    try {
+      var pin = new PinElement({
+        glyphText: newLabel,
+        glyphColor: "white",
+        background: "#FF0000",
+        borderColor: "#CC0000"
+      });
+      marker.content = pin;
+    } catch (error) {
+      debugError("updateMarkerLabel failed", error, {
+        newLabel: newLabel
+      });
+      throw error;
+    }
   }
 
   /**
@@ -350,6 +470,11 @@ $(document).ready(function () {
    * @param {Object} overlay - The overlay to remove from the map.
    */
   function removeOverlayFromMap(overlay) {
+    debugLog("removeOverlayFromMap called", {
+      hasSetMap: !!(overlay && typeof overlay.setMap === "function"),
+      hasMapProperty: !!(overlay && "map" in overlay)
+    });
+
     if (typeof overlay.setMap === "function") {
       overlay.setMap(null);
     } else if ("map" in overlay) {
@@ -370,8 +495,13 @@ $(document).ready(function () {
   async function initMap(mapId) {
     const mapElement = document.getElementById("panel-stc-map");
     if (!mapElement) {
+      debugLog("initMap aborted: panel-stc-map not found");
       return;
     }
+
+    debugLog("initMap start", {
+      mapId: mapId
+    });
 
     // Import required libraries (no 'drawing' library needed)
     const mapsLib = await google.maps.importLibrary("maps");
@@ -379,6 +509,12 @@ $(document).ready(function () {
     const Map = mapsLib.Map;
     AdvancedMarkerElement = markerLib.AdvancedMarkerElement;
     PinElement = markerLib.PinElement;
+
+    debugLog("libraries loaded", {
+      hasMapClass: !!Map,
+      hasAdvancedMarkerElement: !!AdvancedMarkerElement,
+      hasPinElement: !!PinElement
+    });
 
     // Initialize map with mapId for AdvancedMarkerElement support
     var mapOptions = {
@@ -389,7 +525,43 @@ $(document).ready(function () {
     if (mapId) {
       mapOptions.mapId = mapId;
     }
+
+    debugLog("mapOptions before map creation", mapOptions);
+
     map = new Map(mapElement, mapOptions);
+
+    debugLog("map created", {
+      mapIdPassed: mapOptions.mapId || "",
+      renderingType: typeof map.getRenderingType === "function" ? map.getRenderingType() : "n/a"
+    });
+
+    if (typeof map.getMapCapabilities === "function") {
+      try {
+        var caps = map.getMapCapabilities();
+        debugLog("initial map capabilities", {
+          isAdvancedMarkersAvailable: caps ? caps.isAdvancedMarkersAvailable : null,
+          isDataDrivenStylingAvailable: caps ? caps.isDataDrivenStylingAvailable : null,
+          isWebGLOverlayViewAvailable: caps ? caps.isWebGLOverlayViewAvailable : null
+        });
+      } catch (error) {
+        debugError("reading initial map capabilities failed", error);
+      }
+    }
+
+    if (typeof map.addListener === "function") {
+      map.addListener("mapcapabilities_changed", function () {
+        try {
+          var caps = typeof map.getMapCapabilities === "function" ? map.getMapCapabilities() : null;
+          debugLog("mapcapabilities_changed", {
+            isAdvancedMarkersAvailable: caps ? caps.isAdvancedMarkersAvailable : null,
+            isDataDrivenStylingAvailable: caps ? caps.isDataDrivenStylingAvailable : null,
+            isWebGLOverlayViewAvailable: caps ? caps.isWebGLOverlayViewAvailable : null
+          });
+        } catch (error) {
+          debugError("mapcapabilities_changed handler failed", error);
+        }
+      });
+    }
 
     // Keyboard zoom: + / = zooms in, - zooms out, active whenever the map modal is visible.
     document.addEventListener("keydown", function (e) {
@@ -400,18 +572,23 @@ $(document).ready(function () {
       if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT") return;
       if (e.key === "+" || e.key === "=") {
         e.preventDefault();
+        debugLog("keyboard zoom in");
         map.setZoom(map.getZoom() + 1);
       } else if (e.key === "-") {
         e.preventDefault();
+        debugLog("keyboard zoom out");
         map.setZoom(map.getZoom() - 1);
       }
     });
 
     // Setup custom drawing controller (replaces deprecated DrawingManager)
     var drawingController = new DrawingController(map);
+    debugLog("drawing controller initialized");
 
     // Setup PlaceAutocompleteElement (replaces deprecated SearchBox)
     await setupPlaceAutocomplete();
+
+    debugLog("place autocomplete initialized");
 
     // Handle rectangle drawing completion
     drawingController.on("rectanglecomplete", function (rectangle) {
@@ -425,6 +602,12 @@ $(document).ready(function () {
       var ne = bounds.getNorthEast();
       var sw = bounds.getSouthWest();
 
+      debugLog("rectanglecomplete handler", {
+        rowId: rowId,
+        ne: { lat: ne.lat(), lng: ne.lng() },
+        sw: { lat: sw.lat(), lng: sw.lng() }
+      });
+
       $currentRow.find("[id^=input-stc-latmax]").val(ne.lat());
       $currentRow.find("[id^=input-stc-longmax]").val(ne.lng());
       $currentRow.find("[id^=input-stc-latmin]").val(sw.lat());
@@ -434,6 +617,11 @@ $(document).ready(function () {
       var label = createLabeledMarker(bounds.getCenter(), displayNumber.toString());
 
       drawnOverlays.push({ rowId: rowId, overlay: rectangle, labelOverlay: label });
+
+      debugLog("rectangle overlay stored", {
+        rowId: rowId,
+        drawnOverlayCount: drawnOverlays.length
+      });
     });
 
     // Handle marker placement completion
@@ -447,6 +635,12 @@ $(document).ready(function () {
       var position = marker.position;
       var lat = typeof position.lat === "function" ? position.lat() : position.lat;
       var lng = typeof position.lng === "function" ? position.lng() : position.lng;
+      debugLog("markercomplete handler", {
+        rowId: rowId,
+        lat: lat,
+        lng: lng
+      });
+
       $currentRow.find("[id^=input-stc-latmin]").val(lat);
       $currentRow.find("[id^=input-stc-longmin]").val(lng);
       $currentRow.find("[id^=input-stc-latmax]").val("");
@@ -455,6 +649,11 @@ $(document).ready(function () {
       var displayNumber = $currentRow.index() + 1;
       updateMarkerLabel(marker, displayNumber.toString());
       drawnOverlays.push({ rowId: rowId, overlay: marker });
+
+      debugLog("marker overlay stored", {
+        rowId: rowId,
+        drawnOverlayCount: drawnOverlays.length
+      });
     });
   }
 
@@ -469,10 +668,17 @@ $(document).ready(function () {
    * @async
    */
   async function setupPlaceAutocomplete() {
+    debugLog("setupPlaceAutocomplete start");
+
     await google.maps.importLibrary("places");
 
     var card = document.getElementById("place-autocomplete-card");
     var placeAutocomplete = document.querySelector("gmp-place-autocomplete");
+
+    debugLog("place autocomplete elements", {
+      hasCard: !!card,
+      hasPlaceAutocomplete: !!placeAutocomplete
+    });
 
     if (!card || !placeAutocomplete) return;
 
@@ -485,9 +691,16 @@ $(document).ready(function () {
 
     // Handle place selection from autocomplete
     placeAutocomplete.addEventListener("gmp-select", async function (event) {
+      debugLog("place autocomplete selection event fired");
+
       var placePrediction = event.placePrediction;
       var place = placePrediction.toPlace();
       await place.fetchFields({ fields: ["location", "viewport"] });
+
+      debugLog("place fetched", {
+        hasLocation: !!place.location,
+        hasViewport: !!place.viewport
+      });
 
       // Clear previous search marker
       if (searchMarker) {
@@ -504,10 +717,18 @@ $(document).ready(function () {
 
       // Add marker for selected place
       if (place.location) {
-        searchMarker = new AdvancedMarkerElement({
-          map: map,
-          position: place.location
-        });
+        try {
+          searchMarker = new AdvancedMarkerElement({
+            map: map,
+            position: place.location
+          });
+
+          debugLog("search marker created", {
+            hasLocation: !!place.location
+          });
+        } catch (error) {
+          debugError("search marker creation failed", error);
+        }
       }
     });
   }
@@ -528,6 +749,14 @@ $(document).ready(function () {
       var latMin = $row.find("[id^=input-stc-latmin]").val();
       var lngMin = $row.find("[id^=input-stc-longmin]").val();
 
+      debugLog("coordinate input changed", {
+        rowId: currentRowId,
+        latMax: latMax,
+        lngMax: lngMax,
+        latMin: latMin,
+        lngMin: lngMin
+      });
+
       updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
     }
   );
@@ -536,6 +765,10 @@ $(document).ready(function () {
    * Updates the labels on the overlays to match the current row numbering.
    */
   function updateOverlayLabels() {
+    debugLog("updateOverlayLabels called", {
+      drawnOverlayCount: drawnOverlays.length
+    });
+
     drawnOverlays.forEach(function (item) {
       var rowId = item.rowId;
       var $row = $("#group-stc").find("[tsc-row-id='" + rowId + "']");
@@ -565,6 +798,10 @@ $(document).ready(function () {
       var $row = $("#group-stc").find("[tsc-row-id='" + item.rowId + "']");
       return $row.length > 0;
     });
+
+    debugLog("updateOverlayLabels finished", {
+      remainingOverlayCount: drawnOverlays.length
+    });
   }
 
   /**
@@ -578,6 +815,14 @@ $(document).ready(function () {
    * @param {string} lngMin - The minimum longitude value.
    */
   function updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin) {
+    debugLog("updateMapOverlay called", {
+      rowId: currentRowId,
+      latMax: latMax,
+      lngMax: lngMax,
+      latMin: latMin,
+      lngMin: lngMin
+    });
+
     deleteDrawnOverlaysForRow(currentRowId);
 
     var $row = $("#group-stc").find("[tsc-row-id='" + currentRowId + "']");
@@ -599,6 +844,11 @@ $(document).ready(function () {
         clickable: false
       });
 
+      debugLog("rectangle overlay created from inputs", {
+        rowId: currentRowId,
+        displayNumber: displayNumber
+      });
+
       var label = createLabeledMarker(bounds.getCenter(), displayNumber.toString());
       drawnOverlays.push({ rowId: currentRowId, overlay: rectangle, labelOverlay: label });
     } else if (latMin && lngMin) {
@@ -606,6 +856,14 @@ $(document).ready(function () {
         parseFloat(latMin),
         parseFloat(lngMin)
       );
+
+      debugLog("point overlay created from inputs", {
+        rowId: currentRowId,
+        displayNumber: displayNumber,
+        lat: position.lat(),
+        lng: position.lng()
+      });
+
       var marker = new AdvancedMarkerElement({
         position: position,
         map: map
@@ -613,6 +871,11 @@ $(document).ready(function () {
       updateMarkerLabel(marker, displayNumber.toString());
       drawnOverlays.push({ rowId: currentRowId, overlay: marker });
     }
+
+    debugLog("updateMapOverlay finished", {
+      rowId: currentRowId,
+      drawnOverlayCount: drawnOverlays.length
+    });
 
     fitMapBoundsForRow(currentRowId);
   }
@@ -623,6 +886,11 @@ $(document).ready(function () {
    * @param {string} rowId - The ID of the row whose overlays should be deleted.
    */
   function deleteDrawnOverlaysForRow(rowId) {
+    debugLog("deleteDrawnOverlaysForRow called", {
+      rowId: rowId,
+      drawnOverlayCountBefore: drawnOverlays.length
+    });
+
     drawnOverlays = drawnOverlays.filter(function (item) {
       if (item.rowId === rowId) {
         removeOverlayFromMap(item.overlay);
@@ -633,6 +901,11 @@ $(document).ready(function () {
       }
       return true;
     });
+
+    debugLog("deleteDrawnOverlaysForRow finished", {
+      rowId: rowId,
+      drawnOverlayCountAfter: drawnOverlays.length
+    });
   }
 
   /**
@@ -641,6 +914,10 @@ $(document).ready(function () {
    * @param {string} rowId - The row whose overlays define the viewport.
    */
   function fitMapBoundsForRow(rowId) {
+    debugLog("fitMapBoundsForRow called", {
+      rowId: rowId
+    });
+
     var bounds = new google.maps.LatLngBounds();
     drawnOverlays.forEach(function (item) {
       if (item.rowId !== rowId) return;
@@ -664,7 +941,18 @@ $(document).ready(function () {
       var lng_buffer = (ne.lng() - sw.lng()) * 0.5 || 2;
       bounds.extend(new google.maps.LatLng(ne.lat() + lat_buffer, ne.lng() + lng_buffer));
       bounds.extend(new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer));
+
+      debugLog("fitMapBoundsForRow applying bounds", {
+        rowId: rowId,
+        ne: { lat: ne.lat(), lng: ne.lng() },
+        sw: { lat: sw.lat(), lng: sw.lng() }
+      });
+
       map.fitBounds(bounds);
+    } else {
+      debugLog("fitMapBoundsForRow skipped: bounds empty", {
+        rowId: rowId
+      });
     }
   }
 
@@ -672,6 +960,10 @@ $(document).ready(function () {
    * Adjusts the map's viewport to fit all drawn overlays with a 50% buffer.
    */
   function fitMapBounds() {
+    debugLog("fitMapBounds called", {
+      drawnOverlayCount: drawnOverlays.length
+    });
+
     var bounds = new google.maps.LatLngBounds();
     drawnOverlays.forEach(function (item) {
       if (item.overlay.getBounds) {
@@ -700,9 +992,18 @@ $(document).ready(function () {
       bounds.extend(
         new google.maps.LatLng(sw.lat() - lat_buffer, sw.lng() - lng_buffer)
       );
+
+      debugLog("fitMapBounds applying bounds", {
+        ne: { lat: ne.lat(), lng: ne.lng() },
+        sw: { lat: sw.lat(), lng: sw.lng() }
+      });
+
       map.fitBounds(bounds);
+    } else {
+      debugLog("fitMapBounds skipped: bounds empty");
     }
   }
+
 
   /**
    * Loads the Google Maps API dynamically using the provided API key.
@@ -711,6 +1012,10 @@ $(document).ready(function () {
    * @param {string} apiKey - The API key for Google Maps.
    */
   function loadGoogleMapsApi(apiKey) {
+    debugLog("loadGoogleMapsApi called", {
+      hasApiKey: !!apiKey
+    });
+
     ((g) => {
       var h,
         a,
@@ -737,6 +1042,9 @@ $(document).ready(function () {
               );
             e.set("callback", c + ".maps." + q);
             a.src = `https://maps.${c}apis.com/maps/api/js?` + e;
+            debugLog("appending Google Maps script", {
+              src: a.src
+            });
             d[q] = f;
             a.onerror = () => (h = n(Error(p + " could not load.")));
             a.nonce = m.querySelector("script[nonce]")?.nonce || "";
@@ -751,20 +1059,35 @@ $(document).ready(function () {
     });
   }
 
+
   // Fetch the Google Maps API key and Map ID from settings.php, then initialize
   fetch("settings.php?setting=apiKey")
     .then(function (response) {
+      debugLog("settings.php response received", {
+        ok: response.ok,
+        status: response.status
+      });
+
       if (!response.ok) {
         throw new Error("Network response was not ok");
       }
       return response.json();
     })
     .then(function (data) {
+      debugLog("maps config from settings.php", {
+        hasApiKey: !!data.apiKey,
+        mapId: data.mapId || "",
+        host: window.location.host
+      });
+
       if (data.apiKey) {
         if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
           loadGoogleMapsApi(data.apiKey);
         }
         window.google.maps.importLibrary("maps").then(function () {
+          debugLog("google.maps.importLibrary('maps') resolved; calling initMap", {
+            mapId: data.mapId || ""
+          });
           initMap(data.mapId || "");
         });
       } else {
@@ -774,6 +1097,7 @@ $(document).ready(function () {
     .catch(function (error) {
       console.error("Error fetching the API key:", error);
     });
+
 
 
   // Make functions globally accessible
