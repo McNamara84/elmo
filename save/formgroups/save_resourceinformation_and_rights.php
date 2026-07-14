@@ -302,7 +302,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
         
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
-            $defaultId = getDefaultTitleTypeId($connection, $i);
+            $defaultId = getDefaultTitleTypeId($connection, count($uniqueTitles));
             if ($defaultId === null) {
                 error_log("Cannot assign default title type: no Title_Type rows exist in database");
                 return false;
@@ -328,17 +328,17 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
 
 
         // (only for submit action): Validate the title type exists in the database
-        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
-            error_log("Invalid title type ID provided: $title_type_int. Skipping this title.");
+        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type)) {
+            error_log("Invalid title type ID provided: $title_type. Skipping this title.");
             continue;
         }
 
         // Create unique key for deduplication
-        $key = $title_text . '|' . $title_type_int;
+        $key = $title_text . '|' . $title_type;
         if (!isset($uniqueTitles[$key])) {
             $uniqueTitles[$key] = [
                 'text' => $title_text,
-                'type' => $title_type_int
+                'type' => $title_type
             ];
         }
     }
