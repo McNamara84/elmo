@@ -296,7 +296,7 @@ describe('initializeAllDropdownsParallel failure handling', () => {
     jest.restoreAllMocks();
   });
 
-  test('falls back to sequential AJAX when a critical fetch fails', async () => {
+  test('falls back to sequential AJAX only for failed critical fetches', async () => {
     global.fetch = jest.fn((url) => {
       if (url.includes('api/v2/vocabs/titletypes')) {
         return Promise.resolve({ ok: false, json: async () => ({}) });
@@ -307,8 +307,13 @@ describe('initializeAllDropdownsParallel failure handling', () => {
     await selectModule.initializeAllDropdownsParallel();
 
     expect(console.warn).toHaveBeenCalledWith(
+      'Failed to fetch titleTypes in parallel. Will use fallback.'
+    );
+    expect($.ajax).toHaveBeenCalledWith(
+      expect.objectContaining({ url: 'api/v2/vocabs/titletypes' })
+    );
+    expect(console.warn).not.toHaveBeenCalledWith(
       'Falling back to legacy sequential dropdown initialization.'
     );
-    expect($.ajax).toHaveBeenCalled();
   });
 });

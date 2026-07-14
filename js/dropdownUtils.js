@@ -2,51 +2,42 @@
  * Shared dropdown helpers used by select.js.
  * @module dropdownUtils
  */
+(function () {
+  function updateDropdownPlaceholders() {
+    const translatedText = window.elmo?.translate?.('general.choose');
+    if (!translatedText) return;
 
-/**
- * Updates all placeholder options in dropdown selects with the current translation.
- * Called when translations are loaded or changed to fix race condition between
- * dropdown initialization and translation loading.
- */
-function updateDropdownPlaceholders() {
-  const translatedText = window.elmo?.translate?.('general.choose');
-  if (!translatedText) return;
-
-  $('option[data-translate="general.choose"]').each(function () {
-    $(this).text(translatedText);
-  });
-}
-
-/**
- * Filters data based on GEM feature flag
- * @param {Array} data - Array of data objects to filter
- * @param {string} type - Type of filter: "resourceType" or "language"
- * @param {boolean} isGEM - Whether ICGEM mode is enabled (see showGGMsProperties flag)
- * @returns {Array} Filtered data array
- */
-function filterDataByGEM(data, type, isGEM) {
-  if (!isGEM || !Array.isArray(data)) {
-    return data;
+    $('option[data-translate="general.choose"]').each(function () {
+      $(this).text(translatedText);
+    });
   }
 
-  switch (type) {
-    case 'resourceType':
-      return data.filter(item => item.resource_type_general === "Dataset");
-    case 'language':
-      return data.filter(item => item.name === "English");
-    default:
+  function filterDataByGEM(data, type, isGEM) {
+    if (!isGEM || !Array.isArray(data)) {
       return data;
-  }
-}
+    }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
+    switch (type) {
+      case 'resourceType':
+        return data.filter(item => item.resource_type_general === "Dataset");
+      case 'language':
+        return data.filter(item => item.name === "English");
+      default:
+        return data;
+    }
+  }
+
+  const api = {
     updateDropdownPlaceholders,
     filterDataByGEM,
   };
-}
 
-if (typeof window !== 'undefined') {
-  window.updateDropdownPlaceholders = updateDropdownPlaceholders;
-  window.filterDataByGEM = filterDataByGEM;
-}
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  }
+
+  if (typeof window !== 'undefined') {
+    window.updateDropdownPlaceholders = updateDropdownPlaceholders;
+    window.filterDataByGEM = filterDataByGEM;
+  }
+})();

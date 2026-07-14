@@ -3,11 +3,11 @@
  * Used as fallbacks when parallel fetch initialization is unavailable or fails.
  * @module dropdownAjax
  */
-
-const { filterDataByGEM } =
-  (typeof require === 'function' && typeof module !== 'undefined')
-    ? require('./dropdownUtils.js')
-    : { filterDataByGEM: window.filterDataByGEM };
+(function () {
+  const dropdownUtilsRef =
+    (typeof require === 'function' && typeof module !== 'undefined')
+      ? require('./dropdownUtils.js')
+      : { filterDataByGEM: window.filterDataByGEM };
 
 /**
  * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
@@ -151,7 +151,7 @@ function setupResourceTypeDropdownAjax() {
 
       if (Array.isArray(data)) {
         const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-        const filteredData = filterDataByGEM(data, 'resourceType', isGEM);
+        const filteredData = dropdownUtilsRef.filterDataByGEM(data, 'resourceType', isGEM);
 
         filteredData.forEach(function (type) {
           select.append(
@@ -200,7 +200,7 @@ function setupLanguageDropdownAjax() {
 
       if (Array.isArray(data)) {
         const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-        const filteredData = filterDataByGEM(data, 'language', isGEM);
+        const filteredData = dropdownUtilsRef.filterDataByGEM(data, 'language', isGEM);
 
         filteredData.forEach(function (lang) {
           select.append(
@@ -406,8 +406,7 @@ function runSequentialFallback() {
   setupTitleTypeDropdownAjax();
 }
 
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = {
+  const api = {
     setupTimezoneDropdownAjax,
     setupResourceTypeDropdownAjax,
     setupLanguageDropdownAjax,
@@ -416,14 +415,18 @@ if (typeof module !== 'undefined' && module.exports) {
     addPlaceholder,
     runSequentialFallback,
   };
-}
 
-if (typeof window !== 'undefined') {
-  window.setupTimezoneDropdownAjax = setupTimezoneDropdownAjax;
-  window.setupLicenseDropdown = setupLicenseDropdown;
-  window.setupLanguageDropdownAjax = setupLanguageDropdownAjax;
-  window.setupResourceTypeDropdownAjax = setupResourceTypeDropdownAjax;
-  window.setupTitleTypeDropdownAjax = setupTitleTypeDropdownAjax;
-  window.addPlaceholder = addPlaceholder;
-  window.runSequentialFallback = runSequentialFallback;
-}
+  if (typeof module !== 'undefined' && module.exports) {
+    module.exports = api;
+  }
+
+  if (typeof window !== 'undefined') {
+    window.setupTimezoneDropdownAjax = setupTimezoneDropdownAjax;
+    window.setupLicenseDropdown = setupLicenseDropdown;
+    window.setupLanguageDropdownAjax = setupLanguageDropdownAjax;
+    window.setupResourceTypeDropdownAjax = setupResourceTypeDropdownAjax;
+    window.setupTitleTypeDropdownAjax = setupTitleTypeDropdownAjax;
+    window.addPlaceholder = addPlaceholder;
+    window.runSequentialFallback = runSequentialFallback;
+  }
+})();

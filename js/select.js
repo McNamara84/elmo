@@ -1,4 +1,4 @@
-const { updateDropdownPlaceholders, filterDataByGEM } =
+const dropdownUtils =
   (typeof require === 'function' && typeof module !== 'undefined')
     ? require('./dropdownUtils.js')
     : {
@@ -6,15 +6,7 @@ const { updateDropdownPlaceholders, filterDataByGEM } =
         filterDataByGEM: window.filterDataByGEM,
       };
 
-const {
-  setupTimezoneDropdownAjax,
-  setupResourceTypeDropdownAjax,
-  setupLanguageDropdownAjax,
-  setupTitleTypeDropdownAjax,
-  setupLicenseDropdown,
-  addPlaceholder,
-  runSequentialFallback,
-} =
+const dropdownAjax =
   (typeof require === 'function' && typeof module !== 'undefined')
     ? require('./dropdownAjax.js')
     : {
@@ -36,7 +28,7 @@ const {
  */
 async function initializeAllDropdownsParallel() {
   if (typeof fetch !== 'function') {
-    return runSequentialFallback();
+    return dropdownAjax.runSequentialFallback();
   }
 
   const dropdownSelectors = {
@@ -112,10 +104,10 @@ async function initializeAllDropdownsParallel() {
 
   // --- TARGETED FALLBACKS ---
   // Only trigger the sequential AJAX fallbacks for the ones that actually failed!
-  if (failures.includes('timezones')) setupTimezoneDropdownAjax();
-  if (failures.includes('resourceTypes')) setupResourceTypeDropdownAjax();
-  if (failures.includes('languages')) setupLanguageDropdownAjax();
-  if (failures.includes('titleTypes')) setupTitleTypeDropdownAjax();
+  if (failures.includes('timezones')) dropdownAjax.setupTimezoneDropdownAjax();
+  if (failures.includes('resourceTypes')) dropdownAjax.setupResourceTypeDropdownAjax();
+  if (failures.includes('languages')) dropdownAjax.setupLanguageDropdownAjax();
+  if (failures.includes('titleTypes')) dropdownAjax.setupTitleTypeDropdownAjax();
   
   // If licenses/relations/identifiers failed and don't have fallbacks,
   // we can at least restore their disabled state so they aren't stuck on "Loading..."
@@ -176,12 +168,12 @@ function populateResourceTypeDropdownWithData(types) {
   $select.empty();
   
   // Handle placeholder logic
-  addPlaceholder($select, true);
+  dropdownAjax.addPlaceholder($select, true);
   
   if (Array.isArray(types)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = filterDataByGEM(types, 'resourceType', isGEM);
+    const filteredData = dropdownUtils.filterDataByGEM(types, 'resourceType', isGEM);
     
     filteredData.forEach(type => {
       $select.append(
@@ -208,12 +200,12 @@ function populateLanguageDropdownWithData(languages) {
   $select.empty();
   
   // Handle placeholder logic
-  addPlaceholder($select, true);
+  dropdownAjax.addPlaceholder($select, true);
   
   if (Array.isArray(languages)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = filterDataByGEM(languages, 'language', isGEM);
+    const filteredData = dropdownUtils.filterDataByGEM(languages, 'language', isGEM);
     
     filteredData.forEach(lang => {
       $select.append(
@@ -243,7 +235,7 @@ function populateTitleTypeDropdownWithData(types) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   let mainTitleId = "";
   let alternativeTitleId = "";
@@ -315,7 +307,7 @@ function populateRelationsDropdownWithData(response) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   if (response && response.relations && response.relations.length > 0) {
     response.relations
@@ -342,7 +334,7 @@ function populateIdentifierTypesDropdownWithData(response) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   if (response && response.identifierTypes) {
     response.identifierTypes.forEach(type => {
@@ -363,7 +355,7 @@ function populateIdentifierTypesDropdownWithData(response) {
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
 // Update dropdown placeholders when translations are loaded or changed
-document.addEventListener('translationsLoaded', updateDropdownPlaceholders);
+document.addEventListener('translationsLoaded', dropdownUtils.updateDropdownPlaceholders);
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
@@ -769,14 +761,14 @@ $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    setupTimezoneDropdownAjax,
+    setupTimezoneDropdownAjax: dropdownAjax.setupTimezoneDropdownAjax,
     initializeAllDropdownsParallel,
-    setupResourceTypeDropdownAjax,
-    setupLanguageDropdownAjax,
-    setupTitleTypeDropdownAjax,
-    setupLicenseDropdown,
+    setupResourceTypeDropdownAjax: dropdownAjax.setupResourceTypeDropdownAjax,
+    setupLanguageDropdownAjax: dropdownAjax.setupLanguageDropdownAjax,
+    setupTitleTypeDropdownAjax: dropdownAjax.setupTitleTypeDropdownAjax,
+    setupLicenseDropdown: dropdownAjax.setupLicenseDropdown,
     setupIdentifierTypesDropdown,
-    runSequentialFallback,
+    runSequentialFallback: dropdownAjax.runSequentialFallback,
     populateTimezoneDropdownWithData,
     populateResourceTypeDropdownWithData,
     populateLanguageDropdownWithData,
@@ -784,9 +776,9 @@ if (typeof module !== 'undefined' && module.exports) {
     populateLicenseDropdownWithData,
     populateRelationsDropdownWithData,
     populateIdentifierTypesDropdownWithData,
-    addPlaceholder,
-    updateDropdownPlaceholders,
-    filterDataByGEM,
+    addPlaceholder: dropdownAjax.addPlaceholder,
+    updateDropdownPlaceholders: dropdownUtils.updateDropdownPlaceholders,
+    filterDataByGEM: dropdownUtils.filterDataByGEM,
     getIdentifierPriority,
     updateIdentifierType,
     debounce,
