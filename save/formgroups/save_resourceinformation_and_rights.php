@@ -321,7 +321,8 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
             }
             $row = $result->fetch_assoc();
             $name_from_db = str_replace(" ", "", $row['name']);
-            $title_name = $row['name'];
+            error_log("Resolved title type ID $title_type to name '$name_from_db'");
+            $title_name = $name_from_db;
         }
 
 
