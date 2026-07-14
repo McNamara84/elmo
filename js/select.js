@@ -1,3 +1,11 @@
+const { updateDropdownPlaceholders, filterDataByGEM } =
+  (typeof require === 'function' && typeof module !== 'undefined')
+    ? require('./dropdownUtils.js')
+    : {
+        updateDropdownPlaceholders: window.updateDropdownPlaceholders,
+        filterDataByGEM: window.filterDataByGEM,
+      };
+
 /**
  * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
  * @async
@@ -244,10 +252,13 @@ function setupLanguageDropdown() {
     },
   });
 }
-
+// This function is a fallback implementation for the environments that don't have fetch in it.
 function setupTitleTypeDropdown() {
   const select = $("#input-resourceinformation-titletype");
-  if (select.length === 0) return;
+  if (select.length === 0) {
+    console.error("Title type dropdown not found. Ensure the element with ID 'input-resourceinformation-titletype' exists in the DOM.");
+    return;
+  }
 
   select.prop('disabled', true).empty().append(
     $("<option>", {
@@ -271,7 +282,6 @@ function setupTitleTypeDropdown() {
 
       let mainTitleId = "";
       let alternativeTitleId = "";
-
       if (Array.isArray(data)) {
         data.forEach(function (type) {
           const option = $("<option>", {
@@ -418,42 +428,6 @@ function addPlaceholder($select, isGEMDropdown = false) {
   $select.append(
     $("<option>", { value: "", text: translatedText, "data-translate": "general.choose" })
   );
-}
-
-/**
- * Updates all placeholder options in dropdown selects with the current translation.
- * Called when translations are loaded or changed to fix race condition between
- * dropdown initialization and translation loading.
- */
-function updateDropdownPlaceholders() {
-  const translatedText = window.elmo?.translate?.('general.choose');
-  if (!translatedText) return;
-  
-  $('option[data-translate="general.choose"]').each(function () {
-    $(this).text(translatedText);
-  });
-}
-
-/**
- * Filters data based on GEM feature flag
- * @param {Array} data - Array of data objects to filter
- * @param {string} type - Type of filter: "resourceType" or "language"
- * @param {boolean} isGEM - Whether ICGEM mode is enabled (see showGGMsProperties flag)
- * @returns {Array} Filtered data array
- */
-function filterDataByGEM(data, type, isGEM) {
-  if (!isGEM || !Array.isArray(data)) {
-    return data;
-  }
-
-  switch (type) {
-    case 'resourceType':
-      return data.filter(item => item.resource_type_general === "Dataset");
-    case 'language':
-      return data.filter(item => item.name === "English");
-    default:
-      return data;
-  }
 }
 
 // Make functions available globally (important for tests)
