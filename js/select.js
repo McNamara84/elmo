@@ -9,12 +9,12 @@ const { updateDropdownPlaceholders, filterDataByGEM } =
 /**
  * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
  * @async
- * @function initializeTimezoneDropdown
+ * @function setupTimezoneDropdownAjax
  * @param {string|jQuery|HTMLElement} dropdownSelector - The selector for the timezone dropdown element
  * @param {string} jsonPath - Path to the timezones JSON file
  * @returns {Promise<void>}
  */
-async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
+async function setupTimezoneDropdownAjax(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
   try {
     const $dropdown = $(dropdownSelector);
     if ($dropdown.length === 0) return;
@@ -149,7 +149,7 @@ async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezon
  */
 
 // Dropdown helper functions exposed globally so tests can invoke them
-function setupResourceTypeDropdown() {
+function setupResourceTypeDropdownAjax() {
   const select = $("#input-resourceinformation-resourcetype");
   if (select.length === 0) return;
 
@@ -198,7 +198,7 @@ function setupResourceTypeDropdown() {
   });
 }
 
-function setupLanguageDropdown() {
+function setupLanguageDropdownAjax() {
   const select = $("#input-resourceinformation-language");
   if (select.length === 0) return;
 
@@ -253,7 +253,7 @@ function setupLanguageDropdown() {
   });
 }
 // This function is a fallback implementation for the environments that don't have fetch in it.
-function setupTitleTypeDropdown() {
+function setupTitleTypeDropdownAjax() {
   const select = $("#input-resourceinformation-titletype");
   if (select.length === 0) {
     console.error("Title type dropdown not found. Ensure the element with ID 'input-resourceinformation-titletype' exists in the DOM.");
@@ -430,11 +430,12 @@ function addPlaceholder($select, isGEMDropdown = false) {
   );
 }
 
-// Make functions available globally (important for tests)
+// Make AJAX fallback dropdown setup functions available globally (important for tests)
+window.setupTimezoneDropdownAjax = setupTimezoneDropdownAjax;
 window.setupLicenseDropdown = setupLicenseDropdown;
-window.setupLanguageDropdown = setupLanguageDropdown;
-window.setupResourceTypeDropdown = setupResourceTypeDropdown;
-window.setupTitleTypeDropdown = setupTitleTypeDropdown;
+window.setupLanguageDropdownAjax = setupLanguageDropdownAjax;
+window.setupResourceTypeDropdownAjax = setupResourceTypeDropdownAjax;
+window.setupTitleTypeDropdownAjax = setupTitleTypeDropdownAjax;
 
 /**
  * Initializes all dropdowns in parallel for faster page load.
@@ -447,10 +448,10 @@ async function initializeAllDropdownsParallel() {
   // Check if fetch is available (not available in some test environments)
   if (typeof fetch !== 'function') {
     // Fallback to sequential initialization
-    initializeTimezoneDropdown();
-    setupResourceTypeDropdown();
-    setupLanguageDropdown();
-    setupTitleTypeDropdown();
+    setupTimezoneDropdownAjax();
+    setupResourceTypeDropdownAjax();
+    setupLanguageDropdownAjax();
+    setupTitleTypeDropdownAjax();
     return;
   }
 
@@ -543,10 +544,10 @@ async function initializeAllDropdownsParallel() {
   } catch (error) {
     console.error('Error initializing dropdowns in parallel:', error);
     // Fallback: try individual initialization
-    initializeTimezoneDropdown();
-    setupResourceTypeDropdown();
-    setupLanguageDropdown();
-    setupTitleTypeDropdown();
+    setupTimezoneDropdownAjax();
+    setupResourceTypeDropdownAjax();
+    setupLanguageDropdownAjax();
+    setupTitleTypeDropdownAjax();
   }
 }
 
@@ -1189,11 +1190,11 @@ $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    initializeTimezoneDropdown,
+    setupTimezoneDropdownAjax,
     initializeAllDropdownsParallel,
-    setupResourceTypeDropdown,
-    setupLanguageDropdown,
-    setupTitleTypeDropdown,
+    setupResourceTypeDropdownAjax,
+    setupLanguageDropdownAjax,
+    setupTitleTypeDropdownAjax,
     setupIdentifierTypesDropdown,
     populateTimezoneDropdownWithData,
     populateResourceTypeDropdownWithData,
