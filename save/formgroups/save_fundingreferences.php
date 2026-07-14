@@ -58,7 +58,7 @@ function prepareFunderIdDetails($funderId, $funderIdTyp = 'crossref')
  *
  * @return bool True on success, false otherwise.
  */
-function saveFundingReferenceEntry($connection, $entry, $resource_id)
+function saveFundingReferenceEntry($connection, $entry, $resource_id, $action)
 {
     // Trim and normalize all fields upfront so whitespace-only input
     // is treated the same as truly empty input in the guards below.
@@ -72,7 +72,7 @@ function saveFundingReferenceEntry($connection, $entry, $resource_id)
         return true;
     }
 
-    if ($funder === '') {
+    if ($action === 'submit' && $funder === '') {
         return false;
     }
 
@@ -151,7 +151,7 @@ function saveFundingReferences($connection, $postData, $resource_id)
     $allSuccessful = true;
 
     foreach ($entries as $entry) {
-        if (!saveFundingReferenceEntry($connection, $entry, $resource_id)) {
+        if (!saveFundingReferenceEntry($connection, $entry, $resource_id, $action)) {
             $allSuccessful = false;
         }
     }
