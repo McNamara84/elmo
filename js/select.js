@@ -438,24 +438,25 @@ window.setupResourceTypeDropdownAjax = setupResourceTypeDropdownAjax;
 window.setupTitleTypeDropdownAjax = setupTitleTypeDropdownAjax;
 
 /**
+ * Helper to run legacy sequential fallbacks in one place.
+ */
+function runSequentialFallback() {
+  console.warn("Falling back to legacy sequential dropdown initialization.");
+  setupTimezoneDropdownAjax();
+  setupResourceTypeDropdownAjax();
+  setupLanguageDropdownAjax();
+  setupTitleTypeDropdownAjax();
+}
+
+/**
  * Initializes all dropdowns in parallel for faster page load.
- * Uses Promise.all to fetch all data simultaneously instead of sequentially.
- * Falls back to sequential initialization if fetch API is not available (e.g., in test environment).
- * @async
- * @returns {Promise<void>}
  */
 async function initializeAllDropdownsParallel() {
-  // Check if fetch is available (not available in some test environments)
+  // 1. Check environment availability immediately
   if (typeof fetch !== 'function') {
-    // Fallback to sequential initialization
-    setupTimezoneDropdownAjax();
-    setupResourceTypeDropdownAjax();
-    setupLanguageDropdownAjax();
-    setupTitleTypeDropdownAjax();
-    return;
+    return runSequentialFallback();
   }
 
-  // Show loading state for all dropdowns immediately
   const dropdownSelectors = {
     resourceType: $("#input-resourceinformation-resourcetype"),
     language: $("#input-resourceinformation-language"),
@@ -465,7 +466,7 @@ async function initializeAllDropdownsParallel() {
     identifierType: $("#input-relatedwork-identifiertype")
   };
 
-  // Set loading state for existing dropdowns
+  // 2. Set loading state for existing dropdowns immediately
   Object.values(dropdownSelectors).forEach($el => {
     if ($el.length) {
       $el.prop('disabled', true).empty().append(
@@ -474,45 +475,28 @@ async function initializeAllDropdownsParallel() {
     }
   });
 
-  // Define all fetch operations
+  // 3. Define the critical fetches.
+  // Note: We do NOT catch errors inline here. If these fail, we want them to bubble up
+  // to Promise.all so we can cleanly trigger the fallback instead of showing empty dropdowns.
   const fetchOperations = {
-    timezones: fetch('json/timezones.json')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
+    timezones: fetch('json/timezones.json').then(r => r.ok ? r.json() : Promise.reject()),
+    resourceTypes: fetch('api/v2/vocabs/resourcetypes').then(r => r.ok ? r.json() : Promise.reject()),
+    languages: fetch('api/v2/vocabs/languages').then(r => r.ok ? r.json() : Promise.reject()),
+    titleTypes: fetch('api/v2/vocabs/titletypes').then(r => r.ok ? r.json() : Promise.reject()),
+    licenses: fetch('api/v2/vocabs/licenses/all').then(r => r.ok ? r.json() : Promise.reject()),
+    relations: fetch('api/v2/vocabs/relations').then(r => r.ok ? r.json() : { relations: [] }),
+    identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] }),
     
-    resourceTypes: fetch('api/v2/vocabs/resourcetypes')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    languages: fetch('api/v2/vocabs/languages')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    titleTypes: fetch('api/v2/vocabs/titletypes')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    licenses: fetch('api/v2/vocabs/licenses/all')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    relations: fetch('api/v2/vocabs/relations')
-      .then(r => r.ok ? r.json() : { relations: [] })
-      .catch(() => ({ relations: [] })),
-    
-    identifierTypes: fetch('api/v2/validation/identifiertypes/active')
-      .then(r => r.ok ? r.json() : { identifierTypes: [] })
-      .catch(() => ({ identifierTypes: [] })),
-    
-    funders: (window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR')
+    // Lazy Evaluation: Only call fetch if the condition is met!
+    funders: (window.ELMO_FEATURES?.funderPidMode === 'ROR')
       ? Promise.resolve([])
-      : fetch('json/funders.json')
-        .then(r => r.ok ? r.json() : [])
-        .catch(() => [])
+      : fetch('json/funders.json').then(r => r.ok ? r.json() : [])
   };
 
   try {
-    // Execute all fetches in parallel
+    // 4. Execute all in parallel.
+    // If ANY critical fetch fails (rejects), Promise.all immediately rejects, 
+    // skipping the population step and routing directly to the catch block.
     const results = await Promise.all(
       Object.entries(fetchOperations).map(async ([key, promise]) => {
         const data = await promise;
@@ -520,10 +504,9 @@ async function initializeAllDropdownsParallel() {
       })
     );
 
-    // Convert results array to object
     const data = Object.fromEntries(results);
 
-    // Populate all dropdowns with fetched data
+    // 5. Populate dropdowns with verified data
     populateTimezoneDropdownWithData(data.timezones);
     populateResourceTypeDropdownWithData(data.resourceTypes);
     populateLanguageDropdownWithData(data.languages);
@@ -532,22 +515,17 @@ async function initializeAllDropdownsParallel() {
     populateRelationsDropdownWithData(data.relations);
     populateIdentifierTypesDropdownWithData(data.identifierTypes);
     
-    // Store funders data globally and initialize autocomplete
     window.fundersData = data.funders;
     $(".inputFunder").each(function () {
       window.setUpAutocompleteFunder(this);
     });
 
-    // Dispatch event to signal dropdowns are ready
     document.dispatchEvent(new CustomEvent('dropdownsReady'));
     
   } catch (error) {
-    console.error('Error initializing dropdowns in parallel:', error);
-    // Fallback: try individual initialization
-    setupTimezoneDropdownAjax();
-    setupResourceTypeDropdownAjax();
-    setupLanguageDropdownAjax();
-    setupTitleTypeDropdownAjax();
+    console.error('Error in parallel initialization:', error);
+    // 6. If anything failed, trigger sequential AJAX backups exactly ONCE.
+    runSequentialFallback();
   }
 }
 
