@@ -35,7 +35,6 @@ const {
  * Initializes all dropdowns in parallel for faster page load.
  */
 async function initializeAllDropdownsParallel() {
-  // 1. Check environment availability immediately
   if (typeof fetch !== 'function') {
     return runSequentialFallback();
   }
@@ -49,7 +48,7 @@ async function initializeAllDropdownsParallel() {
     identifierType: $("#input-relatedwork-identifiertype")
   };
 
-  // 2. Set loading state for existing dropdowns immediately
+  // Set loading state
   Object.values(dropdownSelectors).forEach($el => {
     if ($el.length) {
       $el.prop('disabled', true).empty().append(
@@ -58,9 +57,8 @@ async function initializeAllDropdownsParallel() {
     }
   });
 
-  // 3. Define the critical fetches.
-  // Note: We do NOT catch errors inline here. If these fail, we want them to bubble up
-  // to Promise.all so we can cleanly trigger the fallback instead of showing empty dropdowns.
+  // Define the operations. Note that we want failures to actually reject 
+  // so we can identify them in the results.
   const fetchOperations = {
     timezones: fetch('json/timezones.json').then(r => r.ok ? r.json() : Promise.reject()),
     resourceTypes: fetch('api/v2/vocabs/resourcetypes').then(r => r.ok ? r.json() : Promise.reject()),
@@ -69,47 +67,67 @@ async function initializeAllDropdownsParallel() {
     licenses: fetch('api/v2/vocabs/licenses/all').then(r => r.ok ? r.json() : Promise.reject()),
     relations: fetch('api/v2/vocabs/relations').then(r => r.ok ? r.json() : { relations: [] }),
     identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] }),
-    
-    // Lazy Evaluation: Only call fetch if the condition is met!
     funders: (window.ELMO_FEATURES?.funderPidMode === 'ROR')
       ? Promise.resolve([])
-      : fetch('json/funders.json').then(r => r.ok ? r.json() : [])
+      : fetch('json/funders.json').then(r => r.ok ? r.json() : Promise.reject())
   };
 
-  try {
-    // 4. Execute all in parallel.
-    // If ANY critical fetch fails (rejects), Promise.all immediately rejects, 
-    // skipping the population step and routing directly to the catch block.
-    const results = await Promise.all(
-      Object.entries(fetchOperations).map(async ([key, promise]) => {
-        const data = await promise;
-        return [key, data];
-      })
-    );
+  // We convert the dictionary into an array of entries: [[key, promise], [key, promise]...]
+  const keys = Object.keys(fetchOperations);
+  const promises = Object.values(fetchOperations);
 
-    const data = Object.fromEntries(results);
+  // Promise.allSettled will NEVER reject. It always resolves once everything is done.
+  const results = await Promise.allSettled(promises);
 
-    // 5. Populate dropdowns with verified data
-    populateTimezoneDropdownWithData(data.timezones);
-    populateResourceTypeDropdownWithData(data.resourceTypes);
-    populateLanguageDropdownWithData(data.languages);
-    populateTitleTypeDropdownWithData(data.titleTypes);
-    populateLicenseDropdownWithData(data.licenses);
-    populateRelationsDropdownWithData(data.relations);
-    populateIdentifierTypesDropdownWithData(data.identifierTypes);
-    
+  // We map the settled results back to our keys
+  const data = {};
+  const failures = [];
+
+  results.forEach((result, index) => {
+    const key = keys[index];
+    if (result.status === 'fulfilled') {
+      data[key] = result.value;
+    } else {
+      // Keep track of exactly which key failed
+      failures.push(key);
+      console.warn(`Failed to fetch ${key} in parallel. Will use fallback.`);
+    }
+  });
+
+  // --- POPULATE SUCCESSFUL DROPDOWNS ---
+  if ('timezones' in data) populateTimezoneDropdownWithData(data.timezones);
+  if ('resourceTypes' in data) populateResourceTypeDropdownWithData(data.resourceTypes);
+  if ('languages' in data) populateLanguageDropdownWithData(data.languages);
+  if ('titleTypes' in data) populateTitleTypeDropdownWithData(data.titleTypes);
+  if ('licenses' in data) populateLicenseDropdownWithData(data.licenses);
+  if ('relations' in data) populateRelationsDropdownWithData(data.relations);
+  if ('identifierTypes' in data) populateIdentifierTypesDropdownWithData(data.identifierTypes);
+  
+  if ('funders' in data) {
     window.fundersData = data.funders;
     $(".inputFunder").each(function () {
       window.setUpAutocompleteFunder(this);
     });
-
-    document.dispatchEvent(new CustomEvent('dropdownsReady'));
-    
-  } catch (error) {
-    console.error('Error in parallel initialization:', error);
-    // 6. If anything failed, trigger sequential AJAX backups exactly ONCE.
-    runSequentialFallback();
   }
+
+  // --- TARGETED FALLBACKS ---
+  // Only trigger the sequential AJAX fallbacks for the ones that actually failed!
+  if (failures.includes('timezones')) setupTimezoneDropdownAjax();
+  if (failures.includes('resourceTypes')) setupResourceTypeDropdownAjax();
+  if (failures.includes('languages')) setupLanguageDropdownAjax();
+  if (failures.includes('titleTypes')) setupTitleTypeDropdownAjax();
+  
+  // If licenses/relations/identifiers failed and don't have fallbacks,
+  // we can at least restore their disabled state so they aren't stuck on "Loading..."
+  failures.forEach(key => {
+    if (dropdownSelectors[key]) {
+      dropdownSelectors[key].prop('disabled', false).empty().append(
+        $("<option>", { value: "", text: "Error loading options" })
+      );
+    }
+  });
+
+  document.dispatchEvent(new CustomEvent('dropdownsReady'));
 }
 
 /**
