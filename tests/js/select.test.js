@@ -58,6 +58,8 @@ describe('select.js', () => {
 
     const dropdownUtilsScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownUtils.js'), 'utf8');
     window.eval(dropdownUtilsScript);
+    const dropdownAjaxScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownAjax.js'), 'utf8');
+    window.eval(dropdownAjaxScript);
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/select.js'), 'utf8');
     window.eval(script);
   });
