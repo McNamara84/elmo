@@ -290,29 +290,41 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
     for ($i = 0; $i < count($titles); $i++) {
         $title_text = isset($titles[$i]) ? trim($titles[$i]) : '';
         $title_type_str = isset($titleTypes[$i]) ? trim($titleTypes[$i]) : '';
+        error_log("Processing title index $i: text='$title_text', type='$title_type_str'");
 
-        // Skip entirely empty entries (both text and type are empty)
-        if (empty($title_text) && empty($title_type_str)) {
-            continue;
-        }
 
         // Skip if text is empty (text is required)
         if (empty($title_text)) {
             continue;
         }
-
+        // Convert title_type string to integer if present
+        $title_type = intval($title_type_str);
+        
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
-            $defaultId = getDefaultTitleTypeId($connection, count($uniqueTitles));
+            $defaultId = getDefaultTitleTypeId($connection, $i);
             if ($defaultId === null) {
                 error_log("Cannot assign default title type: no Title_Type rows exist in database");
                 return false;
             }
-            $title_type_str = (string) $defaultId;
+            $title_type = $defaultId;
+        } else {
+            // get the title from the database to ensure it is valid
+            $stmt = $connection->prepare("SELECT name FROM Title_Type WHERE title_type_id = ?");
+            $stmt->bind_param("i", $title_type);
+            $stmt->execute();
+            $result = $stmt->get_result(); 
+
+            if ($result->num_rows === 0) {
+                error_log("Invalid title type ID provided: $title_type. Skipping this title.");
+                continue;
+            }
+            $row = $result->fetch_assoc();
+            $name_from_db = str_replace(" ", "", $row['name']);
+            $title_name = $row['name'];
         }
 
-        // Convert title_type string to integer if present
-        $title_type_int = intval($title_type_str);
+
 
         // (only for submit action): Validate the title type exists in the database
         if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
