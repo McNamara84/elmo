@@ -56,6 +56,8 @@ describe('select.js', () => {
     $.getJSON = jest.fn((url, cb) => { cb({identifierTypes: []}); return { fail: jest.fn() }; });
     $.ajax = jest.fn((opts) => { if(opts.success) opts.success({}); return { fail: jest.fn() }; });
 
+    const dropdownUtilsScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownUtils.js'), 'utf8');
+    window.eval(dropdownUtilsScript);
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/select.js'), 'utf8');
     window.eval(script);
   });
