@@ -58,21 +58,22 @@ $(document).ready(function () {
       const oldId = $(this).attr("id");
       if (oldId) {
         const newId = oldId.replace(/_\d+$/, "_" + tscRowIdCounter);
+
+        if (newId !== oldId) {
+          newTscLine.find(`label[for="${escapeSelector(oldId)}"]`).attr("for", newId);
+        }
+
         $(this).attr("id", newId);
       }
     });
+    newTscLine.find("input, select, textarea")
+      .removeClass("is-invalid is-valid js-required-on-submit stc-required-on-submit border-danger")
+      .removeAttr("required aria-required");
 
-    newTscLine.find("input:not(#input-stc-timezone), textarea")
-      .val("")
-      .removeClass("is-invalid is-valid")
-      .removeAttr("required");
+    newTscLine.find("input, textarea").val("");
 
-    newTscLine.find('select:not([name="tscTimezone[]"])').each(function () {
-      $(this).val('');
-      $(this).removeClass('is-invalid is-valid');
-      $(this).removeAttr('required');
-    });
-
+    newTscLine.find('select:not([name="tscTimezone[]"])').val('');
+    newTscLine.find('.stc-required-marker').remove();
     replaceHelpButtonInClonedRows(newTscLine);
 
     newTscLine.find("#button-stc-add").replaceWith(createRemoveButton());

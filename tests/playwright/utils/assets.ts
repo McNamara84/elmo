@@ -171,7 +171,6 @@ export async function registerStaticAssetRoutes(page: Page) {
   for (const pattern of STATIC_ASSET_ROUTE_PATTERNS) {
     await page.route(pattern, fulfillWithLocalAsset);
   }
-  console.log(`📦 Asset routes registered (${STATIC_ASSET_ROUTE_PATTERNS.length} patterns)`);
 }
 
 export async function expectHelpSectionVisible(page: Page, helpSectionId: string) {

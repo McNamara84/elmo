@@ -4,8 +4,12 @@
  * Unit tests for js/validation/orcidValidation.js
  */
 
+const fs = require('fs');
+const path = require('path');
+
 const {
   isValidOrcidChecksum,
+  extractOrcidIdentifier,
   formatOrcidInput,
   validateOrcidField,
   applyTranslationToElement
@@ -72,6 +76,20 @@ describe('isValidOrcidChecksum', () => {
   });
 });
 
+describe('extractOrcidIdentifier', () => {
+  test('extracts ORCID from https profile URL', () => {
+    expect(extractOrcidIdentifier('https://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
+  });
+
+  test('extracts ORCID from profile URL with trailing slash', () => {
+    expect(extractOrcidIdentifier('https://orcid.org/0000-0002-1694-233X/')).toBe('0000-0002-1694-233X');
+  });
+
+  test('keeps direct ORCID input unchanged', () => {
+    expect(extractOrcidIdentifier('0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
+  });
+});
+
 describe('formatOrcidInput', () => {
   test('formats raw digits with hyphens', () => {
     expect(formatOrcidInput('0000000218250097')).toBe('0000-0002-1825-0097');
@@ -85,6 +103,10 @@ describe('formatOrcidInput', () => {
     expect(formatOrcidInput('https://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
   });
 
+  test('strips ORCID URL prefix for the reported #698 ORCID', () => {
+    expect(formatOrcidInput('https://orcid.org/0009-0007-2910-0469')).toBe('0009-0007-2910-0469');
+  });
+
   test('strips ORCID URL prefix (http)', () => {
     expect(formatOrcidInput('http://orcid.org/0000-0002-1825-0097')).toBe('0000-0002-1825-0097');
   });
@@ -95,6 +117,10 @@ describe('formatOrcidInput', () => {
 
   test('preserves trailing X from URL', () => {
     expect(formatOrcidInput('https://orcid.org/0000-0002-1694-233X')).toBe('0000-0002-1694-233X');
+  });
+
+  test('preserves trailing X from URL with trailing slash', () => {
+    expect(formatOrcidInput('https://orcid.org/0000-0002-1694-233X/')).toBe('0000-0002-1694-233X');
   });
 
   test('truncates input longer than 16 characters', () => {
@@ -114,6 +140,19 @@ describe('formatOrcidInput', () => {
   });
 });
 
+
+describe('ORCID form markup', () => {
+  test('does not use maxlength on ORCID inputs so profile URLs can be pasted', () => {
+    const authorsHtml = fs.readFileSync(path.join(__dirname, '../../formgroups/authors.html'), 'utf8');
+    const contributorsHtml = fs.readFileSync(path.join(__dirname, '../../formgroups/contributorPersons.html'), 'utf8');
+    const container = document.createElement('div');
+    container.innerHTML = `${authorsHtml}${contributorsHtml}`;
+
+    container.querySelectorAll('input[name="orcids[]"], input[name="cbORCID[]"]').forEach((input) => {
+      expect(input.hasAttribute('maxlength')).toBe(false);
+    });
+  });
+});
 describe('validateOrcidField', () => {
   let input;
   let feedback;

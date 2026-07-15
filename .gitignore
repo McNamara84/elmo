@@ -1,4 +1,5 @@
 settings.php
+playwright-variant-lock.php
 .vscode/
 .phpunit.result.cache
 .env
@@ -12,13 +13,14 @@ install.html
 
 # Playwright
 test-results/
+test-results.json
 playwright-report/
 blob-report/
 playwright/.cache/
 debug-page.png
 tests/playwright/flows/outputDataActual/*
 !tests/playwright/flows/outputDataActual/.gitkeep
- 
+
 # Autosave files
 storage/drafts/
 
@@ -28,6 +30,7 @@ storage/cache/*.json
 
 # PHPUnit logs
 test.log
+.tmp/
 
 # Ignore all content in the xml directory...
 xml/*

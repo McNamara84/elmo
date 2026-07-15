@@ -221,6 +221,118 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   return node ? node.textContent.trim() : "";
 }
 
+function getAuthorStackController() {
+  return typeof window !== "undefined" && window.authorStack && typeof window.authorStack.setAuthors === "function"
+    ? window.authorStack
+    : null;
+}
+
+function normalizeRorId(value) {
+  return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, "") : "";
+}
+
+function buildAffiliationsPayload(xmlDoc, creatorNode, resolver) {
+  const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const affiliations = [];
+
+  for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
+    const affNode = affiliationNodes.snapshotItem(j);
+    const label = affNode.textContent.trim();
+    const rorId = normalizeRorId(affNode.getAttribute("affiliationIdentifier"));
+
+    if (label || rorId) {
+      affiliations.push({ label, rorId });
+    }
+  }
+
+  return affiliations;
+}
+
+function normalizeNameKey(familyName, givenName) {
+  return `${String(familyName || "").trim().toLowerCase()}\u0000${String(givenName || "").trim().toLowerCase()}`;
+}
+
+function getCurrentAuthorsPayload(authorStack) {
+  if (authorStack && typeof authorStack.collectPayload === "function") {
+    return authorStack.collectPayload();
+  }
+
+  const payloadInput = document.querySelector('input[name="authorsPayload"]');
+  if (!payloadInput || !payloadInput.value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(payloadInput.value);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function applyContactsToAuthorStack(contactPersons) {
+  const authorStack = getAuthorStackController();
+  if (!authorStack || !contactPersons.length) {
+    return false;
+  }
+
+  const authors = getCurrentAuthorsPayload(authorStack).map((author) => ({ ...author }));
+
+  contactPersons.forEach((contact) => {
+    const contactKey = normalizeNameKey(contact.familyname, contact.givenname);
+    let author = authors.find((candidate) => (
+      candidate.type === "person" && normalizeNameKey(candidate.familyname, candidate.givenname) === contactKey
+    ));
+
+    if (!author) {
+      author = {
+        type: "person",
+        familyname: contact.familyname,
+        givenname: contact.givenname,
+        orcid: "",
+        affiliations: []
+      };
+      authors.push(author);
+    }
+
+    author.isContact = true;
+    author.email = contact.email || author.email || "";
+    author.website = contact.website || author.website || "";
+  });
+
+  authorStack.setAuthors(authors);
+  return true;
+}
+
+function collectDataCiteContactPersons(xmlDoc) {
+  function dcResolver(prefix) {
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  const contactPersons = [];
+  const allContributors = xmlDoc.evaluate(
+    './/ns:contributors/ns:contributor',
+    xmlDoc,
+    dcResolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let i = 0; i < allContributors.snapshotLength; i++) {
+    const node = allContributors.snapshotItem(i);
+    if (node.getAttribute("contributorType") !== "ContactPerson") continue;
+
+    const familyname = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
+    const givenname = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
+
+    if (familyname && givenname) {
+      contactPersons.push({ familyname, givenname, email: "", website: "" });
+    }
+  }
+
+  return contactPersons;
+}
+
 /**
  * Process creators from XML and populate the form
  * @param {Document} xmlDoc - The parsed XML document
@@ -229,6 +341,46 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
 function processCreators(xmlDoc, resolver) {
   // Select all <creator> elements inside <creators> using namespace resolver
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  const authorStack = getAuthorStackController();
+  if (authorStack) {
+    const authors = [];
+
+    for (let i = 0; i < creatorNodes.snapshotLength; i++) {
+      const creatorNode = creatorNodes.snapshotItem(i);
+      const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
+      const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
+      const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+      const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+      const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
+      const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
+      const affiliations = buildAffiliationsPayload(xmlDoc, creatorNode, resolver);
+
+      if (givenname || familyname || nameType === "Personal") {
+        authors.push({
+          type: "person",
+          familyname,
+          givenname,
+          orcid,
+          isContact: false,
+          email: "",
+          website: "",
+          affiliations
+        });
+      } else if (creatorName || nameType === "Organizational") {
+        authors.push({
+          type: "institution",
+          institutionname: creatorName,
+          affiliations
+        });
+      }
+    }
+
+    if (authors.length > 0) {
+      authorStack.setAuthors(authors);
+      return;
+    }
+  }
 
   // Separate counter for person authors to avoid index mismatch when creators
   // contain a mix of persons and institutions (fixes #739)
@@ -267,14 +419,41 @@ function processCreators(xmlDoc, resolver) {
     // If givenName or familyName exists, we treat this as a personal author
     if (givenName || familyName) {
       let $row;
+      const $rows = $("div[data-creator-row]");
+
       if (personIndex === 0) {
-        // For the first person creator, use the first existing row in the form
+        // For the first person creator, use the first existing row in the form.
+        // If no row exists yet, create one first.
+        if ($rows.length === 0) {
+          $("#button-author-add").trigger("click");
+        }
         $row = $("div[data-creator-row]").eq(0);
       } else {
-        // For subsequent person creators, simulate click on "add author" button to create new row
-        $("#button-author-add").click();
-        $row = $("div[data-creator-row]").eq(personIndex);
+        // For subsequent person creators, add a new row and verify it exists.
+        const countBefore = $rows.length;
+        $("#button-author-add").trigger("click");
+        const countAfter = $("div[data-creator-row]").length;
+
+        if (countAfter <= countBefore) {
+          console.warn(
+            "processCreators: could not create new author row; skipping creator",
+            { givenName, familyName }
+          );
+          continue;
+        }
+
+        // Use the newly created last row rather than relying on a specific index.
+        $row = $("div[data-creator-row]").last();
       }
+
+      if (!$row || $row.length === 0) {
+        console.warn(
+          "processCreators: target author row not found; skipping creator",
+          { givenName, familyName }
+        );
+        continue;
+      }
+
       personIndex++;
 
       // Populate the personal author fields
@@ -354,6 +533,49 @@ function processContactPersons(xmlDoc) {
   }
 
   const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+  if (getAuthorStackController()) {
+    const contactPersons = [];
+
+    for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
+      const contactPersonNode = contactPersonNodes.snapshotItem(i);
+      const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
+      const [familyname, givenname] = fullName?.split(", ");
+
+      if (!givenname || !familyname) {
+        continue;
+      }
+
+      let email = getNodeText(
+        contactPersonNode,
+        "gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString",
+        xmlDoc,
+        nsResolver
+      );
+      let website = getNodeText(
+        contactPersonNode,
+        "gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL",
+        xmlDoc,
+        nsResolver
+      );
+
+      if (!email) {
+        email = getNodeText(contactPersonNode, "//electronicMailAddress/CharacterString", xmlDoc, null);
+      }
+      if (!website) {
+        website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
+      }
+
+      contactPersons.push({ familyname, givenname, email, website });
+    }
+
+    if (contactPersonNodes.snapshotLength === 0) {
+      contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
+    }
+
+    applyContactsToAuthorStack(contactPersons);
+    return;
+  }
 
   for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
     const contactPersonNode = contactPersonNodes.snapshotItem(i);
@@ -438,6 +660,11 @@ function processContactPersons(xmlDoc) {
 function processContactPersonsFromDataCite(xmlDoc) {
   function dcResolver(prefix) {
     return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+  }
+
+  if (getAuthorStackController()) {
+    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc));
+    return;
   }
 
   // Select all contributors, then filter by attribute in JS
@@ -1027,6 +1254,10 @@ function fillTemporalFields($row, temporalData) {
   }
   $row.find('input[name="tscDateEnd[]"]').val(temporalData.endDate);
 
+  if (!temporalData.timezoneOffset) {
+    return;
+  }
+
   const timezoneField = $row.find('select[name="tscTimezone[]"]');
   timezoneField.find("option").each(function () {
     if ($(this).text().includes(temporalData.timezoneOffset)) {
@@ -1108,10 +1339,14 @@ function processDescriptions(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processDates(xmlDoc, resolver) {
-  const dateNodes = xmlDoc.evaluate("//ns:dates/ns:date", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const dateNodes = Array.from(xmlDoc.getElementsByTagName("*")).filter((node) => (
+    node.localName === "date" &&
+    node.parentElement?.localName === "dates" &&
+    (!node.namespaceURI || node.namespaceURI === "http://datacite.org/schema/kernel-4")
+  ));
 
-  for (let i = 0; i < dateNodes.snapshotLength; i++) {
-    const dateNode = dateNodes.snapshotItem(i);
+  for (let i = 0; i < dateNodes.length; i++) {
+    const dateNode = dateNodes[i];
     const dateType = dateNode.getAttribute("dateType");
     const dateValue = dateNode.textContent.trim();
 
@@ -1130,38 +1365,32 @@ function processDates(xmlDoc, resolver) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processKeywords(xmlDoc, resolver) {
-  const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  // Collect all subject nodes from the XML
+  const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
-  // Thesaurus inputs — may not exist if the thesaurus is disabled via ERNIE availability
-  const tagifyInputGCMD = document.querySelector("#input-sciencekeyword");
-  const tagifyInputPlatforms = document.querySelector("#input-platforms");
-  const tagifyInputInstruments = document.querySelector("#input-instruments");
-  const tagifyInputChronostrat = document.querySelector("#input-chronostratigraphy");
-  const tagifyInputGemet = document.querySelector("#input-gemet");
+  // Map each keyword group to its Tagify instance (if available)
+  const tagifyMap = {
+    free: document.querySelector("#input-freekeyword")?._tagify || null,
+    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+    gcmdScience: document.querySelector("#input-sciencekeyword")?._tagify || null,
+    gcmdPlatforms: document.querySelector("#input-platforms")?._tagify || null,
+    gcmdInstruments: document.querySelector("#input-instruments")?._tagify || null,
+    chronostrat: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+    gemet: document.querySelector("#input-gemet")?._tagify || null,
+  };
 
-  // Always-present inputs
-  const tagifyInputMsl = document.querySelector("#input-mslkeyword");
-  const tagifyInputFree = document.querySelector("#input-freekeyword");
+  // Keep only initialized Tagify fields
+  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
-  if (!tagifyInputFree?._tagify) {
-    console.error("Free keyword Tagify instance is not properly initialized.");
+  if (allTagifyInstances.length === 0) {
+    console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
     return;
   }
 
-  const tagifyFree = tagifyInputFree._tagify;
-  const tagifyMsl = tagifyInputMsl?._tagify;
+  // Clear existing tags before importing new ones
+  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
-  // Clear existing tags on all available inputs
-  tagifyFree.removeAllTags();
-  tagifyMsl?.removeAllTags();
-  tagifyInputGCMD?._tagify?.removeAllTags();
-  tagifyInputPlatforms?._tagify?.removeAllTags();
-  tagifyInputInstruments?._tagify?.removeAllTags();
-  tagifyInputChronostrat?._tagify?.removeAllTags();
-  tagifyInputGemet?._tagify?.removeAllTags();
-
-  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-    const subjectNode = subjectNodes.snapshotItem(i);
+  function buildTagData(subjectNode) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
     const schemeURI = subjectNode.getAttribute("schemeURI") || "";
     const valueURI = subjectNode.getAttribute("valueURI") || "";
@@ -1174,40 +1403,65 @@ function processKeywords(xmlDoc, resolver) {
       schemeURI: schemeURI,
       id: valueURI,
     };
+
     if (language) {
       tagData.language = language;
     }
 
-    // Route tag to appropriate Tagify instance based on schemeURI
+    return {
+      subjectScheme,
+      schemeURI,
+      valueURI,
+      keyword,
+      tagData,
+    };
+  }
+
+  // Resolve which form group a subject belongs to
+  function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      if (tagifyInputGCMD?._tagify) tagifyInputGCMD._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      if (tagifyInputPlatforms?._tagify) tagifyInputPlatforms._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      if (tagifyInputInstruments?._tagify) tagifyInputInstruments._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (
-      schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020" ||
-      subjectScheme === "International Chronostratigraphic Chart" ||
-      subjectScheme === "Chronostratigraphic Chart"
-    ) {
-      if (tagifyInputChronostrat?._tagify) tagifyInputChronostrat._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (
-      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
-      schemeURI === "http://www.eionet.europa.eu/gemet/concept/" ||
-      subjectScheme?.includes("GEMET")
-    ) {
-      if (tagifyInputGemet?._tagify) tagifyInputGemet._tagify.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      if (tagifyMsl) tagifyMsl.addTags([tagData]);
-      else tagifyFree.addTags([tagData]);
-    } else {
-      tagifyFree.addTags([tagData]);
+      return "gcmdScience";
     }
+
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
+      return "gcmdPlatforms";
+    }
+
+    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
+      return "gcmdInstruments";
+    }
+
+    if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
+      return "chronostrat";
+    }
+
+    if (
+      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
+      schemeURI === "http://www.eionet.europa.eu/gemet/concept/"
+    ) {
+      return "gemet";
+    }
+
+    if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
+      return "msl";
+    }
+
+    return "free";
+  }
+
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
+
+    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
+    const targetTagify = tagifyMap[targetGroup];
+
+    // Ignore keywords if the target form group is disabled
+    if (!targetTagify) {
+      continue;
+    }
+
+    targetTagify.addTags([tagData]);
   }
 }
 
@@ -1355,6 +1609,8 @@ function processFunders(xmlDoc, resolver) {
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
@@ -1470,8 +1726,11 @@ async function loadXmlToForm(xmlDoc) {
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
   }
-  // Process descriptions
-  processDescriptions(xmlDoc, resolver);
+  // For ICGEM schema files, descriptions use a section attribute (not DataCite descriptionType)
+  const isIcgem = window.icgemModule?.detectXmlSchema(xmlDoc) === 'icgem';
+  if (!isIcgem) {
+    processDescriptions(xmlDoc, resolver);
+  }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
   // Process Keywords
@@ -1484,6 +1743,10 @@ async function loadXmlToForm(xmlDoc) {
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
+  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  if (isIcgem) {
+    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+  }
 }
 
 // Export for testing (CommonJS)
@@ -1505,6 +1768,7 @@ if (typeof module !== 'undefined' && module.exports) {
         getOrCreatePersonRow,
         processContributors,
         processIndividualContributor,
+        processDates,
         updateContributorMap,
         getTagifyInstance,
         populateFormWithContributors,
@@ -1512,6 +1776,7 @@ if (typeof module !== 'undefined' && module.exports) {
         parseTemporalData,
         getGeoLocationData,
         fillSpatialFields,
+        fillTemporalFields,
         processUsedInstruments,
         processDescriptions,
         processRelatedWorks,

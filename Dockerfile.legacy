@@ -50,8 +50,9 @@ COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 # Install PHP dependencies
 RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
-# Ensure that the standard user www-data has ownership of the application files
-RUN chown -R www-data:www-data /var/www/html
+# Ensure that the standard user www-data can write runtime-generated files.
+RUN mkdir -p /var/www/html/storage /var/www/html/xml \
+    && chown -R www-data:www-data /var/www/html/storage /var/www/html/xml
 
 # Install database schema and set entrypoint
 COPY docker-entrypoint.sh /usr/local/bin/

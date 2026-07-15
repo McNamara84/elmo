@@ -6,7 +6,7 @@ import exampleData from './inputDataEndToEnd.json';
 /**
  * Fills in the minimal required fields for a dataset form.
  * Completes: publication year, resource type, language, title, author details (ORCID, name),
- * affiliation, contact person email, abstract, and date created.
+ * affiliation, contact person email, abstract, and a Date Created value for stable exports.
  * @param {Page} page - The Playwright page object to interact with
  * @returns {Promise<void>}
  */
@@ -24,14 +24,16 @@ export async function completeMinimalDatasetForm(page: Page) {
     affiliation: 'GFZ Helmholtz Centre for Geosciences',
   });
 
-  await page.getByText('ContactPerson?').click();
+  const contactToggle = page.locator(`${SELECTORS.formGroups.authors} [data-author-contact-toggle]`).first();
+  await expect(contactToggle).toBeVisible();
+  await contactToggle.click();
 
   const emailField = page.getByRole('textbox', { name: 'Email address*' });
   await expect(emailField).toBeVisible();
   await emailField.fill('example@gmail.com');
 
   await page.getByRole('textbox', { name: 'Abstract*' }).fill('Necessary abstract');
-  await page.getByRole('textbox', { name: 'Date created*' }).fill('2025-01-01');
+  await page.locator('#input-date-created').fill('2025-01-01');
 }
 
 /**
@@ -153,11 +155,9 @@ async function addAuthorInstitution(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  while (await page.locator('[data-authorinstitution-row]').count() <= index) {
     await page.locator('#button-authorinstitution-add').click();
-    // Wait for the new author institution row to be visible
-    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible' });
+    await page.locator('[data-authorinstitution-row]').nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific author institution row
@@ -166,11 +166,11 @@ async function addAuthorInstitution(
   // Fill institution name
   await institutionRow.locator('[id^="input-authorinstitution-name"]').fill(data.institutionName);
 
-  // Fill affiliation using tagify
-  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
-  await affiliationTagifyInput.click();
-  await affiliationTagifyInput.type(data.affiliation);
-  await page.keyboard.press('Enter');
+  const affiliationEditor = institutionRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 
 /**
@@ -416,7 +416,7 @@ async function addAuthor(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
+  while (await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).count() <= index) {
     await page.locator('#button-author-add').click();
     await page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).nth(index).waitFor({ state: 'visible', timeout: 5000 });
   }
@@ -444,25 +444,91 @@ async function addAuthor(
   await firstNameField.fill(data.firstName);
   await expect(firstNameField).toHaveValue(data.firstName);
 
-  // Add affiliation tag via Tagify API directly (more reliable than type+Enter
-  // because Tagify's async API search can block Enter key processing during loading state)
-  const affiliationInput = authorRow.locator('input[id^="input-author-affiliation"]');
-  await expect(async () => {
-    const hasTagify = await affiliationInput.evaluate((el: any) => !!el._tagify);
-    expect(hasTagify).toBe(true);
-  }).toPass({ timeout: 10000 });
-
-  await affiliationInput.evaluate((el: any, affiliation: string) => {
-    el._tagify.addTags([{ value: affiliation }]);
-  }, data.affiliation);
-
-  // Wait for the tagify tag element to appear in the DOM
-  await authorRow.locator('.tagify__tag').first().waitFor({ state: 'visible', timeout: 5000 });
-
-  // Brief settle time so the next addAuthor call doesn't race with Tagify rendering
-  await page.waitForTimeout(200);
+  const affiliationEditor = authorRow.locator('[data-author-affiliation-editor]');
+  await expect(affiliationEditor).toBeVisible();
+  await affiliationEditor.locator('[data-author-affiliation-input]').fill(data.affiliation);
+  await affiliationEditor.locator('[data-author-affiliation-add]').click();
+  await expect(affiliationEditor.locator('[data-author-affiliation-label]').first()).toHaveValue(data.affiliation);
 }
 export { exampleData };
+
+/**
+ * Fills all GGMs/ICGEM-specific fields with representative test values.
+ * Covers: Definition, Characteristics, all three Model Type sections,
+ * Data Sources (2 rows), and the Abstract description.
+ *
+ * Intended for both the clear-reset test and any future GGMs flow tests.
+ */
+export async function fillGEM(page: Page) {
+  const DS_ROW = '#group-datasources .row[data-source-row]';
+
+  // Wait for dynamically-loaded selects to be populated from the API
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+
+  // ── Definition ────────────────────────────────────────────────────────────
+  await page.locator('#input-celestial-body').selectOption('Moon of the Earth');
+  await page.locator('#input-model-name').fill('TEST_CLEAR_MODEL');
+
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+  await page.locator('#input-mathematical-representation').selectOption({ index: 1 });
+
+  await page.waitForFunction(
+    () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
+    { timeout: 10_000 },
+  );
+  await page.locator('#input-file-format').selectOption({ index: 1 });
+
+  // ── Characteristics ───────────────────────────────────────────────────────
+  await page.locator('#input-tide-system').selectOption('Zero-tide');
+  await page.locator('#input-degree').fill('300');
+  await page.locator('#input-errors').selectOption('calibrated');
+  await page.locator('#input-error-handling-approach').fill('Calibration approach text');
+  await page.locator('#input-earth-gravity-constant').fill('3.986004415e14');
+
+  // ── Model Type: Static ────────────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Static');
+  await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
+  await page.locator('#checkbox-time-variable').check();
+  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  await page.locator('#input-static-description').fill('Static time-variable description');
+
+  // ── Model Type: Temporal ──────────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Temporal');
+  await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible();
+  await page.locator('#input-temporal-start').fill('2002-04-01');
+  await page.locator('#input-temporal-end').fill('2023-06-30');
+  await page.locator('#select-temporal-frequency-predef').selectOption('monthly');
+  await page.locator('#input-temporal-institution').fill('GFZ');
+  await page.locator('#input-release-number').fill('RL07');
+
+  // ── Model Type: Topographic ───────────────────────────────────────────────
+  await page.locator('#input-model-type').selectOption('Topographic');
+  await expect(page.locator('.visibility-modeltype-topographic')).toBeVisible();
+  await page.locator('#select-topo-layerapproach').selectOption('single-layer');
+  await page.locator('#select-topo-domain').selectOption('spatial');
+  await page.locator('#select-topo-approximation').selectOption('spherical');
+  await page.locator('#select-topo-density').selectOption('constant');
+  await page.locator('#input-topo-density-details').fill('2670 kg/m3');
+
+  // ── Data Sources – add a second row as type Model so dName[] is visible ───
+  await page.locator('#button-datasource-add').click();
+  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+
+  const secondRow = page.locator(DS_ROW).nth(1);
+  // Must select type M (Model) first: only M shows visibility-datasources-identifier
+  await secondRow.locator('select[name="datasource_type[]"]').selectOption('M');
+  await secondRow.locator('textarea[name="datasource_description[]"]').fill('Second source description');
+  await secondRow.locator('input[name="dName[]"]').fill('GRACE-FO');
+
+  // ── Descriptions ──────────────────────────────────────────────────────────
+  await page.locator('#input-abstract').fill('Test abstract for clear test');
+}
 
 /**
  * Simulates the Submit handler behavior for submit-only required fields.

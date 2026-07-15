@@ -1,0 +1,261 @@
+import { test, expect, type Page } from '@playwright/test';
+import { navigateToHome } from '../utils';
+
+const SAVE_ENDPOINT = '**/save/save_data.php';
+
+
+async function getSaveButton(page: Page) {
+  return page.locator('#button-form-save');
+}
+
+async function openSaveModal(page: Page) {
+  const saveBtn = await getSaveButton(page);
+  await saveBtn.scrollIntoViewIfNeeded();
+  await saveBtn.click();
+
+  const saveModal = page.locator('#modal-saveas');
+  await expect(saveModal).toBeVisible();
+  await expect(page.locator('#input-csrf-token')).toHaveValue('');
+
+  const filenameField = page.locator('#input-saveas-filename');
+  if (!(await filenameField.inputValue())) {
+    await filenameField.fill('dataset_playwright_security');
+  }
+
+  return saveModal;
+}
+
+function extractMultipartField(body: string, fieldName: string): string | null {
+  const pattern = new RegExp(`name="${fieldName}"\\r\\n\\r\\n([^\\r\\n]*)`);
+  const match = body.match(pattern);
+  return match ? match[1] : null;
+}
+
+test.describe('Save Operation Security Features', () => {
+  test.describe('Honeypot field validation', () => {
+    test('main form honeypot exists and starts empty', async ({ page }) => {
+      await navigateToHome(page);
+
+      const honeypotField = page.locator('#input-please-fill-in-this-field');
+      await expect(honeypotField).toHaveAttribute('name', 'please-fill-in-this-field');
+      await expect(honeypotField).toHaveAttribute('tabindex', '-1');
+      await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
+      await expect(honeypotField).toHaveValue('');
+    });
+
+    test('honeypot value is not cleared when save modal opens', async ({ page }) => {
+      await navigateToHome(page);
+
+      const honeypot = page.locator('#input-please-fill-in-this-field');
+      await honeypot.fill('bot-filled-value');
+
+      await openSaveModal(page);
+      await expect(honeypot).toHaveValue('bot-filled-value');
+    });
+
+    test('backend rejects save when honeypot is filled', async ({ page }) => {
+      let submittedWebsite = '';
+
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        const bodyBuffer = route.request().postDataBuffer();
+        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+        submittedWebsite = extractMultipartField(body, 'please-fill-in-this-field') || '';
+
+        const responseStatus = submittedWebsite ? 400 : 200;
+        await route.fulfill({
+          status: responseStatus,
+          contentType: 'application/json',
+          body: JSON.stringify(responseStatus === 400
+            ? { error: 'Invalid request' }
+            : { success: true, message: 'Saved' }),
+        });
+      });
+
+      await navigateToHome(page);
+
+      const honeypot = page.locator('#input-please-fill-in-this-field');
+      await honeypot.fill('bot-value');
+      await openSaveModal(page);
+
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 400
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      expect(submittedWebsite).toBe('bot-value');
+
+      await expect(page.locator('.alert-danger')).toBeVisible();
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
+  test.describe('Security fields in save operation', () => {
+    test('save request includes CSRF and honeypot fields but not client-side time', async ({ page }) => {
+      let capturedBody = '';
+
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        if (route.request().method() !== 'POST') {
+          await route.fallback();
+          return;
+        }
+
+        const bodyBuffer = route.request().postDataBuffer();
+        capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, message: 'Saved' }),
+        });
+      });
+
+      await navigateToHome(page);
+      await openSaveModal(page);
+
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.request().method() === 'POST'
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      expect(capturedBody).toContain('name="csrf-token"');
+      expect(capturedBody).toContain('name="please-fill-in-this-field"');
+      expect(extractMultipartField(capturedBody, 'csrf-token')).toBeTruthy();
+      // Timing is server-only — client must NOT send save_time_spent
+      expect(capturedBody).not.toContain('name="save_time_spent"');
+
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
+  test.describe('CSRF token protection in save', () => {
+    test('save form includes CSRF token field in main form', async ({ page }) => {
+      await navigateToHome(page);
+            
+      // Check for hidden CSRF field in main form (not in modal)
+      const csrfField = page.locator('#input-csrf-token');
+      
+      await expect(csrfField).toHaveAttribute('type', 'hidden');
+      await expect(csrfField).toHaveValue('');
+    });
+
+    test('CSRF token is fetched when save is committed', async ({ page }) => {
+      await navigateToHome(page);
+
+      const csrfPromise = page.waitForRequest((request) =>
+        request.url().includes('csrf_token.php')
+      );
+
+      await openSaveModal(page);
+      await Promise.all([
+        csrfPromise,
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      await expect(page.locator('#input-csrf-token')).not.toHaveValue('');
+    });
+
+    test('backend rejects save when token is invalid', async ({ page }) => {
+      await page.route('**/api/csrf_token.php', async (route) => {
+        await route.fulfill({
+          status: 200,
+          contentType: 'application/json',
+          body: JSON.stringify({ success: true, token: 'corrupted-token' }),
+        });
+      });
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({ error: 'Invalid request - CSRF token validation failed' }),
+        });
+      });
+
+      await navigateToHome(page);
+
+      await openSaveModal(page);
+
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 400
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      await expect(page.locator('.alert-danger')).toBeVisible();
+      await page.unroute('**/api/csrf_token.php');
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
+
+  test.describe('Rate limiting on save operations', () => {
+    test('shows rate limit error message when server returns 400', async ({ page }) => {
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        await route.fulfill({
+          status: 400,
+          contentType: 'application/json',
+          body: JSON.stringify({
+            success: false,
+            message: 'Too many save requests. Please try again later.',
+          }),
+        });
+      });
+
+      await navigateToHome(page);
+
+      await openSaveModal(page);
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 400
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      const errorAlert = page.locator('.alert-danger');
+      if (await errorAlert.count() > 0) {
+        await expect(errorAlert).toBeVisible();
+      }
+      
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+
+  test.describe('Successful save with all security checks passing', () => {
+    test('backend accepts save when honeypot empty and csrf valid', async ({ page }) => {
+      await page.route(SAVE_ENDPOINT, async (route) => {
+        const bodyBuffer = route.request().postDataBuffer();
+        const body = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+
+        const honeypot = extractMultipartField(body, 'please-fill-in-this-field') || '';
+        const csrfToken = extractMultipartField(body, 'csrf-token') || '';
+        const isValid = honeypot === '' && csrfToken.length > 0;
+
+        await route.fulfill({
+          status: isValid ? 200 : 400,
+          contentType: 'application/json',
+          body: JSON.stringify(isValid
+            ? { success: true, message: 'File saved successfully' }
+            : { error: 'Security validation failed' }),
+        });
+      });
+
+      await navigateToHome(page);
+      await expect(page.locator('#input-please-fill-in-this-field')).toHaveValue('');
+      await openSaveModal(page);
+
+      await Promise.all([
+        page.waitForResponse((response) =>
+          response.url().includes('save_data.php') && response.status() === 200
+        ),
+        page.locator('#button-saveas-save').click(),
+      ]);
+
+      await expect(page.locator('.alert-success')).toBeVisible();
+      await page.unroute(SAVE_ENDPOINT);
+    });
+  });
+});

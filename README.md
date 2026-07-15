@@ -9,7 +9,7 @@
 
 # ELMO - Enhanced Linked Metadata Organizer
 
-The Enhanced Linked Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema.
+The Enhanced Linked Metadata Organizer (ELMO) is based on a student cooperation project between the [University of Applied Sciences Potsdam](https://fh-potsdam.de) and the [GFZ Helmholtz Centre for Geosciences](https://gfz.de). The editor saves metadata for research datasets in valid XML files according to the DataCite and ISO schema and supports standardized DataCite JSON-LD for local save and reload workflows.
 
 # Citation
 
@@ -45,6 +45,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Lazy loading of thesaurus data (JSON files loaded only when modals are opened).
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
+- Local save and reload of standardized metadata as XML or JSON-LD.
 - Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
@@ -100,7 +101,29 @@ This section outlines the automatic processes handled by the Docker environment 
 
 **2. `Dockerfile`** 
 - **Base Image:** Installs `php 8.5-apache` and essential dependencies, including the database client.
-- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). If you don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Multi-stage build:** The PHP web container -- built from `Dockerfile.db` -- uses a multi-stage build technique. The final `prod` image does not need everything created during the build process, so it only receives the required artifacts and runs as a non-root user. Setup is:
+
+  ```mermaid
+  flowchart LR
+      base[base<br/>installs PHP deps and configures server]
+      dev[dev<br/>installs Node.js + Composer deps<br/>and copies project code]
+      builder[builder<br/>prepares production dependencies]
+      prod[prod<br/>non-root runtime image]
+
+      base --> dev
+      dev --> builder
+      base --> prod
+      builder -->|COPY --from=builder| prod
+  ```
+
+  Where:
+  - `base` installs the PHP dependencies and configures the server.
+  - `dev` installs Node.js, Composer, and project dependencies; copies the code into the container; and runs the entrypoint script. This target is meant for full control in local development.
+  - `builder` minimizes the Composer installation for production artifacts.
+  - `prod` gets the pre-compiled dependencies, switches to a non-root user, and runs the entrypoint script. This is more fit for mission-critical tasks.
+
+
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
@@ -154,6 +177,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively.
+  - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
   - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
@@ -769,18 +793,19 @@ Keywords from the GCMD vocabulary. GCMD Science Keywords, GCMD Platforms, and GC
   - In the Elmo-MSL, the keywords `multi-scale laboratories` and `EPOS` are pre-filled as default values in this field but can be removed by the user.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/subject/#a-scheme)
   - Example values: `Seismic tremor`, `Acoustic Emission`
+  - Free keywords can be entered manually or imported from a CSV file via the Upload CSV File Button. Imported values are treated like manually entered keywords and must also be unique.
 
 ### Dates
-In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType dateType="Available">` for the Embargo and `dateType="Created"` for the Date created.
-In the ISO scheme: The data from Date created are mapped to `<date>`, while Embargo until are mapped to `<gml:endPosition>`.
+In the DataCite scheme: All field data are mapped to `<dates>`, with `dateType="Available"` for the Embargo, `dateType="Created"` for Date created when it is provided, and `dateType="Submitted"` added automatically only when the dataset is submitted.
+In the ISO scheme: The data from Date created are mapped to `<date>` when provided, while Embargo until is mapped to `<gml:endPosition>`.
 
 - Date created
   
   This field contains the date the resource itself was put together; this could refer to a timeframe in ancient history, a date range, or a single date for a final component, e.g., the finalized file with all the data.
   - Data type: Date
-  - Occurrence: 1
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `dateCreated` in the `resource` table
-  - Restrictions: This field must be a valid calendar date
+  - Restrictions: Optional field. If provided, this field must be a valid calendar date
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#created)
   - Example values: `2024-06-05` `1999-04-07`
 
@@ -1349,7 +1374,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | *language*                                |                    1                    |                  --                   | `<subject xml:lang>`                                                                                                                                                        |
 |                            | **Free Keyword**                          |                   0-n                   |                  0-n                  | `<subject>`                                                                                                                                                                 |
 | Dates                      |                                           |                                         |                                       | `<date>`                                                                                                                                                                    |
-|                            | **Date created**                          |                    1                    |                  0-n                  | `<date dateType="Created">`                                                                                                                                                 |
+|                            | **Date created**                          |                   0-1                   |                  0-n                  | `<date dateType="Created">` when provided; `<date dateType="Submitted">` is added automatically on submit                                                                  |
 |                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
 | Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
 |                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
@@ -1393,6 +1418,25 @@ The following table gives a quick overview on the occurences of the form fields 
 
   ## Architecture and Data Flow
   </summary>
+
+### JSON-LD Export and Import
+
+The JSON-LD workflow intentionally reuses the existing XML path instead of maintaining a separate field-mapping implementation.
+
+**Export flow**
+1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
+2. The save pipeline persists the current form state first, just like the XML workflow.
+3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
+4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+5. The download response is returned as `application/ld+json`.
+
+**Import flow**
+1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
+2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
+3. The converted XML is then handed to `loadXmlToForm()`.
+4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+
+This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
 
 The `saveGGMsDataSources` function orchestrates a multi-step pipeline that transforms frontend form data into structured database records, often triggering "side effects" to maintain data integrity across the system.
 
@@ -1478,7 +1522,7 @@ Clicking Submit activates all validation rules and dynamic requirements. The for
 - **Always required on submit**
 
 The metadata editor has some fields that are always required for a valid submission, independent of dynamic rules:
-**Publication Year**, **Resource Type**, **Language of dataset**, At least one **main Title**, **Author Lastname**, **Author Firstname**, **Abstract (Descriptions)** and **Date created**
+**Publication Year**, **Resource Type**, **Language of dataset**, At least one **main Title**, **Author Lastname**, **Author Firstname** and **Abstract (Descriptions)**
 
 Depending on the chosen dataset type or page, additional fields may be required (for example, ICGEM‑specific properties for Global Geopotential Models).
 
@@ -1665,7 +1709,9 @@ npm test -- --watch # run in watch mode
 
 ### Playwright (End-to-End Tests)
 
-Playwright tests live in `tests/playwright/` and run against the four ELMO Docker instances:
+Playwright tests live in `tests/playwright/` 
+
+In CI - Github Actions they run against the four ELMO Docker instances:
 
 | Playwright Project | Browser | ELMO Instance | URL |
 |--------------------|---------|---------------|-----|
@@ -1673,6 +1719,8 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 | `webkit` | WebKit (Safari) | MSL Edition | `http://localhost:8081/` |
 | `firefox-gem` | Firefox | ICGEM Edition | `http://localhost:8082/` |
 | `firefox-igsn` | Firefox | IGSN Edition | `http://localhost:8083/` |
+
+Locally, 1 docker container is enough. The tests run using 4 configuration files (one for each variant).
 
 #### Prerequisites
 
@@ -1691,25 +1739,53 @@ Playwright tests live in `tests/playwright/` and run against the four ELMO Docke
 
 #### Running Playwright Tests
 
+**Running all tests at once:**
+
 ```bash
-# Run all tests (all browsers/projects)
+# Run all 4 variants sequentially on a single container (settings switched between variants)
+# This uses the default config (playwright.config.ts with workers:1)
 npx playwright test
+```
 
-# Run only one project (e.g. only Chromium / Standard instance)
-npx playwright test --project=chromium
+**Running a specific variant (recommended for development):**
 
+```bash
+# Fast parallel execution with full test scope for each variant:
+npx playwright test --config=playwright.generic.config.ts  # Standard DataCite edition
+npx playwright test --config=playwright.gem.config.ts      # ICGEM Global Geopotential Models
+npx playwright test --config=playwright.msl.config.ts      # MSL Multi-Scale Laboratories edition
+npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated GeoSample Metadata
+```
+
+**Running individual tests:**
+
+```bash
 # Run a specific test file
 npx playwright test tests/playwright/formgroups/authors.spec.ts
 
-# Run tests with visible browser (headed mode)
-npx playwright test --headed --project=chromium
+# Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
+npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
 
 # Run a single test by title
 npx playwright test -g "populates author details"
 
+# Run only one browser/project (e.g. only Chromium)
+npx playwright test --project=chromium
+
+# Run tests with visible browser (headed mode)
+npx playwright test --headed --project=chromium
+
 # Show the HTML report after a test run
 npx playwright show-report
 ```
+
+**Important:** When running tests for a specific variant locally, always pass the correct `--config` file:
+- **Generic tests:** `--config=playwright.generic.config.ts`
+- **GEM tests:** `--config=playwright.gem.config.ts`
+- **MSL tests:** `--config=playwright.msl.config.ts`
+- **IGSN tests:** `--config=playwright.igsn.config.ts`
+
+**Note on variant configs:** The per-variant configs (`playwright.*.config.ts`) run tests in parallel (`fullyParallel: true, workers: undefined`) for fast feedback during development. The default config (`playwright.config.ts`) runs all 4 variants sequentially (`workers: 1`), automatically switching `settings.php` between variants—this is what CI uses.
 
 #### Troubleshooting
 

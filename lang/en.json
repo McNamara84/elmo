@@ -105,7 +105,42 @@
         "licenseTitle": "License"
     },
     "authors": {
-        "title": "Author: Persons",
+        "title": "Authors",
+        "stackTitle": "Authors",
+        "person": "Person",
+        "institution": "Institution",
+        "typeSwitcherLabel": "Author type",
+        "typeSwitchLocked": "Type can only be changed while this entry is empty.",
+        "addPerson": "Add person",
+        "addInstitution": "Add institution",
+        "dragHandle": "Drag & drop to change order",
+        "removeEntry": "Remove author entry",
+        "editEntry": "Edit author entry",
+        "collapseEntry": "Collapse author entry",
+        "moveEntryUp": "Move author up",
+        "moveEntryDown": "Move author down",
+        "authorSingular": "author",
+        "authorPlural": "authors",
+        "entrySingular": "entry",
+        "entryPlural": "entries",
+        "contactSingular": "contact",
+        "contactPlural": "contacts",
+        "contactPersonSingular": "contact person",
+        "contactPersonPlural": "contact persons",
+        "contactPersonBadge": "Contact person",
+        "contactPersonLabel": "Contact person",
+        "markAsContact": "Mark as contact",
+        "contactRequired": "at least 1 contact required",
+        "entriesSummary": "{count} {label}",
+        "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
+        "affiliationAdd": "Add affiliation",
+        "affiliationEdit": "Edit affiliation",
+        "affiliationSearch": "Search ROR affiliation",
+        "affiliationMoveUp": "Move affiliation up",
+        "affiliationMoveDown": "Move affiliation down",
+        "affiliationRorId": "ROR ID",
+        "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
         "InstitutionsNameInvalid": "Please provide an Institution name."
     },
@@ -161,11 +196,21 @@
             "title": "Thesauri",
             "name": "Thesauri Keywords",
             "label": "Open thesaurus to choose keywords or start typing...",
-            "unavailable": "Thesaurus data currently unavailable."
+            "unavailable": "Thesaurus data currently unavailable.",
+            "button": "Open Thesaurus"
         },
         "free": {
             "title": "Free Keywords",
-            "placeholder": "Please enter keywords and separate them by a comma."
+            "placeholder": "Please enter keywords and separate them by a comma.",
+            "addCsv": "Upload CSV File",
+            "modalTitle": "Upload CSV file",
+            "modalDescription": "Upload a CSV file or drag and drop it here.",
+            "dropzone": "Drag and drop a CSV file here",
+            "selectFile": "or click to select a file",
+            "downloadHint": "Not sure about the CSV format? Download the example file and use it as a template. Please use CSV files smaller than 1 MB.",
+            "downloadSample": "Download example CSV file",
+            "cancel": "Cancel",
+            "import": "Import keywords"
         },
         "searchPlaceholder": "Search for keywords..."
     },
@@ -174,7 +219,7 @@
         "created": "Date created",
         "dateInvalid": "Please enter a valid date between 01.01.1900 and 31.12.2100!",
         "embargoUntil": "Embargo until (only by arrangement)",
-        "embargoDateError": "Embargo date must be after or equal to the creation date."
+        "embargoDateError": "Embargo date must be after or equal to the creation date when a creation date is provided."
     },
     "coverage": {
         "title": "Spatial and Temporal Coverages",
@@ -234,9 +279,9 @@
         "tideSystem": "Tide system",
         "tideSystemInvalid": "Please choose tide system.",
         "tideSystemOptions": {
-            "zeroTide": "zero tide",
-            "meanTide": "mean tide",
-            "tideFree": "tide free"
+            "zeroTide": "Zero-tide",
+            "meanTide": "Mean-tide",
+            "tideFree": "Tide-free"
         },
         "errors": "Errors",
         "errorsInvalid": "Please choose error type.",
@@ -266,8 +311,10 @@
         "clearTooltip": "Delete all entries or content.",
         "load": "Load",
         "loadTooltip": "Load saved data or content.",
-        "saveAs": "Save as",
-        "saveAsTooltip": "Save the current data or content under a new file name.",
+        "saveAs": "Save as XML",
+        "saveAsTooltip": "Save the current data or content as an XML file.",
+        "saveAsJsonLd": "Save as JSON-LD",
+        "saveAsJsonLdTooltip": "Save the current data or content as a JSON-LD file.",
         "submit": "Submit",
         "submitTooltip": "Transmit the entered data or content.",
         "legalNotice": "Legal Notice",
@@ -300,14 +347,20 @@
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {
-            "title": "Select XML file:",
-            "dropZoneInfo": "Drop XML file here",
+            "modalTitle": "Load metadata file",
+            "title": "Select XML or JSON-LD file:",
+            "dropZoneInfo": "Drop XML or JSON-LD file here",
             "loading": "Processing file...",
             "successToast": "successfully loaded",
             "errorToast": "Error loading file",
-            "invalidFileType": "Please upload an XML file.",
-            "errorProcessing": "Error processing XML file",
+            "invalidFileType": "Please upload an XML or JSON-LD file.",
+            "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
+        },
+        "icgemWrongApp": {
+            "title": "ICGEM Metadata File Detected",
+            "body": "Dear user,\n\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
+            "close": "Close"
         },
         "changelog": {
             "title": "Changelog",
@@ -317,6 +370,7 @@
         "save": {
             "title": "Save Metadata",
             "saveAs": "Save as XML",
+            "saveAsJsonLd": "Save as JSON-LD",
             "filename": "Filename",
             "save": "Save"
         },
@@ -335,7 +389,7 @@
             "title": "Submission not possible",
             "greeting": "Dear user,",
             "body": "it appears that you want to submit data. Unfortunately, you have not filled in all the required fields.",
-            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
+            "saveHint": "If you have already agreed with the data curation team that your submission is not yet complete, you can press <strong>Save as XML</strong> and then send the generated XML file to <a href='mailto:{email}'>{email}</a> by email.",
             "fixHint": "Otherwise, please complete the fields marked in red and try again.",
             "guideHint": "If you need further help filling in the form, you can find the <a href='doc/help.php' target='_blank'>ELMO Guide</a> here.",
             "close": "Close"
@@ -369,6 +423,19 @@
         "paragraph2": "Please provide your information and click the ´Submit´ button to send your metadata to the curators of GFZ Data Services. Additionally, we recommend saving a copy of the metadata on your computer for your records.",
         "paragraph3": "For further guidance, please refer to our <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>Publication Instructions</a>.",
         "button": "Continue"
+    },
+    "doiPrefill": {
+        "modalTitle": "Pre-fill from DOI",
+        "modalMessage": "The following metadata was found for this DOI. Do you want to pre-fill the form? Existing entries will be overwritten.",
+        "confirm": "Apply",
+        "cancel": "Cancel",
+        "loading": "Looking up DOI…",
+        "versionHint": "Please check and adjust the version number if necessary.",
+        "previewTitle": "Title",
+        "previewAuthors": "Authors",
+        "previewType": "Resource Type",
+        "previewYear": "Publication Year",
+        "previewLicense": "License"
     }
 
 }

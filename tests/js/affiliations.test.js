@@ -193,6 +193,55 @@ describe('affiliations.js', () => {
     expect(input._tagify.dropdown.hide).toHaveBeenCalled();
   });
 
+  test('editing an affiliation label keeps the structured ROR ID', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.whitelist = [{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }];
+    input._tagify.trigger('add', {
+      data: { value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }
+    });
+
+    input._tagify.value[0].value = 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany';
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
+  });
+
+  test('editing an affiliation label restores the ROR ID from the hidden field when Tagify drops it', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    const hidden = document.getElementById('input-author-rorid');
+
+    input._tagify.addTags([{ value: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394' }]);
+    input._tagify._updateHiddenField();
+    expect(hidden.value).toBe('04z8jg394');
+
+    input._tagify.value[0] = {
+      value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany'
+    };
+    input._tagify.trigger('edit:updated', { data: input._tagify.value[0] });
+
+    expect(hidden.value).toBe('04z8jg394');
+    expect(JSON.parse(input.value)).toEqual([
+      {
+        value: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        label: 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        rorId: '04z8jg394',
+        id: '04z8jg394'
+      }
+    ]);
+  });
+
   /**
    * Checks that the remove event clears tags when no contact person is specified.
    */
@@ -258,8 +307,8 @@ describe('affiliations.js', () => {
    * Ensures refreshTagifyInstances updates placeholder and keeps tags.
    */
   test('refreshTagifyInstances updates placeholder and keeps tags', () => {
-    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
-    const input = document.getElementById('input-author-affiliation');
+    autocompleteAffiliations('input-contributorpersons-affiliation', 'input-contributor-personrorid');
+    const input = document.getElementById('input-contributorpersons-affiliation');
     input._tagify.addTags({ value: 'First', id: '1' });
 
     global.translations = { general: { affiliation: 'Zugehörigkeit' } };
@@ -286,7 +335,7 @@ describe('affiliations.js', () => {
     input._tagify._updateHiddenField();
     
     // Verify the hidden field contains the ROR ID
-    expect(hidden.value).toBe(originalRorId);
+    expect(hidden.value).toBe('01bj3aw27');
     
     // Simulate clicking the pencil icon (edit button)
     const tag = input._tagify.DOM.scope.querySelector('tag');
@@ -300,7 +349,7 @@ describe('affiliations.js', () => {
     const modalEl = document.getElementById('modal-affiliation-edit');
     const valueInput = document.getElementById('input-affiliation-edit-value');
     expect(modalEl._editTagData.value).toBe(originalLabel);
-    expect(modalEl._editTagData.id).toBe(originalRorId);
+    expect(modalEl._editTagData.id).toBe('01bj3aw27');
     expect(valueInput.value).toBe(originalLabel);
     
     // Simulate user editing the label
@@ -318,10 +367,10 @@ describe('affiliations.js', () => {
     
     // Verify the ROR ID is still in the Tagify value
     expect(input._tagify.value[0].value).toBe(newLabel);
-    expect(input._tagify.value[0].id).toBe(originalRorId);
+    expect(input._tagify.value[0].id).toBe('01bj3aw27');
     
     // Verify the hidden field still contains the original ROR ID
-    expect(hidden.value).toBe(originalRorId);
+    expect(hidden.value).toBe('01bj3aw27');
   });
 
   test('tag template escapes affiliation labels before rendering', () => {

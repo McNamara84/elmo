@@ -74,6 +74,43 @@ final class SaveContactpersonsTest extends DatabaseTestCase
         $this->assertEquals("03yrm5c26", $affiliationResult["rorId"], "Die ROR-ID der Affiliation wurde nicht korrekt gespeichert.");
     }
 
+    public function testSaveContactPersonWithMissingGivenname()
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.MONONYM.CONTACT",
+            "year" => 2023,
+            "dateCreated" => "2023-06-01",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Mononym Contact"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "familynames" => ["Sukarno"],
+            "givennames" => [""],
+            "orcids" => [""],
+            "cpEmail" => ["sukarno@example.com"],
+            "cpOnlineResource" => [""],
+            "personAffiliation" => [""],
+            "authorPersonRorIds" => [""]
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $stmt = $this->connection->prepare("SELECT familyname, givenname, email FROM Contact_Person WHERE email = ?");
+        $stmt->bind_param("s", $postData["cpEmail"][0]);
+        $stmt->execute();
+        $result = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($result, "Die mononyme Contact Person wurde nicht gespeichert.");
+        $this->assertEquals("Sukarno", $result["familyname"]);
+        $this->assertEquals("", $result["givenname"]);
+        $this->assertEquals("sukarno@example.com", $result["email"]);
+    }
+
     /**
      * Test saving three fully populated contact persons
      *
@@ -517,5 +554,63 @@ final class SaveContactpersonsTest extends DatabaseTestCase
 
         $this->assertCount(1, $rows, 'Legacy row with SQL NULLs should be matched by form save.');
         $this->assertEquals($legacyId, $rows[0]['contact_person_id'], 'The pre-existing legacy contact person ID should be reused.');
+    }
+
+    public function testSaveContactPersonUsesOnlyPersonAuthorsMarkedAsContactInPayload(): void
+    {
+        $resource_id = $this->createResource('GFZ.TEST.AUTHOR.PAYLOAD.CONTACT', 'Test Author Payload Contact');
+
+        $postData = [
+            'authorsPayload' => json_encode([
+                [
+                    'type' => 'person',
+                    'familyname' => 'NonContact',
+                    'givenname' => 'Author',
+                    'orcid' => '',
+                    'isContact' => false,
+                    'email' => 'non-contact@example.com',
+                    'website' => '',
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'institution',
+                    'institutionname' => 'Institution Contact Is Invalid',
+                    'isContact' => true,
+                    'email' => 'institution@example.com',
+                    'affiliations' => []
+                ],
+                [
+                    'type' => 'person',
+                    'familyname' => 'PayloadContact',
+                    'givenname' => 'Author',
+                    'orcid' => '',
+                    'isContact' => true,
+                    'email' => 'payload-contact@example.com',
+                    'website' => 'https://contact.example.com',
+                    'affiliations' => []
+                ]
+            ]),
+            'familynames' => ['NonContact', 'PayloadContact'],
+            'givennames' => ['Author', 'Author'],
+            'orcids' => ['', ''],
+            'contacts' => ['', 'on'],
+            'cpEmail' => ['non-contact@example.com', 'payload-contact@example.com'],
+            'cpOnlineResource' => ['', 'https://contact.example.com'],
+            'personAffiliation' => ['', ''],
+            'authorPersonRorIds' => ['', '']
+        ];
+
+        saveContactPerson($this->connection, $postData, $resource_id);
+
+        $result = $this->connection->query("SELECT familyname, email FROM Contact_Person ORDER BY contact_person_id ASC");
+        $rows = $result->fetch_all(MYSQLI_ASSOC);
+
+        $this->assertSame(
+            [
+                ['familyname' => 'PayloadContact', 'email' => 'payload-contact@example.com']
+            ],
+            $rows,
+            'Only person authors with isContact=true in authorsPayload should be saved as contact persons.'
+        );
     }
 }

@@ -129,15 +129,34 @@ const googleMapsStub = String.raw`(() => {
     constructor(opts = {}) {
       this._bounds = opts.bounds || null;
       this._map = opts.map || null;
+      this._listeners = {};
     }
     setMap(map) {
       this._map = map;
     }
     setBounds(bounds) {
       this._bounds = bounds;
+      // Trigger bounds_changed event when bounds are set
+      this._triggerEvent('bounds_changed');
     }
     getBounds() {
       return this._bounds;
+    }
+    addListener(eventName, callback) {
+      if (!this._listeners[eventName]) {
+        this._listeners[eventName] = [];
+      }
+      this._listeners[eventName].push(callback);
+      return {
+        remove: () => {
+          this._listeners[eventName] = this._listeners[eventName].filter(cb => cb !== callback);
+        }
+      };
+    }
+    _triggerEvent(eventName) {
+      if (this._listeners[eventName]) {
+        this._listeners[eventName].forEach(cb => cb());
+      }
     }
   }
 
@@ -252,6 +271,44 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     expect(timezoneOptionCount).toBeGreaterThan(1);
   });
 
+  test('highlights dynamically required STC fields before submit', async ({ page }) => {
+    const longMax = page.locator('#input-stc-longmax_1');
+    const latMin = page.locator('#input-stc-latmin_1');
+    const longMin = page.locator('#input-stc-longmin_1');
+    const description = page.locator('#input-stc-description');
+    const startDate = page.locator('#input-stc-datestart');
+
+    await longMax.fill('14');
+    await longMax.blur();
+
+    await expect(latMin).toHaveAttribute('aria-required', 'true');
+    await expect(latMin).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-latmin_1"] .stc-required-marker')).toHaveText('*');
+
+    await expect(longMin).toHaveAttribute('aria-required', 'true');
+    await expect(longMin).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-longmin_1"] .stc-required-marker')).toHaveText('*');
+
+    await expect(description).toHaveAttribute('aria-required', 'true');
+    await expect(description).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-description"] .stc-required-marker')).toHaveText('*');
+
+    await expect(startDate).toHaveAttribute('aria-required', 'true');
+    await expect(startDate).toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-datestart"] .stc-required-marker')).toHaveText('*');
+
+    await expect(longMax).toHaveAttribute('aria-required', 'true');
+    await expect(longMax).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-longmax_1"] .stc-required-marker')).toHaveCount(0);
+
+    await longMax.fill('');
+    await longMax.blur();
+
+    await expect(latMin).not.toHaveAttribute('aria-required', 'true');
+    await expect(latMin).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-latmin_1"] .stc-required-marker')).toHaveCount(0);
+  });
+
   test('allows adding and removing coverage rows while maintaining timezone selections', async ({ page }) => {
     await page.waitForFunction(() => typeof (window as any).deleteDrawnOverlaysForRow === 'function');
     await page.evaluate(() => {
@@ -274,12 +331,23 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await timezoneSelect.selectOption(targetValue);
     const chosenValue = await timezoneSelect.inputValue();
 
+    const firstRowLongMax = page.locator('#input-stc-longmax_1');
+    await firstRowLongMax.fill('14');
+    await firstRowLongMax.blur();
+    await expect(page.locator('#input-stc-latmin_1')).toHaveClass(/border-danger/);
+
     await page.locator('#button-stc-add').click();
     const rows = page.locator(`${SELECTORS.formGroups.spatialTemporalCoverages} [tsc-row]`);
     await expect(rows).toHaveCount(2);
 
     const secondRowTimezone = page.locator('[tsc-row-id="2"] select[name="tscTimezone[]"]');
     await expect(secondRowTimezone).toHaveValue(chosenValue);
+
+    const secondRowLatMin = page.locator('[tsc-row-id="2"] #input-stc-latmin_2');
+    await expect(page.locator('[tsc-row-id="2"] label[for="input-stc-latmin_2"]')).toBeVisible();
+    await expect(secondRowLatMin).not.toHaveAttribute('aria-required', 'true');
+    await expect(secondRowLatMin).not.toHaveClass(/border-danger/);
+    await expect(page.locator('[tsc-row-id="2"] label[for="input-stc-latmin_2"] .stc-required-marker')).toHaveCount(0);
 
     const description = page.locator('[tsc-row-id="2"] textarea[name="tscDescription[]"]');
     await description.fill('Secondary region focus.');
@@ -327,22 +395,27 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     // Switch to rectangle mode by clicking the rectangle toolbar button
     await page.locator('#btn-draw-rectangle').click();
 
-    // Simulate rectangle drawing: click (start) → mousemove (drag) → mouseup (complete)
+    // Rectangle drawing uses TWO clicks (not click+drag): first click anchors the
+    // first corner, second click completes it. A 150ms double-click guard timer
+    // must expire between clicks, so we wait 300ms after each.
+
+    // First click – anchors first corner, starts the preview rectangle
     await page.evaluate(() => {
       const mapInstance = (window as any).__elmoMapInstance;
-      const LatLng = (window as any).google.maps.LatLng;
-
-      // Start: click sets startLatLng and creates preview rectangle
       (window as any).google.maps.event.trigger(mapInstance, 'click', {
-        latLng: new LatLng(40.0, -74.5),
+        latLng: new (window as any).google.maps.LatLng(40.0, -74.5),
       });
-      // Drag: mousemove updates preview rectangle bounds
-      (window as any).google.maps.event.trigger(mapInstance, 'mousemove', {
-        latLng: new LatLng(41.0, -73.5),
-      });
-      // Release: mouseup completes the rectangle
-      (window as any).google.maps.event.trigger(mapInstance, 'mouseup', {});
     });
+    await page.waitForTimeout(300); // wait for 150ms DBLCLICK_THRESHOLD timer to fire
+
+    // Second click – completes the rectangle and emits 'rectanglecomplete'
+    await page.evaluate(() => {
+      const mapInstance = (window as any).__elmoMapInstance;
+      (window as any).google.maps.event.trigger(mapInstance, 'click', {
+        latLng: new (window as any).google.maps.LatLng(41.0, -73.5),
+      });
+    });
+    await page.waitForTimeout(300); // wait for timer to fire and fields to update
 
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);

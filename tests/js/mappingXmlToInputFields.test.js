@@ -101,6 +101,48 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(text).toBe("Value");
   });
 
+  test("processCreators sends mixed creators to authorStack when available", () => {
+    const setAuthors = jest.fn();
+    window.authorStack = { setAuthors };
+    const ctx = loadMappingModule();
+    const xml = `<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+      <ns:creators>
+        <ns:creator>
+          <ns:creatorName nameType="Personal">Doe, Jane</ns:creatorName>
+          <ns:givenName>Jane</ns:givenName>
+          <ns:familyName>Doe</ns:familyName>
+          <ns:affiliation affiliationIdentifier="https://ror.org/04z8jg394">GFZ</ns:affiliation>
+        </ns:creator>
+        <ns:creator>
+          <ns:creatorName nameType="Organizational">Payload Institute</ns:creatorName>
+          <ns:affiliation affiliationIdentifier="https://ror.org/03qjp1d79">Helmholtz</ns:affiliation>
+        </ns:creator>
+      </ns:creators>
+    </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const resolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+
+    try {
+      ctx.processCreators(xmlDoc, resolver);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: "person",
+          familyname: "Doe",
+          givenname: "Jane",
+          affiliations: [{ label: "GFZ", rorId: "04z8jg394" }]
+        }),
+        expect.objectContaining({
+          type: "institution",
+          institutionname: "Payload Institute",
+          affiliations: [{ label: "Helmholtz", rorId: "03qjp1d79" }]
+        })
+      ]);
+    } finally {
+      delete window.authorStack;
+    }
+  });
+
   test("createLicenseMapping resolves API data and handles errors", async () => {
     const getJSON = jest.fn(() => Promise.resolve([{ rightsIdentifier: "MIT", rights_id: 4 }]));
     const ctx = loadMappingModule({ $: { getJSON } });

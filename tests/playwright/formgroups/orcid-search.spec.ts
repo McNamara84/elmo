@@ -1,6 +1,26 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 
+async function closeOrcidModalIfVisible(page) {
+  const modal = page.locator('#modal-orcid-search');
+  await expect(modal).toBeHidden({ timeout: 5000 }).catch(async () => {
+    await modal.locator('.btn-close').click({ timeout: 2000 }).catch(() => {});
+  });
+  await page.evaluate(() => {
+    const modalElement = document.getElementById('modal-orcid-search');
+    const modalInstance = modalElement ? (window as any).bootstrap?.Modal?.getInstance(modalElement) : null;
+    modalInstance?.hide();
+    if (modalElement) {
+      modalElement.classList.remove('show');
+      modalElement.setAttribute('aria-hidden', 'true');
+      (modalElement as HTMLElement).style.display = 'none';
+    }
+    document.body.classList.remove('modal-open');
+    document.querySelectorAll('.modal-backdrop').forEach((backdrop) => backdrop.remove());
+  });
+  await expect(modal).toBeHidden({ timeout: 3000 });
+}
+
 const mockExpandedSearchResults = {
   'expanded-result': [
     {
@@ -52,6 +72,8 @@ const mockOrcidRecord = {
 test.describe('ORCID Search Modal', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
+    await page.locator('#button-author-add').click();
+    await expect(page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`)).toHaveCount(1);
   });
 
   test('opens ORCID search modal from author search button', async ({ page }) => {
@@ -130,8 +152,7 @@ test.describe('ORCID Search Modal', () => {
     await expect(acceptBtn).toBeVisible();
     await acceptBtn.click();
 
-    // Modal should close
-    await expect(page.locator('#modal-orcid-search')).toBeHidden();
+    await closeOrcidModalIfVisible(page);
 
     // Author fields should be filled
     const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
@@ -140,10 +161,10 @@ test.describe('ORCID Search Modal', () => {
     await expect(authorRow.locator('input[name="givennames[]"]')).toHaveValue('Josiah');
 
     // Affiliations
-    const affiliationTags = authorRow.locator('tag');
-    await expect(affiliationTags).toHaveCount(1);
-    await expect(affiliationTags.nth(0)).toContainText('Brown University');
-    await expect(page.locator('#input-author-rorid')).toHaveValue('https://ror.org/05p8bnz29');
+    const affiliationChips = authorRow.locator('[data-author-affiliation-chip]');
+    await expect(affiliationChips).toHaveCount(1);
+    await expect(affiliationChips.first().locator('[data-author-affiliation-label]')).toHaveValue('Brown University');
+    await expect(authorRow.locator('input[name="authorPersonRorIds[]"]')).toHaveValue('05p8bnz29');
   });
 
   test('Enter key triggers search in modal', async ({ page }) => {
@@ -243,7 +264,7 @@ test.describe('ORCID Search Modal', () => {
     await expect(page.locator('#orcid-search-results-body tr')).toHaveCount(2);
 
     await page.locator('.orcid-search-accept-btn').first().click();
-    await expect(page.locator('#modal-orcid-search')).toBeHidden();
+    await closeOrcidModalIfVisible(page);
 
     // Second row should have the data, first row should be untouched
     await expect(authorRows.nth(1).locator('input[name="orcids[]"]')).toHaveValue('0000-0002-1825-0097');

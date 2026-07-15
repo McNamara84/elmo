@@ -3,9 +3,20 @@
  */
 function setupContactPersonListener() {
     // When the checkbox for "Contact Person" is toggled (checked/unchecked), call validateContactPersonRequirements
-    $('#group-author').on('change', '[id^="checkbox-author-contactperson"]', function () {
+    const authorContainer = $('[data-author-stack]').length ? $('[data-author-stack]') : $('#group-author');
+    authorContainer.on('change', '[id^="checkbox-author-contactperson"]', function () {
         validateContactPersonRequirements();  // Re-run the validateContactPersonRequirements function whenever the checkbox state changes
     });
+}
+
+function getPersonAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-creator-row]');
+    return stackRows.length ? stackRows : $('#group-author').children('.row');
+}
+
+function getInstitutionAuthorRows() {
+    const stackRows = $('[data-author-stack] [data-authorinstitution-row]');
+    return stackRows.length ? stackRows : $('#group-authorinstitution').children('.row');
 }
 
 /**
@@ -18,7 +29,7 @@ function setupContactPersonListener() {
  */
 function validateContactPersonRequirements() {
     // Loops through each row in the "group-author" container
-    $('#group-author').children('.row').each(function () {
+    getPersonAuthorRows().each(function () {
         var row = $(this);
 
         // Defines the relevant fields for the Contact Person section
@@ -31,11 +42,11 @@ function validateContactPersonRequirements() {
 
         // Checks if the checkbox for Contact Person is checked
         var isCheckboxChecked = fields.checkbox.prop('checked');
+        fields.firstname.removeAttr('required').removeClass('js-required-on-submit');
 
         // Sets or removes the 'required' attribute for the email field based solely on the checkbox state
         if (isCheckboxChecked) {
             fields.email.attr('required', 'required');  // Make email required if checkbox is checked
-            fields.firstname.attr('required', 'required');
             fields.lastname.attr('required', 'required');
         } else {
             fields.email.removeAttr('required');  // Remove email requirement if checkbox is unchecked
@@ -112,12 +123,101 @@ function validateContributorOrganisationRequirements() {
 
 
 /**
+ * Escapes an element ID for use in a label[for=...] selector.
+ *
+ * @param {string} value
+ * @returns {string}
+ */
+function escapeStcLabelSelector(value) {
+    if (typeof window !== 'undefined' && window.CSS && typeof window.CSS.escape === 'function') {
+        return window.CSS.escape(value);
+    }
+
+    if ($.escapeSelector) {
+        return $.escapeSelector(value);
+    }
+
+    return String(value).replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
+}
+
+/**
+ * Adds or removes the required marker next to the visible label of a dynamic STC field.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredLabelMarker(inputElement, isRequired) {
+    var inputId = inputElement.getAttribute('id');
+    if (!inputId) {
+        return;
+    }
+
+    var labelSelector = 'label[for="' + escapeStcLabelSelector(inputId) + '"]';
+    var row = $(inputElement).closest('[tsc-row]');
+    var labels = row.length ? row.find(labelSelector) : $(labelSelector);
+    labels.each(function () {
+        var label = $(this);
+        if (label.hasClass('visually-hidden')) {
+            label.children('.stc-required-marker').remove();
+            return;
+        }
+
+        var marker = label.children('.stc-required-marker');
+        if (isRequired) {
+            if (!marker.length) {
+                label.append('<span class="red-star stc-required-marker" aria-hidden="true">*</span>');
+            }
+        } else {
+            marker.remove();
+        }
+    });
+}
+
+/**
+ * Applies the visual and accessibility state for an STC field that is required on submit.
+ *
+ * @param {HTMLElement} inputElement
+ * @param {boolean} isRequired
+ * @returns {void}
+ */
+function updateStcRequiredVisualCue(inputElement, isRequired) {
+    var input = $(inputElement);
+    var value = String(input.val() || '').trim();
+
+    input.toggleClass('stc-required-on-submit', isRequired);
+    input.toggleClass('border-danger', isRequired && value === '');
+
+    if (isRequired) {
+        input.attr('aria-required', 'true');
+    } else {
+        input.removeAttr('aria-required');
+    }
+
+    updateStcRequiredLabelMarker(inputElement, isRequired);
+}
+
+/**
+ * Synchronizes visual required cues for all fields in one STC row.
+ *
+ * @param {Object.<string, JQuery>} inputs
+ * @returns {void}
+ */
+function updateStcRowRequiredVisualCues(inputs) {
+    Object.values(inputs).forEach(function (input) {
+        input.each(function () {
+            updateStcRequiredVisualCue(this, $(this).hasClass('js-required-on-submit'));
+        });
+    });
+}
+
+/**
  * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
  *
  * The function ensures:
  * - If all fields are empty, none will be required.
- * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, dateStart, and dateEnd become required.
- * - If latMin, longMin, or description is filled, those fields along with dateStart and dateEnd become required.
+ * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, and, outside ELMO-GEM, dateStart/dateEnd become required.
+ * - If latMin, longMin, or description is filled, those fields and, outside ELMO-GEM, dateStart/dateEnd become required.
  * - If dateStart or dateEnd is filled, they along with latMin, longMin, and description become required.
  * - Time fields (timeStart, timeEnd) are always optional unless one of them is filled.
  * - If timeStart or timeEnd is filled, both time fields, dates, and timezone become required.
@@ -131,6 +231,7 @@ function validateSpatialTemporalCoverageRequirements() {
     var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
     var allRows = group.find('[tsc-row]');
 
+    var isElmoGem = Boolean(window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties);
     // Process each row independently
     allRows.each(function () {
         var row = $(this);
@@ -141,7 +242,10 @@ function validateSpatialTemporalCoverageRequirements() {
         fields.forEach(function (field) {
             inputs[field] = row.find('[id^="input-stc-' + field + '"]');
             filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
-            inputs[field].removeAttr('required').removeClass('js-required-on-submit');
+            inputs[field].removeAttr('required')
+                .removeAttr('aria-required')
+                .removeClass('js-required-on-submit stc-required-on-submit border-danger');
+            inputs[field].each(function () { updateStcRequiredLabelMarker(this, false); });
         });
 
         // If all fields are empty, skip this row
@@ -151,17 +255,29 @@ function validateSpatialTemporalCoverageRequirements() {
 
         // _______________________________________________________________________
 
-        // Bounding box dependencies -> dates required but time optional
+        // Bounding box dependencies -> dates required outside ELMO-GEM but time optional
         if (filled.latmax || filled.longmax) {
-            ['latmin', 'longmin', 'latmax', 'longmax', 'description', 'datestart', 'dateend']
+            var boundingBoxRequiredFields = ['latmin', 'longmin', 'latmax', 'longmax', 'description'];
+
+            if (!isElmoGem) {
+                boundingBoxRequiredFields = boundingBoxRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            boundingBoxRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
 
-        // If any of latmin/longmin/description is filled -> dates required, time optional
+        // If any of latmin/longmin/description is filled -> dates required outside ELMO-GEM, time optional
         if (filled.latmin || filled.longmin || filled.description) {
-            ['latmin', 'longmin', 'description', 'datestart', 'dateend']
+            var spatialRequiredFields = ['latmin', 'longmin', 'description'];
+
+            if (!isElmoGem) {
+                spatialRequiredFields = spatialRequiredFields.concat(['datestart', 'dateend']);
+            }
+
+            spatialRequiredFields
                 .forEach(function (field) {
                     inputs[field].addClass('js-required-on-submit');
                 });
@@ -182,6 +298,8 @@ function validateSpatialTemporalCoverageRequirements() {
                     inputs[field].addClass('js-required-on-submit');
                 });
         }
+
+        updateStcRowRequiredVisualCues(inputs);
     });
 }
 
@@ -342,7 +460,7 @@ function applyAuthorInstitutionNameRequirement(inputElement, shouldRequire) {
 }
 
 function validateAuthorInstitutionRequirements() {
-    $('#group-authorinstitution').children('.row').each(function () {
+    getInstitutionAuthorRows().each(function () {
         var row = $(this);
         // Defines the relevant fields for the Author-Institution section
         var fields = {
@@ -350,11 +468,22 @@ function validateAuthorInstitutionRequirements() {
             authorinstitutionAffiliation: row.find('[id^="input-authorinstitution-affiliation"]')
         };
 
-        // Check whether the Author-Institution-Affiliation field has a visible value or Tagify tags assigned.
+        // Check whether the Author-Institution-Affiliation field has a visible value, JSON affiliations, or Tagify tags assigned.
         var affVal = (fields.authorinstitutionAffiliation.val() || '').trim();
+        var hasStructuredAffiliations = false;
+        if (affVal.charAt(0) === '[') {
+            try {
+                var parsedAffiliations = JSON.parse(affVal);
+                hasStructuredAffiliations = Array.isArray(parsedAffiliations) && parsedAffiliations.some(function (affiliation) {
+                    return String(affiliation?.label || affiliation?.value || affiliation?.name || '').trim() !== '';
+                });
+            } catch (error) {
+                hasStructuredAffiliations = false;
+            }
+        }
         var tagifyInstance = fields.authorinstitutionAffiliation.get(0)?._tagify;
         var hasTagifyAffiliations = Array.isArray(tagifyInstance?.value) && tagifyInstance.value.length > 0;
-        var isauthorinstitutionAffiliationFilled = affVal !== '' || hasTagifyAffiliations;
+        var isauthorinstitutionAffiliationFilled = (affVal !== '' && affVal !== '[]') || hasStructuredAffiliations || hasTagifyAffiliations;
 
         // Sets or removes the “required” attribute for the “Author Institution Name” field based on the fill status of “Author Institution Affiliation.”
         fields.authorinstitutionName.each(function () {
@@ -438,8 +567,216 @@ if (errorHandlingApproach) {
         errorHandlingApproach.addEventListener(evt, validateErrorHandlingApproachField)
     );
 }
+
+// Select the title input element
+const titleInput = document.getElementById('input-resourceinformation-title');
+// Add event listeners for both input (typing) and blur (leaving the field) if element exists
+if (titleInput) {
+    ['input', 'blur'].forEach(evt =>
+        titleInput.addEventListener(evt, validateTitleField)
+    );
+}
+
 /**
- * Validates the error handling approach textarea field.
+ * Validates the resource title input field.
+ * - Marks the field as valid if it contains non-whitespace text.
+ * - Marks the field as invalid if it is empty or contains only whitespace.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateTitleField() {
+    const titleInput = document.getElementById('input-resourceinformation-title');
+    if (!titleInput) return true;
+    const value = titleInput.value.trim();
+    const container = titleInput.closest('.input-group') || titleInput.parentElement;
+
+    titleInput.classList.remove('is-valid', 'is-invalid');
+
+    let oldFeedback = container.querySelector('.invalid-feedback[data-translate="resourceInfo.resourceTitleInvalid"]');
+    if (oldFeedback) oldFeedback.remove();
+
+    if (value.length === 0) {
+        titleInput.classList.add('is-invalid');
+        const message = (typeof translations !== 'undefined' && translations.resourceInfo)
+            ? translations.resourceInfo.resourceTitleInvalid
+            : 'Please provide a title.';
+        const feedbackElem = document.createElement('div');
+        feedbackElem.className = 'invalid-feedback';
+        feedbackElem.setAttribute('data-translate', 'resourceInfo.resourceTitleInvalid');
+        feedbackElem.innerText = message;
+        container.appendChild(feedbackElem);
+        titleInput.setCustomValidity(message);
+        return false;
+    } else {
+        titleInput.classList.add('is-valid');
+        titleInput.setCustomValidity("");
+        return true;
+    }
+}
+
+function getAuthorNameFields() {
+    const stackFields = Array.from(document.querySelectorAll(
+        '[data-author-stack] [data-creator-row] input[name="familynames[]"], ' +
+        '[data-author-stack] [data-creator-row] input[name="givennames[]"]'
+    ));
+
+    if (stackFields.length > 0) {
+        return stackFields;
+    }
+
+    const legacyFields = [
+        document.getElementById('input-author-lastname'),
+        document.getElementById('input-author-firstname')
+    ].filter(Boolean);
+
+    if (legacyFields.length > 0) {
+        return legacyFields;
+    }
+
+    return Array.from(document.querySelectorAll(
+        'input[name="familynames[]"], input[name="givennames[]"]'
+    ));
+}
+
+function getAuthorNameTranslationKey(input) {
+    return input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0
+        ? 'general.firstNameInvalid'
+        : 'general.lastNameInvalid';
+}
+
+function getAuthorNameRow(input) {
+    return input.closest('[data-creator-row]') || input.closest('.row');
+}
+
+function isNonEmptyAuthorValue(input) {
+    if (!input) {
+        return false;
+    }
+
+    if (input.type === 'checkbox' || input.type === 'radio') {
+        return input.checked;
+    }
+
+    const value = String(input.value || '');
+    return value !== '' && value !== '[]';
+}
+
+function authorNameRowHasContent(input) {
+    const row = getAuthorNameRow(input);
+    if (!row) {
+        return true;
+    }
+
+    return Array.from(row.querySelectorAll(
+        'input[name="familynames[]"], ' +
+        'input[name="givennames[]"], ' +
+        'input[name="orcids[]"], ' +
+        'input[name="contacts[]"], ' +
+        'input[name="cpEmail[]"], ' +
+        'input[name="cpOnlineResource[]"], ' +
+        'input[name="personAffiliation[]"], ' +
+        'input[name="authorPersonRorIds[]"]'
+    )).some(isNonEmptyAuthorValue);
+}
+
+function resetAuthorNameField(input, container, translationKey) {
+    input.classList.remove('is-valid', 'is-invalid');
+    input.setCustomValidity("");
+
+    let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+    if (oldFeedback) oldFeedback.remove();
+}
+
+function isAuthorNameInput(target) {
+    return target instanceof HTMLInputElement &&
+        (target.name === 'familynames[]' || target.name === 'givennames[]');
+}
+
+['input', 'blur'].forEach(evt => {
+    document.addEventListener(evt, function (event) {
+        if (isAuthorNameInput(event.target)) {
+            validateAuthorNameFields();
+        }
+    }, evt === 'blur');
+});
+
+/**
+ * Validates author name input fields.
+ * - Last name is mandatory and must contain non-whitespace text.
+ * - First name is optional, but any entered value is reflected in UI state.
+ * - Uses setCustomValidity() so that HTML5 checkValidity() also rejects whitespace-only input.
+ */
+function validateAuthorNameFields() {
+    let isValid = true;
+    const fields = getAuthorNameFields();
+
+    fields.forEach((input) => {
+        if (!input) return;
+        const translationKey = getAuthorNameTranslationKey(input);
+        const value = input.value.trim();
+        const container = input.closest('.input-group') || input.parentElement;
+
+        input.classList.remove('is-valid', 'is-invalid');
+
+        let oldFeedback = container.querySelector(`.invalid-feedback[data-translate="${translationKey}"]`);
+        if (oldFeedback) oldFeedback.remove();
+
+        const [section, key] = translationKey.split('.');
+        const isOptionalFirstName = input.name === 'givennames[]' || input.id.indexOf('input-author-firstname') === 0;
+
+        if (value.length === 0 && isOptionalFirstName) {
+            input.setCustomValidity("");
+            input.removeAttribute('required');
+        } else if (value.length === 0 && !authorNameRowHasContent(input)) {
+            resetAuthorNameField(input, container, translationKey);
+            input.removeAttribute('required');
+        } else if (value.length === 0) {
+            input.classList.add('is-invalid');
+            const message = (typeof translations !== 'undefined' && translations[section])
+                ? translations[section][key]
+                : translationKey;
+            const feedbackElem = document.createElement('div');
+            feedbackElem.className = 'invalid-feedback';
+            feedbackElem.setAttribute('data-translate', translationKey);
+            feedbackElem.innerText = message;
+            container.appendChild(feedbackElem);
+            input.setCustomValidity(message);
+            isValid = false;
+        } else {
+            input.classList.add('is-valid');
+            input.setCustomValidity("");
+        }
+    });
+
+    return isValid;
+}
+/**
+ * ICGEM special: Marks topographic-specific selects (layerApproach, forwardModellingDomain) as
+ * required-on-submit only when the topographic section is currently visible.
+ * Called from the Submit button handler in buttons.js.
+ */
+function validateTopographicModelTypeRequirements() {
+    const topoSection = document.querySelector('.visibility-modeltype-topographic');
+    const layerApproach = document.getElementById('select-topo-layerapproach');
+    const domain = document.getElementById('select-topo-domain');
+
+    if (!topoSection || !layerApproach || !domain) {
+        return;
+    }
+
+    const isVisible = !topoSection.classList.contains('d-none');
+
+    if (isVisible) {
+        layerApproach.classList.add('js-required-on-submit');
+        domain.classList.add('js-required-on-submit');
+    } else {
+        layerApproach.classList.remove('js-required-on-submit');
+        layerApproach.removeAttribute('required');
+        domain.classList.remove('js-required-on-submit');
+        domain.removeAttribute('required');
+    }
+}
+/**
+ * ICGEM special: Validates the error handling approach textarea field.
  * - Returns success automatically if the field is not required or not present.
  * - Marks the field as valid if it contains text and is required.
  * - Marks the field as invalid if it is required but empty or contains only whitespace.
@@ -473,8 +810,6 @@ function validateErrorHandlingApproachField() {
     let oldFeedback = inputGroup.querySelector('.invalid-feedback.custom-error-handling');
     if (oldFeedback) oldFeedback.remove();
     errorHandlingApproach.setCustomValidity("");
-
-
 
     // Field is required, so validate content
     if (value.trim().length === 0) {
@@ -582,11 +917,14 @@ function validateAllMandatoryFields() {
     // for the entire form
     removeGreenCheckmarks();
 
-    // Validate error handling approach field
+    // ICGEM special Validate error handling approach field
     validateErrorHandlingApproachField();
+    // ICGEM special Validate topographic model type requirements
+    validateTopographicModelTypeRequirements();
 
 };
 
+// used to remove the green checkmarks from optional fields
 const optionalFieldsSelector = [
     // Resource Information
     'input[name="doi"]',
@@ -676,13 +1014,16 @@ $(document).on('blur',
     'input[name="tscLongitudeMin[]"],' +
     'input[name="tscLatitudeMin[]"],' +
     'input[name="tscLatitudeMax[]"],' +
-    'input[name="tscDescription[]"],' +
+    'textarea[name="tscDescription[]"],' +
     'input[name="tscDateStart[]"],' +
     'input[name="tscDateEnd[]"],' +
     'input[name="tscTimeStart[]"],' +
     'input[name="tscTimeEnd[]"],' +
     'input[name="rIdentifier[]"],' +
     'input[name="awardURI[]"], ' +
+    'input[name="title[]"], ' +
+    'input[name="familynames[]"], ' +
+    'input[name="givennames[]"], ' +
     'textarea#input-abstract' , +
     'textarea#input-error-handling-approach',
 
@@ -718,6 +1059,7 @@ $(document).on('change',
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
-        validateAllMandatoryFields
+        validateAllMandatoryFields,
+        validateTopographicModelTypeRequirements
     };
 }

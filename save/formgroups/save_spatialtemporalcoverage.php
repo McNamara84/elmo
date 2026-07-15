@@ -3,13 +3,26 @@ require_once __DIR__ . '/../validation.php';
 
 if (!function_exists('isEmptyArray')) {
     function isEmptyArray($arr) {
-        return !isset($arr) || !is_array($arr) || count($arr) === 0;
+        if (!isset($arr) || !is_array($arr) || count($arr) === 0) {
+            return true;
+        }
+
+        foreach ($arr as $value) {
+            if (trim((string) $value) !== '') {
+                return false;
+            }
+        }
+
+        return true;
     }
 }
 
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
+    global $showGGMsProperties;
+
     $action = $postData['action'] ?? 'save_and_download';
+    $isElmoGem = !empty($showGGMsProperties);
 
     // If NO STC data provided at all, return early (it's optional)
     // Only skip if BOTH spatial and temporal fields are empty
@@ -45,8 +58,23 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
         ];
         // Only validate on submit
         if ($action === 'submit') {
+            $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
+                          || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
+            $hasAnyData = $hasAnySpatial
+                       || (trim($entry['dateStart'] ?? '') !== '')
+                       || (trim($entry['dateEnd'] ?? '') !== '')
+                       || (trim($entry['description'] ?? '') !== '');
+            if (!$hasAnyData) {
+                continue;
+            }
+
             // Check required fields: latitudeMin and longitudeMin (0 is allowed, empty strings are not)
             if ((trim($entry['latitudeMin'] ?? '') === '') || (trim($entry['longitudeMin'] ?? '') === '')) {
+                $allSuccessful = false;
+                continue;
+            }
+
+            if ($isElmoGem && trim($entry['description'] ?? '') === '') {
                 $allSuccessful = false;
                 continue;
             }
@@ -56,9 +84,12 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
                 continue;
             }
 
-            // Skip entry if dateStart is empty (no temporal data)
+            // Outside ELMO-GEM, submitted STC rows with spatial data still need temporal coverage.
             if (trim($entry['dateStart'] ?? '') === '') {
-                continue;
+                if (!$isElmoGem) {
+                    $allSuccessful = false;
+                    continue;
+                }
             }
         } else {
             // Even without submit, skip entries with incomplete coordinates

@@ -106,7 +106,42 @@
         "licenseTitle": "Licence"
     },
     "authors": {
-        "title": "Auteur: Personnes",
+        "title": "Auteurs",
+        "stackTitle": "Auteurs",
+        "person": "Personne",
+        "institution": "Institution",
+        "typeSwitcherLabel": "Type d'auteur",
+        "typeSwitchLocked": "Le type ne peut être modifié que tant que cette entrée est vide.",
+        "addPerson": "Ajouter une personne",
+        "addInstitution": "Ajouter une institution",
+        "dragHandle": "Modifier l'ordre par glisser-déposer",
+        "removeEntry": "Supprimer une entrée d'auteur",
+        "editEntry": "Modifier l'entrée d'auteur",
+        "collapseEntry": "Replier l'entrée d'auteur",
+        "moveEntryUp": "Déplacer l'auteur vers le haut",
+        "moveEntryDown": "Déplacer l'auteur vers le bas",
+        "authorSingular": "auteur",
+        "authorPlural": "auteurs",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "contactSingular": "contact",
+        "contactPlural": "contacts",
+        "contactPersonSingular": "personne de contact",
+        "contactPersonPlural": "personnes de contact",
+        "contactPersonBadge": "Personne de contact",
+        "contactPersonLabel": "Personne de contact",
+        "markAsContact": "Marquer comme contact",
+        "contactRequired": "au moins 1 contact requis",
+        "entriesSummary": "{count} {label}",
+        "contactsSummary": "{count} {label}",
+        "affiliations": "Affiliations",
+        "affiliationAdd": "Ajouter une affiliation",
+        "affiliationEdit": "Modifier une affiliation",
+        "affiliationSearch": "Rechercher une affiliation dans ROR",
+        "affiliationMoveUp": "Déplacer l'affiliation vers le haut",
+        "affiliationMoveDown": "Déplacer l'affiliation vers le bas",
+        "affiliationRorId": "ID ROR",
+        "affiliationRemove": "Supprimer une affiliation",
         "affiliationInvalid": "Veuillez indiquer une affiliation.",
         "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution."
     },
@@ -162,11 +197,21 @@
             "title": "Thésaurus",
             "name": "Thésaurus Keywords",
             "label": "Ouvrez le thésaurus pour choisir des mots-clés ou commencez à taper...",
-            "unavailable": "Les données du thésaurus ne sont actuellement pas disponibles."
+            "unavailable": "Les données du thésaurus ne sont actuellement pas disponibles.",
+            "button": "Ouvrir le thésaurus"
         },
         "free": {
             "title": "Mots-clés libres",
-            "placeholder": "Veuillez saisir des mots-clés séparés par des virgules."
+            "placeholder": "Veuillez saisir des mots-clés et les séparer par une virgule.",
+            "addCsv": "Téléverser un fichier CSV",
+            "modalTitle": "Téléverser un fichier CSV",
+            "modalDescription": "Téléversez un fichier CSV ou glissez-déposez-le ici.",
+            "dropzone": "Glissez-déposez un fichier CSV ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "downloadHint": "Vous ne savez pas à quoi doit ressembler le format CSV ? Téléchargez le fichier d’exemple et utilisez-le comme modèle. Veuillez utiliser des fichiers CSV de moins de 1 Mo.",
+            "downloadSample": "Télécharger le fichier CSV d’exemple",
+            "cancel": "Annuler",
+            "import": "Importer les mots-clés"
         },
         "searchPlaceholder": "Rechercher des mots-clés..."
     },
@@ -267,8 +312,10 @@
         "clearTooltip": "Supprimer toutes les entrées ou le contenu.",
         "load": "Charger",
         "loadTooltip": "Charger les données ou le contenu sauvegardés.",
-        "saveAs": "Enregistrer sous",
-        "saveAsTooltip": "Enregistrer les données ou le contenu actuels sous un nouveau nom de fichier.",
+        "saveAs": "Enregistrer en XML",
+        "saveAsTooltip": "Enregistrer les données ou le contenu actuels dans un fichier XML.",
+        "saveAsJsonLd": "Enregistrer en JSON-LD",
+        "saveAsJsonLdTooltip": "Enregistrer les données ou le contenu actuels dans un fichier JSON-LD.",
         "submit": "Soumettre",
         "submitTooltip": "Transmettre les données ou le contenu saisis.",
         "legalNotice": "Mentions légales",
@@ -298,14 +345,20 @@
             "thankYouMessage": "Merci pour votre retour !"
         },
         "upload": {
-            "title": "Sélectionner un fichier XML :",
-            "dropZoneInfo": "Déposer le fichier XML ici",
+            "modalTitle": "Charger un fichier de métadonnées",
+            "title": "Sélectionner un fichier XML ou JSON-LD :",
+            "dropZoneInfo": "Déposer le fichier XML ou JSON-LD ici",
             "loading": "Traitement du fichier...",
             "successToast": "chargé avec succès",
             "errorToast": "Erreur lors du chargement du fichier",
-            "invalidFileType": "Veuillez télécharger un fichier XML.",
-            "errorProcessing": "Erreur lors du traitement du fichier XML",
+            "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
+            "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
+        },
+        "icgemWrongApp": {
+            "title": "Fichier de métadonnées ICGEM détecté",
+            "body": "Cher utilisateur,\nil semble que vous souhaitiez télécharger un fichier de métadonnées ICGEM sur ELMO. Cela est certes possible, mais pas avec cette version. Veuillez vous rendre sur ELMOGEM (https://icgem.gfz.de/elmogem) pour finaliser la transmission des métadonnées relatives au produit gravimétrique.",
+            "close": "Fermer"
         },
         "changelog": {
             "title": "Journal des modifications",
@@ -315,6 +368,7 @@
         "save": {
             "title": "Enregistrer les métadonnées",
             "saveAs": "Enregistrer en XML",
+            "saveAsJsonLd": "Enregistrer en JSON-LD",
             "filename": "Nom du fichier",
             "save": "Enregistrer"
         },
@@ -333,7 +387,7 @@
             "title": "Soumission impossible",
             "greeting": "Cher utilisateur, chère utilisatrice,",
             "body": "il semble que vous souhaitiez soumettre des données. Malheureusement, vous n'avez pas rempli tous les champs obligatoires.",
-            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer sous</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
+            "saveHint": "Si vous avez déjà convenu avec l'équipe de curation des données que votre soumission n'est pas encore complète, vous pouvez cliquer sur <strong>Enregistrer en XML</strong> et envoyer le fichier XML généré par e-mail à <a href='mailto:{email}'>{email}</a>.",
             "fixHint": "Sinon, veuillez compléter les champs marqués en rouge et réessayer.",
             "guideHint": "Si vous avez besoin d'aide pour remplir le formulaire, vous pouvez consulter le <a href='doc/help.php' target='_blank'>Guide ELMO</a> ici.",
             "close": "Fermer"
@@ -367,5 +421,18 @@
         "paragraph2": "Veuillez saisir vos informations et cliquer sur « Soumettre » pour transmettre vos métadonnées aux curatrices et curateurs des GFZ Data Services. Nous vous recommandons également d’enregistrer une copie de vos métadonnées sur votre ordinateur pour vos dossiers.",
         "paragraph3": "Pour plus d'informations, veuillez consulter nos <a href='https://dataservices.gfz.de/web/publish-data/publication-instructions' target='_blank' rel='noopener noreferrer'>instructions de publication</a>.",
         "button": "Continuer"
+    },
+    "doiPrefill": {
+        "modalTitle": "Préremplissage à partir du DOI",
+        "modalMessage": "Les métadonnées suivantes ont été trouvées pour ce DOI. Souhaitez-vous préremplir le formulaire ? Les entrées existantes seront écrasées.",
+        "confirm": "Appliquer",
+        "cancel": "Annuler",
+        "loading": "Recherche du DOI…",
+        "versionHint": "Veuillez vérifier et ajuster le numéro de version si nécessaire.",
+        "previewTitle": "Titre",
+        "previewAuthors": "Auteurs",
+        "previewType": "Type de ressource",
+        "previewYear": "Année de publication",
+        "previewLicense": "Licence"
     }
 }

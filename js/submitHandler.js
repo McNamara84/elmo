@@ -1,19 +1,27 @@
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+
 /**
  * Validates that the embargo date is not before the creation date.
  * @returns {boolean} True if the dates are valid, false otherwise.
  */
+
 function validateEmbargoDate() {
     const dateCreatedInput = document.getElementById('input-date-created');
     const dateEmbargoInput = document.getElementById('input-date-embargo');
     const embargoInvalidFeedback = document.querySelector('.embargo-invalid');
 
-    const dateCreated = new Date(dateCreatedInput.value);
-    const dateEmbargo = new Date(dateEmbargoInput.value);
-
-    if (!dateEmbargoInput.value) {
+    if (!dateEmbargoInput || !dateEmbargoInput.value) {
         resetFieldState(dateEmbargoInput, embargoInvalidFeedback);
         return true;
     }
+
+    if (!dateCreatedInput || !dateCreatedInput.value) {
+        setValidState(dateEmbargoInput, embargoInvalidFeedback);
+        return true;
+    }
+
+    const dateCreated = new Date(dateCreatedInput.value);
+    const dateEmbargo = new Date(dateEmbargoInput.value);
 
     if (dateCreated > dateEmbargo) {
         setInvalidState(dateEmbargoInput, embargoInvalidFeedback, translations.dates.embargoDateError);
@@ -173,8 +181,33 @@ if (groupStc) {
 /**
  * Validates if a Contact Person is selected from group of Authors.
  */
+function isCompletePayloadContact(author) {
+    if (!author || author.type !== 'person' || author.isContact !== true) {
+        return false;
+    }
+
+    return String(author.familyname || '').trim() !== '' &&
+        String(author.email || '').trim() !== '';
+}
+
 function validateContactPerson() {
-    var isValid = $('input[name="contacts[]"]:checked').length > 0;
+    var payloadInput = document.querySelector('input[name="authorsPayload"]');
+    var authorsPayload = null;
+
+    if (payloadInput && payloadInput.value) {
+        try {
+            authorsPayload = JSON.parse(payloadInput.value);
+        } catch (error) {
+            authorsPayload = null;
+        }
+    }
+
+    var isValid = Array.isArray(authorsPayload)
+        ? authorsPayload.some(function (author) {
+            return isCompletePayloadContact(author);
+        })
+        : $('input[name="contacts[]"]:checked').length > 0;
+
     $('#contact-person-error').remove();
     // 
     if (!isValid) {
@@ -217,6 +250,10 @@ class SubmitHandler {
         this.$selectedFileName = $('#selected-file-name');
         this.autosaveService = autosaveService;
 
+        // Security field references
+        this.$mainHoneypotField = $('#input-please-fill-in-this-field');
+        this.$modalHoneypotField = $('#input-submit-please-fill-in-this-field');
+
         this.initializeEventListeners();
         this.initializeFileHandlers();
         this.$removeFileBtn.hide();
@@ -229,11 +266,27 @@ class SubmitHandler {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
         this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+        this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
+        document.addEventListener('authorsPayload:updated', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
 
-        // Focus on input field
+        // Reset modal-scoped fields on open
         $('#modal-submit').on('shown.bs.modal', () => {
+            this.$modalHoneypotField.val('');
             $('#input-submit-dataurl').select();
         });
+
+        $('#modal-submit').on('hidden.bs.modal', () => {
+            this.toggleSubmitButton();
+        });
+
         $('#modal-submit').on('keydown', (e) => {
             // KeyCode 13? (Enter)
             if (e.which === 13 || e.keyCode === 13) {
@@ -298,8 +351,14 @@ class SubmitHandler {
             this.autosaveService.flushPending();
         }
         validateEmbargoDate();
+        validateTitleField();
+        validateAuthorNameFields();
         const temporalCoverageValid = validateAllTemporalCoverageRows();
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid) {
+        const authorAffiliationsValid = typeof globalThis !== 'undefined'
+            && typeof globalThis.validateAuthorAffiliationEditors === 'function'
+            ? globalThis.validateAuthorAffiliationEditors()
+            : true;
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
@@ -337,7 +396,36 @@ class SubmitHandler {
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
+
+        if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
+            window.authorStack.updatePayload();
+        }
+
         const submitData = new FormData(this.$form[0]);
+        const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
+        if (authorsPayloadInput) {
+            submitData.set('authorsPayload', authorsPayloadInput.value);
+        }
+
+        // Ensure the form-level CSRF token is present.
+        const csrfToken = await fetchAndStoreCsrfToken('form');
+        if (csrfToken) {
+            submitData.set('csrf-token', csrfToken.toString());
+        }
+
+        // Backend validates one honeypot field — send whichever trap was filled.
+        const mainHoneypot = (this.$mainHoneypotField.val() || '').toString().trim();
+        let modalHoneypot = '';
+        if (this.$modalHoneypotField && this.$modalHoneypotField.length > 0) {
+            const element = this.$modalHoneypotField[0];
+            if (element && element.value) {
+                modalHoneypot = String(element.value).trim();
+            }
+        }
+        const honeypotField = this.$mainHoneypotField[0] || this.$modalHoneypotField[0];
+        if (honeypotField?.name) {
+            submitData.set(honeypotField.name, mainHoneypot || modalHoneypot);
+        }
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());

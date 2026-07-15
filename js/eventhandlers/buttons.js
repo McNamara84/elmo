@@ -7,8 +7,7 @@
 
 // ─── Import form group modules ────────────────────────────────────────────────
 import './formgroups/feedback.js';
-import './formgroups/author.js';
-import './formgroups/authorInstitution.js';
+import './formgroups/authorStack.js';
 import './formgroups/contributor-person.js';
 import './formgroups/contributor-organisation.js';
 import './formgroups/resourceinformation-title.js';
@@ -147,7 +146,7 @@ $(document).ready(function () {
     }
 
     // For Save: no validation
-    $('#button-form-save').on('click', function () {
+    $('#button-form-save, #button-form-save-jsonld').on('click', function () {
       resetSubmitOnlyFields();
     });
 
@@ -161,6 +160,7 @@ $(document).ready(function () {
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();
+  
 
       form.querySelectorAll('.js-required-on-submit').forEach(el => {
         el.setAttribute('required', 'required');

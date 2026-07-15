@@ -87,6 +87,10 @@ describe('submitHandler.js', () => {
         // Mock applyTranslations function
     global.applyTranslations = jest.fn();
 
+    // Mock whitespace-only validators from checkMandatoryFields.js
+    global.validateTitleField = jest.fn().mockReturnValue(true);
+    global.validateAuthorNameFields = jest.fn().mockReturnValue(true);
+
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 
@@ -96,6 +100,9 @@ describe('submitHandler.js', () => {
   afterEach(() => {
     jest.useRealTimers();
     console.error.mockRestore();
+    delete global.validateTitleField;
+    delete global.validateAuthorNameFields;
+    delete global.validateAuthorAffiliationEditors;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -162,6 +169,12 @@ describe('submitHandler.js', () => {
 
     const result = validateAllTemporalCoverageRows();
     expect(result).toBe(false);
+  });
+
+  test('toggleSubmitButton disables button when privacy is unchecked', () => {
+    $('#input-submit-privacycheck').prop('checked', false);
+    handler.toggleSubmitButton();
+    expect($('#button-submit-submit').prop('disabled')).toBe(true);
   });
 
   test('toggleSubmitButton enables button when checked', () => {
@@ -638,6 +651,21 @@ describe('submitHandler.js', () => {
     expect(notifSpy).not.toHaveBeenCalled();
   });
 
+  test('handleSubmit shows validation-failed modal when author affiliation labels are invalid', () => {
+    global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
+    handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+
+    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
+    expect(modalSpy).toHaveBeenCalled();
+  });
+
   test('handleSubmit shows validation-failed modal when contact person is missing', () => {
     // Temporarily override checkValidity to return true (form fields are valid)
     // but validateContactPerson will return false (no checkbox checked)
@@ -662,5 +690,144 @@ describe('submitHandler.js', () => {
     const modalSpy = jest.spyOn(handler, 'showValidationFailedModal');
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
+  });
+
+  test('validateContactPerson reads contact state from authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('validateContactPerson accepts contact author without given name', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Sukarno","givenname":"","email":"sukarno@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('validateContactPerson rejects incomplete contacts in authorsPayload', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"   ","givenname":"Jane","email":"jane@example.org","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+  });
+
+  test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect($('#contact-person-error').length).toBe(1);
+
+    document.querySelector('input[name="authorsPayload"]').value = '[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]';
+    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: [] } }));
+
+    expect($('#contact-person-error').length).toBe(0);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  describe('on-demand CSRF token', () => {
+    beforeEach(() => {
+      if (!document.getElementById('input-csrf-token')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" id="input-csrf-token" name="csrf-token" value="">'
+        );
+      } else {
+        document.getElementById('input-csrf-token').value = '';
+      }
+
+      if (!document.getElementById('input-please-fill-in-this-field')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" id="input-please-fill-in-this-field" name="please-fill-in-this-field" value="">'
+        );
+      }
+
+      if (!document.getElementById('input-submit-urgency')) {
+        document.body.insertAdjacentHTML(
+          'beforeend',
+          `
+            <input type="hidden" id="input-submit-urgency" value="2">
+            <input type="hidden" id="input-submit-dataurl" value="">
+          `
+        );
+      }
+
+      const modalSubmit = document.getElementById('modal-submit');
+      if (modalSubmit && !document.getElementById('input-submit-please-fill-in-this-field')) {
+        modalSubmit.insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" id="input-submit-please-fill-in-this-field" name="please-fill-in-this-field" value="">'
+        );
+      }
+
+      handler = new SubmitHandler('test-form', 'modal-submit', 'modal-notification');
+    });
+
+    test('handleModalSubmit fetches a token before submitting when the field starts empty', async () => {
+      const csrfToken = 'fetched-on-submit-token';
+      global.fetch = jest.fn((url) => {
+        if (url === 'api/csrf_token.php') {
+          return Promise.resolve({
+            json: async () => ({ token: csrfToken }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        'api/csrf_token.php',
+        { credentials: 'include' }
+      );
+      expect(document.getElementById('input-csrf-token').value).toBe(csrfToken);
+      expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe(csrfToken);
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
+    test('handleModalSubmit replaces a stale field value with the freshly fetched token', async () => {
+      document.getElementById('input-csrf-token').value = 'stale-submit-token';
+
+      global.fetch = jest.fn((url) => {
+        if (url === 'api/csrf_token.php') {
+          return Promise.resolve({
+            json: async () => ({ token: 'fresh-submit-token' }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(global.fetch).toHaveBeenCalledTimes(1);
+      expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe('fresh-submit-token');
+      expect(document.getElementById('input-csrf-token').value).toBe('fresh-submit-token');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
   });
 });

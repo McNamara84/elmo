@@ -13,7 +13,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  *                          - action (string): Either 'submit' or 'save_and_download'
  *                          - doi (string|null): The DOI of the resource
  *                          - year (int): Publication year
- *                          - dateCreated (string): Creation date
+ *                          - dateCreated (string|null): Creation date
  *                          - dateEmbargo (string|null): Embargo date
  *                          - resourcetype (int): Resource type ID
  *                          - version (float|null): Version number
@@ -34,7 +34,7 @@ function saveResourceInformationAndRights($connection, $postData)
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'dateCreated', 'resourcetype'];
+            $requiredFields = ['year', 'resourcetype'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {
@@ -52,6 +52,7 @@ function saveResourceInformationAndRights($connection, $postData)
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
         if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'], $action)) {
+            error_log("[SAVE] Failed to save titles for resource_id: $resource_id");
             return false;
         }
 
@@ -315,6 +316,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
 
         // (only for submit action): Validate the title type exists in the database
         if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
+            error_log("Invalid title type ID provided: $title_type_int. Skipping this title.");
             continue;
         }
 
@@ -329,7 +331,11 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
     }
 
     if (empty($uniqueTitles)) {
-        return $action !== 'submit';
+        if ($action !== 'submit') {
+            return true;
+        }
+        error_log("[SAVE] Failed to save titles: no valid unique titles provided for resource_id: $resource_id");
+        return false;
     }
 
     foreach ($uniqueTitles as $title) {

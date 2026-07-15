@@ -1,21 +1,46 @@
 </form>
 </main>
+<!-- ICGEM Wrong Application Modal -->
+<div class="modal fade" id="modal-icgem-wrong-app" tabindex="-1" aria-labelledby="modal-icgem-wrong-app-label"
+    aria-describedby="modal-icgem-wrong-app-description" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-icgem-wrong-app-label"
+                    data-translate="modals.icgemWrongApp.title">ICGEM Metadata File Detected</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning mb-0" role="alert">
+                    <p class="mb-0" id="modal-icgem-wrong-app-description"
+                        data-translate="modals.icgemWrongApp.body">Dear user,
+                        
+                        it looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal"
+                    data-translate="modals.icgemWrongApp.close">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Upload Modal -->
 <div class="modal fade" id="modal-uploadxml" tabindex="-1" aria-labelledby="modal-uploadxml-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="modal-uploadxml-label">XML hochladen</h5>
+                <h5 class="modal-title" id="modal-uploadxml-label" data-translate="modals.upload.modalTitle">Metadatendatei laden</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>            
             <div class="modal-body">
                 <div class="mb-3">
-                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML file:</label>
-                    <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml">
+                    <label for="input-uploadxml-file" class="form-label" data-translate="modals.upload.title">Select XML or JSON-LD file:</label>
+                    <input class="form-control" type="file" id="input-uploadxml-file" accept=".xml,.jsonld,application/xml,text/xml,application/ld+json">
                 </div>
 
                 <div class="drop-zone mb-3 p-5 border rounded text-center" id="panel-uploadxml-dropfile">
-                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML file here</p>
+                    <p class="mb-0" data-translate="modals.upload.dropZoneInfo">Drop XML or JSON-LD file here</p>
                 </div>
                 <div id="upload-spinner-overlay" class="d-none text-center py-4">
                     <div class="spinner-border text-primary" role="status">
@@ -178,13 +203,13 @@
             </div>
             <div class="modal-body">
                 <form id="form-saveas-filename">
-                    <div class="mb-3">
+                        <div class="mb-3">
                         <label for="input-saveas-filename" class="form-label" data-translate="modals.save.filename">
                             Filename
                         </label>
                         <div class="input-group">
                             <input type="text" class="form-control" id="input-saveas-filename">
-                            <span class="input-group-text">.xml</span>
+                            <span class="input-group-text" id="saveas-extension">.xml</span>
                         </div>
                     </div>
                 </form>
@@ -210,6 +235,11 @@
         </div>
         <div class="modal-body">
           <form id="modal-submit-form">
+            <!-- Honeypot field - hidden from humans, bots will fill it -->
+            <div style="position: absolute; left: -9999px;" aria-hidden="true">
+                <input type="text" id="input-submit-please-fill-in-this-field" name="please-fill-in-this-field" tabindex="-1" autocomplete="off">
+            </div>
+            
             <!-- Publication urgency dropdown -->
             <div class="mb-3">
               <label for="input-submit-urgency" class="form-label" data-translate="modals.submit.urgency">Urgency</label>
@@ -358,11 +388,10 @@
                 <form id="form-feedback" method="POST" action="send_feedback_mail.php">
                     <!-- Honeypot field - hidden from humans, bots will fill it -->
                     <div style="position: absolute; left: -9999px;" aria-hidden="true">
-                        <input type="text" name="website" tabindex="-1" autocomplete="off">
+                        <input type="text" id="input-feedback-please-fill-in-this-field" name="please-fill-in-this-field" tabindex="-1" autocomplete="off">
                     </div>
                     <!-- Hidden fields for security -->
-                    <input type="hidden" name="feedback_time_spent" id="input-feedback-time-spent" value="0">
-                    <input type="hidden" name="csrf_token" id="input-feedback-csrf-token" value="">
+                    <input type="hidden" name="csrf-token" id="input-feedback-csrf-token" value="">
                     <div class="mb-3">
                         <label for="input-feedback-question1" class="form-label"
                             data-translate="modals.feedback.question1">Which functions of the new metadata editor do you find particularly helpful?</label>
@@ -408,6 +437,30 @@
                     <button class="btn btn-primary feedback-button-send" type="submit" id="button-feedback-send"
                         data-translate="modals.feedback.sendButton">Send feedback</button>
                 </form>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- DOI Prefill Confirmation Modal -->
+<div class="modal fade" id="modal-doi-prefill" tabindex="-1" aria-labelledby="modal-doi-prefill-label"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-doi-prefill-label" data-translate="doiPrefill.modalTitle">Pre-fill
+                    from DOI</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p data-translate="doiPrefill.modalMessage">The following metadata was found for this DOI. Do you want
+                    to pre-fill the form?</p>
+                <div id="doi-prefill-preview" class="doi-prefill-preview mt-2"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-outline-secondary" id="button-doi-prefill-cancel"
+                    data-bs-dismiss="modal" data-translate="doiPrefill.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="button-doi-prefill-confirm"
+                    data-translate="doiPrefill.confirm">Apply</button>
             </div>
         </div>
     </div>

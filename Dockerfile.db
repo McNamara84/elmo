@@ -1,0 +1,5 @@
+FROM mariadb:11
+
+ENV TZ=Europe/Berlin
+
+VOLUME ["/var/lib/mysql"]

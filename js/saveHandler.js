@@ -4,6 +4,23 @@
  * @requires jquery
  */
 
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+
+const SAVE_FORMATS = {
+    xml: {
+        extension: 'xml',
+        modalTitleKey: 'saveAs',
+        fallbackTitle: 'Save as XML',
+        logLabel: 'xml file locally'
+    },
+    jsonld: {
+        extension: 'jsonld',
+        modalTitleKey: 'saveAsJsonLd',
+        fallbackTitle: 'Save as JSON-LD',
+        logLabel: 'json-ld file locally'
+    }
+};
+
 class SaveHandler {
     /**
      * Initialize save handler
@@ -18,7 +35,16 @@ class SaveHandler {
             saveAs: new bootstrap.Modal($(`#${saveAsModalId}`)[0]),
             notification: new bootstrap.Modal($(`#${notificationModalId}`)[0])
         };
+        this.modalElements = {
+            title: document.getElementById('label-saveas-modal'),
+            extension: document.getElementById('saveas-extension')
+        };
         this.autosaveService = autosaveService;
+        this.currentFormat = 'xml';
+        
+        // Security fields
+        this.$honeypotField = $('#input-please-fill-in-this-field');
+        
         this.initializeEventListeners();
     }
 
@@ -36,7 +62,7 @@ class SaveHandler {
             }
         });
 
-        // Focus on input field
+        // Focus on filename input when modal opens
         $('#modal-saveas').on('shown.bs.modal', () => {
             $('#input-saveas-filename').select();
         });
@@ -60,8 +86,15 @@ class SaveHandler {
 
     /**
      * Handle save action
+     * @param {string} [format='xml'] - Download format
      */
-    async handleSave() {
+    async handleSave(format = 'xml') {
+        this.saveFlowStartedAt = Date.now();
+        this.setCurrentFormat(format);
+        if (!this.validateAuthorAffiliationsForSave()) {
+            return;
+        }
+        this.updateSaveAsModal();
         this.showNotification('info',
             translations.alerts.processingHeading,
             translations.alerts.preparingDownload);
@@ -70,6 +103,29 @@ class SaveHandler {
             $('#input-saveas-filename').val(suggestedFilename);
             this.modals.saveAs.show();
         }
+    }
+
+    validateAuthorAffiliationsForSave() {
+        const validator = typeof globalThis !== 'undefined'
+            ? globalThis.validateAuthorAffiliationEditors
+            : null;
+
+        if (typeof validator !== 'function' || validator()) {
+            return true;
+        }
+
+        const firstInvalid = this.$form.find('[data-author-affiliation-label].is-invalid').first();
+        if (firstInvalid.length > 0 && firstInvalid[0]) {
+            firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            firstInvalid[0].focus();
+        }
+
+        this.showNotification(
+            'danger',
+            translations.alerts.validationErrorheading || translations.alerts.errorHeading,
+            translations.alerts.validationError || translations.alerts.saveError
+        );
+        return false;
     }
 
     /**
@@ -105,14 +161,16 @@ class SaveHandler {
         }
 
         this.modals.saveAs.hide();
-        await this.saveAndDownload(filename);
+        await this.saveAndDownload(filename, this.currentFormat);
     }
 
     /**
      * Save data and trigger download
      * @param {string} filename - Chosen filename
+     * @param {string} [format=this.currentFormat] - Download format
      */
-    async saveAndDownload(filename) {
+    async saveAndDownload(filename, format = this.currentFormat) {
+        const formatConfig = this.getFormatConfig(format);
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
@@ -138,23 +196,46 @@ class SaveHandler {
             });
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
-            
+
+            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
+                window.authorStack.updatePayload();
+            }
+
             const formData = new FormData(this.$form[0]);
+            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
+            if (authorsPayloadInput) {
+                formData.set('authorsPayload', authorsPayloadInput.value);
+            }
             formData.append('filename', filename);
+
+            const csrfToken = await fetchAndStoreCsrfToken('form');
+
+            formData.set('csrf-token', csrfToken);
+            const honeypotEl = this.$honeypotField[0];
+            if (honeypotEl?.name) {
+                formData.append(honeypotEl.name, this.$honeypotField.val());
+            }
+            formData.append('download_format', formatConfig.extension);
             formData.append('action', 'save_and_download');
 
             const response = await fetch('save/save_data.php', {
                 method: 'POST',
+                credentials: 'include',
                 body: formData
             });
 
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+            if (!response.ok) {
+                const serverMessage = await this.extractErrorMessage(response);
+                throw Object.assign(new Error(`HTTP error! status: ${response.status}`), {
+                    userMessage: serverMessage
+                });
+            }
 
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `${filename}.xml`;
+            a.download = this.resolveDownloadFilename(response, filename, formatConfig.extension);
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
@@ -167,19 +248,118 @@ class SaveHandler {
             this.showNotification('success',
                 translations.alerts.successHeading,
                 translations.alerts.savingSuccess);
-
-            // Log successful save (fire-and-forget, must not delay the notification)
-            logEvent('save', 'user successfully saved xml file locally');
         } catch (error) {
             console.error('Error saving dataset:', error);
 
-            // Log failed save
-            await logEvent('save', 'user FAILED to save xml file locally');
-
             this.showNotification('danger',
                 translations.alerts.errorHeading,
-                translations.alerts.saveError);
+                error?.userMessage || translations.alerts.saveError);
         }
+    }
+
+    /**
+     * Calculate elapsed save interaction time in whole seconds.
+     * @returns {number}
+     */
+    calculateTimeSpent() {
+        const now = Date.now();
+        const startedAtCandidates = [this.modalOpenedAt, this.saveFlowStartedAt]
+            .filter((timestamp) => Number.isFinite(timestamp) && timestamp > 0);
+
+        if (!startedAtCandidates.length) {
+            return 0;
+        }
+
+        return Math.max(
+            0,
+            ...startedAtCandidates.map((timestamp) => Math.floor((now - timestamp) / 1000))
+        );
+    }
+
+    /**
+     * Extract a user-safe error message from a failed save response.
+     * @param {Response} response - Failed fetch response
+     * @returns {Promise<string|null>}
+     */
+    async extractErrorMessage(response) {
+        if (!response?.clone) {
+            return null;
+        }
+
+        try {
+            const clone = response.clone();
+            const contentType = clone.headers?.get?.('Content-Type')
+                || clone.headers?.get?.('content-type')
+                || '';
+
+            if (!contentType.includes('application/json') || typeof clone.json !== 'function') {
+                return null;
+            }
+
+            const payload = await clone.json();
+            return payload?.error || payload?.message || null;
+        } catch (error) {
+            console.warn('Could not parse save error response:', error);
+        }
+
+        return null;
+    }
+
+    /**
+     * Normalize and store the current save format.
+     * @param {string} format - Requested format
+     */
+    setCurrentFormat(format) {
+        this.currentFormat = this.getFormatConfig(format).extension;
+    }
+
+    /**
+     * Return the config for a supported format.
+     * @param {string} format - Requested format
+     * @returns {{extension: string, modalTitleKey: string, fallbackTitle: string, logLabel: string}}
+     */
+    getFormatConfig(format) {
+        return SAVE_FORMATS[format] || SAVE_FORMATS.xml;
+    }
+
+    /**
+     * Update modal title and visible filename suffix for the active format.
+     */
+    updateSaveAsModal() {
+        const formatConfig = this.getFormatConfig(this.currentFormat);
+        const translatedTitle = translations?.modals?.save?.[formatConfig.modalTitleKey] || formatConfig.fallbackTitle;
+
+        if (this.modalElements.title) {
+            this.modalElements.title.textContent = translatedTitle;
+        }
+
+        if (this.modalElements.extension) {
+            this.modalElements.extension.textContent = `.${formatConfig.extension}`;
+        }
+    }
+
+    /**
+     * Resolve the downloaded filename from the response headers or format.
+     * @param {Response} response - Fetch response
+     * @param {string} filename - User-chosen base filename
+     * @param {string} extension - Fallback extension
+     * @returns {string}
+     */
+    resolveDownloadFilename(response, filename, extension) {
+        const contentDisposition = response?.headers?.get?.('Content-Disposition')
+            || response?.headers?.get?.('content-disposition')
+            || '';
+        const encodedMatch = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i);
+        if (encodedMatch && encodedMatch[1]) {
+            return decodeURIComponent(encodedMatch[1]);
+        }
+
+        const plainMatch = contentDisposition.match(/filename="?([^";]+)"?/i);
+        if (plainMatch && plainMatch[1]) {
+            return plainMatch[1];
+        }
+
+        return `${filename}.${extension}`;
     }
 
     /**

@@ -1,5 +1,8 @@
 <?php
-require_once __DIR__ . '/../../../settings.php';
+if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
+require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 
 class DatasetController
 {
@@ -181,13 +184,14 @@ class DatasetController
         LEFT JOIN Author_institution ai ON a.Author_Institution_author_institution_id = ai.author_institution_id
         JOIN Resource_has_Author rha ON a.author_id = rha.Author_author_id
         WHERE rha.Resource_resource_id = ?
+        ORDER BY rha.sort_order ASC, rha.Resource_has_Author_id ASC
     ");
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
         $result = $stmt->get_result();
         while ($row = $result->fetch_assoc()) {
             // Prüfen: Ist es ein Person-Author?
-            if (!empty($row['familyname']) || !empty($row['givenname'])) {
+            if (!empty($row['familyname']) || !empty($row['givenname']) || !empty($row['orcid'])) {
                 $authors[] = [
                     'type' => 'person',
                     'familyname' => $row['familyname'],
@@ -729,31 +733,41 @@ class DatasetController
 
         foreach ($authors as $author) {
             $authorXml = null;
-            
-            if (!empty($author['familyname']) || !empty($author['givenname'])) {
-                // Person
+            $unifiedXml = null;
+
+            if (($author['type'] ?? '') === 'person' || !empty($author['familyname']) || !empty($author['givenname']) || !empty($author['orcid'])) {
+                $unifiedXml = $authorsXml->addChild('Author');
+                $unifiedXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
+                $unifiedXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
+                if (!empty($author['orcid'])) {
+                    $unifiedXml->addChild('orcid', htmlspecialchars($author['orcid']));
+                }
+
                 $authorXml = $authorsXml->addChild('AuthorPerson');
                 $authorXml->addChild('familyname', htmlspecialchars($author['familyname'] ?? ''));
                 $authorXml->addChild('givenname', htmlspecialchars($author['givenname'] ?? ''));
                 if (!empty($author['orcid'])) {
                     $authorXml->addChild('orcid', htmlspecialchars($author['orcid']));
                 }
-            } elseif (!empty($author['institutionname'])) {
-                // Institution
+            } elseif (($author['type'] ?? '') === 'institution' || !empty($author['institutionname'])) {
+                $unifiedXml = $authorsXml->addChild('Author');
+                $unifiedXml->addChild('institutionname', htmlspecialchars($author['institutionname'] ?? ''));
+
                 $authorXml = $authorsXml->addChild('AuthorInstitution');
-                $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname']));
+                $authorXml->addChild('institutionname', htmlspecialchars($author['institutionname'] ?? ''));
             }
 
-            if (!empty($author['Affiliations']) && $authorXml !== null) {
-                $affiliationsXml = $authorXml->addChild('Affiliations');
-                foreach ($author['Affiliations'] as $affiliation) {
-                    $affiliationXml = $affiliationsXml->addChild('Affiliation');
-                    foreach ($affiliation as $key => $value) {
-                        // Skip adding <rorId> if it's empty or not set
-                        if ($key === 'rorId' && empty($value)) {
-                            continue;
+            if (!empty($author['Affiliations']) && $unifiedXml !== null && $authorXml !== null) {
+                foreach ([$unifiedXml, $authorXml] as $targetXml) {
+                    $affiliationsXml = $targetXml->addChild('Affiliations');
+                    foreach ($author['Affiliations'] as $affiliation) {
+                        $affiliationXml = $affiliationsXml->addChild('Affiliation');
+                        foreach ($affiliation as $key => $value) {
+                            if ($key === 'rorId' && empty($value)) {
+                                continue;
+                            }
+                            $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
                         }
-                        $affiliationXml->addChild($key, htmlspecialchars($value ?? ''));
                     }
                 }
             }
@@ -885,12 +899,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($person['Roles'])) {
-                    $rolesXml = $personXml->addChild('Roles');
-                    foreach ($person['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $personXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($person['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -914,12 +926,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($institution['Roles'])) {
-                    $rolesXml = $institutionXml->addChild('Roles');
-                    foreach ($institution['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $institutionXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($institution['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -1095,6 +1105,21 @@ class DatasetController
     }
 
     /**
+     * Return explicit contributor roles or the DataCite-compatible draft fallback.
+     *
+     * The fallback is intentionally applied only while building export XML. It
+     * must not be written to contributor role relations because the user did not
+     * explicitly select it.
+     *
+     * @param array<int, array{name?: mixed}> $roles
+     * @return array<int, array{name: mixed}>
+     */
+    private function getContributorRolesForExport(array $roles): array
+    {
+        return $roles !== [] ? $roles : [['name' => 'Other']];
+    }
+
+    /**
      * Transforms an XML resource using an XSLT stylesheet and either saves or downloads the result.
      *
      * @param int    $id       The identifier of the resource.
@@ -1105,10 +1130,97 @@ class DatasetController
      *
      * @return string|null The transformed XML as a string if $download is false; null if the XML is downloaded.
      */
-    function transformAndSaveOrDownloadXml($id, $format, $download = false)
+    function transformAndSaveOrDownloadXml($id, $format, $download = false, ?string $sourceXmlString = null)
     {
-        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $formatInfo = $this->getTransformFormatInfo($format);
+        
+        if ($sourceXmlString === null) {
+            // Temporarily create FreestyleXML
+            $this->getResourceAsXml($GLOBALS['connection'], $id);
+            $inputXmlPath = $this->generate_xml_path($id);
 
+            if (!file_exists($inputXmlPath)) {
+                throw new Exception("Required resource XML file is missing. xmlpath is {$inputXmlPath}");
+            }
+
+            $sourceXmlString = file_get_contents($inputXmlPath);
+            if ($sourceXmlString === false) {
+                throw new Exception("Could not read resource XML file: {$inputXmlPath}");
+            }
+        }
+
+        $outputXmlPath = $this->generate_xml_path($id, $formatInfo['outputPrefix']);
+        //REPLACES $baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
+
+        $newXml = $this->transformResourceXmlString($sourceXmlString, $format);
+
+        if ($download) {
+            // Set headers for download and output the file
+            header('Content-Type: application/xml');
+            header('Content-Disposition: attachment; filename="' . basename($outputXmlPath) . '"');
+            header('Content-Length: ' . strlen($newXml));
+            echo $newXml;
+            exit();
+        } else {
+            // Return the XML string
+            return $newXml;
+        }
+    }
+
+    /**
+     * Transforms a resource XML string with the configured XSLT for the requested format.
+     *
+     * @param string $sourceXmlString The source Resource XML string.
+     * @param string $format The target format, either datacite or iso.
+     * @return string The transformed XML string.
+     * @throws Exception If the format is invalid, files are missing, or transformation fails.
+     */
+    public function transformResourceXmlString(string $sourceXmlString, string $format): string
+    {
+        $formatInfo = $this->getTransformFormatInfo($format);
+        $baseDir = realpath(dirname(dirname(dirname(__DIR__))));
+        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo['xsltFile'];
+
+        if (!file_exists($xsltPath)) {
+            throw new Exception("Required XSLT file is missing. xsltpath is {$xsltPath}");
+        }
+
+        $xml = new DOMDocument;
+        if (!$xml->loadXML($sourceXmlString)) {
+            throw new Exception("Could not parse source resource XML string.");
+        }
+
+        $xsl = new DOMDocument;
+        $xsl->load($xsltPath);
+
+        $proc = new XSLTProcessor;
+        $proc->importStyleSheet($xsl);
+        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactEmail', $contactEmail);
+        $newXml = $proc->transformToXML($xml);
+
+        if ($newXml === false) {
+            throw new Exception("Error during XSLT transformation.");
+        }
+
+        if ($format === 'iso') {
+            $newXml = $this->stripEmptyIsoCreationDates($newXml);
+        }
+
+        if ($format === 'datacite') {
+            $newXml = $this->stripEmptyDataciteElements($newXml);
+            $newXml = $this->restoreDataCiteAwardUrisWithoutNumbers($newXml, $sourceXmlString);
+            $newXml = $this->restoreDataCiteDateOnlyCoverageDates($newXml, $sourceXmlString);
+        }
+
+        return $newXml;
+    }
+
+    /**
+     * @return array{xsltFile: string, outputPrefix: string}
+     */
+    private function getTransformFormatInfo(string $format): array
+    {
         $formatInfo = [
             'iso' => [
                 'xsltFile' => 'MappingMapToIso.xslt',
@@ -1123,50 +1235,401 @@ class DatasetController
         if (!isset($formatInfo[$format])) {
             throw new Exception("Invalid format.");
         }
-        
-        // Temporarily create FreestyleXML
-        $this->getResourceAsXml($GLOBALS['connection'], $id);
-        $inputXmlPath = $this->generate_xml_path($id);
-        $xsltPath = $baseDir . "/schemas/XSLT/" . $formatInfo[$format]['xsltFile'];
-        $outputXmlPath = $this->generate_xml_path($id, $formatInfo[$format]['outputPrefix']);
-        //REPLACES $baseDir . "/xml/" . $formatInfo[$format]['outputPrefix'] . "_resource_$id.xml";
 
-        // Check if the input XML and XSLT files exist
-        if (!file_exists($inputXmlPath) || !file_exists($xsltPath)) {
-            throw new Exception("Required files are missing. xmlpath is {$inputXmlPath}, xsltpath is {$xsltPath}");
-        }
-
-        // Load XML document and XSLT stylesheet
-        $xml = new DOMDocument;
-        $xml->load($inputXmlPath);
-        $xsl = new DOMDocument;
-        $xsl->load($xsltPath);
-
-        // Create XSLT processor, configure it, and perform the transformation
-        $proc = new XSLTProcessor;
-        $proc->importStyleSheet($xsl);
-        // Pass the contact email as an XSLT parameter
-        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
-        $proc->setParameter('', 'contactEmail', $contactEmail);
-        $newXml = $proc->transformToXML($xml);
-
-        if ($newXml === false) {
-            throw new Exception("Error during XSLT transformation.");
-        }
-
-        if ($download) {
-            // Set headers for download and output the file
-            header('Content-Type: application/xml');
-            header('Content-Disposition: attachment; filename="' . basename($outputXmlPath) . '"');
-            header('Content-Length: ' . strlen($newXml));
-            echo $newXml;
-            exit();
-        } else {
-            // Return the XML string
-            return $newXml;
-        }
+        return $formatInfo[$format];
     }
-    
+
+    /**
+     * Transforms the DataCite XML export into compact JSON-LD.
+     *
+     * @param int $id The identifier of the resource.
+     * @return string JSON-LD representation of the DataCite export.
+     */
+    public function transformResourceToJsonLd(int $id, ?string $sourceXmlString = null): string
+    {
+        $dataciteXml = $sourceXmlString === null
+            ? $this->transformAndSaveOrDownloadXml($id, 'datacite', false)
+            : $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
+        $service = new DataCiteJsonLdService();
+
+        return $service->convertXmlStringToJsonLd($dataciteXml);
+    }
+
+    /**
+     * Adds or updates the DataCite Submitted date in an already generated XML envelope.
+     *
+     * Normal exports intentionally do not call this method. It is used by the real
+     * submit flow after XML generation so saved drafts and API downloads are not
+     * marked as submitted.
+     *
+     * @param string $xml Raw DataCite XML or all-format envelope XML.
+     * @param string|null $submissionDate Date to write as YYYY-MM-DD; defaults to today.
+     * @return string XML with exactly one DataCite Submitted date per DataCite resource.
+     */
+    public function markDataCiteEnvelopeAsSubmitted(string $xml, ?string $submissionDate = null): string
+    {
+        $submissionDate = $submissionDate ?: date('Y-m-d');
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+
+        $resources = $xpath->query('//dc:resource');
+        foreach ($resources as $resource) {
+            if (!$resource instanceof DOMElement) {
+                continue;
+            }
+
+            $dates = $xpath->query('dc:dates', $resource)->item(0);
+            if (!$dates instanceof DOMElement) {
+                $dates = $dom->createElementNS($ns, 'dates');
+                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
+                if ($insertBefore !== null) {
+                    $resource->insertBefore($dates, $insertBefore);
+                } else {
+                    $resource->appendChild($dates);
+                }
+            }
+
+            $submittedDate = null;
+            $duplicates = [];
+            $submittedDates = $xpath->query('dc:date[@dateType="Submitted"]', $dates);
+            foreach ($submittedDates as $dateNode) {
+                if (!$dateNode instanceof DOMElement) {
+                    continue;
+                }
+                if ($submittedDate === null) {
+                    $submittedDate = $dateNode;
+                    continue;
+                }
+                $duplicates[] = $dateNode;
+            }
+
+            foreach ($duplicates as $duplicate) {
+                $duplicate->parentNode->removeChild($duplicate);
+            }
+
+            if (!$submittedDate instanceof DOMElement) {
+                $submittedDate = $dom->createElementNS($ns, 'date');
+                $submittedDate->setAttribute('dateType', 'Submitted');
+                $dates->appendChild($submittedDate);
+            }
+
+            while ($submittedDate->firstChild) {
+                $submittedDate->removeChild($submittedDate->firstChild);
+            }
+            $submittedDate->setAttribute('dateType', 'Submitted');
+            $submittedDate->appendChild($dom->createTextNode($submissionDate));
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Finds the first DataCite child that must follow <dates> in schema order.
+     *
+     * @param DOMXPath $xpath XPath configured with the DataCite namespace.
+     * @param DOMElement $resource DataCite resource element.
+     * @return DOMNode|null Node before which <dates> should be inserted.
+     */
+    private function findDataCiteDatesInsertBefore(DOMXPath $xpath, DOMElement $resource): ?DOMNode
+    {
+        $followingDateElements = [
+            'language',
+            'alternateIdentifiers',
+            'relatedIdentifiers',
+            'sizes',
+            'formats',
+            'version',
+            'rightsList',
+            'descriptions',
+            'geoLocations',
+            'fundingReferences',
+            'relatedItems'
+        ];
+
+        foreach ($followingDateElements as $elementName) {
+            $node = $xpath->query("dc:{$elementName}", $resource)->item(0);
+            if ($node instanceof DOMNode) {
+                return $node;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Restores Award URIs that the generated XSLT omits when no grant number exists.
+     *
+     * DataCite represents awardURI as an attribute of awardNumber. The schema permits
+     * awardNumber to have empty string content, but the generated XSLT only creates the
+     * element when the source contains a non-empty grantnumber.
+     *
+     * @param string $dataciteXml Transformed DataCite XML.
+     * @param string $sourceXml Source resource XML used for the transformation.
+     * @return string DataCite XML with URI-only award numbers preserved.
+     */
+    private function restoreDataCiteAwardUrisWithoutNumbers(string $dataciteXml, string $sourceXml): string
+    {
+        $sourceDom = new DOMDocument();
+        if (!$sourceDom->loadXML($sourceXml)) {
+            return $dataciteXml;
+        }
+
+        $sourceXPath = new DOMXPath($sourceDom);
+        $sourceReferences = $sourceXPath->query(
+            '/*[local-name()=\'Resource\']/*[local-name()=\'FundingReferences\']/*[local-name()=\'FundingReference\']'
+        );
+        if ($sourceReferences === false || $sourceReferences->length === 0) {
+            return $dataciteXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($dataciteXml)) {
+            return $dataciteXml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        $targetReferences = $xpath->query('//dc:fundingReferences/dc:fundingReference');
+        if ($targetReferences === false) {
+            return $dataciteXml;
+        }
+
+        foreach ($sourceReferences as $index => $sourceReference) {
+            $awardUri = trim((string) $sourceXPath->evaluate(
+                'string(*[local-name()=\'awarduri\'][1])',
+                $sourceReference
+            ));
+            $grantNumber = trim((string) $sourceXPath->evaluate(
+                'string(*[local-name()=\'grantnumber\'][1])',
+                $sourceReference
+            ));
+
+            if ($awardUri === '' || $grantNumber !== '') {
+                continue;
+            }
+
+            $targetReference = $targetReferences->item($index);
+            if (!$targetReference instanceof DOMElement) {
+                continue;
+            }
+
+            $existingAwardNumber = $xpath->query('dc:awardNumber', $targetReference)->item(0);
+            if ($existingAwardNumber instanceof DOMElement) {
+                continue;
+            }
+
+            $awardNumber = $dom->createElementNS($ns, 'awardNumber');
+            $awardNumber->setAttribute('awardURI', $awardUri);
+
+            $awardTitle = $xpath->query('dc:awardTitle', $targetReference)->item(0);
+            if ($awardTitle instanceof DOMNode) {
+                $targetReference->insertBefore($awardNumber, $awardTitle);
+            } else {
+                $targetReference->appendChild($awardNumber);
+            }
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Restores date-only STC coverage intervals that the generated XSLT omits.
+     *
+     * @param string $dataciteXml Transformed DataCite XML.
+     * @param string $sourceXml Source resource XML used for the transformation.
+     * @return string DataCite XML with date-only Coverage dates preserved.
+     */
+    private function restoreDataCiteDateOnlyCoverageDates(string $dataciteXml, string $sourceXml): string
+    {
+        $coverageIntervals = $this->extractDateOnlyCoverageIntervals($sourceXml);
+        if ($coverageIntervals === []) {
+            return $dataciteXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($dataciteXml)) {
+            return $dataciteXml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+
+        $resources = $xpath->query('//dc:resource');
+        foreach ($resources as $resource) {
+            if (!$resource instanceof DOMElement) {
+                continue;
+            }
+
+            $dates = $xpath->query('dc:dates', $resource)->item(0);
+            if (!$dates instanceof DOMElement) {
+                $dates = $dom->createElementNS($ns, 'dates');
+                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
+                if ($insertBefore !== null) {
+                    $resource->insertBefore($dates, $insertBefore);
+                } else {
+                    $resource->appendChild($dates);
+                }
+            }
+
+            $existingCoverageDates = [];
+            foreach ($xpath->query('dc:date[@dateType="Coverage"]', $dates) as $dateNode) {
+                $existingCoverageDates[] = trim($dateNode->textContent);
+            }
+
+            foreach ($coverageIntervals as $coverageInterval) {
+                if (in_array($coverageInterval, $existingCoverageDates, true)) {
+                    continue;
+                }
+
+                $date = $dom->createElementNS($ns, 'date', $coverageInterval);
+                $date->setAttribute('dateType', 'Coverage');
+                $dates->appendChild($date);
+                $existingCoverageDates[] = $coverageInterval;
+            }
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function extractDateOnlyCoverageIntervals(string $sourceXml): array
+    {
+        $dom = new DOMDocument();
+        if (!$dom->loadXML($sourceXml)) {
+            return [];
+        }
+
+        $xpath = new DOMXPath($dom);
+        $coverageNodes = $xpath->query('//*[local-name()="SpatialTemporalCoverage"]');
+        $coverageIntervals = [];
+
+        foreach ($coverageNodes as $coverageNode) {
+            $dateStart = $this->childTextByLocalName($xpath, $coverageNode, 'dateStart');
+            if ($dateStart === '') {
+                continue;
+            }
+
+            $timeStart = $this->childTextByLocalName($xpath, $coverageNode, 'timeStart');
+            $timeEnd = $this->childTextByLocalName($xpath, $coverageNode, 'timeEnd');
+            if ($timeStart !== '' || $timeEnd !== '') {
+                continue;
+            }
+
+            $dateEnd = $this->childTextByLocalName($xpath, $coverageNode, 'dateEnd');
+            $coverageIntervals[] = $dateStart . '/' . $dateEnd;
+        }
+
+        return $coverageIntervals;
+    }
+
+    /**
+     * Reads the trimmed text of a direct child selected by local-name.
+     *
+     * @param DOMXPath $xpath XPath helper.
+     * @param DOMNode $contextNode Parent node to search below.
+     * @param string $localName Local element name to read.
+     * @return string Trimmed child text, or an empty string when absent.
+     */
+    private function childTextByLocalName(DOMXPath $xpath, DOMNode $contextNode, string $localName): string
+    {
+        $node = $xpath->query('./*[local-name()="' . $localName . '"]', $contextNode)->item(0);
+
+        return $node instanceof DOMNode ? trim($node->textContent) : '';
+    }
+
+    /**
+     * Removes empty elements from a DataCite XML string that would violate the
+     * nonemptycontentStringType constraint (minLength=1).
+     *
+     * The XSLT transformation outputs optional elements like <givenName>, <familyName>,
+     * <affiliation>, <nameIdentifier>, and <date> unconditionally, even when the source value
+     * is null or an empty string. DataCite schema requires all of these to have
+     * non-empty text content. This method strips them after the fact so the XSLT
+     * (which carries a "do not modify" comment as it was MapForce-generated) does not
+     * need to be changed.
+     *
+     * Also removes empty <geoLocationPoint> elements (no pointLongitude/pointLatitude
+     * children) which arise when a SpatialTemporalCoverage row has only a description
+     * but no coordinates.
+     *
+     * @param string $xml Raw DataCite XML string.
+     * @return string Cleaned DataCite XML string.
+     */
+    private function stripEmptyDataciteElements(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml; // Return unchanged if unparseable
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        
+        // Elements whose text content must be non-empty per DataCite schema constraints.
+        // Remove the element entirely when content is blank/whitespace-only.
+        $leafElements = ['givenName', 'familyName', 'nameIdentifier', 'affiliation', 'date'];
+        foreach ($leafElements as $tag) {
+            $nodes = $xpath->query("//dc:{$tag}"); 
+            foreach ($nodes as $node) {
+                if (trim($node->textContent) === '') {
+                    $node->parentNode->removeChild($node);
+                }
+            }
+        }
+
+        // Remove <geoLocationPoint> that has no coordinate children — happens when
+        // a coverage row carries only a description (no lat/lon values).
+        $emptyPoints = $xpath->query('//dc:geoLocationPoint[not(dc:pointLongitude) or not(dc:pointLatitude)]');
+        foreach ($emptyPoints as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
+    }
+
+    /**
+     * Removes empty ISO creation date nodes generated from an optional Date Created.
+     *
+     * @param string $xml Raw ISO XML string.
+     * @return string Cleaned ISO XML string.
+     */
+    private function stripEmptyIsoCreationDates(string $xml): string
+    {
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($xml)) {
+            return $xml;
+        }
+
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('gmd', 'http://www.isotc211.org/2005/gmd');
+        $xpath->registerNamespace('gco', 'http://www.isotc211.org/2005/gco');
+
+        $emptyCreationDates = $xpath->query(
+            '//gmd:date[gmd:CI_Date[gmd:date/gco:Date[normalize-space(.) = ""] and gmd:dateType/gmd:CI_DateTypeCode[@codeListValue="creation"]]]'
+        );
+        foreach ($emptyCreationDates as $node) {
+            $node->parentNode->removeChild($node);
+        }
+
+        return $dom->saveXML();
+    }
     /**
      * Exports a resource in the specified metadata scheme and initiates a file download.
      *
@@ -1204,7 +1667,7 @@ class DatasetController
         $scheme = strtolower($vars['scheme']);
 
         // Check for valid schema formats
-        $validSchemes = ['datacite', 'iso'];
+        $validSchemes = ['datacite', 'iso', 'jsonld'];
         if (!in_array($scheme, $validSchemes)) {
             http_response_code(400);
             echo json_encode(['error' => 'Invalid metadata scheme. Supported schemes are: ' . implode(', ', $validSchemes)]);
@@ -1212,27 +1675,31 @@ class DatasetController
         }
 
         try {
-            $result = $this->transformAndSaveOrDownloadXml($id, $scheme, $download);
+            if ($scheme === 'jsonld') {
+                $result = $this->transformResourceToJsonLd($id);
+                $filename = "dataset_{$id}_jsonld.jsonld";
+                $contentType = 'application/ld+json; charset=utf-8';
+            } else {
+                $result = $this->transformAndSaveOrDownloadXml($id, $scheme, false);
+                $filename = "dataset_{$id}_{$scheme}.xml";
+                $contentType = 'application/xml; charset=utf-8';
+            }
 
             if ($download) {
                 // Ensure no output has been sent before headers
-                if (ob_get_level())
+                if (ob_get_level()) {
                     ob_end_clean();
+                }
 
-                $filename = "dataset_{$id}_{$scheme}.xml";
-
-                // Binary Transfer
-                header('Content-Type: application/octet-stream');
+                header('Content-Type: ' . $contentType);
                 header('Content-Disposition: attachment; filename="' . $filename . '"');
                 header('Content-Length: ' . strlen($result));
-                header('Content-Transfer-Encoding: binary');
-                header('Connection: close');
 
                 echo $result;
                 flush();
                 exit();
             } else {
-                header('Content-Type: application/xml; charset=utf-8');
+                header('Content-Type: ' . $contentType);
                 echo $result;
             }
         } catch (Exception $e) {
@@ -1272,14 +1739,14 @@ class DatasetController
      * @param bool  $returnAsString If true, the combined XML string is returned instead of being output.
      * @return string|null
      */
-    private function handleExportAll(array $vars, $download, $returnAsString = false): ?string
+    private function handleExportAll(array $vars, $download, $returnAsString = false, ?string $sourceXmlString = null): ?string
     {
         $id = intval($vars['id']);
 
         try {
             // Retrieve all three XML formats
-            $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false);
-            $isoXml = $this->transformAndSaveOrDownloadXml($id, 'iso', false);
+            $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
+            $isoXml = $this->transformAndSaveOrDownloadXml($id, 'iso', false, $sourceXmlString);
             // Remove XML declarations from individual XMLs
             $dataciteXml = preg_replace('/<\?xml[^>]+\?>/', '', $dataciteXml);
             $isoXml = preg_replace('/<\?xml[^>]+\?>/', '', $isoXml);
@@ -1336,10 +1803,10 @@ XML;
      * @param mysqli $connection The database connection.
      * @param int $id The ID of the resource.
      */
-    public function envelopeXmlAsString($connection, $id): string
+    public function envelopeXmlAsString($connection, $id, ?string $sourceXmlString = null): string
     {
         // Use the existing private function, returning the combined XML as a string.
         $vars = ['id' => $id];
-        return $this->handleExportAll($vars, false, true);
+        return $this->handleExportAll($vars, false, true, $sourceXmlString);
     }
 }

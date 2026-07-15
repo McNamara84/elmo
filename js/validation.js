@@ -8,7 +8,7 @@ import SaveHandler from './saveHandler.js';
 import SubmitHandler from './submitHandler.js';
 import AutosaveService from './services/autosaveService.js';
 
-$(() => {
+$(async () => {
   const autosaveService = new AutosaveService('form-mde', {
     statusElementId: 'autosave-status',
     statusTextId: 'autosave-status-text',
@@ -38,8 +38,10 @@ $(() => {
 
     const action = e.originalEvent?.submitter?.dataset.action ?? pendingAction;
 
-    if (action === 'save') {
-      saveHandler.handleSave();
+    if (action === 'save-xml') {
+      saveHandler.handleSave('xml');
+    } else if (action === 'save-jsonld') {
+      saveHandler.handleSave('jsonld');
     } else if (action === 'submit') {
       submitHandler.handleSubmit();
     }

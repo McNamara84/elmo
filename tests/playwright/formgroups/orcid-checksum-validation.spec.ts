@@ -4,14 +4,20 @@ import { navigateToHome, SELECTORS } from '../utils';
 test.describe('ORCID Checksum Validation', () => {
   test.beforeEach(async ({ page }) => {
     await navigateToHome(page);
+    await page.locator('#button-author-add').click();
   });
 
+  function firstAuthor(page) {
+    return page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
+  }
+
   test('shows invalid feedback for ORCID with bad checksum on blur', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     // 0000-0002-1825-0098 has wrong check digit (valid would be 0097)
     await orcidInput.fill('0000-0002-1825-0098');
     // Trigger blur by clicking another field
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await expect(orcidInput).toHaveClass(/is-invalid/);
     const feedback = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row] .invalid-feedback`).first();
@@ -19,36 +25,39 @@ test.describe('ORCID Checksum Validation', () => {
   });
 
   test('shows valid feedback for ORCID with correct checksum on blur', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     await orcidInput.fill('0000-0002-1825-0097');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await expect(orcidInput).toHaveClass(/is-valid/);
     await expect(orcidInput).not.toHaveClass(/is-invalid/);
   });
 
   test('resets validation state when ORCID field is cleared', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     // First make it invalid
     await orcidInput.fill('0000-0002-1825-0098');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
     await expect(orcidInput).toHaveClass(/is-invalid/);
 
     // Clear the field
     await orcidInput.fill('');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await expect(orcidInput).not.toHaveClass(/is-invalid/);
     await expect(orcidInput).not.toHaveClass(/is-valid/);
   });
 
   test('auto-formats pasted ORCID URL and validates checksum', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     await orcidInput.focus();
 
     // Simulate paste of a full ORCID URL via fill + dispatch
     await page.evaluate(() => {
-      const input = document.querySelector('#input-author-orcid') as HTMLInputElement;
+      const input = document.querySelector('#group-author [data-creator-row] input[name="orcids[]"]') as HTMLInputElement;
       input.value = '';
       input.focus();
       const pasteData = new DataTransfer();
@@ -62,14 +71,14 @@ test.describe('ORCID Checksum Validation', () => {
     // Wait briefly for the paste handler
     await page.waitForTimeout(100);
     // Trigger blur to run validation
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await expect(orcidInput).toHaveValue('0000-0002-1825-0097');
     await expect(orcidInput).toHaveClass(/is-valid/);
   });
 
   test('auto-inserts hyphens while typing', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const orcidInput = firstAuthor(page).locator('input[name="orcids[]"]');
     await orcidInput.click();
     // Type digits one by one — the input handler should insert hyphens
     await orcidInput.pressSequentially('0000000218250097', { delay: 30 });
@@ -84,11 +93,12 @@ test.describe('ORCID Checksum Validation', () => {
       await route.fulfill({ status: 200, body: '{}' });
     });
 
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     // Enter ORCID with invalid checksum
     await orcidInput.fill('0000-0002-1825-0098');
     // Trigger blur
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     // Wait a bit to ensure no API call happens
     await page.waitForTimeout(500);
@@ -109,19 +119,21 @@ test.describe('ORCID Checksum Validation', () => {
       });
     });
 
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     await orcidInput.fill('0000-0002-1825-0097');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await page.waitForTimeout(500);
     expect(apiCalled).toBe(true);
   });
 
   test('validates ORCID ending with X', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
     // 0000-0001-2345-672X has a valid X check digit (ISO 7064 Mod 11-2)
     await orcidInput.fill('0000-0001-2345-672X');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
 
     await expect(orcidInput).toHaveClass(/is-valid/);
   });
@@ -135,11 +147,12 @@ test.describe('ORCID Checksum Validation', () => {
   });
 
   test('ORCID search result clears invalid state', async ({ page }) => {
-    const orcidInput = page.locator('#input-author-orcid');
+    const authorRow = firstAuthor(page);
+    const orcidInput = authorRow.locator('input[name="orcids[]"]');
 
     // 1. Enter invalid ORCID → field turns red
     await orcidInput.fill('0000-0002-1825-0098');
-    await page.locator('#input-author-lastname').click();
+    await authorRow.locator('input[name="familynames[]"]').click();
     await expect(orcidInput).toHaveClass(/is-invalid/);
 
     // 2. Mock ORCID search API + record lookup

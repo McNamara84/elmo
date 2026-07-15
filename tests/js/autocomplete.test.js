@@ -28,6 +28,16 @@ class MockTagify {
 
 const flushPromises = () => new Promise(res => setTimeout(res, 0));
 
+function expectedAffiliation(name, rorId) {
+  const normalizedRorId = rorId.startsWith('https://ror.org/') ? rorId : `https://ror.org/${rorId}`;
+  return {
+    value: name,
+    label: name,
+    rorId: normalizedRorId,
+    id: normalizedRorId
+  };
+}
+
 function createAffiliationSummary(type, name, rorId, endDate = null) {
   const summary = {
     organization: {
@@ -169,7 +179,7 @@ describe('autocomplete.js', () => {
     expect(fetch).toHaveBeenCalled();
     expect($('#group-author input[name="familynames[]"]').val()).toBe('Doe');
     expect($('#group-author input[name="givennames[]"]').val()).toBe('John');
-    expect(affInput._tagify.value).toEqual([{ value: 'Current Lab' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Current Lab', '05rrcem69')]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/05rrcem69');
   });
 
@@ -209,8 +219,45 @@ describe('autocomplete.js', () => {
     });
     expect($('#group-author input[name="familynames[]"]').val()).toBe('Reference');
     expect($('#group-author input[name="givennames[]"]').val()).toBe('Case');
-    expect(affInput._tagify.value).toEqual([{ value: 'Expected Current Affiliation' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Expected Current Affiliation', '0arefcase1')]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/0arefcase1');
+  });
+
+  test('author ORCID blur normalizes profile URL and fetches the ORCID record', async () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Reference' },
+          'given-names': { value: 'Case' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Expected Current Affiliation', '0arefcase1')
+          ]
+        }
+      }
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const affInput = document.getElementById('input-author-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const orcidInput = $('#group-author input[name="orcids[]"]');
+    orcidInput.val('https://orcid.org/0000-0001-5140-8602').trigger('blur');
+    await flushPromises();
+    await flushPromises();
+
+    expect(orcidInput.val()).toBe('0000-0001-5140-8602');
+    expect(fetch).toHaveBeenCalledWith('https://pub.orcid.org/v3.0/0000-0001-5140-8602/record', {
+      headers: {
+        Accept: 'application/vnd.orcid+json'
+      }
+    });
+    expect($('#group-author input[name="familynames[]"]').val()).toBe('Reference');
+    expect($('#group-author input[name="givennames[]"]').val()).toBe('Case');
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Expected Current Affiliation', '0arefcase1')]);
   });
 
   test('author ORCID blur keeps two current affiliations', async () => {
@@ -249,8 +296,8 @@ describe('autocomplete.js', () => {
     await flushPromises();
 
     expect(affInput._tagify.value).toEqual([
-      { value: 'Institute One' },
-      { value: 'Institute Two' }
+      expectedAffiliation('Institute One', '01aaa1111'),
+      expectedAffiliation('Institute Two', '02bbb2222')
     ]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/01aaa1111,https://ror.org/02bbb2222');
   });
@@ -293,8 +340,8 @@ describe('autocomplete.js', () => {
     await flushPromises();
 
     expect(affInput._tagify.value).toEqual([
-      { value: 'Current Institute' },
-      { value: 'Current University' }
+      expectedAffiliation('Current Institute', '05eee5555'),
+      expectedAffiliation('Current University', '04ddd4444')
     ]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/05eee5555,https://ror.org/04ddd4444');
   });
@@ -337,7 +384,7 @@ describe('autocomplete.js', () => {
     await flushPromises();
     await flushPromises();
 
-    expect(affInput._tagify.value).toEqual([{ value: 'Current Org' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Current Org', '09iii9999')]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/09iii9999');
   });
 
@@ -401,8 +448,45 @@ describe('autocomplete.js', () => {
 
     expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Smith');
     expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Anna');
-    expect(affInput._tagify.value).toEqual([{ value: 'Lab B' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Lab B', '0anewlab1')]);
     expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/0anewlab1');
+  });
+
+  test('contributor ORCID blur normalizes profile URL with X checksum and fetches the ORCID record', async () => {
+    const data = {
+      person: {
+        name: {
+          'family-name': { value: 'Smith' },
+          'given-names': { value: 'Anna' }
+        }
+      },
+      'activities-summary': {
+        employments: {
+          'affiliation-group': [
+            createAffiliationSummary('employment', 'Lab B', '0anewlab1')
+          ]
+        }
+      }
+    };
+    fetch.mockResolvedValueOnce({ json: () => Promise.resolve(data) });
+
+    const affInput = document.getElementById('input-contributorpersons-affiliation');
+    affInput._tagify = new MockTagify(affInput, {});
+
+    const orcidInput = $('#group-contributorperson input[name="cbORCID[]"]');
+    orcidInput.val('https://orcid.org/0000-0002-1694-233X/').trigger('blur');
+    await flushPromises();
+    await flushPromises();
+
+    expect(orcidInput.val()).toBe('0000-0002-1694-233X');
+    expect(fetch).toHaveBeenCalledWith('https://pub.orcid.org/v3.0/0000-0002-1694-233X/record', {
+      headers: {
+        Accept: 'application/vnd.orcid+json'
+      }
+    });
+    expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Smith');
+    expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Anna');
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Lab B', '0anewlab1')]);
   });
 
   test('fillRowFromOrcidRecord fills author row with name and affiliations', () => {
@@ -431,7 +515,7 @@ describe('autocomplete.js', () => {
 
     expect($('#group-author input[name="familynames[]"]').val()).toBe('Einstein');
     expect($('#group-author input[name="givennames[]"]').val()).toBe('Albert');
-    expect(affInput._tagify.value).toEqual([{ value: 'ETH Zurich' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('ETH Zurich', '01ror0001')]);
     expect(document.getElementById('input-author-rorid').value).toBe('https://ror.org/01ror0001');
   });
 
@@ -461,7 +545,7 @@ describe('autocomplete.js', () => {
 
     expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Curie');
     expect($('#group-contributorperson input[name="cbPersonFirstname[]"]').val()).toBe('Marie');
-    expect(affInput._tagify.value).toEqual([{ value: 'Sorbonne' }]);
+    expect(affInput._tagify.value).toEqual([expectedAffiliation('Sorbonne', '02ror0002')]);
     expect(document.getElementById('input-contributor-personrorid').value).toBe('https://ror.org/02ror0002');
   });
 

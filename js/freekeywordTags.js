@@ -170,6 +170,285 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
+    /**
+     * CSV upload modal elements
+     */
+    var csvModalElement = document.getElementById('freeKeywordsCsvModal');
+    var csvInput = document.getElementById('input-freekeywords-csv');
+    var csvDropzone = document.getElementById('freekeywords-csv-dropzone');
+    var csvFileName = document.getElementById('freekeywords-csv-filename');
+    var csvFeedback = document.getElementById('freekeywords-csv-feedback');
+    var confirmCsvButton = document.getElementById('button-confirm-csv-upload');
+    var downloadCsvTestFilesButton = document.getElementById('button-download-csv-test-files');
+
+    if (downloadCsvTestFilesButton) {
+        var path = window.location.pathname || '/';
+        var segments = path.split('/').filter(Boolean);
+        var editorBase = segments.length > 0 ? '/' + segments[0] : '';
+
+        var href = window.location.origin + editorBase + '/test_data/free-keywords-example.csv';
+        downloadCsvTestFilesButton.href = href;
+    }
+
+    /**
+     * Stores parsed CSV keywords until the user confirms the import
+     * @type {Array}
+     */
+    var parsedCsvKeywords = [];
+
+    /**
+     * CSV feedback messages
+     */
+    var csvMessages = {
+        invalidFile: 'Please select a valid CSV file.',
+        fileTooLarge: 'The selected CSV file is too large. Please upload a file smaller than 1 MB.',
+        noKeywords: 'No keywords found in the CSV file.',
+        readError: 'The file could not be read.'
+    };
+
+    /**
+     * Resets all temporary CSV-related state and UI in the modal.
+     *
+     * @returns {void}
+     */
+    function resetCsvModalState() {
+        parsedCsvKeywords = [];
+
+        if (csvInput) {
+            csvInput.value = '';
+        }
+
+        if (csvFileName) {
+            csvFileName.textContent = '';
+        }
+
+        if (csvFeedback) {
+            csvFeedback.textContent = '';
+            csvFeedback.className = 'mt-2 small';
+        }
+
+        if (confirmCsvButton) {
+            confirmCsvButton.disabled = true;
+        }
+
+        if (csvDropzone) {
+            csvDropzone.classList.remove('border-primary');
+        }
+    }
+
+    /**
+     * Parses CSV text into a flat array of keyword strings.
+     * Splits on newlines, commas and semicolons and trims whitespace.
+     *
+     * @param {string} text
+     * @returns {Array<string>}
+     */
+    function parseCsvText(text) {
+        return text
+            .split(/\r?\n|,|;/)
+            .map(function (value) {
+                return value.trim();
+            })
+            .filter(function (value) {
+                return value.length > 0;
+            });
+    }
+
+    /**
+     * Sets the feedback message in the modal.
+     *
+     * @param {string} message
+     * @param {boolean} isError
+     * @returns {void}
+     */
+    function setCsvFeedback(message, isError) {
+        if (!csvFeedback) {
+            return;
+        }
+
+        csvFeedback.textContent = message;
+        csvFeedback.className = isError
+            ? 'mt-2 small text-danger'
+            : 'mt-2 small text-success';
+    }
+
+    /**
+    * Maximum allowed CSV file size in bytes.
+    * Prevents the browser from trying to parse very large files in memory.
+    */
+    var MAX_CSV_FILE_SIZE = 1024 * 1024;
+
+    /**
+     * Handles a selected or dropped CSV file:
+     * - validates the file type
+     * - reads it as text
+     * - parses keywords
+     * - updates UI and enables confirm button
+     *
+     * @param {File} file
+     * @returns {void}
+     */
+    function handleCsvFile(file) {
+        if (!file) {
+            resetCsvModalState();
+            return;
+        }
+
+        if (typeof FileReader === 'undefined') {
+            setCsvFeedback(csvMessages.readError, true);
+            return;
+        }
+
+        var isCsvFile = file.name.toLowerCase().endsWith('.csv') || file.type === 'text/csv';
+
+        if (!isCsvFile) {
+            parsedCsvKeywords = [];
+
+            if (confirmCsvButton) {
+                confirmCsvButton.disabled = true;
+            }
+
+            if (csvFileName) {
+                csvFileName.textContent = file.name;
+            }
+
+            setCsvFeedback(csvMessages.invalidFile, true);
+            return;
+        }
+
+        if (file.size > MAX_CSV_FILE_SIZE) {
+            parsedCsvKeywords = [];
+
+            if (confirmCsvButton) {
+                confirmCsvButton.disabled = true;
+            }
+
+            if (csvFileName) {
+                csvFileName.textContent = file.name;
+            }
+
+            setCsvFeedback(csvMessages.fileTooLarge, true);
+            return;
+        }
+
+        if (csvFileName) {
+            csvFileName.textContent = file.name;
+        }
+
+        var reader = new FileReader();
+
+        reader.onload = function (event) {
+            var text = event.target && typeof event.target.result === 'string'
+                ? event.target.result
+                : '';
+
+            var parsedKeywords = parseCsvText(text);
+            var uniqueKeywords = Array.from(new Set(parsedKeywords));
+
+            parsedCsvKeywords = uniqueKeywords;
+
+            if (parsedCsvKeywords.length === 0) {
+                if (confirmCsvButton) {
+                    confirmCsvButton.disabled = true;
+                }
+                setCsvFeedback(csvMessages.noKeywords, true);
+                return;
+            }
+
+            if (confirmCsvButton) {
+                confirmCsvButton.disabled = false;
+            }
+
+            setCsvFeedback(parsedCsvKeywords.length + ' keywords ready to import.', false);
+        };
+
+        reader.onerror = function () {
+            parsedCsvKeywords = [];
+
+            if (confirmCsvButton) {
+                confirmCsvButton.disabled = true;
+            }
+
+            setCsvFeedback(csvMessages.readError, true);
+        };
+
+        reader.readAsText(file);
+    }
+
+    // CSV file selection via native file input
+    if (csvInput) {
+        csvInput.addEventListener('change', function (event) {
+            var file = event.target.files && event.target.files[0];
+            handleCsvFile(file);
+        });
+    }
+
+    // CSV drag and drop support
+    if (csvDropzone) {
+        csvDropzone.addEventListener('dragover', function (event) {
+            event.preventDefault();
+            csvDropzone.classList.add('border-primary');
+        });
+
+        csvDropzone.addEventListener('dragleave', function () {
+            csvDropzone.classList.remove('border-primary');
+        });
+
+        csvDropzone.addEventListener('drop', function (event) {
+            event.preventDefault();
+            csvDropzone.classList.remove('border-primary');
+
+            var file = event.dataTransfer && event.dataTransfer.files
+                ? event.dataTransfer.files[0]
+                : null;
+
+            if (file) {
+                handleCsvFile(file);
+            }
+        });
+    }
+
+    // Import parsed CSV keywords into Tagify
+    if (confirmCsvButton) {
+        confirmCsvButton.addEventListener('click', function () {
+            if (!parsedCsvKeywords.length || !input._tagify) {
+                return;
+            }
+
+            var existingValues = (input._tagify.value || []).map(function (tag) {
+                return (tag.value || '').toLowerCase();
+            });
+
+            var keywordsToAdd = parsedCsvKeywords.filter(function (keyword) {
+                return existingValues.indexOf(keyword.toLowerCase()) === -1;
+            });
+
+            if (keywordsToAdd.length) {
+                input._tagify.addTags(keywordsToAdd);
+            }
+
+            if (csvModalElement && window.bootstrap && window.bootstrap.Modal) {
+                bootstrap.Modal.getOrCreateInstance(csvModalElement).hide();
+            }
+        });
+    }
+
+    // Reset CSV modal state after closing
+    if (csvModalElement) {
+        csvModalElement.addEventListener('hidden.bs.modal', function () {
+            resetCsvModalState();
+        });
+    }
+
+    // Prevent browser from opening dropped files outside the dropzone
+    window.addEventListener('dragover', function (event) {
+        event.preventDefault();
+    });
+
+    window.addEventListener('drop', function (event) {
+        event.preventDefault();
+    });
+
     // 1) Initialize Tagify with current translations
     initTagify();
 

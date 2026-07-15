@@ -16,8 +16,9 @@ function connectDb()
     $username = getenv('DB_USER') ?: "your_database_username";
     $password = getenv('DB_PASSWORD') ?: "your_database_password";
     $database = getenv('DB_NAME') ?: "your_database_name";
-    $conn = new mysqli($host, $username, $password, $database);
-    return $conn;
+    $port = getenv('DB_PORT') ? (int)getenv('DB_PORT') : 3306; #if the port is provided explicitly, it will overwrite the default 3306
+
+    return new mysqli($host, $username, $password, $database, $port);
 }
 
 // Establish the database connection
@@ -48,8 +49,6 @@ $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 
-// having the MSL logo in the header:
-$showMslLogo = false;
 
 // Show Contributor Persons form group
 $showContributorPersons = true;
@@ -72,34 +71,31 @@ $showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
 
-// SETTINGS FOR EPOS MSL (Defaults: ELMO Variant = false)
-$showMslLabs = false;
-// URL to the source with all laboratories for MSL
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
-// Show MSL vocabularies
-$showMslVocabs = false;
-// URL to the source with all vocabularies for MSL
-$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
+// MSL-specific UI elements are disabled by default.
+$showMslLogo = false;
+$showMslLabs = false;
+$showMslVocabs = false;
 $showMslDefaultFreeKeywords = false;
 
-$envShowMslLabs   = getenv('SHOW_MSL_LABS');
-$envShowMslVocabs = getenv('SHOW_MSL_VOCABS');
-$envShowMslDefaultFreeKeywords = getenv('SHOW_MSL_DEFAULT_FREE_KEYWORDS');
-$envShowMslLogo = getenv('SHOW_MSL_LOGO');
+// MSL data sources.
+$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
+$mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-if ($envShowMslLabs !== false) {
-    $showMslLabs = filter_var($envShowMslLabs, FILTER_VALIDATE_BOOLEAN);
+// Single source of truth for all MSL-specific features.
+$showMslMode = false;
+$envShowMslMode = getenv('SHOW_MSL_MODE');
+
+if ($envShowMslMode !== false) {
+    $showMslMode = filter_var($envShowMslMode, FILTER_VALIDATE_BOOLEAN);
 }
-if ($envShowMslVocabs !== false) {
-    $showMslVocabs = filter_var($envShowMslVocabs, FILTER_VALIDATE_BOOLEAN);
-}
-if ($envShowMslDefaultFreeKeywords !== false) {
-    $showMslDefaultFreeKeywords = filter_var($envShowMslDefaultFreeKeywords, FILTER_VALIDATE_BOOLEAN);
-}
-if ($envShowMslLogo !== false) {
-    $showMslLogo = filter_var($envShowMslLogo, FILTER_VALIDATE_BOOLEAN);
-}
+
+// Keep all MSL-related UI elements in sync with MSL mode.
+$showMslLabs = $showMslMode;
+$showMslVocabs = $showMslMode;
+$showMslDefaultFreeKeywords = $showMslMode;
+$showMslLogo = $showMslMode;
+
 
 // SETTINGS FOR PID4INST INSTRUMENTS
 // Show Used Instruments form group (PID4INST via ERNIE API)
@@ -138,6 +134,13 @@ if ($envShowSpatialTemporalCoverage !== false) {
 }
 if ($envShowRelatedWork !== false) {
     $showRelatedWork = filter_var($envShowRelatedWork, FILTER_VALIDATE_BOOLEAN);
+}
+
+// Playwright variant setup writes this lock file after env overrides so local
+// Docker env vars (SHOW_GGMS_PROPERTIES, SHOW_MSL_MODE, etc.) cannot override
+// the active test variant on a single shared container.
+if (is_readable(__DIR__ . '/playwright-variant-lock.php')) {
+    require __DIR__ . '/playwright-variant-lock.php';
 }
 
 // Display the feedback link (true to display, false to hide)

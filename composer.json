@@ -64,6 +64,9 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts": {
-        "test": "phpunit"
+        "test": [
+            "Composer\\Config::disableProcessTimeout",
+            "phpunit"
+        ]
     }
 }

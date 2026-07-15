@@ -72,13 +72,13 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     await uploadXmlAndWaitForTitles(page, XML_TWO_TITLES, 'two-titles.xml');
 
     const allTitles = page.locator('input[name="title[]"]');
-    expect(await allTitles.count()).toBe(2);
+    await expect(allTitles).toHaveCount(2);
     await expect(allTitles.first()).toHaveValue('First Title');
     await expect(allTitles.nth(1)).toHaveValue('Second Title');
 
     // Verify second title type is "Alternative Title"
     const allTitleTypes = page.locator('select[name="titleType[]"]');
-    expect(await allTitleTypes.count()).toBe(2);
+    await expect(allTitleTypes).toHaveCount(2);
     const selectedText = await allTitleTypes.nth(1).locator('option:checked').textContent();
     expect(selectedText?.trim()).toContain('Alternative Title');
   });
@@ -87,7 +87,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     // Step 1: Manually add a second title row and fill in values
     await page.locator('#button-resourceinformation-addtitle').click();
     const titleInputsBefore = page.locator('input[name="title[]"]');
-    expect(await titleInputsBefore.count()).toBe(2);
+    await expect(titleInputsBefore).toHaveCount(2);
     await titleInputsBefore.first().fill('manual-first');
     await titleInputsBefore.nth(1).fill('manual-second');
 
@@ -97,7 +97,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     await uploadXmlAndWaitForTitles(page, XML_TWO_TITLES, 'two-titles.xml');
 
     const allTitles = page.locator('input[name="title[]"]');
-    expect(await allTitles.count()).toBe(2);
+    await expect(allTitles).toHaveCount(2);
     await expect(allTitles.first()).toHaveValue('First Title');
     await expect(allTitles.nth(1)).toHaveValue('Second Title');
   });
@@ -108,7 +108,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
 
     // The second row's title type dropdown must have a non-empty selection
     const allTitleTypes = page.locator('select[name="titleType[]"]');
-    expect(await allTitleTypes.count()).toBe(2);
+    await expect(allTitleTypes).toHaveCount(2);
 
     const secondTitleTypeValue = await allTitleTypes.nth(1).inputValue();
     expect(secondTitleTypeValue).not.toBe('');
@@ -125,7 +125,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     // Step 2: Add second title row
     await page.locator('#button-resourceinformation-addtitle').click();
     const allTitles = page.locator('input[name="title[]"]');
-    expect(await allTitles.count()).toBe(2);
+    await expect(allTitles).toHaveCount(2);
     await allTitles.nth(1).fill('TESTTITLE2');
 
     // The title type should now be pre-selected (no longer empty after our fix)
@@ -139,7 +139,11 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
         // Open Save As modal
         await page.locator('#button-form-save').click();
         await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 5_000 });
+        
+        // Wait for CSRF token to be fetched and populated
         await page.locator('#input-saveas-filename').fill('test-two-titles');
+        // Wait to satisfy server-side minimum interaction time for save.
+        await page.waitForTimeout(2200);
         await page.locator('#button-saveas-save').click();
       })(),
     ]);
@@ -181,7 +185,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
     await uploadXmlAndWaitForTitles(page, xmlContent, 'test-two-titles.xml');
 
     const loadedTitles = page.locator('input[name="title[]"]');
-    expect(await loadedTitles.count()).toBe(2);
+    await expect(loadedTitles).toHaveCount(2);
     await expect(loadedTitles.first()).toHaveValue('TESTTITLE1');
     await expect(loadedTitles.nth(1)).toHaveValue('TESTTITLE2');
   });

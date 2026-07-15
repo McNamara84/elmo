@@ -25,7 +25,27 @@ class MockTagify {
 const flushPromises = () => new Promise(res => setTimeout(res, 0));
 
 function loadScript(ajaxImpl, translations = { keywords: { free: { placeholder: 'Placeholder' } } }) {
-  document.body.innerHTML = '<input id="input-freekeyword" data-translate-placeholder="keywords.free.placeholder">';
+  document.body.innerHTML = `<input id="input-freekeyword" data-translate-placeholder="keywords.free.placeholder">
+
+  <div class="modal fade" id="freeKeywordsCsvModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-body">
+          <label for="input-freekeywords-csv" id="freekeywords-csv-dropzone"></label>
+          <input type="file" id="input-freekeywords-csv" class="visually-hidden" accept=".csv,text/csv">
+          <a id="button-download-csv-test-files"></a>
+          <div id="freekeywords-csv-filename"></div>
+          <div id="freekeywords-csv-feedback"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" id="button-confirm-csv-upload" disabled>
+            Import keywords
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+`;
   const $ = require('jquery');
   global.$ = $;
   global.jQuery = $;
@@ -122,5 +142,211 @@ describe('freekeywordTags.js', () => {
       { value: 'EPOS' },
       { value: 'multi-scale laboratories' }
     ]);
+  });
+
+  test('accepts valid csv file from input change and enables confirm', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeywords-csv');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['ignored'], 'geoscience-keywords.csv', { type: 'text/csv' });
+    file.__mockText = 'rock mechanics, seismology\nInSAR; rock mechanics';
+
+    Object.defineProperty(input, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+
+    await flushPromises();
+    await flushPromises();
+
+    expect(fileName.textContent).toBe('geoscience-keywords.csv');
+    expect(feedback.textContent).toContain('keywords ready to import.');
+    expect(feedback.className).toContain('text-success');
+    expect(confirmBtn.disabled).toBe(false);
+  });
+
+  test('rejects invalid non-csv file', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeywords-csv');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['seismology'], 'geoscience-keywords.txt', { type: 'text/plain' });
+
+    Object.defineProperty(input, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+    await flushPromises();
+
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+    expect(confirmBtn.disabled).toBe(true);
+  });
+
+  test('handles dropped csv file', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const dropzone = document.getElementById('freekeywords-csv-dropzone');
+    const confirmBtn = document.getElementById('button-confirm-csv-upload');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['ignored'], 'tectonics-keywords.csv', { type: 'text/csv' });
+    file.__mockText = 'fault creep, induced seismicity';
+
+    const dropEvent = new Event('drop', { bubbles: true });
+    dropEvent.preventDefault = jest.fn();
+    dropEvent.dataTransfer = { files: [file] };
+
+    dropzone.dispatchEvent(dropEvent);
+    await flushPromises();
+    await flushPromises();
+
+    expect(dropEvent.preventDefault).toHaveBeenCalled();
+    expect(fileName.textContent).toBe('tectonics-keywords.csv');
+    expect(feedback.textContent).toContain('keywords ready to import.');
+    expect(confirmBtn.disabled).toBe(false);
+  });
+
+  test('accepts a .csv file even when browser reports application/vnd.ms-excel', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    global.FileReader = jest.fn(function () {
+      this.readAsText = () => {
+        this.onload({
+          target: {
+            result: 'alpha,beta'
+          }
+        });
+      };
+    });
+
+    const file = new File(['alpha,beta'], 'keywords.csv', {
+      type: 'application/vnd.ms-excel'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(confirmButton.disabled).toBe(false);
+    expect(feedback.textContent).toBe('2 keywords ready to import.');
+    expect(feedback.className).toContain('text-success');
+  });
+
+  test('rejects a non-csv file even if the MIME type looks text-based', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+
+    const file = new File(['body { color: red; }'], 'styles.css', {
+      type: 'text/css'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(confirmButton.disabled).toBe(true);
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+  });
+
+  test('rejects a pdf file and keeps confirm button disabled', async () => {
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const csvInput = document.getElementById('input-freekeywords-csv');
+    const confirmButton = document.getElementById('button-confirm-csv-upload');
+    const feedback = document.getElementById('freekeywords-csv-feedback');
+    const fileName = document.getElementById('freekeywords-csv-filename');
+
+    const file = new File(['%PDF-1.4'], 'document.pdf', {
+      type: 'application/pdf'
+    });
+
+    Object.defineProperty(csvInput, 'files', {
+      value: [file],
+      configurable: true
+    });
+
+    csvInput.dispatchEvent(new Event('change'));
+    await flushPromises();
+
+    expect(fileName.textContent).toBe('document.pdf');
+    expect(confirmButton.disabled).toBe(true);
+    expect(feedback.textContent).toBe('Please select a valid CSV file.');
+    expect(feedback.className).toContain('text-danger');
+  });
+
+  test('builds the correct download link in ELMO', () => {
+    window.history.pushState({}, 'ELMO test', '/elmo/');
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const downloadLink = document.getElementById('button-download-csv-test-files');
+
+    expect(downloadLink.href).toBe(
+      'http://localhost/elmo/test_data/free-keywords-example.csv'
+    );
+  });
+
+  test('builds the correct download link in ELMO MSL for a complex path', () => {
+    window.history.pushState({}, 'ELMO MSL test', '/elmo-msl/some/page');
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const downloadLink = document.getElementById('button-download-csv-test-files');
+
+    expect(downloadLink.href).toBe(
+      'http://localhost/elmo-msl/test_data/free-keywords-example.csv'
+    );
   });
 });
