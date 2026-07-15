@@ -16,7 +16,8 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.legacy
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8080:80"
     environment:
@@ -73,7 +74,8 @@ services:
   web-msl:
     build:
       context: .
-      dockerfile: Dockerfile.legacy
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8081:80"
     environment:
@@ -81,7 +83,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
