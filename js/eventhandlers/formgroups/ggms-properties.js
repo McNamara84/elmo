@@ -259,13 +259,13 @@ $(document).ready(function() {
     const gfcFileInput = $('#input-ggms-gfc-file');
 
     $('#button-ggms-gfc-fill-metadata').on('click', async function () {
-        $('#ggms-gfc-upload-status').addClass('d-none').text('');
+        $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
 
         const file = gfcFileInput[0].files[0];
         const text = $('#textarea-ggms-gfc-header-text').val().trim();
 
         if (!file && !text) {
-            $('#ggms-gfc-upload-status').removeClass('d-none').text('Please upload a GFC file or paste header text.');
+            $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text('Please upload a GFC file or paste header text.');
             return;
         }
 
@@ -275,7 +275,7 @@ $(document).ready(function() {
             $('#modal-ggms-gfc-upload').modal('hide');
         } catch (error) {
             console.error('Error filling metadata from GFC:', error);
-            $('#ggms-gfc-upload-status').removeClass('d-none').text('Error processing GFC file');
+            $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text('Error processing GFC file');
         }
     });
 
@@ -307,7 +307,7 @@ $(document).ready(function() {
     $('#modal-ggms-gfc-upload').on('hidden.bs.modal', function () {
         gfcFileInput.val('');
         $('#textarea-ggms-gfc-header-text').val('');
-        $('#ggms-gfc-upload-status').addClass('d-none').text('');
+        $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
         gfcDropZone.removeClass('border-primary');
     });
 });
