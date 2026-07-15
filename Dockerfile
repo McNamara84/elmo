@@ -41,14 +41,14 @@ WORKDIR /var/www/html
 
 COPY . .
 
-# Install Node dependencies
-RUN npm install
+# Install production Node dependencies from the lockfile
+RUN npm ci --omit=dev
 
 # Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
 
 # Install PHP dependencies
-RUN composer install --no-dev --prefer-dist --optimize-autoloader
+RUN composer install --no-dev --no-interaction --no-progress --prefer-dist --optimize-autoloader
 
 # Ensure that the standard user www-data has ownership of the application files
 RUN chown -R www-data:www-data /var/www/html
