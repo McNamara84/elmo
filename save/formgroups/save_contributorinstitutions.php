@@ -14,6 +14,9 @@ require_once __DIR__ . '/save_affiliations.php';
 function saveContributorInstitutions($connection, $postData, $resource_id)
 {
     $valid_roles = getValidRoles($connection);
+    $contributorRoles = isset($postData['cbOrganisationRoles']) && is_array($postData['cbOrganisationRoles'])
+        ? $postData['cbOrganisationRoles']
+        : [];
 
     // Validate only on submit
     $action = $postData['action'] ?? 'save_and_download';
@@ -21,11 +24,9 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
     if (
         !isset(
         $postData['cbOrganisationName'],
-        $postData['cbOrganisationRoles'],
         $postData['OrganisationAffiliation']
     ) ||
         !is_array($postData['cbOrganisationName']) ||
-        !is_array($postData['cbOrganisationRoles']) ||
         !is_array($postData['OrganisationAffiliation'])
     ) {
         return true; // No data provided is valid
@@ -37,7 +38,7 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
     for ($i = 0; $i < $len; $i++) {
         $entry = [
             'name' => $postData['cbOrganisationName'][$i] ?? '',
-            'roles' => $postData['cbOrganisationRoles'][$i] ?? '',
+            'roles' => $contributorRoles[$i] ?? [],
             'affiliation' => $postData['OrganisationAffiliation'][$i] ?? ''
         ];
 
@@ -54,8 +55,9 @@ function saveContributorInstitutions($connection, $postData, $resource_id)
             continue;
         }
 
-        // Skip if roles are empty (required field)
-        if (empty($entry['roles'])) {
+        // A name is required to persist the contributor identity. Roles may be
+        // omitted for draft downloads and receive an export-only fallback.
+        if (empty($entry['name'])) {
             continue;
         }
 

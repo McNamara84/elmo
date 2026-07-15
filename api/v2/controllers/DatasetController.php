@@ -899,12 +899,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($person['Roles'])) {
-                    $rolesXml = $personXml->addChild('Roles');
-                    foreach ($person['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $personXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($person['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -928,12 +926,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($institution['Roles'])) {
-                    $rolesXml = $institutionXml->addChild('Roles');
-                    foreach ($institution['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $institutionXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($institution['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -1106,6 +1102,21 @@ class DatasetController
         $stmt->close();
         // Return the XML as a string (additionally to saving it)
         return $xml->asXML();
+    }
+
+    /**
+     * Return explicit contributor roles or the DataCite-compatible draft fallback.
+     *
+     * The fallback is intentionally applied only while building export XML. It
+     * must not be written to contributor role relations because the user did not
+     * explicitly select it.
+     *
+     * @param array<int, array{name?: mixed}> $roles
+     * @return array<int, array{name: mixed}>
+     */
+    private function getContributorRolesForExport(array $roles): array
+    {
+        return $roles !== [] ? $roles : [['name' => 'Other']];
     }
 
     /**
