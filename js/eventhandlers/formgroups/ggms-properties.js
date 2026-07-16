@@ -1,4 +1,4 @@
-import { parseGfcFiles, extractSections, parseRecords } from '../../fileUpload.js';
+import { parseGfcFiles, extractSections, parseRecords, GFC_EXTENSION_ERROR } from '../../fileUpload.js';
 /**
  * @fileOverview This script handles the conditional visibility of reference system fields
  * in the GGMs Technical form group based on mathematical representation selection.
@@ -138,8 +138,7 @@ async function getHeaderFromText(text) {
     try {
         const lines = text.split(/\r?\n/);
         const { headerLines } = extractSections(lines);
-        const linesToParse = headerLines.length > 0 ? headerLines : lines;
-        return parseRecords(linesToParse);
+        return parseRecords(headerLines);
     } catch (error) {
         console.error("Error parsing GFC text:", error);
         throw error;
@@ -258,14 +257,22 @@ $(document).ready(function() {
     const gfcDropZone = $('#panel-ggms-gfc-dropfile');
     const gfcFileInput = $('#input-ggms-gfc-file');
 
-    $('#button-ggms-gfc-fill-metadata').on('click', async function () {
+    function showGfcUploadStatusError(message) {
+        $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
+    }
+
+    function clearGfcUploadStatus() {
         $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
+    }
+
+    $('#button-ggms-gfc-fill-metadata').on('click', async function () {
+        clearGfcUploadStatus();
 
         const file = gfcFileInput[0].files[0];
         const text = $('#textarea-ggms-gfc-header-text').val().trim();
 
         if (!file && !text) {
-            $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text('Please upload a GFC file or paste header text.');
+            showGfcUploadStatusError('Please upload a GFC file or paste header text.');
             return;
         }
 
@@ -275,7 +282,10 @@ $(document).ready(function() {
             $('#modal-ggms-gfc-upload').modal('hide');
         } catch (error) {
             console.error('Error filling metadata from GFC:', error);
-            $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text('Error processing GFC file');
+            const message = error instanceof Error && error.message === GFC_EXTENSION_ERROR
+                ? GFC_EXTENSION_ERROR
+                : 'Error processing GFC file';
+            showGfcUploadStatusError(message);
         }
     });
 
@@ -297,17 +307,27 @@ $(document).ready(function() {
         gfcDropZone.removeClass('border-primary');
 
         const file = event.originalEvent.dataTransfer.files[0];
-        if (file && file.name.toLowerCase().endsWith('.gfc')) {
-            const dataTransfer = new DataTransfer();
-            dataTransfer.items.add(file);
-            gfcFileInput[0].files = dataTransfer.files;
+        if (!file) {
+            return;
         }
+        if (!file.name.toLowerCase().endsWith('.gfc')) {
+            showGfcUploadStatusError(GFC_EXTENSION_ERROR);
+            return;
+        }
+        clearGfcUploadStatus();
+        const dataTransfer = new DataTransfer();
+        dataTransfer.items.add(file);
+        gfcFileInput[0].files = dataTransfer.files;
+    });
+
+    gfcFileInput.on('change', function () {
+        clearGfcUploadStatus();
     });
 
     $('#modal-ggms-gfc-upload').on('hidden.bs.modal', function () {
         gfcFileInput.val('');
         $('#textarea-ggms-gfc-header-text').val('');
-        $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
+        clearGfcUploadStatus();
         gfcDropZone.removeClass('border-primary');
     });
 });
