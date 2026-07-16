@@ -358,6 +358,18 @@
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
             "errorReading": "Fehler beim Lesen der Datei"
         },
+        "gfcUpload": {
+            "uploadButton": "Nicht tippen – Modelldatei hochladen",
+            "modalTitle": "Modelldatei hochladen",
+            "dropZone": "GFC-Datei hierher ziehen und ablegen",
+            "selectFile": "oder klicken, um eine Datei auszuwählen",
+            "pasteHeaderLabel": "Oder Kopfzeilentext einfügen:",
+            "pasteHeaderPlaceholder": "GFC-Kopfzeilen hier einfügen…",
+            "fillMetadata": "Metadaten ausfüllen",
+            "errorNoInput": "Bitte laden Sie eine GFC-Datei hoch oder fügen Sie Kopfzeilentext ein.",
+            "errorProcessing": "Fehler beim Verarbeiten der GFC-Datei",
+            "invalidExtension": "Die hochgeladene Datei muss die Endung .gfc haben! Ändern Sie die Dateiendung oder fügen Sie den Text in das Freitextfeld ein."
+        },
         "icgemWrongApp": {
             "title": "ICGEM-Metadatendatei erkannt",
             "body": "Sehr geehrte Nutzende,\n\nes scheint, als wollten Sie eine ICGEM-Metadatendatei auf ELMO hochladen. Dies ist zwar möglich, aber nicht in dieser Version. Bitte besuchen Sie ELMOGEM (https://icgem.gfz.de/elmogem), um die Metadatenübermittlung für das gravitationsbezogene Produkt abzuschließen.",

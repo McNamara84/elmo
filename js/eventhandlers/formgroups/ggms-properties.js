@@ -1,4 +1,11 @@
 import { parseGfcFiles, extractSections, parseRecords, GFC_EXTENSION_ERROR } from '../../fileUpload.js';
+
+function translateWithFallback(key, fallback) {
+    const translate = (window.elmo && typeof window.elmo.translate === 'function')
+        ? window.elmo.translate
+        : null;
+    return (translate && translate(key)) || fallback;
+}
 /**
  * @fileOverview This script handles the conditional visibility of reference system fields
  * in the GGMs Technical form group based on mathematical representation selection.
@@ -256,6 +263,7 @@ $(document).ready(function() {
     // GFC upload modal (GGMsProperties)
     const gfcDropZone = $('#panel-ggms-gfc-dropfile');
     const gfcFileInput = $('#input-ggms-gfc-file');
+    const gfcSelectedFilename = $('#ggms-gfc-selected-filename');
 
     function showGfcUploadStatusError(message) {
         $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
@@ -265,6 +273,29 @@ $(document).ready(function() {
         $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
     }
 
+    function setSelectedGfcFilename(file) {
+        gfcSelectedFilename.text(file ? file.name : '');
+    }
+
+    function handleSelectedGfcFile(file) {
+        if (!file) {
+            setSelectedGfcFilename(null);
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith('.gfc')) {
+            gfcFileInput.val('');
+            setSelectedGfcFilename(null);
+            showGfcUploadStatusError(
+                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
+            );
+            return;
+        }
+
+        clearGfcUploadStatus();
+        setSelectedGfcFilename(file);
+    }
+
     $('#button-ggms-gfc-fill-metadata').on('click', async function () {
         clearGfcUploadStatus();
 
@@ -272,7 +303,12 @@ $(document).ready(function() {
         const text = $('#textarea-ggms-gfc-header-text').val().trim();
 
         if (!file && !text) {
-            showGfcUploadStatusError('Please upload a GFC file or paste header text.');
+            showGfcUploadStatusError(
+                translateWithFallback(
+                    'modals.gfcUpload.errorNoInput',
+                    'Please upload a GFC file or paste header text.'
+                )
+            );
             return;
         }
 
@@ -283,8 +319,8 @@ $(document).ready(function() {
         } catch (error) {
             console.error('Error filling metadata from GFC:', error);
             const message = error instanceof Error && error.message === GFC_EXTENSION_ERROR
-                ? GFC_EXTENSION_ERROR
-                : 'Error processing GFC file';
+                ? translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
+                : translateWithFallback('modals.gfcUpload.errorProcessing', 'Error processing GFC file');
             showGfcUploadStatusError(message);
         }
     });
@@ -310,22 +346,27 @@ $(document).ready(function() {
         if (!file) {
             return;
         }
+
         if (!file.name.toLowerCase().endsWith('.gfc')) {
-            showGfcUploadStatusError(GFC_EXTENSION_ERROR);
+            showGfcUploadStatusError(
+                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
+            );
             return;
         }
-        clearGfcUploadStatus();
+
         const dataTransfer = new DataTransfer();
         dataTransfer.items.add(file);
         gfcFileInput[0].files = dataTransfer.files;
+        handleSelectedGfcFile(file);
     });
 
     gfcFileInput.on('change', function () {
-        clearGfcUploadStatus();
+        handleSelectedGfcFile(gfcFileInput[0].files[0] || null);
     });
 
     $('#modal-ggms-gfc-upload').on('hidden.bs.modal', function () {
         gfcFileInput.val('');
+        setSelectedGfcFilename(null);
         $('#textarea-ggms-gfc-header-text').val('');
         clearGfcUploadStatus();
         gfcDropZone.removeClass('border-primary');

@@ -1,7 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../../utils';
+import { navigateToHome, openLanguageMenu } from '../../utils';
+import { getTranslations } from '../../utils/translations';
 
 const GFC_EXAMPLES_DIR = path.join(__dirname, 'gfc-files-examples');
 const OUTPUT_DATA_REFERENCE_DIR = path.join(__dirname, '../../flows/outputDataReference');
@@ -12,8 +13,10 @@ const DV_ELL_GFC = path.join(GFC_EXAMPLES_DIR, 'dV_ELL_Earth2014_5480_plusGRS80.
 const MINIMAL_XML = path.join(OUTPUT_DATA_REFERENCE_DIR, 'minimal.xml');
 const MINIMAL_JSON = path.join(OUTPUT_DATA_REFERENCE_DIR, 'minimal.json');
 
-const GFC_EXTENSION_ERROR =
-  'The uploaded file should have a .gfc extension!. Change the file extension or copy-paste the text in the free text fields.';
+const enGfcUpload = (getTranslations('en') as { modals: { gfcUpload: Record<string, string> } }).modals.gfcUpload;
+const deGfcUpload = (getTranslations('de') as { modals: { gfcUpload: Record<string, string> } }).modals.gfcUpload;
+
+const GFC_EXTENSION_ERROR = enGfcUpload.invalidExtension;
 
 async function openGfcUploadModal(page: import('@playwright/test').Page) {
   await page.locator('#button-ggms-gfc-upload').click();
@@ -66,14 +69,30 @@ test.describe('GFC model file upload – GGMs Properties', () => {
   });
 
   test('shows upload button and opens modal with file drop zone and text field', async ({ page }) => {
-    await expect(page.locator('#button-ggms-gfc-upload')).toHaveText("Don't type - upload the model file");
+    await expect(page.locator('#button-ggms-gfc-upload')).toHaveText(enGfcUpload.uploadButton);
 
     await openGfcUploadModal(page);
 
-    await expect(page.locator('#input-ggms-gfc-file')).toBeVisible();
+    await expect(page.locator('#input-ggms-gfc-file')).toBeAttached();
     await expect(page.locator('#panel-ggms-gfc-dropfile')).toBeVisible();
+    await expect(page.locator('#panel-ggms-gfc-dropfile')).toContainText(enGfcUpload.dropZone);
+    await expect(page.locator('#panel-ggms-gfc-dropfile')).toContainText(enGfcUpload.selectFile);
     await expect(page.locator('#textarea-ggms-gfc-header-text')).toBeVisible();
-    await expect(page.locator('#button-ggms-gfc-fill-metadata')).toHaveText('Fill in metadata');
+    await expect(page.locator('#button-ggms-gfc-fill-metadata')).toHaveText(enGfcUpload.fillMetadata);
+    await expect(page.locator('#modal-ggms-gfc-upload')).not.toContainText('Durchsuchen');
+  });
+
+  test('shows German modal text when editor language is German', async ({ page }) => {
+    const languageMenu = await openLanguageMenu(page);
+    await languageMenu.locator('[data-bs-language-value="de"]').click();
+
+    await openGfcUploadModal(page);
+
+    await expect(page.locator('#modal-ggms-gfc-upload-label')).toHaveText(deGfcUpload.modalTitle);
+    await expect(page.locator('#panel-ggms-gfc-dropfile')).toContainText(deGfcUpload.dropZone);
+    await expect(page.locator('#panel-ggms-gfc-dropfile')).toContainText(deGfcUpload.selectFile);
+    await expect(page.locator('#button-ggms-gfc-fill-metadata')).toHaveText(deGfcUpload.fillMetadata);
+    await expect(page.locator('#modal-ggms-gfc-upload')).not.toContainText('Durchsuchen');
   });
 
   test('populates fields from WGS72.gfc file upload', async ({ page }) => {
@@ -144,7 +163,7 @@ test.describe('GFC model file upload – GGMs Properties', () => {
 
     await expect(page.locator('#modal-ggms-gfc-upload')).toBeVisible();
     await expect(page.locator('#ggms-gfc-upload-status')).toBeVisible();
-    await expect(page.locator('#ggms-gfc-upload-status')).toContainText('Please upload a GFC file or paste header text.');
+    await expect(page.locator('#ggms-gfc-upload-status')).toContainText(enGfcUpload.errorNoInput);
   });
 
   test.describe('non-.gfc file extension validation', () => {
