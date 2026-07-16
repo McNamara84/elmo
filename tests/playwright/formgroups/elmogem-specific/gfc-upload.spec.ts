@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { test, expect } from '@playwright/test';
 import { navigateToHome, openLanguageMenu } from '../../utils';
-import { getTranslations } from '../../utils/translations';
+import { getTranslations, getCurrentLanguage } from '../../utils/translations';
 
 const GFC_EXAMPLES_DIR = path.join(__dirname, 'gfc-files-examples');
 const OUTPUT_DATA_REFERENCE_DIR = path.join(__dirname, '../../flows/outputDataReference');
@@ -16,7 +16,18 @@ const MINIMAL_JSON = path.join(OUTPUT_DATA_REFERENCE_DIR, 'minimal.json');
 const enGfcUpload = (getTranslations('en') as { modals: { gfcUpload: Record<string, string> } }).modals.gfcUpload;
 const deGfcUpload = (getTranslations('de') as { modals: { gfcUpload: Record<string, string> } }).modals.gfcUpload;
 
-const GFC_EXTENSION_ERROR = enGfcUpload.invalidExtension;
+
+async function getGfcUploadMessage(
+  page: import('@playwright/test').Page,
+  key: string,
+): Promise<string> {
+  const language = await getCurrentLanguage(page);
+  const gfcUploadTranslations = (
+    getTranslations(language) as { modals: { gfcUpload: Record<string, string> } }
+  ).modals.gfcUpload;
+
+  return gfcUploadTranslations[key];
+}
 
 async function openGfcUploadModal(page: import('@playwright/test').Page) {
   await page.locator('#button-ggms-gfc-upload').click();
@@ -29,9 +40,10 @@ async function fillMetadataFromGfc(page: import('@playwright/test').Page) {
 }
 
 async function expectGfcExtensionError(page: import('@playwright/test').Page) {
+  const expectedMessage = await getGfcUploadMessage(page, 'invalidExtension');
   await expect(page.locator('#modal-ggms-gfc-upload')).toBeVisible();
   await expect(page.locator('#ggms-gfc-upload-status')).toBeVisible();
-  await expect(page.locator('#ggms-gfc-upload-status')).toContainText(GFC_EXTENSION_ERROR);
+  await expect(page.locator('#ggms-gfc-upload-status')).toContainText(expectedMessage);
 }
 
 async function dropFileOnGfcZone(
@@ -170,14 +182,12 @@ test.describe('GFC model file upload – GGMs Properties', () => {
     test('shows error when uploading minimal.xml via file input', async ({ page }) => {
       await openGfcUploadModal(page);
       await page.locator('#input-ggms-gfc-file').setInputFiles(MINIMAL_XML);
-      await page.locator('#button-ggms-gfc-fill-metadata').click();
       await expectGfcExtensionError(page);
     });
 
     test('shows error when uploading minimal.json via file input', async ({ page }) => {
       await openGfcUploadModal(page);
       await page.locator('#input-ggms-gfc-file').setInputFiles(MINIMAL_JSON);
-      await page.locator('#button-ggms-gfc-fill-metadata').click();
       await expectGfcExtensionError(page);
     });
 
