@@ -1,6 +1,3 @@
-export const GFC_EXTENSION_ERROR =
-    'The uploaded file should have a .gfc extension!. Change the file extension or copy-paste the text in the free text fields.';
-
 const GFC_HEADER_KEYS = [
     'product_type',
     'modelname',

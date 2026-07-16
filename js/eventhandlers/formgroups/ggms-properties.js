@@ -297,10 +297,15 @@ $(document).ready(function() {
     }
 
     $('#button-ggms-gfc-fill-metadata').on('click', async function () {
-        clearGfcUploadStatus();
-
         const file = gfcFileInput[0].files[0];
         const text = $('#textarea-ggms-gfc-header-text').val().trim();
+
+        if (file && !file.name.toLowerCase().endsWith('.gfc')) {
+            showGfcUploadStatusError(
+                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
+            );
+            return;
+        }
 
         if (!file && !text) {
             showGfcUploadStatusError(
@@ -311,6 +316,8 @@ $(document).ready(function() {
             );
             return;
         }
+
+        clearGfcUploadStatus();
 
         try {
             const header = await mergeGfcHeaders(file, text);
