@@ -367,7 +367,7 @@
             "fillMetadata": "Fill in metadata",
             "errorNoInput": "Please upload a GFC file or paste header text.",
             "errorProcessing": "Error processing GFC file",
-            "invalidExtension": "The uploaded file should have a .gfc extension!. Change the file extension or copy-paste the text in the free text fields."
+            "invalidExtension": "The uploaded file should have a .gfc extension. Change the file extension or copy-paste the text in the free text fields."
         },
         "icgemWrongApp": {
             "title": "ICGEM Metadata File Detected",

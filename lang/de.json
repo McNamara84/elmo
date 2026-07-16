@@ -368,7 +368,7 @@
             "fillMetadata": "Metadaten ausfüllen",
             "errorNoInput": "Bitte laden Sie eine GFC-Datei hoch oder fügen Sie Kopfzeilentext ein.",
             "errorProcessing": "Fehler beim Verarbeiten der GFC-Datei",
-            "invalidExtension": "Die hochgeladene Datei muss die Endung .gfc haben! Ändern Sie die Dateiendung oder fügen Sie den Text in das Freitextfeld ein."
+            "invalidExtension": "Die hochgeladene Datei muss die Endung .gfc haben. Ändern Sie die Dateiendung oder fügen Sie den Text in das Freitextfeld ein."
         },
         "icgemWrongApp": {
             "title": "ICGEM-Metadatendatei erkannt",

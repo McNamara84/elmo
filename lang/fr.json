@@ -365,7 +365,7 @@
             "fillMetadata": "Remplir les métadonnées",
             "errorNoInput": "Veuillez télécharger un fichier GFC ou coller le texte d'en-tête.",
             "errorProcessing": "Erreur lors du traitement du fichier GFC",
-            "invalidExtension": "Le fichier téléchargé doit avoir l'extension .gfc ! Modifiez l'extension du fichier ou copiez-collez le texte dans le champ libre."
+            "invalidExtension": "Le fichier téléchargé doit avoir l'extension .gfc . Modifiez l'extension du fichier ou copiez-collez le texte dans le champ libre."
         },
         "icgemWrongApp": {
             "title": "Fichier de métadonnées ICGEM détecté",
