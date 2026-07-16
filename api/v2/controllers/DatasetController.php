@@ -899,12 +899,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($person['Roles'])) {
-                    $rolesXml = $personXml->addChild('Roles');
-                    foreach ($person['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $personXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($person['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -928,12 +926,10 @@ class DatasetController
                         }
                     }
                 }
-                if (isset($institution['Roles'])) {
-                    $rolesXml = $institutionXml->addChild('Roles');
-                    foreach ($institution['Roles'] as $role) {
-                        $roleXml = $rolesXml->addChild('Role');
-                        $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
-                    }
+                $rolesXml = $institutionXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($institution['Roles'] ?? []) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
                 }
             }
         }
@@ -1109,6 +1105,21 @@ class DatasetController
     }
 
     /**
+     * Return explicit contributor roles or the DataCite-compatible draft fallback.
+     *
+     * The fallback is intentionally applied only while building export XML. It
+     * must not be written to contributor role relations because the user did not
+     * explicitly select it.
+     *
+     * @param array<int, array{name?: mixed}> $roles
+     * @return array<int, array{name: mixed}>
+     */
+    private function getContributorRolesForExport(array $roles): array
+    {
+        return $roles !== [] ? $roles : [['name' => 'Other']];
+    }
+
+    /**
      * Transforms an XML resource using an XSLT stylesheet and either saves or downloads the result.
      *
      * @param int    $id       The identifier of the resource.
@@ -1198,6 +1209,7 @@ class DatasetController
 
         if ($format === 'datacite') {
             $newXml = $this->stripEmptyDataciteElements($newXml);
+            $newXml = $this->restoreDataCiteAwardUrisWithoutNumbers($newXml, $sourceXmlString);
             $newXml = $this->restoreDataCiteDateOnlyCoverageDates($newXml, $sourceXmlString);
         }
 
@@ -1350,6 +1362,84 @@ class DatasetController
         }
 
         return null;
+    }
+
+    /**
+     * Restores Award URIs that the generated XSLT omits when no grant number exists.
+     *
+     * DataCite represents awardURI as an attribute of awardNumber. The schema permits
+     * awardNumber to have empty string content, but the generated XSLT only creates the
+     * element when the source contains a non-empty grantnumber.
+     *
+     * @param string $dataciteXml Transformed DataCite XML.
+     * @param string $sourceXml Source resource XML used for the transformation.
+     * @return string DataCite XML with URI-only award numbers preserved.
+     */
+    private function restoreDataCiteAwardUrisWithoutNumbers(string $dataciteXml, string $sourceXml): string
+    {
+        $sourceDom = new DOMDocument();
+        if (!$sourceDom->loadXML($sourceXml)) {
+            return $dataciteXml;
+        }
+
+        $sourceXPath = new DOMXPath($sourceDom);
+        $sourceReferences = $sourceXPath->query(
+            '/*[local-name()=\'Resource\']/*[local-name()=\'FundingReferences\']/*[local-name()=\'FundingReference\']'
+        );
+        if ($sourceReferences === false || $sourceReferences->length === 0) {
+            return $dataciteXml;
+        }
+
+        $dom = new DOMDocument();
+        $dom->formatOutput = true;
+        if (!$dom->loadXML($dataciteXml)) {
+            return $dataciteXml;
+        }
+
+        $ns = 'http://datacite.org/schema/kernel-4';
+        $xpath = new DOMXPath($dom);
+        $xpath->registerNamespace('dc', $ns);
+        $targetReferences = $xpath->query('//dc:fundingReferences/dc:fundingReference');
+        if ($targetReferences === false) {
+            return $dataciteXml;
+        }
+
+        foreach ($sourceReferences as $index => $sourceReference) {
+            $awardUri = trim((string) $sourceXPath->evaluate(
+                'string(*[local-name()=\'awarduri\'][1])',
+                $sourceReference
+            ));
+            $grantNumber = trim((string) $sourceXPath->evaluate(
+                'string(*[local-name()=\'grantnumber\'][1])',
+                $sourceReference
+            ));
+
+            if ($awardUri === '' || $grantNumber !== '') {
+                continue;
+            }
+
+            $targetReference = $targetReferences->item($index);
+            if (!$targetReference instanceof DOMElement) {
+                continue;
+            }
+
+            $existingAwardNumber = $xpath->query('dc:awardNumber', $targetReference)->item(0);
+            if ($existingAwardNumber instanceof DOMElement) {
+                continue;
+            }
+
+            $awardNumber = $dom->createElementNS($ns, 'awardNumber');
+            $awardNumber->setAttribute('awardURI', $awardUri);
+
+            $awardTitle = $xpath->query('dc:awardTitle', $targetReference)->item(0);
+            if ($awardTitle instanceof DOMNode) {
+                $targetReference->insertBefore($awardNumber, $awardTitle);
+            } else {
+                $targetReference->appendChild($awardNumber);
+            }
+        }
+
+        return $dom->saveXML();
     }
 
     /**
