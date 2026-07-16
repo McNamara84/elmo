@@ -8,7 +8,7 @@ import SaveHandler from './saveHandler.js';
 import SubmitHandler from './submitHandler.js';
 import AutosaveService from './services/autosaveService.js';
 
-$(() => {
+$(async () => {
   const autosaveService = new AutosaveService('form-mde', {
     statusElementId: 'autosave-status',
     statusTextId: 'autosave-status-text',

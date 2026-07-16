@@ -101,7 +101,29 @@ This section outlines the automatic processes handled by the Docker environment 
 
 **2. `Dockerfile`** 
 - **Base Image:** Installs `php 8.5-apache` and essential dependencies, including the database client.
-- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). I fyou don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Project Copy:** Copies the entire project directory into the container's root (`/var/www/html`), setting appropriate ownership for the standard Apache user (`www-data`). If you don't want something to be copied into container, include it into .dockerignore (performance might be affected)
+- **Multi-stage build:** The PHP web container -- built from `Dockerfile.db` -- uses a multi-stage build technique. The final `prod` image does not need everything created during the build process, so it only receives the required artifacts and runs as a non-root user. Setup is:
+
+  ```mermaid
+  flowchart LR
+      base[base<br/>installs PHP deps and configures server]
+      dev[dev<br/>installs Node.js + Composer deps<br/>and copies project code]
+      builder[builder<br/>prepares production dependencies]
+      prod[prod<br/>non-root runtime image]
+
+      base --> dev
+      dev --> builder
+      base --> prod
+      builder -->|COPY --from=builder| prod
+  ```
+
+  Where:
+  - `base` installs the PHP dependencies and configures the server.
+  - `dev` installs Node.js, Composer, and project dependencies; copies the code into the container; and runs the entrypoint script. This target is meant for full control in local development.
+  - `builder` minimizes the Composer installation for production artifacts.
+  - `prod` gets the pre-compiled dependencies, switches to a non-root user, and runs the entrypoint script. This is more fit for mission-critical tasks.
+
+
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 

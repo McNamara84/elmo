@@ -323,6 +323,28 @@ describe('thesauri.js', () => {
     expect(tree.get_selected()).toHaveLength(0);
   });
 
+  test('pre-populated Tagify values are synced to jsTree on ready after lazy loading', () => {
+    const input = document.getElementById('input-sciencekeyword');
+
+    // Simulate uploaded value before modal/tree is opened
+    input._tagify.addTags([{ value: 'Root > Child' }]);
+
+    // Tree not loaded yet
+    expect($('#jstree-sciencekeyword').jstree(true)).toBeUndefined();
+
+    // Open modal -> lazy loads thesaurus + initializes tree
+    openModal('#modal-sciencekeyword');
+
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+    expect(tree).toBeDefined();
+
+    // Simulate jsTree ready event for the new ready-handler logic
+    $('#jstree-sciencekeyword').trigger('ready.jstree');
+
+    expect(tree.get_selected()).toEqual(['child']);
+    expect($('#selected-keywords-sciencekeyword li').text()).toContain('Root > Child');
+  });
+
   test('does not reload thesaurus data on subsequent modal opens', () => {
     openModal('#modal-sciencekeyword');
 

@@ -4,21 +4,28 @@
  * @function logEvent
  * @param {string} eventType - The type of event to log (e.g., 'page loaded')
  * @param {string} [status=''] - Optional status information (e.g., 'success', 'failure')
+ * @param {number|string} [timeSpent=''] - Optional time spent on the page in seconds
  * @returns {Promise<void>} 
  * @throws {Error} Logs a warning to console if the fetch request fails
  * @description Sends an event log to 'log_page_event.php' with the event type, status, and current timestamp.
  */
-async function logEvent(eventType, status = '') {
+async function logEvent(eventType, status = '', timeSpent = '') {
     try {
+        const params = {
+            event: eventType,
+            status: status,
+            timestamp: new Date().toISOString()
+        };
+
+        if (timeSpent !== '' && timeSpent != null) {
+            params.time_spent = String(timeSpent);
+        }
+
         await fetch('log_page_event.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         credentials: 'include',
-        body: new URLSearchParams({
-            event: eventType,
-            status: status,
-            timestamp: new Date().toISOString()
-        })
+        body: new URLSearchParams(params)
         });
     } catch (err) {
         console.warn('Failed to log page load:', err);

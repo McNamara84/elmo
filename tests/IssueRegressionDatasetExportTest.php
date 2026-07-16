@@ -16,6 +16,92 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
         $this->controller = new \DatasetController();
     }
 
+    public function testDataCiteTransformPreservesAwardUriWithoutGrantNumberForIssue1147(): void
+    {
+        $sourceXml = $this->resourceXmlWithCoverage(fundingReferences: <<<'XML'
+<FundingReferences>
+    <FundingReference>
+        <funder>Example Foundation</funder>
+        <awarduri>https://example.org/award?x=1&amp;y=2</awarduri>
+    </FundingReference>
+</FundingReferences>
+XML);
+
+        $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+        $xpath = $this->dataCiteXPath($dataciteXml);
+        $awardNumbers = $xpath->query(
+            '//dc:fundingReference[dc:funderName = \'Example Foundation\']/dc:awardNumber'
+        );
+
+        $this->assertSame(1, $awardNumbers->length);
+        $this->assertSame('', trim($awardNumbers->item(0)->textContent));
+        $this->assertSame(
+            'https://example.org/award?x=1&y=2',
+            $awardNumbers->item(0)->getAttribute('awardURI')
+        );
+        $this->assertDataCiteSchemaValid($dataciteXml);
+    }
+
+    public function testDataCiteTransformDoesNotDuplicateAwardNumberForIssue1147(): void
+    {
+        $sourceXml = $this->resourceXmlWithCoverage(fundingReferences: <<<'XML'
+<FundingReferences>
+    <FundingReference>
+        <funder>Numbered Foundation</funder>
+        <grantnumber>GRANT-1147</grantnumber>
+        <awarduri>https://example.org/award/1147</awarduri>
+    </FundingReference>
+</FundingReferences>
+XML);
+
+        $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+        $xpath = $this->dataCiteXPath($dataciteXml);
+        $awardNumbers = $xpath->query(
+            '//dc:fundingReference[dc:funderName = \'Numbered Foundation\']/dc:awardNumber'
+        );
+
+        $this->assertSame(1, $awardNumbers->length);
+        $this->assertSame('GRANT-1147', trim($awardNumbers->item(0)->textContent));
+        $this->assertSame(
+            'https://example.org/award/1147',
+            $awardNumbers->item(0)->getAttribute('awardURI')
+        );
+    }
+
+    public function testDataCiteTransformKeepsAwardUrisAssignedToTheirFundingReferencesForIssue1147(): void
+    {
+        $sourceXml = $this->resourceXmlWithCoverage(fundingReferences: <<<'XML'
+<FundingReferences>
+    <FundingReference>
+        <funder>URI Only Foundation</funder>
+        <awarduri>https://example.org/uri-only</awarduri>
+    </FundingReference>
+    <FundingReference>
+        <funder>Numbered Foundation</funder>
+        <grantnumber>GRANT-2</grantnumber>
+        <grantname>Second Award</grantname>
+        <awarduri>https://example.org/numbered</awarduri>
+    </FundingReference>
+    <FundingReference>
+        <funder>Title Only Foundation</funder>
+        <grantname>Third Award</grantname>
+    </FundingReference>
+</FundingReferences>
+XML);
+
+        $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+        $xpath = $this->dataCiteXPath($dataciteXml);
+
+        $this->assertFundingAward($xpath, 'URI Only Foundation', '', 'https://example.org/uri-only');
+        $this->assertFundingAward($xpath, 'Numbered Foundation', 'GRANT-2', 'https://example.org/numbered');
+        $this->assertSame(
+            0,
+            $xpath->query(
+                '//dc:fundingReference[dc:funderName = \'Title Only Foundation\']/dc:awardNumber'
+            )->length
+        );
+    }
+
     public function testDataCiteTransformOmitsEmptyCreatedDateForIssue929(): void
     {
         $dataciteXml = $this->controller->transformResourceXmlString(
@@ -115,10 +201,57 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
         return $xpath;
     }
 
+    private function assertFundingAward(
+        \DOMXPath $xpath,
+        string $funderName,
+        string $awardNumber,
+        string $awardUri
+    ): void {
+        $fundingReferences = $xpath->query('//dc:fundingReference');
+        $matchingAward = null;
+
+        foreach ($fundingReferences as $fundingReference) {
+            $name = $xpath->query('dc:funderName', $fundingReference)->item(0);
+            if ($name === null || trim($name->textContent) !== $funderName) {
+                continue;
+            }
+
+            $matchingAward = $xpath->query('dc:awardNumber', $fundingReference)->item(0);
+            break;
+        }
+
+        $this->assertNotNull($matchingAward, "Missing awardNumber for {$funderName}.");
+        $this->assertSame($awardNumber, trim($matchingAward->textContent));
+        $this->assertSame($awardUri, $matchingAward->getAttribute('awardURI'));
+    }
+
+    private function assertDataCiteSchemaValid(string $xml): void
+    {
+        $dom = new \DOMDocument();
+        $this->assertTrue($dom->loadXML($xml));
+
+        $previousSetting = libxml_use_internal_errors(true);
+        libxml_clear_errors();
+
+        try {
+            $isValid = $dom->schemaValidate(__DIR__ . '/../schemas/DataCite/DataCiteSchema47.xsd');
+            $errors = array_map(
+                static fn (\LibXMLError $error): string => trim($error->message),
+                libxml_get_errors()
+            );
+        } finally {
+            libxml_clear_errors();
+            libxml_use_internal_errors($previousSetting);
+        }
+
+        $this->assertTrue($isValid, implode(PHP_EOL, $errors));
+    }
+
     private function resourceXmlWithCoverage(
         ?string $dateCreated = '2026-01-01',
         string $dateStart = '2026-01-01',
-        ?string $dateEnd = '2026-12-31'
+        ?string $dateEnd = '2026-12-31',
+        string $fundingReferences = ''
     ): string {
         $dateCreatedElement = $dateCreated === null ? '' : "<dateCreated>{$dateCreated}</dateCreated>";
         $dateEndElement = $dateEnd === null ? '' : "<dateEnd>{$dateEnd}</dateEnd>";
@@ -149,6 +282,7 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
             {$dateEndElement}
         </SpatialTemporalCoverage>
     </SpatialTemporalCoverages>
+    {$fundingReferences}
 </Resource>
 XML;
     }
