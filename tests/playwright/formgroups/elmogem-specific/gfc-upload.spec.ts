@@ -34,6 +34,12 @@ async function openGfcUploadModal(page: import('@playwright/test').Page) {
   await expect(page.locator('#modal-ggms-gfc-upload')).toBeVisible();
 }
 
+async function setGfcInputFile(page: import('@playwright/test').Page, filePath: string) {
+  const fileInput = page.locator('#input-ggms-gfc-file');
+  await fileInput.setInputFiles(filePath);
+  await fileInput.dispatchEvent('change');
+}
+
 async function fillMetadataFromGfc(page: import('@playwright/test').Page) {
   await page.locator('#button-ggms-gfc-fill-metadata').click();
   await expect(page.locator('#modal-ggms-gfc-upload')).toBeHidden();
@@ -63,7 +69,8 @@ async function dropFileOnGfcZone(
       const file = new File([new Uint8Array(bytes)], name, { type });
       const dataTransfer = new DataTransfer();
       dataTransfer.items.add(file);
-      dropZone.dispatchEvent(new DragEvent('drop', { bubbles: true, dataTransfer }));
+      const dropEvent = new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer });
+      dropZone.dispatchEvent(dropEvent);
     },
     {
       selector: '#panel-ggms-gfc-dropfile',
@@ -72,6 +79,8 @@ async function dropFileOnGfcZone(
       bytes: fileBytes,
     },
   );
+
+  await expect(page.locator('#ggms-gfc-upload-status')).toBeVisible({ timeout: 5000 });
 }
 
 test.describe('GFC model file upload – GGMs Properties', () => {
@@ -109,7 +118,7 @@ test.describe('GFC model file upload – GGMs Properties', () => {
 
   test('populates fields from WGS72.gfc file upload', async ({ page }) => {
     await openGfcUploadModal(page);
-    await page.locator('#input-ggms-gfc-file').setInputFiles(WGS72_GFC);
+    await setGfcInputFile(page, WGS72_GFC);
     await fillMetadataFromGfc(page);
 
     await expect(page.locator('#input-degree')).toHaveValue('28');
@@ -120,7 +129,7 @@ test.describe('GFC model file upload – GGMs Properties', () => {
 
   test('populates fields from EHFM_Earth_7200.gfc file upload', async ({ page }) => {
     await openGfcUploadModal(page);
-    await page.locator('#input-ggms-gfc-file').setInputFiles(EHFM_GFC);
+    await setGfcInputFile(page, EHFM_GFC);
     await fillMetadataFromGfc(page);
 
     await expect(page.locator('#input-degree')).toHaveValue('7300');
@@ -131,7 +140,7 @@ test.describe('GFC model file upload – GGMs Properties', () => {
 
   test('populates fields from dV_ELL_Earth2014_5480_plusGRS80.gfc including tide system', async ({ page }) => {
     await openGfcUploadModal(page);
-    await page.locator('#input-ggms-gfc-file').setInputFiles(DV_ELL_GFC);
+    await setGfcInputFile(page, DV_ELL_GFC);
     await fillMetadataFromGfc(page);
 
     await expect(page.locator('#input-degree')).toHaveValue('5480');
@@ -143,7 +152,7 @@ test.describe('GFC model file upload – GGMs Properties', () => {
 
   test('free text field overwrites values parsed from file', async ({ page }) => {
     await openGfcUploadModal(page);
-    await page.locator('#input-ggms-gfc-file').setInputFiles(WGS72_GFC);
+    await setGfcInputFile(page, WGS72_GFC);
     await page.locator('#textarea-ggms-gfc-header-text').fill(
       'max_degree 99\nerrors formal\nearth_gravity_constant 1.0E+14'
     );
@@ -181,13 +190,13 @@ test.describe('GFC model file upload – GGMs Properties', () => {
   test.describe('non-.gfc file extension validation', () => {
     test('shows error when uploading minimal.xml via file input', async ({ page }) => {
       await openGfcUploadModal(page);
-      await page.locator('#input-ggms-gfc-file').setInputFiles(MINIMAL_XML);
+      await setGfcInputFile(page, MINIMAL_XML);
       await expectGfcExtensionError(page);
     });
 
     test('shows error when uploading minimal.json via file input', async ({ page }) => {
       await openGfcUploadModal(page);
-      await page.locator('#input-ggms-gfc-file').setInputFiles(MINIMAL_JSON);
+      await setGfcInputFile(page, MINIMAL_JSON);
       await expectGfcExtensionError(page);
     });
 

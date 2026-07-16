@@ -1,4 +1,6 @@
-import { parseGfcFiles, extractSections, parseRecords, GFC_EXTENSION_ERROR } from '../../fileUpload.js';
+import { parseGfcFiles, extractSections, parseRecords } from '../../fileUpload.js';
+
+const GFC_EXTENSION_ERROR_FALLBACK = 'Please upload a .gfc file.';
 
 function translateWithFallback(key, fallback) {
     const translate = (window.elmo && typeof window.elmo.translate === 'function')
@@ -163,6 +165,136 @@ async function mergeGfcHeaders(file, text) {
     return header;
 }
 
+function showGfcUploadStatusError() {
+    const message = translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR_FALLBACK);
+    $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
+}
+
+function showGfcUploadStatusMessage(message) {
+    $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
+}
+
+function clearGfcUploadStatus() {
+    $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
+}
+
+function setSelectedGfcFilename(file) {
+    $('#ggms-gfc-selected-filename').text(file ? file.name : '');
+}
+
+function hideGfcUploadModal() {
+    const modalElement = document.getElementById('modal-ggms-gfc-upload');
+    if (modalElement && window.bootstrap?.Modal) {
+        window.bootstrap.Modal.getOrCreateInstance(modalElement).hide();
+    }
+}
+
+function handleSelectedGfcFile(file) {
+    const gfcFileInput = $('#input-ggms-gfc-file');
+
+    if (!file) {
+        setSelectedGfcFilename(null);
+        return;
+    }
+
+    if (!file.name.toLowerCase().endsWith('.gfc')) {
+        gfcFileInput.val('');
+        setSelectedGfcFilename(null);
+        showGfcUploadStatusError();
+        return;
+    }
+
+    clearGfcUploadStatus();
+    setSelectedGfcFilename(file);
+}
+
+function initGfcUploadHandlers() {
+    $(document).on('click', '#button-ggms-gfc-fill-metadata', async function () {
+        const gfcFileInput = $('#input-ggms-gfc-file');
+        const file = gfcFileInput[0]?.files?.[0];
+        const text = $('#textarea-ggms-gfc-header-text').val().trim();
+
+        if (file && !file.name.toLowerCase().endsWith('.gfc')) {
+            showGfcUploadStatusError();
+            return;
+        }
+
+        if (!file && !text) {
+            showGfcUploadStatusMessage(
+                translateWithFallback(
+                    'modals.gfcUpload.errorNoInput',
+                    'Please upload a GFC file or paste header text.'
+                )
+            );
+            return;
+        }
+
+        clearGfcUploadStatus();
+
+        try {
+            const header = await mergeGfcHeaders(file, text);
+            populateParsedFields(header);
+            hideGfcUploadModal();
+        } catch (error) {
+            console.error('Error filling metadata from GFC:', error);
+            const message = error instanceof Error && error.message === GFC_EXTENSION_ERROR_FALLBACK
+                ? translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR_FALLBACK)
+                : translateWithFallback('modals.gfcUpload.errorProcessing', 'Error processing GFC file');
+            showGfcUploadStatusMessage(message);
+        }
+    });
+
+    $(document).on('dragover', '#panel-ggms-gfc-dropfile', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        $('#panel-ggms-gfc-dropfile').addClass('border-primary');
+    });
+
+    $(document).on('dragleave', '#panel-ggms-gfc-dropfile', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        $('#panel-ggms-gfc-dropfile').removeClass('border-primary');
+    });
+
+    $(document).on('drop', '#panel-ggms-gfc-dropfile', function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        $('#panel-ggms-gfc-dropfile').removeClass('border-primary');
+
+        const dataTransfer = event.originalEvent?.dataTransfer;
+        const file = dataTransfer?.files?.[0];
+        if (!file) {
+            return;
+        }
+
+        if (!file.name.toLowerCase().endsWith('.gfc')) {
+            showGfcUploadStatusError();
+            return;
+        }
+
+        const gfcFileInput = $('#input-ggms-gfc-file')[0];
+        if (gfcFileInput) {
+            const dataTransferForInput = new DataTransfer();
+            dataTransferForInput.items.add(file);
+            gfcFileInput.files = dataTransferForInput.files;
+        }
+        handleSelectedGfcFile(file);
+    });
+
+    $(document).on('change', '#input-ggms-gfc-file', function () {
+        const file = this.files?.[0] || null;
+        handleSelectedGfcFile(file);
+    });
+
+    $(document).on('hidden.bs.modal', '#modal-ggms-gfc-upload', function () {
+        $('#input-ggms-gfc-file').val('');
+        setSelectedGfcFilename(null);
+        $('#textarea-ggms-gfc-header-text').val('');
+        clearGfcUploadStatus();
+        $('#panel-ggms-gfc-dropfile').removeClass('border-primary');
+    });
+}
+
 /**
  * 
  * @param {*} file 
@@ -260,124 +392,7 @@ $(document).ready(function() {
         updateReferenceSystemVisibility();
     });
 
-    // GFC upload modal (GGMsProperties)
-    const gfcDropZone = $('#panel-ggms-gfc-dropfile');
-    const gfcFileInput = $('#input-ggms-gfc-file');
-    const gfcSelectedFilename = $('#ggms-gfc-selected-filename');
-
-    function showGfcUploadStatusError(message) {
-        $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
-    }
-
-    function clearGfcUploadStatus() {
-        $('#ggms-gfc-upload-status').addClass('d-none').removeClass('alert alert-danger').text('');
-    }
-
-    function setSelectedGfcFilename(file) {
-        gfcSelectedFilename.text(file ? file.name : '');
-    }
-
-    function handleSelectedGfcFile(file) {
-        if (!file) {
-            setSelectedGfcFilename(null);
-            return;
-        }
-
-        if (!file.name.toLowerCase().endsWith('.gfc')) {
-            gfcFileInput.val('');
-            setSelectedGfcFilename(null);
-            showGfcUploadStatusError(
-                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
-            );
-            return;
-        }
-
-        clearGfcUploadStatus();
-        setSelectedGfcFilename(file);
-    }
-
-    $('#button-ggms-gfc-fill-metadata').on('click', async function () {
-        const file = gfcFileInput[0].files[0];
-        const text = $('#textarea-ggms-gfc-header-text').val().trim();
-
-        if (file && !file.name.toLowerCase().endsWith('.gfc')) {
-            showGfcUploadStatusError(
-                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
-            );
-            return;
-        }
-
-        if (!file && !text) {
-            showGfcUploadStatusError(
-                translateWithFallback(
-                    'modals.gfcUpload.errorNoInput',
-                    'Please upload a GFC file or paste header text.'
-                )
-            );
-            return;
-        }
-
-        clearGfcUploadStatus();
-
-        try {
-            const header = await mergeGfcHeaders(file, text);
-            populateParsedFields(header);
-            $('#modal-ggms-gfc-upload').modal('hide');
-        } catch (error) {
-            console.error('Error filling metadata from GFC:', error);
-            const message = error instanceof Error && error.message === GFC_EXTENSION_ERROR
-                ? translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
-                : translateWithFallback('modals.gfcUpload.errorProcessing', 'Error processing GFC file');
-            showGfcUploadStatusError(message);
-        }
-    });
-
-    gfcDropZone.on('dragover', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        gfcDropZone.addClass('border-primary');
-    });
-
-    gfcDropZone.on('dragleave', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        gfcDropZone.removeClass('border-primary');
-    });
-
-    gfcDropZone.on('drop', function (event) {
-        event.preventDefault();
-        event.stopPropagation();
-        gfcDropZone.removeClass('border-primary');
-
-        const file = event.originalEvent.dataTransfer.files[0];
-        if (!file) {
-            return;
-        }
-
-        if (!file.name.toLowerCase().endsWith('.gfc')) {
-            showGfcUploadStatusError(
-                translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR)
-            );
-            return;
-        }
-
-        const dataTransfer = new DataTransfer();
-        dataTransfer.items.add(file);
-        gfcFileInput[0].files = dataTransfer.files;
-        handleSelectedGfcFile(file);
-    });
-
-    gfcFileInput.on('change', function () {
-        handleSelectedGfcFile(gfcFileInput[0].files[0] || null);
-    });
-
-    $('#modal-ggms-gfc-upload').on('hidden.bs.modal', function () {
-        gfcFileInput.val('');
-        setSelectedGfcFilename(null);
-        $('#textarea-ggms-gfc-header-text').val('');
-        clearGfcUploadStatus();
-        gfcDropZone.removeClass('border-primary');
-    });
+    initGfcUploadHandlers();
 });
 
 /**

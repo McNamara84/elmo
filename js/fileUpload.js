@@ -9,6 +9,8 @@ const GFC_HEADER_KEYS = [
     'tide_system',
 ];
 
+const GFC_EXTENSION_ERROR = 'Please upload a .gfc file.';
+
 class Parser {
 
     checkFile(file) {

@@ -11,7 +11,7 @@ const translations: Record<Language, object> = {
 };
 
 
-async function getCurrentLanguage(page: import('@playwright/test').Page): Promise<SupportedLanguage> {
+async function getCurrentLanguage(page: import('@playwright/test').Page): Promise<Language> {
   const activeLanguage = await page
     .locator('[data-bs-language-value].active')
     .first()
