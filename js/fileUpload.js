@@ -1,3 +1,17 @@
+export const GFC_EXTENSION_ERROR =
+    'The uploaded file should have a .gfc extension!. Change the file extension or copy-paste the text in the free text fields.';
+
+const GFC_HEADER_KEYS = [
+    'product_type',
+    'modelname',
+    'earth_gravity_constant',
+    'radius',
+    'max_degree',
+    'errors',
+    'format',
+    'tide_system',
+];
+
 class Parser {
 
     checkFile(file) {
@@ -71,6 +85,16 @@ class GFCParser extends Parser {
         this.header = {};
     }
 
+    validateGfcFileExtension(file) {
+        if (!file) {
+            return;
+        }
+        const { extension } = this.checkFile(file);
+        if (extension !== 'gfc') {
+            throw new Error(GFC_EXTENSION_ERROR);
+        }
+    }
+
     /**
      * Main method to read and parse the GFC file.
      * Assumes `this.readFile(file)` returns a Promise (as updated previously).
@@ -79,14 +103,23 @@ class GFCParser extends Parser {
      */
     async parseGfcFiles(file) {
         try {
+            this.validateGfcFileExtension(file);
+
             // 1. Read the file contents as text
             const text = await this.readFile(file, 1, false);
             // 2. Split the text into an array of lines (handling both \r\n and \n)
             const lines = text.split(/\r?\n/);
             
             // 3. Extract the sections
-            const { headerLines, commentLines } = this.extractSections(lines);
-            
+            let { headerLines, commentLines } = this.extractSections(lines);
+
+            // 3.1 Handle the case when the comment is not separated from header
+            if (headerLines.length === 0) {
+                // parse all lines
+                // for each line starting with a known header key, treat as header; otherwise comment
+                ({ headerLines, commentLines } = this.extractSectionsByHeaderKeys(lines));
+            }
+
             // 4. Store the results in the class properties
             this.commentSection = commentLines.join("");
             this.header = this.parseRecords(headerLines);
@@ -133,6 +166,28 @@ class GFCParser extends Parser {
             }
 
             if (inHeader) {
+                headerLines.push(line);
+            } else {
+                commentLines.push(this.cleanComment(line));
+            }
+        }
+
+        return { headerLines, commentLines };
+    }
+
+    /**
+     * Fallback when begin_of_head / end_of_head markers are absent:
+     * classify each line by whether it starts with a known GFC header keyword.
+     */
+    extractSectionsByHeaderKeys(lines) {
+        const headerLines = [];
+        const commentLines = [];
+
+        for (const line of lines) {
+            const strippedLine = line.trim();
+            const isHeaderLine = GFC_HEADER_KEYS.some((key) => strippedLine.startsWith(key));
+
+            if (isHeaderLine) {
                 headerLines.push(line);
             } else {
                 commentLines.push(this.cleanComment(line));
@@ -212,12 +267,25 @@ class GFCParser extends Parser {
 
 const gfcParser = new GFCParser();
 
+export function validateGfcFileExtension(file) {
+    gfcParser.validateGfcFileExtension(file);
+}
+
 export async function parseGfcFiles(file) {
     return gfcParser.parseGfcFiles(file);
 }
 
 export function extractSections(lines) {
-    return gfcParser.extractSections(lines);
+    let sections = gfcParser.extractSections(lines);
+
+    // 3.1 Handle the case when the comment is not separated from header
+    if (sections.headerLines.length === 0) {
+        // parse all lines
+        // for each line starting with a known header key, treat as header; otherwise comment
+        sections = gfcParser.extractSectionsByHeaderKeys(lines);
+    }
+
+    return sections;
 }
 
 export function parseRecords(lines) {
