@@ -50,7 +50,8 @@ services:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       # Mount the entire project directory for live code changes.

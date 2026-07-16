@@ -64,7 +64,8 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
       SHOW_RELATED_WORK: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -121,7 +122,8 @@ services:
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -179,7 +181,8 @@ services:
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM – Alpha Version"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -238,7 +241,8 @@ services:
       INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal

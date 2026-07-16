@@ -84,6 +84,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - xml_data:/var/www/html/xml
       - storage_data:/var/www/html/storage
