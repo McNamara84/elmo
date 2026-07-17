@@ -52,46 +52,20 @@ $(document).ready(function () {
         }
     }
 
-    function makeAllFieldsOptional(row) {
-        // Get all input/select/textarea elements in the row
-        const allFields = row.find('input, select, textarea');
-        
-        allFields.each(function() {
-            $(this).prop('required', false).removeClass('required-field');
-        });
+    function clearSubmitRequiredMarkers(row) {
+        row.find('.js-required-on-submit').removeClass('js-required-on-submit');
     }
-    
+
     /**
-     * Updates required attributes on form fields based on datasource type
+     * Updates js-required-on-submit markers on form fields based on datasource type.
      * @param {jQuery} row - The data source row to process
      */
     function updateRequiredAttributes(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
-        const rules = validationRules[selectedType];
 
-        makeAllFieldsOptional(row);
+        clearSubmitRequiredMarkers(row);
         makeSpecificFieldsRequired(row, selectedType);
-
-        if (!rules) return;
-
-        // Get all input/select/textarea elements in the row
-        const allFields = row.find('input, select, textarea');
-
-        allFields.each(function() {
-            const fieldName = $(this).attr('name');
-            if (!fieldName) return;
-
-            // Extract the base field name (without [])
-            const baseFieldName = fieldName.replace('[]', '');
-
-            // Check if this field is in the required list
-            if (rules.required.includes(baseFieldName)) {
-                $(this).prop('required', true).addClass('required-field');
-            } else {
-                $(this).prop('required', false).removeClass('required-field');
-            }
-        });
     }
 
     // --- Core functionality -------------------------------------------------
