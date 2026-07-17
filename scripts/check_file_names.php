@@ -43,6 +43,12 @@ function elmoFileNameViolation(string $path): ?string
     }
 
     if ($extension === 'js') {
+        if (str_ends_with($fileName, '.test')) {
+            return preg_match('/^[a-z][A-Za-z0-9]*(?:\.[a-z][A-Za-z0-9]*)*\.test$/', $fileName) === 1
+                ? null
+                : 'Jest tests must use dot-delimited camelCase.test.js';
+        }
+
         return preg_match('/^[a-z][A-Za-z0-9]*$/', $fileName) === 1
             ? null
             : 'JavaScript modules must use camelCase.js';

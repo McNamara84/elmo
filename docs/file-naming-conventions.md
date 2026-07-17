@@ -9,6 +9,7 @@ Diese Konvention gilt verbindlich für neue, verschobene, umbenannte und in eine
 | PHP-Klasse, Interface, Trait, Enum oder Testklasse | `PascalCase.php` und identisch zum primären Symbol | `DatasetController.php`, `FileNameConventionTest.php` |
 | Prozedurales PHP, Endpoint, Include oder CLI-Skript | `snake_case.php` | `send_feedback_mail.php`, `check_file_names.php` |
 | JavaScript-Modul | `camelCase.js` | `submitHandler.js` |
+| Jest-Test | punktgetrennte `camelCase`-Segmente mit `.test.js` | `logging.test.js`, `logging.module.test.js` |
 | HTML und statische Browser-Assets | `kebab-case` | `apple-touch-icon.png` |
 | Playwright-/TypeScript-Spezifikation | `kebab-case.spec.ts` | `feedback-security.spec.ts` |
 | Verzeichnis | kleingeschrieben, bei neuen zusammengesetzten Namen `kebab-case` | `assets/icons`, `form-groups` |
