@@ -289,13 +289,13 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(longMin).toHaveClass(/border-danger/);
     await expect(page.locator('label[for="input-stc-longmin_1"] .stc-required-marker')).toHaveText('*');
 
-    await expect(description).toHaveAttribute('aria-required', 'true');
-    await expect(description).toHaveClass(/border-danger/);
-    await expect(page.locator('label[for="input-stc-description"] .stc-required-marker')).toHaveText('*');
+    await expect(description).not.toHaveAttribute('aria-required', 'true');
+    await expect(description).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-description"] .stc-required-marker')).toHaveCount(0);
 
-    await expect(startDate).toHaveAttribute('aria-required', 'true');
-    await expect(startDate).toHaveClass(/border-danger/);
-    await expect(page.locator('label[for="input-stc-datestart"] .stc-required-marker')).toHaveText('*');
+    await expect(startDate).not.toHaveAttribute('aria-required', 'true');
+    await expect(startDate).not.toHaveClass(/border-danger/);
+    await expect(page.locator('label[for="input-stc-datestart"] .stc-required-marker')).toHaveCount(0);
 
     await expect(longMax).toHaveAttribute('aria-required', 'true');
     await expect(longMax).not.toHaveClass(/border-danger/);
@@ -461,7 +461,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(timezoneSelect).not.toHaveClass(/is-invalid/);
   });
 
-  test('makes timezone required when time fields are filled', async ({ page }) => {
+  test('time zone should be optional even if the time fields are filled in', async ({ page }) => {
     // Verify timezone is NOT required initially
     const timezoneSelect = page.locator('#input-stc-timezone');
     await expect(timezoneSelect).not.toHaveAttribute('required');
@@ -492,7 +492,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await simulateSubmitValidation(page);
 
     // Timezone should now be required when time is provided
-    await expect(timezoneSelect).toHaveAttribute('required');
+    await expect(timezoneSelect).not.toHaveAttribute('required');
   });
 
   test('keeps STC submit validation highlights visible when fields must be filled in', async ({ page }) => {
@@ -508,8 +508,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     await expect(latMin).toHaveAttribute('aria-required', 'true');
     await expect(longMin).toHaveAttribute('aria-required', 'true');
-    await expect(description).toHaveAttribute('aria-required', 'true');
-    await expect(startDate).toHaveAttribute('aria-required', 'true');
+    await expect(description).not.toHaveAttribute('aria-required', 'true');
+    await expect(startDate).not.toHaveAttribute('aria-required', 'true');
 
     // Submit with missing required STC fields
     await simulateSubmitValidation(page);
@@ -517,8 +517,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     // Required-but-empty fields must stay highlighted after failed submit
     await expect(latMin).toHaveClass(/border-danger/);
     await expect(longMin).toHaveClass(/border-danger/);
-    await expect(description).toHaveClass(/border-danger/);
-    await expect(startDate).toHaveClass(/border-danger/);
+    await expect(description).not.toHaveClass(/border-danger/);
+    await expect(startDate).not.toHaveClass(/border-danger/);
 
     // The filled trigger field should not be highlighted as missing
     await expect(longMax).not.toHaveClass(/border-danger/);
@@ -529,8 +529,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     await expect(latMin).toHaveClass(/border-danger/);
     await expect(longMin).toHaveClass(/border-danger/);
-    await expect(description).toHaveClass(/border-danger/);
-    await expect(startDate).toHaveClass(/border-danger/);
+    await expect(description).not.toHaveClass(/border-danger/);
+    await expect(startDate).not.toHaveClass(/border-danger/);
 
     // Once the fields are fixed, the red highlight should disappear
     await latMin.fill('52.0');
