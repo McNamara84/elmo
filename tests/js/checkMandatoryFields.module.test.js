@@ -142,8 +142,8 @@ describe('checkMandatoryFields module coverage', () => {
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
             simulateSubmitValidation();
             
-            expect($('#input-stc-datestart').attr('required')).toBe('required');
-            expect($('#input-stc-dateend').attr('required')).toBe('required');
+            expect($('#input-stc-datestart').attr('required')).not.toBe('required');
+            expect($('#input-stc-dateend').attr('required')).not.toBe('required');
         });
 
         test('does not require time fields by default', () => {
@@ -166,7 +166,16 @@ describe('checkMandatoryFields module coverage', () => {
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
             simulateSubmitValidation();
             
-            expect($('#input-stc-timezone').attr('required')).toBe('required');
+            expect($('#input-stc-timezone').attr('required')).not.toBe('required');
+        });
+
+        test('Allow submission when only a description is provided', () => {
+            $('#input-stc-description').val('Test description');
+
+            checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
+            simulateSubmitValidation();
+
+            expect($('#input-stc-latmin_1').attr('required')).not.toBe('required');
         });
 
         test('clears requirements when all fields empty', () => {
