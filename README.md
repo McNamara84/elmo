@@ -74,10 +74,9 @@ Following conditions are required for installation:
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
-11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
-12. Delete `install.php` and `install.html` after successfully creating the database.
-13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-14. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+11. Run `php scripts/install.php basic` to create the database structure and lookup data. Use `complete` instead of `basic` only when exemplar test data is required. The installer is intentionally not available through the browser.
+12. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+13. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -87,8 +86,8 @@ Following conditions are required for installation:
 5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
 	Please mind that: 
 	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
-	- Use `docker-compose down -v` to reset the database when updating credentials.
-  - To recreate the database structure, a special variable 'DB_INIT_MODE' is introduced. Setting it to 'keep_data' will mean that the db is reset only if no tables are found. 'drop_data' will ensure an actual database structure (see install.php), but will lose data. Setting to 'skip' skips the procedure.   
+	- Use `docker compose down -v` to reset the disposable local database when updating credentials.
+  - The entrypoint invokes `php scripts/install.php` with the `INSTALL_ACTION` value. Supported values are `basic` (default) and `complete` (including exemplar test data). Both modes recreate the configured schema, so use them only with the intended database.
 
 6. Docker Environment Setup 🐳
 
@@ -127,9 +126,8 @@ This section outlines the automatic processes handled by the Docker environment 
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
-- **Database Setup:** Responsible for initializing the database structure by running `install.php`.
-- **Idempotency:** Utilizes a `FLAG_FILE` to ensure the database setup runs only once. If this file exists, the installation process is skipped.
-- **Installation Options for `install.php`:**
+- **Database Setup:** Initializes the configured database by running the CLI-only `scripts/install.php`.
+- **Installation Options for `scripts/install.php`:**
   - `basic` (default): Creates only the database structure and inserts lookup data.
   - `complete`: Creates the database structure, inserts lookup data, *and* populates the database with exemplar (test) data. This is controlled by the `INSTALL_ACTION` environment variable (e.g., `INSTALL_ACTION=complete`).
 
@@ -1659,7 +1657,7 @@ We appreciate every contribution to this project! You can use the feedback form 
 ## Testing
 
 > [!NOTE]
-> Dependencies must be installed first: `composer install` and `npm install`.
+> Dependencies must be installed first: `composer install` and `npm install`. See also [Project structure](docs/project-structure.md) and [file-name conventions](docs/file-naming-conventions.md).
 
 ELMO uses three test frameworks:
 

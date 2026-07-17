@@ -1,16 +1,29 @@
 <IfModule mod_rewrite.c>
-    # Enable the RewriteEngine module, which allows URL rewriting
     RewriteEngine On
 
-    # If the requested filename exists as a file (-f) or directory (-d), skip the next rule
+    # CLI maintenance tools are never public HTTP endpoints.
+    RewriteRule ^scripts(?:/|$) - [R=404,L]
+
+    # Temporary compatibility aliases for the former root endpoints.
+    RewriteRule ^api\.php$ api/deprecated_v1.php [QSA,L]
+    RewriteRule ^doc/privacyPolicy\.html$ doc/privacy-policy.html [L]
+    RewriteRule ^log_page_event\.php$ endpoints/log_page_event.php [QSA,L]
+    RewriteRule ^send_feedback_mail\.php$ endpoints/send_feedback_mail.php [QSA,L]
+    RewriteRule ^send_xml_file\.php$ endpoints/send_xml_file.php [QSA,L]
+
+    # Temporary compatibility aliases for browser icons moved to assets/icons.
+    RewriteRule ^apple-touch-icon\.png$ assets/icons/apple-touch-icon.png [L]
+    RewriteRule ^favicon-96x96\.png$ assets/icons/favicon-96x96.png [L]
+    RewriteRule ^favicon\.ico$ assets/icons/favicon.ico [L]
+    RewriteRule ^favicon\.svg$ assets/icons/favicon.svg [L]
+    RewriteRule ^web-app-manifest-192x192\.png$ assets/icons/web-app-manifest-192x192.png [L]
+    RewriteRule ^web-app-manifest-512x512\.png$ assets/icons/web-app-manifest-512x512.png [L]
+
+    # Existing files and directories are served without additional routing.
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # For API requests: rewrite URLs starting with 'api/' to 'api/index.php'
+    # API v2 uses the shared API front controller.
     RewriteRule ^api/(.*)$ api/index.php [QSA,L]
-
-    # For all other requests (if needed), rewrite to 'index.php'
-    # Uncomment the following line if you want all other routes to point to 'index.php'
-    # RewriteRule ^(.*)$ index.php [QSA,L]
 </IfModule>
