@@ -249,7 +249,7 @@ describe('submitHandler.js', () => {
 
   test('submitViaAjax sends FormData and handles success', (done) => {
     jest.spyOn($, 'ajax').mockImplementation((config) => {
-      expect(config.url).toBe('send_xml_file.php');
+      expect(config.url).toBe('endpoints/send_xml_file.php');
       expect(config.type).toBe('POST');
       expect(config.processData).toBe(false);
       expect(config.contentType).toBe(false);

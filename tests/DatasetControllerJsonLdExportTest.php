@@ -53,7 +53,7 @@ XML;
             ->onlyMethods(['transformAndSaveOrDownloadXml'])
             ->getMock();
 
-        $controller->method('transformAndSaveOrDownloadXml')
+        $controller->expects(self::once())->method('transformAndSaveOrDownloadXml')
             ->with(123, 'datacite', false)
             ->willReturn($xml);
 

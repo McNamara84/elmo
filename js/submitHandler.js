@@ -446,7 +446,7 @@ class SubmitHandler {
      */
     submitViaAjax(formData) {
         $.ajax({
-            url: 'send_xml_file.php',
+            url: 'endpoints/send_xml_file.php',
             type: 'POST',
             data: formData,
             processData: false,
