@@ -71,7 +71,7 @@ $(document).ready(function () {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
         const rules = validationRules[selectedType];
-        
+
         makeAllFieldsOptional(row);
         makeSpecificFieldsRequired(row);
 
@@ -102,7 +102,7 @@ $(document).ready(function () {
      * It adds or removes the 'Elevation/Terrain' option based on the main 'Model Type' selection.
      * If 'Elevation/Terrain' is selected and the model type changes, it defaults the selection to 'Satellite'.
      */
-    function updateAllDatasourceTypeOptions() {
+    function updateTypeOptionsTopographicModels() {
         const modelType = $('#input-model-type').val();
         const isTopoModel = (modelType === 'Topographic');
 
@@ -318,37 +318,9 @@ $(document).ready(function () {
         }
     }
 
-    /**
-     * Returns the validation message for an empty satellite platform field.
-     *
-     * @returns {string}
-     */
-    function getSatellitePlatformValidationMessage() {
-        return translations?.dataSources?.satellitePlatformInvalid || 'Please provide satellite in this field.';
-    }
-
-    /**
-     * Returns the visible Tagify wrapper for a datasource platform input.
-     *
-     * @param {HTMLInputElement} inputElement
-     * @returns {HTMLElement|null}
-     */
-    function getSatellitePlatformTagifyElement(inputElement) {
-        return inputElement.closest('.tagify') || inputElement.parentElement?.querySelector('.tagify');
-    }
-
-    /**
-     * @param {HTMLInputElement} inputElement
-     * @returns {boolean}
-     */
-    function isSatellitePlatformEmpty(inputElement) {
-        const tagifyInstance = inputElement._tagify;
-        if (tagifyInstance && Array.isArray(tagifyInstance.value)) {
-            return tagifyInstance.value.length === 0;
-        }
-
-        const rawValue = (inputElement.value || '').trim();
-        return rawValue === '' || rawValue === '[]';
+    function removeAllValidationMessages(row){
+        row.find('.is-invalid').removeClass('is-invalid');
+        row.find('.invalid-feedback').hide();
     }
 
     /**
@@ -358,8 +330,8 @@ $(document).ready(function () {
      * @param {boolean} isValid
      */
     function setSatellitePlatformValidationState(inputElement, isValid) {
-        const tagifyElement = getSatellitePlatformTagifyElement(inputElement);
-
+        // get the visible Tagify Element
+        const tagifyElement = inputElement.closest('.tagify') || inputElement.parentElement?.querySelector('.tagify');
         if (isValid) {
             inputElement.classList.remove('is-invalid');
             inputElement.classList.add('is-valid');
@@ -371,7 +343,7 @@ $(document).ready(function () {
             return;
         }
 
-        const message = getSatellitePlatformValidationMessage();
+        const message = translations?.dataSources?.satellitePlatformInvalid || 'Please provide satellite in this field.';
         inputElement.classList.remove('is-valid');
         inputElement.classList.add('is-invalid');
         inputElement.setCustomValidity(message);
@@ -485,22 +457,25 @@ $(document).ready(function () {
             // Find any label associated with the old ID and update its 'for' attribute
             newRow.find(`label[for="${oldId}"]`).attr('for', newId);
         });
-
-        replaceHelpButtonInClonedRows(newRow);
-        newRow.find(".addDataSource").replaceWith(createRemoveButton());
-        
         // Set the default value to Satellite for the new row.
         newRow.find('select[name="datasource_type[]"]').val('S');
 
-        datasourceGroup.append(newRow);
+        resetDatasourcePlatformSearch(newRow);
+        removeAllValidationMessages(newRow);
+        replaceHelpButtonInClonedRows(newRow);
+        newRow.find(".addDataSource").replaceWith(createRemoveButton());
         updateRowState(newRow); // Immediately set the correct visibility.
         restoreHelpButtons(newRow);
-
-        const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
-        if (newInputElem) {
-            initTagifyForInput(newInputElem, 'satellitePlatforms');
-            applyDatasourcePlatformPlaceholder(newInputElem);
+        const newTagifyElem = newRow.find('input[name="satellite_platform[]"]')[0];
+        if (newTagifyElem) {
+            initTagifyForInput(newTagifyElem, 'satellitePlatforms');
+            applyDatasourcePlatformPlaceholder(newTagifyElem);
         }
+
+        datasourceGroup.append(newRow);
+
+
+
     });
 
     // Remove a data source entry.
