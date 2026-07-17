@@ -111,7 +111,7 @@ services:
       SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS_MSL:-true}
       SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE_MSL:-true}
       SHOW_RELATED_WORK: ${SHOW_RELATED_WORK_MSL:-true}
-      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
     depends_on:
       - db
     restart: unless-stopped
