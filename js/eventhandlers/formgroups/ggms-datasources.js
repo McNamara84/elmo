@@ -326,6 +326,14 @@ $(document).ready(function () {
     }
 
     /**
+     * @param {HTMLInputElement} inputElement
+     * @returns {boolean}
+     */
+    function isSatellitePlatformEmpty(inputElement) {
+        return !(inputElement?._tagify?.value?.length);
+    }
+
+    /**
      * Validates visible Satellite datasource rows and marks empty platform fields invalid.
      *
      * @returns {boolean}
