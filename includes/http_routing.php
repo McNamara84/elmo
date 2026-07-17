@@ -48,7 +48,7 @@ function elmoIsHttpBlockedPath(string $requestUri): bool
 function elmoStaticContentType(string $path): string
 {
     return match (strtolower((string) pathinfo($path, PATHINFO_EXTENSION))) {
-        'html' => 'text/html; charset=utf-8',
+        'html' => 'text/html; charset=UTF-8',
         'ico' => 'image/x-icon',
         'png' => 'image/png',
         'svg' => 'image/svg+xml',

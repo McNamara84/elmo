@@ -73,7 +73,7 @@ final class HttpRoutingTest extends TestCase
     public static function contentTypeProvider(): array
     {
         return [
-            'HTML' => ['privacy-policy.html', 'text/html; charset=utf-8'],
+            'HTML' => ['privacy-policy.html', 'text/html; charset=UTF-8'],
             'ICO' => ['favicon.ico', 'image/x-icon'],
             'PNG' => ['icon.png', 'image/png'],
             'SVG' => ['icon.svg', 'image/svg+xml'],
