@@ -40,17 +40,15 @@ $(document).ready(function () {
         'G': { required: [] },
         'A': { required: [] },
         'T': { required: [] },
-        'M': { required: ['dName'] }
+        'M': { required: ['input-datasource-modelname'] }
     };
 
-    // this function is assumed to be called within a context where selectedType is defined
-    function makeSpecificFieldsRequired(row){
+    function makeSpecificFieldsRequired(row, selectedType) {
+        const rules = validationRules[selectedType];
+        if (!rules) return;
 
-        // go through all th required fields for the selected row
-        for (var requiredField of validationRules[selectedType].required) {
-            // assuming that the ids are provided in the format of the field names, we can select the element by id inside a raw
-            const selector = $(`#${requiredField}`);
-            selector.addClass('js-required-on-submit');
+        for (const requiredFieldId of rules.required) {
+            row.find(`[id^="${requiredFieldId}"]`).addClass('js-required-on-submit');
         }
     }
 
@@ -73,7 +71,7 @@ $(document).ready(function () {
         const rules = validationRules[selectedType];
 
         makeAllFieldsOptional(row);
-        makeSpecificFieldsRequired(row);
+        makeSpecificFieldsRequired(row, selectedType);
 
         if (!rules) return;
 
