@@ -194,7 +194,7 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     simulateSubmitValidation();
 
-    // datestart and dateend should be required
+    // datestart and dateend should not be required
     expect(datestart.prop('required')).not.toBe(true);
     expect(dateend.prop('required')).not.toBe(true);
 

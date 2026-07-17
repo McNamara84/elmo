@@ -133,7 +133,7 @@ describe('checkMandatoryFields module coverage', () => {
             }).not.toThrow();
         });
 
-        test('marks date fields as required when coordinates filled', () => {
+        test('DateStart and DateEnd should not be required when coordinates are filled', () => {
             $('#input-stc-latmin_1').val('52.0');
             $('#input-stc-latmax_1').val('53.0');
             $('#input-stc-longmin_1').val('13.0');
@@ -158,7 +158,7 @@ describe('checkMandatoryFields module coverage', () => {
             expect($('#input-stc-timeend').attr('required')).toBeUndefined();
         });
 
-        test('requires timezone when time is provided', () => {
+        test('when time is provided timezone should not be required', () => {
             $('#input-stc-latmin_1').val('52.0');
             $('#input-stc-datestart').val('2025-01-01');
             $('#input-stc-timestart').val('08:00');
