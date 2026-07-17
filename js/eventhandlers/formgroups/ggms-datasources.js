@@ -36,13 +36,33 @@ $(document).ready(function () {
      * Defines which fields are required based on datasource type
      */
     const validationRules = {
-        'S': { required: [] },
+        'S': { required: ['input-datasource-platforms'] },
         'G': { required: [] },
         'A': { required: [] },
         'T': { required: [] },
         'M': { required: ['dName'] }
     };
 
+    // this function is assumed to be called within a context where selectedType is defined
+    function makeSpecificFieldsRequired(row){
+
+        // go through all th required fields for the selected row
+        for (var requiredField of validationRules[selectedType].required) {
+            // assuming that the ids are provided in the format of the field names, we can select the element by id inside a raw
+            const selector = $(`#${requiredField}`);
+            selector.addClass('js-required-on-submit');
+        }
+    }
+
+    function makeAllFieldsOptional(row) {
+        // Get all input/select/textarea elements in the row
+        const allFields = row.find('input, select, textarea');
+        
+        allFields.each(function() {
+            $(this).prop('required', false).removeClass('required-field');
+        });
+    }
+    
     /**
      * Updates required attributes on form fields based on datasource type
      * @param {jQuery} row - The data source row to process
@@ -51,16 +71,9 @@ $(document).ready(function () {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
         const rules = validationRules[selectedType];
-
-        const platformInput = row.find('input[name="satellite_platform[]"]');
-        if (selectedType === 'S') {
-            platformInput.addClass('js-required-on-submit');
-        } else {
-            platformInput.removeClass('js-required-on-submit').removeAttr('required');
-            if (platformInput[0]) {
-                setSatellitePlatformValidationState(platformInput[0], true);
-            }
-        }
+        
+        makeAllFieldsOptional(row);
+        makeSpecificFieldsRequired(row);
 
         if (!rules) return;
 
