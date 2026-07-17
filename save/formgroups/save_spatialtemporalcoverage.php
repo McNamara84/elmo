@@ -22,7 +22,6 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     global $showGGMsProperties;
 
     $action = $postData['action'] ?? 'save_and_download';
-    $isElmoGem = !empty($showGGMsProperties);
 
     // If NO STC data provided at all, return early (it's optional)
     // Only skip if BOTH spatial and temporal fields are empty
