@@ -189,8 +189,10 @@ function updateStcRequiredVisualCue(inputElement, isRequired) {
     input.toggleClass('border-danger', isRequired && value === '');
 
     if (isRequired) {
+        input.attr('required', 'required');
         input.attr('aria-required', 'true');
     } else {
+        input.removeAttr('required');
         input.removeAttr('aria-required');
     }
 
