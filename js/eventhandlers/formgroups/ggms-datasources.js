@@ -52,18 +52,24 @@ $(document).ready(function () {
         }
     }
 
+    function clearRequiredAttributes(row) {
+        row.find('input, select, textarea').removeAttr('required');
+    }
+
     function clearSubmitRequiredMarkers(row) {
         row.find('.js-required-on-submit').removeClass('js-required-on-submit');
     }
 
     /**
      * Updates js-required-on-submit markers on form fields based on datasource type.
+     * Clears stale required attributes so cloned or retyped rows do not keep hidden required fields.
      * @param {jQuery} row - The data source row to process
      */
     function updateRequiredAttributes(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
 
+        clearRequiredAttributes(row);
         clearSubmitRequiredMarkers(row);
         makeSpecificFieldsRequired(row, selectedType);
     }
@@ -296,94 +302,6 @@ $(document).ready(function () {
     }
 
     /**
-     * Applies or clears Bootstrap validation styling for a satellite platform Tagify input.
-     *
-     * @param {HTMLInputElement} inputElement
-     * @param {boolean} isValid
-     */
-    function setSatellitePlatformValidationState(inputElement, isValid) {
-        // get the visible Tagify Element
-        const tagifyElement = inputElement.closest('.tagify') || inputElement.parentElement?.querySelector('.tagify');
-        if (isValid) {
-            inputElement.classList.remove('is-invalid');
-            inputElement.classList.add('is-valid');
-            inputElement.setCustomValidity('');
-            if (tagifyElement) {
-                tagifyElement.classList.remove('is-invalid');
-                tagifyElement.classList.add('is-valid');
-            }
-            return;
-        }
-
-        const message = translations?.dataSources?.satellitePlatformInvalid || 'Please provide satellite in this field.';
-        inputElement.classList.remove('is-valid');
-        inputElement.classList.add('is-invalid');
-        inputElement.setCustomValidity(message);
-        if (tagifyElement) {
-            tagifyElement.classList.remove('is-valid');
-            tagifyElement.classList.add('is-invalid');
-        }
-    }
-
-    /**
-     * @param {HTMLInputElement} inputElement
-     * @returns {boolean}
-     */
-    function isSatellitePlatformEmpty(inputElement) {
-        return !(inputElement?._tagify?.value?.length);
-    }
-
-    /**
-     * Validates visible Satellite datasource rows and marks empty platform fields invalid.
-     *
-     * @returns {boolean}
-     */
-    function validateSatellitePlatformFields() {
-        let allValid = true;
-
-        datasourceGroup.children('.row').each(function () {
-            const row = $(this);
-            const platformInput = row.find('input[name="satellite_platform[]"]')[0];
-            if (!platformInput) return;
-
-            const selectedType = row.find('select[name="datasource_type[]"]').val();
-            const satelliteSection = row.children('.visibility-datasources-satellite');
-            const requiresPlatform = selectedType === 'S' && satelliteSection.is(':visible');
-
-            if (!requiresPlatform) {
-                setSatellitePlatformValidationState(platformInput, true);
-                return;
-            }
-
-            if (isSatellitePlatformEmpty(platformInput)) {
-                setSatellitePlatformValidationState(platformInput, false);
-                allValid = false;
-            } else {
-                setSatellitePlatformValidationState(platformInput, true);
-            }
-        });
-
-        return allValid;
-    }
-
-    window.validateSatellitePlatformFields = validateSatellitePlatformFields;
-
-    /**
-     * Clears validation styling when the user adds a satellite platform tag.
-     *
-     * @param {HTMLInputElement} inputElement
-     */
-    function bindSatellitePlatformValidationClear(inputElement) {
-        const tagifyInstance = inputElement?._tagify;
-        if (!tagifyInstance || inputElement.dataset.satelliteValidationBound === 'true') return;
-
-        inputElement.dataset.satelliteValidationBound = 'true';
-        tagifyInstance.on('add', function () {
-            setSatellitePlatformValidationState(inputElement, true);
-        });
-    }
-
-    /**
      * Applies the datasource-specific placeholder to a platform input and its Tagify UI.
      *
      * @param {HTMLInputElement} inputElement - Datasource platform input enhanced by Tagify.
@@ -411,8 +329,6 @@ $(document).ready(function () {
                 placeholder: datasourcePlatformPlaceholder
             });
         }
-
-        bindSatellitePlatformValidationClear(inputElement);
     }
 
     // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
@@ -421,7 +337,7 @@ $(document).ready(function () {
     datasourceGroup.on("click", ".addDataSource", function () {
         const newRow = originalDataSourceRow.clone();
 
-        newRow.find("input, textarea, select").val("");
+        newRow.find("input, textarea, select").val("").removeAttr("required");
         newRow.find(".is-invalid, .is-valid").removeClass("is-invalid is-valid");
         newRow.find(".invalid-feedback").hide();
 
@@ -496,7 +412,7 @@ $(document).ready(function () {
     });
     
     $(document).on('change', '#input-model-type', function() {
-        updateAllDatasourceTypeOptions();
+        updateTypeOptionsTopographicModels();
     });
 
     // --- INITIALIZATION ---

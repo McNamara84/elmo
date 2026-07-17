@@ -319,15 +319,28 @@ describe('ggms-datasources.js', () => {
     expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
   });
 
-  test('validateSatellitePlatformFields marks empty satellite platform as invalid', () => {
-    const input = $('input[name="satellite_platform[]"]')[0];
-    expect(window.validateSatellitePlatformFields()).toBe(false);
-    expect(input.classList.contains('is-invalid')).toBe(true);
-    expect(input.validationMessage).toBe('Please provide satellite in this field.');
+  test('clears required attribute when datasource type changes away from Satellite', () => {
+    const row = $('#group-datasources .row').first();
+    const platformInput = row.find('input[name="satellite_platform[]"]');
 
-    input._tagify.addTags([{ value: 'Space-based Platforms > GRACE' }]);
-    expect(window.validateSatellitePlatformFields()).toBe(true);
-    expect(input.classList.contains('is-invalid')).toBe(false);
+    platformInput.attr('required', 'required');
+    row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+
+    expect(platformInput.prop('required')).toBe(false);
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+  });
+
+  test('cloned row does not inherit required from template row', () => {
+    const templateRow = $('#group-datasources .row').first();
+    templateRow.find('input[name="satellite_platform[]"]').attr('required', 'required');
+
+    $('.addDataSource').trigger('click');
+
+    const newRow = $('#group-datasources .row').last();
+    const clonedPlatformInput = newRow.find('input[name="satellite_platform[]"]');
+
+    expect(clonedPlatformInput.prop('required')).toBe(false);
+    expect(clonedPlatformInput.hasClass('js-required-on-submit')).toBe(true);
   });
 
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {

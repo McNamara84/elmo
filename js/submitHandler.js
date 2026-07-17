@@ -358,11 +358,7 @@ class SubmitHandler {
             && typeof globalThis.validateAuthorAffiliationEditors === 'function'
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
-        const satellitePlatformsValid = typeof globalThis !== 'undefined'
-            && typeof globalThis.validateSatellitePlatformFields === 'function'
-            ? globalThis.validateSatellitePlatformFields()
-            : true;
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid || !satellitePlatformsValid) {
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {

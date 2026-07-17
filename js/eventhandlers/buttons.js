@@ -149,6 +149,17 @@ $(document).ready(function () {
       });
     }
 
+    /** Applies required only to enabled js-required-on-submit fields (skips hidden/disabled rows). */
+    function applySubmitRequiredFields() {
+      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+        if (el.disabled) {
+          el.removeAttribute('required');
+          return;
+        }
+        el.setAttribute('required', 'required');
+      });
+    }
+
     // For Save: no validation
     $('#button-form-save, #button-form-save-jsonld').on('click', function () {
       resetSubmitOnlyFields();
@@ -166,13 +177,7 @@ $(document).ready(function () {
       validateContributorPersonRequirements();
   
 
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
-        el.setAttribute('required', 'required');
-      });
-
-      if (typeof window.validateSatellitePlatformFields === 'function') {
-        window.validateSatellitePlatformFields();
-      }
+      applySubmitRequiredFields();
 
       // Validation is handled by submitHandler.handleSubmit() in validation.js.
       // The form has novalidate, so no native browser validation occurs.
