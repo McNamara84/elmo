@@ -192,6 +192,7 @@ $(document).ready(function () {
     }
 
     /**
+     * A collector function that controls the visibility and layout. called for type updates and new rows.
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
      */
@@ -216,15 +217,22 @@ $(document).ready(function () {
         const detailsContainer = row.children('.visibility-datasources-details');
         if (detailsContainer.is(':visible')) {
             const detailsSelect = detailsContainer.find('select[name="datasource_details[]"]');
-            detailsSelect.empty();
             const options = detailsOptions[selectedType] || [];
+            const currentValue = detailsSelect.val();
+            const existingValues = detailsSelect.find('option').map((_, option) => option.value).get();
+            const needsRepopulate = existingValues.length !== options.length
+                || options.some(option => !existingValues.includes(option));
 
-            options.forEach(detail => {
-                detailsSelect.append($('<option>', { value: detail, text: detail }));
-            });
-            // If there are options, select the first one by default
-            if(options.length > 0) {
-                detailsSelect.val(options[0]);
+            if (needsRepopulate) {
+                detailsSelect.empty();
+                options.forEach(detail => {
+                    detailsSelect.append($('<option>', { value: detail, text: detail }));
+                });
+                if (options.includes(currentValue)) {
+                    detailsSelect.val(currentValue);
+                } else if (options.length > 0) {
+                    detailsSelect.val(options[0]);
+                }
             }
         }
 
@@ -331,7 +339,7 @@ $(document).ready(function () {
         }
     }
 
-    // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
+    // --- EVENT HANDLERS  ---
 
     // Add new data source entry.
     datasourceGroup.on("click", ".addDataSource", function () {
@@ -390,18 +398,13 @@ $(document).ready(function () {
         row.remove();
     });
 
-    // Update fields when the data source type changes.
-    datasourceGroup.on('change', 'select[name="datasource_type[]"]', function () {
+    // Update row when type or details selection changes.
+    datasourceGroup.on('change', 'select[name="datasource_type[]"], select[name="datasource_details[]"]', function () {
         const row = $(this).closest('.row');
         updateRowState(row);
         restoreHelpButtons(row);
     });
-
-    datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
-        const row = $(this).closest('.row');
-        handleIsostasyField(row);
-    });
-
+    // Load keywords when a search modal is loaded
     datasourcePlatformsModal.on('show.bs.modal', function () {
         resetDatasourcePlatformSearch();
         ensureThesaurusLoaded('satellitePlatforms');
