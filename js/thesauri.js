@@ -726,7 +726,6 @@ export function initTagifyForInput(inputElement, configKey) {
         state.jsTreeIds.push(config.jsTreeId);
     }
 
-    // Initialize Tagify if it hasn't been already
     if (!inputElement._tagify) {
         inputElement._tagify = new Tagify(inputElement, {
             whitelist: state.whitelist,
@@ -751,6 +750,15 @@ export function initTagifyForInput(inputElement, configKey) {
         }
     }
     state.tagifyInstances.add(inputElement._tagify);
+
+    if (!inputElement.dataset.tagifyValidationBound && inputElement._tagify) {
+        inputElement.dataset.tagifyValidationBound = 'true';
+        inputElement._tagify.on('add', function () {
+            inputElement.setCustomValidity('');
+            inputElement.classList.remove('is-invalid', 'is-valid');
+            inputElement.closest('.tagify')?.classList.remove('is-invalid', 'is-valid');
+        });
+    }
 
     if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
         window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {

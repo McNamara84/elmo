@@ -635,7 +635,27 @@ describe('submitHandler.js', () => {
     });
   });
 
-  // ── handleSubmit validation-failed modal integration test ──────────
+  test('syncTagifyInvalidState marks empty required Tagify fields invalid', () => {
+    const { syncTagifyInvalidState } = requireFresh('../../js/submitHandler.js');
+    document.body.innerHTML = `
+      <form id="test-form">
+        <div class="input-group has-validation">
+          <tags class="tagify">
+            <input name="satellite_platform[]" required />
+          </tags>
+          <div class="invalid-feedback">Provide the name of the Satellite here</div>
+        </div>
+      </form>
+    `;
+    const input = document.querySelector('input');
+    input._tagify = { value: [] };
+
+    syncTagifyInvalidState(document.getElementById('test-form'));
+
+    expect(input.classList.contains('is-invalid')).toBe(true);
+    expect(input.closest('.tagify').classList.contains('is-invalid')).toBe(true);
+    expect(input.validationMessage).toBe('Provide the name of the Satellite here');
+  });
 
   test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
     // Add a required field that is empty so :invalid selector finds it

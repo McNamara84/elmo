@@ -145,6 +145,40 @@ function resetFieldState(input, feedback) {
     feedback.textContent = "";
 }
 
+function getTagifyValidationMessage(input) {
+    const feedback = input.closest('.input-group')?.querySelector('.invalid-feedback');
+    const message = feedback?.textContent?.trim();
+    if (message) return message;
+    return translations?.general?.pleaseFillOut || 'Please fill out this field.';
+}
+
+function isTagifyInputEmpty(input) {
+    if (input._tagify) {
+        return !(input._tagify.value && input._tagify.value.length);
+    }
+    return !String(input.value ?? '').trim();
+}
+
+/** Sync Bootstrap invalid styling onto Tagify wrappers for constraint-validated inputs. */
+function syncTagifyInvalidState(form) {
+    if (!form) return;
+
+    form.querySelectorAll('.tagify input').forEach((input) => {
+        const tagify = input.closest('.tagify');
+        const requiredEmpty = input.required && isTagifyInputEmpty(input);
+        const invalid = input.matches(':invalid') || requiredEmpty;
+
+        if (requiredEmpty) {
+            input.setCustomValidity(getTagifyValidationMessage(input));
+        } else if (!input.matches(':invalid')) {
+            input.setCustomValidity('');
+        }
+
+        input.classList.toggle('is-invalid', invalid);
+        tagify?.classList.toggle('is-invalid', invalid);
+    });
+}
+
 // Event listeners for immediate validation
 const dateCreatedInput = document.getElementById('input-date-created');
 const dateEmbargoInput = document.getElementById('input-date-embargo');
@@ -358,8 +392,10 @@ class SubmitHandler {
             && typeof globalThis.validateAuthorAffiliationEditors === 'function'
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
+        syncTagifyInvalidState(this.$form[0]);
         if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
+            syncTagifyInvalidState(this.$form[0]);
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
                 $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -666,9 +702,10 @@ if (typeof module !== 'undefined' && module.exports) {
     validateTemporalCoverage,
         validateAllTemporalCoverageRows,
     validateContactPerson,
+    syncTagifyInvalidState,
     default: SubmitHandler
   };
 }
 
-export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson };
+export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson, syncTagifyInvalidState };
 export default SubmitHandler;
