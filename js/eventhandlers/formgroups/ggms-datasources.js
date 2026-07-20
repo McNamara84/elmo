@@ -81,34 +81,30 @@ $(document).ready(function () {
      * If 'Elevation/Terrain' is selected and the model type changes, it defaults the selection to 'Satellite'.
      */
     function updateTypeOptionsTopographicModels() {
-        // Iterate over each data source type dropdown
-        const dataSourceGroup = $('#group-datasources');
-        // make a change for each row in the data source group
-        dataSourceGroup.find('.row').each(function() {
+        datasourceGroup.children('.row').each(function () {
             updateTypeOptionsTopographicModelsRow(this);
         });
     }
+
     function updateTypeOptionsTopographicModelsRow(row) {
+        const $row = $(row);
         const modelType = $('#input-model-type').val();
         const isTopoModel = (modelType === 'Topographic');
-        const typeSelect = row.find('select[name="datasource_type[]"]');
+        const typeSelect = $row.find('select[name="datasource_type[]"]');
         const hasTopoOption = typeSelect.find('option[value="T"]').length > 0;
 
         if (isTopoModel && !hasTopoOption) {
-            // If the model is Topographic and the option doesn't exist, add it.
             typeSelect.append($('<option>', { value: 'T', text: 'Elevation/Terrain' }));
-        } else if (!isTopoModel && hasTopoOption) {
-            // If the model is NOT Topographic and the option exists, remove it.
-            // First, check if it's the currently selected option.
+            return;
+        }
+
+        if (!isTopoModel && hasTopoOption) {
             if (typeSelect.val() === 'T') {
-                // If it is, change the selection to a default value (e.g., 'S' for Satellite).
                 typeSelect.val('S');
-                // Trigger the change event to update the rest of the row's UI.
                 typeSelect.trigger('change');
             }
-            // Now, remove the option from the dropdown.
             typeSelect.find('option[value="T"]').remove();
-        } else return;
+        }
     }
 
     function handleIsostasyField(row) {
@@ -239,7 +235,7 @@ $(document).ready(function () {
                 }
             }
         }
-        updateTypeOptionsTopographicModels();
+        updateTypeOptionsTopographicModelsRow(row);
         handleIsostasyField(row);
         adjustLayoutForModel(row, selectedType === 'M');
 
@@ -432,7 +428,6 @@ $(document).ready(function () {
     // --- INITIALIZATION ---
 
     function initializeAllDatasourceRows() {
-        updateTypeOptionsTopographicModels();
         datasourceGroup.children('.row').each(function () {
             const row = $(this);
             updateRowState(row);
