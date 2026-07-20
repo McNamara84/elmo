@@ -370,6 +370,7 @@ describe('ggms-datasources.js', () => {
 
   test('changing type to T populates terrain options', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
     expect(options).toEqual(['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']);
@@ -377,6 +378,7 @@ describe('ggms-datasources.js', () => {
 
   test('shows compensation depth when detail is Isostasy', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
     detailsSelect.val('Isostasy').trigger('change');
@@ -387,6 +389,7 @@ describe('ggms-datasources.js', () => {
 
   test('layout adjusts when detail Isostasy is selected', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
     const compField = row.children('.visibility-datasources-compensation');

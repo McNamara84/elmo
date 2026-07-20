@@ -48,7 +48,7 @@ $(document).ready(function () {
         if (!rules) return;
 
         for (const requiredFieldId of rules.required) {
-            row.find(`[id^="${requiredFieldId}"]`).addClass('js-required-on-submit');
+            row.find(`[id^="${requiredFieldId}"]:enabled`).addClass('js-required-on-submit');
         }
     }
 
@@ -235,7 +235,6 @@ $(document).ready(function () {
                 }
             }
         }
-
         handleIsostasyField(row);
         adjustLayoutForModel(row, selectedType === 'M');
 
@@ -248,6 +247,19 @@ $(document).ready(function () {
 
         // Update required attributes based on type rules
         updateRequiredAttributes(row);
+        resetValidationDisplay(row);
+        restoreHelpButtons(row);
+    }
+
+    /**
+     * Clears stale validation styling so Bootstrap can show feedback again on submit.
+     *
+     * @param {jQuery} row
+     */
+    function resetValidationDisplay(row) {
+        row.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        row.find('.tagify.is-invalid, .tagify.is-valid').removeClass('is-invalid is-valid');
+        row.find('.invalid-feedback').removeAttr('style');
     }
 
     /**
@@ -259,7 +271,7 @@ $(document).ready(function () {
     function restoreHelpButtons(row) {
         const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
         
-        row.find('div.help-placeholder').each(function () {
+        row.find('.help-placeholder').each(function () {
             const placeholder = $(this);
             const helpSectionId = placeholder.data('help-section-id') || '';
 
@@ -304,9 +316,17 @@ $(document).ready(function () {
         }
     }
 
-    function removeAllValidationMessages(row){
-        row.find('.is-invalid').removeClass('is-invalid');
-        row.find('.invalid-feedback').hide();
+    /**
+     * One-time widget setup for a row (Tagify on platform input).
+     *
+     * @param {jQuery} row
+     */
+    function initializeRowWidgets(row) {
+        const platformInput = row.find('input[name="satellite_platform[]"]')[0];
+        if (!platformInput) return;
+
+        initTagifyForInput(platformInput, 'satellitePlatforms');
+        applyDatasourcePlatformPlaceholder(platformInput);
     }
 
     /**
@@ -346,8 +366,6 @@ $(document).ready(function () {
         const newRow = originalDataSourceRow.clone();
 
         newRow.find("input, textarea, select").val("").removeAttr("required");
-        newRow.find(".is-invalid, .is-valid").removeClass("is-invalid is-valid");
-        newRow.find(".invalid-feedback").hide();
 
         // Generate unique IDs for all elements and update their corresponding labels
         const rowCount = datasourceGroup.children('.row').length;
@@ -361,25 +379,15 @@ $(document).ready(function () {
             // Find any label associated with the old ID and update its 'for' attribute
             newRow.find(`label[for="${oldId}"]`).attr('for', newId);
         });
-        // Set the default value to Satellite for the new row.
         newRow.find('select[name="datasource_type[]"]').val('S');
 
-        resetDatasourcePlatformSearch(newRow);
-        removeAllValidationMessages(newRow);
+        resetDatasourcePlatformSearch();
         replaceHelpButtonInClonedRows(newRow);
         newRow.find(".addDataSource").replaceWith(createRemoveButton());
-        updateRowState(newRow); // Immediately set the correct visibility.
-        restoreHelpButtons(newRow);
-        const newTagifyElem = newRow.find('input[name="satellite_platform[]"]')[0];
-        if (newTagifyElem) {
-            initTagifyForInput(newTagifyElem, 'satellitePlatforms');
-            applyDatasourcePlatformPlaceholder(newTagifyElem);
-        }
+        updateRowState(newRow);
+        initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
-
-
-
     });
 
     // Remove a data source entry.
@@ -400,9 +408,7 @@ $(document).ready(function () {
 
     // Update row when type or details selection changes.
     datasourceGroup.on('change', 'select[name="datasource_type[]"], select[name="datasource_details[]"]', function () {
-        const row = $(this).closest('.row');
-        updateRowState(row);
-        restoreHelpButtons(row);
+        updateRowState($(this).closest('.row'));
     });
     // Load keywords when a search modal is loaded
     datasourcePlatformsModal.on('show.bs.modal', function () {
@@ -420,13 +426,14 @@ $(document).ready(function () {
 
     // --- INITIALIZATION ---
 
-    document.querySelectorAll('input[name="satellite_platform[]"]').forEach(function (input) {
-        initTagifyForInput(input, 'satellitePlatforms');
-        applyDatasourcePlatformPlaceholder(input);
-    });
-
-    // Set the correct visibility for the first row when the page loads.
-    if (datasourceGroup.children(".row").length > 0) {
-        updateRowState(datasourceGroup.children(".row").first());
+    function initializeAllDatasourceRows() {
+        updateTypeOptionsTopographicModels();
+        datasourceGroup.children('.row').each(function () {
+            const row = $(this);
+            updateRowState(row);
+            initializeRowWidgets(row);
+        });
     }
+
+    initializeAllDatasourceRows();
 });
