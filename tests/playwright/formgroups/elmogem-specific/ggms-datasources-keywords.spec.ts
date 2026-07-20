@@ -78,6 +78,6 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
     await expect(platformInput).toHaveAttribute('required', 'required');
     await expect(tagifyWrapper).toHaveClass(/is-invalid/);
     await expect(invalidFeedback).toBeVisible();
-    await expect(invalidFeedback).toContainText('Please provide satellite in this field.');
+    await expect(invalidFeedback).toContainText('Provide the name of the Satellite here');
   });
 });

@@ -71,7 +71,7 @@ describe('ggms-datasources.js', () => {
           <div class="col-md-3 visibility-datasources-satellite">
             <div class="input-group has-validation">
               <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
-              <div class="invalid-feedback" data-translate="dataSources.satellitePlatformInvalid">Please provide satellite in this field.</div>
+              <div class="invalid-feedback" data-translate="dataSources.satellitePlatformInvalid">Provide the name of the Satellite here</div>
             </div>
           </div>
           <div class="col-md-6 visibility-datasources-identifier"><input name="dName[]" /></div>
@@ -240,7 +240,7 @@ describe('ggms-datasources.js', () => {
     })($);
 
     global.Tagify = MockTagify;
-    global.translations = { keywords: { thesaurus: { label: 'initial' } }, dataSources: { satellitePlatformInvalid: 'Please provide satellite in this field.' } };
+    global.translations = { keywords: { thesaurus: { label: 'initial' } }, dataSources: { satellitePlatformInvalid: 'Provide the name of the Satellite here' } };
     window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
 
     const originalIs = $.fn.is;

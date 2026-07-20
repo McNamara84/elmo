@@ -273,8 +273,9 @@
         "identifierType": "Type d'identifiant",
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
         "modelName": "Nom du modèle",
+        "modelNameInvalid": "Indiquez ici le nom du modèle",
         "compensationDepth": "Profondeur de compensation (en mètres)",
-        "satellitePlatformInvalid": "Veuillez indiquer un satellite dans ce champ."
+        "satellitePlatformInvalid": "Indiquez ici le nom du satellite"
     },
     "technical": {
         "title": "Informations techniques",
