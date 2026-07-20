@@ -250,13 +250,17 @@ function validateSTCDependencies($entry)
 
     if ($hasLatMax || $hasLongMax) {
         return $hasLatMin && $hasLatMax && $hasLongMin && $hasLongMax;
+        error_log("[SAVE] STC validation failed: lat/long max requires all four coordinates. Entry: " . json_encode($entry));
+            return false;
     }
 
     if ($hasLatMin && !$hasLongMin) {
+        error_log("[SAVE] STC validation failed: latitudeMin without longitudeMin. Entry: " . json_encode($entry));
         return false;
     }
 
     if ($hasLongMin && !$hasLatMin) {
+        error_log("[SAVE] STC validation failed: longitudeMin without latitudeMin. Entry: " . json_encode($entry));
         return false;
     }
 
