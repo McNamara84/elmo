@@ -103,7 +103,7 @@ $(document).ready(function () {
                 }
                 // Now, remove the option from the dropdown.
                 typeSelect.find('option[value="T"]').remove();
-            }
+            } else return;
         });
     }
 
@@ -235,6 +235,7 @@ $(document).ready(function () {
                 }
             }
         }
+        updateTypeOptionsTopographicModels();
         handleIsostasyField(row);
         adjustLayoutForModel(row, selectedType === 'M');
 
