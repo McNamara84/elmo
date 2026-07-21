@@ -1,7 +1,6 @@
 import { test, expect } from '@playwright/test';
 import path from 'node:path';
-import { promises as fs, readFileSync } from 'node:fs';
-// import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, SELECTORS } from '../utils';
+import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT, simulateSubmitValidation, SELECTORS } from '../utils';
 
 const relationsFixture = {
@@ -64,6 +63,8 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/checkMandatoryFields.js"></script>
+    <script src="js/dropdownUtils.js"></script>
+    <script src="js/dropdownAjax.js"></script>
     <script src="js/select.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/relatedwork.js"></script>
   </body>
@@ -72,16 +73,6 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
 test.describe('Related work form group', () => {
   test.beforeEach(async ({ page }) => {
     await registerStaticAssetRoutes(page);
-    await page.route('**/js/select.js', async route => {
-      const filePath = path.join(REPO_ROOT, 'js/select.js');
-      let body = await fs.readFile(filePath, 'utf8');
-      body = body.replace(/\n\}\);\s*$/u, '\n  if (typeof window !== "undefined") {\n    window.__testUpdateValidationPattern = updateValidationPattern;\n  }\n});');
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/javascript; charset=utf-8',
-        body
-      });
-    });
     await page.route('**/api/v2/vocabs/relations', async route => {
       await route.fulfill({
         status: 200,

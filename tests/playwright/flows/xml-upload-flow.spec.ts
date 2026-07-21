@@ -603,6 +603,8 @@ test.describe('XML Upload Mapping Flow', () => {
 
     const appScripts = [
       'js/clear.js',
+      'js/dropdownUtils.js',
+      'js/dropdownAjax.js',
       'js/select.js',
       'js/originatingLaboratories.js',
       'js/affiliations.js',
