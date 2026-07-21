@@ -10,7 +10,7 @@ Dieses Dokument beschreibt die nach Issue #357 eingeführten Verantwortungsgrenz
 | `endpoints/` | schlanke browserseitig aufgerufene PHP-Aktionen für Feedback, Submit und Event-Logging | ja |
 | `scripts/` | Installation, XML-Massengenerierung und Entwicklungsprüfungen | nein |
 | `assets/icons/` | Favicons, Apple-Touch-Icon und PWA-Icons | ja |
-| `logos/` | Marken- und Identifier-Logos | ja |
+| `assets/logos/` | Marken- und Identifier-Logos | ja |
 | `includes/` | gemeinsam genutzte PHP-Hilfen ohne eigenen öffentlichen Endpunkt | indirekt |
 | `save/` | Speichern, Validieren und Persistieren von Formgruppen | indirekt |
 | `formgroups/` | serverseitig eingebundene HTML-Formulargruppen | ja |
@@ -18,6 +18,8 @@ Dieses Dokument beschreibt die nach Issue #357 eingeführten Verantwortungsgrenz
 | `doc/` | ausgelieferte Nutzerhilfe und Datenschutzseite | ja |
 | `docs/` | Entwickler-, Architektur- und Planungsdokumentation | nicht Teil des Produktionsartefakts |
 | `tests/` | PHPUnit-, Jest- und Playwright-Tests | nicht Teil des Produktionsartefakts |
+
+`assets/icons/` ist auf Browser- und App-Icons begrenzt: Favicons, Apple-Touch-Icon und PWA-Icons. `assets/logos/` enthält sichtbare Marken- und Identifier-Logos, beispielsweise GFZ, DOI, ORCID und ROR. Die alten `/logos/...`-URLs bleiben während der Kompatibilitätsphase intern erreichbar.
 
 ## Öffentliche Einstiege
 
@@ -47,7 +49,8 @@ Folgende alte URLs bleiben vorübergehend erreichbar:
 - `/send_feedback_mail.php` → `/endpoints/send_feedback_mail.php`,
 - `/send_xml_file.php` → `/endpoints/send_xml_file.php`,
 - `/log_page_event.php` → `/endpoints/log_page_event.php`,
-- ehemalige Root-URLs der Favicons/PWA-Icons → `/assets/icons/...`.
+- ehemalige Root-URLs der Favicons/PWA-Icons → `/assets/icons/...`,
+- ehemalige `/logos/...`-URLs → `/assets/logos/...`.
 
 Die Regeln sind sowohl in `.htaccess` als auch in `ci-router.php` abgebildet und durch Unit- sowie Browsertests abgesichert.
 

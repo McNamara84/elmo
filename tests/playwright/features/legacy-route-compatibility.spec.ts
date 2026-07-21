@@ -48,4 +48,15 @@ test.describe('Issue #357 legacy route compatibility', () => {
     expect(canonicalResponse.status()).toBe(200);
     expect(Buffer.compare(await legacyResponse.body(), await canonicalResponse.body())).toBe(0);
   });
+
+  test('legacy and canonical logo URLs return the same asset', async ({ request }) => {
+    const [legacyResponse, canonicalResponse] = await Promise.all([
+      request.get('logos/GFZ-logo.png'),
+      request.get('assets/logos/gfz-logo.png'),
+    ]);
+
+    expect(legacyResponse.status()).toBe(200);
+    expect(canonicalResponse.status()).toBe(200);
+    expect(Buffer.compare(await legacyResponse.body(), await canonicalResponse.body())).toBe(0);
+  });
 });

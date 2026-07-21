@@ -31,6 +31,9 @@ final class HttpRoutingTest extends TestCase
             'logging endpoint' => ['/log_page_event.php', '/endpoints/log_page_event.php'],
             'favicon' => ['/favicon.ico', '/assets/icons/favicon.ico'],
             'PWA icon' => ['/web-app-manifest-512x512.png', '/assets/icons/web-app-manifest-512x512.png'],
+            'GFZ logo' => ['/logos/GFZ-logo.png', '/assets/logos/gfz-logo.png'],
+            'Data Services logo' => ['/logos/GFZ_Data_Services_logo.png', '/assets/logos/gfz-data-services-logo.png'],
+            'ORCID logo' => ['/logos/orcid.logo.png', '/assets/logos/orcid-logo.png'],
         ];
     }
 

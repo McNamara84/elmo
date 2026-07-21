@@ -33,6 +33,7 @@ final class FileNameConventionTest extends TestCase
             'camel-case Jest test' => ['tests/js/submitHandler.test.js'],
             'kebab-case HTML' => ['example-form.html'],
             'kebab-case icon' => ['assets/icons/apple-touch-icon.png'],
+            'kebab-case logo' => ['assets/logos/gfz-data-services-logo.png'],
             'Playwright spec' => ['tests/playwright/feedback-security.spec.ts'],
             'legacy CI router exception' => ['ci-router.php'],
             'tool configuration' => ['composer.json'],
