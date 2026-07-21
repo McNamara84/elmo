@@ -16,14 +16,16 @@ Diese Konvention gilt verbindlich für neue, verschobene, umbenannte und in eine
 
 Ein einzelnes kleingeschriebenes Wort wie `index.php`, `logging.js` oder `favicon.svg` erfüllt die jeweilige Konvention ebenfalls.
 
-## Ausnahmen
+## Ausnahmen und fremdbestimmte Namen
 
-- Von Werkzeugen vorgegebene Namen, beispielsweise `composer.json`, `package-lock.json`, `.htaccess`, `Dockerfile.web` oder GitHub-Workflow-Dateien.
+- Von Werkzeugen, Paketmanagern, Servern oder Plattformen vorgegebene Namen, beispielsweise `composer.json`, `package-lock.json`, `.htaccess`, `Dockerfile.web` oder GitHub-Workflow-Dateien. Diese Dateien sind keine frei benannten Browser-Assets, auch wenn sie statisch im Repository liegen oder vom Webserver gelesen werden.
 - Drittanbieter-, generierte, Coverage-, Cache- und Laufzeitdateien.
 - `ci-router.php` bleibt während Issue #357 als bestehender Infrastruktur-Dateiname erhalten. Eine Umbenennung würde Aufrufkommandos und CI-Konfiguration ohne strukturellen Mehrwert verändern.
 - Bestehende, im jeweiligen Pull Request nicht bearbeitete Altdateien.
 
 Generische Sammelnamen wie `helper_functions.php` sollen vermieden werden. Neue Hilfslogik wird nach ihrem fachlichen Zweck benannt und im zuständigen Modul abgelegt.
+
+Wiederverwendbare CLI- und Entwicklungshelfer für wiederkehrende Aufgaben liegen in `scripts/`. Browserseitig aufgerufene PHP-Aktionen gehören nach `endpoints/`; gemeinsam genutzte PHP-Hilfen ohne eigenen HTTP-Einstieg gehören in `includes/` oder das fachlich passende Modul.
 
 ## Automatisierte Prüfung
 
