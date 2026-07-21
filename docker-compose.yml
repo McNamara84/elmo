@@ -13,10 +13,11 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 3
     security_opt:
       - no-new-privileges:true
 
@@ -49,7 +50,8 @@ services:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       # Mount the entire project directory for live code changes.
