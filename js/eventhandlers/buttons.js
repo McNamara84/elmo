@@ -137,12 +137,17 @@ $(document).ready(function () {
   if (form) {
     const $form = $(form);
 
+    // Only real form controls — Tagify copies js-required-on-submit onto <tags>, which must not get required.
+    const submitOnlyFieldSelector = 'input.js-required-on-submit, select.js-required-on-submit, textarea.js-required-on-submit';
+
     // Reset submit-only required fields
     function resetSubmitOnlyFields() {
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
-        const tagifyEl = el.closest('.tagify') || el.parentElement?.querySelector('.tagify');
+        const tagifyEl = el._tagify?.DOM?.scope
+          || el.closest('.tagify')
+          || el.parentElement?.querySelector('.tagify');
         if (tagifyEl) {
           tagifyEl.classList.remove('is-invalid');
         }
@@ -151,7 +156,7 @@ $(document).ready(function () {
 
     /** Applies required only to enabled js-required-on-submit fields (skips hidden/disabled rows). */
     function applySubmitRequiredFields() {
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         if (el.disabled) {
           el.removeAttribute('required');
           return;

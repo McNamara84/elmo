@@ -756,7 +756,11 @@ export function initTagifyForInput(inputElement, configKey) {
         inputElement._tagify.on('add', function () {
             inputElement.setCustomValidity('');
             inputElement.classList.remove('is-invalid', 'is-valid');
-            inputElement.closest('.tagify')?.classList.remove('is-invalid', 'is-valid');
+            // Tagify keeps the original input as a sibling of <tags class="tagify">.
+            const tagifyWrapper = inputElement._tagify?.DOM?.scope
+                || inputElement.closest('.tagify')
+                || inputElement.parentElement?.querySelector('.tagify');
+            tagifyWrapper?.classList.remove('is-invalid', 'is-valid');
         });
     }
 

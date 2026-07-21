@@ -159,21 +159,39 @@ function isTagifyInputEmpty(input) {
     return !String(input.value ?? '').trim();
 }
 
+/**
+ * Resolves the visible Tagify wrapper for an original input.
+ * Tagify keeps the original <input> as a sibling of <tags class="tagify">.
+ */
+function getTagifyWrapper(input) {
+    if (!input) return null;
+    if (input._tagify?.DOM?.scope) {
+        return input._tagify.DOM.scope;
+    }
+    return input.closest('.tagify') || input.parentElement?.querySelector('.tagify') || null;
+}
+
 /** Sync Bootstrap invalid styling onto Tagify wrappers for constraint-validated inputs. */
 function syncTagifyInvalidState(form) {
     if (!form) return;
 
-    form.querySelectorAll('.tagify input').forEach((input) => {
-        const tagify = input.closest('.tagify');
-        const requiredEmpty = input.required && isTagifyInputEmpty(input);
-        const invalid = input.matches(':invalid') || requiredEmpty;
+    // Walk original inputs that own a Tagify instance (not nested `.tagify input`,
+    // which misses the sibling DOM structure Tagify actually creates).
+    form.querySelectorAll('input').forEach((input) => {
+        if (!input._tagify) return;
 
+        const tagify = getTagifyWrapper(input);
+        const requiredEmpty = input.required && isTagifyInputEmpty(input);
+
+        // Set emptiness validity first so :invalid reflects the Tagify tag list,
+        // not a stale customValidity from a previous submit attempt.
         if (requiredEmpty) {
             input.setCustomValidity(getTagifyValidationMessage(input));
-        } else if (!input.matches(':invalid')) {
+        } else {
             input.setCustomValidity('');
         }
 
+        const invalid = input.matches(':invalid');
         input.classList.toggle('is-invalid', invalid);
         tagify?.classList.toggle('is-invalid', invalid);
     });
