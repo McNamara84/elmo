@@ -87,7 +87,12 @@ Following conditions are required for installation:
 	Please mind that: 
 	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
 	- Use `docker compose down -v` to reset the disposable local database when updating credentials.
-  - The entrypoint invokes `php scripts/install.php` with the `INSTALL_ACTION` value. Supported values are `basic` (default) and `complete` (including exemplar test data). Both modes recreate the configured schema, so use them only with the intended database.
+  - The entrypoint invokes `php scripts/install.php` with the `INSTALL_ACTION` value when the `web` container starts. Supported values are `basic` (default) and `complete` (including exemplar test data). Both modes recreate the configured schema, so use them only with the intended database.
+  - If you change the database schema in `scripts/install.php` while reusing an existing local database, run the installer inside the running container:
+    ```bash
+    docker compose exec web php scripts/install.php basic
+    ```
+    For a disposable local reset, run `docker compose down -v` and then `docker compose up -d --build`; the entrypoint will run the installer again.
 
 6. Docker Environment Setup 🐳
 
@@ -138,15 +143,15 @@ This section outlines the automatic processes handled by the Docker environment 
 * **Full Reset for Dockerfile/Entrypoint Changes:**
     To apply changes made to `Dockerfile` or `docker-entrypoint.sh`, a full reset of the Docker containers is required:
     ```bash
-    docker-compose down -v
-    docker-compose build --no-cache
+    docker compose down -v
+    docker compose build --no-cache
     ```
 * **Applying Other Changes:**
     For changes to project files (which are copied, not mounted as volumes), you need to rebuild the service:
     ```bash
-    docker-compose up --build
+    docker compose up --build
     ```
-    This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+    This rebuilds the `web` service (and any other services specified in `docker-compose.yml` that depend on the build context), ensuring your updated project files are included in the new container image.
 
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/elmo/issues)!
@@ -273,7 +278,7 @@ npm install
 
 ### Resource Information
 
-- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="logos/doi.logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="assets/logos/doi-logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
@@ -404,7 +409,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
-- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
@@ -414,7 +419,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
  
   This field contains the author's affiliation.
   - Data type: String
@@ -449,7 +454,7 @@ Occurrence is: 0-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#creatorname)
   - Example values: `California Digital Library`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
-- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the author's affiliation.
   - Data type: String
@@ -548,7 +553,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
-- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
   - Data type: String
@@ -588,7 +593,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributor(s).
   - Data type: String
@@ -622,7 +627,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributing institution.
   - Data type: String
