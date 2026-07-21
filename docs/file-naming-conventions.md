@@ -1,59 +1,59 @@
-# Dateinamen-Konventionen
+# File naming conventions
 
-Diese Konvention gilt verbindlich für neue, verschobene, umbenannte und in einem Pull Request fachlich bearbeitete Dateien. Bestehende unberührte Dateien werden schrittweise migriert und müssen nicht gesammelt umbenannt werden.
+This convention is mandatory for new, moved, renamed, and meaningfully changed files in a pull request. Existing untouched files are migrated step by step and do not have to be renamed all at once.
 
-## Regeln
+## Rules
 
-| Dateityp | Konvention | Beispiel |
+| File type | Convention | Example |
 | --- | --- | --- |
-| PHP-Klasse, Interface, Trait, Enum oder Testklasse | `PascalCase.php` und identisch zum primären Symbol | `DatasetController.php`, `FileNameConventionTest.php` |
-| Prozedurales PHP, Endpoint, Include oder CLI-Skript | `snake_case.php` | `send_feedback_mail.php`, `check_file_names.php` |
-| JavaScript-Modul | `camelCase.js` | `submitHandler.js` |
-| Jest-Test | punktgetrennte `camelCase`-Segmente mit `.test.js` | `logging.test.js`, `logging.module.test.js` |
-| HTML und statische Browser-Assets | `kebab-case` | `apple-touch-icon.png` |
-| Playwright-/TypeScript-Spezifikation | `kebab-case.spec.ts` | `feedback-security.spec.ts` |
-| Verzeichnis | kleingeschrieben, bei neuen zusammengesetzten Namen `kebab-case` | `assets/icons`, `form-groups` |
+| PHP class, interface, trait, enum, or test class | `PascalCase.php` and identical to the primary symbol | `DatasetController.php`, `FileNameConventionTest.php` |
+| Procedural PHP, endpoint, include, or CLI script | `snake_case.php` | `send_feedback_mail.php`, `check_file_names.php` |
+| JavaScript module | `camelCase.js` | `submitHandler.js` |
+| Jest test | dot-separated `camelCase` segments with `.test.js` | `logging.test.js`, `logging.module.test.js` |
+| HTML and static browser assets | `kebab-case` | `apple-touch-icon.png` |
+| Playwright or TypeScript spec | `kebab-case.spec.ts` | `feedback-security.spec.ts` |
+| Directory | lowercase, and `kebab-case` for new compound names | `assets/icons`, `form-groups` |
 
-Ein einzelnes kleingeschriebenes Wort wie `index.php`, `logging.js` oder `favicon.svg` erfüllt die jeweilige Konvention ebenfalls.
+A single lowercase word such as `index.php`, `logging.js`, or `favicon.svg` also follows the matching convention.
 
-## Ausnahmen und fremdbestimmte Namen
+## Exceptions and externally defined names
 
-- Von Werkzeugen, Paketmanagern, Servern oder Plattformen vorgegebene Namen, beispielsweise `composer.json`, `package-lock.json`, `.htaccess`, `Dockerfile.web` oder GitHub-Workflow-Dateien. Diese Dateien sind keine frei benannten Browser-Assets, auch wenn sie statisch im Repository liegen oder vom Webserver gelesen werden.
-- Drittanbieter-, generierte, Coverage-, Cache- und Laufzeitdateien.
-- `ci-router.php` bleibt während Issue #357 als bestehender Infrastruktur-Dateiname erhalten. Eine Umbenennung würde Aufrufkommandos und CI-Konfiguration ohne strukturellen Mehrwert verändern.
-- Bestehende, im jeweiligen Pull Request nicht bearbeitete Altdateien.
+- Names required by tools, package managers, servers, or platforms, for example `composer.json`, `package-lock.json`, `.htaccess`, `Dockerfile.web`, or GitHub workflow files. These files are not freely named browser assets, even if they are static files in the repository or are read by the web server.
+- Third-party, generated, coverage, cache, and runtime files.
+- `ci-router.php` keeps its existing infrastructure file name during issue #357. Renaming it would change commands and CI configuration without adding structural value.
+- Existing legacy files that are not changed in the current pull request.
 
-Generische Sammelnamen wie `helper_functions.php` sollen vermieden werden. Neue Hilfslogik wird nach ihrem fachlichen Zweck benannt und im zuständigen Modul abgelegt.
+Avoid generic collection names such as `helper_functions.php`. New helper logic should be named after its business purpose and placed in the responsible module.
 
-Wiederverwendbare CLI- und Entwicklungshelfer für wiederkehrende Aufgaben liegen in `scripts/`. Browserseitig aufgerufene PHP-Aktionen gehören nach `endpoints/`; gemeinsam genutzte PHP-Hilfen ohne eigenen HTTP-Einstieg gehören in `includes/` oder das fachlich passende Modul.
+Reusable CLI and development helpers for recurring tasks belong in `scripts/`. Browser-called PHP actions belong in `endpoints/`. Shared PHP helpers without their own HTTP entry point belong in `includes/` or in the matching business module.
 
-## Automatisierte Prüfung
+## Automated check
 
-Geänderte Dateien im aktuellen Working Tree prüfen:
+Check changed files in the current working tree:
 
 ```text
 composer check:file-names
 ```
 
-Änderungen gegenüber einem Basis-Commit prüfen:
+Check changes against a base commit:
 
 ```text
 composer check:file-names -- --base=<commit>
 ```
 
-Alle versionierten Dateien prüfen, beispielsweise zur Ermittlung technischer Schulden:
+Check all versioned files, for example to find technical debt:
 
 ```text
 composer check:file-names -- --all
 ```
 
-Der `--all`-Modus kann wegen bewusst noch nicht migrierter Altdateien fehlschlagen und ist vorerst kein verpflichtendes CI-Gate.
+The `--all` mode may fail because some old files have not been migrated on purpose. For now, it is not a required CI gate.
 
-## Groß-/Kleinschreibung unter Windows
+## Uppercase and lowercase changes on Windows
 
-Eine reine Änderung der Groß-/Kleinschreibung muss zweistufig erfolgen, damit Git sie sowohl unter Windows als auch in Linux-Containern erkennt:
+A case-only rename must be done in two steps, so Git detects it on both Windows and Linux containers:
 
 ```text
-git mv altername.php temp-name.php
-git mv temp-name.php AlterName.php
+git mv oldname.php temp-name.php
+git mv temp-name.php NewName.php
 ```
