@@ -173,7 +173,9 @@ function populateResourceTypeDropdownWithData(types) {
   if (Array.isArray(types)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = dropdownUtils.filterDataByGEM(types, 'resourceType', isGEM);
+    const filteredData = typeof dropdownUtils.filterDataByGEM === 'function'
+      ? dropdownUtils.filterDataByGEM(types, 'resourceType', isGEM)
+      : types;
     
     filteredData.forEach(type => {
       $select.append(
@@ -205,7 +207,9 @@ function populateLanguageDropdownWithData(languages) {
   if (Array.isArray(languages)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = dropdownUtils.filterDataByGEM(languages, 'language', isGEM);
+    const filteredData = typeof dropdownUtils.filterDataByGEM === 'function'
+      ? dropdownUtils.filterDataByGEM(languages, 'language', isGEM)
+      : languages;
     
     filteredData.forEach(lang => {
       $select.append(
@@ -355,7 +359,9 @@ function populateIdentifierTypesDropdownWithData(response) {
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
 // Update dropdown placeholders when translations are loaded or changed
-document.addEventListener('translationsLoaded', dropdownUtils.updateDropdownPlaceholders);
+if (typeof dropdownUtils.updateDropdownPlaceholders === 'function') {
+  document.addEventListener('translationsLoaded', dropdownUtils.updateDropdownPlaceholders);
+}
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
