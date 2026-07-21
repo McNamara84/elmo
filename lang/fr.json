@@ -362,8 +362,8 @@
             "selectFile": "ou cliquez pour sélectionner un fichier",
             "pasteHeaderLabel": "Ou collez le texte d'en-tête :",
             "pasteHeaderPlaceholder": "Collez les lignes d'en-tête GFC ici…",
-            "fillMetadata": "Remplir les métadonnées",
-            "errorNoInput": "Veuillez télécharger un fichier GFC ou coller le texte d'en-tête.",
+            "fillMetadata": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "errorNoInput": "Veuillez télécharger un fichier .gfc ou coller le texte d'en-tête dans le champ libre.",
             "errorProcessing": "Erreur lors du traitement du fichier GFC",
             "invalidExtension": "Le fichier téléchargé doit avoir l'extension .gfc . Modifiez l'extension du fichier ou copiez-collez le texte dans le champ libre."
         },

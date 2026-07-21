@@ -365,8 +365,8 @@
             "selectFile": "oder klicken, um eine Datei auszuwählen",
             "pasteHeaderLabel": "Oder Kopfzeilentext einfügen:",
             "pasteHeaderPlaceholder": "GFC-Kopfzeilen hier einfügen…",
-            "fillMetadata": "Metadaten ausfüllen",
-            "errorNoInput": "Bitte laden Sie eine GFC-Datei hoch oder fügen Sie Kopfzeilentext ein.",
+            "fillMetadata": "Metadatenfelder aus Modelldatei ausfüllen",
+            "errorNoInput": "Bitte laden Sie eine .gfc-Datei hoch oder fügen Sie den Kopfzeilentext in das Freitextfeld ein.",
             "errorProcessing": "Fehler beim Verarbeiten der GFC-Datei",
             "invalidExtension": "Die hochgeladene Datei muss die Endung .gfc haben. Ändern Sie die Dateiendung oder fügen Sie den Text in das Freitextfeld ein."
         },

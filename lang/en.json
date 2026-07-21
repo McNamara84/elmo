@@ -364,8 +364,8 @@
             "selectFile": "Or click to select a file",
             "pasteHeaderLabel": "Or paste header text:",
             "pasteHeaderPlaceholder": "Paste GFC header lines here…",
-            "fillMetadata": "Fill in metadata",
-            "errorNoInput": "Please upload a GFC file or paste header text.",
+            "fillMetadata": "Fill in metadata fields from model file",
+            "errorNoInput": "Please upload a .gfc file or paste the header text into the free text field.",
             "errorProcessing": "Error processing GFC file",
             "invalidExtension": "The uploaded file should have a .gfc extension. Change the file extension or copy-paste the text in the free text fields."
         },
