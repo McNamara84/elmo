@@ -133,6 +133,7 @@ function updateReferenceSystemVisibility() {
 
 // FUNCTIONALITY FOR AUTO POPULATING this form group from a file or text
 
+/** @param {File} file @returns {Promise<Object>} Parsed GFC header key/value map */
 async function getHeaderFromFile(file) {
     try {
         const parsedData = await parseGfcFiles(file);
@@ -143,6 +144,7 @@ async function getHeaderFromFile(file) {
     }
 }
 
+/** @param {string} text @returns {Promise<Object>} Parsed GFC header key/value map */
 async function getHeaderFromText(text) {
     try {
         const lines = text.split(/\r?\n/);
@@ -154,6 +156,12 @@ async function getHeaderFromText(text) {
     }
 }
 
+/**
+ * Merges headers from file and pasted text. Text keys overwrite file keys.
+ * @param {File|null|undefined} file
+ * @param {string} text
+ * @returns {Promise<Object>}
+ */
 async function mergeGfcHeaders(file, text) {
     let header = {};
     if (file) {
@@ -223,7 +231,7 @@ function initGfcUploadHandlers() {
             showGfcUploadStatusMessage(
                 translateWithFallback(
                     'modals.gfcUpload.errorNoInput',
-                    'Please upload a GFC file or paste header text.'
+                    'Please upload a .gfc file or paste the header text into the free text field.'
                 )
             );
             return;
@@ -296,34 +304,26 @@ function initGfcUploadHandlers() {
 }
 
 /**
- * 
- * @param {*} file 
- * according to the format description, product_type 1 "gravity_field"
-modelname 1 name of the model (usually the respective filename without the extension
-“.gfc”)
-earth_gravity_constant 1 gravitational constant times mass of the earth [m3s-2]
-radius 1 reference radius of the spherical harmonic development [m]
-max_degree 1 maximum degree of the spherical harmonic development
-errors 1 either "no", "calibrated", “formal” or both "calibrated_and_formal" errors
-are included
-end_of_head 0 The position of this keyword defines the end of the header
-Case dependent keywords number of
-parameters meaning of parameters
-format 1
-“icgem1.0” or “icgem2.0”
-This parameter with the value “icgem2.0” is mandatory in case the time
-variable coefficients gfct and the associated parameters trnd, asin
-respective acos are given piecewise for dedicated periods. Otherwise, this
-parameter is optional and may be given with the value “icgem1.0”
-optional keywords number of
-parameters meaning of parameters
-begin_of_head 0 The position of this keyword indicates the begin of the header section.
-All preceding lines are comments.
-tide_system 1 either "zero_tide", "tide_free", “mean_tide” or "unknown" (default)
-norm 1 either "fully_normalized" (=default) or "unnormalized"
+ * Fills GGMs Properties inputs from a parsed GFC header map.
+ *
+ * Header keyword             → Form field
+ * --------------------------   --------------------------------
+ * tide_system                → #input-tide-system
+ *                              (zero_tide|tide_free|mean_tide,
+ *                               hyphens or underscores)
+ * max_degree | degree        → #input-degree
+ * errors                     → #input-errors
+ *                              (n/a ignored;
+ *                               calibrated_and_formal → calibrated)
+ * radius                     → #input-radius
+ * earth_gravity_constant     → #input-earth-gravity-constant
+ *
+ * Not mapped here: product_type, modelname, format, norm,
+ * begin_of_head / end_of_head (section markers only).
+ *
+ * @param {Object} dict Parsed GFC header key/value map
  */
 async function populateParsedFields(dict) {
-    // populate the form fields based on the file header
     if (dict.tide_system) {
         const tideMap = { zero_tide: 'Zero-tide', tide_free: 'Tide-free', mean_tide: 'Mean-tide' };
         const tideKey = dict.tide_system.trim().toLowerCase().replace(/-/g, '_');

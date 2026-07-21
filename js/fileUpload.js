@@ -22,6 +22,14 @@ class Parser {
     }
 
 
+    /**
+     * Reads a file as text, optionally capping size.
+     * @param {File|Blob} file
+     * @param {number} [maxSizeInMB=1]
+     * @param {boolean} [strict=true] If true, reject when over limit;
+     *   if false, read only the first maxSizeInMB bytes.
+     * @returns {Promise<string>}
+     */
     readFile(file, maxSizeInMB = 1, strict = true) {
         return new Promise((resolve, reject) => {
             const reader = new FileReader();
@@ -31,22 +39,18 @@ class Parser {
             
             let blobToRead = file;
 
-            // If a size limit is provided, handle the strict/non-strict logic
             if (maxSizeInMB) {
                 const maxBytes = maxSizeInMB * 1024 * 1024;
                 
                 if (file.size > maxBytes) {
                     if (strict) {
-                        // Use reject() inside a Promise instead of throw
                         return reject(new Error(`File size exceeds the limit of ${maxSizeInMB} MB.`));
-                    } else {
-                        // The magic happens here: gently ignore the rest of the file
-                        blobToRead = file.slice(0, maxBytes);
                     }
+                    // Non-strict: keep only the leading bytes (enough for GFC headers)
+                    blobToRead = file.slice(0, maxBytes);
                 }
             }
             
-            // readAsText works perfectly on sliced Blobs
             reader.readAsText(blobToRead);
         });
     }
@@ -95,16 +99,16 @@ class GFCParser extends Parser {
     }
 
     /**
-     * Main method to read and parse the GFC file.
-     * Assumes `this.readFile(file)` returns a Promise (as updated previously).
-     * 
-     * @param {File} file - The file object from an HTML input
+     * Reads and parses a .gfc file. Oversized files are truncated at 1 MB
+     * (strict=false) so the header can still be extracted.
+     * @param {File} file
+     * @returns {Promise<{header: Object, commentSection: string}>}
      */
     async parseGfcFiles(file) {
         try {
             this.validateGfcFileExtension(file);
 
-            // 1. Read the file contents as text
+            // 1. Read the file contents as text (truncate after 1 MB)
             const text = await this.readFile(file, 1, false);
             // 2. Split the text into an array of lines (handling both \r\n and \n)
             const lines = text.split(/\r?\n/);
