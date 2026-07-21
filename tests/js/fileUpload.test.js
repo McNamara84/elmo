@@ -4,6 +4,7 @@ import {
     parseGfcFiles,
     extractSections,
     parseRecords,
+    Parser,
 } from '../../js/fileUpload.js';
 
 describe('fileUpload.js GFC extension validation', () => {
@@ -20,6 +21,51 @@ describe('fileUpload.js GFC extension validation', () => {
     test('parseGfcFiles rejects non-.gfc files before reading', async () => {
         const file = { name: 'model.csv', size: 0 };
         await expect(parseGfcFiles(file)).rejects.toThrow(GFC_EXTENSION_ERROR);
+    });
+});
+
+describe('fileUpload.js readFile size limit', () => {
+    const ONE_MB = 1024 * 1024;
+
+    test('strict=true rejects files larger than maxSizeInMB', async () => {
+        const parser = new Parser();
+        const content = 'a'.repeat(ONE_MB + 10);
+        const file = new File([content], 'big.gfc', { type: 'text/plain' });
+
+        await expect(parser.readFile(file, 1, true)).rejects.toThrow(
+            'File size exceeds the limit of 1 MB.'
+        );
+    });
+
+    test('strict=false reads only the first maxSizeInMB bytes', async () => {
+        const parser = new Parser();
+        const content = `${'a'.repeat(ONE_MB)}SHOULD_NOT_APPEAR`;
+        const file = new File([content], 'big.gfc', { type: 'text/plain' });
+
+        const text = await parser.readFile(file, 1, false);
+
+        expect(text.length).toBe(ONE_MB);
+        expect(text).not.toContain('SHOULD_NOT_APPEAR');
+    });
+
+    test('parseGfcFiles truncates oversized .gfc files and still parses the header', async () => {
+        const header = [
+            'begin_of_head',
+            'modelname BigModel',
+            'max_degree 42',
+            'errors no',
+            'radius 6.3E+06',
+            'earth_gravity_constant 3.9E+14',
+            'end_of_head',
+        ].join('\n');
+        const padding = 'x'.repeat(ONE_MB);
+        const file = new File([`${header}\n${padding}`], 'big.gfc', { type: 'text/plain' });
+
+        const { header: parsed } = await parseGfcFiles(file);
+
+        expect(parsed.modelname.trim()).toBe('BigModel');
+        expect(parsed.max_degree.trim()).toBe('42');
+        expect(parsed.errors.trim()).toBe('no');
     });
 });
 
