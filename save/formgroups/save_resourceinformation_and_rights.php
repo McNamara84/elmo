@@ -299,7 +299,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
         }
         // Convert title_type string to integer if present
         $title_type = intval($title_type_str);
-        
+
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
             $defaultId = getDefaultTitleTypeId($connection, count($uniqueTitles));
@@ -308,27 +308,7 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
                 return false;
             }
             $title_type = $defaultId;
-        } else {
-            // get the title from the database to ensure it is valid
-            $stmt = $connection->prepare("SELECT name FROM Title_Type WHERE title_type_id = ?");
-            $stmt->bind_param("i", $title_type);
-            $stmt->execute();
-            $result = $stmt->get_result(); 
-
-            if ($result->num_rows === 0) {
-                error_log("Invalid title type ID provided: $title_type. Skipping this title.");
-                continue;
-            }
-            $row = $result->fetch_assoc();
-            $name_from_db = str_replace(" ", "", $row['name']);
-            error_log("Resolved title type ID $title_type to name '$name_from_db'");
-            $title_name = $name_from_db;
-        }
-
-
-
-        // (only for submit action): Validate the title type exists in the database
-        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type)) {
+        } elseif ($action === 'submit' && !isTitleTypeValid($connection, $title_type)) {
             error_log("Invalid title type ID provided: $title_type. Skipping this title.");
             continue;
         }
