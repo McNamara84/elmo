@@ -46,7 +46,6 @@ describe('Spatial and temporal coverage submit requirements', () => {
     global.$ = global.jQuery = $;
     window.$ = $;
     window.jQuery = $;
-    global.requestAnimationFrame = (callback) => callback();
     loadCheckMandatoryFields();
   });
 
@@ -56,11 +55,9 @@ describe('Spatial and temporal coverage submit requirements', () => {
     delete global.jQuery;
     delete window.$;
     delete window.jQuery;
-    delete window.ELMO_FEATURES;
-    delete global.requestAnimationFrame;
   });
 
-  test('spatial-only row requires temporal coverage outside ELMO-GEM', () => {
+  test('Do not set any further STC fields to required if only the min coordinates have been entered.', () => {
     $('#input-stc-latmin_1').val('-90');
     $('#input-stc-longmin_1').val('-180');
     $('#input-stc-description').val('Global spatial coverage');
@@ -68,101 +65,22 @@ describe('Spatial and temporal coverage submit requirements', () => {
     window.validateSpatialTemporalCoverageRequirements();
     simulateSubmitValidation();
 
-    expect($('#input-stc-latmin_1').prop('required')).toBe(true);
-    expect($('#input-stc-longmin_1').prop('required')).toBe(true);
-    expect($('#input-stc-description').prop('required')).toBe(true);
-    expect($('#input-stc-datestart').prop('required')).toBe(true);
-    expect($('#input-stc-dateend').prop('required')).toBe(true);
-  });
-
-  test('ELMO-GEM spatial-only row keeps description required but does not require temporal coverage', () => {
-    window.ELMO_FEATURES = { showGGMsProperties: true };
-
-    $('#input-stc-latmin_1').val('-90');
-    $('#input-stc-longmin_1').val('-180');
-    $('#input-stc-description').val('Global spatial coverage');
-
-    window.validateSpatialTemporalCoverageRequirements();
-    simulateSubmitValidation();
-
-    expect($('#input-stc-latmin_1').prop('required')).toBe(true);
-    expect($('#input-stc-longmin_1').prop('required')).toBe(true);
-    expect($('#input-stc-description').prop('required')).toBe(true);
+    expect($('#input-stc-description').prop('required')).toBe(false);
     expect($('#input-stc-datestart').prop('required')).toBe(false);
     expect($('#input-stc-dateend').prop('required')).toBe(false);
+    expect($('#input-stc-latmax_1').prop('required')).toBe(false);
+    expect($('#input-stc-longmax_1').prop('required')).toBe(false);
   });
 
-  test('ELMO-GEM spatial-only row still requires description', () => {
-    window.ELMO_FEATURES = { showGGMsProperties: true };
-
-    $('#input-stc-latmin_1').val('-90');
-    $('#input-stc-longmin_1').val('-180');
+  test('sets all coordinate fields to required if a max coordinate is filled in', () => {
+    $('#input-stc-longmax_1').val('-90');
 
     window.validateSpatialTemporalCoverageRequirements();
     simulateSubmitValidation();
 
     expect($('#input-stc-latmin_1').prop('required')).toBe(true);
     expect($('#input-stc-longmin_1').prop('required')).toBe(true);
-    expect($('#input-stc-description').prop('required')).toBe(true);
-    expect($('#input-stc-datestart').prop('required')).toBe(false);
-    expect($('#input-stc-dateend').prop('required')).toBe(false);
-  });
-
-  test('ELMO-GEM still requires dates, both times, and timezone when a time is entered', () => {
-    window.ELMO_FEATURES = { showGGMsProperties: true };
-
-    $('#input-stc-latmin_1').val('-90');
-    $('#input-stc-longmin_1').val('-180');
-    $('#input-stc-description').val('Global spatial coverage');
-    $('#input-stc-timestart').val('08:00');
-
-    window.validateSpatialTemporalCoverageRequirements();
-    simulateSubmitValidation();
-
-    expect($('#input-stc-datestart').prop('required')).toBe(true);
-    expect($('#input-stc-dateend').prop('required')).toBe(true);
-    expect($('#input-stc-timestart').prop('required')).toBe(true);
-    expect($('#input-stc-timeend').prop('required')).toBe(true);
-    expect($('#input-stc-timezone').prop('required')).toBe(true);
-  });
-
-  test('visually marks dynamically required STC fields before submit', () => {
-    $('#input-stc-longmax_1').val('14');
-
-    window.validateSpatialTemporalCoverageRequirements();
-
-    expect($('#input-stc-latmin_1').attr('aria-required')).toBe('true');
-    expect($('#input-stc-latmin_1').hasClass('border-danger')).toBe(true);
-    expect($('label[for="input-stc-latmin_1"] .stc-required-marker').text()).toBe('*');
-
-    expect($('#input-stc-longmin_1').attr('aria-required')).toBe('true');
-    expect($('#input-stc-longmin_1').hasClass('border-danger')).toBe(true);
-    expect($('label[for="input-stc-longmin_1"] .stc-required-marker').text()).toBe('*');
-
-    expect($('#input-stc-longmax_1').attr('aria-required')).toBe('true');
-    expect($('#input-stc-longmax_1').hasClass('border-danger')).toBe(false);
-    expect($('label[for="input-stc-longmax_1"] .stc-required-marker').length).toBe(0);
-
-    expect($('#input-stc-description').attr('aria-required')).toBe('true');
-    expect($('#input-stc-description').hasClass('border-danger')).toBe(true);
-    expect($('label[for="input-stc-description"] .stc-required-marker').text()).toBe('*');
-
-    expect($('#input-stc-datestart').attr('aria-required')).toBe('true');
-    expect($('#input-stc-datestart').hasClass('border-danger')).toBe(true);
-    expect($('label[for="input-stc-datestart"] .stc-required-marker').text()).toBe('*');
-
-    expect($('#input-stc-dateend').attr('aria-required')).toBe('true');
-    expect($('#input-stc-dateend').hasClass('border-danger')).toBe(true);
-    expect($('label[for="input-stc-dateend"] .stc-required-marker').text()).toBe('*');
-
-    $('#input-stc-longmax_1').val('');
-    window.validateSpatialTemporalCoverageRequirements();
-
-    expect($('#input-stc-latmin_1').attr('aria-required')).toBeUndefined();
-    expect($('#input-stc-latmin_1').hasClass('border-danger')).toBe(false);
-    expect($('label[for="input-stc-latmin_1"] .stc-required-marker').length).toBe(0);
-    expect($('#input-stc-datestart').attr('aria-required')).toBeUndefined();
-    expect($('#input-stc-datestart').hasClass('border-danger')).toBe(false);
-    expect($('label[for="input-stc-datestart"] .stc-required-marker').length).toBe(0);
+    expect($('#input-stc-description').prop('required')).toBe(false);
+    expect($('#input-stc-latmax_1').prop('required')).toBe(true);
   });
 });

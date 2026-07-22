@@ -16,7 +16,8 @@ services:
   web:
     build:
       context: .
-      dockerfile: Dockerfile.legacy
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8080:80"
     environment:
@@ -73,7 +74,8 @@ services:
   web-msl:
     build:
       context: .
-      dockerfile: Dockerfile.legacy
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8081:80"
     environment:
@@ -81,7 +83,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -109,7 +111,7 @@ services:
       SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS_MSL:-true}
       SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE_MSL:-true}
       SHOW_RELATED_WORK: ${SHOW_RELATED_WORK_MSL:-true}
-      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
     depends_on:
       - db
     restart: unless-stopped

@@ -234,48 +234,34 @@ function normalizeTimeForComparison($timeValue)
  */
 function validateSTCDependencies($entry)
 {
-    $hasTimeStart = trim((string) ($entry['timeStart'] ?? '')) !== '';
-    $hasTimeEnd = trim((string) ($entry['timeEnd'] ?? '')) !== '';
+    $latMin  = trim((string)($entry['latitudeMin'] ?? ''));
+    $latMax  = trim((string)($entry['latitudeMax'] ?? ''));
+    $longMin = trim((string)($entry['longitudeMin'] ?? ''));
+    $longMax = trim((string)($entry['longitudeMax'] ?? ''));
 
-    // If a time value is given, a full date/time/zone set is required.
-    if (
-        ($hasTimeStart || $hasTimeEnd) &&
-        (
-            !$hasTimeStart ||
-            !$hasTimeEnd ||
-            trim((string) ($entry['dateStart'] ?? '')) === '' ||
-            trim((string) ($entry['dateEnd'] ?? '')) === '' ||
-            trim((string) ($entry['timezone'] ?? '')) === ''
-        )
-    ) {
-        error_log("[SAVE] STC validation failed: A complete date/time/zone set is required if a time value is provided. Entry: " . json_encode($entry));
-        return false;
+    $hasLatMin  = $latMin !== '';
+    $hasLatMax  = $latMax !== '';
+    $hasLongMin = $longMin !== '';
+    $hasLongMax = $longMax !== '';
+
+    if (!$hasLatMin && !$hasLatMax && !$hasLongMin && !$hasLongMax) {
+        return true;
     }
 
-    // If longitudeMax is given, latitudeMax must also be given and vice versa
-    if (
-        (!empty($entry['longitudeMax']) && empty($entry['latitudeMax'])) ||
-        (empty($entry['longitudeMax']) && !empty($entry['latitudeMax']))
-    ) {
-        error_log("[SAVE] STC validation failed: longitudeMax and latitudeMax must be provided together. Entry: " . json_encode($entry));
-        return false;
-    }
-
-    // If dates are equal and both times are present, end time must not be before start time
-    if (
-        !empty($entry['dateStart']) &&
-        !empty($entry['dateEnd']) &&
-        $entry['dateStart'] === $entry['dateEnd'] &&
-        !empty($entry['timeStart']) &&
-        !empty($entry['timeEnd'])
-    ) {
-        $timeStart = normalizeTimeForComparison((string) $entry['timeStart']);
-        $timeEnd = normalizeTimeForComparison((string) $entry['timeEnd']);
-
-        if ($timeStart !== null && $timeEnd !== null && $timeEnd < $timeStart) {
-            error_log("[SAVE] STC validation failed: End time cannot be before start time on the same day. Entry: " . json_encode($entry));
+    if ($hasLatMax || $hasLongMax) {
+        return $hasLatMin && $hasLatMax && $hasLongMin && $hasLongMax;
+        error_log("[SAVE] STC validation failed: lat/long max requires all four coordinates. Entry: " . json_encode($entry));
             return false;
-        }
+    }
+
+    if ($hasLatMin && !$hasLongMin) {
+        error_log("[SAVE] STC validation failed: latitudeMin without longitudeMin. Entry: " . json_encode($entry));
+        return false;
+    }
+
+    if ($hasLongMin && !$hasLatMin) {
+        error_log("[SAVE] STC validation failed: longitudeMin without latitudeMin. Entry: " . json_encode($entry));
+        return false;
     }
 
     return true;
