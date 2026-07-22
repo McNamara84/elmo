@@ -839,7 +839,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the larger geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if Longitude Max is filled
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#northboundlatitude)
@@ -849,7 +849,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the geographic longitude of a single coordinate or the smaller geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1
+  - Occurrence: 0-1 
   - The corresponding field in the database where the value is stored is called: longitudeMin in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#westboundlongitude)
@@ -859,17 +859,23 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the larger geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if Latitude Max is filled
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
+
+ - Coordinate rules:
+    - A point requires Minimum Latitude Min + Longitude Min.
+    - A rectangle requires Latitude Min + Longitude Min + Latitude Max + Longitude Max.
+    - Latitude Max or Longitude Max on its own is not permitted.
+    - Once a "Max" field is used, all four coordinate fields are mandatory.
   
 - Description
 
   This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
-  - Occurrence: 0-1
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#geolocationplace)
@@ -879,7 +885,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0-1 
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -889,7 +895,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -899,7 +905,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0-1
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -909,7 +915,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0-1, optional. If provided, both Start Time and End Time as well as Timezone become mandatory.
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -919,7 +925,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: String
-  - Occurrence: 0-1, mandatory only when Start Time or End Time is provided.
+  - Occurrence: 0
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation

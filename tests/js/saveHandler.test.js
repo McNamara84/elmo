@@ -135,7 +135,7 @@ describe('saveHandler.js', () => {
   });
 
   test('calculateTimeSpent uses the longest active save timer', () => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:00:04Z'));
+    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:00:04Z').getTime());
     const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
 
     handler.saveFlowStartedAt = new Date('2024-05-30T12:00:00Z').getTime();

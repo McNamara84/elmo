@@ -756,4 +756,89 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals(0, (float)$retrievedStc["longitudeMin"], 'Zero longitudeMin should be saved as 0, not NULL');
         $this->assertEquals(0, (float)$retrievedStc["longitudeMax"], 'Zero longitudeMax should be saved as 0, not NULL');
     }
+    
+    /**
+     * Tests that saving fails when longitudeMax is set but the bounding box is incomplete.
+     * 
+     * This covers the scenario where one of the maximum coordinate values is provided
+     * without all four bounding box coordinates being present. The backend should
+     * reject incomplete bounding box definitions.
+     *
+     * @return void
+     */
+    public function testSaveFailsWhenLongitudeMaxIsGivenButBoundingBoxIsIncomplete(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.INCOMPLETE.BBOX." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Incomplete Bounding Box"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "tscLatitudeMin"  => ["45.0"],
+            "tscLongitudeMin" => ["10.0"],
+            "tscLongitudeMax" => ["20.0"],
+            "tscDateStart"    => ["2026-01-01"]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertFalse($result, 'Saving should fail when longitudeMax is set but not all four coordinates are present');
+    }
+
+    /**
+     * Tests saving STC with description only and no coordinates.
+     * 
+     * This covers the scenario where a user provides only a textual spatial
+     * description without any coordinate values. The backend should allow saving
+     * this entry and store all coordinate fields as NULL.
+     *
+     * @return void
+     */
+    public function testSaveWithDescriptionOnlyAndNoCoordinates(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DESCRIPTION.ONLY." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Description Only"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "tscDescription" => ["Area described in text only"],
+            "tscDateStart"   => ["2026-01-01"]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Saving should succeed with description only and no coordinates');
+
+        $stmt = $this->connection->prepare(
+            "SELECT stc.* FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc
+                ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
+             WHERE rhstc.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc);
+        $this->assertEquals("Area described in text only", $retrievedStc["description"]);
+        $this->assertNull($retrievedStc["latitudeMin"]);
+        $this->assertNull($retrievedStc["latitudeMax"]);
+        $this->assertNull($retrievedStc["longitudeMin"]);
+        $this->assertNull($retrievedStc["longitudeMax"]);
+    }
 }
