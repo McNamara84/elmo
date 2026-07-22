@@ -164,4 +164,110 @@ test.describe('JSON-LD roundtrip flow', () => {
     await closeNotificationModalIfPresent(page);
     expect(consoleErrors).toEqual([]);
   });
+
+  test('preserves mixed Authors payload order and DataCite fields', async ({ page }) => {
+    await navigateToHome(page);
+    await expectNavbarVisible(page);
+    await completeMinimalDatasetForm(page);
+
+    await page.evaluate(() => {
+      (window as any).authorStack.setAuthors([
+        {
+          type: 'person',
+          familyname: 'Payload',
+          givenname: 'Jane',
+          orcid: '0000-0002-1825-0097',
+          isContact: true,
+          email: 'jane@example.org',
+          website: 'https://example.org/jane',
+          affiliations: [
+            { label: 'GFZ', rorId: '04z8jg394' },
+            { label: 'University of Potsdam', rorId: '012m9bp23' },
+          ],
+        },
+        {
+          type: 'institution',
+          institutionname: 'Payload Institute',
+          affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }],
+        },
+        {
+          type: 'person',
+          familyname: 'Sukarno',
+          givenname: '',
+          orcid: '',
+          isContact: false,
+          email: '',
+          website: '',
+          affiliations: [],
+        },
+      ]);
+    });
+
+    await expect.poll(() => page.evaluate(() => (
+      (window as any).authorStack.collectPayload().map((author: any) => author.type)
+    ))).toEqual(['person', 'institution', 'person']);
+
+    const firstSaveBody = await saveJsonLd(page, 'e2e-jsonld-mixed-authors', 2100);
+    const firstPayload = JSON.parse(firstSaveBody) as Record<string, any>;
+    const creators = Array.isArray(firstPayload.creators.creator)
+      ? firstPayload.creators.creator
+      : [firstPayload.creators.creator];
+    const contributors = Array.isArray(firstPayload.contributors.contributor)
+      ? firstPayload.contributors.contributor
+      : [firstPayload.contributors.contributor];
+    const contact = contributors.find((contributor: any) => (
+      contributor.attrs?.contributorType === 'ContactPerson'
+    ));
+
+    expect(creators.map((creator: any) => creator.creatorName.value)).toEqual([
+      'Payload, Jane',
+      'Payload Institute',
+      'Sukarno',
+    ]);
+    expect(creators[0].nameIdentifier.value).toBe('0000-0002-1825-0097');
+    expect(creators[0].affiliation[0].attrs.affiliationIdentifier).toBe('https://ror.org/04z8jg394');
+    expect(creators[1].creatorName.attrs.nameType).toBe('Organizational');
+    expect(contact.familyName.value).toBe('Payload');
+    expect(firstSaveBody).not.toContain('jane@example.org');
+    expect(firstSaveBody).not.toContain('https://example.org/jane');
+
+    const tempDir = join(tmpdir(), 'elmo-e2e');
+    mkdirSync(tempDir, { recursive: true });
+    const savedJsonLdPath = join(tempDir, 'e2e-jsonld-mixed-authors.jsonld');
+    await import('node:fs').then(({ writeFileSync }) => writeFileSync(savedJsonLdPath, firstSaveBody, 'utf8'));
+
+    await closeNotificationModalIfPresent(page);
+    await clearForm(page);
+    await page.locator('#button-form-load').click();
+    await page.locator('#input-uploadxml-file').setInputFiles(savedJsonLdPath);
+
+    await expect.poll(() => page.evaluate(() => (
+      (window as any).authorStack.collectPayload()
+    )), { timeout: 20000 }).toEqual([
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Payload',
+        givenname: 'Jane',
+        orcid: '0000-0002-1825-0097',
+        isContact: true,
+        email: '',
+        website: '',
+        affiliations: [
+          { label: 'GFZ', rorId: '04z8jg394' },
+          { label: 'University of Potsdam', rorId: '012m9bp23' },
+        ],
+      }),
+      expect.objectContaining({
+        type: 'institution',
+        institutionname: 'Payload Institute',
+        affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }],
+      }),
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Sukarno',
+        givenname: '',
+        isContact: false,
+      }),
+    ]);
+  });
 });

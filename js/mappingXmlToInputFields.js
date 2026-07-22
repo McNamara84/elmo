@@ -223,6 +223,40 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   return node ? node.textContent.trim() : "";
 }
 
+/**
+ * Reads an ORCID nameIdentifier without relying on XPath attribute predicates.
+ *
+ * Some supported DOM implementations do not evaluate predicates on namespaced
+ * elements consistently. Inspecting the small nameIdentifier collection keeps
+ * JSON-LD/XML reloads deterministic in browsers and tests.
+ *
+ * @param {Document} xmlDoc - The XML document
+ * @param {Node} parentNode - Creator or contributor containing identifiers
+ * @param {Function} resolver - The namespace resolver function
+ * @returns {string} Normalized ORCID without the resolver URL prefix
+ */
+function getOrcidFromNode(xmlDoc, parentNode, resolver) {
+  const identifiers = xmlDoc.evaluate(
+    "ns:nameIdentifier",
+    parentNode,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let index = 0; index < identifiers.snapshotLength; index++) {
+    const identifier = identifiers.snapshotItem(index);
+    const scheme = (identifier.getAttribute("nameIdentifierScheme") || "").toUpperCase();
+    const schemeUri = identifier.getAttribute("schemeURI") || "";
+
+    if (scheme === "ORCID" || /^https?:\/\/orcid\.org\/?$/i.test(schemeUri)) {
+      return identifier.textContent.trim().replace(/^https?:\/\/orcid\.org\//i, "");
+    }
+  }
+
+  return "";
+}
+
 function getAuthorStackController() {
   return typeof window !== "undefined" && window.authorStack && typeof window.authorStack.setAuthors === "function"
     ? window.authorStack
@@ -327,7 +361,7 @@ function collectDataCiteContactPersons(xmlDoc) {
     const familyname = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenname = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (familyname && givenname) {
+    if (familyname || givenname) {
       contactPersons.push({ familyname, givenname, email: "", website: "" });
     }
   }
@@ -352,7 +386,7 @@ function processCreators(xmlDoc, resolver) {
       const creatorNode = creatorNodes.snapshotItem(i);
       const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
       const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
-      const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+      const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
       const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
       const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
       const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
@@ -395,7 +429,7 @@ function processCreators(xmlDoc, resolver) {
     const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
     // Clean ORCID by removing URL prefix if present
-    const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+    const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
     const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
 
     // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
@@ -686,7 +720,7 @@ function processContactPersonsFromDataCite(xmlDoc) {
     const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (!familyName || !givenName) continue;
+    if (!familyName && !givenName) continue;
 
     const normalizedFamily = familyName.trim().toLowerCase();
     const normalizedGiven = givenName.trim().toLowerCase();
@@ -913,7 +947,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const contributorName = getNodeText(contributor, "ns:contributorName", xmlDoc, resolver);
   const givenName = getNodeText(contributor, "ns:givenName", xmlDoc, resolver);
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
-  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
+  const orcid = getOrcidFromNode(xmlDoc, contributor, resolver);
 
   // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -1759,6 +1793,7 @@ if (typeof module !== 'undefined' && module.exports) {
         mapTitleType,
         processTitles,
         getNodeText,
+        getOrcidFromNode,
         processCreators,
         processContactPersons,
         processContactPersonsFromDataCite,

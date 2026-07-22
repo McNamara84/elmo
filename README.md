@@ -1435,15 +1435,17 @@ The JSON-LD workflow intentionally reuses the existing XML path instead of maint
 **Export flow**
 1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
 2. The save pipeline persists the current form state first, just like the XML workflow.
-3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
-4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
-5. The download response is returned as `application/ld+json`.
+3. When a non-empty `authorsPayload` is present, ELMO replaces the database-derived `Authors` and `ContactPersons` sections in the internal Resource XML with that current payload. XML and JSON-LD downloads therefore share the same author ordering and values without re-reading the stored Authors representation.
+4. `DatasetController::transformResourceToJsonLd()` transforms the prepared Resource XML into the canonical DataCite XML export.
+5. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+6. The download response is returned as `application/ld+json`.
 
 **Import flow**
 1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
 2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
 3. The converted XML is then handed to `loadXmlToForm()`.
-4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+4. The shared field mapping restores ordered person and institution authors, ORCID identifiers, affiliations, ROR identifiers, and the DataCite contact-person marker, including mononymous contacts.
+5. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
 
 This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
 

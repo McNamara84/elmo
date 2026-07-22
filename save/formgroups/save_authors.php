@@ -113,6 +113,12 @@ function validateInstitutionAuthors(array $postData): bool
     return false; // No valid entries found
 }
 
+/**
+ * Decodes the unified Authors payload from submitted form data.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return list<mixed>|null Decoded payload or null when it is absent or invalid.
+ */
 function decodeAuthorsPayload(array $postData): ?array
 {
     if (!array_key_exists('authorsPayload', $postData)) {
@@ -132,6 +138,12 @@ function decodeAuthorsPayload(array $postData): ?array
     return is_array($decoded) ? $decoded : null;
 }
 
+/**
+ * Normalizes HTML/JSON boolean representations used by Authors fields.
+ *
+ * @param mixed $value Boolean-like value.
+ * @return bool Normalized boolean.
+ */
 function normalizeAuthorBoolean($value): bool
 {
     if (is_bool($value)) {
@@ -145,6 +157,12 @@ function normalizeAuthorBoolean($value): bool
     return (bool) $value;
 }
 
+/**
+ * Formats an ORCID identifier as four groups of four characters.
+ *
+ * @param string $value ORCID digits with optional separators.
+ * @return string Formatted identifier or an empty string.
+ */
 function formatAuthorOrcidIdentifier(string $value): string
 {
     $upperValue = strtoupper($value);
@@ -164,6 +182,12 @@ function formatAuthorOrcidIdentifier(string $value): string
     return trim(chunk_split($digits, 4, '-'), '-');
 }
 
+/**
+ * Removes ORCID resolver URLs and normalizes recognized identifiers.
+ *
+ * @param mixed $orcid Submitted ORCID value.
+ * @return string Normalized ORCID without a resolver URL prefix.
+ */
 function normalizeAuthorOrcid($orcid): string
 {
     $orcid = trim((string) $orcid);
@@ -181,6 +205,12 @@ function normalizeAuthorOrcid($orcid): string
     return rtrim(trim($orcid), '/');
 }
 
+/**
+ * Converts structured Authors affiliations to the legacy storage fields.
+ *
+ * @param mixed $affiliations Structured affiliation entries.
+ * @return array{affiliation_data: string, rorId_data: string}
+ */
 function normalizeAuthorAffiliations($affiliations): array
 {
     if (!is_array($affiliations)) {
@@ -220,6 +250,12 @@ function normalizeAuthorAffiliations($affiliations): array
     ];
 }
 
+/**
+ * Validates and normalizes ordered person and institution payload entries.
+ *
+ * @param list<mixed> $payload Decoded Authors payload.
+ * @return list<array<string, mixed>> Normalized author records in payload order.
+ */
 function normalizeAuthorsFromPayload(array $payload): array
 {
     $authors = [];
@@ -278,6 +314,12 @@ function normalizeAuthorsFromPayload(array $payload): array
     return $authors;
 }
 
+/**
+ * Builds normalized author records from the legacy parallel form arrays.
+ *
+ * @param array<string, mixed> $postData Submitted legacy form fields.
+ * @return list<array<string, mixed>> Normalized person records followed by institutions.
+ */
 function normalizeLegacyAuthors(array $postData): array
 {
     $authors = [];
@@ -348,6 +390,12 @@ function normalizeLegacyAuthors(array $postData): array
     return $authors;
 }
 
+/**
+ * Reports whether form data contains an explicitly non-empty Authors payload.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return bool True when at least one raw payload entry is present.
+ */
 function hasNonemptyAuthorsPayload(array $postData): bool
 {
     $payload = decodeAuthorsPayload($postData);
@@ -355,6 +403,12 @@ function hasNonemptyAuthorsPayload(array $postData): bool
     return is_array($payload) && count($payload) > 0;
 }
 
+/**
+ * Resolves the preferred unified payload with a legacy-field fallback.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return list<array<string, mixed>> Normalized ordered authors.
+ */
 function normalizeAuthorsPayload(array $postData): array
 {
     $payload = decodeAuthorsPayload($postData);

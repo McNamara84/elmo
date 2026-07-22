@@ -261,5 +261,75 @@ describe('upload.js', () => {
             expect(identifier.textContent).toBe('10.5678/example');
             expect(identifier.getAttribute('identifierType')).toBe('DOI');
         });
+
+        test('preserves mixed authors, ordering, identifiers and affiliations', () => {
+            const xmlDoc = uploadModule.convertJsonLdToXmlDocument({
+                '@context': 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld',
+                creators: {
+                    creator: [
+                        {
+                            creatorName: { attrs: { nameType: 'Personal' }, value: 'Doe, Jane' },
+                            givenName: { value: 'Jane' },
+                            familyName: { value: 'Doe' },
+                            nameIdentifier: {
+                                attrs: {
+                                    nameIdentifierScheme: 'ORCID',
+                                    schemeURI: 'https://orcid.org/'
+                                },
+                                value: '0000-0002-1825-0097'
+                            },
+                            affiliation: [
+                                {
+                                    attrs: {
+                                        affiliationIdentifier: 'https://ror.org/04z8jg394',
+                                        affiliationIdentifierScheme: 'ROR'
+                                    },
+                                    value: 'GFZ'
+                                },
+                                { value: 'Additional University' }
+                            ]
+                        },
+                        {
+                            creatorName: {
+                                attrs: { nameType: 'Organizational' },
+                                value: 'Payload Institute'
+                            }
+                        },
+                        {
+                            creatorName: { attrs: { nameType: 'Personal' }, value: 'Sukarno' },
+                            familyName: { value: 'Sukarno' }
+                        }
+                    ]
+                },
+                contributors: {
+                    contributor: {
+                        attrs: { contributorType: 'ContactPerson' },
+                        contributorName: { attrs: { nameType: 'Personal' }, value: 'Sukarno' },
+                        familyName: { value: 'Sukarno' }
+                    }
+                }
+            });
+
+            const creators = Array.from(
+                xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'creator')
+            );
+            const creatorNames = creators.map((creator) => creator
+                .getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'creatorName')[0]
+                .textContent);
+            const affiliations = creators[0]
+                .getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'affiliation');
+            const nameIdentifier = creators[0]
+                .getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'nameIdentifier')[0];
+            const contact = xmlDoc
+                .getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'contributor')[0];
+
+            expect(creatorNames).toEqual(['Doe, Jane', 'Payload Institute', 'Sukarno']);
+            expect(nameIdentifier.getAttribute('nameIdentifierScheme')).toBe('ORCID');
+            expect(nameIdentifier.textContent).toBe('0000-0002-1825-0097');
+            expect(affiliations).toHaveLength(2);
+            expect(affiliations[0].getAttribute('affiliationIdentifier')).toBe('https://ror.org/04z8jg394');
+            expect(contact.getAttribute('contributorType')).toBe('ContactPerson');
+            expect(contact.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'givenName')).toHaveLength(0);
+        });
     });
 });
