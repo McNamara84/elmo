@@ -839,7 +839,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the larger geographic latitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if any of the coordinate fields have been filled in
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -90 to +90
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#northboundlatitude)
@@ -859,11 +859,17 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the larger geographic longitude of a rectangle.
   - Data type: Floating-point number
-  - Occurrence: 0-1, becomes mandatory if any of the coordinate fields have been filled in
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
   - Restrictions: Only positive and negative numbers in the value range from -180 to +180
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
+
+ - Coordinate rules:
+    - A point requires Minimum Latitude Min + Longitude Min.
+    - A rectangle requires Latitude Min + Longitude Min + Latitude Max + Longitude Max.
+    - Latitude Max or Longitude Max on its own is not permitted.
+    - Once a "Max" field is used, all four coordinate fields are mandatory.
   
 - Description
 
