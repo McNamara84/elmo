@@ -74,6 +74,25 @@ describe('select module coverage', () => {
         // Mock fetch
         global.fetch = jest.fn();
 
+        const identifierTypesResponse = {
+            identifierTypes: [
+                { name: 'DOI', pattern: '^10\\.\\d{4,9}/.+$', description: 'Digital Object Identifier' },
+                { name: 'URL', pattern: '^https?://.+$', description: 'Uniform Resource Locator' }
+            ]
+        };
+        $.getJSON = jest.fn((url, success) => {
+            if (typeof success === 'function') {
+                success(identifierTypesResponse);
+            }
+            return { fail: jest.fn() };
+        });
+        $.ajax = jest.fn((options) => {
+            if (typeof options?.success === 'function') {
+                options.success(identifierTypesResponse);
+            }
+            return { fail: jest.fn(), always: jest.fn() };
+        });
+
         // Clear module cache
         jest.resetModules();
 

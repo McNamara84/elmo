@@ -22,7 +22,6 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
     global $showGGMsProperties;
 
     $action = $postData['action'] ?? 'save_and_download';
-    $isElmoGem = !empty($showGGMsProperties);
 
     // If NO STC data provided at all, return early (it's optional)
     // Only skip if BOTH spatial and temporal fields are empty
@@ -69,38 +68,14 @@ function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
             }
 
             // Check required fields: latitudeMin and longitudeMin (0 is allowed, empty strings are not)
-            if ((trim($entry['latitudeMin'] ?? '') === '') || (trim($entry['longitudeMin'] ?? '') === '')) {
-                $allSuccessful = false;
-                continue;
-            }
-
-            if ($isElmoGem && trim($entry['description'] ?? '') === '') {
-                $allSuccessful = false;
-                continue;
-            }
-
             if (!validateSTCDependencies($entry)) {
                 $allSuccessful = false;
                 continue;
             }
 
-            // Outside ELMO-GEM, submitted STC rows with spatial data still need temporal coverage.
-            if (trim($entry['dateStart'] ?? '') === '') {
-                if (!$isElmoGem) {
-                    $allSuccessful = false;
-                    continue;
-                }
-            }
         } else {
-            // Even without submit, skip entries with incomplete coordinates
             $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
                           || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
-            $hasBothRequired = (trim($entry['latitudeMin'] ?? '') !== '') && (trim($entry['longitudeMin'] ?? '') !== '');
-            if ($hasAnySpatial && !$hasBothRequired) {
-                $allSuccessful = false;
-                continue;
-            }
-            // Skip entries where all fields are effectively empty
             $hasAnyData = $hasAnySpatial
                        || (trim($entry['dateStart'] ?? '') !== '')
                        || (trim($entry['dateEnd'] ?? '') !== '')
