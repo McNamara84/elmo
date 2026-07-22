@@ -46,6 +46,7 @@ describe('saveHandler.js', () => {
         <input id="input-please-fill-in-this-field" name="please-fill-in-this-field">
         <div class="embargo-invalid"></div>
         <div id="group-author">
+          <input type="hidden" name="authorsPayload" value="[]">
           <input type="checkbox" name="contacts[]" value="1">
           <input type="checkbox" name="contacts[]" value="2">
         </div>
@@ -108,6 +109,7 @@ describe('saveHandler.js', () => {
   afterEach(() => {
     jest.useRealTimers();
     delete global.validateAuthorAffiliationEditors;
+    delete window.authorStack;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -284,6 +286,14 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload sends jsonld format', async () => {
+    const currentAuthors = JSON.stringify([
+      { type: 'person', familyname: 'Payload', givenname: 'Jane', affiliations: [] }
+    ]);
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        document.querySelector('input[name="authorsPayload"]').value = currentAuthors;
+      })
+    };
     global.fetch = createSaveHandlerFetchMock({
       saveFilename: 'dataset.jsonld',
       blob: new Blob([], { type: 'application/ld+json' })
@@ -297,7 +307,10 @@ describe('saveHandler.js', () => {
     // Find the save/download fetch call
     const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
     expect(saveCall).toBeDefined();
+    expect(window.authorStack.updatePayload).toHaveBeenCalledTimes(1);
+    expect(saveCall[1].body.get('authorsPayload')).toBe(currentAuthors);
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
+    delete window.authorStack;
     delete global.fetch;
   });
 

@@ -111,11 +111,17 @@ describe("mappingXmlToInputFields helpers", () => {
           <ns:creatorName nameType="Personal">Doe, Jane</ns:creatorName>
           <ns:givenName>Jane</ns:givenName>
           <ns:familyName>Doe</ns:familyName>
+          <ns:nameIdentifier nameIdentifierScheme="ORCID">https://orcid.org/0000-0002-1825-0097</ns:nameIdentifier>
           <ns:affiliation affiliationIdentifier="https://ror.org/04z8jg394">GFZ</ns:affiliation>
+          <ns:affiliation>Additional University</ns:affiliation>
         </ns:creator>
         <ns:creator>
           <ns:creatorName nameType="Organizational">Payload Institute</ns:creatorName>
           <ns:affiliation affiliationIdentifier="https://ror.org/03qjp1d79">Helmholtz</ns:affiliation>
+        </ns:creator>
+        <ns:creator>
+          <ns:creatorName nameType="Personal">Sukarno</ns:creatorName>
+          <ns:familyName>Sukarno</ns:familyName>
         </ns:creator>
       </ns:creators>
     </ns:resource>`;
@@ -130,12 +136,65 @@ describe("mappingXmlToInputFields helpers", () => {
           type: "person",
           familyname: "Doe",
           givenname: "Jane",
-          affiliations: [{ label: "GFZ", rorId: "04z8jg394" }]
+          orcid: "0000-0002-1825-0097",
+          affiliations: [
+            { label: "GFZ", rorId: "04z8jg394" },
+            { label: "Additional University", rorId: "" }
+          ]
         }),
         expect.objectContaining({
           type: "institution",
           institutionname: "Payload Institute",
           affiliations: [{ label: "Helmholtz", rorId: "03qjp1d79" }]
+        }),
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: ""
+        })
+      ]);
+    } finally {
+      delete window.authorStack;
+    }
+  });
+
+  test("processContactPersons restores contact state for a mononymous authorStack entry", () => {
+    const setAuthors = jest.fn();
+    window.authorStack = {
+      collectPayload: jest.fn(() => [{
+        type: "person",
+        familyname: "Sukarno",
+        givenname: "",
+        orcid: "",
+        isContact: false,
+        email: "",
+        website: "",
+        affiliations: []
+      }]),
+      setAuthors
+    };
+    const ctx = loadMappingModule();
+    const xml = `<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+      <ns:contributors>
+        <ns:contributor contributorType="ContactPerson">
+          <ns:contributorName nameType="Personal">Sukarno</ns:contributorName>
+          <ns:familyName>Sukarno</ns:familyName>
+        </ns:contributor>
+      </ns:contributors>
+    </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+
+    try {
+      ctx.processContactPersons(xmlDoc);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: "",
+          isContact: true,
+          email: "",
+          website: ""
         })
       ]);
     } finally {

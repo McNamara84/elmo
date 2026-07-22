@@ -926,19 +926,22 @@ function insertTestResourceData($connection)
             ["institutionname" => "Institut für Luft- und Raumfahrt"]
         ],
         "Author" => [
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
+            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 4, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 5, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 6, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 7, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 8, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 9, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 10, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 11, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 12, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 13, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 3]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -1103,20 +1106,23 @@ function insertTestResourceData($connection)
 
     $helpTableData = [
         "Resource_has_Author" => [
-            ["Resource_resource_id" => 3, "Author_author_id" => 1],
-            ["Resource_resource_id" => 2, "Author_author_id" => 3],
-            ["Resource_resource_id" => 1, "Author_author_id" => 2],
-            ["Resource_resource_id" => 4, "Author_author_id" => 4],
-            ["Resource_resource_id" => 4, "Author_author_id" => 5],
-            ["Resource_resource_id" => 4, "Author_author_id" => 6],
-            ["Resource_resource_id" => 5, "Author_author_id" => 7],
-            ["Resource_resource_id" => 5, "Author_author_id" => 8],
-            ["Resource_resource_id" => 5, "Author_author_id" => 9],
-            ["Resource_resource_id" => 5, "Author_author_id" => 5],     // dr. prof. Flectner co-authored models 4 AND 5                               
-            ["Resource_resource_id" => 4, "Author_author_id" => 10],
-            ["Resource_resource_id" => 4, "Author_author_id" => 11],
-            ["Resource_resource_id" => 4, "Author_author_id" => 12],
-            ["Resource_resource_id" => 4, "Author_author_id" => 13]
+            ["Resource_resource_id" => 3, "Author_author_id" => 1, "sort_order" => 0],
+            ["Resource_resource_id" => 2, "Author_author_id" => 3, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 2, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 14, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 4, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Author_author_id" => 5, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 6, "sort_order" => 2],
+            ["Resource_resource_id" => 4, "Author_author_id" => 10, "sort_order" => 3],
+            ["Resource_resource_id" => 4, "Author_author_id" => 11, "sort_order" => 4],
+            ["Resource_resource_id" => 4, "Author_author_id" => 12, "sort_order" => 5],
+            ["Resource_resource_id" => 4, "Author_author_id" => 13, "sort_order" => 6],
+            ["Resource_resource_id" => 4, "Author_author_id" => 15, "sort_order" => 7],
+            ["Resource_resource_id" => 5, "Author_author_id" => 7, "sort_order" => 0],
+            ["Resource_resource_id" => 5, "Author_author_id" => 8, "sort_order" => 1],
+            ["Resource_resource_id" => 5, "Author_author_id" => 9, "sort_order" => 2],
+            ["Resource_resource_id" => 5, "Author_author_id" => 5, "sort_order" => 3],
+            ["Resource_resource_id" => 5, "Author_author_id" => 16, "sort_order" => 4]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],

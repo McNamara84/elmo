@@ -54,7 +54,7 @@ XML;
             ->getMock();
 
         $controller->expects(self::once())->method('transformAndSaveOrDownloadXml')
-            ->with(123, 'datacite', false)
+            ->with(123, 'datacite', false, null)
             ->willReturn($xml);
 
         $json = $controller->transformResourceToJsonLd(123);
@@ -69,5 +69,48 @@ XML;
         $this->assertSame('Earth Science', $payload['subjects']['subject']['value']);
         $this->assertSame('Test Funder', $payload['fundingReferences']['fundingReference']['funderName']['value']);
         $this->assertSame('10.1234/test', $payload['relatedIdentifiers']['relatedIdentifier']['value']);
+    }
+
+    public function testTransformResourceToJsonLdForwardsPreparedAuthorsSourceXml(): void
+    {
+        $sourceXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+  <Authors>
+    <Author><familyname>Payload</familyname><givenname>Person</givenname></Author>
+  </Authors>
+</Resource>
+XML;
+        $dataCiteXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Payload, Person</creatorName>
+      <givenName>Person</givenName>
+      <familyName>Payload</familyName>
+    </creator>
+  </creators>
+</resource>
+XML;
+
+        $controller = $this->getMockBuilder(\DatasetController::class)
+            ->disableOriginalConstructor()
+            ->onlyMethods(['transformAndSaveOrDownloadXml'])
+            ->getMock();
+
+        $controller->expects(self::once())
+            ->method('transformAndSaveOrDownloadXml')
+            ->with(456, 'datacite', false, $sourceXml)
+            ->willReturn($dataCiteXml);
+
+        $payload = json_decode(
+            $controller->transformResourceToJsonLd(456, $sourceXml),
+            true,
+            512,
+            JSON_THROW_ON_ERROR
+        );
+
+        self::assertSame('Payload', $payload['creators']['creator']['familyName']['value']);
     }
 }
