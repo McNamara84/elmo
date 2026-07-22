@@ -1,17 +1,23 @@
 <?php
 /**
  *
- * This script handles the database installation process via AJAX requests.
+ * This script handles the database installation process via the command line.
  * It provides two installation options:
  * 1. Basic installation with required lookup data
  * 2. Complete installation including test data
  *
  */
 
+$isDirectInstallationRequest = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__;
+if ($isDirectInstallationRequest && PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit();
+}
+
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    $settingsPath = __DIR__ . '/settings.php';
+    $settingsPath = dirname(__DIR__) . '/settings.php';
     if (!file_exists($settingsPath)) {
         $msg = 'Error: settings.php not found. ' .
             'Please copy sample_settings.php to settings.php and update your database credentials.';
@@ -1296,14 +1302,14 @@ function processInstallation($connection, $action): array
             insertTestResourceData($connection);
             return [
                 'status' => 'success',
-                'message' => 'Database installed successfully with all test data. Please do not forget to delete the files install.php and install.html now!',
+                'message' => 'Database installed successfully with all test data.',
                 'progress' => 100
             ];
         }
 
         return [
             'status' => 'success',
-            'message' => 'Database installed successfully with required data. Please do not forget to delete the files install.php and install.html now!',
+            'message' => 'Database installed successfully with required data.',
             'progress' => 100
         ];
 
@@ -1316,31 +1322,52 @@ function processInstallation($connection, $action): array
     }
 }
 
-// Handle AJAX requests
-if (isset($_POST['action'])) {
-    header('Content-Type: application/json');
-    // Ensure connection exists
-    if (!isset($connection)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Database connection not available.'
-        ]);
-        exit(1);
+/**
+ * Validate the CLI arguments and return the requested installation mode.
+ *
+ * @param list<string> $arguments
+ */
+function parseInstallationAction(array $arguments): string
+{
+    $action = $arguments[1] ?? '';
+    if (!in_array($action, ['basic', 'complete'], true)) {
+        throw new InvalidArgumentException('Usage: php scripts/install.php <basic|complete>');
     }
-    $result = processInstallation($connection, $_POST['action']);
-    echo json_encode($result);
-    exit;
+
+    return $action;
 }
 
-// Handle CLI requests
-if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
-    $action = $argv[1] ?? 'basic';
-    // Ensure connection exists
+/**
+ * @param list<string> $arguments
+ */
+function runInstallationCli(array $arguments): int
+{
+    global $connection;
+
+    try {
+        $action = parseInstallationAction($arguments);
+    } catch (InvalidArgumentException $exception) {
+        fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+        return 2;
+    }
+
     if (!isset($connection)) {
         fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
-        exit(1);
+        return 1;
     }
+
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);
-    exit($result['status'] === 'success' ? 0 : 1);
+    return $result['status'] === 'success' ? 0 : 1;
+}
+
+if ($isDirectInstallationRequest) {
+    $arguments = [];
+    foreach ($_SERVER['argv'] ?? [] as $argument) {
+        if (is_string($argument)) {
+            $arguments[] = $argument;
+        }
+    }
+
+    exit(runInstallationCli($arguments));
 }

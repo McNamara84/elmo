@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
@@ -15,6 +16,7 @@ require_once __DIR__ . '/../api/v2/controllers/DoiController.php';
 /**
  * Tests for DoiController — DOI lookup and contact person resolution.
  */
+#[AllowMockObjectsWithoutExpectations]
 #[CoversClass(\DoiController::class)]
 final class DoiControllerTest extends TestCase
 {

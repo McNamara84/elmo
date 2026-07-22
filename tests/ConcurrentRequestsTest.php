@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+require_once __DIR__ . '/../includes/save_to_db_helper.php';
 
-require_once __DIR__ . '/../save/save_data.php';
 
 /**
  * Tests concurrent full save operations to verify transaction isolation and data integrity.
@@ -353,10 +353,30 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
             $_POST['skipXmlGeneration'] = true; // Skip XML generation for testing
             $GLOBALS['connection'] = $connection;
             
-            ob_start();
-            require __DIR__ . '/../save/save_data.php';
-            ob_end_clean();
-                
+            if ($useTransactions) {
+                $connection->begin_transaction();
+            }
+
+            try {
+                $resourceId = saveResourceInformationAndRights($connection, $postData);
+                if ($resourceId === false) {
+                    throw new \RuntimeException('Resource information could not be saved.');
+                }
+
+                saveAuthors($connection, $postData, $resourceId);
+                saveContactPerson($connection, $postData, $resourceId);
+                saveDescriptions($connection, $postData, $resourceId);
+
+                if ($useTransactions) {
+                    $connection->commit();
+                }
+            } catch (\Throwable $exception) {
+                if ($useTransactions) {
+                    $connection->rollback();
+                }
+                throw $exception;
+            }
+
             // Extract resource_id from the database
             $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE DOI = ? ORDER BY resource_id DESC LIMIT 1");
             $stmt->bind_param("s", $postData['doi']);
