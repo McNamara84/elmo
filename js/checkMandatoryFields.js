@@ -189,8 +189,10 @@ function updateStcRequiredVisualCue(inputElement, isRequired) {
     input.toggleClass('border-danger', isRequired && value === '');
 
     if (isRequired) {
+        input.attr('required', 'required');
         input.attr('aria-required', 'true');
     } else {
+        input.removeAttr('required');
         input.removeAttr('aria-required');
     }
 
@@ -212,27 +214,22 @@ function updateStcRowRequiredVisualCues(inputs) {
 }
 
 /**
- * Dynamically applies or removes the 'required' attribute to input fields in each row within #group-stc.
+ * Dynamically marks STC coordinate fields as required on submit.
  *
- * The function ensures:
- * - If all fields are empty, none will be required.
- * - If latMax or longMax is filled, latMin, longMin, latMax, longMax, description, and, outside ELMO-GEM, dateStart/dateEnd become required.
- * - If latMin, longMin, or description is filled, those fields and, outside ELMO-GEM, dateStart/dateEnd become required.
- * - If dateStart or dateEnd is filled, they along with latMin, longMin, and description become required.
- * - Time fields (timeStart, timeEnd) are always optional unless one of them is filled.
- * - If timeStart or timeEnd is filled, both time fields, dates, and timezone become required.
- * - Timezone is only required when time values are provided.
+ * Rules:
+ * - If latmin is filled, longmin becomes required.
+ * - If longmin is filled, latmin becomes required.
+ * - If latmax or longmax is filled, all four coordinate fields become required.
+ * - If all four fields are empty, no validation is applied.
  *
  * @function validateSpatialTemporalCoverageRequirements
  * @returns {void}
  */
 function validateSpatialTemporalCoverageRequirements() {
     var group = $('#group-stc');
-    var fields = ['latmin', 'latmax', 'longmin', 'longmax', 'description', 'datestart', 'timestart', 'dateend', 'timeend', 'timezone'];
+    var fields = ['latmin', 'latmax', 'longmin', 'longmax'];
     var allRows = group.find('[tsc-row]');
 
-    var isElmoGem = Boolean(window.ELMO_FEATURES && window.ELMO_FEATURES.showGGMsProperties);
-    // Process each row independently
     allRows.each(function () {
         var row = $(this);
         var inputs = {};
@@ -241,7 +238,8 @@ function validateSpatialTemporalCoverageRequirements() {
         // Store jQuery elements and their filled status
         fields.forEach(function (field) {
             inputs[field] = row.find('[id^="input-stc-' + field + '"]');
-            filled[field] = inputs[field].val() && inputs[field].val().trim() !== '';
+            filled[field] = String(inputs[field].val() || '').trim() !== '';
+
             inputs[field].removeAttr('required')
                 .removeAttr('aria-required')
                 .removeClass('js-required-on-submit stc-required-on-submit border-danger');
@@ -253,50 +251,23 @@ function validateSpatialTemporalCoverageRequirements() {
             return;
         }
 
-        // _______________________________________________________________________
-
-        // Bounding box dependencies -> dates required outside ELMO-GEM but time optional
+        // If any MAX field is filled, all four fields are required.
         if (filled.latmax || filled.longmax) {
-            var boundingBoxRequiredFields = ['latmin', 'longmin', 'latmax', 'longmax', 'description'];
+            fields.forEach(function (field) {
+                inputs[field].addClass('js-required-on-submit');
+            });
 
-            if (!isElmoGem) {
-                boundingBoxRequiredFields = boundingBoxRequiredFields.concat(['datestart', 'dateend']);
-            }
-
-            boundingBoxRequiredFields
-                .forEach(function (field) {
-                    inputs[field].addClass('js-required-on-submit');
-                });
+            updateStcRowRequiredVisualCues(inputs);
+            return;
         }
 
-        // If any of latmin/longmin/description is filled -> dates required outside ELMO-GEM, time optional
-        if (filled.latmin || filled.longmin || filled.description) {
-            var spatialRequiredFields = ['latmin', 'longmin', 'description'];
-
-            if (!isElmoGem) {
-                spatialRequiredFields = spatialRequiredFields.concat(['datestart', 'dateend']);
-            }
-
-            spatialRequiredFields
-                .forEach(function (field) {
-                    inputs[field].addClass('js-required-on-submit');
-                });
+        // Point rule: latmin <-> longmin
+        if (filled.latmin) {
+            inputs.longmin.addClass('js-required-on-submit');
         }
 
-        // If dates are provided -> ensure basic required fields, time optional
-        if (filled.datestart || filled.dateend) {
-            ['datestart', 'dateend', 'latmin', 'longmin', 'description']
-                .forEach(function (field) {
-                    inputs[field].addClass('js-required-on-submit');
-                });
-        }
-
-        // If any time value is provided in this row -> require both times, dates and timezone
-        if (filled.timestart || filled.timeend) {
-            ['timestart', 'timeend', 'datestart', 'dateend', 'latmin', 'longmin', 'description', 'timezone']
-                .forEach(function (field) {
-                    inputs[field].addClass('js-required-on-submit');
-                });
+        if (filled.longmin) {
+            inputs.latmin.addClass('js-required-on-submit');
         }
 
         updateStcRowRequiredVisualCues(inputs);
