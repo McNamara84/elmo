@@ -29,6 +29,9 @@
   },
   "overrides": {
     "ws": "^8.21.0",
-    "yargs": "^18.0.0"
+    "yargs": "^18.0.0",
+    "babel-preset-current-node-syntax": {
+    "@babel/core": "$@babel/core"
+    }
   }
 }
