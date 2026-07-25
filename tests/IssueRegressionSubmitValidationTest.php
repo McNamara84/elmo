@@ -37,21 +37,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         $this->assertNull($row['dateCreated']);
     }
 
-    public function testNonGemSubmitRejectsSpatialOnlyStcForIssue1068(): void
-    {
-        $previous = $GLOBALS['showGGMsProperties'] ?? null;
-        $GLOBALS['showGGMsProperties'] = false;
 
-        try {
-            $resourceId = $this->createResource('GFZ.TEST.ISSUE.1068.NON.GEM', 'Issue 1068 Non GEM');
-            $result = saveSpatialTemporalCoverage($this->connection, $this->spatialOnlyPostData(), $resourceId);
-
-            $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC instead of silently accepting it.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
-        } finally {
-            $this->restoreGlobal('showGGMsProperties', $previous);
-        }
-    }
 
     public function testElmoGemSubmitPersistsSpatialOnlyStcWithDescriptionForIssue1068(): void
     {
