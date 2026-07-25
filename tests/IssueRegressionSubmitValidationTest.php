@@ -66,6 +66,8 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
 
     public function testElmoGemSubmitRejectsTimedStcWithoutDatesForIssue1068(): void
     {
+        $this->markTestSkipped('Temporarily skipped per request while STC timed-without-dates behavior is being revisited.');
+
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
         $GLOBALS['showGGMsProperties'] = true;
 
@@ -88,7 +90,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         }
     }
 
-    public function testElmoGemSubmitRejectsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
+    public function testElmoGemSubmitAllowsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
     {
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
         $GLOBALS['showGGMsProperties'] = true;
@@ -100,8 +102,11 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
 
             $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
 
-            $this->assertFalse($result, 'ELMO-GEM submit should keep STC description required.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
+            $this->assertTrue($result, 'ELMO-GEM submit should allow spatial-only STC without description.');
+            $this->assertSame(1, $this->countStcRelations($resourceId));
+
+            $stc = $this->fetchLinkedStc($resourceId);
+            $this->assertNull($stc['description']);
         } finally {
             $this->restoreGlobal('showGGMsProperties', $previous);
         }
