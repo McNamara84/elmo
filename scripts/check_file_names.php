@@ -72,6 +72,14 @@ function elmoFileNameViolation(string $path): ?string
 
 function elmoFileNameCheckIsExcluded(string $path): bool
 {
+    $excludedFiles = [
+        'settings.elmo.php',
+    ];
+
+    if (in_array($path, $excludedFiles, true)) {
+        return true;
+    }
+
     $excludedPrefixes = [
         'vendor/',
         'node_modules/',
