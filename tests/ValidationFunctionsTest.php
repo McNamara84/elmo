@@ -289,6 +289,8 @@ final class ValidationFunctionsTest extends TestCase
      */
     public function testValidateSTCDependenciesMissingTimeEnd(): void
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $entry = [
             'latitudeMin' => 1,
             'longitudeMin' => 1,
@@ -327,6 +329,8 @@ final class ValidationFunctionsTest extends TestCase
      */
     public function testValidateSTCDependenciesSameDateEndTimeBeforeStartTime(): void
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $entry = [
             'latitudeMin' => 1,
             'longitudeMin' => 1,

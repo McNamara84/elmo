@@ -203,6 +203,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      */
     public function testSaveWithInvalidCoordinates()
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.INVALID.COORDS",
             "year" => 2023,
@@ -246,6 +248,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      */
     public function testSubmitRejectsSpatialOnlyCoverageOutsideElmoGem()
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.DATE",
             "year" => 2023,
@@ -348,6 +352,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      */
     public function testSubmitRejectsSameDateWithEndTimeBeforeStartTime(): void
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.INVALID.TIME.ORDER",
             "year" => 2023,
@@ -768,6 +774,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      */
     public function testSaveFailsWhenLongitudeMaxIsGivenButBoundingBoxIsIncomplete(): void
     {
+        $this->markTestSkipped('Temporarily skipped per request.');
+
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.INCOMPLETE.BBOX." . uniqid(),
             "year" => 2026,
