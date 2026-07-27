@@ -20,12 +20,14 @@ session_start();
 // Buffer output
 ob_start();
 
+$projectRoot = dirname(__DIR__);
+
 // Include security functions FIRST (before settings.php to avoid duplicate includes)
-require_once __DIR__ . '/api/security.php';
+require_once $projectRoot . '/api/security.php';
 
 // Include required files
-require_once __DIR__ . '/settings.php';
-require_once __DIR__ . '/includes/save_to_db_helper.php';
+require_once $projectRoot . '/settings.php';
+require_once $projectRoot . '/includes/save_to_db_helper.php';
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties, $showUsedInstruments;
@@ -37,9 +39,9 @@ error_log("send_xml_file.php: Globals set, connection: " . (isset($connection) ?
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/Exception.php';
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/Exception.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 error_log("send_xml_file.php: PHPMailer included");
 
@@ -357,7 +359,7 @@ try {
 
     if ($payloadData['generator'] === 'dataset-xml') {
         try {
-            require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
+            require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
             $datasetController = new DatasetController();
             $xml_content = $datasetController->markDataCiteEnvelopeAsSubmitted($xml_content, date('Y-m-d'));
             error_log("Submit: Marked DataCite XML with dateType=Submitted.");
@@ -367,7 +369,7 @@ try {
     }
 
     // Feature toggles for simulation path
-    include_once __DIR__ . '/includes/feature_toggles.php';
+    include_once $projectRoot . '/includes/feature_toggles.php';
     $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 
     if ($simulateEmail) {

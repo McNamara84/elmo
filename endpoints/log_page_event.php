@@ -1,14 +1,14 @@
 <?php
 if (!defined('UNIT_TESTING')) {
-    require_once __DIR__ . '/settings.php';
+    require_once dirname(__DIR__) . '/settings.php';
 }
 
 if (!function_exists('handle_log_page_event')) {
     /**
      * Process a page event log request.
      * The function outputs 2 parts: even and status. The event is one of the allowed events, and describes the type of page action. Stat
-     * @param array $post Incoming POST data
-     * @param array $server Server context (expects REQUEST_METHOD)
+     * @param array<string, mixed> $post Incoming POST data
+     * @param array<string, mixed> $server Server context (expects REQUEST_METHOD)
      * @param callable|null $logger Logger callback; defaults to error_log
      * @param callable|null $nowProvider Time provider; defaults to date('c')
      * @return array{status:string,event?:string,timestamp?:string}
@@ -57,7 +57,7 @@ if (!function_exists('handle_log_page_event')) {
 
 $result = handle_log_page_event($_POST, $_SERVER);
 
-if (($result['status'] ?? '') === 'logged') {
+if ($result['status'] === 'logged') {
     header('Content-Type: application/json');
     echo json_encode(['response' => 'logged']);
 }
