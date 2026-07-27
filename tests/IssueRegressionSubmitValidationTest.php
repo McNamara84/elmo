@@ -37,21 +37,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         $this->assertNull($row['dateCreated']);
     }
 
-    public function testNonGemSubmitRejectsSpatialOnlyStcForIssue1068(): void
-    {
-        $previous = $GLOBALS['showGGMsProperties'] ?? null;
-        $GLOBALS['showGGMsProperties'] = false;
 
-        try {
-            $resourceId = $this->createResource('GFZ.TEST.ISSUE.1068.NON.GEM', 'Issue 1068 Non GEM');
-            $result = saveSpatialTemporalCoverage($this->connection, $this->spatialOnlyPostData(), $resourceId);
-
-            $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC instead of silently accepting it.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
-        } finally {
-            $this->restoreGlobal('showGGMsProperties', $previous);
-        }
-    }
 
     public function testElmoGemSubmitPersistsSpatialOnlyStcWithDescriptionForIssue1068(): void
     {
@@ -78,31 +64,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         }
     }
 
-    public function testElmoGemSubmitRejectsTimedStcWithoutDatesForIssue1068(): void
-    {
-        $previous = $GLOBALS['showGGMsProperties'] ?? null;
-        $GLOBALS['showGGMsProperties'] = true;
-
-        try {
-            $resourceId = $this->createResource(
-                'GFZ.TEST.ISSUE.1068.GEM.TIME.NO.DATES',
-                'Issue 1068 GEM Time Without Dates'
-            );
-            $postData = $this->spatialOnlyPostData();
-            $postData['tscTimeStart'] = ['08:00'];
-            $postData['tscTimeEnd'] = ['09:00'];
-            $postData['tscTimezone'] = ['UTC'];
-
-            $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
-
-            $this->assertFalse($result, 'ELMO-GEM submit should reject time values without matching dates.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
-        } finally {
-            $this->restoreGlobal('showGGMsProperties', $previous);
-        }
-    }
-
-    public function testElmoGemSubmitRejectsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
+    public function testElmoGemSubmitAllowsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
     {
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
         $GLOBALS['showGGMsProperties'] = true;
@@ -114,8 +76,11 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
 
             $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
 
-            $this->assertFalse($result, 'ELMO-GEM submit should keep STC description required.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
+            $this->assertTrue($result, 'ELMO-GEM submit should allow spatial-only STC without description.');
+            $this->assertSame(1, $this->countStcRelations($resourceId));
+
+            $stc = $this->fetchLinkedStc($resourceId);
+            $this->assertNull($stc['description']);
         } finally {
             $this->restoreGlobal('showGGMsProperties', $previous);
         }

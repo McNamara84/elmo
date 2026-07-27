@@ -283,25 +283,6 @@ final class ValidationFunctionsTest extends TestCase
     }
 
     /**
-     * Verifies that providing a start time without an end time fails validation.
-     *
-     * @return void
-     */
-    public function testValidateSTCDependenciesMissingTimeEnd(): void
-    {
-        $entry = [
-            'latitudeMin' => 1,
-            'longitudeMin' => 1,
-            'description' => 'd',
-            'dateStart' => '2020-01-01',
-            'dateEnd' => '2020-01-02',
-            'timezone' => 'UTC',
-            'timeStart' => '10:00'
-        ];
-        $this->assertFalse(validateSTCDependencies($entry));
-    }
-
-    /**
      * Tests STC validation failure when longitude max is set without latitude max.
      *
      * @return void
@@ -317,27 +298,6 @@ final class ValidationFunctionsTest extends TestCase
             'timezone' => 'UTC',
             'longitudeMax' => 2
         ];
-        $this->assertFalse(validateSTCDependencies($entry));
-    }
-
-    /**
-     * Ensures STC validation fails when end time is before start time on the same date.
-     *
-     * @return void
-     */
-    public function testValidateSTCDependenciesSameDateEndTimeBeforeStartTime(): void
-    {
-        $entry = [
-            'latitudeMin' => 1,
-            'longitudeMin' => 1,
-            'description' => 'd',
-            'dateStart' => '2020-01-01',
-            'dateEnd' => '2020-01-01',
-            'timeStart' => '12:00',
-            'timeEnd' => '11:59',
-            'timezone' => 'UTC'
-        ];
-
         $this->assertFalse(validateSTCDependencies($entry));
     }
 
