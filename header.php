@@ -15,7 +15,7 @@ sort($langCodes);
 
 // Fallback for instance title if not defined in settings
 if (!isset($instanceTitle)) {
-    $instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor 2.0';
+    $instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor';
 }
 
 // Determine base href, taking reverse proxy prefixes into account

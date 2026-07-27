@@ -12,7 +12,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
-    "@babel/core": "^8.0.1",
     "@babel/preset-env": "^8.0.2",
     "@playwright/test": "^1.61.1",
     "@types/node": "^26.1.1",
@@ -30,6 +29,9 @@
   },
   "overrides": {
     "ws": "^8.21.0",
-    "yargs": "^18.0.0"
+    "yargs": "^18.0.0",
+    "@babel/core": "$@babel/core",
+    "minimatch": "^10.0.0",
+    "brace-expansion": "^5.0.8"
   }
 }

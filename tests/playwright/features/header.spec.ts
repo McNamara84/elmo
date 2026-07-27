@@ -45,8 +45,8 @@ test.describe('Header Tests', () => {
 
     // Title should match one of the valid instance titles
     const validTitles = [
-      'ELMO – GFZ Metadata Editor 2.0',
-      'ELMO MSL Edition – GFZ Metadata Editor 2.0',
+      'ELMO – GFZ Metadata Editor',
+      'ELMO MSL Edition – GFZ Metadata Editor',
       'ELMO ICGEM Edition – Alpha Version',
       'ELMO IGSN Edition – Alpha Version'
     ];
