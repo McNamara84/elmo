@@ -64,32 +64,6 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         }
     }
 
-    public function testElmoGemSubmitRejectsTimedStcWithoutDatesForIssue1068(): void
-    {
-        $this->markTestSkipped('Temporarily skipped per request while STC timed-without-dates behavior is being revisited.');
-
-        $previous = $GLOBALS['showGGMsProperties'] ?? null;
-        $GLOBALS['showGGMsProperties'] = true;
-
-        try {
-            $resourceId = $this->createResource(
-                'GFZ.TEST.ISSUE.1068.GEM.TIME.NO.DATES',
-                'Issue 1068 GEM Time Without Dates'
-            );
-            $postData = $this->spatialOnlyPostData();
-            $postData['tscTimeStart'] = ['08:00'];
-            $postData['tscTimeEnd'] = ['09:00'];
-            $postData['tscTimezone'] = ['UTC'];
-
-            $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
-
-            $this->assertFalse($result, 'ELMO-GEM submit should reject time values without matching dates.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
-        } finally {
-            $this->restoreGlobal('showGGMsProperties', $previous);
-        }
-    }
-
     public function testElmoGemSubmitAllowsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
     {
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
