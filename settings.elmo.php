@@ -199,7 +199,7 @@ if (isset($_GET['setting'])) {
 }
 
 // Instance title for header (can be overridden via environment variable)
-$instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor 2.0';
+$instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor';
 
 // Initialize logging
 function elmo_log($msg) {

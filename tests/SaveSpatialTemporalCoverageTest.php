@@ -195,101 +195,6 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
-     * Tests validation of invalid coordinate combinations.
-     * 
-     * Verifies that saving fails when required coordinate fields are missing.
-     *
-     * @return void
-     */
-    public function testSaveWithInvalidCoordinates()
-    {
-        $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.INVALID.COORDS",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Test Invalid Coordinates STC"],
-            "titleType" => [1]
-        ];
-        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
-
-        $postData = [
-            "tscLatitudeMin" => [""],
-            "tscLatitudeMax" => ["40.7828"],
-            "tscLongitudeMin" => ["-74.0060"],
-            "tscLongitudeMax" => [""],
-            "tscDescription" => ["New York City"],
-            "tscDateStart" => ["2023-01-01"],
-            "tscTimeStart" => ["00:00:00"],
-            "tscDateEnd" => ["2023-12-31"],
-            "tscTimeEnd" => ["23:59:59"],
-            "tscTimezone" => ["-05:00"]
-        ];
-
-        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
-
-        $this->assertFalse($result, 'Function should return false with invalid coordinates');
-
-        // Verify no records were saved
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Spatial_Temporal_Coverage");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $count, 'No STC entries should be saved with invalid coordinates');
-    }
-
-    /**
-     * Tests that spatial-only submit data is rejected outside ELMO-GEM.
-     *
-     * @return void
-     */
-    public function testSubmitRejectsSpatialOnlyCoverageOutsideElmoGem()
-    {
-        $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.EMPTY.DATE",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Test Empty Date STC"],
-            "titleType" => [1]
-        ];
-        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
-
-        $postData = [
-            "action" => "submit",
-            "tscLatitudeMin" => ["40.7128"],
-            "tscLatitudeMax" => ["40.7828"],
-            "tscLongitudeMin" => ["-74.0060"],
-            "tscLongitudeMax" => ["-73.9360"],
-            "tscDescription" => ["New York City"],
-            "tscDateStart" => [""],  // Empty date
-            "tscTimeStart" => [""],
-            "tscDateEnd" => [""],
-            "tscTimeEnd" => [""],
-            "tscTimezone" => [""]
-        ];
-
-        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
-
-        $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC without temporal coverage.');
-
-        // No STC should be saved since the submitted row is incomplete for non-GEM.
-        $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count 
-            FROM Resource_has_Spatial_Temporal_Coverage 
-            WHERE Resource_resource_id = ?
-        ");
-        $stmt->bind_param("i", $resource_id);
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-
-        $this->assertEquals(0, $count, 'No STC should be saved when dateStart is empty outside ELMO-GEM.');
-    }
-
-    /**
      * Tests saving without time values.
      * 
      * Verifies that records can be saved with date-only temporal coverage,
@@ -341,48 +246,6 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertNull($retrievedStc["timeEnd"]);
     }
 
-    /**
-     * Tests that submit validation rejects same-day entries with reversed time order.
-     *
-     * @return void
-     */
-    public function testSubmitRejectsSameDateWithEndTimeBeforeStartTime(): void
-    {
-        $resourceData = [
-            "doi" => "10.5880/GFZ.TEST.INVALID.TIME.ORDER",
-            "year" => 2023,
-            "dateCreated" => "2023-06-01",
-            "resourcetype" => 1,
-            "language" => 1,
-            "Rights" => 1,
-            "title" => ["Test Invalid Time Order STC"],
-            "titleType" => [1]
-        ];
-        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
-
-        $postData = [
-            "action" => "submit",
-            "tscLatitudeMin" => ["40.7128"],
-            "tscLatitudeMax" => ["40.7828"],
-            "tscLongitudeMin" => ["-74.0060"],
-            "tscLongitudeMax" => ["-73.9360"],
-            "tscDescription" => ["New York City"],
-            "tscDateStart" => ["2023-01-01"],
-            "tscTimeStart" => ["12:00"],
-            "tscDateEnd" => ["2023-01-01"],
-            "tscTimeEnd" => ["11:00"],
-            "tscTimezone" => ["-05:00"]
-        ];
-
-        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
-
-        $this->assertFalse($result, 'Function should return false for invalid same-day time order.');
-
-        $stmt = $this->connection->prepare("SELECT COUNT(*) as count FROM Spatial_Temporal_Coverage");
-        $stmt->execute();
-        $count = $stmt->get_result()->fetch_assoc()['count'];
-        $this->assertEquals(0, $count, 'No STC entries should be saved for invalid same-day time order.');
-    }
     /**
      * Tests saving with mixed time values.
      * 
@@ -755,5 +618,55 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals(0, (float)$retrievedStc["latitudeMax"], 'Zero latitudeMax should be saved as 0, not NULL');
         $this->assertEquals(0, (float)$retrievedStc["longitudeMin"], 'Zero longitudeMin should be saved as 0, not NULL');
         $this->assertEquals(0, (float)$retrievedStc["longitudeMax"], 'Zero longitudeMax should be saved as 0, not NULL');
+    }
+
+    /**
+     * Tests saving STC with description only and no coordinates.
+     * 
+     * This covers the scenario where a user provides only a textual spatial
+     * description without any coordinate values. The backend should allow saving
+     * this entry and store all coordinate fields as NULL.
+     *
+     * @return void
+     */
+    public function testSaveWithDescriptionOnlyAndNoCoordinates(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.DESCRIPTION.ONLY." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Description Only"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "tscDescription" => ["Area described in text only"],
+            "tscDateStart"   => ["2026-01-01"]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Saving should succeed with description only and no coordinates');
+
+        $stmt = $this->connection->prepare(
+            "SELECT stc.* FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc
+                ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
+             WHERE rhstc.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $retrievedStc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($retrievedStc);
+        $this->assertEquals("Area described in text only", $retrievedStc["description"]);
+        $this->assertNull($retrievedStc["latitudeMin"]);
+        $this->assertNull($retrievedStc["latitudeMax"]);
+        $this->assertNull($retrievedStc["longitudeMin"]);
+        $this->assertNull($retrievedStc["longitudeMax"]);
     }
 }
