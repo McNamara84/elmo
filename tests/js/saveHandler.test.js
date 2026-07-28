@@ -103,6 +103,12 @@ describe('saveHandler.js', () => {
         }
       }
     };
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        const payloadInput = document.querySelector('input[name="authorsPayload"]');
+        return payloadInput ? JSON.parse(payloadInput.value) : [];
+      })
+    };
     loadScript();
   });
 
@@ -286,12 +292,14 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload sends jsonld format', async () => {
-    const currentAuthors = JSON.stringify([
+    const currentAuthorsPayload = [
       { type: 'person', familyname: 'Payload', givenname: 'Jane', affiliations: [] }
-    ]);
+    ];
+    const currentAuthors = JSON.stringify(currentAuthorsPayload);
     window.authorStack = {
       updatePayload: jest.fn(() => {
         document.querySelector('input[name="authorsPayload"]').value = currentAuthors;
+        return currentAuthorsPayload;
       })
     };
     global.fetch = createSaveHandlerFetchMock({
@@ -311,6 +319,23 @@ describe('saveHandler.js', () => {
     expect(saveCall[1].body.get('authorsPayload')).toBe(currentAuthors);
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
     delete window.authorStack;
+    delete global.fetch;
+  });
+
+  test('saveAndDownload aborts visibly when the Authors payload field is missing', async () => {
+    document.querySelector('input[name="authorsPayload"]').remove();
+    global.fetch = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset', 'jsonld');
+
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+
+    consoleSpy.mockRestore();
     delete global.fetch;
   });
 
