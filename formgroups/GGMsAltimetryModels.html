@@ -91,6 +91,10 @@
             <hr>
 			<div class="row mt-2">
 				<div class="col-auto">
+					<input type="checkbox" class="btn-check" id="altimetryGRA" autocomplete="off">
+					<label class="btn btn-outline-primary" for="altimetryGRA">Gravity over oceans</label>
+				</div>
+				<div class="col-auto">
 					<input type="checkbox" class="btn-check" id="altimetryMSS" autocomplete="off">
 					<label class="btn btn-outline-primary" for="altimetryMSS">Mean sea surface</label>
 				</div>
@@ -98,17 +102,67 @@
 					<input type="checkbox" class="btn-check" id="altimetryMDOT" autocomplete="off">
 					<label class="btn btn-outline-primary" for="altimetryMDOT">Mean dynamic ocean topography</label>
 				</div>
-				<div class="col-auto">
-					<input type="checkbox" class="btn-check" id="altimetryGRA" autocomplete="off">
-					<label class="btn btn-outline-primary" for="altimetryGRA">Gravity over oceans</label>
-				</div>
-				<div class="col-auto">
-					<input type="checkbox" class="btn-check" id="altimetryBathymetry" autocomplete="off">
-					<label class="btn btn-outline-primary" for="altimetryBathymetry">Bathymetry</label>
-				</div>
-				<div class="col-auto">
-					<input type="checkbox" class="btn-check" id="altimetryErrors" autocomplete="off">
-					<label class="btn btn-outline-primary" for="altimetryErrors">Errors</label>
+			</div>
+
+			<!-- GRA product group -->
+			<div id="group-altimetry-gra" class="mt-3 d-none" aria-hidden="true">
+				<h6 class="mb-2">Gravity over oceans: product properties</h6>
+				<div class="row">
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-file-name" name="gra_file_name" disabled>
+								<label for="input-gra-file-name">File name</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-file-name" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-spatial-resolution" name="gra_spatial_resolution" disabled>
+								<label for="input-gra-spatial-resolution">Spatial resolution</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-4 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<select class="form-select input-with-help input-right-no-round-corners" id="input-gra-spatial-coverage" name="gra_spatial_coverage" disabled>
+									<option value="global" selected>Global</option>
+									<option value="custom">Custom</option>
+								</select>
+								<label for="input-gra-spatial-coverage">Spatial coverage</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
+					<div class="col-12 col-md-6 col-lg-6 p-1">
+						<div class="input-group has-validation">
+							<div class="form-floating">
+								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-calc-method" name="gra_calculation_method" disabled>
+								<label for="input-gra-calc-method">Calculation method</label>
+							</div>
+							<div class="input-group-append">
+								<span class="input-group-text">
+									<i class="bi bi-question-circle-fill" data-help-section-id="help-calculation-method" aria-hidden="true"></i>
+								</span>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 
@@ -138,47 +192,6 @@
 							<div class="input-group-append">
 								<span class="input-group-text">
 									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-4 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-spatial-coverage" name="mss_spatial_coverage" disabled>
-								<label for="input-mss-spatial-coverage">Spatial coverage</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="row mt-2">
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-bathymetry" name="mss_bathymetry" disabled>
-								<label for="input-mss-bathymetry">Bathymetry</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-bathymetry" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mss-errors" name="mss_errors" disabled>
-								<label for="input-mss-errors">Errors</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-errors" aria-hidden="true"></i>
 								</span>
 							</div>
 						</div>
@@ -216,19 +229,6 @@
 							</div>
 						</div>
 					</div>
-					<div class="col-12 col-md-6 col-lg-4 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-spatial-coverage" name="mdot_spatial_coverage" disabled>
-								<label for="input-mdot-spatial-coverage">Spatial coverage</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
 					<div class="col-12 col-md-6 col-lg-6 p-1">
 						<div class="input-group has-validation">
 							<div class="form-floating">
@@ -256,161 +256,8 @@
 						</div>
 					</div>
 				</div>
-				<div class="row mt-2">
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-bathymetry" name="mdot_bathymetry" disabled>
-								<label for="input-mdot-bathymetry">Bathymetry</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-bathymetry" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mdot-errors" name="mdot_errors" disabled>
-								<label for="input-mdot-errors">Errors</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-errors" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
 			</div>
 
-			<!-- GRA product group -->
-			<div id="group-altimetry-gra" class="mt-3 d-none" aria-hidden="true">
-				<h6 class="mb-2">Gravity over oceans: product properties</h6>
-				<div class="row">
-					<div class="col-12 col-md-6 col-lg-4 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-file-name" name="gra_file_name" disabled>
-								<label for="input-gra-file-name">File name</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-file-name" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-4 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-spatial-resolution" name="gra_spatial_resolution" disabled>
-								<label for="input-gra-spatial-resolution">Spatial resolution</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-4 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-spatial-coverage" name="gra_spatial_coverage" disabled>
-								<label for="input-gra-spatial-coverage">Spatial coverage</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-coverage" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-calc-method" name="gra_calculation_method" disabled>
-								<label for="input-gra-calc-method">Calculation method</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-calculation-method" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-resolution-arcmin" name="gra_resolution_arcmin" disabled>
-								<label for="input-gra-resolution-arcmin">Resolution (arc-minute)</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-gra-resolution-arcmin" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-geostrophic-velocity" name="gra_geostrophic_velocity" disabled>
-								<label for="input-gra-geostrophic-velocity">Geostrophic velocity</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-geostrophic-velocity" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-geostrophic-velocity-error" name="gra_geostrophic_velocity_error" disabled>
-								<label for="input-gra-geostrophic-velocity-error">Geostrophic velocity error</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-geostrophic-velocity-error" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="row mt-2">
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-bathymetry" name="gra_bathymetry" disabled>
-								<label for="input-gra-bathymetry">Bathymetry</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-bathymetry" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-					<div class="col-12 col-md-6 col-lg-6 p-1">
-						<div class="input-group has-validation">
-							<div class="form-floating">
-								<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gra-errors" name="gra_errors" disabled>
-								<label for="input-gra-errors">Errors</label>
-							</div>
-							<div class="input-group-append">
-								<span class="input-group-text">
-									<i class="bi bi-question-circle-fill" data-help-section-id="help-errors" aria-hidden="true"></i>
-								</span>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
 		</div>
 	</div>
 </div>
