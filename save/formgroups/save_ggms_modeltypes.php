@@ -190,18 +190,19 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
     $startDate = $getVal('temporalStart');
     $endDate = $getVal('temporalEnd');
     $generatingInstitution = $getVal('temporalInstitution');
+    $releaseFrequency = $getVal('releaseFrequency');
     $release = $getVal('releaseNumber');
 
     // Insert new temporal properties record
     $sql = "INSERT INTO `Temporal_Model_Properties`
-                (`start_date`, `end_date`, `temporal_resolution_days`, `generating_institution`, `release`)
-             VALUES (?, ?, ?, ?, ?)";
+                (`start_date`, `end_date`, `temporal_resolution_days`, `generating_institution`, `release_frequency`, `release`)
+             VALUES (?, ?, ?, ?, ?, ?)";
     $stmt = $connection->prepare($sql);
     if (!$stmt) {
         throw new Exception("Failed to prepare insert statement: " . $connection->error);
     }
-    error_log("binding parameters: " . $startDate . ", " . $endDate . ", " . $temporalResolutionDays . ", " . $generatingInstitution . ", " . $release);
-    $stmt->bind_param('ssiss', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution, $release);
+    error_log("binding parameters: " . $startDate . ", " . $endDate . ", " . $temporalResolutionDays . ", " . $generatingInstitution . ", " . $releaseFrequency . ", " . $release);
+    $stmt->bind_param('ssisss', $startDate, $endDate, $temporalResolutionDays, $generatingInstitution, $releaseFrequency, $release);
     if (!$stmt->execute()) {
         throw new Exception('Error inserting Temporal_Model_Properties: ' . $stmt->error);
     }
