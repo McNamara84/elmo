@@ -1,18 +1,31 @@
 services:
   db:
-    image: mariadb:11
+    build:
+      context: .
+      dockerfile: Dockerfile.db
+    tmpfs:  # <-- In-memory, no disk, auto-cleared on restart
+      - /var/lib/mysql:rw,uid=65532,gid=65532,mode=0770
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}
       MARIADB_USER: ${DB_USER}
       MARIADB_PASSWORD: ${DB_PASSWORD}
       TZ: Europe/Berlin
-    volumes:
-      - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    security_opt:
+      - no-new-privileges:true
 
   web:
-    build: .
+    build:
+      context: .
+      target: dev
+      dockerfile: Dockerfile.web
     ports:
       - "8080:80"
     environment:
@@ -23,7 +36,6 @@ services:
       ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
       TZ: Europe/Berlin
-      DB_INIT_MODE: drop_data
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
       GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
       ERNIE_URL: ${ERNIE_URL}
@@ -38,7 +50,8 @@ services:
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     volumes:
       # Mount the entire project directory for live code changes.
@@ -47,7 +60,7 @@ services:
       - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.60.0-noble
+    image: mcr.microsoft.com/playwright:v1.61.1-noble
     profiles:
       - test
     init: true

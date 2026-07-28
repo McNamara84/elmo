@@ -10,11 +10,20 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - internal
 
   web:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8080:80"
     environment:
@@ -22,8 +31,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-
-
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -41,7 +49,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Database install routine
@@ -56,7 +64,8 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
       SHOW_RELATED_WORK: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -71,7 +80,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-msl:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8081:80"
     environment:
@@ -79,7 +91,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
       SMTP_USER: ${SMTP_USER}
@@ -97,7 +109,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for MSL (MSL-specific vocabularies enabled)
@@ -110,7 +122,8 @@ services:
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -125,7 +138,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-gem:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8082:80"
     environment:
@@ -133,6 +149,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       # No install routine
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -151,7 +168,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "true"
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for ICGEM (GGMs properties enabled)
@@ -164,7 +181,8 @@ services:
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM – Alpha Version"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -179,7 +197,10 @@ services:
       - "traefik.docker.network=traefik"
 
   web-igsn:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
     ports:
       - "8083:80"
     environment:
@@ -187,6 +208,7 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
       # No install routine
       INSTALL_ACTION: skip
       SMTP_HOST: ${SMTP_HOST}
@@ -205,6 +227,7 @@ services:
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Flags for IGSN (minimal form - most form groups disabled)
@@ -218,7 +241,8 @@ services:
       INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal

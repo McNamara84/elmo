@@ -201,11 +201,10 @@ test.describe('DOI Prefill Feature', () => {
     const confirmBtn = page.locator('#button-doi-prefill-confirm');
     await expect(confirmBtn).toBeVisible({ timeout: 10000 });
 
-    // Click confirm
+    // Click confirm and wait for prefill to finish (modal closes after apply starts)
     await confirmBtn.click();
-
-    // Wait for modal to close
-    await expect(page.locator('#modal-doi-prefill')).not.toBeVisible({ timeout: 5000 });
+    await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('2024', { timeout: 15000 });
+    await expect(page.locator('#modal-doi-prefill')).toBeHidden({ timeout: 10000 });
 
     // Check form fields were populated
     await expect(doiInput).toHaveValue('10.5880/test.2024.001');

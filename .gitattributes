@@ -1,0 +1,7 @@
+# Treat all files as text and handle them automatically by default
+* text=auto
+
+# Explicitly force Unix (LF) line endings for scripts and configs
+*.sh text eol=lf
+*.bash text eol=lf
+Dockerfile text eol=lf

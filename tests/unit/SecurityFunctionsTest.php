@@ -5,19 +5,17 @@
  * Tests core security features:
  * - CSRF token validation, generation, and invalidation
  * - Honeypot validation for bot detection
- * - Client IP detection from various headers
- * - recordRateLimit fail-open behavior
- * - logSuspiciousAttempt sanitization and fallback
+ * - Session-scoped rate limiting
+ * - logSuspiciousAttempt sanitization and throttling
  */
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class SecurityFunctionsTest extends TestCase
 {
-    private string $testIp = '192.168.1.100';
-
     protected function setUp(): void
     {
         if (session_status() === PHP_SESSION_NONE) {
@@ -33,7 +31,6 @@ class SecurityFunctionsTest extends TestCase
     protected function tearDown(): void
     {
         $_SESSION = [];
-        unset($_SERVER['REMOTE_ADDR'], $_SERVER['HTTP_X_FORWARDED_FOR'], $_SERVER['HTTP_X_REAL_IP']);
     }
 
     // ========== CSRF Token Tests ==========
@@ -42,6 +39,7 @@ class SecurityFunctionsTest extends TestCase
      * @test
      * hash_equals() comparison prevents timing attacks on token validation.
      */
+    #[Test]
     public function validateCsrfToken_RejectsEmptyToken(): void
     {
         $this->assertFalse(validateCsrfToken(''));
@@ -50,6 +48,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_AcceptsValidToken(): void
     {
         $token = generateCsrfToken();
@@ -59,6 +58,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsInvalidToken(): void
     {
         generateCsrfToken();
@@ -68,6 +68,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsWhenNoSessionToken(): void
     {
         $_SESSION = [];
@@ -77,6 +78,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsExpiredToken(): void
     {
         $token = generateCsrfToken();
@@ -87,6 +89,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_AcceptsTokenWithinWindow(): void
     {
         $token = generateCsrfToken();
@@ -97,6 +100,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function invalidateCsrfToken_RemovesToken(): void
     {
         $token = generateCsrfToken();
@@ -110,6 +114,19 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
+    public function getOrCreateCsrfToken_ReusesExistingToken(): void
+    {
+        $first = getOrCreateCsrfToken();
+        $second = getOrCreateCsrfToken();
+
+        $this->assertSame($first, $second);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
     public function generateCsrfToken_StoresTimeInSession(): void
     {
         $beforeTime = time();
@@ -126,23 +143,179 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
-    public function getCsrfTokenAgeSeconds_ReturnsZeroWhenNoToken(): void
+    #[Test]
+    public function getPageInteractionAgeSeconds_ReturnsZeroWhenNoTimestamp(): void
     {
         $_SESSION = [];
-        $this->assertEquals(0, getCsrfTokenAgeSeconds());
+        $this->assertEquals(0.0, getPageInteractionAgeSeconds());
     }
 
     /**
      * @test
      */
-    public function getCsrfTokenAgeSeconds_ReturnsElapsedTime(): void
+    #[Test]
+    public function getPageInteractionAgeSeconds_ReturnsElapsedTime(): void
     {
+        $_SESSION['interaction_start_time'] = microtime(true) - 5.0;
+
+        $age = getPageInteractionAgeSeconds();
+        $this->assertGreaterThanOrEqual(4.9, $age);
+        $this->assertLessThanOrEqual(6.0, $age);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function resetPageInteractionTime_ResetsTimerRegardlessOfTokenState(): void
+    {
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
+
+        resetPageInteractionTime('form');
+        $this->assertLessThanOrEqual(0.1, getPageInteractionAgeSeconds());
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function resetPageInteractionTime_DoesNotRotateExistingToken(): void
+    {
+        $token = getOrCreateCsrfToken();
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
+
+        resetPageInteractionTime('form');
+
+        $this->assertSame($token, $_SESSION['csrf_token']);
+        $this->assertLessThanOrEqual(0.1, getPageInteractionAgeSeconds());
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function evaluateInteractionTime_UsesOnlyServerTimer(): void
+    {
+        $_SESSION['interaction_start_time'] = microtime(true) - 10.0;
+
+        $result = evaluateInteractionTime(2.0);
+
+        $this->assertTrue($result['isValid']);
+        $this->assertGreaterThanOrEqual(9.9, $result['effectiveSeconds']);
+        $this->assertArrayNotHasKey('clientSeconds', $result);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function evaluateInteractionTime_RejectsWhenTooFast(): void
+    {
+        $_SESSION['interaction_start_time'] = microtime(true) - 0.5;
+
+        $result = evaluateInteractionTime(2.0);
+
+        $this->assertFalse($result['isValid']);
+        $this->assertLessThan(2.0, $result['effectiveSeconds']);
+        $this->assertFalse($result['timerWasMissing']);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function evaluateInteractionTime_SeedsTimerWhenMissing(): void
+    {
+        $_SESSION = [];
+
+        $result = evaluateInteractionTime(3.0);
+
+        $this->assertFalse($result['isValid']);
+        $this->assertTrue($result['timerWasMissing']);
+        $this->assertLessThan(3.0, $result['effectiveSeconds']);
+        $this->assertArrayHasKey('interaction_start_time', $_SESSION);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function evaluateInteractionTime_AllowsRetryAfterTimerWasRestored(): void
+    {
+        $_SESSION = [];
+
+        evaluateInteractionTime(3.0);
+        $_SESSION['interaction_start_time'] = microtime(true) - 3.5;
+
+        $result = evaluateInteractionTime(3.0);
+
+        $this->assertTrue($result['isValid']);
+        $this->assertFalse($result['timerWasMissing']);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function getPageInteractionAgeSeconds_DoesNotSeedMissingTimer(): void
+    {
+        $_SESSION = [];
+
+        $this->assertSame(0.0, getPageInteractionAgeSeconds());
+        $this->assertArrayNotHasKey('interaction_start_time', $_SESSION);
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function generateCsrfToken_DoesNotResetInteractionTimer(): void
+    {
+        $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
+
         generateCsrfToken();
-        $_SESSION['csrf_token_time'] = time() - 5;
-        
-        $age = getCsrfTokenAgeSeconds();
-        $this->assertGreaterThanOrEqual(4, $age);
-        $this->assertLessThanOrEqual(6, $age);
+
+        $this->assertGreaterThanOrEqual(441.0, getPageInteractionAgeSeconds());
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function getSubmittedCsrfToken_ReadsHyphenatedFieldName(): void
+    {
+        $this->assertSame(
+            'token-value',
+            getSubmittedCsrfToken(['csrf-token' => 'token-value'])
+        );
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function getSubmittedCsrfToken_FallsBackToLegacyUnderscoreName(): void
+    {
+        $this->assertSame(
+            'legacy-token',
+            getSubmittedCsrfToken(['csrf_token' => 'legacy-token'])
+        );
+    }
+
+    /**
+     * @test
+     */
+    #[Test]
+    public function getSubmittedHoneypotValue_ReadsConfiguredFieldName(): void
+    {
+        $this->assertSame(
+            '',
+            getSubmittedHoneypotValue(['please-fill-in-this-field' => ''])
+        );
+        $this->assertSame(
+            'bot',
+            getSubmittedHoneypotValue(['please-fill-in-this-field' => 'bot'])
+        );
     }
 
     // ========== Honeypot Tests ==========
@@ -151,6 +324,7 @@ class SecurityFunctionsTest extends TestCase
      * @test
      * Honeypot rejects any non-empty value (indicates bot automation).
      */
+    #[Test]
     public function validateHoneypot_AcceptsEmpty(): void
     {
         $this->assertTrue(validateHoneypot(''));
@@ -159,6 +333,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateHoneypot_RejectsFilled(): void
     {
         $this->assertFalse(validateHoneypot('bot-value'));
@@ -167,76 +342,28 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateHoneypot_RejectsWhitespace(): void
     {
         $this->assertFalse(validateHoneypot('   '));
     }
 
-    // ========== Client IP Detection Tests ==========
+    // ========== Session Rate Limit Tests ==========
 
-    /**
-     * @test
-     * IP detection prioritizes forwarded headers (X-Forwarded-For, X-Real-IP).
-     */
-    public function getClientIp_UsesRemoteAddr(): void
+    /** @test */
+    #[Test]
+    public function checkSessionRateLimit_AllowsWithinLimit(): void
     {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $this->assertEquals('10.0.0.1', getClientIp());
-    }
-
-    /**
-     * @test
-     */
-    public function getClientIp_PrefersXForwardedFor(): void
-    {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $_SERVER['HTTP_X_FORWARDED_FOR'] = '203.0.113.5, 198.51.100.1';
-
-        $this->assertEquals('203.0.113.5', getClientIp());
-    }
-
-    /**
-     * @test
-     */
-    public function getClientIp_UsesXRealIp(): void
-    {
-        $_SERVER['REMOTE_ADDR'] = '10.0.0.1';
-        $_SERVER['HTTP_X_REAL_IP'] = '192.0.2.1';
-
-        $this->assertEquals('192.0.2.1', getClientIp());
-    }
-
-    // ========== Rate Limit Storage: Fail-Open Tests ==========
-
-    /**
-     * @test
-     * All rate-limit functions degrade gracefully (fail-open) when storage is unavailable.
-     */
-    public function isRateLimitStorageAvailable_FalseForNullConnection(): void
-    {
-        $this->assertFalse(isRateLimitStorageAvailable(null));
+        recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
+        $this->assertTrue(checkSessionRateLimit('save', 2, RATE_LIMIT_WINDOW_SECONDS));
     }
 
     /** @test */
-    public function isRateLimitStorageAvailable_FalseForNonMysqliObject(): void
+    #[Test]
+    public function recordSessionRateLimit_StoresTimestampInSession(): void
     {
-        $this->assertFalse(isRateLimitStorageAvailable(new \stdClass()));
-    }
-
-    // ========== recordRateLimit Tests ==========
-
-    /** @test */
-    public function recordRateLimit_ReturnsFalseForNullConnection(): void
-    {
-        $result = recordRateLimit(null, $this->testIp, 'save');
-        $this->assertFalse($result);
-    }
-
-    /** @test */
-    public function recordRateLimit_ReturnsFalseForInvalidConnection(): void
-    {
-        $result = recordRateLimit(new \stdClass(), $this->testIp, 'submit');
-        $this->assertFalse($result);
+        recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
+        $this->assertCount(1, $_SESSION[RATE_LIMIT_SESSION_KEY]['submit']);
     }
 
     // ========== logSuspiciousAttempt Tests ==========
@@ -262,36 +389,37 @@ class SecurityFunctionsTest extends TestCase
 
     /**
      * @test
-     * When no DB is available the function must not throw and must write to error_log.
      */
-    public function logSuspiciousAttempt_FallsBackToErrorLogWhenNoConnection(): void
+    #[Test]
+    public function logSuspiciousAttempt_WritesToErrorLog(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'save', 'honeypot filled', $this->testIp);
+        logSuspiciousAttempt('save', 'honeypot filled');
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringContainsString('[SECURITY]', $content);
         $this->assertStringContainsString('Suspicious save attempt', $content);
-        $this->assertStringContainsString($this->testIp, $content);
+        $this->assertStringNotContainsString('IP', $content);
     }
 
     /** @test */
+    #[Test]
     public function logSuspiciousAttempt_SanitizesSpecialCharsInOperation(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'save/op@attack!', 'reason', $this->testIp);
+        logSuspiciousAttempt('save/op@attack!', 'reason');
         $content = $this->readAndCleanLog($logFile);
 
-        // Dangerous chars must be replaced with underscores in the log line
         $this->assertStringContainsString('save_op_attack_', $content);
         $this->assertStringNotContainsString('save/op@attack!', $content);
     }
 
     /** @test */
+    #[Test]
     public function logSuspiciousAttempt_SanitizesControlCharsInReason(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'submit', "invalid\x00token\x1Fvalue", $this->testIp);
+        logSuspiciousAttempt('submit', "invalid\x00token\x1Fvalue");
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringNotContainsString("\x00", $content);
@@ -299,21 +427,11 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
-    public function logSuspiciousAttempt_UsesProvidedIpAddress(): void
-    {
-        $customIp = '10.0.0.50';
-        $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(null, 'submit', 'csrf invalid', $customIp);
-        $content = $this->readAndCleanLog($logFile);
-
-        $this->assertStringContainsString($customIp, $content);
-    }
-
-    /** @test */
-    public function logSuspiciousAttempt_DoesNotThrowOnInvalidConnection(): void
+    #[Test]
+    public function logSuspiciousAttempt_DoesNotThrow(): void
     {
         $logFile = $this->captureErrorLog();
-        logSuspiciousAttempt(new \stdClass(), 'submit', 'test', $this->testIp);
+        logSuspiciousAttempt('submit', 'test');
         $content = $this->readAndCleanLog($logFile);
 
         $this->assertStringContainsString('[SECURITY]', $content);

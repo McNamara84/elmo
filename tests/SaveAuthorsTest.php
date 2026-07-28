@@ -473,7 +473,7 @@ final class SaveAuthorsTest extends DatabaseTestCase
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreePersonAuthorsWithOneMissingLastName()
+    public function testSaveThreePersonAuthorsRetainsAuthorWithoutFamilyName()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS.ONE.MISSING",
@@ -501,9 +501,9 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            2,
+            3,
             $count,
-            "Es sollten nur zwei Autoren gespeichert worden sein, da einer einen fehlenden Nachnamen hatte."
+            "Alle drei Autoren sollten gespeichert werden, da ein Vorname oder eine ORCID ausreicht."
         );
 
         $stmt = $this->connection->prepare("SELECT familyname FROM Author_person ORDER BY familyname");
@@ -514,9 +514,9 @@ final class SaveAuthorsTest extends DatabaseTestCase
             $savedFamilynames[] = $row['familyname'];
         }
         $this->assertEquals(
-            ["Doe", "Johnson"],
+            ["", "Doe", "Johnson"],
             $savedFamilynames,
-            "Nur die Autoren 'Doe' und 'Johnson' sollten gespeichert worden sein."
+            "Der Autor ohne Familiennamen sollte zusammen mit Doe und Johnson gespeichert worden sein."
         );
     }
     public function testSaveMultipleInstitutionAuthorsWithOneMissingName()
