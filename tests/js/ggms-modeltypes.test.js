@@ -55,21 +55,30 @@ describe('ggms-modeltypes.js', () => {
                         <h5 class="mb-3">Temporal models special variables</h5>
                         <hr>
                         <div class="row mb-3">
-                            <div class="col-sm-5 col-lg-5 p-1">
+                            <div class="col-sm-2 col-lg-2 p-1">
+                                <div class="form-floating">
+                                    <select class="form-select" id="select-release-frequency" name="releaseFrequency">
+                                        <option selected value=""></option>
+                                        <option value="monthly">Monthly</option>
+                                    </select>
+                                    <label for="select-release-frequency">Release frequency</label>
+                                </div>
+                            </div>
+                            <div class="col-sm-2 col-lg-2 p-1">
                                 <div class="form-floating mb-1">
                                     <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
                                         <option selected value=""></option>
                                         <option value="monthly">Monthly</option>
                                     </select>
-                                    <label for="select-temporal-frequency-predef">Release frequency / temporal resolution</label>
+                                    <label for="select-temporal-frequency-predef">Temporal resolution</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input no-validation-style" type="checkbox" id="checkbox-custom-frequency">
-                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom frequency value</label>
+                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom temporal resolution</label>
                                 </div>
                                 <div class="form-floating mt-1 d-none" id="custom-frequency-container">
                                     <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
-                                    <label for="input-temporal-frequency">Custom frequency (days)</label>
+                                    <label for="input-temporal-frequency">Custom temporal resolution (days)</label>
                                 </div>
                             </div>
                         </div>
