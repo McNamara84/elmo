@@ -50,6 +50,12 @@ function setupICGEMFileFormats() {
             // The response is directly an array of format objects
             if (response && response.length > 0) {
                 response.forEach(function (format) {
+                    // MASCON is a mathematical representation. Filter the
+                    // legacy lookup entry so upgraded GEM installations match
+                    // the current taxonomy before their vocabulary is reset.
+                    if ((format.name || '').toString().trim().toLowerCase() === 'mascon') {
+                        return;
+                    }
                         selectElement.append(
                             $("<option>", {
                                 value: format.name,
@@ -305,7 +311,7 @@ $(document).ready(function() {
 
 /**
  * @description Handles default values for mathematical representation and file format
- * based on special model types (altimetry-derived, mascon).
+ * based on the altimetry-derived model type.
  * 
  * @module ggmspropertiesessential
  */
@@ -329,7 +335,7 @@ $(document).ready(function() {
 
     /** Checks if the model type requires gridded dataset defaults. */
     function isGriddedDatasetType(modelType) {
-        return modelType === 'altimetry-derived' || modelType === 'mascon';
+        return modelType === 'altimetry-derived';
     }
 
     /** Sets select to value by text match (case-insensitive), returns true if found. */

@@ -187,6 +187,7 @@ function clearInputFields() {
     // Temporal
     $('#input-temporal-start').val('');
     $('#input-temporal-end').val('');
+    $('#select-release-frequency').prop('selectedIndex', 0).val('');
     $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
     // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
     // hides #custom-frequency-container and re-enables #select-temporal-frequency-predef.
@@ -238,6 +239,7 @@ const GGMS_SELECTORS = {
         staticDescription: '#input-static-description',
         temporalStart: '#input-temporal-start',
         temporalEnd: '#input-temporal-end',
+        releaseFrequency: '#select-release-frequency',
         temporalFreqPredef: '#select-temporal-frequency-predef',
         customFreqCheckbox: '#checkbox-custom-frequency',
         temporalFrequency: '#input-temporal-frequency',

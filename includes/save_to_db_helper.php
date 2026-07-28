@@ -19,6 +19,8 @@ if ($showGGMsProperties ?? false) {
     require_once __DIR__ . '/../save/formgroups/save_ggms_properties.php';
     require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
     require_once __DIR__ . '/../save/formgroups/save_ggms_modeltypes.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_altimetry_models.php';
+    require_once __DIR__ . '/../save/formgroups/save_ggms_mascons.php';
 }
 
 if ($showMslMode ?? false) {
@@ -101,6 +103,8 @@ function saveALL(array $postData): int {
             executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
             executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
             executeSaveFunction('saveGGMsModeltypes', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveGGMsAltimetryModels', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveGGMsMascons', $connection, $_POST, $resource_id);
         }
 
         // Validate transaction commit
