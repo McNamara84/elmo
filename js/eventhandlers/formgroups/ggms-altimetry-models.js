@@ -189,29 +189,5 @@ $(document).ready(function () {
 		}
 	});
 
-	$(document).on('change', '#altimetryBathymetry, #altimetryErrors', function () {
-		const checkboxId = $(this).attr('id');
-		const isChecked = $(this).is(':checked');
-		let fieldName = '';
-		
-		if (checkboxId === 'altimetryBathymetry') {
-			fieldName = 'bathymetry';
-		} else if (checkboxId === 'altimetryErrors') {
-			fieldName = 'errors';
-		}
-		
-		if (!fieldName) return;
-		
-		// Enable/disable the field in all visible product groups
-		for (const [id, config] of Object.entries(productCheckboxes)) {
-			if (!config.group || !config.group.length) continue;
-			const inputSelector = `#input-${config.name}-${fieldName}`;
-			const $input = config.group.find(inputSelector);
-			if ($input.length) {
-				$input.prop('disabled', !isChecked);
-			}
-		}
-	});
-
 	toggleAltimetrySpecificGroups();
 });

@@ -1,8 +1,11 @@
 import { visibilityOFF, visibilityON } from '../functions.js';
-// This file handles ICGEM, specific behavior, where the STC group is only visible for Altimetry-derived models.
+// In ELMO-GEM, custom coverage is available only for Gravity-over-Oceans
+// products of Altimetry-derived models.
 $(document).ready(function () {
 	const modelTypeSelect = $('#input-model-type');
-	if (!modelTypeSelect.length) {
+	const gravityOverOceansCheckbox = $('#altimetryGRA');
+	const spatialCoverageSelect = $('#input-gra-spatial-coverage');
+	if (!modelTypeSelect.length || !gravityOverOceansCheckbox.length || !spatialCoverageSelect.length) {
 		return;
 	}
     const stcCard = $('#group-stc').closest('.card');
@@ -11,13 +14,13 @@ $(document).ready(function () {
 		return (value || '').toString().trim().toLowerCase();
 	}
 
-	function toggleSTCByModelType() {
+	function toggleSTCByCoverage() {
 		const modelType = normalizeModelType(modelTypeSelect.val());
-		const hasModelType = modelType !== '' && modelType !== 'choose...';
 		const isAltimetry = modelType === 'altimetry-derived';
-		const isMASCON = modelType === 'mascon';
-		const toShow = hasModelType && (isAltimetry || isMASCON);
-		// Altimetry-specific group and STC are visible only for Altimetry-derived.
+		const isGravityOverOceans = gravityOverOceansCheckbox.is(':checked');
+		const hasCustomCoverage = normalizeModelType(spatialCoverageSelect.val()) === 'custom';
+		const toShow = isAltimetry && isGravityOverOceans && hasCustomCoverage;
+
 		if (toShow) {
 			visibilityON(stcCard);
 		} else {
@@ -25,6 +28,6 @@ $(document).ready(function () {
 		}
 	}
 
-	$(document).on('change', '#input-model-type', toggleSTCByModelType);
-	toggleSTCByModelType();
+	$(document).on('change', '#input-model-type, #altimetryGRA, #input-gra-spatial-coverage', toggleSTCByCoverage);
+	toggleSTCByCoverage();
 });

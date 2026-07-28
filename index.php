@@ -85,6 +85,9 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsMASCONs.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
     include $baseDir . 'formgroups/GGMsDataSources.html';
+    // Keep coverage close to the GEM data sources; other ELMO variants retain
+    // their established form order below. JavaScript manages its visibility.
+    include $baseDir . 'formgroups/coverage.html';
     include $baseDir . 'formgroups/GGMsProperties.html';
 }
 if ($showContributorPersons) {
@@ -111,7 +114,7 @@ if ($showFreeKeywords) {
     include $baseDir . 'formgroups/freeKeywords.html';
 }
 include $baseDir . 'formgroups/dates.html';
-if ($showSpatialTemporalCoverage) {
+if ($showSpatialTemporalCoverage && !$showGGMsProperties) {
     include $baseDir . 'formgroups/coverage.html';
 }
 if ($showUsedInstruments) {
