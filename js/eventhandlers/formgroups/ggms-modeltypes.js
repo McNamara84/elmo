@@ -14,9 +14,9 @@ $(document).ready(function() {
         // Check if a valid model type is selected.
         // This covers null, undefined, and empty strings ''.
         const modelTypeLower = (modelType || '').toLowerCase();
-        const isSpecialType = modelTypeLower === 'mascon' || modelTypeLower === 'altimetry-derived';
+        const isSpecialType = modelTypeLower === 'altimetry-derived';
         if (modelType && modelTypeLower !== 'choose...' && modelTypeLower !== 'simulated' && !isSpecialType) {
-            // If a valid model type is selected (not 'Choose...', 'Simulated', or special types), show the card and enable inputs.
+            // If a valid model type is selected (not 'Choose...', 'Simulated', or altimetry-derived), show the card and enable inputs.
             visibilityON(modelSpecificCard);
         } else {
             // Otherwise, hide the card and disable inputs inside.
