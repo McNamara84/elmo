@@ -610,6 +610,7 @@ test.describe('XML Upload Mapping Flow', () => {
       'js/thesauri.js',
       'js/roles.js',
       'js/upload.js',
+      'js/resourceTypeUtils.js',
       'js/mappingXmlToInputFields.js',
     ];
 

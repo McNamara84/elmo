@@ -234,6 +234,115 @@ final class ResourceTypesIntegrationTest extends DatabaseTestCase
     }
 
     /**
+     * Compound DataCite types are stored as the human-readable ERNIE labels.
+     */
+    public function testInstallSeedsUseErnieDisplayLabelsForCompoundResourceTypes(): void
+    {
+        $expectedLabels = [
+            'Computational Notebook',
+            'Data Paper',
+            'Interactive Resource',
+            'Output Management Plan',
+            'Study Registration',
+        ];
+
+        $result = $this->connection->query(
+            "SELECT resource_type_general
+             FROM Resource_Type
+             WHERE resource_type_general LIKE '% %'
+             ORDER BY resource_type_general"
+        );
+
+        $actualLabels = [];
+        while ($row = $result->fetch_assoc()) {
+            $actualLabels[] = $row['resource_type_general'];
+        }
+
+        $this->assertSame($expectedLabels, $actualLabels);
+    }
+
+    /**
+     * ERNIE-backed options must expose local IDs that can be saved as foreign keys.
+     */
+    public function testSyncedComputationalNotebookUsesSavableLocalId(): void
+    {
+        $seedResult = $this->connection->query(
+            "SELECT resource_name_id
+             FROM Resource_Type
+             WHERE resource_type_general = 'Computational Notebook'"
+        );
+        $seedRow = $seedResult->fetch_assoc();
+        $this->assertNotFalse($seedRow);
+        $seededLocalId = (int) $seedRow['resource_name_id'];
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+        $reflection = new \ReflectionClass($controller);
+
+        $syncMethod = $reflection->getMethod('syncErnieToDb');
+        $syncResult = $syncMethod->invoke(
+            $controller,
+            'Resource_Type',
+            [[
+                'ernie_id' => 6,
+                'name' => 'Computational Notebook',
+                'description' => null,
+            ]],
+            [
+                'ernie_id_col' => 'ernie_id',
+                'name_col' => 'resource_type_general',
+                'description_col' => 'description',
+            ]
+        );
+        $this->assertTrue($syncResult);
+
+        $mapMethod = $reflection->getMethod('mapErnieToLocalIds');
+        $mappedTypes = $mapMethod->invoke(
+            $controller,
+            'Resource_Type',
+            [[
+                'id' => 6,
+                'name' => 'Computational Notebook',
+                'description' => null,
+            ]],
+            'resource_name_id',
+            'ernie_id',
+            [
+                'name' => 'resource_type_general',
+                'description' => 'description',
+            ]
+        );
+
+        $this->assertSame($seededLocalId, $mappedTypes[0]['id']);
+
+        require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        $resourceId = saveResourceInformationAndRights(
+            $this->connection,
+            [
+                'doi' => '10.5880/GFZ.TEST.RESOURCE.TYPE.' . uniqid(),
+                'year' => 2026,
+                'dateCreated' => '2026-07-29',
+                'resourcetype' => $mappedTypes[0]['id'],
+                'language' => 1,
+                'Rights' => 1,
+                'title' => ['Computational notebook resource'],
+                'titleType' => [1],
+            ]
+        );
+
+        $this->assertGreaterThan(0, $resourceId);
+        $savedResource = $this->connection->query(
+            "SELECT Resource_Type_resource_name_id
+             FROM Resource
+             WHERE resource_id = " . (int) $resourceId
+        )->fetch_assoc();
+        $this->assertSame(
+            $seededLocalId,
+            (int) $savedResource['Resource_Type_resource_name_id']
+        );
+    }
+
+    /**
      * Seeds the database with test resource types
      */
     private function seedResourceTypes(): void

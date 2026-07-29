@@ -468,7 +468,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(timezoneSelect).not.toHaveClass(/is-invalid/);
   });
 
-  test('time zone should be optional even if the time fields are filled in', async ({ page }) => {
+  test('time zone should become required when the time fields are filled in', async ({ page }) => {
     // Verify timezone is NOT required initially
     const timezoneSelect = page.locator('#input-stc-timezone');
     await expect(timezoneSelect).not.toHaveAttribute('required');
@@ -499,7 +499,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await simulateSubmitValidation(page);
 
     // Timezone should now be required when time is provided
-    await expect(timezoneSelect).not.toHaveAttribute('required');
+    await expect(timezoneSelect).toHaveAttribute('required', 'required');
+    await expect(timezoneSelect).toHaveAttribute('aria-required', 'true');
   });
 
   test('keeps STC submit validation highlights visible when fields must be filled in', async ({ page }) => {
