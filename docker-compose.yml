@@ -13,7 +13,7 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -58,7 +58,7 @@ services:
       - ./docker/php-dev.ini:/usr/local/etc/php/conf.d/99-dev.ini:ro
 
   playwright:
-    image: mcr.microsoft.com/playwright:v1.60.0-noble
+    image: mcr.microsoft.com/playwright:v1.62.0-noble
     profiles:
       - test
     init: true
