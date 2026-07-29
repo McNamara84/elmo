@@ -1,4 +1,5 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -179,7 +180,10 @@ if (groupStc) {
 
 
 /**
- * Validates if a Contact Person is selected from group of Authors.
+ * Checks whether an Authors payload entry is a complete person contact.
+ *
+ * @param {Record<string, unknown>|null} author - Authors payload entry.
+ * @returns {boolean} True for a selected person contact with family name and email.
  */
 function isCompletePayloadContact(author) {
     if (!author || author.type !== 'person' || author.isContact !== true) {
@@ -190,23 +194,34 @@ function isCompletePayloadContact(author) {
         String(author.email || '').trim() !== '';
 }
 
-function validateContactPerson() {
-    var payloadInput = document.querySelector('input[name="authorsPayload"]');
-    var authorsPayload = null;
+/**
+ * Validates that the synchronized Authors payload contains a complete contact.
+ *
+ * Direct calls rebuild the payload through the shared Authors synchronization
+ * service. The optional payload is used by the `authorsPayload:updated` event,
+ * whose detail already contains the freshly synchronized value. Missing or
+ * malformed payload infrastructure is a validation failure and never falls
+ * back to legacy checkboxes.
+ *
+ * @param {Array<Record<string, unknown>>|null} [synchronizedPayload=null]
+ *        Payload supplied by an Authors update event, or null to synchronize now.
+ * @returns {boolean} True when the payload contains a complete person contact.
+ */
+function validateContactPerson(synchronizedPayload = null) {
+    var authorsPayload = Array.isArray(synchronizedPayload) ? synchronizedPayload : null;
 
-    if (payloadInput && payloadInput.value) {
+    if (!Array.isArray(authorsPayload)) {
         try {
-            authorsPayload = JSON.parse(payloadInput.value);
+            authorsPayload = synchronizeAuthorsPayload(document);
         } catch (error) {
-            authorsPayload = null;
+            console.error('Could not synchronize Authors payload for contact validation:', error);
         }
     }
 
-    var isValid = Array.isArray(authorsPayload)
-        ? authorsPayload.some(function (author) {
+    var isValid = Array.isArray(authorsPayload) &&
+        authorsPayload.some(function (author) {
             return isCompletePayloadContact(author);
-        })
-        : $('input[name="contacts[]"]:checked').length > 0;
+        });
 
     $('#contact-person-error').remove();
     // 
@@ -265,15 +280,15 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
-        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+        this.$form.on('change', 'input[name="contacts[]"]', () => validateContactPerson());
         this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson();
             }
         });
-        document.addEventListener('authorsPayload:updated', () => {
+        document.addEventListener('authorsPayload:updated', (event) => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
-                validateContactPerson();
+                validateContactPerson(event.detail?.payload);
             }
         });
 
@@ -390,22 +405,35 @@ class SubmitHandler {
     }
 
     /**
-     * Handle modal submit
+     * Submits the validated form using the same freshly generated Authors
+     * payload used by contact validation and file saving.
+     *
+     * Payload synchronization failures abort submission, display the standard
+     * submit error, and prevent stale legacy author fields from reaching the
+     * backend.
+     *
+     * @returns {Promise<void>} Promise resolved after handing data to the AJAX submission.
      */
     async handleModalSubmit() {
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
 
-        if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
-            window.authorStack.updatePayload();
+        let authorsPayload;
+        try {
+            authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+        } catch (error) {
+            console.error('Could not synchronize Authors payload for submission:', error);
+            this.showNotification(
+                'danger',
+                translations.alerts.errorHeading,
+                translations.alerts.submitError
+            );
+            return;
         }
 
         const submitData = new FormData(this.$form[0]);
-        const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
-        if (authorsPayloadInput) {
-            submitData.set('authorsPayload', authorsPayloadInput.value);
-        }
+        submitData.set('authorsPayload', JSON.stringify(authorsPayload));
 
         // Ensure the form-level CSRF token is present.
         const csrfToken = await fetchAndStoreCsrfToken('form');
