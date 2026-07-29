@@ -217,30 +217,10 @@ function normalizeRelationType(relationType) {
   return (relationType || '').replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
-/**
- * Creates the whitespace-independent key used by DataCite and ERNIE labels.
- * @param {unknown} value
- * @returns {string}
- */
-function normalizeResourceTypeGeneral(value) {
-  return String(value ?? '').replace(/\s+/g, '');
-}
-
-/**
- * Prefers an exact option label and falls back to whitespace-independent matching.
- * @param {HTMLOptionElement[]} options
- * @param {string} resourceTypeGeneral
- * @returns {HTMLOptionElement|undefined}
- */
-function findResourceTypeOption(options, resourceTypeGeneral) {
-  const exactMatch = options.find(option => option.text.trim() === resourceTypeGeneral);
-  if (exactMatch) return exactMatch;
-
-  const normalizedResourceType = normalizeResourceTypeGeneral(resourceTypeGeneral);
-  return options.find(
-    option => normalizeResourceTypeGeneral(option.text) === normalizedResourceType
-  );
-}
+// Shared by XML upload and DOI prefill in the browser and in Jest.
+var resourceTypeUtils = typeof module !== 'undefined' && module.exports
+  ? require('./resourceTypeUtils')
+  : window.resourceTypeUtils;
 
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
@@ -270,7 +250,7 @@ function prefillResourceInfo(attr) {
   if (attr.types?.resourceTypeGeneral) {
     const selectField = document.querySelector('#input-resourceinformation-resourcetype');
     if (selectField) {
-      const opt = findResourceTypeOption(
+      const opt = resourceTypeUtils.findResourceTypeOption(
         Array.from(selectField.options),
         attr.types.resourceTypeGeneral
       );
@@ -1020,8 +1000,8 @@ if (typeof module !== 'undefined' && module.exports) {
     decodeHtmlEntities,
     normalizeRole,
     normalizeRelationType,
-    normalizeResourceTypeGeneral,
-    findResourceTypeOption,
+    normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
+    findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
     mapTitleTypeFromJson,
     prefillResourceInfo,
     prefillLanguage,
