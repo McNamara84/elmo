@@ -209,15 +209,29 @@ jobs:
           set -euo pipefail
 
           output_file="$(mktemp)"
-          if ! vendor/bin/phpunit --configuration phpunit.xml 2>&1 | tee "$output_file"; then
+          junit_file="$(mktemp)"
+          if ! vendor/bin/phpunit --configuration phpunit.xml --log-junit "$junit_file" 2>&1 | tee "$output_file"; then
             echo "PHPUnit test run failed."
             exit 1
           fi
 
-          if grep -q "No tests executed" "$output_file"; then
-            echo "PHPUnit completed without executing tests."
+          if [ ! -s "$junit_file" ]; then
+            echo "PHPUnit did not produce a JUnit report. The process may have terminated before completing the test suite."
             exit 1
           fi
+
+          test_count="$(grep -c '<testcase ' "$junit_file" || true)"
+          if [ "$test_count" -eq 0 ]; then
+            echo "PHPUnit completed without recording any executed tests."
+            exit 1
+          fi
+
+          if ! grep -Eq 'OK \([1-9][0-9]* tests?|Tests: [1-9][0-9]*,' "$output_file"; then
+            echo "PHPUnit did not reach its final test summary. The process may have terminated prematurely."
+            exit 1
+          fi
+
+          echo "PHPUnit completed and recorded ${test_count} tests."
 
           echo "\nFinal Server Log:"
           cat server.log
