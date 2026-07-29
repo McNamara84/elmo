@@ -72,9 +72,15 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("mapTitleType maps known types to option values", () => {
     const ctx = loadMappingModule();
-    expect(ctx.mapTitleType("AlternativeTitle")).toBe("2");
-    expect(ctx.mapTitleType("TranslatedTitle")).toBe("3");
-    expect(ctx.mapTitleType("UnknownType")).toBe("1");
+    const mapping = {
+      MainTitle: "6",
+      AlternativeTitle: "1",
+      TranslatedTitle: "16",
+      "": "6",
+    };
+    expect(ctx.mapTitleType("AlternativeTitle", mapping)).toBe("1");
+    expect(ctx.mapTitleType("TranslatedTitle", mapping)).toBe("16");
+    expect(ctx.mapTitleType("UnknownType", mapping)).toBe("6");
   });
 
   test("normalizeRole inserts whitespace in contributor roles", () => {
@@ -290,8 +296,10 @@ describe("mappingXmlToInputFields helpers", () => {
     const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
     const fallback = await ctxFail.createTitleTypeMapping();
     expect(failingGetJSON).toHaveBeenCalled();
-    expect(fallback[""]).toBe("1");
-    expect(fallback.AlternativeTitle).toBe("2");
+    expect(fallback[""]).toBe("");
+    expect(fallback.AlternativeTitle).toBe("");
+    expect(fallback.MainTitle).toBe("");
+    expect(fallback.TranslatedTitle).toBe("");
   });
 
   test("setLabDataInRow populates fields and triggers change", () => {

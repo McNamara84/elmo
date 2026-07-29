@@ -125,6 +125,13 @@ async function createLanguageMapping() {
   }
 }
 
+const EMPTY_TITLE_TYPE_MAPPING = {
+  "": "",
+  MainTitle: "",
+  AlternativeTitle: "",
+  TranslatedTitle: "",
+};
+
 /**
  * Creates a title type mapping from API data
  * @returns {Promise<Object>} A promise that resolves to a mapping of title types
@@ -148,12 +155,7 @@ async function createTitleTypeMapping() {
     return mapping;
   } catch (error) {
     console.error("Error creating title type mapping:", error);
-    return {
-      "": "1",
-      MainTitle: "1",
-      AlternativeTitle: "2",
-      TranslatedTitle: "3",
-    };
+    return { ...EMPTY_TITLE_TYPE_MAPPING };
   }
 }
 
@@ -167,8 +169,8 @@ function mapTitleType(titleType, mapping = {}) {
   const key = (titleType || "").replace(/\s+/g, "");
   const map = Object.keys(mapping).length
     ? mapping
-    : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
-  return map[key] || map[""] || "1";
+    : EMPTY_TITLE_TYPE_MAPPING;
+  return map[key] ?? map[""] ?? "";
 }
 
 /**
