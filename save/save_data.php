@@ -15,15 +15,13 @@
  * @requires formgroups/*.php
  */
 
-// Guard for PHPUnit
-if (defined('PHPUNIT_RUNNING')) {
-    return;
-}
-
 // Only process POST requests
 if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
     return;
 }
+
+// Preserve output buffers owned by callers (for example the PHPUnit request harness).
+$saveDataInitialOutputBufferLevel = ob_get_level();
 
 require_once __DIR__ . '/../api/security.php';
 
@@ -41,12 +39,12 @@ validateRequestSecurity('save', $_POST);
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 try {
-    $resource_id = saveALL($_POST, $connection);
+    $resource_id = saveALL($_POST);
 } catch (\Throwable $e) {
     // Transaction or save operation failed
     error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());
     // Flush any buffers
-    while (ob_get_level() > 0) {
+    while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
         ob_end_clean();
     }
     http_response_code(500);
@@ -82,7 +80,7 @@ if (isset($_POST['filename'])) {
         error_log("[SAVE] Payload generated via {$generated['generator']}, length=" . strlen($payload) . " bytes");
 
         // Flush any stale output buffers before sending the response
-        while (ob_get_level() > 0) {
+        while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
             ob_end_clean();
         }
 
@@ -96,7 +94,7 @@ if (isset($_POST['filename'])) {
     } catch (\Throwable $e) {
         error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
         // Flush any buffers from the failed generation attempt
-        while (ob_get_level() > 0) {
+        while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
             ob_end_clean();
         }
         http_response_code(500);

@@ -4,10 +4,6 @@ declare(strict_types=1);
 
 namespace Tests;
 
-use PHPUnit\Framework\Attributes\PreserveGlobalState;
-use PHPUnit\Framework\Attributes\RunInSeparateProcess;
-
-require_once __DIR__ . '/../api/security.php';
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 
 /**
@@ -20,8 +16,6 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
     private $postData1;
     private $postData2;
 
-    #[RunInSeparateProcess]
-    #[PreserveGlobalState(false)]
     public function testSaveDataReturnsForNonPostRequestsWithoutTerminatingPhpUnit(): void
     {
         $savedRequestMethod = $_SERVER['REQUEST_METHOD'] ?? null;
@@ -44,6 +38,7 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
     protected function setUp(): void
     {
         parent::setUp();
+        require_once __DIR__ . '/../api/security.php';
         
         // Create a REAL second database connection using the same logic as DatabaseTestCase
         $isCI = getenv('CI') !== false || getenv('GITHUB_ACTIONS') !== false;
@@ -360,10 +355,9 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
      *
      * @param array $postData The POST data to submit
      * @param \mysqli $connection The database connection to use for this request
-     * @param bool $useTransactions Whether to use transactions (if false, data may corrupt)
      * @return int The resource_id that was created
      */
-    private function simulateSaveDataRequest(array $postData, \mysqli $connection, bool $useTransactions = true): int
+    private function simulateSaveDataRequest(array $postData, \mysqli $connection): int
     {
         // Save original state
         $savedRequestMethod = $_SERVER['REQUEST_METHOD'] ?? null;
@@ -380,9 +374,28 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
             $_SESSION['interaction_start_time'] = microtime(true) - MIN_INTERACTION_SAVE_SECONDS - 1.0;
             $GLOBALS['connection'] = $connection;
             
+            http_response_code(200);
+            $initialOutputBufferLevel = ob_get_level();
             ob_start();
-            require __DIR__ . '/../save/save_data.php';
-            ob_end_clean();
+
+            try {
+                require __DIR__ . '/../save/save_data.php';
+                $responseBody = (string) ob_get_clean();
+            } catch (\Throwable $exception) {
+                while (ob_get_level() > $initialOutputBufferLevel) {
+                    ob_end_clean();
+                }
+                throw $exception;
+            }
+
+            $response = json_decode($responseBody, true);
+            if (!is_array($response) || ($response['success'] ?? false) !== true) {
+                throw new \RuntimeException(sprintf(
+                    'save_data.php returned HTTP %d with response: %s',
+                    http_response_code(),
+                    $responseBody
+                ));
+            }
                 
             // Extract resource_id from the database
             $stmt = $connection->prepare("SELECT resource_id FROM Resource WHERE DOI = ? ORDER BY resource_id DESC LIMIT 1");
@@ -391,7 +404,12 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
             $result = $stmt->get_result()->fetch_assoc();
             $stmt->close();
             
-            return $result ? (int)$result['resource_id'] : 0;
+            $resourceId = $result ? (int) $result['resource_id'] : 0;
+            if ($resourceId !== (int) ($response['resource_id'] ?? 0)) {
+                throw new \RuntimeException('Endpoint response resource_id does not match the saved resource.');
+            }
+
+            return $resourceId;
         } finally {
             // Restore original state
             $_SERVER['REQUEST_METHOD'] = $savedRequestMethod;
@@ -405,8 +423,7 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
     }
 
     /**
-     * Test: Two concurrent saves on the SAME connection WITHOUT transactions.
-     * Demonstrates potential data corruption when transaction isolation is removed.
+     * Test two sequential endpoint saves on the same database connection.
      * 
      * This test uses minimal required fields:
      * - Resource info (doi, year, dateCreated, resourcetype, language)
@@ -414,12 +431,12 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
      * - Contact person (email)
      * - Description (abstract)
      * 
-     * Both requests share the same connection and execute without transaction boundaries.
-     * This tests what happens if we remove transactions - showing why they're necessary.
+     * Both requests share the same connection. The production saveALL() transaction
+     * must finish before the next simulated request starts.
      *
      * @return void
      */
-    public function testTwoSavesOnSameConnectionWithoutTransactions(): void
+    public function testTwoSequentialEndpointSavesOnSameConnection(): void
     {
         // Dataset 3 (C) - with all required fields
         $postData3 = [
@@ -473,14 +490,14 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
             "descriptionAbstract" => "Dataset D: Testing concurrent saves without transactions - Diana & Derek",
         ];
 
-        // Execute both saves on the SAME connection WITHOUT transaction boundaries
-        echo "\n=== Testing TWO SAVES on SAME CONNECTION WITHOUT transactions ===\n";
+        // Execute both endpoint requests sequentially on the same connection.
+        echo "\n=== Testing TWO SEQUENTIAL SAVES on the SAME CONNECTION ===\n";
         
-        $resourceId3 = $this->simulateSaveDataRequest($postData3, $this->connection, false);
+        $resourceId3 = $this->simulateSaveDataRequest($postData3, $this->connection);
         echo "✓ Created resource 3 (C): $resourceId3\n";
         
         
-        $resourceId4 = $this->simulateSaveDataRequest($postData4, $this->connection, false);
+        $resourceId4 = $this->simulateSaveDataRequest($postData4, $this->connection);
         echo "✓ Created resource 4 (D): $resourceId4\n";
 
         // ===== BASIC CHECKS =====
