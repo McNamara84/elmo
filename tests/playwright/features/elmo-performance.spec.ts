@@ -14,6 +14,15 @@ const KEY_SECTIONS = [
 ];
 
 const MEASUREMENT_RUNS = process.env.CI ? 1 : 3;
+const HEADER_LOGO_ASSETS = [
+  'logos/GFZ-logo.svg',
+  'logos/gfz-data-services-logo.svg',
+];
+const LEGACY_HEADER_LOGO_ASSETS = [
+  'logos/GFZ-logo.png',
+  'logos/GFZ_Data_Services_logo.png',
+];
+const HEADER_LOGO_BUDGET_BYTES = 100 * 1024;
 
 const average = (values: Array<number | undefined>) => {
   const valid = values.filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
@@ -64,6 +73,22 @@ const collectNavigationTiming = async (page: Page): Promise<NavigationTiming> =>
 };
 
 test.describe('Homepage performance', () => {
+  test('keeps optimized header assets within the initial-load budget', async () => {
+    const assetStats = await Promise.all(
+      HEADER_LOGO_ASSETS.map(asset => fs.stat(path.join(process.cwd(), asset))),
+    );
+    const totalBytes = assetStats.reduce((sum, stats) => sum + stats.size, 0);
+
+    expect(totalBytes).toBeLessThanOrEqual(HEADER_LOGO_BUDGET_BYTES);
+
+    for (const legacyAsset of LEGACY_HEADER_LOGO_ASSETS) {
+      const legacyAssetExists = await fs.access(path.join(process.cwd(), legacyAsset))
+        .then(() => true)
+        .catch(() => false);
+      expect(legacyAssetExists, `${legacyAsset} should be removed`).toBe(false);
+    }
+  });
+
   test('measures average load time for fully rendered homepage', async ({ page }, testInfo) => {
     const runs: RunMetrics[] = [];
 
