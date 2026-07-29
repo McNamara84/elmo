@@ -4,6 +4,16 @@
  * Tests for mappingXmlToInputFields.js using require() for proper coverage tracking
  */
 
+const {
+    getDataCite47ResourceTypes,
+    toSpacedResourceTypeLabel
+} = require('./utils/dataciteResourceTypes');
+
+const DATACITE_47_RESOURCE_TYPES = getDataCite47ResourceTypes();
+const DATACITE_47_SPACED_RESOURCE_TYPES = DATACITE_47_RESOURCE_TYPES
+    .map(resourceType => [resourceType, toSpacedResourceTypeLabel(resourceType)])
+    .filter(([resourceType, label]) => resourceType !== label);
+
 describe('mappingXmlToInputFields module coverage', () => {
     let mappingModule;
     let $;
@@ -104,6 +114,11 @@ describe('mappingXmlToInputFields module coverage', () => {
     describe('module exports', () => {
         test('exports processResourceType function', () => {
             expect(typeof mappingModule.processResourceType).toBe('function');
+        });
+
+        test('exports resource type normalizer and option matcher', () => {
+            expect(typeof mappingModule.normalizeResourceTypeGeneral).toBe('function');
+            expect(typeof mappingModule.findResourceTypeOption).toBe('function');
         });
 
         test('exports extractLicenseIdentifier function', () => {
@@ -631,6 +646,76 @@ describe('mappingXmlToInputFields module coverage', () => {
             
             const select = document.querySelector('#input-resourceinformation-resourcetype');
             expect(select.options[0].selected).toBe(true);
+        });
+
+        test.each(DATACITE_47_SPACED_RESOURCE_TYPES)(
+            'maps DataCite 4.7 value %s to spaced ERNIE label %s',
+            (resourceTypeGeneral, optionLabel) => {
+                const select = document.querySelector('#input-resourceinformation-resourcetype');
+                select.innerHTML = '<option value="resource-type">' + optionLabel + '</option>';
+                select.selectedIndex = -1;
+
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(
+                    '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                        + '<ns:resourceType resourceTypeGeneral="' + resourceTypeGeneral + '">'
+                        + optionLabel
+                        + '</ns:resourceType></ns:resource>',
+                    'text/xml'
+                );
+
+                mappingModule.processResourceType(xmlDoc, nsResolver);
+
+                expect(select.value).toBe('resource-type');
+            }
+        );
+
+        test.each(DATACITE_47_RESOURCE_TYPES)(
+            'keeps canonical DataCite 4.7 value %s unchanged during matching',
+            resourceTypeGeneral => {
+                expect(mappingModule.normalizeResourceTypeGeneral(resourceTypeGeneral))
+                    .toBe(resourceTypeGeneral);
+            }
+        );
+
+        test('prefers an exact canonical label over a whitespace-normalized label', () => {
+            const select = document.querySelector('#input-resourceinformation-resourcetype');
+            select.innerHTML = [
+                '<option value="spaced">Computational Notebook</option>',
+                '<option value="canonical">ComputationalNotebook</option>'
+            ].join('');
+            select.selectedIndex = -1;
+
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                    + '<ns:resourceType resourceTypeGeneral="ComputationalNotebook">'
+                    + 'Computational Notebook</ns:resourceType></ns:resource>',
+                'text/xml'
+            );
+
+            mappingModule.processResourceType(xmlDoc, nsResolver);
+
+            expect(select.value).toBe('canonical');
+        });
+
+        test('keeps the current option when an official DataCite type is unavailable', () => {
+            const select = document.querySelector('#input-resourceinformation-resourcetype');
+            select.innerHTML = '<option value="software">Software</option>';
+            const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                    + '<ns:resourceType resourceTypeGeneral="Dataset">Dataset</ns:resourceType>'
+                    + '</ns:resource>',
+                'text/xml'
+            );
+
+            mappingModule.processResourceType(xmlDoc, nsResolver);
+
+            expect(select.value).toBe('software');
+            expect(warn).toHaveBeenCalledWith('No matching option found for text: Dataset');
         });
     });
 
