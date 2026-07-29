@@ -22,7 +22,7 @@ if (defined('PHPUNIT_RUNNING')) {
 
 // Only process POST requests
 if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
-    exit();
+    return;
 }
 
 require_once __DIR__ . '/../api/security.php';

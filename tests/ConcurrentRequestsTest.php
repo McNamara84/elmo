@@ -4,8 +4,11 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 
-require_once __DIR__ . '/../save/save_data.php';
+require_once __DIR__ . '/../api/security.php';
+require_once __DIR__ . '/../includes/save_to_db_helper.php';
 
 /**
  * Tests concurrent full save operations to verify transaction isolation and data integrity.
@@ -16,6 +19,27 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
     private $connection2;
     private $postData1;
     private $postData2;
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function testSaveDataReturnsForNonPostRequestsWithoutTerminatingPhpUnit(): void
+    {
+        $savedRequestMethod = $_SERVER['REQUEST_METHOD'] ?? null;
+
+        try {
+            $_SERVER['REQUEST_METHOD'] = 'GET';
+
+            require __DIR__ . '/../save/save_data.php';
+
+            $this->addToAssertionCount(1);
+        } finally {
+            if ($savedRequestMethod === null) {
+                unset($_SERVER['REQUEST_METHOD']);
+            } else {
+                $_SERVER['REQUEST_METHOD'] = $savedRequestMethod;
+            }
+        }
+    }
 
     protected function setUp(): void
     {
@@ -351,6 +375,9 @@ final class ConcurrentRequestsTest extends DatabaseTestCase
             $_SERVER['REQUEST_METHOD'] = 'POST';
             $_POST = $postData;
             $_POST['skipXmlGeneration'] = true; // Skip XML generation for testing
+            $_POST['csrf-token'] = generateCsrfToken();
+            $_POST['please-fill-in-this-field'] = '';
+            $_SESSION['interaction_start_time'] = microtime(true) - MIN_INTERACTION_SAVE_SECONDS - 1.0;
             $GLOBALS['connection'] = $connection;
             
             ob_start();
