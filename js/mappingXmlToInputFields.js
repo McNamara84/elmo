@@ -5,6 +5,39 @@
  * @param {Document} xmlDoc - The XML document containing the resourceType element.
  * @param {Function} resolver - The namespace resolver function.
  */
+/**
+ * Creates the whitespace-independent key used by DataCite and ERNIE labels.
+ *
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeResourceTypeGeneral(value) {
+  return String(value ?? '').replace(/\s+/g, '');
+}
+
+/**
+ * Prefers an exact option label and falls back to whitespace-independent matching.
+ *
+ * @param {HTMLOptionElement[]} options
+ * @param {string} resourceTypeGeneral
+ * @returns {HTMLOptionElement|undefined}
+ */
+function findResourceTypeOption(options, resourceTypeGeneral) {
+  const exactMatch = options.find((option) => option.text.trim() === resourceTypeGeneral);
+  if (exactMatch) return exactMatch;
+
+  const normalizedResourceType = normalizeResourceTypeGeneral(resourceTypeGeneral);
+  return options.find(
+    (option) => normalizeResourceTypeGeneral(option.text) === normalizedResourceType
+  );
+}
+
+/**
+ * Processes the resource type from an XML document and selects the corresponding option.
+ *
+ * @param {Document} xmlDoc - The XML document containing the resourceType element.
+ * @param {Function} resolver - The namespace resolver function.
+ */
 function processResourceType(xmlDoc, resolver) {
   // Extract the resourceType element using XPath with namespace fallback
   // (supports both namespaced and non-namespaced XML documents)
@@ -35,8 +68,11 @@ function processResourceType(xmlDoc, resolver) {
     return;
   }
 
-  // Find an option where the visible text matches resourceTypeGeneral
-  const optionToSelect = Array.from(selectField.options).find((option) => option.text.trim() === resourceTypeGeneral);
+  // Prefer an exact label match, then account for ERNIE display whitespace.
+  const optionToSelect = findResourceTypeOption(
+    Array.from(selectField.options),
+    resourceTypeGeneral
+  );
 
   if (optionToSelect) {
     optionToSelect.selected = true;
@@ -45,7 +81,7 @@ function processResourceType(xmlDoc, resolver) {
   }
 }
 
-/**
+/*
  * Extracts license identifier from various formats
  * @param {Element} rightsNode - The XML rights element
  * @returns {string} The normalized license identifier
@@ -1752,6 +1788,8 @@ async function loadXmlToForm(xmlDoc) {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        normalizeResourceTypeGeneral,
+        findResourceTypeOption,
         processResourceType,
         extractLicenseIdentifier,
         mapTitleType,

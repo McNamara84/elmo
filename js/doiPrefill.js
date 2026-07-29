@@ -217,6 +217,31 @@ function normalizeRelationType(relationType) {
   return (relationType || '').replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+/**
+ * Creates the whitespace-independent key used by DataCite and ERNIE labels.
+ * @param {unknown} value
+ * @returns {string}
+ */
+function normalizeResourceTypeGeneral(value) {
+  return String(value ?? '').replace(/\s+/g, '');
+}
+
+/**
+ * Prefers an exact option label and falls back to whitespace-independent matching.
+ * @param {HTMLOptionElement[]} options
+ * @param {string} resourceTypeGeneral
+ * @returns {HTMLOptionElement|undefined}
+ */
+function findResourceTypeOption(options, resourceTypeGeneral) {
+  const exactMatch = options.find(option => option.text.trim() === resourceTypeGeneral);
+  if (exactMatch) return exactMatch;
+
+  const normalizedResourceType = normalizeResourceTypeGeneral(resourceTypeGeneral);
+  return options.find(
+    option => normalizeResourceTypeGeneral(option.text) === normalizedResourceType
+  );
+}
+
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
   return mapping[key] || mapping[''] || '1';
@@ -245,7 +270,10 @@ function prefillResourceInfo(attr) {
   if (attr.types?.resourceTypeGeneral) {
     const selectField = document.querySelector('#input-resourceinformation-resourcetype');
     if (selectField) {
-      const opt = Array.from(selectField.options).find(o => o.text.trim() === attr.types.resourceTypeGeneral);
+      const opt = findResourceTypeOption(
+        Array.from(selectField.options),
+        attr.types.resourceTypeGeneral
+      );
       if (opt) opt.selected = true;
     }
   }
@@ -992,6 +1020,8 @@ if (typeof module !== 'undefined' && module.exports) {
     decodeHtmlEntities,
     normalizeRole,
     normalizeRelationType,
+    normalizeResourceTypeGeneral,
+    findResourceTypeOption,
     mapTitleTypeFromJson,
     prefillResourceInfo,
     prefillLanguage,
