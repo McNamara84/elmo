@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 use PHPUnit\Framework\Attributes\CoversFunction;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../save/validation.php';
@@ -21,6 +22,7 @@ require_once __DIR__ . '/../save/validation.php';
 #[CoversFunction('validateContributorInstitutionDependencies')]
 #[CoversFunction('validateFundingReferenceDependencies')]
 #[CoversFunction('validateRelatedWorkDependencies')]
+#[CoversFunction('validateSTCDependencies')]
 final class ValidationFunctionsTest extends TestCase
 {
     /**
@@ -280,6 +282,54 @@ final class ValidationFunctionsTest extends TestCase
         $entry = [];
         // Empty entries are considered valid - no data = no validation errors
         $this->assertTrue(validateSTCDependencies($entry));
+    }
+
+    /**
+     * @param array<string, int|string> $entry
+     */
+    #[DataProvider('stcCoordinateDependencyCases')]
+    public function testValidateSTCDependenciesCoordinateMatrix(array $entry, bool $expected): void
+    {
+        $this->assertSame($expected, validateSTCDependencies($entry));
+    }
+
+    /**
+     * @return iterable<string, array{array<string, int|string>, bool}>
+     */
+    public static function stcCoordinateDependencyCases(): iterable
+    {
+        yield 'zero-valued point' => [
+            ['latitudeMin' => 0, 'longitudeMin' => 0],
+            true,
+        ];
+        yield 'latitude without longitude' => [
+            ['latitudeMin' => 1],
+            false,
+        ];
+        yield 'longitude without latitude' => [
+            ['longitudeMin' => 1],
+            false,
+        ];
+        yield 'latitude maximum without remaining box' => [
+            ['latitudeMax' => 2],
+            false,
+        ];
+        yield 'point plus latitude maximum' => [
+            ['latitudeMin' => 1, 'longitudeMin' => 1, 'latitudeMax' => 2],
+            false,
+        ];
+        yield 'point plus longitude maximum' => [
+            ['latitudeMin' => 1, 'longitudeMin' => 1, 'longitudeMax' => 2],
+            false,
+        ];
+        yield 'maximum pair without minimum pair' => [
+            ['latitudeMax' => 2, 'longitudeMax' => 2],
+            false,
+        ];
+        yield 'complete bounding box' => [
+            ['latitudeMin' => 1, 'longitudeMin' => 1, 'latitudeMax' => 2, 'longitudeMax' => 2],
+            true,
+        ];
     }
 
     /**

@@ -415,6 +415,19 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $this->assertSame('0000-0002-1825-0097', $author['orcid']);
     }
 
+    public function testLegacyAuthorNormalizationAcceptsPersonWithOnlyGivenName(): void
+    {
+        $authors = normalizeLegacyAuthors([
+            'givennames' => ['Cher'],
+        ]);
+
+        $this->assertCount(1, $authors);
+        $this->assertSame('person', $authors[0]['type']);
+        $this->assertSame('', $authors[0]['familyname']);
+        $this->assertSame('Cher', $authors[0]['givenname']);
+        $this->assertSame('', $authors[0]['orcid']);
+    }
+
     public function testSaveSingleInstitutionAuthorWithMissingName()
     {
         $this->expectException(\Exception::class);

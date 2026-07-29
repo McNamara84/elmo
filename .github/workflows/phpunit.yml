@@ -210,7 +210,7 @@ jobs:
 
           output_file="$(mktemp)"
           junit_file="$(mktemp)"
-          if ! vendor/bin/phpunit --configuration phpunit.xml --log-junit "$junit_file" 2>&1 | tee "$output_file"; then
+          if ! vendor/bin/phpunit --configuration phpunit.xml --colors=never --log-junit "$junit_file" 2>&1 | tee "$output_file"; then
             echo "PHPUnit test run failed."
             exit 1
           fi

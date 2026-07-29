@@ -604,6 +604,55 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals(0, $count, 'No STC should be saved for an empty row.');
     }
 
+    public function testSubmitValidatesAllRowsBeforeWritingAnyStcData(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.ATOMIC.STC.SUBMIT." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-07-29",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Atomic STC Submit"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "action" => "submit",
+            "tscLatitudeMin" => ["10", "20"],
+            "tscLatitudeMax" => ["", ""],
+            "tscLongitudeMin" => ["30", ""],
+            "tscLongitudeMax" => ["", ""],
+            "tscDescription" => ["Valid first row", "Invalid second row"],
+            "tscDateStart" => ["", ""],
+            "tscDateEnd" => ["", ""],
+            "tscTimeStart" => ["", ""],
+            "tscTimeEnd" => ["", ""],
+            "tscTimezone" => ["", ""],
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertFalse($result, 'An invalid later row must reject the complete STC submit.');
+
+        $stmt = $this->connection->prepare(
+            "SELECT COUNT(*) AS count
+             FROM Resource_has_Spatial_Temporal_Coverage
+             WHERE Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+
+        $this->assertSame(0, (int) $stmt->get_result()->fetch_assoc()['count']);
+        $this->assertSame(
+            0,
+            (int) $this->connection->query('SELECT COUNT(*) AS count FROM Spatial_Temporal_Coverage')
+                ->fetch_assoc()['count'],
+            'Pre-validation must prevent orphaned STC records.'
+        );
+    }
+
     /**
      * Tests saving STC with only coordinates and start date (minimal valid input).
      * 
