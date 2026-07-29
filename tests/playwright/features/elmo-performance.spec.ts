@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { waitForHomepageReady } from '../utils';
 
 const KEY_SECTIONS = [
   'header[role="banner"]',
@@ -103,13 +104,15 @@ test.describe('Homepage performance', () => {
         expect(response, 'Homepage should respond successfully').not.toBeNull();
         expect(response!.ok()).toBeTruthy();
 
-        await page.waitForLoadState('networkidle');
-
         for (const selector of KEY_SECTIONS) {
           await test.step(`run ${attempt}: wait for ${selector}`, async () => {
             await expect(page.locator(selector)).toBeVisible();
           });
         }
+
+        await test.step(`run ${attempt}: wait for interactive homepage`, async () => {
+          await waitForHomepageReady(page);
+        });
 
         const end = Date.now();
         const totalLoadTimeMs = end - start;

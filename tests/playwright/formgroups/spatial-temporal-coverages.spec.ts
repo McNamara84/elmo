@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome, SELECTORS, simulateSubmitValidation } from '../utils';
+import {
+  navigateToHome,
+  SELECTORS,
+  simulateSubmitValidation,
+  waitForRenderingSettled,
+} from '../utils';
 
 const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
 const mapId = 'playwright-test-map-id';
@@ -130,6 +135,8 @@ const googleMapsStub = String.raw`(() => {
       this._bounds = opts.bounds || null;
       this._map = opts.map || null;
       this._listeners = {};
+      window.__elmoRectangles = window.__elmoRectangles || [];
+      window.__elmoRectangles.push(this);
     }
     setMap(map) {
       this._map = map;
@@ -406,7 +413,9 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
         latLng: new (window as any).google.maps.LatLng(40.0, -74.5),
       });
     });
-    await page.waitForTimeout(300); // wait for 150ms DBLCLICK_THRESHOLD timer to fire
+    await page.waitForFunction(() =>
+      (window as any).__elmoRectangles?.some((rectangle: any) => rectangle._bounds)
+    );
 
     // Second click – completes the rectangle and emits 'rectanglecomplete'
     await page.evaluate(() => {
@@ -415,8 +424,6 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
         latLng: new (window as any).google.maps.LatLng(41.0, -73.5),
       });
     });
-    await page.waitForTimeout(300); // wait for timer to fire and fields to update
-
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);
     await expect(latMin).toHaveValue(/40(?:\.0+)?/);
@@ -525,7 +532,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     // Revalidation / follow-up events must not clear the red highlight
     await longMax.blur();
-    await page.waitForTimeout(150);
+    await waitForRenderingSettled(page);
 
     await expect(latMin).toHaveClass(/border-danger/);
     await expect(longMin).toHaveClass(/border-danger/);

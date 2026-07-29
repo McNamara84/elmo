@@ -86,7 +86,10 @@ const MOCK_DOI_RESPONSE = {
 };
 
 test.describe('DOI Prefill Feature', () => {
+  let doiLookupRequestCount = 0;
+
   test.beforeEach(async ({ page }) => {
+    doiLookupRequestCount = 0;
     // Serve our test page
     await page.route(`**${TEST_ROUTE_PATH}`, async route => {
       await route.fulfill({
@@ -98,6 +101,7 @@ test.describe('DOI Prefill Feature', () => {
 
     // Intercept DOI lookup API calls with mock data
     await page.route('**/api/v2/doi/lookup/**', async route => {
+      doiLookupRequestCount += 1;
       const url = route.request().url();
       if (url.includes('10.5880')) {
         await route.fulfill({
@@ -176,20 +180,24 @@ test.describe('DOI Prefill Feature', () => {
     await doiInput.fill('not-a-doi');
     await doiInput.blur();
 
-    // Modal should NOT appear (wait briefly to be sure)
-    await page.waitForTimeout(1000);
     const modal = page.locator('#modal-doi-prefill');
     await expect(modal).not.toBeVisible();
+    expect(doiLookupRequestCount).toBe(0);
   });
 
   test('does not show modal for DOI not found in DataCite', async ({ page }) => {
     const doiInput = page.locator('#input-resourceinformation-doi');
     await doiInput.fill('10.99999/nonexistent');
+    const lookupResponse = page.waitForResponse(response =>
+      response.url().includes('/api/v2/doi/lookup/')
+    );
     await doiInput.blur();
 
-    await page.waitForTimeout(1500);
+    await lookupResponse;
+    await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
     const modal = page.locator('#modal-doi-prefill');
     await expect(modal).not.toBeVisible();
+    expect(doiLookupRequestCount).toBe(1);
   });
 
   test('applies prefill data to form on confirm', async ({ page }) => {
@@ -257,8 +265,8 @@ test.describe('DOI Prefill Feature', () => {
     await doiInput.click();
     await doiInput.blur();
 
-    // Modal should NOT appear again (same DOI already loaded)
-    await page.waitForTimeout(1500);
+    // The duplicate guard runs synchronously before any request can be issued.
     await expect(modal).not.toBeVisible();
+    expect(doiLookupRequestCount).toBe(1);
   });
 });

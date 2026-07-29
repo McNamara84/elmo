@@ -4,6 +4,7 @@ import {
   completeExtendedDatasetForm,
   completeExtendedMultipleEntries,
   navigateToHome,
+  waitForFormInteractionReady,
 } from '../utils';
 import * as fs from 'fs';
 import * as path from 'path';
@@ -406,8 +407,7 @@ async function downloadAndSaveXml(
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
-  // Wait to satisfy server-side minimum interaction time for save.
-  await page.waitForTimeout(2200);
+  await waitForFormInteractionReady(page, 'save');
 
   const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
   await page.locator('#button-saveas-save').click();
