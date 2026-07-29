@@ -86,23 +86,30 @@ export async function waitForFormInteractionReady(
 export async function waitForHomepageReady(page: Page): Promise<void> {
   await page.waitForFunction(() => {
     const app = (window as any).elmo;
+    return Boolean(app?.translations?.general)
+      && typeof app?.dropdownsReady?.then === 'function'
+      && typeof (window as any).descriptionTypesReady?.then === 'function';
+  });
+
+  const unreadyDropdowns = await page.evaluate(async () => {
+    await Promise.all([
+      (window as any).elmo.dropdownsReady,
+      (window as any).descriptionTypesReady,
+    ]);
+
     const requiredDropdowns = [
       '#input-resourceinformation-resourcetype',
       '#input-resourceinformation-language',
       '#input-resourceinformation-titletype',
     ];
 
-    return Boolean(app?.translations?.general)
-      && requiredDropdowns.every(selector => {
-        const dropdown = document.querySelector<HTMLSelectElement>(selector);
-        return dropdown && !dropdown.disabled && dropdown.options.length > 1;
-      })
-      && (window as any).descriptionTypesReady instanceof Promise;
+    return requiredDropdowns.filter(selector => {
+      const dropdown = document.querySelector<HTMLSelectElement>(selector);
+      return !dropdown || dropdown.disabled || dropdown.options.length === 0;
+    });
   });
 
-  await page.evaluate(async () => {
-    await (window as any).descriptionTypesReady;
-  });
+  expect(unreadyDropdowns, 'Homepage dropdowns should be populated and enabled').toEqual([]);
 }
 
 /** Flushes browser microtasks and two rendering frames without a wall-clock sleep. */

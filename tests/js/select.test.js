@@ -9,6 +9,7 @@ describe('select.js', () => {
   
   beforeEach(() => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
+    delete window.elmo;
     
     // Save and remove fetch to trigger fallback mode in initializeAllDropdownsParallel
     originalFetch = global.fetch;
@@ -68,6 +69,15 @@ describe('select.js', () => {
     if (originalFetch) {
       global.fetch = originalFetch;
     }
+    delete window.elmo;
+  });
+
+  test('exposes a promise for the initial dropdown population', async () => {
+    const dropdownsReady = window.startInitialDropdownPopulation();
+
+    expect(dropdownsReady).toBeInstanceOf(Promise);
+    expect(window.elmo.dropdownsReady).toBe(dropdownsReady);
+    await expect(dropdownsReady).resolves.toBeUndefined();
   });
 
   test('setupIdentifierTypesDropdown populates options', () => {

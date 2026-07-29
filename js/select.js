@@ -833,12 +833,18 @@ function populateIdentifierTypesDropdownWithData(response) {
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
+function startInitialDropdownPopulation() {
+  window.elmo = window.elmo || {};
+  window.elmo.dropdownsReady = initializeAllDropdownsParallel();
+  return window.elmo.dropdownsReady;
+}
+
 // Update dropdown placeholders when translations are loaded or changed
 document.addEventListener('translationsLoaded', updateDropdownPlaceholders);
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
-  initializeAllDropdownsParallel();
+  startInitialDropdownPopulation();
   
   // Event handler to monitor if the resource type is changed
   // Only reload licenses when user actually selects a resource type (not on initial load)
@@ -1265,6 +1271,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     initializeTimezoneDropdown,
     initializeAllDropdownsParallel,
+    startInitialDropdownPopulation,
     setupResourceTypeDropdown,
     setupLanguageDropdown,
     setupTitleTypeDropdown,
