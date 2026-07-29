@@ -1,6 +1,12 @@
 ﻿/**
- * Processes the resource type from an XML document and selects the corresponding option
- * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
+ * Shared resource-type helpers for XML upload and DOI prefill.
+ */
+var resourceTypeUtils = typeof module !== 'undefined' && module.exports
+  ? require('./resourceTypeUtils')
+  : window.resourceTypeUtils;
+
+/**
+ * Processes the resource type from an XML document and selects the corresponding option.
  *
  * @param {Document} xmlDoc - The XML document containing the resourceType element.
  * @param {Function} resolver - The namespace resolver function.
@@ -35,8 +41,11 @@ function processResourceType(xmlDoc, resolver) {
     return;
   }
 
-  // Find an option where the visible text matches resourceTypeGeneral
-  const optionToSelect = Array.from(selectField.options).find((option) => option.text.trim() === resourceTypeGeneral);
+  // Prefer an exact label match, then account for ERNIE display whitespace.
+  const optionToSelect = resourceTypeUtils.findResourceTypeOption(
+    Array.from(selectField.options),
+    resourceTypeGeneral
+  );
 
   if (optionToSelect) {
     optionToSelect.selected = true;
@@ -45,7 +54,7 @@ function processResourceType(xmlDoc, resolver) {
   }
 }
 
-/**
+/*
  * Extracts license identifier from various formats
  * @param {Element} rightsNode - The XML rights element
  * @returns {string} The normalized license identifier
@@ -1752,6 +1761,8 @@ async function loadXmlToForm(xmlDoc) {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
+        findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
         processResourceType,
         extractLicenseIdentifier,
         mapTitleType,

@@ -379,6 +379,55 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $this->assertEquals("OnlyLastName", $personResult["familyname"]);
         $this->assertEquals("", $personResult["givenname"]);
     }
+
+    public function testSubmitAcceptsPersonAuthorWithOnlyOrcid(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.ORCID.ONLY",
+            "year" => 2026,
+            "dateCreated" => "2026-07-29",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test ORCID-only Author"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        saveAuthors($this->connection, [
+            "action" => "submit",
+            "orcids" => ["0000-0002-1825-0097"],
+        ], $resource_id);
+
+        $stmt = $this->connection->prepare(
+            "SELECT person.familyname, person.givenname, person.orcid
+             FROM Author_person person
+             INNER JOIN Author author ON author.Author_Person_author_person_id = person.author_person_id
+             INNER JOIN Resource_has_Author relation ON relation.Author_author_id = author.author_id
+             WHERE relation.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $author = $stmt->get_result()->fetch_assoc();
+
+        $this->assertSame('', $author['familyname']);
+        $this->assertSame('', $author['givenname']);
+        $this->assertSame('0000-0002-1825-0097', $author['orcid']);
+    }
+
+    public function testLegacyAuthorNormalizationAcceptsPersonWithOnlyGivenName(): void
+    {
+        $authors = normalizeLegacyAuthors([
+            'givennames' => ['Cher'],
+        ]);
+
+        $this->assertCount(1, $authors);
+        $this->assertSame('person', $authors[0]['type']);
+        $this->assertSame('', $authors[0]['familyname']);
+        $this->assertSame('Cher', $authors[0]['givenname']);
+        $this->assertSame('', $authors[0]['orcid']);
+    }
+
     public function testSaveSingleInstitutionAuthorWithMissingName()
     {
         $this->expectException(\Exception::class);
@@ -468,12 +517,13 @@ final class SaveAuthorsTest extends DatabaseTestCase
     }
 
     /**
-     * Tests saving three personal authors where one has a missing last name.
+     * Tests that a person with a given name and ORCID remains a valid author
+     * even when the family name is absent.
      *
      * @return void
      * @throws \Exception
      */
-    public function testSaveThreePersonAuthorsWithOneMissingLastName()
+    public function testSaveAcceptsAuthorWithGivenNameAndOrcidButNoFamilyName()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.THREE.AUTHORS.ONE.MISSING",
@@ -501,22 +551,22 @@ final class SaveAuthorsTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
         $this->assertEquals(
-            2,
+            3,
             $count,
-            "Es sollten nur zwei Autoren gespeichert worden sein, da einer einen fehlenden Nachnamen hatte."
+            "Alle drei Autoren sollten gespeichert werden, da Vorname oder ORCID als Identifikation genügen."
         );
 
-        $stmt = $this->connection->prepare("SELECT familyname FROM Author_person ORDER BY familyname");
+        $stmt = $this->connection->prepare("SELECT familyname, givenname, orcid FROM Author_person ORDER BY familyname");
         $stmt->execute();
-        $result = $stmt->get_result();
-        $savedFamilynames = [];
-        while ($row = $result->fetch_assoc()) {
-            $savedFamilynames[] = $row['familyname'];
-        }
+        $savedAuthors = $stmt->get_result()->fetch_all(MYSQLI_ASSOC);
         $this->assertEquals(
-            ["Doe", "Johnson"],
-            $savedFamilynames,
-            "Nur die Autoren 'Doe' und 'Johnson' sollten gespeichert worden sein."
+            [
+                ['familyname' => '', 'givenname' => 'Jane', 'orcid' => '0000-0002-3456-7890'],
+                ['familyname' => 'Doe', 'givenname' => 'John', 'orcid' => '0000-0001-2345-6789'],
+                ['familyname' => 'Johnson', 'givenname' => 'Bob', 'orcid' => '0000-0003-4567-8901'],
+            ],
+            $savedAuthors,
+            'Alle identifizierbaren Autoren sollten vollständig gespeichert werden.'
         );
     }
     public function testSaveMultipleInstitutionAuthorsWithOneMissingName()

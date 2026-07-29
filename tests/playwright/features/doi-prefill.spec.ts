@@ -149,6 +149,7 @@ test.describe('DOI Prefill Feature', () => {
     });
 
     await injectScript(page, 'js/services/doiLookupService.js');
+    await injectScript(page, 'js/resourceTypeUtils.js');
     await injectScript(page, 'js/doiPrefill.js');
     await injectScript(page, 'js/eventhandlers/doiPrefillHandler.js');
 

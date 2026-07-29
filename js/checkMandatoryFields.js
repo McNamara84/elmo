@@ -214,20 +214,23 @@ function updateStcRowRequiredVisualCues(inputs) {
 }
 
 /**
- * Dynamically marks STC coordinate fields as required on submit.
+ * Dynamically marks dependent STC fields as required on submit.
  *
  * Rules:
  * - If latmin is filled, longmin becomes required.
  * - If longmin is filled, latmin becomes required.
  * - If latmax or longmax is filled, all four coordinate fields become required.
- * - If all four fields are empty, no validation is applied.
+ * - If either time is filled, both dates, both times, and timezone become required.
+ * - Spatial-only, temporal-only, and description-only entries remain valid.
  *
  * @function validateSpatialTemporalCoverageRequirements
  * @returns {void}
  */
 function validateSpatialTemporalCoverageRequirements() {
     var group = $('#group-stc');
-    var fields = ['latmin', 'latmax', 'longmin', 'longmax'];
+    var coordinateFields = ['latmin', 'latmax', 'longmin', 'longmax'];
+    var temporalFields = ['datestart', 'dateend', 'timestart', 'timeend', 'timezone'];
+    var fields = coordinateFields.concat(temporalFields);
     var allRows = group.find('[tsc-row]');
 
     allRows.each(function () {
@@ -246,28 +249,26 @@ function validateSpatialTemporalCoverageRequirements() {
             inputs[field].each(function () { updateStcRequiredLabelMarker(this, false); });
         });
 
-        // If all fields are empty, skip this row
-        if (!Object.values(filled).includes(true)) {
-            return;
-        }
-
         // If any MAX field is filled, all four fields are required.
         if (filled.latmax || filled.longmax) {
-            fields.forEach(function (field) {
+            coordinateFields.forEach(function (field) {
                 inputs[field].addClass('js-required-on-submit');
             });
+        } else {
+            // Point rule: latmin <-> longmin
+            if (filled.latmin) {
+                inputs.longmin.addClass('js-required-on-submit');
+            }
 
-            updateStcRowRequiredVisualCues(inputs);
-            return;
+            if (filled.longmin) {
+                inputs.latmin.addClass('js-required-on-submit');
+            }
         }
 
-        // Point rule: latmin <-> longmin
-        if (filled.latmin) {
-            inputs.longmin.addClass('js-required-on-submit');
-        }
-
-        if (filled.longmin) {
-            inputs.latmin.addClass('js-required-on-submit');
+        if (filled.timestart || filled.timeend) {
+            temporalFields.forEach(function (field) {
+                inputs[field].addClass('js-required-on-submit');
+            });
         }
 
         updateStcRowRequiredVisualCues(inputs);

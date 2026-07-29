@@ -238,29 +238,57 @@ function validateSTCDependencies($entry)
     $latMax  = trim((string)($entry['latitudeMax'] ?? ''));
     $longMin = trim((string)($entry['longitudeMin'] ?? ''));
     $longMax = trim((string)($entry['longitudeMax'] ?? ''));
+    $dateStart = trim((string)($entry['dateStart'] ?? ''));
+    $dateEnd = trim((string)($entry['dateEnd'] ?? ''));
+    $timeStart = trim((string)($entry['timeStart'] ?? ''));
+    $timeEnd = trim((string)($entry['timeEnd'] ?? ''));
+    $timezone = trim((string)($entry['timezone'] ?? ''));
 
     $hasLatMin  = $latMin !== '';
     $hasLatMax  = $latMax !== '';
     $hasLongMin = $longMin !== '';
     $hasLongMax = $longMax !== '';
+    $hasAnyTime = $timeStart !== '' || $timeEnd !== '';
+
+    if ($hasAnyTime) {
+        if ($dateStart === '' || $dateEnd === '' || $timeStart === '' || $timeEnd === '' || $timezone === '') {
+            error_log('[SAVE] STC validation failed: time coverage requires start/end dates, start/end times, and timezone. Entry: ' . json_encode($entry));
+            return false;
+        }
+
+        $normalizedTimeStart = normalizeTimeForComparison($timeStart);
+        $normalizedTimeEnd = normalizeTimeForComparison($timeEnd);
+        if ($normalizedTimeStart === null || $normalizedTimeEnd === null) {
+            error_log('[SAVE] STC validation failed: invalid start or end time. Entry: ' . json_encode($entry));
+            return false;
+        }
+
+        if ($dateStart === $dateEnd && strcmp($normalizedTimeEnd, $normalizedTimeStart) < 0) {
+            error_log('[SAVE] STC validation failed: end time precedes start time on the same date. Entry: ' . json_encode($entry));
+            return false;
+        }
+    }
 
     if (!$hasLatMin && !$hasLatMax && !$hasLongMin && !$hasLongMax) {
         return true;
     }
 
     if ($hasLatMax || $hasLongMax) {
-        return $hasLatMin && $hasLatMax && $hasLongMin && $hasLongMax;
-        error_log("[SAVE] STC validation failed: lat/long max requires all four coordinates. Entry: " . json_encode($entry));
+        if (!$hasLatMin || !$hasLatMax || !$hasLongMin || !$hasLongMax) {
+            error_log('[SAVE] STC validation failed: lat/long max requires all four coordinates. Entry: ' . json_encode($entry));
             return false;
+        }
+
+        return true;
     }
 
     if ($hasLatMin && !$hasLongMin) {
-        error_log("[SAVE] STC validation failed: latitudeMin without longitudeMin. Entry: " . json_encode($entry));
+        error_log('[SAVE] STC validation failed: latitudeMin without longitudeMin. Entry: ' . json_encode($entry));
         return false;
     }
 
     if ($hasLongMin && !$hasLatMin) {
-        error_log("[SAVE] STC validation failed: longitudeMin without latitudeMin. Entry: " . json_encode($entry));
+        error_log('[SAVE] STC validation failed: longitudeMin without latitudeMin. Entry: ' . json_encode($entry));
         return false;
     }
 
