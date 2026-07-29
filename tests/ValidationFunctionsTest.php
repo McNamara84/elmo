@@ -301,6 +301,39 @@ final class ValidationFunctionsTest extends TestCase
         $this->assertFalse(validateSTCDependencies($entry));
     }
 
+    public function testValidateSTCDependenciesRejectsTimesWithoutDates(): void
+    {
+        $entry = [
+            'timeStart' => '10:00',
+            'timeEnd' => '11:00',
+            'timezone' => 'UTC',
+        ];
+
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    public function testValidateSTCDependenciesRejectsTimesWithoutTimezone(): void
+    {
+        $entry = [
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+            'timeStart' => '10:00',
+            'timeEnd' => '11:00',
+        ];
+
+        $this->assertFalse(validateSTCDependencies($entry));
+    }
+
+    public function testValidateSTCDependenciesAllowsDateOnlyCoverage(): void
+    {
+        $entry = [
+            'dateStart' => '2020-01-01',
+            'dateEnd' => '2020-01-02',
+        ];
+
+        $this->assertTrue(validateSTCDependencies($entry));
+    }
+
     /**
      * Tests STC validation failure when longitude max is set without latitude max.
      *

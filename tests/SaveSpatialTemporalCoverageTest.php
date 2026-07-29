@@ -201,7 +201,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      *
      * @return void
      */
-    public function testSaveWithInvalidCoordinates()
+    public function testSubmitRejectsInvalidCoordinateCombination()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.INVALID.COORDS",
@@ -216,6 +216,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action" => "submit",
             "tscLatitudeMin" => [""],
             "tscLatitudeMax" => ["40.7828"],
             "tscLongitudeMin" => ["-74.0060"],
@@ -240,11 +241,11 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
 
     /**
-     * Tests that spatial-only submit data is rejected outside ELMO-GEM.
+     * Tests that spatial-only submit data is allowed outside ELMO-GEM.
      *
      * @return void
      */
-    public function testSubmitRejectsSpatialOnlyCoverageOutsideElmoGem()
+    public function testSubmitAllowsSpatialOnlyCoverageOutsideElmoGem()
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.EMPTY.DATE",
@@ -274,9 +275,9 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
-        $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC without temporal coverage.');
+        $this->assertTrue($result, 'Spatial-only STC should be valid outside ELMO-GEM.');
 
-        // No STC should be saved since the submitted row is incomplete for non-GEM.
+        // Spatial coverage is independent from temporal coverage in DataCite 4.7.
         $stmt = $this->connection->prepare("
             SELECT COUNT(*) as count 
             FROM Resource_has_Spatial_Temporal_Coverage 
@@ -286,7 +287,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $stmt->execute();
         $count = $stmt->get_result()->fetch_assoc()['count'];
 
-        $this->assertEquals(0, $count, 'No STC should be saved when dateStart is empty outside ELMO-GEM.');
+        $this->assertEquals(1, $count, 'Spatial-only STC should be linked to the resource.');
     }
 
     /**
@@ -766,7 +767,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
      *
      * @return void
      */
-    public function testSaveFailsWhenLongitudeMaxIsGivenButBoundingBoxIsIncomplete(): void
+    public function testSubmitFailsWhenLongitudeMaxIsGivenButBoundingBoxIsIncomplete(): void
     {
         $resourceData = [
             "doi" => "10.5880/GFZ.TEST.INCOMPLETE.BBOX." . uniqid(),
@@ -781,6 +782,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action"          => "submit",
             "tscLatitudeMin"  => ["45.0"],
             "tscLongitudeMin" => ["10.0"],
             "tscLongitudeMax" => ["20.0"],
@@ -790,6 +792,51 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
 
         $this->assertFalse($result, 'Saving should fail when longitudeMax is set but not all four coordinates are present');
+    }
+
+    /**
+     * Draft saves preserve incomplete bounding boxes so users can finish them later.
+     */
+    public function testSaveAllowsIncompleteBoundingBoxDraft(): void
+    {
+        $resourceData = [
+            "doi" => "10.5880/GFZ.TEST.INCOMPLETE.BBOX.DRAFT." . uniqid(),
+            "year" => 2026,
+            "dateCreated" => "2026-01-24",
+            "resourcetype" => 1,
+            "language" => 1,
+            "Rights" => 1,
+            "title" => ["Test Incomplete Bounding Box Draft"],
+            "titleType" => [1]
+        ];
+        $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
+
+        $postData = [
+            "action" => "save_and_download",
+            "tscLatitudeMin" => ["45.0"],
+            "tscLongitudeMin" => ["10.0"],
+            "tscLongitudeMax" => ["20.0"],
+            "tscDateStart" => ["2026-01-01"]
+        ];
+
+        $result = saveSpatialTemporalCoverage($this->connection, $postData, $resource_id);
+
+        $this->assertTrue($result, 'Draft saving should preserve an incomplete bounding box.');
+
+        $stmt = $this->connection->prepare(
+            "SELECT stc.latitudeMax, stc.longitudeMax
+             FROM Spatial_Temporal_Coverage stc
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rel
+                ON rel.Spatial_Temporal_Coverage_spatial_temporal_coverage_id = stc.spatial_temporal_coverage_id
+             WHERE rel.Resource_resource_id = ?"
+        );
+        $stmt->bind_param("i", $resource_id);
+        $stmt->execute();
+        $stc = $stmt->get_result()->fetch_assoc();
+
+        $this->assertNotNull($stc);
+        $this->assertNull($stc['latitudeMax']);
+        $this->assertSame(20.0, (float) $stc['longitudeMax']);
     }
 
     /**
