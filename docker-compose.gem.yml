@@ -54,6 +54,8 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      # ICGEM registration mail; Data Services still uses XML_SUBMIT_ADDRESS
+      ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS:-icgem@gfz.de}
       SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
