@@ -28,29 +28,26 @@ function filterValidPersonAuthors(array $postData): array
         'authorPersonRorIds' => []
     ];
 
-    // If familynames is missing or empty, return empty validAuthors
-    if (empty($postData['familynames'])) {
-        return $validAuthors;
-    }
-
     // Extract input arrays or default empty arrays for optional fields
-    $familynames = $postData['familynames'];
-    $givennames = $postData['givennames'] ?? [];
-    $orcids = $postData['orcids'] ?? [];
-    $affiliations = $postData['personAffiliation'] ?? [];
-    $rorids = $postData['authorPersonRorIds'] ?? [];
+    $familynames = is_array($postData['familynames'] ?? null) ? $postData['familynames'] : [];
+    $givennames = is_array($postData['givennames'] ?? null) ? $postData['givennames'] : [];
+    $orcids = is_array($postData['orcids'] ?? null) ? $postData['orcids'] : [];
+    $affiliations = is_array($postData['personAffiliation'] ?? null) ? $postData['personAffiliation'] : [];
+    $rorids = is_array($postData['authorPersonRorIds'] ?? null) ? $postData['authorPersonRorIds'] : [];
+    $rowCount = max(count($familynames), count($givennames), count($orcids));
 
     // Loop through all author entries by index
-    foreach ($familynames as $i => $family) {
+    for ($i = 0; $i < $rowCount; $i++) {
+        $family = trim((string) ($familynames[$i] ?? ''));
         // Get corresponding given name or empty string if not set
-        $given = $givennames[$i] ?? '';
+        $given = trim((string) ($givennames[$i] ?? ''));
         $orcid = normalizeAuthorOrcid($orcids[$i] ?? '');
 
         // Keep person authors that provide at least a name part or an ORCID.
-        if (trim($family) !== '' || trim($given) !== '' || $orcid !== '') {
+        if ($family !== '' || $given !== '' || $orcid !== '') {
             // Append trimmed valid fields to results arrays, safely handling optional data
-            $validAuthors['familynames'][] = trim($family);
-            $validAuthors['givennames'][] = trim($given);
+            $validAuthors['familynames'][] = $family;
+            $validAuthors['givennames'][] = $given;
             $validAuthors['orcids'][] = $orcid;
             $validAuthors['personAffiliation'][] = $affiliations[$i] ?? '';
             $validAuthors['authorPersonRorIds'][] = $rorids[$i] ?? '';
@@ -73,19 +70,7 @@ function filterValidPersonAuthors(array $postData): array
  */
 function validatePersonAuthors(array $postData): bool
 {
-    if (empty($postData['familynames'])) {
-        return false;
-    }
-
-    $familynames = $postData['familynames'];
-
-    foreach ($familynames as $family) {
-        if (trim($family) !== '') {
-            return true;
-        }
-    }
-
-    return false;
+    return count(filterValidPersonAuthors($postData)['familynames']) > 0;
 }
 
 /**
@@ -323,15 +308,7 @@ function normalizeAuthorsFromPayload(array $payload): array
 function normalizeLegacyAuthors(array $postData): array
 {
     $authors = [];
-    $filteredPersons = (!empty($postData['familynames']) || !empty($postData['givennames']))
-        ? filterValidPersonAuthors($postData)
-        : [
-            'familynames' => [],
-            'givennames' => [],
-            'orcids' => [],
-            'personAffiliation' => [],
-            'authorPersonRorIds' => []
-        ];
+    $filteredPersons = filterValidPersonAuthors($postData);
 
     foreach ($filteredPersons['familynames'] as $i => $familyname) {
         $affiliationData = trim($filteredPersons['personAffiliation'][$i] ?? '');

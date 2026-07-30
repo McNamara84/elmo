@@ -12,6 +12,14 @@ async function openSubmitModal(page: Page) {
 
   const submitModal = page.locator('#modal-submit');
   await expect(submitModal).toBeVisible({ timeout: 5000 });
+  await page.waitForFunction(() => {
+    const modalElement = document.getElementById('modal-submit');
+    const modal = modalElement
+      ? (window as any).bootstrap?.Modal?.getInstance(modalElement)
+      : null;
+
+    return modalElement?.classList.contains('show') && modal?._isTransitioning === false;
+  });
 
   // Form token is in main form, not modal - verify it exists in the main form
   const csrfField = page.locator('#input-csrf-token');
@@ -89,9 +97,6 @@ test.describe('Submit Operation Security Features', () => {
 
     await openSubmitModal(page);
 
-    // Wait 3+ seconds from page load to satisfy server-side minimum interaction time
-    await page.waitForTimeout(3100);
-
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
     );
@@ -110,9 +115,7 @@ test.describe('Submit Operation Security Features', () => {
     const honeypot = submitModal.locator('#input-submit-please-fill-in-this-field');
     await honeypot.waitFor({ state: 'attached' });
 
-    // Wait 3+ seconds from page load for server-side minimum interaction time.
     // Fill honeypot only after the modal open animation completes — shown.bs.modal resets the field.
-    await page.waitForTimeout(3100);
     await honeypot.fill('I am a bot');
 
     const responsePromise = page.waitForResponse((response) =>
@@ -135,8 +138,6 @@ test.describe('Submit Operation Security Features', () => {
     await page.locator('#button-form-submit').click();
     await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
     await page.check('#input-submit-privacycheck');
-
-    await page.waitForTimeout(3100);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
@@ -165,7 +166,6 @@ test.describe('Submit Operation Security Features', () => {
     });
 
     await openSubmitModal(page);
-    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForResponse(

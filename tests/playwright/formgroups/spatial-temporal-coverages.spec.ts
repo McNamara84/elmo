@@ -1,5 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome, SELECTORS, simulateSubmitValidation } from '../utils';
+import {
+  navigateToHome,
+  SELECTORS,
+  simulateSubmitValidation,
+  waitForRenderingSettled,
+} from '../utils';
 
 const apiKey = process.env.GOOGLE_MAPS_API_KEY ?? 'playwright-test-google-maps-key';
 const mapId = 'playwright-test-map-id';
@@ -130,6 +135,8 @@ const googleMapsStub = String.raw`(() => {
       this._bounds = opts.bounds || null;
       this._map = opts.map || null;
       this._listeners = {};
+      window.__elmoRectangles = window.__elmoRectangles || [];
+      window.__elmoRectangles.push(this);
     }
     setMap(map) {
       this._map = map;
@@ -406,7 +413,9 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
         latLng: new (window as any).google.maps.LatLng(40.0, -74.5),
       });
     });
-    await page.waitForTimeout(300); // wait for 150ms DBLCLICK_THRESHOLD timer to fire
+    await page.waitForFunction(() =>
+      (window as any).__elmoRectangles?.some((rectangle: any) => rectangle._bounds)
+    );
 
     // Second click – completes the rectangle and emits 'rectanglecomplete'
     await page.evaluate(() => {
@@ -415,8 +424,6 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
         latLng: new (window as any).google.maps.LatLng(41.0, -73.5),
       });
     });
-    await page.waitForTimeout(300); // wait for timer to fire and fields to update
-
     await expect(latMax).toHaveValue(/41(?:\.0+)?/);
     await expect(longMax).toHaveValue(/-73\.5/);
     await expect(latMin).toHaveValue(/40(?:\.0+)?/);
@@ -461,7 +468,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await expect(timezoneSelect).not.toHaveClass(/is-invalid/);
   });
 
-  test('time zone should be optional even if the time fields are filled in', async ({ page }) => {
+  test('time zone should become required when the time fields are filled in', async ({ page }) => {
     // Verify timezone is NOT required initially
     const timezoneSelect = page.locator('#input-stc-timezone');
     await expect(timezoneSelect).not.toHaveAttribute('required');
@@ -492,7 +499,8 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
     await simulateSubmitValidation(page);
 
     // Timezone should now be required when time is provided
-    await expect(timezoneSelect).not.toHaveAttribute('required');
+    await expect(timezoneSelect).toHaveAttribute('required', 'required');
+    await expect(timezoneSelect).toHaveAttribute('aria-required', 'true');
   });
 
   test('keeps STC submit validation highlights visible when fields must be filled in', async ({ page }) => {
@@ -525,7 +533,7 @@ test.describe('Spatial and Temporal Coverages Form Group', () => {
 
     // Revalidation / follow-up events must not clear the red highlight
     await longMax.blur();
-    await page.waitForTimeout(150);
+    await waitForRenderingSettled(page);
 
     await expect(latMin).toHaveClass(/border-danger/);
     await expect(longMin).toHaveClass(/border-danger/);

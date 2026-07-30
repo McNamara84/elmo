@@ -18,6 +18,10 @@ const path = require("path");
 const vm = require("vm");
 
 function loadMappingModule(contextOverrides = {}) {
+  const resourceTypeUtilsCode = fs.readFileSync(
+    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
+    "utf8"
+  );
   const code = fs.readFileSync(
     path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
     "utf8"
@@ -37,6 +41,8 @@ function loadMappingModule(contextOverrides = {}) {
     ...contextOverrides,
   };
   vm.createContext(context);
+  vm.runInContext(resourceTypeUtilsCode, context);
+  context.window.resourceTypeUtils = context.resourceTypeUtils;
   vm.runInContext(code, context);
   return context;
 }

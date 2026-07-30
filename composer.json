@@ -43,8 +43,8 @@
     },
     "require-dev": {
         "guzzlehttp/guzzle": "^7.10.5",
-        "phpstan/phpstan": "^2.2.1",
-        "phpunit/phpunit": "^13.1.13"
+        "phpstan/phpstan": "^2.2.6",
+        "phpunit/phpunit": "^13.2.6"
     },
     "autoload": {
         "classmap": [

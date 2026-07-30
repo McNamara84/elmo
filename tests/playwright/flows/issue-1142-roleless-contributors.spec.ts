@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { XMLParser } from 'fast-xml-parser';
 import fs from 'node:fs';
-import { completeMinimalDatasetForm, navigateToHome } from '../utils';
+import { completeMinimalDatasetForm, navigateToHome, waitForFormInteractionReady } from '../utils';
 
 test.describe('Issue #1142 roleless contributor export', () => {
   test.setTimeout(90_000);
@@ -29,7 +29,7 @@ test.describe('Issue #1142 roleless contributor export', () => {
     await expect(saveAsModal).toBeVisible();
     await page.locator('#input-saveas-filename').fill('issue-1142-roleless-contributors');
 
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
 
     const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
     const responsePromise = page.waitForResponse(

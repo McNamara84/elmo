@@ -12,6 +12,12 @@ const FUNDERS_FIXTURE = [
   { crossRefId: '100000012', name: 'Gordon and Betty Moore Foundation' }
 ];
 
+let fundersRequestCount = 0;
+let fundersResponseStatus = 200;
+let holdFundersResponse = false;
+let fundersResponseGate: Promise<void>;
+let releaseFundersResponse: () => void;
+
 async function buildHarnessPage(): Promise<string> {
   const template = await FUNDING_REFERENCE_TEMPLATE;
   return `<!DOCTYPE html>
@@ -74,13 +80,25 @@ async function buildHarnessPage(): Promise<string> {
 
 test.describe('Funding Reference form group', () => {
   test.beforeEach(async ({ page }) => {
+    fundersRequestCount = 0;
+    fundersResponseStatus = 200;
+    holdFundersResponse = false;
+    fundersResponseGate = new Promise(resolve => {
+      releaseFundersResponse = resolve;
+    });
+
     await registerStaticAssetRoutes(page);
 
     await page.route('**/json/funders.json', async route => {
+      fundersRequestCount += 1;
+      if (holdFundersResponse) {
+        await fundersResponseGate;
+      }
+
       await route.fulfill({
-        status: 200,
+        status: fundersResponseStatus,
         contentType: 'application/json',
-        body: JSON.stringify(FUNDERS_FIXTURE)
+        body: fundersResponseStatus === 200 ? JSON.stringify(FUNDERS_FIXTURE) : JSON.stringify({ error: 'unavailable' })
       });
     });
 
@@ -107,6 +125,98 @@ test.describe('Funding Reference form group', () => {
         el.style.visibility = 'visible';
       });
     });
+  });
+
+  test.afterEach(() => {
+    releaseFundersResponse();
+  });
+
+  test('defers CFID funder data until first interaction and reuses one request', async ({ page }) => {
+    expect(fundersRequestCount).toBe(0);
+
+    holdFundersResponse = true;
+    const rows = page.locator(`${SELECTORS.formGroups.fundingReference} [funding-reference-row]`);
+    const firstFunderInput = rows.first().locator('.inputFunder');
+
+    await firstFunderInput.focus();
+    await expect.poll(() => fundersRequestCount).toBe(1);
+
+    await firstFunderInput.fill('Gordon');
+    releaseFundersResponse();
+
+    const firstDropdown = page.locator('ul.ui-autocomplete')
+      .filter({ hasText: 'Gordon and Betty Moore Foundation' })
+      .first();
+    await expect(firstDropdown).toBeVisible();
+    await firstDropdown.locator('li', { hasText: 'Gordon and Betty Moore Foundation' }).first().click();
+
+    await expect(firstFunderInput).toHaveValue('Gordon and Betty Moore Foundation');
+    await expect(rows.first().locator('.inputFunderId')).toHaveValue('100000012');
+    await expect(rows.first().locator('.inputFunderIdTyp')).toHaveValue('crossref');
+
+    await page.locator('#button-fundingreference-add').click();
+    await expect(rows).toHaveCount(2);
+
+    const secondFunderInput = rows.nth(1).locator('.inputFunder');
+    await secondFunderInput.fill('Ford');
+    const secondDropdown = page.locator('ul.ui-autocomplete')
+      .filter({ hasText: 'Ford Foundation' })
+      .first();
+    await expect(secondDropdown).toBeVisible();
+
+    expect(fundersRequestCount).toBe(1);
+  });
+
+  test('handles an unavailable CFID funder file without an unhandled page error', async ({ page }) => {
+    const pageErrors: string[] = [];
+    page.on('pageerror', error => pageErrors.push(error.message));
+    fundersResponseStatus = 503;
+
+    const funderInput = page.locator('#input-funder');
+    await funderInput.focus();
+    await expect.poll(() => fundersRequestCount).toBe(1);
+    await funderInput.fill('Gordon');
+
+    await page.waitForFunction(() => {
+      const $ = (window as any).jQuery;
+      const input = document.querySelector('#input-funder');
+      const instance = $ && input ? $(input).autocomplete('instance') : null;
+      return instance && instance.term === 'Gordon' && instance.pending === 0;
+    });
+
+    await expect(page.locator('ul.ui-autocomplete:visible')).toHaveCount(0);
+    expect(pageErrors).toEqual([]);
+  });
+
+  test('keeps local funder data unloaded in ROR mode', async ({ page }) => {
+    await page.addInitScript(() => {
+      (window as any).ELMO_FEATURES = { funderPidMode: 'ROR' };
+    });
+    await page.route('**/api/v2/affiliations/search**', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify([
+          { id: 'https://ror.org/04z8jg394', name: 'GFZ Helmholtz Centre for Geosciences' }
+        ])
+      });
+    });
+
+    await page.reload({ waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => {
+      const $ = (window as any).jQuery;
+      const input = document.querySelector('#input-funder');
+      return Boolean($ && input && $(input).data('ui-autocomplete'));
+    });
+
+    const funderInput = page.locator('#input-funder');
+    await funderInput.fill('Helmholtz');
+
+    const dropdown = page.locator('ul.ui-autocomplete')
+      .filter({ hasText: 'GFZ Helmholtz Centre for Geosciences' })
+      .first();
+    await expect(dropdown).toBeVisible();
+    expect(fundersRequestCount).toBe(0);
   });
 
   test('renders accessible inputs, help affordances, and validation hooks', async ({ page }) => {
