@@ -23,8 +23,8 @@ function elmoCompatibilityRoutes(): array
         '/web-app-manifest-512x512.png' => '/assets/icons/web-app-manifest-512x512.png',
         '/logos/doi.logo.svg' => '/assets/logos/doi-logo.svg',
         '/logos/EPOS_logo.png' => '/assets/logos/epos-logo.png',
-        '/logos/GFZ_Data_Services_logo.png' => '/assets/logos/gfz-data-services-logo.png',
-        '/logos/GFZ-logo.png' => '/assets/logos/gfz-logo.png',
+        '/logos/GFZ_Data_Services_logo.png' => '/assets/logos/gfz-data-services-logo.svg',
+        '/logos/GFZ-logo.png' => '/assets/logos/gfz-logo.svg',
         '/logos/orcid.logo.png' => '/assets/logos/orcid-logo.png',
         '/logos/ror-logo.svg' => '/assets/logos/ror-logo.svg',
     ];

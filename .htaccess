@@ -22,8 +22,8 @@
     # Temporary compatibility aliases for logos moved to assets/logos.
     RewriteRule ^logos/doi\.logo\.svg$ assets/logos/doi-logo.svg [L]
     RewriteRule ^logos/EPOS_logo\.png$ assets/logos/epos-logo.png [L]
-    RewriteRule ^logos/GFZ_Data_Services_logo\.png$ assets/logos/gfz-data-services-logo.png [L]
-    RewriteRule ^logos/GFZ-logo\.png$ assets/logos/gfz-logo.png [L]
+    RewriteRule ^logos/GFZ_Data_Services_logo\.png$ assets/logos/gfz-data-services-logo.svg [L]
+    RewriteRule ^logos/GFZ-logo\.png$ assets/logos/gfz-logo.svg [L]
     RewriteRule ^logos/orcid\.logo\.png$ assets/logos/orcid-logo.png [L]
     RewriteRule ^logos/ror-logo\.svg$ assets/logos/ror-logo.svg [L]
 

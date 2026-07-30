@@ -52,7 +52,7 @@ test.describe('Issue #357 legacy route compatibility', () => {
   test('legacy and canonical logo URLs return the same asset', async ({ request }) => {
     const [legacyResponse, canonicalResponse] = await Promise.all([
       request.get('logos/GFZ-logo.png'),
-      request.get('assets/logos/gfz-logo.png'),
+      request.get('assets/logos/gfz-logo.svg'),
     ]);
 
     expect(legacyResponse.status()).toBe(200);
