@@ -14,7 +14,7 @@ module.exports = {
     '!js/eventhandlers/formgroups/contributor-organisation.js',
     '!js/eventhandlers/formgroups/contributor-person.js',
     '!js/eventhandlers/formgroups/fundingreference.js',
-    '!js/eventhandlers/formgroups/ggms-datasources.js',
+    '!js/eventhandlers/formgroups/ggmsDatasources.js',
     '!js/eventhandlers/formgroups/relatedwork.js',
     '!js/eventhandlers/formgroups/resourceinformation-title.js',
     '!js/eventhandlers/formgroups/stc.js',
