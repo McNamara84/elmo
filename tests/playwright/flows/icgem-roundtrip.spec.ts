@@ -41,7 +41,7 @@
  */
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { navigateToHome, waitForFormInteractionReady } from '../utils';
 import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
@@ -625,7 +625,6 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     const typeCode = typeCodeMap[ds.type.toLowerCase()] ?? 'S';
     await dsRow.locator('select[name="datasource_type[]"]').selectOption(typeCode);
     await dsRow.locator('select[name="datasource_type[]"]').dispatchEvent('change');
-    await page.waitForTimeout(300); // allow row visibility to update
 
     await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
 
@@ -675,8 +674,6 @@ async function downloadAndSaveIcgemXml(
 
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5_000 });
-  // Wait 2+ seconds to meet backend minimum interaction time for save
-  await page.waitForTimeout(2100);
   await saveButton.click();
 
   const saveModal = page.locator('#modal-saveas');
@@ -686,8 +683,7 @@ async function downloadAndSaveIcgemXml(
   const filenameInput = page.locator('#input-saveas-filename');
   await filenameInput.fill(testName);
 
-  // Wait to satisfy server-side minimum interaction time for save.
-  await page.waitForTimeout(2200);
+  await waitForFormInteractionReady(page, 'save');
 
   await page.locator('#button-saveas-save').click();
 

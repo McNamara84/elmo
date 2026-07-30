@@ -201,11 +201,12 @@ http://www.altova.com/mapforce
 				<publicationYear>
 					<xsl:value-of select="*[local-name()='year' and namespace-uri()='']"/>
 				</publicationYear>
+				<xsl:variable name="resourceTypeLabel" select="normalize-space(*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()=''])"/>
 				<resourceType>
 					<xsl:attribute name="resourceTypeGeneral" namespace="">
-						<xsl:value-of select="*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()='']"/>
+						<xsl:value-of select="translate($resourceTypeLabel, ' ', '')"/>
 					</xsl:attribute>
-					<xsl:value-of select="*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()='']"/>
+					<xsl:value-of select="$resourceTypeLabel"/>
 				</resourceType>
 				<subjects>
 					<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()='']">

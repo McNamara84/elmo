@@ -383,6 +383,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       'js/affiliations.js',
       'js/usedInstruments.js',
       'js/upload.js',
+      'js/resourceTypeUtils.js',
       'js/mappingXmlToInputFields.js',
     ];
 

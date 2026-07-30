@@ -68,8 +68,6 @@ test.describe('ORCID Checksum Validation', () => {
       input.dispatchEvent(new Event('input', { bubbles: true }));
     });
 
-    // Wait briefly for the paste handler
-    await page.waitForTimeout(100);
     // Trigger blur to run validation
     await authorRow.locator('input[name="familynames[]"]').click();
 
@@ -100,8 +98,7 @@ test.describe('ORCID Checksum Validation', () => {
     // Trigger blur
     await authorRow.locator('input[name="familynames[]"]').click();
 
-    // Wait a bit to ensure no API call happens
-    await page.waitForTimeout(500);
+    // Invalid-checksum handling is synchronous and must not start a request.
     expect(apiCalled).toBe(false);
   });
 
@@ -124,8 +121,7 @@ test.describe('ORCID Checksum Validation', () => {
     await orcidInput.fill('0000-0002-1825-0097');
     await authorRow.locator('input[name="familynames[]"]').click();
 
-    await page.waitForTimeout(500);
-    expect(apiCalled).toBe(true);
+    await expect.poll(() => apiCalled).toBe(true);
   });
 
   test('validates ORCID ending with X', async ({ page }) => {

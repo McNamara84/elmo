@@ -19,6 +19,43 @@ const dropdownAjax =
         runSequentialFallback: window.runSequentialFallback,
       };
 
+let fundersDataPromise = null;
+
+/**
+ * Loads the local Crossref Funder Registry once and reuses the result.
+ * The request is intentionally excluded from initial page loading and starts
+ * only when CFID autocomplete is actually used.
+ * @returns {Promise<Array>} Resolves with the available funder entries.
+ */
+function loadFundersData() {
+  if (Array.isArray(window.fundersData)) {
+    return Promise.resolve(window.fundersData);
+  }
+
+  if (fundersDataPromise) {
+    return fundersDataPromise;
+  }
+
+  if (typeof fetch !== 'function') {
+    window.fundersData = [];
+    fundersDataPromise = Promise.resolve(window.fundersData);
+    return fundersDataPromise;
+  }
+
+  fundersDataPromise = fetch('json/funders.json')
+    .then(response => response.ok ? response.json() : [])
+    .then(data => {
+      window.fundersData = Array.isArray(data) ? data : [];
+      return window.fundersData;
+    })
+    .catch(() => {
+      window.fundersData = [];
+      return window.fundersData;
+    });
+
+  return fundersDataPromise;
+}
+
 /**
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
@@ -58,10 +95,7 @@ async function initializeAllDropdownsParallel() {
     titleTypes: fetch('api/v2/vocabs/titletypes').then(r => r.ok ? r.json() : Promise.reject()),
     licenses: fetch('api/v2/vocabs/licenses/all').then(r => r.ok ? r.json() : Promise.reject()),
     relations: fetch('api/v2/vocabs/relations').then(r => r.ok ? r.json() : { relations: [] }),
-    identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] }),
-    funders: (window.ELMO_FEATURES?.funderPidMode === 'ROR')
-      ? Promise.resolve([])
-      : fetch('json/funders.json').then(r => r.ok ? r.json() : Promise.reject())
+    identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] })
   };
 
   // We convert the dictionary into an array of entries: [[key, promise], [key, promise]...]
@@ -94,13 +128,6 @@ async function initializeAllDropdownsParallel() {
   if ('licenses' in data) populateLicenseDropdownWithData(data.licenses);
   if ('relations' in data) populateRelationsDropdownWithData(data.relations);
   if ('identifierTypes' in data) populateIdentifierTypesDropdownWithData(data.identifierTypes);
-  
-  if ('funders' in data) {
-    window.fundersData = data.funders;
-    $(".inputFunder").each(function () {
-      window.setUpAutocompleteFunder(this);
-    });
-  }
 
   // --- TARGETED FALLBACKS ---
   // Only trigger the sequential AJAX fallbacks for the ones that actually failed!
@@ -358,6 +385,12 @@ function populateIdentifierTypesDropdownWithData(response) {
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
+function startInitialDropdownPopulation() {
+  window.elmo = window.elmo || {};
+  window.elmo.dropdownsReady = initializeAllDropdownsParallel();
+  return window.elmo.dropdownsReady;
+}
+
 // Update dropdown placeholders when translations are loaded or changed
 if (typeof dropdownUtils.updateDropdownPlaceholders === 'function') {
   document.addEventListener('translationsLoaded', dropdownUtils.updateDropdownPlaceholders);
@@ -365,7 +398,7 @@ if (typeof dropdownUtils.updateDropdownPlaceholders === 'function') {
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
-  initializeAllDropdownsParallel();
+  startInitialDropdownPopulation();
   
   // Event handler to monitor if the resource type is changed
   // Only reload licenses when user actually selects a resource type (not on initial load)
@@ -394,6 +427,10 @@ $(document).ready(function () {
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   window.setUpAutocompleteFunder = function (inputElement) {
+    if (!inputElement || $(inputElement).data('ui-autocomplete')) {
+      return;
+    }
+
     const isRorMode = window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR';
 
     if (isRorMode) {
@@ -403,18 +440,25 @@ $(document).ready(function () {
     }
   };
 
+  $(".inputFunder").each(function () {
+    window.setUpAutocompleteFunder(this);
+  });
+
   /**
    * Sets up funder autocomplete using local Crossref Funder Registry data.
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   function setUpAutocompleteFunderCfid(inputElement) {
-    // Use globally stored fundersData from parallel load
-    const fundersData = window.fundersData || [];
+    const $input = $(inputElement);
     let searchTimeout;
     const MAX_RESULTS = 30; // Limit dropdown results
     const MIN_LENGTH = 2; // Minimum characters before search
-    
-    $(inputElement)
+
+    $input.one('focus.funder-data', () => {
+      loadFundersData();
+    });
+
+    $input
       .autocomplete({
         source: function (request, response) {
           // Cancel previous search if still pending
@@ -426,35 +470,47 @@ $(document).ready(function () {
             return;
           }
           
-          // Debounce search: wait 300ms before executing
+          // Debounce search before filtering the shared lazy-loaded data.
           searchTimeout = setTimeout(() => {
-            // Search at start of name first (more specific), then anywhere
-            const searchTerm = $.ui.autocomplete.escapeRegex(request.term).toLowerCase();
-            const results = [];
-            
-            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
-              const itemName = fundersData[i].name.toLowerCase();
-              
-              // Prioritize matches at the start of the name
-              if (itemName.indexOf(searchTerm) === 0) {
-                results.push(fundersData[i]);
+            loadFundersData().then(fundersData => {
+              // Search at start of name first (more specific), then anywhere
+              const searchTerm = $.ui.autocomplete.escapeRegex(request.term).toLowerCase();
+              const results = [];
+
+              for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+                const funder = fundersData[i];
+                if (!funder || typeof funder.name !== 'string') {
+                  continue;
+                }
+
+                const itemName = funder.name.toLowerCase();
+
+                // Prioritize matches at the start of the name
+                if (itemName.indexOf(searchTerm) === 0) {
+                  results.push(funder);
+                }
               }
-            }
-            
-          // If we need more results, search anywhere in the name
-          if (results.length < MAX_RESULTS) {
-            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
-              const itemName = fundersData[i].name.toLowerCase();
-              
-              // Check if this funder is NOT already in the results array
-              // AND Check if searchTerm exists anywhere in the funder name
-              if (results.indexOf(fundersData[i]) === -1 && itemName.indexOf(searchTerm) !== -1) {
-                results.push(fundersData[i]);
+
+              // If we need more results, search anywhere in the name
+              if (results.length < MAX_RESULTS) {
+                for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+                  const funder = fundersData[i];
+                  if (!funder || typeof funder.name !== 'string') {
+                    continue;
+                  }
+
+                  const itemName = funder.name.toLowerCase();
+
+                  // Check if this funder is NOT already in the results array
+                  // AND Check if searchTerm exists anywhere in the funder name
+                  if (results.indexOf(funder) === -1 && itemName.indexOf(searchTerm) !== -1) {
+                    results.push(funder);
+                  }
+                }
               }
-            }
-          }
-            
-            response(results);
+
+              response(results);
+            });
           }, 200); // 200ms debounce
         },
         minLength: MIN_LENGTH,
@@ -769,6 +825,7 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     setupTimezoneDropdownAjax: dropdownAjax.setupTimezoneDropdownAjax,
     initializeAllDropdownsParallel,
+    startInitialDropdownPopulation,
     setupResourceTypeDropdownAjax: dropdownAjax.setupResourceTypeDropdownAjax,
     setupLanguageDropdownAjax: dropdownAjax.setupLanguageDropdownAjax,
     setupTitleTypeDropdownAjax: dropdownAjax.setupTitleTypeDropdownAjax,
@@ -789,6 +846,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateIdentifierType,
     debounce,
     updateIdsAndNames,
-    updateDataSourceIdsAndNames
+    updateDataSourceIdsAndNames,
+    loadFundersData
   };
 }

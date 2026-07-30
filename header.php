@@ -46,10 +46,10 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <link rel="stylesheet" href="./css/tagify-adj.css">
   <link rel="stylesheet" href="./css/darkmode.css">
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="assets/icons/favicon-96x96.png" sizes="96x96" />
-  <link rel="icon" type="image/svg+xml" href="assets/icons/favicon.svg" />
-  <link rel="shortcut icon" href="assets/icons/favicon.ico" />
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/icons/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
   <link rel="manifest" href="site.webmanifest" />
   <title>ELMO</title>
   <style>
@@ -73,12 +73,12 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
       <div class="d-flex align-items-center ms-3 my-2">
         <h1 class="visually-hidden">ELMO – GFZ Data Services' Metadata Editor 2.0</h1>
         <a href="https://www.gfz.de/" target="_blank" rel="noopener noreferrer">
-          <img src="assets/logos/gfz-logo.png" alt="GFZ Logo" class="logo logo-left">
+          <img src="assets/logos/gfz-logo.svg" width="2048" height="694" alt="GFZ Logo" class="logo logo-left">
         </a>
       </div>
 
       <a href="https://dataservices.gfz.de/web/" target="_blank" rel="noopener noreferrer" class="logo-center-wrapper">
-        <img src="assets/logos/gfz-data-services-logo.png" alt="GFZ Data Services Logo" class="logo">
+        <img src="assets/logos/gfz-data-services-logo.svg" width="2048" height="413" alt="GFZ Data Services Logo" class="logo">
       </a>
 
       <!-- Toggle button for mobile -->

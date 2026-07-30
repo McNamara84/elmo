@@ -143,7 +143,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     jest.restoreAllMocks();
   });
 
-  test('calls all parallel fetch endpoints', () => {
+  test('calls initial parallel fetch endpoints without funders', () => {
     const urls = global.fetch.mock.calls.map(([url]) => url);
     expect(urls.some((url) => url.includes('json/timezones.json'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/vocabs/resourcetypes'))).toBe(true);
@@ -152,7 +152,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect(urls.some((url) => url.includes('api/v2/vocabs/licenses/all'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/vocabs/relations'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/validation/identifiertypes/active'))).toBe(true);
-    expect(urls.some((url) => url.includes('json/funders.json'))).toBe(true);
+    expect(urls.some((url) => url.includes('json/funders.json'))).toBe(false);
   });
 
   test('does not fall back to sequential AJAX initialization on success', () => {
@@ -258,8 +258,8 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect(options.slice(1)).toEqual(['ARK', 'arXiv', 'bibcode']);
   });
 
-  test('stores funders data for autocomplete setup', () => {
-    expect(window.fundersData).toEqual([]);
+  test('does not load funder data during dropdown setup', () => {
+    expect(window.fundersData).toBeUndefined();
     expect(window.setUpAutocompleteFunder).not.toHaveBeenCalled();
   });
 });
