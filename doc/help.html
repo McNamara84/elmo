@@ -208,6 +208,14 @@ include_once "../settings.php";
                     </p>
                     <p><strong>Optional field. Please leave this field empty if your dataset is not published
                             yet.</strong></p>
+                    <?php if ($showGGMsProperties ?? false): ?>
+                    <p>
+                        Leave this field empty if your model does not have a DOI yet: GFZ Data Services then receives
+                        the usual submission mail and reserves a DOI, and the model ID is generated once your primary
+                        data has been received. If you enter an existing DOI, only the ICGEM team is notified and no
+                        new DOI or model ID is generated.
+                    </p>
+                    <?php endif; ?>
                 </div>
                 <div id="help-resourceinformation-publicationyear">
                     <h4>Publication Year</h4>
