@@ -75,6 +75,36 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
     await expect(graceNode).toHaveCount(0);
   });
 
+  test('expands a broader platform term on row click and selects the satellite below it', async ({ page }) => {
+    await page.locator('#button-datasource-platforms').click();
+    await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
+
+    const tree = page.locator('#jstree-platforms-datasource');
+    await expect(tree.locator('.jstree-container-ul')).toBeVisible({ timeout: 10_000 });
+
+    const satellitesNode = tree.locator(
+      '[id="https://gcmd.earthdata.nasa.gov/kms/concept/3466eed1-2fbb-49bf-ab0b-dc08731d502b"]',
+    );
+    await expect(satellitesNode).toHaveClass(/jstree-closed/);
+
+    // Clicking the row itself browses into the broader term rather than selecting it.
+    await satellitesNode.locator('> .jstree-anchor').click();
+    await expect(satellitesNode).toHaveClass(/jstree-open/);
+    await expect(satellitesNode.locator('> .jstree-anchor')).not.toHaveClass(/jstree-clicked/);
+
+    const graceAnchor = tree
+      .locator('[id="https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac"]')
+      .locator('> .jstree-anchor');
+    await expect(graceAnchor).toBeVisible();
+
+    await graceAnchor.click();
+    await expect(graceAnchor).toHaveClass(/jstree-clicked/);
+
+    const selectedKeywords = page.locator('#selected-keywords-platforms-ds li');
+    await expect(selectedKeywords).toHaveCount(1);
+    await expect(selectedKeywords.first()).toContainText('GRACE');
+  });
+
   test('satellite platform input is js-required-on-submit and becomes required on Submit', async ({ page }) => {
     const platformInput = page.locator('#input-datasource-platforms');
     const tagifyWrapper = page.locator('.visibility-datasources-satellite .tagify');
