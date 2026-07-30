@@ -89,8 +89,7 @@ export const THESAURUS_CONFIG = {
         searchInputId: '#input-platforms-thesaurussearch-ds',
         selectedListId: 'selected-keywords-platforms-ds',
         stateKey: 'satellitePlatforms',
-        dynamicOnly: true,
-        initialOpenNodeTexts: ['Earth Observation Satellites']
+        dynamicOnly: true
     }
 };
 
@@ -134,7 +133,8 @@ function hideLoadingSpinner(jsTreeId) {
  * @param {Object} config - Thesaurus configuration.
  */
 function expandInitialTreeNodes(config) {
-    if (!config.initialOpenNodeTexts || config.initialOpenNodeTexts.length === 0) return;
+    const hasInitialOpenTexts = config.initialOpenNodeTexts && config.initialOpenNodeTexts.length > 0;
+    if (!config.rootNodeId && !hasInitialOpenTexts) return;
 
     const tree = $(config.jsTreeId).jstree(true);
     if (!tree || typeof tree.open_node !== 'function') return;
@@ -145,7 +145,7 @@ function expandInitialTreeNodes(config) {
         nodesToOpen.push(config.rootNodeId);
     }
 
-    config.initialOpenNodeTexts.forEach(function (text) {
+    (config.initialOpenNodeTexts || []).forEach(function (text) {
         const node = tree.get_json('#', { flat: true }).find(function (n) {
             return n.text === text;
         });

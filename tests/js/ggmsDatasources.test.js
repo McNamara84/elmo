@@ -490,13 +490,13 @@ describe('ggms-datasources.js', () => {
     expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
   });
 
-  test('pre-opens Space-based Platforms and Earth Observation Satellites after thesaurus load', () => {
+  test('pre-opens Space-based Platforms but not Earth Observation Satellites after thesaurus load', () => {
     openDatasourceModal(document.getElementById('button-datasource-platforms'));
 
     const tree = $('#jstree-platforms-datasource').jstree(true);
     expect(tree).toBeTruthy();
     expect(tree.opened).toContain('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
-    expect(tree.opened).toContain('earth-obs');
+    expect(tree.opened).not.toContain('earth-obs');
   });
 
   test('remove button deletes row', () => {

@@ -49,7 +49,7 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
     await expect(page.locator('#group-datasources')).toBeVisible();
   });
 
-  test('opens datasource platforms modal with GRACE visible without manual tree expansion', async ({ page }) => {
+  test('opens datasource platforms modal with Space-based Platforms expanded but satellites collapsed', async ({ page }) => {
     await page.locator('#button-datasource-platforms').click();
     await expect(page.locator('#modal-platforms-datasource')).toBeVisible();
 
@@ -57,11 +57,22 @@ test.describe('simplification of satellite modal interaction for ELMOGEM', () =>
     await expect(tree.locator('.thesaurus-loading-spinner')).toHaveCount(0, { timeout: 10_000 });
     await expect(tree.locator('.jstree-container-ul')).toBeVisible({ timeout: 10_000 });
 
+    const spaceBasedNode = tree.locator(
+      '[id="https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847"]',
+    );
+    await expect(spaceBasedNode).toBeVisible();
+    await expect(spaceBasedNode).toHaveClass(/jstree-open/);
+
+    const satellitesNode = tree.locator(
+      '[id="https://gcmd.earthdata.nasa.gov/kms/concept/3466eed1-2fbb-49bf-ab0b-dc08731d502b"]',
+    );
+    await expect(satellitesNode).toBeVisible();
+    await expect(satellitesNode).toHaveClass(/jstree-closed/);
+
     const graceNode = tree.locator(
       '[id="https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac"]',
     );
-    await expect(graceNode).toBeVisible();
-    await expect(graceNode).toHaveClass(/jstree-leaf/);
+    await expect(graceNode).toHaveCount(0);
   });
 
   test('satellite platform input is js-required-on-submit and becomes required on Submit', async ({ page }) => {
