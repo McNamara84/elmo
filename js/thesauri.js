@@ -165,6 +165,34 @@ function expandInitialTreeNodes(config) {
 }
 
 /**
+ * Decides what activating a tree row does, so broader terms can be browsed by clicking
+ * the row instead of aiming for the small expander arrow.
+ *
+ * Rows that have narrower terms open or close, rows without children keep jsTree's
+ * default selection. Clicking the checkbox or holding Ctrl/Cmd always selects, so
+ * broader terms stay selectable as keywords.
+ *
+ * Invoked by the conditionalselect plugin with the jsTree instance as `this`.
+ *
+ * @param {Object} node - The activated jsTree node.
+ * @param {Object} [event] - Event that triggered the activation.
+ * @returns {boolean} True when jsTree should apply its default selection.
+ */
+function handleTreeNodeActivation(node, event) {
+    const selectsExplicitly = !event
+        || event.ctrlKey
+        || event.metaKey
+        || $(event.target).hasClass('jstree-checkbox');
+
+    if (selectsExplicitly || !this.is_parent(node)) {
+        return true;
+    }
+
+    this.toggle_node(node);
+    return false;
+}
+
+/**
  * Loads thesaurus vocabulary data on demand.
  * Triggered when a modal is opened for the first time OR when
  * a Tagify input field receives focus.
@@ -360,6 +388,8 @@ function loadKeywordsForConfig(config, response) {
     $(config.jsTreeId).jstree({
         core: {
             data: processedData,
+            // A single click already opens and closes broader terms.
+            dblclick_toggle: false,
             themes: {
                 icons: false,
                 dots: false
@@ -369,7 +399,8 @@ function loadKeywordsForConfig(config, response) {
             keep_selected_style: true,
             three_state: false
         },
-        plugins: ['search', 'checkbox'],
+        conditionalselect: handleTreeNodeActivation,
+        plugins: ['search', 'checkbox', 'conditionalselect'],
         search: {
             show_only_matches: true,
             search_callback: function (str, node) {

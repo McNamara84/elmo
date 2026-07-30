@@ -42,6 +42,7 @@ function transformThesauriScript(source, extraExportEntries = '') {
     'loadThesaurusOnDemand',
     'loadKeywordsForConfig',
     'loadedConfigs',
+    'handleTreeNodeActivation',
   ];
 
   if (/\bfunction ensureThesaurusLoaded\b/.test(script)) {
