@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import { XMLParser } from 'fast-xml-parser';
-import { completeMinimalDatasetForm, navigateToHome } from '../utils';
+import { completeMinimalDatasetForm, navigateToHome, waitForFormInteractionReady } from '../utils';
 
 const AWARD_URI = 'https://example.org/awards/issue-1147';
 
@@ -25,7 +25,7 @@ test.describe('Issue 1147 funding-reference draft save', () => {
     await expect(saveModal).toBeVisible({ timeout: 10_000 });
     await page.locator('#input-saveas-filename').fill('issue-1147-uri-only-award');
 
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
     const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
     await page.locator('#button-saveas-save').click();
     const download = await downloadPromise;

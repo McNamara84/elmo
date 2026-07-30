@@ -180,9 +180,11 @@ http://www.altova.com/mapforce
 					<xsl:for-each select="*[local-name()='Titles' and namespace-uri()='']/*[local-name()='Title' and namespace-uri()='']">
 						<xsl:variable name="var10_cur" select="."/>
 						<title>
-							<xsl:if test="not(contains(*[local-name()='type' and namespace-uri()=''], 'Main Title'))">
+							<xsl:variable name="titleTypeCamel" select="translate(*[local-name()='type' and namespace-uri()=''], ' ', '')"/>
+							<!-- CamelCase all title types; omit titleType for Main Title. -->
+							<xsl:if test="$titleTypeCamel != 'MainTitle'">
 								<xsl:attribute name="titleType" namespace="">
-									<xsl:value-of select="concat(substring-before(*[local-name()='type' and namespace-uri()=''], ' '), substring-after(*[local-name()='type' and namespace-uri()=''], ' '))"/>
+									<xsl:value-of select="$titleTypeCamel"/>
 								</xsl:attribute>
 							</xsl:if>
 							<xsl:if test="contains(*[local-name()='type' and namespace-uri()=''], 'Main Title')">
@@ -199,11 +201,12 @@ http://www.altova.com/mapforce
 				<publicationYear>
 					<xsl:value-of select="*[local-name()='year' and namespace-uri()='']"/>
 				</publicationYear>
+				<xsl:variable name="resourceTypeLabel" select="normalize-space(*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()=''])"/>
 				<resourceType>
 					<xsl:attribute name="resourceTypeGeneral" namespace="">
-						<xsl:value-of select="*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()='']"/>
+						<xsl:value-of select="translate($resourceTypeLabel, ' ', '')"/>
 					</xsl:attribute>
-					<xsl:value-of select="*[local-name()='ResourceType' and namespace-uri()='']/*[local-name()='resource_type_general' and namespace-uri()='']"/>
+					<xsl:value-of select="$resourceTypeLabel"/>
 				</resourceType>
 				<subjects>
 					<xsl:for-each select="*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()='']">

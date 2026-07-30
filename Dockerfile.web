@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1.24.0
 
 # ====== Stage 1: Base ======
 FROM php:8.5-apache-bookworm AS base

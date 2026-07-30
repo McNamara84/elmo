@@ -111,9 +111,6 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
       { timeout: 30_000 }
     );
 
-    // Wait 2+ seconds to meet backend minimum interaction time for save
-    await page.waitForTimeout(2100);
-
     // Click Save button in modal
     await page.click('#button-saveas-save');
 
@@ -159,8 +156,8 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
         }
       });
       
-      // Wait for tag to be registered
-      await page.waitForTimeout(500);
+      await expect.poll(() => roleInput.evaluate((input: any) => input._tagify?.value?.length ?? 0))
+        .toBeGreaterThan(0);
     }
 
     // Trigger save with mocked endpoint
@@ -223,7 +220,9 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
         input._tagify.addTags([input._tagify.whitelist[0]]);
       }
     });
-    await page.waitForTimeout(500);
+    await expect.poll(() => page.locator('#input-contributor-personrole').evaluate(
+      (input: any) => input._tagify?.value?.length ?? 0,
+    )).toBeGreaterThan(0);
 
     // Add Spatial/Temporal Coverage
     await page.fill('#input-stc-latmin_1', '52.5');
@@ -268,8 +267,6 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
 
     // Wait for download
     const downloadPromise = page.waitForEvent('download', { timeout: 30_000 });
-    // Wait 2+ seconds to meet backend minimum interaction time for save
-    await page.waitForTimeout(2100);
     await page.click('#button-saveas-save');
     const download = await downloadPromise;
 

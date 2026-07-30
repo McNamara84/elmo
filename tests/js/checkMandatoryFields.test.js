@@ -194,9 +194,9 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     simulateSubmitValidation();
 
-    // datestart and dateend should be required
-    expect(datestart.prop('required')).toBe(true);
-    expect(dateend.prop('required')).toBe(true);
+    // datestart and dateend should not be required
+    expect(datestart.prop('required')).not.toBe(true);
+    expect(dateend.prop('required')).not.toBe(true);
 
     // time fields should NOT be required (time is optional)
     expect(timestart.prop('required')).toBe(false);
@@ -228,7 +228,9 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
 
     simulateSubmitValidation();
 
-    // Now time fields ARE required (since a time was given)
+    // A time turns both dates, both times, and the timezone into one required bundle.
+    expect(datestart.prop('required')).toBe(true);
+    expect(dateend.prop('required')).toBe(true);
     expect(timestart.prop('required')).toBe(true);
     expect(timeend.prop('required')).toBe(true);
     expect(timezone.prop('required')).toBe(true);

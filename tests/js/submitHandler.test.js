@@ -94,6 +94,13 @@ describe('submitHandler.js', () => {
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        const payloadInput = document.querySelector('input[name="authorsPayload"]');
+        return payloadInput ? JSON.parse(payloadInput.value) : [];
+      })
+    };
+
     loadScript();
   });
 
@@ -103,6 +110,7 @@ describe('submitHandler.js', () => {
     delete global.validateTitleField;
     delete global.validateAuthorNameFields;
     delete global.validateAuthorAffiliationEditors;
+    delete window.authorStack;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -249,7 +257,7 @@ describe('submitHandler.js', () => {
 
   test('submitViaAjax sends FormData and handles success', (done) => {
     jest.spyOn($, 'ajax').mockImplementation((config) => {
-      expect(config.url).toBe('send_xml_file.php');
+      expect(config.url).toBe('endpoints/send_xml_file.php');
       expect(config.type).toBe('POST');
       expect(config.processData).toBe(false);
       expect(config.contentType).toBe(false);
@@ -772,6 +780,57 @@ describe('submitHandler.js', () => {
     expect($('input[name="contacts[]"]').prop('required')).toBe(true);
   });
 
+  test('validateContactPerson uses the freshly generated payload instead of a stale hidden value', () => {
+    const freshPayload = [
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        email: 'jane@example.org',
+        isContact: true
+      }
+    ];
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value="[]">
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+    window.authorStack.updatePayload.mockReturnValue(freshPayload);
+
+    expect(validateContactPerson()).toBe(true);
+    expect(window.authorStack.updatePayload).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(document.querySelector('input[name="authorsPayload"]').value)).toEqual(freshPayload);
+  });
+
+  test('validateContactPerson does not accept a legacy checkbox when payload synchronization fails', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1" checked>
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
+    expect($('#contact-person-error').length).toBe(1);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+  });
+
+  test('handleModalSubmit aborts before CSRF and AJAX when payload synchronization fails', async () => {
+    document.getElementById('test-form').insertAdjacentHTML(
+      'beforeend',
+      '<input type="hidden" name="authorsPayload" value="[]">'
+    );
+    window.authorStack.updatePayload.mockReturnValue(null);
+    global.fetch = jest.fn();
+    const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+    const notificationSpy = jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleModalSubmit();
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+    expect(notificationSpy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+
+    delete global.fetch;
+  });
+
   test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
     document.getElementById('group-author').innerHTML = `
       <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
@@ -781,9 +840,12 @@ describe('submitHandler.js', () => {
     expect(validateContactPerson()).toBe(false);
     expect($('#contact-person-error').length).toBe(1);
 
-    document.querySelector('input[name="authorsPayload"]').value = '[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]';
-    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: [] } }));
+    const completePayload = [{ type: 'person', familyname: 'Doe', givenname: 'Jane', email: 'jane@example.org', isContact: true }];
+    document.querySelector('input[name="authorsPayload"]').value = JSON.stringify(completePayload);
+    window.authorStack.updatePayload.mockClear();
+    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: completePayload } }));
 
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
     expect($('#contact-person-error').length).toBe(0);
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
@@ -813,6 +875,13 @@ describe('submitHandler.js', () => {
             <input type="hidden" id="input-submit-urgency" value="2">
             <input type="hidden" id="input-submit-dataurl" value="">
           `
+        );
+      }
+
+      if (!document.querySelector('#test-form input[name="authorsPayload"]')) {
+        document.getElementById('test-form').insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" name="authorsPayload" value="[]">'
         );
       }
 

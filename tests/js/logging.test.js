@@ -34,7 +34,7 @@ describe('logging.js - logEvent', () => {
         // Define logEvent function directly for testing
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',
@@ -53,7 +53,7 @@ describe('logging.js - logEvent', () => {
 
         expect(mockFetch).toHaveBeenCalledTimes(1);
         expect(mockFetch).toHaveBeenCalledWith(
-            'log_page_event.php',
+            'endpoints/log_page_event.php',
             expect.objectContaining({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -65,7 +65,7 @@ describe('logging.js - logEvent', () => {
     test('logEvent sends event type in body', async () => {
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',
@@ -93,7 +93,7 @@ describe('logging.js - logEvent', () => {
         
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',
@@ -123,7 +123,7 @@ describe('logging.js - logEvent', () => {
     test('logEvent handles empty status', async () => {
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',
@@ -151,7 +151,7 @@ describe('logging.js - logEvent', () => {
 
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',
@@ -175,7 +175,7 @@ describe('logging.js - logEvent', () => {
     test('logEvent uses include for credentials', async () => {
         async function logEvent(eventType, status = '') {
             try {
-                await fetch('log_page_event.php', {
+                await fetch('endpoints/log_page_event.php', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     credentials: 'include',

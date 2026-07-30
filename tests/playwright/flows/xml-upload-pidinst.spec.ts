@@ -377,10 +377,13 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Inject app scripts
     const appScripts = [
       'js/clear.js',
+      'js/dropdownUtils.js',
+      'js/dropdownAjax.js',
       'js/select.js',
       'js/affiliations.js',
       'js/usedInstruments.js',
       'js/upload.js',
+      'js/resourceTypeUtils.js',
       'js/mappingXmlToInputFields.js',
     ];
 

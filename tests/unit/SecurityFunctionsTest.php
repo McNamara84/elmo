@@ -11,6 +11,7 @@
 
 namespace Tests\Unit;
 
+use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
 class SecurityFunctionsTest extends TestCase
@@ -38,6 +39,7 @@ class SecurityFunctionsTest extends TestCase
      * @test
      * hash_equals() comparison prevents timing attacks on token validation.
      */
+    #[Test]
     public function validateCsrfToken_RejectsEmptyToken(): void
     {
         $this->assertFalse(validateCsrfToken(''));
@@ -46,6 +48,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_AcceptsValidToken(): void
     {
         $token = generateCsrfToken();
@@ -55,6 +58,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsInvalidToken(): void
     {
         generateCsrfToken();
@@ -64,6 +68,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsWhenNoSessionToken(): void
     {
         $_SESSION = [];
@@ -73,6 +78,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_RejectsExpiredToken(): void
     {
         $token = generateCsrfToken();
@@ -83,6 +89,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateCsrfToken_AcceptsTokenWithinWindow(): void
     {
         $token = generateCsrfToken();
@@ -93,6 +100,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function invalidateCsrfToken_RemovesToken(): void
     {
         $token = generateCsrfToken();
@@ -106,6 +114,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getOrCreateCsrfToken_ReusesExistingToken(): void
     {
         $first = getOrCreateCsrfToken();
@@ -117,6 +126,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function generateCsrfToken_StoresTimeInSession(): void
     {
         $beforeTime = time();
@@ -133,6 +143,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getPageInteractionAgeSeconds_ReturnsZeroWhenNoTimestamp(): void
     {
         $_SESSION = [];
@@ -142,6 +153,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getPageInteractionAgeSeconds_ReturnsElapsedTime(): void
     {
         $_SESSION['interaction_start_time'] = microtime(true) - 5.0;
@@ -154,6 +166,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function resetPageInteractionTime_ResetsTimerRegardlessOfTokenState(): void
     {
         $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
@@ -165,6 +178,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function resetPageInteractionTime_DoesNotRotateExistingToken(): void
     {
         $token = getOrCreateCsrfToken();
@@ -179,6 +193,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function evaluateInteractionTime_UsesOnlyServerTimer(): void
     {
         $_SESSION['interaction_start_time'] = microtime(true) - 10.0;
@@ -193,6 +208,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function evaluateInteractionTime_RejectsWhenTooFast(): void
     {
         $_SESSION['interaction_start_time'] = microtime(true) - 0.5;
@@ -207,6 +223,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function evaluateInteractionTime_SeedsTimerWhenMissing(): void
     {
         $_SESSION = [];
@@ -222,6 +239,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function evaluateInteractionTime_AllowsRetryAfterTimerWasRestored(): void
     {
         $_SESSION = [];
@@ -238,6 +256,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getPageInteractionAgeSeconds_DoesNotSeedMissingTimer(): void
     {
         $_SESSION = [];
@@ -249,6 +268,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function generateCsrfToken_DoesNotResetInteractionTimer(): void
     {
         $_SESSION['interaction_start_time'] = microtime(true) - 442.0;
@@ -261,6 +281,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getSubmittedCsrfToken_ReadsHyphenatedFieldName(): void
     {
         $this->assertSame(
@@ -272,6 +293,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getSubmittedCsrfToken_FallsBackToLegacyUnderscoreName(): void
     {
         $this->assertSame(
@@ -283,6 +305,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function getSubmittedHoneypotValue_ReadsConfiguredFieldName(): void
     {
         $this->assertSame(
@@ -301,6 +324,7 @@ class SecurityFunctionsTest extends TestCase
      * @test
      * Honeypot rejects any non-empty value (indicates bot automation).
      */
+    #[Test]
     public function validateHoneypot_AcceptsEmpty(): void
     {
         $this->assertTrue(validateHoneypot(''));
@@ -309,6 +333,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateHoneypot_RejectsFilled(): void
     {
         $this->assertFalse(validateHoneypot('bot-value'));
@@ -317,6 +342,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function validateHoneypot_RejectsWhitespace(): void
     {
         $this->assertFalse(validateHoneypot('   '));
@@ -325,6 +351,7 @@ class SecurityFunctionsTest extends TestCase
     // ========== Session Rate Limit Tests ==========
 
     /** @test */
+    #[Test]
     public function checkSessionRateLimit_AllowsWithinLimit(): void
     {
         recordSessionRateLimit('save', RATE_LIMIT_WINDOW_SECONDS);
@@ -332,6 +359,7 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function recordSessionRateLimit_StoresTimestampInSession(): void
     {
         recordSessionRateLimit('submit', RATE_LIMIT_WINDOW_SECONDS);
@@ -362,6 +390,7 @@ class SecurityFunctionsTest extends TestCase
     /**
      * @test
      */
+    #[Test]
     public function logSuspiciousAttempt_WritesToErrorLog(): void
     {
         $logFile = $this->captureErrorLog();
@@ -374,6 +403,7 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function logSuspiciousAttempt_SanitizesSpecialCharsInOperation(): void
     {
         $logFile = $this->captureErrorLog();
@@ -385,6 +415,7 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function logSuspiciousAttempt_SanitizesControlCharsInReason(): void
     {
         $logFile = $this->captureErrorLog();
@@ -396,6 +427,7 @@ class SecurityFunctionsTest extends TestCase
     }
 
     /** @test */
+    #[Test]
     public function logSuspiciousAttempt_DoesNotThrow(): void
     {
         $logFile = $this->captureErrorLog();

@@ -10,6 +10,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - internal
 
@@ -58,7 +64,8 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
       SHOW_RELATED_WORK: "true"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -113,9 +120,10 @@ services:
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
       SHOW_RELATED_WORK: "true"
-      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor 2.0"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -127,64 +135,6 @@ services:
       - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
       - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
       - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"
-
-  web-gem:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8082:80"
-    environment:
-      DB_HOST: db
-      DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
-      DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD}
-      # No install routine
-      SMTP_HOST: ${SMTP_HOST}
-      SMTP_PORT: ${SMTP_PORT}
-      SMTP_USER: ${SMTP_USER}
-      SMTP_PASSWORD: ${SMTP_PASSWORD}
-      SMTP_AUTH: ${SMTP_AUTH}
-      SMTP_SECURE: ${SMTP_SECURE}
-      SMTP_SENDER: ${SMTP_SENDER}
-      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
-      SIMULATE_EMAIL: "false"
-      TZ: Europe/Berlin
-      ELMO_API_KEY: ${ELMO_API_KEY}
-      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
-      ERNIE_URL: ${ERNIE_URL}
-      ERNIE_API_KEY: ${ERNIE_API_KEY}
-      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      LOCAL_DEVELOPMENT: "false"
-      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
-      FUNDER_PID: ${FUNDER_PID:-CFID}
-      # Flags for ICGEM (GGMs properties enabled)
-      SHOW_MSL_MODE: "false"
-      SHOW_GGMS_PROPERTIES: "true"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
-      SHOW_THESAURI: "true"
-      SHOW_FREE_KEYWORDS: "true"
-      SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
-      SHOW_RELATED_WORK: "true"
-      INSTANCE_TITLE: "ELMO for ICGEM – Alpha Version"
-    depends_on:
-      - db
-    restart: unless-stopped
-    networks:
-      - internal
-      - frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-gem-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-gem`)"
-      - "traefik.http.routers.elmo-gem-router.entrypoints=https"
-      - "traefik.http.routers.elmo-gem-router.middlewares=elmo-gem-stripprefix"
-      - "traefik.http.middlewares.elmo-gem-stripprefix.stripprefix.prefixes=/elmo-gem"
-      - "traefik.http.services.elmo-gem-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
 
   web-igsn:
@@ -232,7 +182,8 @@ services:
       INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal

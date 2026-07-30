@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../../utils';
+import { navigateToHome, waitForFormInteractionReady } from '../../utils';
 
 const PLATFORMS_MOCK = [
   {
@@ -97,8 +97,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('textbox', { name: 'Filename' }).dblclick();
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_save_with_incoplete_info');
     const downloadPromise = page.waitForEvent('download');
-    // Wait to satisfy server-side minimum interaction time for save.
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.xml');
@@ -131,8 +130,7 @@ test.describe('ELMO-GEM save', () => {
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_datase_with_data_sources');
     const downloadPromise = page.waitForEvent('download');
-    // Wait to satisfy server-side minimum interaction time for save.
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.xml');
@@ -170,8 +168,7 @@ test.describe('ELMO-GEM save', () => {
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_sparse');
     const downloadPromise = page.waitForEvent('download');
-    // Wait to satisfy server-side minimum interaction time for save.
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.xml');
@@ -211,8 +208,7 @@ test.describe('ELMO-GEM save', () => {
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_isostasy');
     const downloadPromise = page.waitForEvent('download');
-    // Wait to satisfy server-side minimum interaction time for save.
-    await page.waitForTimeout(2200);
+    await waitForFormInteractionReady(page, 'save');
     await page.getByRole('button', { name: 'Save', exact: true }).click();
     const download = await downloadPromise;
     expect(download.suggestedFilename()).toContain('.xml');

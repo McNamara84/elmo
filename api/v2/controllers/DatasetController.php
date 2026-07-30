@@ -1242,14 +1242,21 @@ class DatasetController
     /**
      * Transforms the DataCite XML export into compact JSON-LD.
      *
-     * @param int $id The identifier of the resource.
+     * When a source XML string is supplied, the transformation uses that
+     * document directly instead of rebuilding it from the database. This is
+     * used by local save workflows to preserve the current Authors payload.
+     *
+     * @param int $id The database identifier of the resource.
+     * @param string|null $sourceXmlString Optional internal Resource XML to transform.
      * @return string JSON-LD representation of the DataCite export.
+     *
+     * @throws Exception When the DataCite transformation cannot be completed.
+     * @throws InvalidArgumentException When the generated DataCite XML is invalid.
+     * @throws JsonException When the JSON-LD payload cannot be encoded.
      */
     public function transformResourceToJsonLd(int $id, ?string $sourceXmlString = null): string
     {
-        $dataciteXml = $sourceXmlString === null
-            ? $this->transformAndSaveOrDownloadXml($id, 'datacite', false)
-            : $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
+        $dataciteXml = $this->transformAndSaveOrDownloadXml($id, 'datacite', false, $sourceXmlString);
         $service = new DataCiteJsonLdService();
 
         return $service->convertXmlStringToJsonLd($dataciteXml);
