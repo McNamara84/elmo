@@ -74,6 +74,7 @@ function elmoFileNameCheckIsExcluded(string $path): bool
 {
     $excludedFiles = [
         'settings.elmo.php',
+        'jest.config.js',
     ];
 
     if (in_array($path, $excludedFiles, true)) {
