@@ -46,7 +46,7 @@ function transformThesauriScript(source) {
   return script;
 }
 
-describe('ggms-datasources.js', () => {
+describe('ggmsDatasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
@@ -242,7 +242,7 @@ describe('ggms-datasources.js', () => {
     const thesauriScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
     window.eval(transformThesauriScript(thesauriScript));
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
+    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
     script = script.replace("import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
