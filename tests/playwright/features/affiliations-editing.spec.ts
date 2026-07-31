@@ -1,6 +1,11 @@
 import { test, expect, type Page, type Locator } from '@playwright/test';
 import { XMLParser } from 'fast-xml-parser';
-import { completeMinimalDatasetForm, navigateToHome, runAxeAudit } from '../utils';
+import {
+  completeMinimalDatasetForm,
+  navigateToHome,
+  runAxeAudit,
+  waitForFormInteractionReady,
+} from '../utils';
 
 // ─── selectors ────────────────────────────────────────────────────────────────
 const AUTHOR_GROUP     = '#group-author';
@@ -127,7 +132,7 @@ async function saveAndGetXml(page: Page, filename: string): Promise<string> {
   await page.locator('#button-form-save').click();
   await expect(page.locator('#modal-saveas')).toBeVisible({ timeout: 10_000 });
   await page.locator('#input-saveas-filename').fill(filename);
-  await page.waitForTimeout(2100);
+  await waitForFormInteractionReady(page, 'save');
 
   const responsePromise = page.waitForResponse(
     (response) => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',

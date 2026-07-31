@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 
 test.describe('Header Tests', () => {
 
@@ -15,6 +15,52 @@ test.describe('Header Tests', () => {
     // Check Data Services logo
     const dataServicesLogo = page.locator('header img[alt="GFZ Data Services Logo"]');
     await expect(dataServicesLogo).toBeVisible();
+  });
+
+  test('header loads the optimized SVG logos with intrinsic dimensions', async ({ page }) => {
+    const requestedLogoPaths = new Set<string>();
+    page.on('request', request => {
+      const pathname = new URL(request.url()).pathname;
+      if (pathname.includes('/logos/')) {
+        requestedLogoPaths.add(pathname);
+      }
+    });
+
+    await page.reload({ waitUntil: 'load' });
+
+    const gfzLogo = page.locator('header img[alt="GFZ Logo"]');
+    const dataServicesLogo = page.locator('header img[alt="GFZ Data Services Logo"]');
+
+    await expect(gfzLogo).toHaveAttribute('src', 'assets/logos/gfz-logo.svg');
+    await expect(gfzLogo).toHaveAttribute('width', '2048');
+    await expect(gfzLogo).toHaveAttribute('height', '694');
+
+    await expect(dataServicesLogo).toHaveAttribute('src', 'assets/logos/gfz-data-services-logo.svg');
+    await expect(dataServicesLogo).toHaveAttribute('width', '2048');
+    await expect(dataServicesLogo).toHaveAttribute('height', '413');
+
+    for (const logo of [gfzLogo, dataServicesLogo]) {
+      await expect(logo).toBeVisible();
+      const imageState = await logo.evaluate((element: HTMLImageElement) => ({
+        complete: element.complete,
+        naturalWidth: element.naturalWidth,
+        naturalHeight: element.naturalHeight,
+      }));
+      expect(imageState.complete).toBe(true);
+      expect(imageState.naturalWidth).toBeGreaterThan(0);
+      expect(imageState.naturalHeight).toBeGreaterThan(0);
+
+      const renderedBox = await logo.boundingBox();
+      expect(renderedBox).not.toBeNull();
+      const intrinsicRatio = imageState.naturalWidth / imageState.naturalHeight;
+      const renderedRatio = renderedBox!.width / renderedBox!.height;
+      expect(Math.abs(renderedRatio - intrinsicRatio)).toBeLessThan(0.02);
+    }
+
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/assets/logos/gfz-logo.svg'))).toBe(true);
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/assets/logos/gfz-data-services-logo.svg'))).toBe(true);
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/GFZ-logo.png'))).toBe(false);
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/GFZ_Data_Services_logo.png'))).toBe(false);
   });
 
   test('header contains help, mode and language dropdowns', async ({ page }) => {
@@ -45,8 +91,8 @@ test.describe('Header Tests', () => {
 
     // Title should match one of the valid instance titles
     const validTitles = [
-      'ELMO – GFZ Metadata Editor 2.0',
-      'ELMO MSL Edition – GFZ Metadata Editor 2.0',
+      'ELMO – GFZ Metadata Editor',
+      'ELMO MSL Edition – GFZ Metadata Editor',
       'ELMO ICGEM Edition – Alpha Version',
       'ELMO IGSN Edition – Alpha Version'
     ];
