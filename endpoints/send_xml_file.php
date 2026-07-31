@@ -618,7 +618,7 @@ try {
                 'title' => $researcherConfirmationData['title'],
                 'doi' => trim((string) ($_POST['doi'] ?? '')),
                 'priorityText' => getPriorityText($urgencyWeeks),
-                'dataUrl' => $dataUrl ?? '',
+                'dataUrl' => $dataUrl,
                 'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
                 'submittedAt' => date('d.m.Y H:i:s'),
                 'icgemAddress' => $icgemSubmitAddress,
