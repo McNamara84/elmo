@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('ggms-modeltypes.js', () => {
+describe('ggmsModelTypes.js', () => {
     let $;
 
     beforeEach(() => {
@@ -11,7 +11,7 @@ describe('ggms-modeltypes.js', () => {
         global.jQuery = $;
         window.$ = $;
         window.jQuery = $;
-                // Define helper functions that are used in ggms-modeltypes.js
+                // Define helper functions that are used in ggmsModelTypes.js
         window.visibilityON = function(element) {
             element.removeClass('d-none');
             element.attr('aria-hidden', 'false');
@@ -105,7 +105,7 @@ describe('ggms-modeltypes.js', () => {
             </div>
         `;
 
-        const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-modeltypes.js');
+        const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsModelTypes.js');
         let scriptContent = fs.readFileSync(scriptPath, 'utf8');
 
         scriptContent = scriptContent

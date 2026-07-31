@@ -14,14 +14,14 @@ import './formgroups/resourceinformation-title.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';
-import './formgroups/ggms-modeltypes.js';
-import './formgroups/ggms-definition.js';
+import './formgroups/ggmsModelTypes.js';
+import './formgroups/ggmsDefinition.js';
 import './formgroups/ggms-properties.js';
 import './formgroups/ggms-datasources.js';
-import './formgroups/ggms-stc.js';
-import './formgroups/ggms-altimetry-models.js';
-import './formgroups/ggms-mascons.js';
-import './formgroups/ggms-experimental-payload.js';
+import './formgroups/ggmsStc.js';
+import './formgroups/ggmsAltimetryModels.js';
+import './formgroups/ggmsMascons.js';
+import './formgroups/ggmsExperimentalPayload.js';
 import './confirmationModal.js';
 
 

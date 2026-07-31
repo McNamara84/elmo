@@ -3,7 +3,7 @@
  * Altimetry-derived and MASCON collect into hidden inputs on save/submit.
  * No backend overlay/XSLT yet — FormData carries the payloads for later wiring.
  *
- * @module ggms-experimental-payload
+ * @module ggmsExperimentalPayload
  */
 
 function readVal(selector) {
