@@ -158,7 +158,7 @@ describe('checkMandatoryFields module coverage', () => {
             expect($('#input-stc-timeend').attr('required')).toBeUndefined();
         });
 
-        test('when time is provided timezone should not be required', () => {
+        test('when time is provided the complete temporal bundle is required', () => {
             $('#input-stc-latmin_1').val('52.0');
             $('#input-stc-datestart').val('2025-01-01');
             $('#input-stc-timestart').val('08:00');
@@ -166,7 +166,11 @@ describe('checkMandatoryFields module coverage', () => {
             checkMandatoryFields.validateSpatialTemporalCoverageRequirements();
             simulateSubmitValidation();
             
-            expect($('#input-stc-timezone').attr('required')).not.toBe('required');
+            expect($('#input-stc-datestart').attr('required')).toBe('required');
+            expect($('#input-stc-dateend').attr('required')).toBe('required');
+            expect($('#input-stc-timestart').attr('required')).toBe('required');
+            expect($('#input-stc-timeend').attr('required')).toBe('required');
+            expect($('#input-stc-timezone').attr('required')).toBe('required');
         });
 
         test('Allow submission when only a description is provided', () => {

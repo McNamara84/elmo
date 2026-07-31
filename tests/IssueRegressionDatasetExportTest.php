@@ -176,6 +176,59 @@ XML);
         );
     }
 
+    public function testDataCiteTransformNormalizesErnieResourceTypeLabelsForIssue1182(): void
+    {
+        $resourceTypes = [
+            'Computational Notebook' => 'ComputationalNotebook',
+            'Data Paper' => 'DataPaper',
+            'Interactive Resource' => 'InteractiveResource',
+        ];
+        $schemaResourceTypes = $this->dataCite47ResourceTypes();
+
+        foreach ($resourceTypes as $label => $resourceTypeGeneral) {
+            $this->assertContains(
+                $resourceTypeGeneral,
+                $schemaResourceTypes,
+                "{$resourceTypeGeneral} must be defined by the bundled DataCite 4.7 schema."
+            );
+
+            $dataciteXml = $this->controller->transformResourceXmlString(
+                $this->resourceXmlWithCoverage(resourceType: $label),
+                'datacite'
+            );
+            $resourceType = $this->dataCiteXPath($dataciteXml)
+                ->query('//dc:resourceType')
+                ->item(0);
+
+            $this->assertNotNull($resourceType);
+            $this->assertSame($resourceTypeGeneral, $resourceType->getAttribute('resourceTypeGeneral'));
+            $this->assertSame($label, trim($resourceType->textContent));
+            $this->assertDataCiteSchemaValid($dataciteXml);
+        }
+    }
+
+    public function testDataCiteTransformPreservesEverySchema47ResourceType(): void
+    {
+        foreach ($this->dataCite47ResourceTypes() as $resourceTypeGeneral) {
+            $dataciteXml = $this->controller->transformResourceXmlString(
+                $this->resourceXmlWithCoverage(resourceType: $resourceTypeGeneral),
+                'datacite'
+            );
+            $resourceType = $this->dataCiteXPath($dataciteXml)
+                ->query('//dc:resourceType')
+                ->item(0);
+
+            $this->assertNotNull($resourceType);
+            $this->assertSame(
+                $resourceTypeGeneral,
+                $resourceType->getAttribute('resourceTypeGeneral'),
+                "DataCite 4.7 resource type {$resourceTypeGeneral} must remain unchanged."
+            );
+            $this->assertSame($resourceTypeGeneral, trim($resourceType->textContent));
+            $this->assertDataCiteSchemaValid($dataciteXml);
+        }
+    }
+
     /**
      * @return array<int, string>
      */
@@ -247,14 +300,38 @@ XML);
         $this->assertTrue($isValid, implode(PHP_EOL, $errors));
     }
 
+    /**
+     * @return list<string>
+     */
+    private function dataCite47ResourceTypes(): array
+    {
+        $schema = new \DOMDocument();
+        $this->assertTrue(
+            $schema->load(__DIR__ . '/../schemas/DataCite/include/datacite-resourceType-v4.xsd')
+        );
+        $xpath = new \DOMXPath($schema);
+        $xpath->registerNamespace('xs', 'http://www.w3.org/2001/XMLSchema');
+        $resourceTypes = [];
+
+        foreach ($xpath->query('//xs:simpleType[@name="resourceType"]//xs:enumeration/@value') as $value) {
+            $resourceTypes[] = $value->nodeValue;
+        }
+
+        $this->assertCount(34, $resourceTypes, 'The bundled DataCite 4.7 resource type list changed.');
+
+        return $resourceTypes;
+    }
+
     private function resourceXmlWithCoverage(
         ?string $dateCreated = '2026-01-01',
         string $dateStart = '2026-01-01',
         ?string $dateEnd = '2026-12-31',
-        string $fundingReferences = ''
+        string $fundingReferences = '',
+        string $resourceType = 'Dataset'
     ): string {
         $dateCreatedElement = $dateCreated === null ? '' : "<dateCreated>{$dateCreated}</dateCreated>";
         $dateEndElement = $dateEnd === null ? '' : "<dateEnd>{$dateEnd}</dateEnd>";
+        $resourceTypeElement = htmlspecialchars($resourceType, ENT_XML1 | ENT_QUOTES, 'UTF-8');
 
         return <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
@@ -263,7 +340,7 @@ XML);
     <year>2026</year>
     <currentDate>2026-06-25</currentDate>
     {$dateCreatedElement}
-    <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+    <ResourceType><resource_type_general>{$resourceTypeElement}</resource_type_general></ResourceType>
     <Language><code>en</code></Language>
     <Titles><Title><text>Issue Regression Dataset</text><type>Main Title</type></Title></Titles>
     <Descriptions><Description><description>Regression test dataset</description><type>Abstract</type></Description></Descriptions>

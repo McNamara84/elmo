@@ -2,7 +2,13 @@ import { test, expect } from '@playwright/test';
 import { mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { completeMinimalDatasetForm, expectNavbarVisible, navigateToHome } from '../utils';
+import {
+  completeMinimalDatasetForm,
+  expectNavbarVisible,
+  navigateToHome,
+  registerGoogleMapsNoopRoute,
+  waitForFormInteractionReady,
+} from '../utils';
 
 const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
@@ -48,7 +54,7 @@ async function clearForm(page: import('@playwright/test').Page) {
   await expect(page.locator('input[name="title[]"]').first()).toHaveValue('', { timeout: 5000 });
 }
 
-async function saveJsonLd(page: import('@playwright/test').Page, filename: string, waitMs: number) {
+async function saveJsonLd(page: import('@playwright/test').Page, filename: string) {
   const saveAsModal = page.locator('#modal-saveas');
   let capturedBody = '';
   let capturedStatus = 0;
@@ -66,14 +72,12 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
     await route.fulfill({ response, body });
   });
 
-  await page.waitForTimeout(2100);
   await page.locator('#button-form-save-jsonld').click();
   await expect(saveAsModal).toBeVisible({ timeout: 10000 });
   await expect(page.locator('#label-saveas-modal')).toContainText(/JSON-LD/i);
   await expect(page.locator('#saveas-extension')).toHaveText('.jsonld');
   await page.locator('#input-saveas-filename').fill(filename);
-  // Wait to satisfy server-side minimum interaction time for save.
-  await page.waitForTimeout(Math.max(waitMs, 2200));
+  await waitForFormInteractionReady(page, 'save');
   await page.locator('#button-saveas-save').click();
 
   await page.waitForResponse(
@@ -89,6 +93,7 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
 
 test.describe('JSON-LD roundtrip flow', () => {
   test('can save JSON-LD, load it again, and save it once more', async ({ page }) => {
+    await registerGoogleMapsNoopRoute(page);
     const consoleErrors: string[] = [];
     page.on('console', msg => {
       if (msg.type() !== 'error') {
@@ -109,7 +114,7 @@ test.describe('JSON-LD roundtrip flow', () => {
     mkdirSync(tempDir, { recursive: true });
 
     const savedJsonLdPath = join(tempDir, 'e2e-jsonld-roundtrip.jsonld');
-    const firstSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip', 2100);
+    const firstSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip');
     const firstPayload = JSON.parse(firstSaveBody) as Record<string, any>;
     await import('node:fs').then(({ writeFileSync }) => writeFileSync(savedJsonLdPath, firstSaveBody, 'utf8'));
 
@@ -136,6 +141,7 @@ test.describe('JSON-LD roundtrip flow', () => {
     await expect(page.locator('input[name="familynames[]"]').first()).toHaveValue('Carberry');
     await expect(page.getByRole('textbox', { name: 'Abstract*' })).toHaveValue('Necessary abstract');
     await expect(page.locator('#input-date-created')).toHaveValue('2025-01-01');
+    await expect(page.locator('#input-uploadxml-file')).toBeEnabled();
 
     if (await uploadModal.isVisible().catch(() => false)) {
       await page.evaluate(() => {
@@ -150,11 +156,9 @@ test.describe('JSON-LD roundtrip flow', () => {
       await expect(uploadModal).toBeHidden({ timeout: 5000 });
     }
 
-    // Wait for form to settle after loading XML
-    await page.waitForTimeout(500);
 
     const resavedJsonLdPath = join(tempDir, 'e2e-jsonld-roundtrip-resaved.jsonld');
-    const secondSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip-resaved', 3100);
+    const secondSaveBody = await saveJsonLd(page, 'e2e-jsonld-roundtrip-resaved');
     await import('node:fs').then(({ writeFileSync }) => writeFileSync(resavedJsonLdPath, secondSaveBody, 'utf8'));
 
     const secondPayload = JSON.parse(secondSaveBody) as Record<string, any>;
@@ -163,5 +167,112 @@ test.describe('JSON-LD roundtrip flow', () => {
 
     await closeNotificationModalIfPresent(page);
     expect(consoleErrors).toEqual([]);
+  });
+
+  test('preserves mixed Authors payload order and DataCite fields', async ({ page }) => {
+    await registerGoogleMapsNoopRoute(page);
+    await navigateToHome(page);
+    await expectNavbarVisible(page);
+    await completeMinimalDatasetForm(page);
+
+    await page.evaluate(() => {
+      (window as any).authorStack.setAuthors([
+        {
+          type: 'person',
+          familyname: 'Payload',
+          givenname: 'Jane',
+          orcid: '0000-0002-1825-0097',
+          isContact: true,
+          email: 'jane@example.org',
+          website: 'https://example.org/jane',
+          affiliations: [
+            { label: 'GFZ', rorId: '04z8jg394' },
+            { label: 'University of Potsdam', rorId: '012m9bp23' },
+          ],
+        },
+        {
+          type: 'institution',
+          institutionname: 'Payload Institute',
+          affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }],
+        },
+        {
+          type: 'person',
+          familyname: 'Sukarno',
+          givenname: '',
+          orcid: '',
+          isContact: false,
+          email: '',
+          website: '',
+          affiliations: [],
+        },
+      ]);
+    });
+
+    await expect.poll(() => page.evaluate(() => (
+      (window as any).authorStack.collectPayload().map((author: any) => author.type)
+    ))).toEqual(['person', 'institution', 'person']);
+
+    const firstSaveBody = await saveJsonLd(page, 'e2e-jsonld-mixed-authors');
+    const firstPayload = JSON.parse(firstSaveBody) as Record<string, any>;
+    const creators = Array.isArray(firstPayload.creators.creator)
+      ? firstPayload.creators.creator
+      : [firstPayload.creators.creator];
+    const contributors = Array.isArray(firstPayload.contributors.contributor)
+      ? firstPayload.contributors.contributor
+      : [firstPayload.contributors.contributor];
+    const contact = contributors.find((contributor: any) => (
+      contributor.attrs?.contributorType === 'ContactPerson'
+    ));
+
+    expect(creators.map((creator: any) => creator.creatorName.value)).toEqual([
+      'Payload, Jane',
+      'Payload Institute',
+      'Sukarno',
+    ]);
+    expect(creators[0].nameIdentifier.value).toBe('0000-0002-1825-0097');
+    expect(creators[0].affiliation[0].attrs.affiliationIdentifier).toBe('https://ror.org/04z8jg394');
+    expect(creators[1].creatorName.attrs.nameType).toBe('Organizational');
+    expect(contact.familyName.value).toBe('Payload');
+    expect(firstSaveBody).not.toContain('jane@example.org');
+    expect(firstSaveBody).not.toContain('https://example.org/jane');
+
+    const tempDir = join(tmpdir(), 'elmo-e2e');
+    mkdirSync(tempDir, { recursive: true });
+    const savedJsonLdPath = join(tempDir, 'e2e-jsonld-mixed-authors.jsonld');
+    await import('node:fs').then(({ writeFileSync }) => writeFileSync(savedJsonLdPath, firstSaveBody, 'utf8'));
+
+    await closeNotificationModalIfPresent(page);
+    await clearForm(page);
+    await page.locator('#button-form-load').click();
+    await page.locator('#input-uploadxml-file').setInputFiles(savedJsonLdPath);
+
+    await expect.poll(() => page.evaluate(() => (
+      (window as any).authorStack.collectPayload()
+    )), { timeout: 20000 }).toEqual([
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Payload',
+        givenname: 'Jane',
+        orcid: '0000-0002-1825-0097',
+        isContact: true,
+        email: '',
+        website: '',
+        affiliations: [
+          { label: 'GFZ', rorId: '04z8jg394' },
+          { label: 'University of Potsdam', rorId: '012m9bp23' },
+        ],
+      }),
+      expect.objectContaining({
+        type: 'institution',
+        institutionname: 'Payload Institute',
+        affiliations: [{ label: 'Helmholtz', rorId: '03qjp1d79' }],
+      }),
+      expect.objectContaining({
+        type: 'person',
+        familyname: 'Sukarno',
+        givenname: '',
+        isContact: false,
+      }),
+    ]);
   });
 });

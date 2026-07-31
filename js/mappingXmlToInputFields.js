@@ -1,6 +1,12 @@
 ﻿/**
- * Processes the resource type from an XML document and selects the corresponding option
- * in the dropdown based on the visible text matching the `resourceTypeGeneral` attribute.
+ * Shared resource-type helpers for XML upload and DOI prefill.
+ */
+var resourceTypeUtils = typeof module !== 'undefined' && module.exports
+  ? require('./resourceTypeUtils')
+  : window.resourceTypeUtils;
+
+/**
+ * Processes the resource type from an XML document and selects the corresponding option.
  *
  * @param {Document} xmlDoc - The XML document containing the resourceType element.
  * @param {Function} resolver - The namespace resolver function.
@@ -35,8 +41,11 @@ function processResourceType(xmlDoc, resolver) {
     return;
   }
 
-  // Find an option where the visible text matches resourceTypeGeneral
-  const optionToSelect = Array.from(selectField.options).find((option) => option.text.trim() === resourceTypeGeneral);
+  // Prefer an exact label match, then account for ERNIE display whitespace.
+  const optionToSelect = resourceTypeUtils.findResourceTypeOption(
+    Array.from(selectField.options),
+    resourceTypeGeneral
+  );
 
   if (optionToSelect) {
     optionToSelect.selected = true;
@@ -45,7 +54,7 @@ function processResourceType(xmlDoc, resolver) {
   }
 }
 
-/**
+/*
  * Extracts license identifier from various formats
  * @param {Element} rightsNode - The XML rights element
  * @returns {string} The normalized license identifier
@@ -125,6 +134,13 @@ async function createLanguageMapping() {
   }
 }
 
+const EMPTY_TITLE_TYPE_MAPPING = {
+  "": "",
+  MainTitle: "",
+  AlternativeTitle: "",
+  TranslatedTitle: "",
+};
+
 /**
  * Creates a title type mapping from API data
  * @returns {Promise<Object>} A promise that resolves to a mapping of title types
@@ -148,12 +164,7 @@ async function createTitleTypeMapping() {
     return mapping;
   } catch (error) {
     console.error("Error creating title type mapping:", error);
-    return {
-      "": "1",
-      MainTitle: "1",
-      AlternativeTitle: "2",
-      TranslatedTitle: "3",
-    };
+    return { ...EMPTY_TITLE_TYPE_MAPPING };
   }
 }
 
@@ -167,8 +178,8 @@ function mapTitleType(titleType, mapping = {}) {
   const key = (titleType || "").replace(/\s+/g, "");
   const map = Object.keys(mapping).length
     ? mapping
-    : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
-  return map[key] || map[""] || "1";
+    : EMPTY_TITLE_TYPE_MAPPING;
+  return map[key] ?? map[""] ?? "";
 }
 
 /**
@@ -219,6 +230,40 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   const node = xmlDoc.evaluate(xpath, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
   return node ? node.textContent.trim() : "";
+}
+
+/**
+ * Reads an ORCID nameIdentifier without relying on XPath attribute predicates.
+ *
+ * Some supported DOM implementations do not evaluate predicates on namespaced
+ * elements consistently. Inspecting the small nameIdentifier collection keeps
+ * JSON-LD/XML reloads deterministic in browsers and tests.
+ *
+ * @param {Document} xmlDoc - The XML document
+ * @param {Node} parentNode - Creator or contributor containing identifiers
+ * @param {Function} resolver - The namespace resolver function
+ * @returns {string} Normalized ORCID without the resolver URL prefix
+ */
+function getOrcidFromNode(xmlDoc, parentNode, resolver) {
+  const identifiers = xmlDoc.evaluate(
+    "ns:nameIdentifier",
+    parentNode,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let index = 0; index < identifiers.snapshotLength; index++) {
+    const identifier = identifiers.snapshotItem(index);
+    const scheme = (identifier.getAttribute("nameIdentifierScheme") || "").toUpperCase();
+    const schemeUri = identifier.getAttribute("schemeURI") || "";
+
+    if (scheme === "ORCID" || /^https?:\/\/orcid\.org\/?$/i.test(schemeUri)) {
+      return identifier.textContent.trim().replace(/^https?:\/\/orcid\.org\//i, "");
+    }
+  }
+
+  return "";
 }
 
 function getAuthorStackController() {
@@ -325,7 +370,7 @@ function collectDataCiteContactPersons(xmlDoc) {
     const familyname = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenname = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (familyname && givenname) {
+    if (familyname || givenname) {
       contactPersons.push({ familyname, givenname, email: "", website: "" });
     }
   }
@@ -350,7 +395,7 @@ function processCreators(xmlDoc, resolver) {
       const creatorNode = creatorNodes.snapshotItem(i);
       const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
       const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
-      const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+      const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
       const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
       const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
       const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
@@ -393,7 +438,7 @@ function processCreators(xmlDoc, resolver) {
     const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
     // Clean ORCID by removing URL prefix if present
-    const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+    const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
     const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
 
     // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
@@ -684,7 +729,7 @@ function processContactPersonsFromDataCite(xmlDoc) {
     const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (!familyName || !givenName) continue;
+    if (!familyName && !givenName) continue;
 
     const normalizedFamily = familyName.trim().toLowerCase();
     const normalizedGiven = givenName.trim().toLowerCase();
@@ -911,7 +956,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const contributorName = getNodeText(contributor, "ns:contributorName", xmlDoc, resolver);
   const givenName = getNodeText(contributor, "ns:givenName", xmlDoc, resolver);
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
-  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
+  const orcid = getOrcidFromNode(xmlDoc, contributor, resolver);
 
   // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -1752,11 +1797,14 @@ async function loadXmlToForm(xmlDoc) {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
+        normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
+        findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
         processResourceType,
         extractLicenseIdentifier,
         mapTitleType,
         processTitles,
         getNodeText,
+        getOrcidFromNode,
         processCreators,
         processContactPersons,
         processContactPersonsFromDataCite,

@@ -74,10 +74,9 @@ Following conditions are required for installation:
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
-11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
-12. Delete `install.php` and `install.html` after successfully creating the database.
-13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-14. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+11. Run `php scripts/install.php basic` to create the database structure and lookup data. Use `complete` instead of `basic` only when exemplar test data is required. The installer is intentionally not available through the browser.
+12. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+13. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -87,8 +86,13 @@ Following conditions are required for installation:
 5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
 	Please mind that: 
 	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
-	- Use `docker-compose down -v` to reset the database when updating credentials.
-  - To recreate the database structure, a special variable 'DB_INIT_MODE' is introduced. Setting it to 'keep_data' will mean that the db is reset only if no tables are found. 'drop_data' will ensure an actual database structure (see install.php), but will lose data. Setting to 'skip' skips the procedure.   
+	- Use `docker compose down -v` to reset the disposable local database when updating credentials.
+  - The entrypoint invokes `php scripts/install.php` with the `INSTALL_ACTION` value when the `web` container starts. Supported values are `basic` (default) and `complete` (including exemplar test data). Both modes recreate the configured schema, so use them only with the intended database.
+  - If you change the database schema in `scripts/install.php` while reusing an existing local database, run the installer inside the running container:
+    ```bash
+    docker compose exec web php scripts/install.php basic
+    ```
+    For a disposable local reset, run `docker compose down -v` and then `docker compose up -d --build`; the entrypoint will run the installer again.
 
 6. Docker Environment Setup 🐳
 
@@ -127,9 +131,8 @@ This section outlines the automatic processes handled by the Docker environment 
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
-- **Database Setup:** Responsible for initializing the database structure by running `install.php`.
-- **Idempotency:** Utilizes a `FLAG_FILE` to ensure the database setup runs only once. If this file exists, the installation process is skipped.
-- **Installation Options for `install.php`:**
+- **Database Setup:** Initializes the configured database by running the CLI-only `scripts/install.php`.
+- **Installation Options for `scripts/install.php`:**
   - `basic` (default): Creates only the database structure and inserts lookup data.
   - `complete`: Creates the database structure, inserts lookup data, *and* populates the database with exemplar (test) data. This is controlled by the `INSTALL_ACTION` environment variable (e.g., `INSTALL_ACTION=complete`).
 
@@ -140,15 +143,15 @@ This section outlines the automatic processes handled by the Docker environment 
 * **Full Reset for Dockerfile/Entrypoint Changes:**
     To apply changes made to `Dockerfile` or `docker-entrypoint.sh`, a full reset of the Docker containers is required:
     ```bash
-    docker-compose down -v
-    docker-compose build --no-cache
+    docker compose down -v
+    docker compose build --no-cache
     ```
 * **Applying Other Changes:**
     For changes to project files (which are copied, not mounted as volumes), you need to rebuild the service:
     ```bash
-    docker-compose up --build
+    docker compose up --build
     ```
-    This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+    This rebuilds the `web` service (and any other services specified in `docker-compose.yml` that depend on the build context), ensuring your updated project files are included in the new container image.
 
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/elmo/issues)!
@@ -275,7 +278,7 @@ npm install
 
 ### Resource Information
 
-- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="logos/doi.logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="assets/logos/doi-logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
@@ -406,7 +409,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
-- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
@@ -416,7 +419,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
  
   This field contains the author's affiliation.
   - Data type: String
@@ -451,7 +454,7 @@ Occurrence is: 0-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#creatorname)
   - Example values: `California Digital Library`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
-- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the author's affiliation.
   - Data type: String
@@ -550,7 +553,7 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
-- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
   - Data type: String
@@ -590,7 +593,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributor(s).
   - Data type: String
@@ -624,7 +627,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributing institution.
   - Data type: String
@@ -875,7 +878,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
 
   This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#geolocationplace)
@@ -885,7 +888,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -895,7 +898,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -905,7 +908,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -915,7 +918,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -925,7 +928,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: String
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
@@ -1432,15 +1435,17 @@ The JSON-LD workflow intentionally reuses the existing XML path instead of maint
 **Export flow**
 1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
 2. The save pipeline persists the current form state first, just like the XML workflow.
-3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
-4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
-5. The download response is returned as `application/ld+json`.
+3. When a non-empty `authorsPayload` is present, ELMO replaces the database-derived `Authors` and `ContactPersons` sections in the internal Resource XML with that current payload. XML and JSON-LD downloads therefore share the same author ordering and values without re-reading the stored Authors representation.
+4. `DatasetController::transformResourceToJsonLd()` transforms the prepared Resource XML into the canonical DataCite XML export.
+5. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+6. The download response is returned as `application/ld+json`.
 
 **Import flow**
 1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
 2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
 3. The converted XML is then handed to `loadXmlToForm()`.
-4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+4. The shared field mapping restores ordered person and institution authors, ORCID identifiers, affiliations, ROR identifiers, and the DataCite contact-person marker, including mononymous contacts.
+5. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
 
 This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
 
@@ -1665,7 +1670,7 @@ We appreciate every contribution to this project! You can use the feedback form 
 ## Testing
 
 > [!NOTE]
-> Dependencies must be installed first: `composer install` and `npm install`.
+> Dependencies must be installed first: `composer install` and `npm install`. See also [Project structure](docs/project-structure.md) and [file-name conventions](docs/file-naming-conventions.md).
 
 ELMO uses three test frameworks:
 

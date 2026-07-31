@@ -139,6 +139,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
     await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
     await injectScript(page, 'node_modules/jstree/dist/jstree.min.js');
     await injectScript(page, 'node_modules/@yaireo/tagify/dist/tagify.js');
+    await injectScript(page, 'js/resourceTypeUtils.js');
 
     await page.evaluate(() => {
       (window as any).ELMO_FEATURES = { showThesauri: true };

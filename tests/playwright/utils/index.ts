@@ -4,3 +4,4 @@ export * from './constants';
 export * from './flows';
 export * from './navigation';
 export * from './translations';
+export * from './waits';

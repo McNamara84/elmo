@@ -3,6 +3,10 @@ const path = require("path");
 const vm = require("vm");
 
 function loadMappingModule(contextOverrides = {}) {
+  const resourceTypeUtilsCode = fs.readFileSync(
+    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
+    "utf8"
+  );
   const code = fs.readFileSync(path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"), "utf8");
   const context = {
     console,
@@ -12,6 +16,8 @@ function loadMappingModule(contextOverrides = {}) {
     ...contextOverrides,
   };
   vm.createContext(context);
+  vm.runInContext(resourceTypeUtilsCode, context);
+  context.window.resourceTypeUtils = context.resourceTypeUtils;
   vm.runInContext(code, context);
   return context;
 }
@@ -72,9 +78,15 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("mapTitleType maps known types to option values", () => {
     const ctx = loadMappingModule();
-    expect(ctx.mapTitleType("AlternativeTitle")).toBe("2");
-    expect(ctx.mapTitleType("TranslatedTitle")).toBe("3");
-    expect(ctx.mapTitleType("UnknownType")).toBe("1");
+    const mapping = {
+      MainTitle: "6",
+      AlternativeTitle: "1",
+      TranslatedTitle: "16",
+      "": "6",
+    };
+    expect(ctx.mapTitleType("AlternativeTitle", mapping)).toBe("1");
+    expect(ctx.mapTitleType("TranslatedTitle", mapping)).toBe("16");
+    expect(ctx.mapTitleType("UnknownType", mapping)).toBe("6");
   });
 
   test("normalizeRole inserts whitespace in contributor roles", () => {
@@ -111,11 +123,17 @@ describe("mappingXmlToInputFields helpers", () => {
           <ns:creatorName nameType="Personal">Doe, Jane</ns:creatorName>
           <ns:givenName>Jane</ns:givenName>
           <ns:familyName>Doe</ns:familyName>
+          <ns:nameIdentifier nameIdentifierScheme="ORCID">https://orcid.org/0000-0002-1825-0097</ns:nameIdentifier>
           <ns:affiliation affiliationIdentifier="https://ror.org/04z8jg394">GFZ</ns:affiliation>
+          <ns:affiliation>Additional University</ns:affiliation>
         </ns:creator>
         <ns:creator>
           <ns:creatorName nameType="Organizational">Payload Institute</ns:creatorName>
           <ns:affiliation affiliationIdentifier="https://ror.org/03qjp1d79">Helmholtz</ns:affiliation>
+        </ns:creator>
+        <ns:creator>
+          <ns:creatorName nameType="Personal">Sukarno</ns:creatorName>
+          <ns:familyName>Sukarno</ns:familyName>
         </ns:creator>
       </ns:creators>
     </ns:resource>`;
@@ -130,12 +148,65 @@ describe("mappingXmlToInputFields helpers", () => {
           type: "person",
           familyname: "Doe",
           givenname: "Jane",
-          affiliations: [{ label: "GFZ", rorId: "04z8jg394" }]
+          orcid: "0000-0002-1825-0097",
+          affiliations: [
+            { label: "GFZ", rorId: "04z8jg394" },
+            { label: "Additional University", rorId: "" }
+          ]
         }),
         expect.objectContaining({
           type: "institution",
           institutionname: "Payload Institute",
           affiliations: [{ label: "Helmholtz", rorId: "03qjp1d79" }]
+        }),
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: ""
+        })
+      ]);
+    } finally {
+      delete window.authorStack;
+    }
+  });
+
+  test("processContactPersons restores contact state for a mononymous authorStack entry", () => {
+    const setAuthors = jest.fn();
+    window.authorStack = {
+      collectPayload: jest.fn(() => [{
+        type: "person",
+        familyname: "Sukarno",
+        givenname: "",
+        orcid: "",
+        isContact: false,
+        email: "",
+        website: "",
+        affiliations: []
+      }]),
+      setAuthors
+    };
+    const ctx = loadMappingModule();
+    const xml = `<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+      <ns:contributors>
+        <ns:contributor contributorType="ContactPerson">
+          <ns:contributorName nameType="Personal">Sukarno</ns:contributorName>
+          <ns:familyName>Sukarno</ns:familyName>
+        </ns:contributor>
+      </ns:contributors>
+    </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+
+    try {
+      ctx.processContactPersons(xmlDoc);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: "",
+          isContact: true,
+          email: "",
+          website: ""
         })
       ]);
     } finally {
@@ -231,8 +302,10 @@ describe("mappingXmlToInputFields helpers", () => {
     const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
     const fallback = await ctxFail.createTitleTypeMapping();
     expect(failingGetJSON).toHaveBeenCalled();
-    expect(fallback[""]).toBe("1");
-    expect(fallback.AlternativeTitle).toBe("2");
+    expect(fallback[""]).toBe("");
+    expect(fallback.AlternativeTitle).toBe("");
+    expect(fallback.MainTitle).toBe("");
+    expect(fallback.TranslatedTitle).toBe("");
   });
 
   test("setLabDataInRow populates fields and triggers change", () => {

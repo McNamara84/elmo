@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { navigateToHome, waitForFormInteractionReady } from '../utils';
 
 // Minimal DataCite XML with two titles – used for load-only tests
 const XML_TWO_TITLES = `<?xml version="1.0" encoding="UTF-8"?>
@@ -142,8 +142,7 @@ test.describe('XML Upload - Multiple Titles (Issue #1045)', () => {
         
         // Wait for CSRF token to be fetched and populated
         await page.locator('#input-saveas-filename').fill('test-two-titles');
-        // Wait to satisfy server-side minimum interaction time for save.
-        await page.waitForTimeout(2200);
+        await waitForFormInteractionReady(page, 'save');
         await page.locator('#button-saveas-save').click();
       })(),
     ]);

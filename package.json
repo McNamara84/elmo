@@ -5,22 +5,22 @@
     "bootstrap-icons": "^1.13.1",
     "jquery": "^4.0.0",
     "jquery-ui": "^1.14.2",
-    "js-yaml": "^5.2.1",
+    "js-yaml": "^5.2.2",
     "jstree": "^3.3.17",
     "mark.js": "^8.11.1",
-    "swagger-ui-dist": "^5.32.9"
+    "swagger-ui-dist": "^5.32.11"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
     "@babel/preset-env": "^8.0.2",
-    "@playwright/test": "^1.61.1",
-    "@types/node": "^26.1.1",
+    "@playwright/test": "^1.62.0",
+    "@types/node": "^26.1.2",
     "babel-jest": "^30.4.1",
     "c8": "^12.0.0",
     "fast-xml-parser": "^5.10.1",
     "jest": "^30.4.2",
     "jest-environment-jsdom": "^30.4.1",
-    "playwright": "^1.61.1"
+    "playwright": "^1.62.0"
   },
   "scripts": {
     "test": "jest",
@@ -28,7 +28,12 @@
     "test:e2e:coverage": "c8 --reporter=html --reporter=text --reporter=lcov --reports-dir=coverage-e2e --include=js/**/*.js --exclude=node_modules/** --exclude=tests/** node ./node_modules/playwright/cli.js test --workers=1"
   },
   "overrides": {
-    "ws": "^8.21.0",
-    "yargs": "^18.0.0"
+    "ws": "^8.21.1",
+    "yargs": "^18.1.0",
+    "babel-preset-current-node-syntax": {
+    "@babel/core": "$@babel/core"
+    },
+    "minimatch": "^10.0.0",
+    "brace-expansion": "^5.0.8"
   }
 }

@@ -1,4 +1,13 @@
 const { requireFresh } = require('./utils');
+const {
+  getDataCite47ResourceTypes,
+  toSpacedResourceTypeLabel,
+} = require('./utils/dataciteResourceTypes');
+
+const DATACITE_47_RESOURCE_TYPES = getDataCite47ResourceTypes();
+const DATACITE_47_SPACED_RESOURCE_TYPES = DATACITE_47_RESOURCE_TYPES
+  .map(resourceType => [resourceType, toSpacedResourceTypeLabel(resourceType)])
+  .filter(([resourceType, label]) => resourceType !== label);
 
 let mod;
 
@@ -131,6 +140,11 @@ describe('doiPrefill.js', () => {
     test('falls back to default for unknown type', () => {
       expect(mod.mapTitleTypeFromJson('UnknownType', mapping)).toBe('1');
     });
+
+    test('falls back to empty string when mapping has no default', () => {
+      expect(mod.mapTitleTypeFromJson('UnknownType', {})).toBe('');
+      expect(mod.mapTitleTypeFromJson('', {})).toBe('');
+    });
   });
 
   /* ── prefillResourceInfo ────────────────────────────────────── */
@@ -168,6 +182,48 @@ describe('doiPrefill.js', () => {
     test('selects matching resource type', () => {
       mod.prefillResourceInfo({ types: { resourceTypeGeneral: 'Software' } });
       expect($('#input-resourceinformation-resourcetype').val()).toBe('2');
+    });
+
+    test.each(DATACITE_47_SPACED_RESOURCE_TYPES)(
+      'maps DataCite 4.7 value %s to spaced ERNIE label %s',
+      (resourceTypeGeneral, optionLabel) => {
+        const select = document.querySelector('#input-resourceinformation-resourcetype');
+        select.innerHTML = '<option value="resource-type">' + optionLabel + '</option>';
+        select.selectedIndex = -1;
+
+        mod.prefillResourceInfo({ types: { resourceTypeGeneral } });
+
+        expect(select.value).toBe('resource-type');
+      }
+    );
+
+    test.each(DATACITE_47_RESOURCE_TYPES)(
+      'keeps canonical DataCite 4.7 value %s unchanged during matching',
+      resourceTypeGeneral => {
+        expect(mod.normalizeResourceTypeGeneral(resourceTypeGeneral)).toBe(resourceTypeGeneral);
+      }
+    );
+
+    test('prefers an exact canonical label over a whitespace-normalized label', () => {
+      const select = document.querySelector('#input-resourceinformation-resourcetype');
+      select.innerHTML = [
+        '<option value="spaced">Data Paper</option>',
+        '<option value="canonical">DataPaper</option>'
+      ].join('');
+      select.selectedIndex = -1;
+
+      mod.prefillResourceInfo({ types: { resourceTypeGeneral: 'DataPaper' } });
+
+      expect(select.value).toBe('canonical');
+    });
+
+    test('keeps the current option when an official DataCite type is unavailable', () => {
+      const select = document.querySelector('#input-resourceinformation-resourcetype');
+      select.innerHTML = '<option value="software">Software</option>';
+
+      mod.prefillResourceInfo({ types: { resourceTypeGeneral: 'Dataset' } });
+
+      expect(select.value).toBe('software');
     });
 
     test('handles empty attributes gracefully', () => {

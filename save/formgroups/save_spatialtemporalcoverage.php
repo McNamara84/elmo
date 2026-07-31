@@ -1,102 +1,80 @@
 <?php
 require_once __DIR__ . '/../validation.php';
 
-if (!function_exists('isEmptyArray')) {
-    function isEmptyArray($arr) {
-        if (!isset($arr) || !is_array($arr) || count($arr) === 0) {
-            return true;
-        }
-
-        foreach ($arr as $value) {
-            if (trim((string) $value) !== '') {
-                return false;
-            }
-        }
-
-        return true;
-    }
-}
-
 function saveSpatialTemporalCoverage($connection, $postData, $resource_id)
 {
-    global $showGGMsProperties;
-
     $action = $postData['action'] ?? 'save_and_download';
+    $fieldMap = [
+        'latitudeMin' => 'tscLatitudeMin',
+        'latitudeMax' => 'tscLatitudeMax',
+        'longitudeMin' => 'tscLongitudeMin',
+        'longitudeMax' => 'tscLongitudeMax',
+        'description' => 'tscDescription',
+        'dateStart' => 'tscDateStart',
+        'dateEnd' => 'tscDateEnd',
+        'timeStart' => 'tscTimeStart',
+        'timeEnd' => 'tscTimeEnd',
+        'timezone' => 'tscTimezone',
+    ];
+    $rowCount = 0;
 
-    // If NO STC data provided at all, return early (it's optional)
-    // Only skip if BOTH spatial and temporal fields are empty
-    if (
-        isEmptyArray($postData['tscLatitudeMin']) &&  //AND
-        isEmptyArray($postData['tscLatitudeMax']) &&
-        isEmptyArray($postData['tscLongitudeMin']) &&
-        isEmptyArray($postData['tscLongitudeMax']) &&
-        isEmptyArray($postData['tscDescription']) &&
-        isEmptyArray($postData['tscDateStart']) &&
-        isEmptyArray($postData['tscDateEnd']) &&
-        isEmptyArray($postData['tscTimeStart']) &&
-        isEmptyArray($postData['tscTimeEnd']) 
-    ) {
-        return true;
+    foreach ($fieldMap as $postField) {
+        if (isset($postData[$postField]) && is_array($postData[$postField])) {
+            $rowCount = max($rowCount, count($postData[$postField]));
+        }
     }
-    // Get the length from any of the provided arrays (latitude, longitude, or date)
-    $len = count($postData['tscLatitudeMin'] ?? $postData['tscLongitudeMin'] ?? $postData['tscDateStart'] ?? []);
-    $allSuccessful = true;
 
-    for ($i = 0; $i < $len; $i++) {
+    $entriesToSave = [];
+    for ($i = 0; $i < $rowCount; $i++) {
         $entry = [
-            'latitudeMin' => $postData['tscLatitudeMin'][$i] ?? NULL,
-            'latitudeMax' => $postData['tscLatitudeMax'][$i] ?? NULL,
-            'longitudeMin' => $postData['tscLongitudeMin'][$i] ?? NULL,
-            'longitudeMax' => $postData['tscLongitudeMax'][$i] ?? NULL,
-            'description' => $postData['tscDescription'][$i] ?? NULL,
-            'dateStart' => $postData['tscDateStart'][$i] ?? NULL,
-            'dateEnd' => $postData['tscDateEnd'][$i] ?? NULL,
-            'timeStart' => $postData['tscTimeStart'][$i] ?? NULL,
-            'timeEnd' => $postData['tscTimeEnd'][$i] ?? NULL,
-            'timezone' => $postData['tscTimezone'][$i] ?? NULL
+            'latitudeMin' => null,
+            'latitudeMax' => null,
+            'longitudeMin' => null,
+            'longitudeMax' => null,
+            'description' => null,
+            'dateStart' => null,
+            'dateEnd' => null,
+            'timeStart' => null,
+            'timeEnd' => null,
+            'timezone' => null,
         ];
-        // Only validate on submit
-        if ($action === 'submit') {
-            $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
-                          || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
-            $hasAnyData = $hasAnySpatial
-                       || (trim($entry['dateStart'] ?? '') !== '')
-                       || (trim($entry['dateEnd'] ?? '') !== '')
-                       || (trim($entry['description'] ?? '') !== '');
-            if (!$hasAnyData) {
-                continue;
-            }
 
-            // Check required fields: latitudeMin and longitudeMin (0 is allowed, empty strings are not)
-            if (!validateSTCDependencies($entry)) {
-                $allSuccessful = false;
-                continue;
-            }
+        foreach ($fieldMap as $entryField => $postField) {
+            $values = is_array($postData[$postField] ?? null) ? $postData[$postField] : [];
+            $entry[$entryField] = $values[$i] ?? null;
+        }
 
-        } else {
-            $hasAnySpatial = (trim($entry['latitudeMin'] ?? '') !== '') || (trim($entry['latitudeMax'] ?? '') !== '')
-                          || (trim($entry['longitudeMin'] ?? '') !== '') || (trim($entry['longitudeMax'] ?? '') !== '');
-            $hasAnyData = $hasAnySpatial
-                       || (trim($entry['dateStart'] ?? '') !== '')
-                       || (trim($entry['dateEnd'] ?? '') !== '')
-                       || (trim($entry['description'] ?? '') !== '');
-            if (!$hasAnyData) {
-                continue;
+        // A timezone selected by default does not create an otherwise empty STC row.
+        $dataFields = array_diff(array_keys($entry), ['timezone']);
+        $hasAnyData = false;
+        foreach ($dataFields as $field) {
+            if (trim((string) ($entry[$field] ?? '')) !== '') {
+                $hasAnyData = true;
+                break;
             }
         }
 
-        // Prepare optional fields - convert empty strings to NULL for database
-        // Use strict comparison (=== '') instead of empty() because empty('0') returns true,
-        // which would incorrectly convert valid coordinate values like 0 (equator/prime meridian) to NULL
-        $entry['latitudeMin']  = (trim($entry['latitudeMin'] ?? '') === '')  ? NULL : $entry['latitudeMin'];
-        $entry['latitudeMax']  = (trim($entry['latitudeMax'] ?? '') === '')  ? NULL : $entry['latitudeMax'];
-        $entry['longitudeMin'] = (trim($entry['longitudeMin'] ?? '') === '') ? NULL : $entry['longitudeMin'];
-        $entry['longitudeMax'] = (trim($entry['longitudeMax'] ?? '') === '') ? NULL : $entry['longitudeMax'];
-        $entry['dateStart'] = (trim($entry['dateStart'] ?? '') === '') ? NULL : $entry['dateStart'];
-        $entry['dateEnd'] = (trim($entry['dateEnd'] ?? '') === '') ? NULL : $entry['dateEnd'];
-        $entry['timeStart'] = (trim($entry['timeStart'] ?? '') === '') ? NULL : $entry['timeStart'];
-        $entry['timeEnd'] = (trim($entry['timeEnd'] ?? '') === '') ? NULL : $entry['timeEnd'];
-        $entry['description'] = (trim($entry['description'] ?? '') === '') ? NULL : $entry['description'];
+        if (!$hasAnyData) {
+            continue;
+        }
+
+        // Draft saves may persist partial rows; final submit must satisfy all dependencies.
+        if ($action === 'submit' && !validateSTCDependencies($entry)) {
+            return false;
+        }
+
+        // Keep coordinate value 0, but store genuinely empty optional values as NULL.
+        foreach (array_keys($entry) as $field) {
+            if (trim((string) ($entry[$field] ?? '')) === '') {
+                $entry[$field] = null;
+            }
+        }
+
+        $entriesToSave[] = $entry;
+    }
+
+    $allSuccessful = true;
+    foreach ($entriesToSave as $entry) {
 
         // Save STC entry
         $stc_id = insertSpatialTemporalCoverage($connection, $entry);

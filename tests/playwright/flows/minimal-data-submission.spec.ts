@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
-const SUBMISSION_ENDPOINT = '**/send_xml_file.php';
+const SUBMISSION_ENDPOINT = '**/endpoints/send_xml_file.php';
 const MOCK_DATA_DESCRIPTION_FILE = {
   name: 'data-description.txt',
   mimeType: 'text/plain',
@@ -38,9 +38,6 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     await page.check('#input-submit-privacycheck');
     await expect(modalSubmitButton).toBeEnabled();
-
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),
@@ -82,9 +79,6 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     await page.check('#input-submit-privacycheck');
     const modalSubmitButton = page.locator('#button-submit-submit');
-
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),
@@ -137,9 +131,6 @@ test.describe('Minimal Valid Dataset Test', () => {
 
     await page.check('#input-submit-privacycheck');
     const modalSubmitButton = page.locator('#button-submit-submit');
-
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
 
     await Promise.all([
       page.waitForRequest(SUBMISSION_ENDPOINT),

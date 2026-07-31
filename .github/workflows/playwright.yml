@@ -13,8 +13,6 @@ permissions:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
     strategy:
       fail-fast: false
       matrix:
@@ -181,7 +179,7 @@ jobs:
         EOF
 
     - name: Initialize database structure and lookup data
-      run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
+      run: php -r "require 'scripts/install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
     - name: Shrink large JSON fixtures for faster page loads
       run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
@@ -264,13 +262,11 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+        key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          playwright-${{ runner.os }}-
+          playwright-${{ runner.os }}-${{ matrix.browser }}-
 
     - name: Install Playwright Browsers
-      env:
-        PLAYWRIGHT_BROWSERS_PATH: ~/.cache/ms-playwright
       run: npx playwright install --with-deps ${{ matrix.browser }}
 
     - name: Verify servers are running

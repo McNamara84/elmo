@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { navigateToHome, registerGoogleMapsNoopRoute } from '../utils';
 
 /**
  * Envelope XML (DataCite + ISO) with a Contact Person.
@@ -267,6 +267,7 @@ test.describe('Contact Person Roundtrip (Issue #1046)', () => {
         consoleErrors.push(msg.text());
       }
     });
+    await registerGoogleMapsNoopRoute(page);
 
     await navigateToHome(page);
 
@@ -395,8 +396,8 @@ test.describe('Contact Person Roundtrip (Issue #1046)', () => {
       { timeout: 20_000 },
     );
 
-    // Allow a short settle time for any deferred processing
-    await page.waitForTimeout(500);
+    await expect(page.locator('#input-uploadxml-file')).toBeEnabled();
+    await expect(page.locator('#upload-spinner-overlay')).toHaveClass(/d-none/);
 
     // Filter known CI-environment messages
     const realErrors = consoleErrors.filter(
