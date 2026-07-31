@@ -406,6 +406,9 @@ class SubmitHandler {
         if (authorsPayloadInput) {
             submitData.set('authorsPayload', authorsPayloadInput.value);
         }
+        if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
+            window.ggmsExperimentalPayload.appendPayloadsToFormData(submitData);
+        }
 
         // Ensure the form-level CSRF token is present.
         const csrfToken = await fetchAndStoreCsrfToken('form');

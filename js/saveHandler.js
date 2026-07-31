@@ -206,6 +206,9 @@ class SaveHandler {
             if (authorsPayloadInput) {
                 formData.set('authorsPayload', authorsPayloadInput.value);
             }
+            if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
+                window.ggmsExperimentalPayload.appendPayloadsToFormData(formData);
+            }
             formData.append('filename', filename);
 
             const csrfToken = await fetchAndStoreCsrfToken('form');
