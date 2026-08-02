@@ -208,7 +208,6 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
             'temporalStart' => '2016-01-01',
             'temporalEnd' => '2024-12-31',
             'releaseFrequency' => 'monthly',
-            'temporalFrequencyPredef' => 'monthly',
             'temporalInstitution' => 'GFZ Potsdam'
         ];
 
@@ -277,7 +276,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $postData = [
             'temporalStart' => '2020-01-01',
             'temporalEnd' => '2025-01-01',
-            'temporalFrequencyPredef' => $frequency,
+            'releaseFrequency' => $frequency,
             'temporalInstitution' => null
         ];
 
@@ -518,7 +517,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $postData = [
             'temporalStart' => '2010-01-01',
             'temporalEnd' => '2024-12-31',
-            'temporalFrequencyPredef' => 'monthly',
+            'releaseFrequency' => 'monthly',
             'temporalInstitution' => 'JPL'
         ];
 

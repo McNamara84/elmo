@@ -4,7 +4,7 @@
  * 
  * Saves model-type-specific properties:
  * - Static models: time-variable coefficients info
- * - Temporal models: start/end dates, temporal resolution
+ * - Temporal models: start/end dates, release frequency
  * - Topographic models: layer approach, domain, density information
  * 
  * Reuses existing GGM_Properties record and validates model type
@@ -166,17 +166,22 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
         return ($val !== '' && $val !== null) ? $val : null;
     };
 
-    // Parse temporal resolution from either custom value or predefined frequency
+    // Release frequency: custom days input, or predefined select (maps to days for ICGEM export).
+    // Legacy clients may still post temporalFrequencyPredef.
     $temporalResolutionDays = null;
-    $customFreq = $postData['temporalFrequency'] ?? null;
-    $predefFreq = $postData['temporalFrequencyPredef'] ?? null;
-    if (!$customFreq && !$predefFreq) {
-        error_log('Temporal resolution is missing: neither custom nor user-defined. If you are saving it is fine.');
+    $customFreq = $getVal('temporalFrequency');
+    $releaseFrequency = $getVal('releaseFrequency');
+    if ($releaseFrequency === null) {
+        $releaseFrequency = $getVal('temporalFrequencyPredef');
+    }
+    if ($customFreq === null && $releaseFrequency === null) {
+        error_log('Release frequency is missing: neither custom nor predefined. If you are saving it is fine.');
     }
 
     if ($customFreq !== null) {
         $temporalResolutionDays = (int) $customFreq;
-    } elseif ($predefFreq !== null) {
+        $releaseFrequency = null;
+    } elseif ($releaseFrequency !== null) {
         $frequencyMap = [
             'daily' => 1,
             'weekly' => 7,
@@ -184,13 +189,12 @@ function insertTemporalModelProperties(mysqli $connection, array $postData, int 
             'quarterly' => 90,
             'yearly' => 365
         ];
-        $temporalResolutionDays = $frequencyMap[$predefFreq] ?? null;
+        $temporalResolutionDays = $frequencyMap[$releaseFrequency] ?? null;
     }
 
     $startDate = $getVal('temporalStart');
     $endDate = $getVal('temporalEnd');
     $generatingInstitution = $getVal('temporalInstitution');
-    $releaseFrequency = $getVal('releaseFrequency');
     $release = $getVal('releaseNumber');
 
     // Insert new temporal properties record

@@ -941,8 +941,8 @@ const optionalFieldsSelector = [
     // GGMs Model Types - Temporal Models
     'input[name="temporalStart[]"]',
     'input[name="temporalEnd[]"]',
-    'select[name="temporalFrequencyPredef[]"]',
-    'input[name="temporalFrequency[]"]',
+    'select[name="releaseFrequency"]',
+    'input[name="temporalFrequency"]',
     'input[name="temporalInstitution"]',
     'input[name="releaseNumber"]',
     // GGMs Model Types - Topographic Models

@@ -56,29 +56,20 @@ describe('ggmsModelTypes.js', () => {
                         <hr>
                         <div class="row mb-3">
                             <div class="col-sm-2 col-lg-2 p-1">
-                                <div class="form-floating">
+                                <div class="form-floating mb-1">
                                     <select class="form-select" id="select-release-frequency" name="releaseFrequency">
                                         <option selected value=""></option>
                                         <option value="monthly">Monthly</option>
                                     </select>
                                     <label for="select-release-frequency">Release frequency</label>
                                 </div>
-                            </div>
-                            <div class="col-sm-2 col-lg-2 p-1">
-                                <div class="form-floating mb-1">
-                                    <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
-                                        <option selected value=""></option>
-                                        <option value="monthly">Monthly</option>
-                                    </select>
-                                    <label for="select-temporal-frequency-predef">Temporal resolution</label>
-                                </div>
                                 <div class="form-check">
                                     <input class="form-check-input no-validation-style" type="checkbox" id="checkbox-custom-frequency">
-                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom temporal resolution</label>
+                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom release frequency</label>
                                 </div>
                                 <div class="form-floating mt-1 d-none" id="custom-frequency-container">
-                                    <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
-                                    <label for="input-temporal-frequency">Custom temporal resolution (days)</label>
+                                    <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency">
+                                    <label for="input-temporal-frequency">Custom release frequency (days)</label>
                                 </div>
                             </div>
                         </div>
@@ -177,40 +168,40 @@ describe('ggmsModelTypes.js', () => {
         });
     });
 
-    describe('Custom Temporal Frequency', () => {
+    describe('Custom Release Frequency', () => {
         test('should show custom input and disable dropdown when checkbox is checked', () => {
             const customCheckbox = $('#checkbox-custom-frequency');
             const customContainer = $('#custom-frequency-container');
-            const predefinedSelect = $('#select-temporal-frequency-predef');
+            const releaseFrequencySelect = $('#select-release-frequency');
 
             // Initial state: checkbox is unchecked
             expect(customContainer.hasClass('d-none')).toBe(true);
-            expect(predefinedSelect.prop('disabled')).toBe(false);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(false);
 
             // Action: check the box
             customCheckbox.prop('checked', true).trigger('change');
 
             // Assert: custom input is visible, dropdown is disabled
             expect(customContainer.hasClass('d-none')).toBe(false);
-            expect(predefinedSelect.prop('disabled')).toBe(true);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(true);
         });
 
         test('should hide custom input and enable dropdown when checkbox is unchecked', () => {
             const customCheckbox = $('#checkbox-custom-frequency');
             const customContainer = $('#custom-frequency-container');
-            const predefinedSelect = $('#select-temporal-frequency-predef');
+            const releaseFrequencySelect = $('#select-release-frequency');
 
             // Setup: start with the checkbox checked
             customCheckbox.prop('checked', true).trigger('change');
             expect(customContainer.hasClass('d-none')).toBe(false);
-            expect(predefinedSelect.prop('disabled')).toBe(true);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(true);
 
             // Action: uncheck the box
             customCheckbox.prop('checked', false).trigger('change');
 
             // Assert: custom input is hidden, dropdown is enabled
             expect(customContainer.hasClass('d-none')).toBe(true);
-            expect(predefinedSelect.prop('disabled')).toBe(false);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(false);
         });
     });
 });

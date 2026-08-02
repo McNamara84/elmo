@@ -591,7 +591,7 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
 
     await page.locator('#input-temporal-start').fill(data.temporalStart);
 
-    // Custom temporal resolution (temporalCoverage ends with "/open" so no end date)
+    // Custom release frequency in days (temporalCoverage ends with "/open" so no end date)
     if (data.temporalResolution) {
       await page.locator('#checkbox-custom-frequency').check();
       await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
@@ -942,7 +942,7 @@ for (const testCase of TEST_CASES) {
       const [savedStart] = coverage.split('/');
       expect(savedStart, '[FIELD: temporalStart]').toBe(parsedData.temporalStart);
 
-      // Temporal resolution
+      // Release frequency (exported as ICGEM temporalResolution days)
       const savedResolution = extractText(getNode(tmpNode, 'temporalResolution'));
       expect(savedResolution, '[FIELD: temporalResolution]').toBe(parsedData.temporalResolution);
     }

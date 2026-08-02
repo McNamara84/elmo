@@ -124,7 +124,7 @@ describe('populateIcgemContactPersons', () => {
     window.jQuery  = $;
 
     jest.resetModules();
-    icgemModule = require('../../js/mappingXmlToInputFields-icgem.js');
+    icgemModule = require('../../js/mappingXmlToInputFieldsIcgem.js');
   });
 
   afterEach(() => {
