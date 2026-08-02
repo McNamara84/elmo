@@ -211,9 +211,9 @@ include_once "../settings.php";
                     <?php if ($showGGMsProperties ?? false): ?>
                     <p>
                         Leave this field empty if your model does not have a DOI yet: GFZ Data Services then receives
-                        the usual submission mail and reserves a DOI, and the model ID is generated once your primary
-                        data has been received. If you enter an existing DOI, only the ICGEM team is notified and no
-                        new DOI or model ID is generated.
+                        the usual submission mail and reserves a DOI; the ICGEM team waits for that DOI before
+                        uploading the model to the ICGEM database. If you enter an existing DOI, only the ICGEM team
+                        is notified and the upload can start straight away.
                     </p>
                     <?php endif; ?>
                 </div>

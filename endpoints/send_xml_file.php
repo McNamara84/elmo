@@ -626,7 +626,6 @@ try {
                 'dataServicesEmailSent' => $dataServicesEmailSent,
                 'icgemXml' => $xml_content,
                 'icgemFilename' => buildXmlAttachmentFilename($resource_id, $_POST),
-                'documentAttachment' => buildGGMsDocumentAttachment($_FILES['dataDescription'] ?? null, $resource_id),
             ]);
             error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
                 . ($dataServicesEmailSent ? 'true' : 'false') . '.');

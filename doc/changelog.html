@@ -15,13 +15,14 @@
                 <ul>
                     <li><strong>Features:</strong>
                         <ul>
-                            <li>ELMO for ICGEM now branches on the DOI field at submit: if it is empty, GFZ Data
-                                Services receives the usual submission mail (DatasetController envelope) and is asked
-                                to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services
-                                mail is skipped.</li>
+                            <li>ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services
+                                receives the usual submission mail (DatasetController envelope) and is asked to report
+                                the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is
+                                skipped.</li>
                             <li>The ICGEM team always receives the ICGEM metadata file (IcgmController) together with
-                                the information whether Data Services was notified, and therefore whether a model ID
-                                is still to follow.</li>
+                                the next step for the ICGEM database: wait for the DOI from Data Services, or upload
+                                straight away when a DOI was already provided.</li>
+                            <li>ELMO-GEM no longer offers the data description template upload in the submit dialog.</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>

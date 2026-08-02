@@ -1,9 +1,9 @@
 <?php
 
 /**
- * ICGEM registration mail for ELMO GEM.
+ * ICGEM registration mail for ELMO-GEM.
  *
- * This file is an ELMO GEM extension: it is only used when $showGGMsProperties
+ * This file is an ELMO-GEM extension: it is only used when $showGGMsProperties
  * is true. Every other ELMO version keeps sending the single submission mail in
  * endpoints/send_xml_file.php untouched.
  *
@@ -11,15 +11,17 @@
  *
  *   DOI empty   GFZ Data Services receives the usual submission mail at
  *               $xmlSubmitAddress (DatasetController envelope) and reserves a
- *               DOI; ICGEM is told that the model ID follows once the primary
- *               data has arrived.
- *   DOI filled  Only ICGEM is notified. The model is published with that DOI, so
- *               no new DOI and no new model ID are created.
+ *               DOI; ICGEM is told to wait for that DOI before uploading the
+ *               model to the ICGEM database.
+ *   DOI filled  Only ICGEM is notified. The model can be uploaded to the ICGEM
+ *               database straight away with the DOI supplied by the author.
  *
  * The ICGEM mail is sent through the shared sendElmoMail() transport. The Data
  * Services mail keeps the existing PHPMailer block in send_xml_file.php and only
  * appends a short GEM note via buildGGMsDataServicesNote().
  */
+
+const GGMS_ICGEM_DATABASE_URL = 'https://icgem-test.gfz.de/database';
 
 require_once __DIR__ . '/mail_helper.php';
 
@@ -113,43 +115,7 @@ function collectGGMsResearcherConfirmationDataFromXml(string $xmlContent): array
 }
 
 /**
- * Validate the optional data description upload and turn it into an attachment.
- *
- * @param array<string, mixed>|null $uploadedFile Entry from $_FILES.
- * @return array{filename: string, path: string}|null Null when nothing was uploaded.
- *
- * @throws Exception When the upload is not an accepted document or too large.
- */
-function buildGGMsDocumentAttachment(?array $uploadedFile, int $resourceId): ?array
-{
-    if ($uploadedFile === null || ($uploadedFile['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK) {
-        return null;
-    }
-
-    $allowedTypes = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    ];
-
-    if (!in_array(mime_content_type($uploadedFile['tmp_name']), $allowedTypes, true)) {
-        throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
-    }
-
-    if ($uploadedFile['size'] > 10 * 1024 * 1024) {
-        throw new Exception('File size exceeds maximum limit of 10MB.');
-    }
-
-    $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-
-    return [
-        'filename' => "data_description_{$resourceId}.{$fileExtension}",
-        'path' => $uploadedFile['tmp_name'],
-    ];
-}
-
-/**
- * Note appended to the usual Data Services submission mail for ELMO GEM.
+ * Note appended to the usual Data Services submission mail for ELMO-GEM.
  *
  * @param string $icgemAddress Address the reserved DOI has to be reported to.
  * @return array{html: string, text: string}
@@ -157,16 +123,16 @@ function buildGGMsDocumentAttachment(?array $uploadedFile, int $resourceId): ?ar
 function buildGGMsDataServicesNote(string $icgemAddress): array
 {
     $html = '<hr>
-        <p>These metadata originate from ElmoGen, the ELMO version used to describe global
+        <p>These metadata originate from ELMO-GEM, the ELMO version used to describe global
         gravity field models for ICGEM. The author(s) did not supply a DOI.</p>
         <p><strong>Once the DOI is reserved, please communicate it to '
             . htmlspecialchars($icgemAddress, ENT_QUOTES, 'UTF-8') .
-        '</strong> so the model can be registered in the ICGEM database.</p>';
+        '</strong> so the model can be uploaded to the ICGEM database.</p>';
 
-    $text = "\n\nThese metadata originate from ElmoGen, the ELMO version used to describe global "
+    $text = "\n\nThese metadata originate from ELMO-GEM, the ELMO version used to describe global "
         . "gravity field models for ICGEM. The author(s) did not supply a DOI.\n"
         . "Once the DOI is reserved, please communicate it to {$icgemAddress} so the model can be "
-        . "registered in the ICGEM database.";
+        . "uploaded to the ICGEM database.";
 
     return ['html' => $html, 'text' => $text];
 }
@@ -218,10 +184,11 @@ function buildGGMsRegistrationFields(array $context): array
 }
 
 /**
- * Build the ICGEM mail that registers the model.
+ * Build the ICGEM mail that announces a new ELMO-GEM model submission.
  *
  * Sent for every GEM submission. `dataServicesEmailSent` is the single source of
- * truth for whether GFZ Data Services was asked for a DOI.
+ * truth for whether GFZ Data Services was asked for a DOI, and therefore whether
+ * the model can already be uploaded to the ICGEM database.
  *
  * @param array<string, mixed> $context Submission context.
  * @param array<int, array{filename: string, content?: string, path?: string}> $attachments
@@ -232,42 +199,51 @@ function buildGGMsIcgemMessage(array $context, array $attachments): array
     $resourceId = (string) ($context['resourceId'] ?? '');
     $doi = (string) ($context['doi'] ?? '');
     $dataServicesEmailSent = (bool) ($context['dataServicesEmailSent'] ?? false);
+    $databaseUrl = GGMS_ICGEM_DATABASE_URL;
 
     $fields = buildGGMsRegistrationFields($context);
     $fields['GFZ Data Services email sent'] = $dataServicesEmailSent ? 'true' : 'false';
     $rendered = renderGGMsRegistrationFields($fields);
 
     if ($dataServicesEmailSent) {
-        $outlookHtml = '<p>A DOI has been requested from GFZ Data Services. The model ID will be
-            generated once the primary data has been received.</p>';
-        $outlookText = 'A DOI has been requested from GFZ Data Services. '
-            . 'The model ID will be generated once the primary data has been received.';
+        $outlookHtml = '<p><strong>Next step:</strong> Please wait for the DOI generated by GFZ Data
+            Services before uploading the model to the ICGEM database at
+            <a href="' . htmlspecialchars($databaseUrl, ENT_QUOTES, 'UTF-8') . '">'
+            . htmlspecialchars($databaseUrl, ENT_QUOTES, 'UTF-8') . '</a>.</p>';
+        $outlookText = 'Next step: Please wait for the DOI generated by GFZ Data Services '
+            . "before uploading the model to the ICGEM database at {$databaseUrl}.";
     } else {
-        $doiText = $doi !== '' ? "the existing DOI {$doi}" : 'the existing DOI supplied by the author(s)';
-        $outlookHtml = '<p>The model is published with ' . htmlspecialchars($doiText, ENT_QUOTES, 'UTF-8')
-            . '. No new DOI and no new model ID are generated.</p>';
-        $outlookText = "The model is published with {$doiText}. No new DOI and no new model ID are generated.";
+        $doiClause = $doi !== ''
+            ? 'The author(s) already provided the DOI ' . $doi . '.'
+            : 'The author(s) already provided a DOI.';
+        $outlookHtml = '<p><strong>Next step:</strong> '
+            . htmlspecialchars($doiClause, ENT_QUOTES, 'UTF-8')
+            . ' The upload to the ICGEM database can start straight away at
+            <a href="' . htmlspecialchars($databaseUrl, ENT_QUOTES, 'UTF-8') . '">'
+            . htmlspecialchars($databaseUrl, ENT_QUOTES, 'UTF-8') . '</a>.</p>';
+        $outlookText = "Next step: {$doiClause} The upload to the ICGEM database can start "
+            . "straight away at {$databaseUrl}.";
     }
 
     $html = '
-        <h2>New gravity field model registration from ElmoGen</h2>
+        <h2>New gravity field model registration from ELMO-GEM</h2>
         ' . $rendered['html'] . '
         ' . $outlookHtml . '
         <p>The ICGEM metadata file is attached.</p>
         <hr>
-        <p><small>This email was generated automatically by ELMO.</small></p>
+        <p><small>This email was generated automatically by ELMO-GEM.</small></p>
     ';
 
-    $text = "New gravity field model registration from ElmoGen\n\n"
+    $text = "New gravity field model registration from ELMO-GEM\n\n"
         . $rendered['text'] . "\n\n"
         . $outlookText . "\n\n"
         . "The ICGEM metadata file is attached.\n\n"
-        . "This email was generated automatically by ELMO.";
+        . "This email was generated automatically by ELMO-GEM.";
 
     return [
         'to' => $context['icgemAddress'] ?? '',
-        'subject' => "ElmoGen model registration (Resource ID: {$resourceId})",
-        'fromName' => 'ELMO GEM Submission System',
+        'subject' => "ELMO-GEM model registration (Resource ID: {$resourceId})",
+        'fromName' => 'ELMO-GEM Submission System',
         'replyTo' => ['address' => (string) ($context['senderAddress'] ?? ''), 'name' => 'ELMO System'],
         'html' => $html,
         'text' => $text,
@@ -286,16 +262,8 @@ function buildGGMsIcgemMessage(array $context, array $attachments): array
  */
 function sendGGMsIcgemRegistrationMail(array $context): void
 {
-    $attachments = [];
-
-    if (!empty($context['documentAttachment'])) {
-        $attachments[] = $context['documentAttachment'];
-    }
-
-    $attachments[] = [
+    sendElmoMail(buildGGMsIcgemMessage($context, [[
         'filename' => (string) $context['icgemFilename'],
         'content' => (string) $context['icgemXml'],
-    ];
-
-    sendElmoMail(buildGGMsIcgemMessage($context, $attachments));
+    ]]));
 }
