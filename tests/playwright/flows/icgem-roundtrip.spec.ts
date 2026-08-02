@@ -591,11 +591,24 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
 
     await page.locator('#input-temporal-start').fill(data.temporalStart);
 
-    // Custom release frequency in days (temporalCoverage ends with "/open" so no end date)
+    // Release frequency: use predefined select for standard day counts, else custom days.
     if (data.temporalResolution) {
-      await page.locator('#checkbox-custom-frequency').check();
-      await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
-      await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
+      const days = parseInt(data.temporalResolution, 10);
+      const daysToFrequency: Record<number, string> = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
+      if (predefined) {
+        await page.locator('#select-release-frequency').selectOption(predefined);
+      } else {
+        await page.locator('#checkbox-custom-frequency').check();
+        await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
+        await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
+      }
     }
   }
 
@@ -1171,11 +1184,28 @@ for (const testCase of TEST_CASES) {
     }
 
     if (parsedData.temporalResolution) {
-      const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
-      expect(freqChecked, 'customFrequency checkbox').toBe(true);
-      await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
-        parsedData.temporalResolution,
-      );
+      // Known day counts map to the predefined release-frequency select on import;
+      // only non-standard values keep the custom-days checkbox path.
+      const days = parseInt(parsedData.temporalResolution, 10);
+      const daysToFrequency: Record<number, string> = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
+      if (predefined) {
+        await expect(page.locator('#select-release-frequency'), 'releaseFrequency').toHaveValue(predefined);
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(false);
+      } else {
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(true);
+        await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
+          parsedData.temporalResolution,
+        );
+      }
     }
 
     // ── Data sources ──────────────────────────────────────────────────────

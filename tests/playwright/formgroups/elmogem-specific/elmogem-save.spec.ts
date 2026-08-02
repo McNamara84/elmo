@@ -81,7 +81,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('File format').selectOption('icgem2.0');
     await page.getByRole('textbox', { name: 'Model name *' }).click();
     await page.getByRole('textbox', { name: 'Model name *' }).fill('test_model_name');
-    await page.getByLabel('Release frequency / temporal').selectOption('monthly');
+    await page.locator('#select-release-frequency').selectOption('monthly');
     await page.getByRole('textbox', { name: 'Release number' }).click();
     await page.getByRole('textbox', { name: 'Release number' }).fill('3.1');
     await page.getByRole('spinbutton', { name: 'Degree *' }).click();
