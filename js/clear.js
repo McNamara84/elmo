@@ -143,7 +143,7 @@ function clearInputFields() {
     // the delegated handler in ggms-modeltypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
     $('#input-model-type').prop('selectedIndex', 0).val('').trigger('change');
-    // .trigger('change') calls updateReferenceSystemVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateReferenceSystemVisibility() in ggmsProperties.js,
     // which resets the model properties FG back to the default spherical layout.
     $('#input-mathematical-representation').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
@@ -151,10 +151,10 @@ function clearInputFields() {
     $('#input-model-name').val('');
     $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
 
-    // === GGMs Characteristics fields (GGMsProperties.html) ===
+    // === GGMs Characteristics fields (ggms-properties.html) ===
     $('#input-tide-system').prop('selectedIndex', 0).val('');
     $('#input-degree').val('');
-    // .trigger('change') calls updateErrorHandlingVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateErrorHandlingVisibility() in ggmsProperties.js,
     // which hides the error-handling approach field when errors is reset to empty.
     $('#input-errors').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-error-handling-approach').val('');

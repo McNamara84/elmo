@@ -26,7 +26,7 @@ module.exports = {
     // Exclude GGMS files (feature-specific, wrapped in document.ready)
     '!js/eventhandlers/formgroups/ggms-definition.js',
     '!js/eventhandlers/formgroups/ggms-modeltypes.js',
-    '!js/eventhandlers/formgroups/ggms-properties.js',
+    '!js/eventhandlers/formgroups/ggmsProperties.js',
     '!js/eventhandlers/formgroups/feedback.js'
   ],
   coverageProvider: 'v8',

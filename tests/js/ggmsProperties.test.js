@@ -1,10 +1,10 @@
 const fs = require('fs');
 const path = require('path');
-describe('ggms-properties.js', () => {
+describe('ggmsProperties.js', () => {
   let $;
   
   beforeEach(() => {
-    // Create a mock DOM based on the GGMsProperties.html structure
+    // Create a mock DOM based on the ggms-properties.html structure
     document.body.innerHTML = `
       <form class="needs-validation">        
         <!-- Mathematical Representation (not in form group but needed for tests) -->
@@ -104,7 +104,7 @@ describe('ggms-properties.js', () => {
     window.jQuery = $;
     
     // Load the script (strip ES module import; provide stubs for fileUpload.js)
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-properties.js'), 'utf8');
+    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsProperties.js'), 'utf8');
     script = script.replace(/^import\s+.*?from\s+['"].*?['"];\s*\n/m, '');
     script = [
       'const parseGfcFiles = async () => ({ header: {} });',
