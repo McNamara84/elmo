@@ -176,7 +176,7 @@ function clearInputFields() {
     $firstDsRow.find('input[name="dName[]"]').val('');
     $firstDsRow.find('input[name="compensation_depth[]"]').val('');
 
-    // === GGMs Model Types (GGMsModelTypes.html) ===
+    // === GGMs Model Types (ggms-model-types.html) ===
     // Static
     // ggmsModelTypes.js registers this via native addEventListener, so we must
     // use dispatchEvent (not .trigger()) to reach it. dispatchEvent also fires

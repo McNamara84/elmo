@@ -68,7 +68,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             </div>
         </div>
 
-        <!-- ── Model-specific card (GGMsModelTypes.html) ── -->
+        <!-- ── Model-specific card (ggms-model-types.html) ── -->
         <!-- Starts visible (as if user picked a model type before) -->
         <div id="model-specific-card">
             <i class="bi bi-question-circle-fill" data-help-section-id="help-static"></i>

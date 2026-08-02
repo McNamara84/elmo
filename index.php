@@ -81,9 +81,9 @@ include $baseDir . 'formgroups/honeypot.html';
 include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsDefinition.html';
-    include $baseDir . 'formgroups/GGMsAltimetryModels.html';
-    include $baseDir . 'formgroups/GGMsMASCONs.html';
-    include $baseDir . "formgroups/GGMsModelTypes.html";
+    include $baseDir . 'formgroups/ggms-altimetry-models.html';
+    include $baseDir . 'formgroups/ggms-mascons.html';
+    include $baseDir . 'formgroups/ggms-model-types.html';
     include $baseDir . 'formgroups/GGMsDataSources.html';
     // Keep coverage close to the GEM data sources; other ELMO variants retain
     // their established form order below. JavaScript manages its visibility.
