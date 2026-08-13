@@ -82,7 +82,7 @@ include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsDefinition.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
-    include $baseDir . 'formgroups/GGMsDataSources.html';
+    include $baseDir . 'formgroups/ggms-data-sources.html';
     include $baseDir . 'formgroups/GGMsProperties.html';
 }
 if ($showContributorPersons) {
