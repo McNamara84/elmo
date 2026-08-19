@@ -15,7 +15,10 @@ $(document).ready(function () {
             return;
         }
 
-        // Find all lab name select elements
+        const sortedLabs = [...data].sort((firstLab, secondLab) =>
+            firstLab.display_name.localeCompare(secondLab.display_name)
+        );
+
         $('select[name="laboratoryName[]"]').each(function () {
             const selectElement = $(this)[0];
 
@@ -29,16 +32,17 @@ $(document).ready(function () {
             emptyOption.textContent = '';
             selectElement.appendChild(emptyOption);
 
-            // Add lab options
-            data.forEach(function (lab) {
+            // Sort labs in alphabetical order
+            sortedLabs.forEach(function (lab) {
                 const option = document.createElement('option');
-                option.value = lab.name;
-                option.textContent = lab.name + ' (' + lab.affiliation_name + ')';
+
+                option.value = lab.id;
+                option.textContent = lab.display_name;
                 selectElement.appendChild(option);
             });
         });
 
-        attachChangeListeners(); // <- wichtig
+        attachChangeListeners();
     }
 
     function attachChangeListeners() {
