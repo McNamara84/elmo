@@ -198,49 +198,39 @@ class VocabController
     }
 
     /**
-     * Fetches MSL Labs data from a remote URL, processes it, and returns the necessary fields.
-     *
-     * @return array<mixed> Processed MSL Labs data.
-     * @throws Exception If fetching or decoding the data fails.
-     */
+    * Fetches MSL Laboratories from the ERNIE API and normalizes them
+    *
+    * @throws Exception If ERNIE is not configured or returns invalid data.
+    */
     public function fetchAndProcessMslLabs(): array
     {
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: PHP Script',
-                    'Accept: application/json',
-                    'Accept-Charset: UTF-8'
-                ]
-            ]
-        ];
-        $context = stream_context_create($opts);
+        $ernieService = $this->getErnieService();
 
-        $jsonData = file_get_contents($this->url, false, $context);
-
-        if ($jsonData === false) {
-            throw new Exception('Error fetching data from GitHub: ' . error_get_last()['message']);
+        if (!$ernieService->isConfigured(logResult: true)) {
+            throw new Exception('ERNIE service is not configured.');
         }
 
-        // Decode JSON data
-        $labs = json_decode($jsonData, true);
+        $response = $ernieService->fetchMslLaboratories();
 
-        if ($labs === null) {
-            throw new Exception('Error decoding JSON data: ' . json_last_error_msg());
+        if (
+            $response === null
+            || !isset($response['data'])
+            || !is_array($response['data'])
+        ) {
+            throw new Exception('Unable to retrieve MSL laboratories from ERNIE.');
         }
 
-        // Process data and retain only necessary fields
-        $processedLabs = array_map(function ($lab) {
+        return array_map(static function (array $lab): array {
             return [
-                'id' => $lab['identifier'],
-                'name' => $lab['name'],
-                'affiliation' => $lab['affiliation_name'],
-                'rorid' => $lab['affiliation_ror']
+                'id' => (string) ($lab['identifier'] ?? ''),
+                'name' => (string) ($lab['name'] ?? ''),
+                'display_name' => (string) ($lab['display_name'] ?? ''),
+                'affiliation' => (string) ($lab['affiliation_name'] ?? ''),
+                'rorid' => (string) ($lab['affiliation_ror'] ?? ''),
+                'scientific_domain' => (string) ($lab['scientific_domain'] ?? ''),
+                'country' => (string) ($lab['country'] ?? ''),
             ];
-        }, $labs);
-
-        return $processedLabs;
+        }, $response['data']);
     }
 
     /**
