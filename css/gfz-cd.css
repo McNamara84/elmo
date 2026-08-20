@@ -709,7 +709,7 @@ header .ms-auto.d-flex {
     #input-originatinglaboratory-name::picker(select) {
         width: anchor-size(width);
         max-width: anchor-size(width);
-        max-height: 280px;
+        max-height: 400px;
         overflow-y: auto;
         margin: 0;
     }
@@ -720,5 +720,11 @@ header .ms-auto.d-flex {
         overflow-wrap: anywhere;
         line-height: 1.35;
         padding: 0.5rem 0.75rem;
+    }
+
+    /* Highlight an option in blue on hover */
+    #input-originatinglaboratory-name option:hover {
+        background-color: #00589C;
+        color: #fff;
     }
 }
