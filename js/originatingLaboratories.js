@@ -15,30 +15,62 @@ $(document).ready(function () {
             return;
         }
 
-        const sortedLabs = [...data].sort((firstLab, secondLab) =>
-            firstLab.display_name.localeCompare(secondLab.display_name)
-        );
+        // Group all laboratories by their scientific domain.
+        // Laboratories without a scientific domain are placed in the "Other"(fallback) group.
+        const labsByScientificDomain = data.reduce((groups, lab) => {
+            const scientificDomain = lab.scientific_domain || 'Other';
 
+            if (!groups[scientificDomain]) {
+                groups[scientificDomain] = [];
+            }
+
+            groups[scientificDomain].push(lab);
+
+            return groups;
+        }, {});
+
+        // Sort scientific domains alphabetically before creating the option groups.
+        const sortedScientificDomains = Object.keys(labsByScientificDomain)
+            .sort((firstDomain, secondDomain) =>
+                firstDomain.localeCompare(secondDomain)
+            );
+
+        // Populate every laboratory select, including dynamically added rows.
         $('select[name="laboratoryName[]"]').each(function () {
-            const selectElement = $(this)[0];
+            const selectElement = this;
 
-            // Clear existing options
+            // Remove previously rendered options and option groups.
             selectElement.innerHTML = '';
 
-            // Add empty option with data-translate attribute
+            // Add an initially empty, non-selectable option so no laboratory is selected by default.
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.hidden = true;
             emptyOption.textContent = '';
             selectElement.appendChild(emptyOption);
 
-            // Sort labs in alphabetical order
-            sortedLabs.forEach(function (lab) {
-                const option = document.createElement('option');
+            sortedScientificDomains.forEach(function (scientificDomain) {
+                // Create a non-selectable heading for each scientific domain.
+                const optionGroup = document.createElement('optgroup');
+                optionGroup.label = scientificDomain;
 
-                option.value = lab.id;
-                option.textContent = lab.display_name;
-                selectElement.appendChild(option);
+                // Sort laboratories alphabetically within their scientific domain.
+                const sortedLabs = labsByScientificDomain[scientificDomain]
+                    .sort((firstLab, secondLab) =>
+                        firstLab.display_name.localeCompare(secondLab.display_name)
+                    );
+
+                sortedLabs.forEach(function (lab) {
+                    const option = document.createElement('option');
+
+                    // Store the laboratory ID as the selected value
+                    option.value = lab.id;
+                    option.textContent = lab.display_name;
+                    optionGroup.appendChild(option);
+                });
+
+                // Add the complete scientific-domain group to the select field.
+                selectElement.appendChild(optionGroup);
             });
         });
 
