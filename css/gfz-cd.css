@@ -698,6 +698,13 @@ header .ms-auto.d-flex {
     #input-originatinglaboratory-name {
         width: 100%;
         box-sizing: border-box;
+        height: auto;
+        min-height: 58px;
+        padding-top: 1.625rem;
+        padding-bottom: 0.5rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
     }
 
     /* Hide the additional picker arrow */
