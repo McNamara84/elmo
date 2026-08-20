@@ -20,11 +20,6 @@ if (!defined('UNIT_TESTING')) {
 class VocabController
 {
     /**
-     * @var string The URL for MSL Labs data.
-     */
-    private $url;
-
-    /**
      * @var string The base URL for MSL vocabularies.
      */
     private $mslVocabsUrl;
@@ -41,9 +36,7 @@ class VocabController
      */
     public function __construct()
     {
-        global $mslLabsUrl;
         global $mslVocabsUrl;
-        $this->url = $mslLabsUrl;
         $this->mslVocabsUrl = $mslVocabsUrl;
     }
 
@@ -199,6 +192,17 @@ class VocabController
 
     /**
     * Fetches MSL Laboratories from the ERNIE API and normalizes them
+    * for the local ELMO vocabulary file.
+    *
+    * @return array<int, array{
+    *     id: string,
+    *     name: string,
+    *     display_name: string,
+    *     affiliation: string,
+    *     rorid: string,
+    *     scientific_domain: string,
+    *     country: string
+    * }>
     *
     * @throws Exception If ERNIE is not configured or returns invalid data.
     */
