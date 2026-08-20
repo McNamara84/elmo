@@ -64,7 +64,7 @@ $(document).ready(function () {
                     const option = document.createElement('option');
 
                     // Store the laboratory ID as the selected value
-                    option.value = lab.id;
+                    option.value = lab.display_name;
                     option.textContent = lab.display_name;
                     optionGroup.appendChild(option);
                 });
@@ -79,15 +79,15 @@ $(document).ready(function () {
 
     function attachChangeListeners() {
         $('select[name="laboratoryName[]"]').off('change').on('change', function () {
-            const selectedName = $(this).val();
+            const selectedDisplayName = $(this).val();
             const row = $(this).closest('.row');
 
-            const lab = labData.find(item => item.name === selectedName);
+            const lab = labData.find((item) => item.display_name === selectedDisplayName );
 
             if (lab) {
-                row.find('input[name="LabId[]"]').val(lab.identifier || '');
-                row.find('input[name="laboratoryAffiliation[]"]').val(lab.affiliation_name || '');
-                row.find('input[name="laboratoryRorIds[]"]').val(lab.affiliation_ror || '');
+                row.find('input[name="LabId[]"]').val(lab.id || '');
+                row.find('input[name="laboratoryAffiliation[]"]').val(lab.affiliation || '');
+                row.find('input[name="laboratoryRorIds[]"]').val(lab.rorid || '');
             } else {
                 row.find('input[name="LabId[]"]').val('');
                 row.find('input[name="laboratoryAffiliation[]"]').val('');
