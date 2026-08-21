@@ -32,7 +32,10 @@ test.describe('Originating Laboratory', () => {
     );
 
     const select = page.locator('#input-originatinglaboratory-name');
-    const firstVisibleOptionValue = await select.locator('option:nth-child(2)').getAttribute('value');
+    const firstVisibleOptionValue = await select
+      .locator('option:not([value=""])')
+      .first()
+      .getAttribute('value');
 
     // Select first actual lab
     await select.selectOption(firstVisibleOptionValue!);
