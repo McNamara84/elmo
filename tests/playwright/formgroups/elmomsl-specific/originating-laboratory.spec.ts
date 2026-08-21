@@ -90,4 +90,56 @@ test.describe('Originating Laboratory', () => {
     await expect(modal).toBeVisible();
     await expect(modal.locator('.modal-body')).toContainText('Originating Laboratory');
   });
+
+  test('Laboratories are grouped by scientific domain', async ({ page }) => {
+    await page.waitForFunction(() =>
+      document.querySelectorAll(
+        '#input-originatinglaboratory-name optgroup'
+      ).length > 0
+    );
+
+    const select = page.locator('#input-originatinglaboratory-name');
+    const optionGroups = select.locator('optgroup');
+
+    // Verify that at least one scientific-domain group exists.
+    expect(await optionGroups.count()).toBeGreaterThan(0);
+
+    // Verify that every group has a visible heading.
+    const groupLabels = await optionGroups.evaluateAll((groups) =>
+      groups.map((group) => group.getAttribute('label') || '')
+    );
+
+    expect(groupLabels.every((label) => label.trim() !== '')).toBe(true);
+
+    // Verify that scientific-domain headings are alphabetically sorted.
+    const sortedGroupLabels = [...groupLabels].sort((firstDomain, secondDomain) =>
+      firstDomain.localeCompare(secondDomain)
+    );
+
+    expect(groupLabels).toEqual(sortedGroupLabels);
+  });
+
+  test('Laboratories are sorted within each scientific domain', async ({ page }) => {
+    await page.waitForFunction(() =>
+      document.querySelectorAll(
+        '#input-originatinglaboratory-name optgroup'
+      ).length > 0
+    );
+
+    const optionGroups = page.locator(
+      '#input-originatinglaboratory-name optgroup'
+    );
+
+    const groups = await optionGroups.all();
+
+    for (const group of groups) {
+      const laboratoryNames = await group.locator('option').allTextContents();
+
+      const sortedLaboratoryNames = [...laboratoryNames].sort(
+        (firstLab, secondLab) => firstLab.localeCompare(secondLab)
+      );
+
+      expect(laboratoryNames).toEqual(sortedLaboratoryNames);
+    }
+  });
 });
