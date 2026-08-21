@@ -774,7 +774,7 @@ function findLabNameById(labId) {
     console.error("labData is not available");
     return null;
   }
-  return labData.find((lab) => lab.identifier === labId) || null;
+  return labData.find((lab) => lab.id === labId) || null;
 }
 
 /**
@@ -805,7 +805,8 @@ function setLabDataInRow(row, labId) {
 
   try {
     // Set the select value to the lab name
-    selectName.val(lab.name);
+    selectName.val(lab.display_name);
+
 
     // Trigger change event to ensure any attached handlers run
     selectName.trigger("change");
@@ -813,15 +814,16 @@ function setLabDataInRow(row, labId) {
     // Set affiliation
     const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]');
     if (inputAffiliation.length) {
-      inputAffiliation.val(lab.affiliation_name || "");
+      inputAffiliation.val(lab.affiliation || "");
     }
 
     // Set hidden fields
     const hiddenRorId = row.find('input[name="laboratoryRorIds[]"]');
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
-    if (hiddenRorId.length) hiddenRorId.val(lab.affiliation_ror || "");
-    if (hiddenLabId.length) hiddenLabId.val(lab.identifier);
+
+    if (hiddenRorId.length) hiddenRorId.val(lab.rorid || "");
+    if (hiddenLabId.length) hiddenLabId.val(lab.id);
   } catch (error) {
     console.error("Error in setLabDataInRow:", error);
     console.error("Error stack:", error.stack);
