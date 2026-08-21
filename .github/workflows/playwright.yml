@@ -131,7 +131,6 @@ jobs:
         $smtpPassword = 'test_password';
         $smtpSender = 'test_sender@test.com';
         $feedbackAddress = 'feedback@test.com';
-        $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
         $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
         // Feature toggles from environment variables (set per PHP server instance)
