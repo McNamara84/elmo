@@ -97,11 +97,13 @@ describe("mappingXmlToInputFields helpers", () => {
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
     vm.runInContext(
-      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', affiliation_ror: 'https://ror.org/05y42nb95', affiliation_name: 'Max Planck Society'}];`,
+      `labData = [{id: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation: 'Max Planck Society', rorid: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
-    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy", affiliation_ror: "https://ror.org/05y42nb95", affiliation_name: "Max Planck Society" });
+
+    expect(lab).toEqual({ id: "MSL-001", name: "Max Planck Institute for Astronomy",
+      display_name: "Max Planck Institute for Astronomy - Max Planck Society", affiliation: "Max Planck Society", rorid: "https://ror.org/05y42nb95", scientific_domain: "Astronomy", country: "Germany" });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
@@ -311,19 +313,21 @@ describe("mappingXmlToInputFields helpers", () => {
   test("setLabDataInRow populates fields and triggers change", () => {
     document.body.innerHTML = `
       <div id="row">
-        <select name="laboratoryName[]"><option></option><option value="Lab1">Lab1</option></select>
+        <select name="laboratoryName[]"><option></option><option value="Lab1 - Aff1">Lab1 - Aff1</option></select>
         <input name="laboratoryAffiliation[]" />
         <input name="laboratoryRorIds[]" />
         <input name="LabId[]" />
       </div>`;
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
-    vm.runInContext(`labData = [{ identifier: 'LAB1', name: 'Lab1', affiliation_ror: 'R1', affiliation_name: 'Aff1' }];`, ctx);
+
+    vm.runInContext(`labData = [{
+      id: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation: 'Aff1', rorid: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");
 
-    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1");
+    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1 - Aff1");
     expect(row.find('input[name="laboratoryAffiliation[]"]').val()).toBe("Aff1");
     expect(row.find('input[name="laboratoryRorIds[]"]').val()).toBe("R1");
     expect(row.find('input[name="LabId[]"]').val()).toBe("LAB1");
