@@ -95,11 +95,6 @@ services:
     security_opt:
       - no-new-privileges:true
 
-  curl:
-    image: curlimages/curl:latest
-    network_mode: host
-    entrypoint: ["sleep", "infinity"]
-
 volumes:
   xml_data:
     driver: local
