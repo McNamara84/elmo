@@ -9,7 +9,7 @@ const GFC_HEADER_KEYS = [
     'tide_system',
 ];
 
-const GFC_EXTENSION_ERROR = 'Please upload a .gfc file.';
+const GFC_EXTENSION_ERROR = 'Please upload a .gfc file or paste the header text into the free text field.';
 
 class Parser {
 
@@ -295,4 +295,4 @@ export function parseRecords(lines) {
     return gfcParser.parseRecords(lines);
 }
 
-export { GFCParser, CSVParser, Parser };
+export { GFCParser, CSVParser, Parser, GFC_EXTENSION_ERROR };

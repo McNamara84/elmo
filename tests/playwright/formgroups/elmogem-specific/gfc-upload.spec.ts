@@ -46,7 +46,7 @@ async function fillMetadataFromGfc(page: import('@playwright/test').Page) {
 }
 
 async function expectGfcExtensionError(page: import('@playwright/test').Page) {
-  const expectedMessage = await getGfcUploadMessage(page, 'invalidExtension');
+  const expectedMessage = await getGfcUploadMessage(page, 'errorNoInput');
   await expect(page.locator('#modal-ggms-gfc-upload')).toBeVisible();
   await expect(page.locator('#ggms-gfc-upload-status')).toBeVisible();
   await expect(page.locator('#ggms-gfc-upload-status')).toContainText(expectedMessage);

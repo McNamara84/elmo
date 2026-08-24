@@ -1,6 +1,6 @@
 import { parseGfcFiles, extractSections, parseRecords } from '../../fileUpload.js';
 
-const GFC_EXTENSION_ERROR_FALLBACK = 'Please upload a .gfc file.';
+const GFC_UPLOAD_ERROR = 'Please upload a .gfc file or paste the header text into the free text field.';
 
 function translateWithFallback(key, fallback) {
     const translate = (window.elmo && typeof window.elmo.translate === 'function')
@@ -174,11 +174,7 @@ async function mergeGfcHeaders(file, text) {
 }
 
 function showGfcUploadStatusError() {
-    const message = translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR_FALLBACK);
-    $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
-}
-
-function showGfcUploadStatusMessage(message) {
+    const message = translateWithFallback('modals.gfcUpload.errorNoInput', GFC_UPLOAD_ERROR);
     $('#ggms-gfc-upload-status').removeClass('d-none').addClass('alert alert-danger').text(message);
 }
 
@@ -228,12 +224,7 @@ function initGfcUploadHandlers() {
         }
 
         if (!file && !text) {
-            showGfcUploadStatusMessage(
-                translateWithFallback(
-                    'modals.gfcUpload.errorNoInput',
-                    'Please upload a .gfc file or paste the header text into the free text field.'
-                )
-            );
+            showGfcUploadStatusError();
             return;
         }
 
@@ -245,10 +236,7 @@ function initGfcUploadHandlers() {
             hideGfcUploadModal();
         } catch (error) {
             console.error('Error filling metadata from GFC:', error);
-            const message = error instanceof Error && error.message === GFC_EXTENSION_ERROR_FALLBACK
-                ? translateWithFallback('modals.gfcUpload.invalidExtension', GFC_EXTENSION_ERROR_FALLBACK)
-                : translateWithFallback('modals.gfcUpload.errorProcessing', 'Error processing GFC file');
-            showGfcUploadStatusMessage(message);
+            showGfcUploadStatusError();
         }
     });
 
