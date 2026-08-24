@@ -1,486 +1,73 @@
+const dropdownUtils =
+  (typeof require === 'function' && typeof module !== 'undefined')
+    ? require('./dropdownUtils.js')
+    : {
+        updateDropdownPlaceholders: window.updateDropdownPlaceholders,
+        filterDataByGEM: window.filterDataByGEM,
+      };
+
+const dropdownAjax =
+  (typeof require === 'function' && typeof module !== 'undefined')
+    ? require('./dropdownAjax.js')
+    : {
+        setupTimezoneDropdownAjax: window.setupTimezoneDropdownAjax,
+        setupResourceTypeDropdownAjax: window.setupResourceTypeDropdownAjax,
+        setupLanguageDropdownAjax: window.setupLanguageDropdownAjax,
+        setupTitleTypeDropdownAjax: window.setupTitleTypeDropdownAjax,
+        setupLicenseDropdown: window.setupLicenseDropdown,
+        addPlaceholder: window.addPlaceholder,
+        runSequentialFallback: window.runSequentialFallback,
+      };
+
+let fundersDataPromise = null;
+
 /**
- * Fills the timezone dropdown and sets the default timezone based on system settings and user's location
- * @async
- * @function initializeTimezoneDropdown
- * @param {string|jQuery|HTMLElement} dropdownSelector - The selector for the timezone dropdown element
- * @param {string} jsonPath - Path to the timezones JSON file
- * @returns {Promise<void>}
+ * Loads the local Crossref Funder Registry once and reuses the result.
+ * The request is intentionally excluded from initial page loading and starts
+ * only when CFID autocomplete is actually used.
+ * @returns {Promise<Array>} Resolves with the available funder entries.
  */
-async function initializeTimezoneDropdown(dropdownSelector = '#input-stc-timezone', jsonPath = 'json/timezones.json') {
-  try {
-    const $dropdown = $(dropdownSelector);
-    if ($dropdown.length === 0) return;
+function loadFundersData() {
+  if (Array.isArray(window.fundersData)) {
+    return Promise.resolve(window.fundersData);
+  }
 
-    /**
-     * Gets system timezone from browser settings
-     * @param {jQuery} $select - The jQuery select element
-     * @returns {string} Timezone offset in format "+HH:MM" or "-HH:MM"
-     */
-    function getSystemTimezone($select) {
-      try {
-        const timezoneName = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (fundersDataPromise) {
+    return fundersDataPromise;
+  }
 
-        if (timezoneName) {
-          const options = $select.find('option').get();
-          const date = new Date();
-          const offset = -date.getTimezoneOffset();
-          const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
-          const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-          const offsetStr = `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
+  if (typeof fetch !== 'function') {
+    window.fundersData = [];
+    fundersDataPromise = Promise.resolve(window.fundersData);
+    return fundersDataPromise;
+  }
 
-          let bestMatch = null;
-
-          for (const option of options) {
-            const optionText = $(option).text();
-            const optionValue = $(option).val();
-
-            if (optionText.includes(`(${timezoneName})`)) {
-              return optionValue;
-            }
-
-            if (optionValue === offsetStr && optionText.includes(timezoneName.split('/')[0])) {
-              bestMatch = optionValue;
-              break;
-            }
-
-            if (optionValue === offsetStr && !bestMatch) {
-              bestMatch = optionValue;
-            }
-          }
-
-          if (bestMatch) return bestMatch;
-        }
-
-        const date = new Date();
-        const offset = -date.getTimezoneOffset();
-        const hours = Math.floor(Math.abs(offset) / 60).toString().padStart(2, '0');
-        const minutes = (Math.abs(offset) % 60).toString().padStart(2, '0');
-        return `${offset >= 0 ? '+' : '-'}${hours}:${minutes}`;
-
-      } catch (error) {
-        console.error('Error getting system timezone:', error);
-        return null;
-      }
-    }
-
-    if ($dropdown.find('option').length > 0) {
-      const systemTimezone = getSystemTimezone($dropdown);
-      setTimezoneInDropdown($dropdown, systemTimezone);
-      return;
-    }
-
-    const response = await fetch(jsonPath);
-    const timezones = await response.json();
-
-    /**
-     * Extracts UTC offset from timezone label
-     * @param {string} label - The timezone label (e.g., "UTC+00:00 (Africa/Abidjan)")
-     * @returns {string} The UTC offset (e.g., "+00:00")
-     */
-    function extractUTCOffset(label) {
-      const match = label.match(/UTC([+-]\d{2}:\d{2})/);
-      return match ? match[1] : '';
-    }
-
-    $dropdown.empty();
-    timezones.forEach(timezone => {
-      $dropdown.append(
-        $('<option>', {
-          value: extractUTCOffset(timezone.label),
-          text: timezone.label
-        })
-      );
+  fundersDataPromise = fetch('json/funders.json')
+    .then(response => response.ok ? response.json() : [])
+    .then(data => {
+      window.fundersData = Array.isArray(data) ? data : [];
+      return window.fundersData;
+    })
+    .catch(() => {
+      window.fundersData = [];
+      return window.fundersData;
     });
 
-    /**
-     * Sets the dropdown value to the specified timezone option
-     * @param {jQuery} $select - The jQuery select element
-     * @param {string} timezoneName - The timezone name (e.g., "Europe/Berlin")
-     * @returns {boolean} True if timezone was set successfully
-     */
-    function setTimezoneInDropdown($select, timezoneName) {
-      if (!timezoneName) return false;
-
-      const allOptions = Array.from($select.find('option'));
-      const exactMatch = allOptions.find(option =>
-        option.text.includes(`(${timezoneName})`)
-      );
-
-      if (exactMatch) {
-        $select.find('option').prop('selected', false);
-        $(exactMatch).prop('selected', true);
-        return true;
-      }
-
-      const region = timezoneName.split('/')[0];
-      const regionMatch = allOptions.find(option =>
-        option.text.includes(`(${region}/`)
-      );
-
-      if (regionMatch) {
-        $select.find('option').prop('selected', false);
-        $(regionMatch).prop('selected', true);
-        return true;
-      }
-
-      return false;
-    }
-
-    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (browserTimezone) {
-      setTimezoneInDropdown($dropdown, browserTimezone);
-    }
-
-  } catch (error) {
-    console.error('Error initializing timezone dropdown:', error);
-  }
+  return fundersDataPromise;
 }
 
 /**
  * This script handles the setup and initialization of various dropdowns, event listeners, and autocomplete functions for the metadata editor.
  */
 
-// Dropdown helper functions exposed globally so tests can invoke them
-function setupResourceTypeDropdown() {
-  const select = $("#input-resourceinformation-resourcetype");
-  if (select.length === 0) return;
-
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
-
-  $.ajax({
-    url: "api/v2/vocabs/resourcetypes",
-    method: "GET",
-    dataType: "json",
-    success: function (data) {
-      select.empty();
-      addPlaceholder(select, true);
-
-      if (Array.isArray(data)) {
-        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-        const filteredData = filterDataByGEM(data, 'resourceType', isGEM);
-
-        filteredData.forEach(function (type) {
-          select.append(
-            $("<option>", {
-              value: type.id,
-              text: type.resource_type_general,
-              title: type.description,
-            })
-          );
-        });
-      }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error("Error loading resource types:", textStatus, errorThrown);
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Error loading data",
-        })
-      );
-    },
-    complete: function () {
-      select.prop('disabled', false).trigger("change");
-    },
-  });
-}
-
-function setupLanguageDropdown() {
-  const select = $("#input-resourceinformation-language");
-  if (select.length === 0) return;
-
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
-
-  $.ajax({
-    url: "api/v2/vocabs/languages",
-    method: "GET",
-    dataType: "json",
-    success: function (data) {
-      select.empty();
-      addPlaceholder(select, true);
-
-      if (Array.isArray(data)) {
-        const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-        const filteredData = filterDataByGEM(data, 'language', isGEM);
-
-        filteredData.forEach(function (lang) {
-          select.append(
-            $("<option>", {
-              value: lang.id,
-              text: lang.name,
-              title: lang.code,
-            })
-          );
-        });
-
-        // Pre-select English (code "en") as default
-        const englishOption = filteredData.find(lang => lang.code === 'en');
-        if (englishOption) {
-          select.val(englishOption.id);
-        }
-      }
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error("Error loading languages:", textStatus, errorThrown);
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Error loading data",
-        })
-      );
-    },
-    complete: function () {
-      select.prop('disabled', false);
-    },
-  });
-}
-
-function setupTitleTypeDropdown() {
-  const select = $("#input-resourceinformation-titletype");
-  if (select.length === 0) return;
-
-  select.prop('disabled', true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-    })
-  );
-
-  $.ajax({
-    url: "api/v2/vocabs/titletypes",
-    method: "GET",
-    dataType: "json",
-    success: function (data) {
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Choose...",
-          "data-translate": "general.choose",
-        })
-      );
-
-      let mainTitleId = "";
-      let alternativeTitleId = "";
-
-      if (Array.isArray(data)) {
-        data.forEach(function (type) {
-          const option = $("<option>", {
-            value: type.id,
-            text: type.name,
-          });
-
-          select.append(option);
-
-          if (type.name.toLowerCase() === "main title") {
-            mainTitleId = type.id.toString();
-          }
-          if (type.name.toLowerCase() === "alternative title") {
-            alternativeTitleId = type.id.toString();
-          }
-        });
-      }
-
-      if (mainTitleId) {
-        select.val(mainTitleId);
-        window.mainTitleTypeId = mainTitleId;
-      }
-      window.alternativeTitleTypeId = alternativeTitleId || "";
-
-      window.titleTypeOptionsHtml = select.html();
-    },
-    error: function (jqXHR, textStatus, errorThrown) {
-      console.error("Error loading title types:", textStatus, errorThrown);
-      select.empty().append(
-        $("<option>", {
-          value: "",
-          text: "Error loading data",
-        })
-      );
-    },
-    complete: function () {
-      select.prop('disabled', false);
-    },
-  });
-}
-
-/**
-* Populates the select field with ID input-rights-license with options created via an API call.
-* @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
-*/
-function setupLicenseDropdown(isSoftware) {
-  const $select = $("#input-rights-license"); // Defined as $select for consistency
-  const top_licenseId = "CC-BY-4.0"; //Should be the first
-  const copyleftLicenses = ['GPL-3.0-or-later', 'EUPL-1.2']; // Should be the last
-
-  // 1. Determine the endpoint FIRST
-  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-
-  // Loading state
-  $select.prop("disabled", true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-      "data-translate": "general.loading",
-    })
-  );
-
-  // 2. Start the API call
-  $.getJSON(`./api/v2/${endpoint}`, function (data) {
-    let processedLicenses = [];
-
-    // Prepare the options for the dropdown menu
-    if (!isSoftware) {
-      // Non-software
-      processedLicenses = data
-        .filter(item => item.forSoftware === "0") // Only non-software
-        .sort((a, b) => {
-          // Custom Priority: If it's our target ID, move it to the top (-1)
-          if (a.rightsIdentifier === top_licenseId) return -1;
-          if (b.rightsIdentifier === top_licenseId) return 1;
-
-          // Otherwise: Standard alphabetical sort
-          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-        });
-    } else {
-      // Software
-      processedLicenses = data
-        .filter(item => item.forSoftware === "1") // Only software licenses
-        .sort((a, b) => {
-          const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
-          const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
-          
-          if (aIsCopyleft !== bIsCopyleft) {
-            return aIsCopyleft ? 1 : -1; // Non-copyleft first
-          }
-          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-        });
-    }
-    // Clear existing options
-    $select.empty()
-
-    // Include them into the dropdown
-    processedLicenses.forEach(license => {
-      const option = $("<option>", {
-        value: license.rights_id,
-        text: `${license.text} (${license.rightsIdentifier})`,
-        title: license.description || license.text
-      });
-
-      if (license.rightsIdentifier === "CC-BY-4.0") {
-        option.prop("selected", true);
-      }
-
-      $select.append(option);
-    });
-
-    $select.prop("disabled", false).trigger("change");
-
-  }).fail(function (jqXHR, textStatus, errorThrown) {
-    // Fallback: use CC-BY-4.0 (rights_id=1) if API call fails
-    console.error("Error loading licenses:", textStatus, errorThrown);
-    $select.empty().append(
-      $("<option>", {
-        value: "1",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true
-      })
-    );
-
-    $select.prop("disabled", false).trigger("change");
-  });
-}
-
-/**
- * Adds a "Choose..." placeholder option to a dropdown
- * For ICGEM-specific dropdowns, skips placeholder when ICGEM mode is enabled
- * @param {jQuery} $select - The jQuery select element
- * @param {boolean} isGEMDropdown - Whether this is a ICGEM-specific dropdown (skips placeholder if ICGEM enabled)
- */
-function addPlaceholder($select, isGEMDropdown = false) {
-  const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-  
-  // For GEM dropdowns, don't add placeholder when GEM is enabled. For others, always add.
-  if (isGEMDropdown && isGEM) return;
-  
-  // Use translated text if translations are already loaded, otherwise fall back to English
-  const translatedText = window.elmo?.translate?.('general.choose') || 'Choose...';
-  
-  $select.append(
-    $("<option>", { value: "", text: translatedText, "data-translate": "general.choose" })
-  );
-}
-
-/**
- * Updates all placeholder options in dropdown selects with the current translation.
- * Called when translations are loaded or changed to fix race condition between
- * dropdown initialization and translation loading.
- */
-function updateDropdownPlaceholders() {
-  const translatedText = window.elmo?.translate?.('general.choose');
-  if (!translatedText) return;
-  
-  $('option[data-translate="general.choose"]').each(function () {
-    $(this).text(translatedText);
-  });
-}
-
-/**
- * Filters data based on GEM feature flag
- * @param {Array} data - Array of data objects to filter
- * @param {string} type - Type of filter: "resourceType" or "language"
- * @param {boolean} isGEM - Whether ICGEM mode is enabled (see showGGMsProperties flag)
- * @returns {Array} Filtered data array
- */
-function filterDataByGEM(data, type, isGEM) {
-  if (!isGEM || !Array.isArray(data)) {
-    return data;
-  }
-
-  switch (type) {
-    case 'resourceType':
-      return data.filter(item => item.resource_type_general === "Dataset");
-    case 'language':
-      return data.filter(item => item.name === "English");
-    default:
-      return data;
-  }
-}
-
-// Make functions available globally (important for tests)
-window.setupLicenseDropdown = setupLicenseDropdown;
-window.setupLanguageDropdown = setupLanguageDropdown;
-window.setupResourceTypeDropdown = setupResourceTypeDropdown;
-window.setupTitleTypeDropdown = setupTitleTypeDropdown;
-
 /**
  * Initializes all dropdowns in parallel for faster page load.
- * Uses Promise.all to fetch all data simultaneously instead of sequentially.
- * Falls back to sequential initialization if fetch API is not available (e.g., in test environment).
- * @async
- * @returns {Promise<void>}
  */
 async function initializeAllDropdownsParallel() {
-  // Check if fetch is available (not available in some test environments)
   if (typeof fetch !== 'function') {
-    // Fallback to sequential initialization
-    initializeTimezoneDropdown();
-    setupResourceTypeDropdown();
-    setupLanguageDropdown();
-    setupTitleTypeDropdown();
-    return;
+    return dropdownAjax.runSequentialFallback();
   }
 
-  // Show loading state for all dropdowns immediately
   const dropdownSelectors = {
     resourceType: $("#input-resourceinformation-resourcetype"),
     language: $("#input-resourceinformation-language"),
@@ -490,7 +77,7 @@ async function initializeAllDropdownsParallel() {
     identifierType: $("#input-relatedwork-identifiertype")
   };
 
-  // Set loading state for existing dropdowns
+  // Set loading state
   Object.values(dropdownSelectors).forEach($el => {
     if ($el.length) {
       $el.prop('disabled', true).empty().append(
@@ -499,81 +86,67 @@ async function initializeAllDropdownsParallel() {
     }
   });
 
-  // Define all fetch operations
+  // Define the operations. Note that we want failures to actually reject 
+  // so we can identify them in the results.
   const fetchOperations = {
-    timezones: fetch('json/timezones.json')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    resourceTypes: fetch('api/v2/vocabs/resourcetypes')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    languages: fetch('api/v2/vocabs/languages')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    titleTypes: fetch('api/v2/vocabs/titletypes')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    licenses: fetch('api/v2/vocabs/licenses/all')
-      .then(r => r.ok ? r.json() : [])
-      .catch(() => []),
-    
-    relations: fetch('api/v2/vocabs/relations')
-      .then(r => r.ok ? r.json() : { relations: [] })
-      .catch(() => ({ relations: [] })),
-    
-    identifierTypes: fetch('api/v2/validation/identifiertypes/active')
-      .then(r => r.ok ? r.json() : { identifierTypes: [] })
-      .catch(() => ({ identifierTypes: [] })),
-    
-    funders: (window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR')
-      ? Promise.resolve([])
-      : fetch('json/funders.json')
-        .then(r => r.ok ? r.json() : [])
-        .catch(() => [])
+    timezones: fetch('json/timezones.json').then(r => r.ok ? r.json() : Promise.reject()),
+    resourceTypes: fetch('api/v2/vocabs/resourcetypes').then(r => r.ok ? r.json() : Promise.reject()),
+    languages: fetch('api/v2/vocabs/languages').then(r => r.ok ? r.json() : Promise.reject()),
+    titleTypes: fetch('api/v2/vocabs/titletypes').then(r => r.ok ? r.json() : Promise.reject()),
+    licenses: fetch('api/v2/vocabs/licenses/all').then(r => r.ok ? r.json() : Promise.reject()),
+    relations: fetch('api/v2/vocabs/relations').then(r => r.ok ? r.json() : { relations: [] }),
+    identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] })
   };
 
-  try {
-    // Execute all fetches in parallel
-    const results = await Promise.all(
-      Object.entries(fetchOperations).map(async ([key, promise]) => {
-        const data = await promise;
-        return [key, data];
-      })
-    );
+  // We convert the dictionary into an array of entries: [[key, promise], [key, promise]...]
+  const keys = Object.keys(fetchOperations);
+  const promises = Object.values(fetchOperations);
 
-    // Convert results array to object
-    const data = Object.fromEntries(results);
+  // Promise.allSettled will NEVER reject. It always resolves once everything is done.
+  const results = await Promise.allSettled(promises);
 
-    // Populate all dropdowns with fetched data
-    populateTimezoneDropdownWithData(data.timezones);
-    populateResourceTypeDropdownWithData(data.resourceTypes);
-    populateLanguageDropdownWithData(data.languages);
-    populateTitleTypeDropdownWithData(data.titleTypes);
-    populateLicenseDropdownWithData(data.licenses);
-    populateRelationsDropdownWithData(data.relations);
-    populateIdentifierTypesDropdownWithData(data.identifierTypes);
-    
-    // Store funders data globally and initialize autocomplete
-    window.fundersData = data.funders;
-    $(".inputFunder").each(function () {
-      window.setUpAutocompleteFunder(this);
-    });
+  // We map the settled results back to our keys
+  const data = {};
+  const failures = [];
 
-    // Dispatch event to signal dropdowns are ready
-    document.dispatchEvent(new CustomEvent('dropdownsReady'));
-    
-  } catch (error) {
-    console.error('Error initializing dropdowns in parallel:', error);
-    // Fallback: try individual initialization
-    initializeTimezoneDropdown();
-    setupResourceTypeDropdown();
-    setupLanguageDropdown();
-    setupTitleTypeDropdown();
-  }
+  results.forEach((result, index) => {
+    const key = keys[index];
+    if (result.status === 'fulfilled') {
+      data[key] = result.value;
+    } else {
+      // Keep track of exactly which key failed
+      failures.push(key);
+      console.warn(`Failed to fetch ${key} in parallel. Will use fallback.`);
+    }
+  });
+
+  // --- POPULATE SUCCESSFUL DROPDOWNS ---
+  if ('timezones' in data) populateTimezoneDropdownWithData(data.timezones);
+  if ('resourceTypes' in data) populateResourceTypeDropdownWithData(data.resourceTypes);
+  if ('languages' in data) populateLanguageDropdownWithData(data.languages);
+  if ('titleTypes' in data) populateTitleTypeDropdownWithData(data.titleTypes);
+  if ('licenses' in data) populateLicenseDropdownWithData(data.licenses);
+  if ('relations' in data) populateRelationsDropdownWithData(data.relations);
+  if ('identifierTypes' in data) populateIdentifierTypesDropdownWithData(data.identifierTypes);
+
+  // --- TARGETED FALLBACKS ---
+  // Only trigger the sequential AJAX fallbacks for the ones that actually failed!
+  if (failures.includes('timezones')) dropdownAjax.setupTimezoneDropdownAjax();
+  if (failures.includes('resourceTypes')) dropdownAjax.setupResourceTypeDropdownAjax();
+  if (failures.includes('languages')) dropdownAjax.setupLanguageDropdownAjax();
+  if (failures.includes('titleTypes')) dropdownAjax.setupTitleTypeDropdownAjax();
+  
+  // If licenses/relations/identifiers failed and don't have fallbacks,
+  // we can at least restore their disabled state so they aren't stuck on "Loading..."
+  failures.forEach(key => {
+    if (dropdownSelectors[key]) {
+      dropdownSelectors[key].prop('disabled', false).empty().append(
+        $("<option>", { value: "", text: "Error loading options" })
+      );
+    }
+  });
+
+  document.dispatchEvent(new CustomEvent('dropdownsReady'));
 }
 
 /**
@@ -622,12 +195,14 @@ function populateResourceTypeDropdownWithData(types) {
   $select.empty();
   
   // Handle placeholder logic
-  addPlaceholder($select, true);
+  dropdownAjax.addPlaceholder($select, true);
   
   if (Array.isArray(types)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = filterDataByGEM(types, 'resourceType', isGEM);
+    const filteredData = typeof dropdownUtils.filterDataByGEM === 'function'
+      ? dropdownUtils.filterDataByGEM(types, 'resourceType', isGEM)
+      : types;
     
     filteredData.forEach(type => {
       $select.append(
@@ -654,12 +229,14 @@ function populateLanguageDropdownWithData(languages) {
   $select.empty();
   
   // Handle placeholder logic
-  addPlaceholder($select, true);
+  dropdownAjax.addPlaceholder($select, true);
   
   if (Array.isArray(languages)) {
     // Filter data based on GEM flag
     const isGEM = window.ELMO_FEATURES?.showGGMsProperties;
-    const filteredData = filterDataByGEM(languages, 'language', isGEM);
+    const filteredData = typeof dropdownUtils.filterDataByGEM === 'function'
+      ? dropdownUtils.filterDataByGEM(languages, 'language', isGEM)
+      : languages;
     
     filteredData.forEach(lang => {
       $select.append(
@@ -689,7 +266,7 @@ function populateTitleTypeDropdownWithData(types) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   let mainTitleId = "";
   let alternativeTitleId = "";
@@ -761,7 +338,7 @@ function populateRelationsDropdownWithData(response) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   if (response && response.relations && response.relations.length > 0) {
     response.relations
@@ -788,7 +365,7 @@ function populateIdentifierTypesDropdownWithData(response) {
   if (!$select.length) return;
 
   $select.empty();
-  addPlaceholder($select);
+  dropdownAjax.addPlaceholder($select);
 
   if (response && response.identifierTypes) {
     response.identifierTypes.forEach(type => {
@@ -808,12 +385,20 @@ function populateIdentifierTypesDropdownWithData(response) {
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
 
+function startInitialDropdownPopulation() {
+  window.elmo = window.elmo || {};
+  window.elmo.dropdownsReady = initializeAllDropdownsParallel();
+  return window.elmo.dropdownsReady;
+}
+
 // Update dropdown placeholders when translations are loaded or changed
-document.addEventListener('translationsLoaded', updateDropdownPlaceholders);
+if (typeof dropdownUtils.updateDropdownPlaceholders === 'function') {
+  document.addEventListener('translationsLoaded', dropdownUtils.updateDropdownPlaceholders);
+}
 
 $(document).ready(function () {
   // Use parallel initialization for faster page load
-  initializeAllDropdownsParallel();
+  startInitialDropdownPopulation();
   
   // Event handler to monitor if the resource type is changed
   // Only reload licenses when user actually selects a resource type (not on initial load)
@@ -842,6 +427,10 @@ $(document).ready(function () {
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   window.setUpAutocompleteFunder = function (inputElement) {
+    if (!inputElement || $(inputElement).data('ui-autocomplete')) {
+      return;
+    }
+
     const isRorMode = window.ELMO_FEATURES && window.ELMO_FEATURES.funderPidMode === 'ROR';
 
     if (isRorMode) {
@@ -851,18 +440,25 @@ $(document).ready(function () {
     }
   };
 
+  $(".inputFunder").each(function () {
+    window.setUpAutocompleteFunder(this);
+  });
+
   /**
    * Sets up funder autocomplete using local Crossref Funder Registry data.
    * @param {HTMLElement} inputElement - The input element to attach autocomplete to.
    */
   function setUpAutocompleteFunderCfid(inputElement) {
-    // Use globally stored fundersData from parallel load
-    const fundersData = window.fundersData || [];
+    const $input = $(inputElement);
     let searchTimeout;
     const MAX_RESULTS = 30; // Limit dropdown results
     const MIN_LENGTH = 2; // Minimum characters before search
-    
-    $(inputElement)
+
+    $input.one('focus.funder-data', () => {
+      loadFundersData();
+    });
+
+    $input
       .autocomplete({
         source: function (request, response) {
           // Cancel previous search if still pending
@@ -874,35 +470,47 @@ $(document).ready(function () {
             return;
           }
           
-          // Debounce search: wait 300ms before executing
+          // Debounce search before filtering the shared lazy-loaded data.
           searchTimeout = setTimeout(() => {
-            // Search at start of name first (more specific), then anywhere
-            const searchTerm = $.ui.autocomplete.escapeRegex(request.term).toLowerCase();
-            const results = [];
-            
-            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
-              const itemName = fundersData[i].name.toLowerCase();
-              
-              // Prioritize matches at the start of the name
-              if (itemName.indexOf(searchTerm) === 0) {
-                results.push(fundersData[i]);
+            loadFundersData().then(fundersData => {
+              // Search at start of name first (more specific), then anywhere
+              const searchTerm = $.ui.autocomplete.escapeRegex(request.term).toLowerCase();
+              const results = [];
+
+              for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+                const funder = fundersData[i];
+                if (!funder || typeof funder.name !== 'string') {
+                  continue;
+                }
+
+                const itemName = funder.name.toLowerCase();
+
+                // Prioritize matches at the start of the name
+                if (itemName.indexOf(searchTerm) === 0) {
+                  results.push(funder);
+                }
               }
-            }
-            
-          // If we need more results, search anywhere in the name
-          if (results.length < MAX_RESULTS) {
-            for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
-              const itemName = fundersData[i].name.toLowerCase();
-              
-              // Check if this funder is NOT already in the results array
-              // AND Check if searchTerm exists anywhere in the funder name
-              if (results.indexOf(fundersData[i]) === -1 && itemName.indexOf(searchTerm) !== -1) {
-                results.push(fundersData[i]);
+
+              // If we need more results, search anywhere in the name
+              if (results.length < MAX_RESULTS) {
+                for (let i = 0; i < fundersData.length && results.length < MAX_RESULTS; i++) {
+                  const funder = fundersData[i];
+                  if (!funder || typeof funder.name !== 'string') {
+                    continue;
+                  }
+
+                  const itemName = funder.name.toLowerCase();
+
+                  // Check if this funder is NOT already in the results array
+                  // AND Check if searchTerm exists anywhere in the funder name
+                  if (results.indexOf(funder) === -1 && itemName.indexOf(searchTerm) !== -1) {
+                    results.push(funder);
+                  }
+                }
               }
-            }
-          }
-            
-            response(results);
+
+              response(results);
+            });
           }, 200); // 200ms debounce
         },
         minLength: MIN_LENGTH,
@@ -1215,12 +823,15 @@ $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    initializeTimezoneDropdown,
+    setupTimezoneDropdownAjax: dropdownAjax.setupTimezoneDropdownAjax,
     initializeAllDropdownsParallel,
-    setupResourceTypeDropdown,
-    setupLanguageDropdown,
-    setupTitleTypeDropdown,
+    startInitialDropdownPopulation,
+    setupResourceTypeDropdownAjax: dropdownAjax.setupResourceTypeDropdownAjax,
+    setupLanguageDropdownAjax: dropdownAjax.setupLanguageDropdownAjax,
+    setupTitleTypeDropdownAjax: dropdownAjax.setupTitleTypeDropdownAjax,
+    setupLicenseDropdown: dropdownAjax.setupLicenseDropdown,
     setupIdentifierTypesDropdown,
+    runSequentialFallback: dropdownAjax.runSequentialFallback,
     populateTimezoneDropdownWithData,
     populateResourceTypeDropdownWithData,
     populateLanguageDropdownWithData,
@@ -1228,13 +839,14 @@ if (typeof module !== 'undefined' && module.exports) {
     populateLicenseDropdownWithData,
     populateRelationsDropdownWithData,
     populateIdentifierTypesDropdownWithData,
-    addPlaceholder,
-    updateDropdownPlaceholders,
-    filterDataByGEM,
+    addPlaceholder: dropdownAjax.addPlaceholder,
+    updateDropdownPlaceholders: dropdownUtils.updateDropdownPlaceholders,
+    filterDataByGEM: dropdownUtils.filterDataByGEM,
     getIdentifierPriority,
     updateIdentifierType,
     debounce,
     updateIdsAndNames,
-    updateDataSourceIdsAndNames
+    updateDataSourceIdsAndNames,
+    loadFundersData
   };
 }

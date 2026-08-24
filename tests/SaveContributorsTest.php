@@ -199,8 +199,8 @@ final class SaveContributorsTest extends DatabaseTestCase
     }
 
     /**
-     * Test saving incomplete contributor person and institution
-     * Verifies that incomplete records are not saved
+     * Test submitting incomplete contributor person and institution
+     * Verifies that incomplete records are not saved during strict submission
      *
      * @return void
      */
@@ -219,9 +219,10 @@ final class SaveContributorsTest extends DatabaseTestCase
         $resource_id = saveResourceInformationAndRights($this->connection, $resourceData);
 
         $postData = [
+            "action" => "submit",
             "cbPersonLastname" => [""],
             "cbPersonFirstname" => ["John"],
-            "cbORCID" => ["0000-0001-2345-6789"],
+            "cbORCID" => [""],
             "cbAffiliation" => ['[{"value":"Test University"}]'],
             "cbpRorIds" => ['[{"value":"https://ror.org/03yrm5c26"}]'],
             "cbPersonRoles" => [["Data Collector"]],

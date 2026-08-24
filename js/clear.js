@@ -167,7 +167,7 @@ function clearInputFields() {
     // === GGMs Data Sources ===
     $('#group-datasources .row[data-source-row]').not(':first').remove();
     const $firstDsRow = $('#group-datasources .row[data-source-row]:first');
-    // .trigger('change') fires the delegated handler in ggms-datasources.js (updateRowState),
+    // .trigger('change') fires the delegated handler in ggmsDatasources.js (updateRowState),
     // which restores satellite-field visibility and hides identifier cols for type S.
     $firstDsRow.find('select[name="datasource_type[]"]').val('S').trigger('change');
     $firstDsRow.find('select[name="datasource_details[]"]').prop('selectedIndex', 0);

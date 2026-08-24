@@ -4,44 +4,19 @@
  * @module feedback
  */
 
+import {
+  fetchAndStoreCsrfToken,
+  startInteraction,
+  INTERACTION_SCOPES,
+} from '../../services/csrfTokenService.js';
+
 $(document).ready(function () {
-  /**
-   * Event handler for the "Send Feedback" button click.
-   * Collects feedback data and sends it via AJAX to the server.
-   */
   const feedbackForm = $("#form-feedback");
   const sendButton = $("#button-feedback-send");
   const statusPanel = $("#panel-feedback-status");
   const thankYouMessage = $("#panel-feedback-message");
-  const timeSpentField = $("#input-feedback-time-spent");
   const csrfTokenField = $("#input-feedback-csrf-token");
 
-  // Track when the modal was opened for minimum time validation
-  let modalOpenedAt = null;
-
-  /**
-   * Fetches a CSRF token from the server for form protection.
-   * @returns {Promise<string>} The CSRF token
-   */
-  async function fetchCsrfToken() {
-    try {
-      const response = await fetch('api/csrf_token.php');
-      const data = await response.json();
-      return data.token || '';
-    } catch (error) {
-      console.error('Failed to fetch CSRF token:', error);
-      return '';
-    }
-  }
-
-  /**
-   * Applies or removes a boolean attribute while ensuring an empty string value for accessibility checks.
-   *
-   * @param {JQuery} $elements - The jQuery collection to update.
-   * @param {string} attributeName - The boolean attribute that should be toggled.
-   * @param {boolean} isActive - Whether the attribute should be present (true) or removed (false).
-   * @returns {JQuery} The original jQuery collection for chaining.
-   */
   function applyBooleanAttribute($elements, attributeName, isActive) {
     $elements.each((_, element) => {
       if (isActive) {
@@ -54,38 +29,31 @@ $(document).ready(function () {
     return $elements;
   }
 
-  sendButton.click(function (event) {
+  sendButton.click(async function (event) {
     event.preventDefault();
 
-    // Calculate time spent filling the form (in seconds)
-    if (modalOpenedAt) {
-      const timeSpent = Math.floor((Date.now() - modalOpenedAt) / 1000);
-      timeSpentField.val(timeSpent);
-    }
-
-    // Form and data setup
-    const feedbackData = feedbackForm.serialize();
-
-    // Disable the button and show a loading spinner
     sendButton
       .prop("disabled", true)
       .attr("aria-busy", "true")
       .html(
         '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ' +
-        getNestedValue(translations, 'modals.feedback.sending') // localized "sending..."
+        getNestedValue(translations, 'modals.feedback.sending')
       );
 
     feedbackForm.attr("aria-busy", "true");
     applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
     applyBooleanAttribute(statusPanel, "hidden", true);
 
-    // Send AJAX POST request
+    const token = await fetchAndStoreCsrfToken('feedback');
+    csrfTokenField.val(token);
+
+    const feedbackData = feedbackForm.serialize();
+
     $.ajax({
-      url: "send_feedback_mail.php",
+      url: "endpoints/send_feedback_mail.php",
       type: "POST",
       data: feedbackData,
       success: function () {
-        // Hide the form and show success message
         feedbackForm.hide().attr("aria-hidden", "true").attr("aria-busy", "false");
         sendButton.attr("aria-busy", "false");
         applyBooleanAttribute(thankYouMessage, "hidden", false)
@@ -103,7 +71,6 @@ $(document).ready(function () {
           );
       },
       error: function (xhr, status, error) {
-        // Try to parse JSON error response
         let errorMessage = error;
         try {
           const response = JSON.parse(xhr.responseText);
@@ -113,8 +80,7 @@ $(document).ready(function () {
         } catch (e) {
           // Use default error message
         }
-        
-        // Show error message and re-enable send button
+
         applyBooleanAttribute(statusPanel, "hidden", false)
           .attr("role", "alert")
           .attr("aria-live", "assertive")
@@ -130,8 +96,7 @@ $(document).ready(function () {
           .html(getNestedValue(translations, 'modals.feedback.sendButton'))
           .trigger("focus");
         feedbackForm.attr({ "aria-busy": "false", "aria-hidden": "false" });
-        thankYouMessage
-          .hide();
+        thankYouMessage.hide();
         applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
       },
       complete: function () {
@@ -141,23 +106,15 @@ $(document).ready(function () {
 
   $('#modal-feedback')
     .on('show.bs.modal', async function () {
-      // Record when modal was opened for time-spent calculation
-      modalOpenedAt = Date.now();
-      
-      // Fetch fresh CSRF token
-      const token = await fetchCsrfToken();
-      csrfTokenField.val(token);
-      
+      await startInteraction(INTERACTION_SCOPES.feedback);
+
       feedbackForm[0].reset();
-      // Reset time spent field after form reset
-      timeSpentField.val('0');
-      csrfTokenField.val(token);
-      
+      csrfTokenField.val('');
+
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });
       thankYouMessage.hide();
       applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
-      statusPanel
-        .empty();
+      statusPanel.empty();
       applyBooleanAttribute(statusPanel, "hidden", true)
         .removeAttr("role")
         .attr("aria-live", "polite")

@@ -182,7 +182,7 @@ async function getTitleTypeMapping() {
       _titleTypeMappingCache['MainTitle'] = main.id.toString();
     }
   } catch {
-    _titleTypeMappingCache = { '': '1', MainTitle: '1', AlternativeTitle: '2', TranslatedTitle: '3' };
+    _titleTypeMappingCache = { '': '', MainTitle: '', AlternativeTitle: '', TranslatedTitle: '' };
   }
   return _titleTypeMappingCache;
 }
@@ -217,9 +217,14 @@ function normalizeRelationType(relationType) {
   return (relationType || '').replace(/([a-z])([A-Z])/g, '$1 $2');
 }
 
+// Shared by XML upload and DOI prefill in the browser and in Jest.
+var resourceTypeUtils = typeof module !== 'undefined' && module.exports
+  ? require('./resourceTypeUtils')
+  : window.resourceTypeUtils;
+
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
-  return mapping[key] || mapping[''] || '1';
+  return mapping[key] ?? mapping[''] ?? '';
 }
 
 /* ================================================================== */
@@ -245,7 +250,10 @@ function prefillResourceInfo(attr) {
   if (attr.types?.resourceTypeGeneral) {
     const selectField = document.querySelector('#input-resourceinformation-resourcetype');
     if (selectField) {
-      const opt = Array.from(selectField.options).find(o => o.text.trim() === attr.types.resourceTypeGeneral);
+      const opt = resourceTypeUtils.findResourceTypeOption(
+        Array.from(selectField.options),
+        attr.types.resourceTypeGeneral
+      );
       if (opt) opt.selected = true;
     }
   }
@@ -992,6 +1000,8 @@ if (typeof module !== 'undefined' && module.exports) {
     decodeHtmlEntities,
     normalizeRole,
     normalizeRelationType,
+    normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
+    findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
     mapTitleTypeFromJson,
     prefillResourceInfo,
     prefillLanguage,

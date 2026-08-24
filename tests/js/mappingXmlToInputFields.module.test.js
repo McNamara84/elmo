@@ -4,6 +4,16 @@
  * Tests for mappingXmlToInputFields.js using require() for proper coverage tracking
  */
 
+const {
+    getDataCite47ResourceTypes,
+    toSpacedResourceTypeLabel
+} = require('./utils/dataciteResourceTypes');
+
+const DATACITE_47_RESOURCE_TYPES = getDataCite47ResourceTypes();
+const DATACITE_47_SPACED_RESOURCE_TYPES = DATACITE_47_RESOURCE_TYPES
+    .map(resourceType => [resourceType, toSpacedResourceTypeLabel(resourceType)])
+    .filter(([resourceType, label]) => resourceType !== label);
+
 describe('mappingXmlToInputFields module coverage', () => {
     let mappingModule;
     let $;
@@ -106,6 +116,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(typeof mappingModule.processResourceType).toBe('function');
         });
 
+        test('exports resource type normalizer and option matcher', () => {
+            expect(typeof mappingModule.normalizeResourceTypeGeneral).toBe('function');
+            expect(typeof mappingModule.findResourceTypeOption).toBe('function');
+        });
+
         test('exports extractLicenseIdentifier function', () => {
             expect(typeof mappingModule.extractLicenseIdentifier).toBe('function');
         });
@@ -189,17 +204,17 @@ describe('mappingXmlToInputFields module coverage', () => {
 
         test('uses default mapping when empty mapping provided', () => {
             const result = mappingModule.mapTitleType('MainTitle', {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('handles empty string input', () => {
             const result = mappingModule.mapTitleType('', {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('handles undefined input', () => {
             const result = mappingModule.mapTitleType(undefined, {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('normalizes spaces in title type', () => {
@@ -632,6 +647,76 @@ describe('mappingXmlToInputFields module coverage', () => {
             const select = document.querySelector('#input-resourceinformation-resourcetype');
             expect(select.options[0].selected).toBe(true);
         });
+
+        test.each(DATACITE_47_SPACED_RESOURCE_TYPES)(
+            'maps DataCite 4.7 value %s to spaced ERNIE label %s',
+            (resourceTypeGeneral, optionLabel) => {
+                const select = document.querySelector('#input-resourceinformation-resourcetype');
+                select.innerHTML = '<option value="resource-type">' + optionLabel + '</option>';
+                select.selectedIndex = -1;
+
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(
+                    '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                        + '<ns:resourceType resourceTypeGeneral="' + resourceTypeGeneral + '">'
+                        + optionLabel
+                        + '</ns:resourceType></ns:resource>',
+                    'text/xml'
+                );
+
+                mappingModule.processResourceType(xmlDoc, nsResolver);
+
+                expect(select.value).toBe('resource-type');
+            }
+        );
+
+        test.each(DATACITE_47_RESOURCE_TYPES)(
+            'keeps canonical DataCite 4.7 value %s unchanged during matching',
+            resourceTypeGeneral => {
+                expect(mappingModule.normalizeResourceTypeGeneral(resourceTypeGeneral))
+                    .toBe(resourceTypeGeneral);
+            }
+        );
+
+        test('prefers an exact canonical label over a whitespace-normalized label', () => {
+            const select = document.querySelector('#input-resourceinformation-resourcetype');
+            select.innerHTML = [
+                '<option value="spaced">Computational Notebook</option>',
+                '<option value="canonical">ComputationalNotebook</option>'
+            ].join('');
+            select.selectedIndex = -1;
+
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                    + '<ns:resourceType resourceTypeGeneral="ComputationalNotebook">'
+                    + 'Computational Notebook</ns:resourceType></ns:resource>',
+                'text/xml'
+            );
+
+            mappingModule.processResourceType(xmlDoc, nsResolver);
+
+            expect(select.value).toBe('canonical');
+        });
+
+        test('keeps the current option when an official DataCite type is unavailable', () => {
+            const select = document.querySelector('#input-resourceinformation-resourcetype');
+            select.innerHTML = '<option value="software">Software</option>';
+            const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(
+                '<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">'
+                    + '<ns:resourceType resourceTypeGeneral="Dataset">Dataset</ns:resourceType>'
+                    + '</ns:resource>',
+                'text/xml'
+            );
+
+            mappingModule.processResourceType(xmlDoc, nsResolver);
+
+            expect(select.value).toBe('software');
+            expect(warn).toHaveBeenCalledWith('No matching option found for text: Dataset');
+        });
     });
 
     describe('getNodeText', () => {
@@ -698,6 +783,152 @@ describe('mappingXmlToInputFields module coverage', () => {
             const element = { 0: { _tagify: mockTagify } };
             
             expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
+        });
+    });
+
+    describe('processKeywords', () => {
+        const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+
+        test('routes free keywords to the free keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+        `;
+
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject>Test Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(freeTagify.removeAllTags).toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Test Keyword' })
+            ]);
+        });
+
+        test('routes MSL keywords to the MSL keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-mslkeyword">
+        `;
+
+            const mslTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-mslkeyword')._tagify = mslTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://epos-msl.uu.nl/voc/laboratories/123">msl Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(mslTagify.removeAllTags).toHaveBeenCalled();
+            expect(mslTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'msl Keyword' })
+            ]);
+        });
+
+        test('routes GCMD science keywords to the science keyword field', () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
+        });
+
+        test('routes chronostrat keywords to the chronostratigraphy field', () => {
+            document.body.innerHTML = `
+            <input id="input-chronostratigraphy">
+        `;
+
+            const chronostratTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-chronostratigraphy')._tagify = chronostratTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="http://resource.geosciml.org/vocabulary/timescale/gts2020">one > two > chronostratigraphy</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(chronostratTagify.removeAllTags).toHaveBeenCalled();
+            expect(chronostratTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'one > two > chronostratigraphy' })
+            ]);
+        });
+
+        test('ignores keywords when the target field is not available', () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+        `;
+
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn()
+            };
+
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                    <ns:subject>Custom Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(freeTagify.removeAllTags).toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledTimes(1);
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Custom Keyword' })
+            ]);
         });
     });
 });

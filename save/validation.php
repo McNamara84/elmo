@@ -12,6 +12,7 @@ function validateRequiredFields($postData, $requiredFields = [], $requiredArrayF
     // Check regular fields
     foreach ($requiredFields as $field) {
         if (!isset($postData[$field]) || $postData[$field] === '' || $postData[$field] === null) {
+            error_log("[SAVE] Validation failed: Required field '$field' is missing or empty.");
             return false;
         }
     }
@@ -19,6 +20,7 @@ function validateRequiredFields($postData, $requiredFields = [], $requiredArrayF
     // Check array fields
     foreach ($requiredArrayFields as $field) {
         if (!isset($postData[$field]) || !is_array($postData[$field]) || empty($postData[$field])) {
+            error_log("[SAVE] Validation failed: Required array field '$field' is missing, not an array, or empty.");
             return false;
         }
     }
@@ -42,6 +44,7 @@ function validateArrayDependencies($data, $dependencies)
 
         // Check if primary field exists and is array
         if (!isset($data[$primaryField]) || !is_array($data[$primaryField])) {
+            error_log("[SAVE] Validation failed: Primary field '$primaryField' for array dependency check is missing or not an array.");
             return false;
         }
 
@@ -62,6 +65,7 @@ function validateArrayDependencies($data, $dependencies)
 
             // Check if corresponding dependent value exists
             if (!isset($data[$dependentField][$i]) || empty($data[$dependentField][$i])) {
+                error_log("[SAVE] Validation failed: Dependent field '$dependentField' at index $i is missing or empty for primary field '$primaryField'.");
                 return false;
             }
         }
@@ -91,10 +95,10 @@ function validateContributorPersonDependencies($entry)
         $entry['roles'] = json_decode($entry['roles'], true);
     }
 
-    // If any field is filled, check if required fields (lastname, firstname, and roles) are filled
+    // If any field is filled, ensure lastname and roles are also filled
     if (!empty($entry['firstname']) || !empty($entry['lastname']) || !empty($entry['roles'])) {
-        // Ensure lastname and roles are filled if any of the relevant fields is filled
         if (empty($entry['lastname']) || empty($entry['roles']) || !is_array($entry['roles']) || count($entry['roles']) == 0) {
+            error_log("[SAVE] Contributor person validation failed: lastname and roles are required if any personal information is provided. Entry: " . json_encode($entry));
             return false;
         }
     }
@@ -118,6 +122,7 @@ function validateContributorInstitutionDependencies($entry)
 
     // Both name and roles are required if any is filled
     if (empty($entry['name']) || empty($entry['roles'])) {
+        error_log("[SAVE] Contributor institution validation failed: name and roles are required if one is provided. Entry: " . json_encode($entry));
         return false;
     }
 
@@ -134,6 +139,7 @@ function isValidOrcidChecksum(string $orcid): bool
 {
     $digits = str_replace('-', '', $orcid);
     if (strlen($digits) !== 16 || !preg_match('/^\d{15}[\dX]$/', $digits)) {
+        error_log("[SAVE] ORCID validation failed: Invalid format or length for ORCID '$orcid'.");
         return false;
     }
 
@@ -145,7 +151,12 @@ function isValidOrcidChecksum(string $orcid): bool
     $checkDigit = (12 - $remainder) % 11;
     $expectedChar = $checkDigit === 10 ? 'X' : strval($checkDigit);
 
-    return $digits[15] === $expectedChar;
+    if ($digits[15] !== $expectedChar) {
+        error_log("[SAVE] ORCID validation failed: Invalid checksum for ORCID '$orcid'.");
+        return false;
+    }
+
+    return true;
 }
 
 /**
@@ -158,15 +169,18 @@ function isValidOrcidChecksum(string $orcid): bool
 function validateKeywordEntries($keywordData, $requiredFields = ['value'])
 {
     if (!is_array($keywordData)) {
+        error_log("[SAVE] Keyword validation failed: Input data is not an array.");
         return false;
     }
 
-    foreach ($keywordData as $entry) {
+    foreach ($keywordData as $index => $entry) {
         if (!is_array($entry)) {
+            error_log("[SAVE] Keyword validation failed: Entry at index $index is not an array.");
             return false;
         }
         foreach ($requiredFields as $field) {
             if (!isset($entry[$field]) || empty($entry[$field])) {
+                error_log("[SAVE] Keyword validation failed: Required field '$field' is missing or empty in entry at index $index.");
                 return false;
             }
         }
@@ -191,6 +205,7 @@ function normalizeTimeForComparison($timeValue)
 
     $timeValue = trim($timeValue);
     if (!preg_match('/^\d{1,2}:\d{2}(:\d{2})?$/', $timeValue)) {
+        error_log("[SAVE] Time normalization failed: Invalid time format for '$timeValue'.");
         return null;
     }
 
@@ -204,6 +219,7 @@ function normalizeTimeForComparison($timeValue)
     $seconds = (int) $parts[2];
 
     if ($hours < 0 || $hours > 23 || $minutes < 0 || $minutes > 59 || $seconds < 0 || $seconds > 59) {
+        error_log("[SAVE] Time normalization failed: Time components out of range for '$timeValue'.");
         return null;
     }
 
@@ -218,45 +234,62 @@ function normalizeTimeForComparison($timeValue)
  */
 function validateSTCDependencies($entry)
 {
-    $hasTimeStart = trim((string) ($entry['timeStart'] ?? '')) !== '';
-    $hasTimeEnd = trim((string) ($entry['timeEnd'] ?? '')) !== '';
+    $latMin  = trim((string)($entry['latitudeMin'] ?? ''));
+    $latMax  = trim((string)($entry['latitudeMax'] ?? ''));
+    $longMin = trim((string)($entry['longitudeMin'] ?? ''));
+    $longMax = trim((string)($entry['longitudeMax'] ?? ''));
+    $dateStart = trim((string)($entry['dateStart'] ?? ''));
+    $dateEnd = trim((string)($entry['dateEnd'] ?? ''));
+    $timeStart = trim((string)($entry['timeStart'] ?? ''));
+    $timeEnd = trim((string)($entry['timeEnd'] ?? ''));
+    $timezone = trim((string)($entry['timezone'] ?? ''));
 
-    // If a time value is given, a full date/time/zone set is required.
-    if (
-        ($hasTimeStart || $hasTimeEnd) &&
-        (
-            !$hasTimeStart ||
-            !$hasTimeEnd ||
-            trim((string) ($entry['dateStart'] ?? '')) === '' ||
-            trim((string) ($entry['dateEnd'] ?? '')) === '' ||
-            trim((string) ($entry['timezone'] ?? '')) === ''
-        )
-    ) {
-        return false;
-    }
+    $hasLatMin  = $latMin !== '';
+    $hasLatMax  = $latMax !== '';
+    $hasLongMin = $longMin !== '';
+    $hasLongMax = $longMax !== '';
+    $hasAnyTime = $timeStart !== '' || $timeEnd !== '';
 
-    // If longitudeMax is given, latitudeMax must also be given and vice versa
-    if (
-        (!empty($entry['longitudeMax']) && empty($entry['latitudeMax'])) ||
-        (empty($entry['longitudeMax']) && !empty($entry['latitudeMax']))
-    ) {
-        return false;
-    }
-
-    // If dates are equal and both times are present, end time must not be before start time
-    if (
-        !empty($entry['dateStart']) &&
-        !empty($entry['dateEnd']) &&
-        $entry['dateStart'] === $entry['dateEnd'] &&
-        !empty($entry['timeStart']) &&
-        !empty($entry['timeEnd'])
-    ) {
-        $timeStart = normalizeTimeForComparison((string) $entry['timeStart']);
-        $timeEnd = normalizeTimeForComparison((string) $entry['timeEnd']);
-
-        if ($timeStart !== null && $timeEnd !== null && $timeEnd < $timeStart) {
+    if ($hasAnyTime) {
+        if ($dateStart === '' || $dateEnd === '' || $timeStart === '' || $timeEnd === '' || $timezone === '') {
+            error_log('[SAVE] STC validation failed: time coverage requires start/end dates, start/end times, and timezone. Entry: ' . json_encode($entry));
             return false;
         }
+
+        $normalizedTimeStart = normalizeTimeForComparison($timeStart);
+        $normalizedTimeEnd = normalizeTimeForComparison($timeEnd);
+        if ($normalizedTimeStart === null || $normalizedTimeEnd === null) {
+            error_log('[SAVE] STC validation failed: invalid start or end time. Entry: ' . json_encode($entry));
+            return false;
+        }
+
+        if ($dateStart === $dateEnd && strcmp($normalizedTimeEnd, $normalizedTimeStart) < 0) {
+            error_log('[SAVE] STC validation failed: end time precedes start time on the same date. Entry: ' . json_encode($entry));
+            return false;
+        }
+    }
+
+    if (!$hasLatMin && !$hasLatMax && !$hasLongMin && !$hasLongMax) {
+        return true;
+    }
+
+    if ($hasLatMax || $hasLongMax) {
+        if (!$hasLatMin || !$hasLatMax || !$hasLongMin || !$hasLongMax) {
+            error_log('[SAVE] STC validation failed: lat/long max requires all four coordinates. Entry: ' . json_encode($entry));
+            return false;
+        }
+
+        return true;
+    }
+
+    if ($hasLatMin && !$hasLongMin) {
+        error_log('[SAVE] STC validation failed: latitudeMin without longitudeMin. Entry: ' . json_encode($entry));
+        return false;
+    }
+
+    if ($hasLongMin && !$hasLatMin) {
+        error_log('[SAVE] STC validation failed: longitudeMin without latitudeMin. Entry: ' . json_encode($entry));
+        return false;
     }
 
     return true;
@@ -279,6 +312,7 @@ function validateRelatedWorkDependencies($entry)
 
     // If any field is filled, all fields must be filled
     if (empty($entry['identifier']) || empty($entry['relation']) || empty($entry['identifierType'])) {
+        error_log("[SAVE] Related work validation failed: identifier, relation, and identifierType are all required if any one is provided. Entry: " . json_encode($entry));
         return false;
     }
 
@@ -308,7 +342,10 @@ function validateFundingReferenceDependencies($entry)
         !empty($entry['funderId']) || !empty($entry['grantNumber']) ||
         !empty($entry['grantName']) || !empty($entry['awardUri'])
     ) {
-        return !empty($entry['funder']);
+        if (empty($entry['funder'])) {
+            error_log("[SAVE] Funding reference validation failed: Funder is required if any other funding information is provided. Entry: " . json_encode($entry));
+            return false;
+        }
     }
 
     // If only funder is filled, that's valid

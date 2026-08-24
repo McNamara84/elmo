@@ -37,7 +37,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         $this->assertNull($row['dateCreated']);
     }
 
-    public function testNonGemSubmitRejectsSpatialOnlyStcForIssue1068(): void
+    public function testNonGemSubmitPersistsSpatialOnlyStcForIssue1068(): void
     {
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
         $GLOBALS['showGGMsProperties'] = false;
@@ -46,8 +46,13 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
             $resourceId = $this->createResource('GFZ.TEST.ISSUE.1068.NON.GEM', 'Issue 1068 Non GEM');
             $result = saveSpatialTemporalCoverage($this->connection, $this->spatialOnlyPostData(), $resourceId);
 
-            $this->assertFalse($result, 'Non-GEM submit should reject spatial-only STC instead of silently accepting it.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
+            $this->assertTrue($result, 'Spatial-only STC should be valid independently of ELMO-GEM mode.');
+            $this->assertSame(1, $this->countStcRelations($resourceId));
+
+            $stc = $this->fetchLinkedStc($resourceId);
+            $this->assertSame('Global spatial coverage', $stc['description']);
+            $this->assertNull($stc['dateStart']);
+            $this->assertNull($stc['dateEnd']);
         } finally {
             $this->restoreGlobal('showGGMsProperties', $previous);
         }
@@ -102,7 +107,7 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
         }
     }
 
-    public function testElmoGemSubmitRejectsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
+    public function testElmoGemSubmitPersistsSpatialOnlyStcWithoutDescriptionForIssue1068(): void
     {
         $previous = $GLOBALS['showGGMsProperties'] ?? null;
         $GLOBALS['showGGMsProperties'] = true;
@@ -114,8 +119,9 @@ final class IssueRegressionSubmitValidationTest extends DatabaseTestCase
 
             $result = saveSpatialTemporalCoverage($this->connection, $postData, $resourceId);
 
-            $this->assertFalse($result, 'ELMO-GEM submit should keep STC description required.');
-            $this->assertSame(0, $this->countStcRelations($resourceId));
+            $this->assertTrue($result, 'STC description should remain optional on submit.');
+            $this->assertSame(1, $this->countStcRelations($resourceId));
+            $this->assertNull($this->fetchLinkedStc($resourceId)['description']);
         } finally {
             $this->restoreGlobal('showGGMsProperties', $previous);
         }

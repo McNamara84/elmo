@@ -5,8 +5,7 @@
  * Central location for security functions used across the application:
  * - CSRF token generation and validation
  * - Honeypot validation
- * - Rate limiting for feedback, save, and submit operations
- * - Client IP detection
+ * - Session-scoped rate limiting for feedback, save, and submit operations
  */
 
 // Load environment variables from .env file
@@ -31,20 +30,21 @@ if (file_exists($envFile)) {
 // Rate limiting configuration (loaded from .env or defaults)
 define('RATE_LIMIT_FEEDBACK_MAX', (int) getenv('FEEDBACK_MAX_SUBMISSIONS') ?: 3);
 define('RATE_LIMIT_SAVE_MAX', (int) getenv('SAVE_RATE_LIMIT') ?: 100);
-define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 5);
+define('RATE_LIMIT_SUBMIT_MAX', (int) getenv('SUBMIT_RATE_LIMIT') ?: 30);
 define('RATE_LIMIT_WINDOW_SECONDS', (int) getenv('RATE_LIMIT_TIME_WINDOW') ?: 3600);
 define('RATE_LIMIT_SUSPICIOUS_LOG_MAX', (int) getenv('SUSPICIOUS_LOG_RATE_LIMIT') ?: 10);
 define('MIN_INTERACTION_SAVE_SECONDS', (int) getenv('SAVE_MIN_INTERACTION_SECONDS') ?: 2);
 define('MIN_INTERACTION_SUBMIT_SECONDS', (int) getenv('SUBMIT_MIN_INTERACTION_SECONDS') ?: 3);
 define('MIN_INTERACTION_FEEDBACK_SECONDS', (int) getenv('FEEDBACK_MIN_INTERACTION_SECONDS') ?: 2);
+define('RATE_LIMIT_SESSION_KEY', 'rate_limits');
 
 /**
- * Initializes session if not already started.
- * Must be called before any session operations.
+ * Ensures the PHP application session is active.
+ * Used by CSRF validation and session-based rate limiting.
  *
  * @return void
  */
-function initializeCsrfSession(): void
+function ensureAppSession(): void
 {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
@@ -59,18 +59,44 @@ function initializeCsrfSession(): void
  */
 function generateCsrfToken(): string
 {
-    initializeCsrfSession();
+    ensureAppSession();
 
-    // Keep a stable interaction start timestamp across token refreshes.
-    if (!isset($_SESSION['csrf_interaction_start_time'])) {
-        $_SESSION['csrf_interaction_start_time'] = time();
-    }
-    
     $token = bin2hex(random_bytes(32));
     $_SESSION['csrf_token'] = $token;
     $_SESSION['csrf_token_time'] = time();
-    
+
     return $token;
+}
+
+/**
+ * Returns whether the session CSRF token exists and is still within its lifetime.
+ *
+ * @return bool
+ */
+function isCsrfTokenValid(): bool
+{
+    ensureAppSession();
+
+    $sessionToken = $_SESSION['csrf_token'] ?? '';
+    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
+
+    return !empty($sessionToken) && (time() - $tokenTime <= 3600);
+}
+
+/**
+ * Returns the current CSRF token or creates one when missing or expired.
+ *
+ * @return string
+ */
+function getOrCreateCsrfToken(): string
+{
+    ensureAppSession();
+
+    if (isCsrfTokenValid()) {
+        return (string) $_SESSION['csrf_token'];
+    }
+
+    return generateCsrfToken();
 }
 
 /**
@@ -82,28 +108,23 @@ function generateCsrfToken(): string
  */
 function validateCsrfToken(string $submittedToken): bool
 {
-    initializeCsrfSession();
-    
+    ensureAppSession();
+
     $sessionToken = $_SESSION['csrf_token'] ?? '';
-    $tokenTime = $_SESSION['csrf_token_time'] ?? 0;
+    $tokenTime = (int) ($_SESSION['csrf_token_time'] ?? 0);
     
-    // Token must exist in session and submitted form
     if (empty($submittedToken) || empty($sessionToken)) {
         return false;
     }
     
     try {
-        // Token must match (timing-safe comparison)
         if (!hash_equals($sessionToken, $submittedToken)) {
             return false;
         }
     } catch (\ValueError $e) {
-        // Token format invalid (e.g., mismatched lengths)
-        error_log("CSRF token validation error: " . $e->getMessage());
         return false;
     }
     
-    // Token must not be older than 1 hour
     if (time() - $tokenTime > 3600) {
         return false;
     }
@@ -113,15 +134,37 @@ function validateCsrfToken(string $submittedToken): bool
 
 /**
  * Invalidates the current CSRF token by removing it from session.
- * Should be called after a successful form submission.
  *
  * @return void
  */
 function invalidateCsrfToken(): void
 {
-    initializeCsrfSession();
+    ensureAppSession();
+
     unset($_SESSION['csrf_token']);
     unset($_SESSION['csrf_token_time']);
+}
+
+/**
+ * Reads the submitted CSRF token from request data.
+ *
+ * @param array<string, mixed> $requestData
+ * @return string
+ */
+function getSubmittedCsrfToken(array $requestData): string
+{
+    return (string) ($requestData['csrf-token'] ?? $requestData['csrf_token'] ?? '');
+}
+
+/**
+ * Returns the honeypot field value from POST data.
+ *
+ * @param array<string, mixed> $requestData
+ * @return string
+ */
+function getSubmittedHoneypotValue(array $requestData): string
+{
+    return (string) ($requestData['please-fill-in-this-field'] ?? '');
 }
 
 /**
@@ -137,241 +180,328 @@ function validateHoneypot(string $honeypotValue): bool
 }
 
 /**
- * Gets the client IP address, considering proxies and forwarding headers.
+ * Records the current time as the start of the user's interaction for a given scope.
  *
- * @return string The client IP address
+ * Call this on every full page load. The interaction start is independent
+ * of the CSRF token — it tracks when the user opened the page.
+ *
+ * @param string $scope Interaction scope (form or feedback)
+ * @return void
  */
-function getClientIp(): string
+function resetPageInteractionTime(string $scope = 'form'): void
 {
-    // Check for forwarded IP (behind proxy/load balancer)
-    if (!empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
-        $ips = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
-        return trim($ips[0]);
-    }
-    
-    if (!empty($_SERVER['HTTP_X_REAL_IP'])) {
-        return $_SERVER['HTTP_X_REAL_IP'];
-    }
-    
-    return $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+    ensureAppSession();
+
+    $normalizedScope = normalizeInteractionScope($scope);
+    $_SESSION[getInteractionStartSessionKey($normalizedScope)] = microtime(true);
 }
 
 /**
- * Returns the age of the current CSRF token in seconds.
+ * Returns how many seconds have elapsed since the user loaded the current page.
  *
- * This can be used as a server-trustworthy interaction timer because
- * the token is fetched when the modal opens.
+ * Pure read: does not create or reset the timer. The timestamp is written by
+ * resetPageInteractionTime() on page load or when evaluateInteractionTime()
+ * restores a missing session timer.
  *
- * @return int Age in seconds, or 0 if no token timestamp is available
+ * @param string $scope Interaction scope (form or feedback)
+ * @return float Elapsed seconds (sub-second precision), or 0.0 if not set
  */
-function getCsrfTokenAgeSeconds(): int
+function getPageInteractionAgeSeconds(string $scope = 'form'): float
 {
-    initializeCsrfSession();
-    $interactionStartTime = (int) ($_SESSION['csrf_interaction_start_time'] ?? 0);
-    if ($interactionStartTime <= 0) {
-        return 0;
+    ensureAppSession();
+
+    $normalizedScope = normalizeInteractionScope($scope);
+    $interactionStart = (float) ($_SESSION[getInteractionStartSessionKey($normalizedScope)] ?? 0.0);
+    if ($interactionStart <= 0.0) {
+        return 0.0;
     }
 
-    return max(0, time() - $interactionStartTime);
+    return max(0.0, microtime(true) - $interactionStart);
 }
 
 /**
- * Evaluates whether the interaction time meets a minimum threshold.
+ * Ensures an interaction timer exists for the scope, seeding it when missing.
  *
-    unset($_SESSION['csrf_interaction_start_time']);
- * Uses a trust-preserving strategy by combining client-reported time with
- * server-measured CSRF token age and taking the lower bound when both exist.
+ * Used when session state was lost (container restart, stale tab) so the first
+ * protected action can fail once and later retries succeed after the minimum wait.
  *
- * @param int $reportedTimeSpentSeconds Client-reported interaction time
- * @param int $minimumSeconds Required minimum interaction time
- * @return array{isValid: bool, effectiveSeconds: int, clientSeconds: int, serverSeconds: int, minimumSeconds: int}
+ * @param string $scope Interaction scope (form or feedback)
+ * @return bool True when the timer was missing and was just initialized
  */
-function evaluateInteractionTime(int $reportedTimeSpentSeconds, int $minimumSeconds): array
+function ensureInteractionTimer(string $scope = 'form'): bool
 {
-    $clientSeconds = max(0, $reportedTimeSpentSeconds);
-    $serverSeconds = getCsrfTokenAgeSeconds();
-    $effectiveSeconds = $clientSeconds > 0
-        ? min($clientSeconds, $serverSeconds)
-        : $serverSeconds;
+    ensureAppSession();
+
+    $normalizedScope = normalizeInteractionScope($scope);
+    $sessionKey = getInteractionStartSessionKey($normalizedScope);
+    if ((float) ($_SESSION[$sessionKey] ?? 0.0) > 0.0) {
+        return false;
+    }
+
+    resetPageInteractionTime($normalizedScope);
+
+    return true;
+}
+
+/**
+ * Evaluates whether the server-measured page interaction time meets a minimum.
+ *
+ * Only the server-side session timer is used; client-reported values are
+ * ignored to prevent manipulation. When the timer is missing, it is seeded
+ * before measuring so a retry after the minimum wait can succeed.
+ *
+ * @param float $minimumSeconds Required minimum interaction time in seconds
+ * @param string $scope Interaction scope (form or feedback)
+ * @return array{isValid: bool, effectiveSeconds: float, minimumSeconds: float, timerWasMissing: bool}
+ */
+function evaluateInteractionTime(float $minimumSeconds, string $scope = 'form'): array
+{
+    $normalizedScope = normalizeInteractionScope($scope);
+    $timerWasMissing = ensureInteractionTimer($normalizedScope);
+    $effectiveSeconds = getPageInteractionAgeSeconds($normalizedScope);
 
     return [
         'isValid' => $effectiveSeconds >= $minimumSeconds,
         'effectiveSeconds' => $effectiveSeconds,
-        'clientSeconds' => $clientSeconds,
-        'serverSeconds' => $serverSeconds,
         'minimumSeconds' => $minimumSeconds,
+        'timerWasMissing' => $timerWasMissing,
     ];
 }
 
 /**
- * Checks whether the shared rate-limit storage is currently available.
+ * Normalizes allowed interaction timer scopes.
  *
- * If storage is unavailable (missing DB connection/table), callers should
- * degrade gracefully instead of failing request processing.
- *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @return bool
+ * @param string $scope
+ * @return string
  */
-function isRateLimitStorageAvailable($connection): bool
+function normalizeInteractionScope(string $scope): string
 {
-    // instanceof guards against null and non-mysqli values; enables fail-open when no DB is passed
-    if (!($connection instanceof \mysqli)) {
-        return false;
-    }
-
-    if ($connection->connect_errno) {
-        return false;
-    }
-
-    // No static cache: avoids stale results across test runs and parallel workers
-    try {
-        $result = $connection->query("SHOW TABLES LIKE 'Rate_Limit'");
-        if ($result === false) {
-            return false;
-        }
-
-        $available = $result->num_rows > 0;
-        $result->free();
-        return $available;
-    } catch (Throwable $exception) {
-        error_log('[SECURITY]: Rate limit storage check failed. We can\'t measure time_spent. We just let it pass. Message: ' . $exception->getMessage());
-        return false;
-    }
+    $normalized = strtolower(trim($scope));
+    return in_array($normalized, ['form', 'feedback'], true) ? $normalized : 'form';
 }
 
 /**
- * Checks if an IP address has exceeded rate limit for a given action type.
- *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $ipAddress The client IP address
- * @param string $actionType The action type ('feedback', 'save', 'submit')
- * @param int $maxRequests Maximum allowed requests in the time window
- * @param int $windowSeconds Time window in seconds (default 3600 = 1 hour)
- * @return bool True if within rate limit, false if exceeded
+ * @param string $scope
+ * @return string
  */
-function checkRateLimit(
-    $connection,
-    string $ipAddress,
-    string $actionType,
-    int $maxRequests = 3,
-    int $windowSeconds = 3600
-): bool
+function getInteractionStartSessionKey(string $scope): string
 {
-    // Fail-open: unavailable storage must not block user operations.
-    if (!isRateLimitStorageAvailable($connection)) {
-        return true;
-    }
-    /** @var \mysqli $connection */
-
-    // Clean up old entries (older than 24 hours)
-    $cleanupSql = "DELETE FROM Rate_Limit WHERE submitted_at < DATE_SUB(NOW(), INTERVAL 24 HOUR)";
-    if (mysqli_query($connection, $cleanupSql) === false) {
-        return true;
-    }
-    
-    // Count recent submissions from this IP for this action type
-    $stmt = $connection->prepare(
-        "SELECT COUNT(*) as count FROM Rate_Limit 
-         WHERE ip_address = ? AND action = ? AND submitted_at > DATE_SUB(NOW(), INTERVAL ? SECOND)"
-    );
-    if ($stmt === false) {
-        return true;
-    }
-
-    $stmt->bind_param("ssi", $ipAddress, $actionType, $windowSeconds);
-    if (!$stmt->execute()) {
-        $stmt->close();
-        return true;
-    }
-
-    $result = $stmt->get_result();
-    $row = $result->fetch_assoc();
-    $stmt->close();
-    
-    return ($row['count'] ?? 0) < $maxRequests;
+    return $scope === 'form' ? 'interaction_start_time' : 'interaction_start_time_' . $scope;
 }
 
 /**
- * Records a submission for rate limiting purposes.
+ * Normalizes a rate-limit action name for use as a session key segment.
  *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $ipAddress The client IP address
- * @param string $actionType The action type ('feedback', 'save', 'submit')
- * @return bool True if successfully recorded, false on error
+ * @param string $action
+ * @return string
  */
-function recordRateLimit(
-    $connection,
-    string $ipAddress,
-    string $actionType
-): bool
+function normalizeRateLimitAction(string $action): string
 {
-    if (!isRateLimitStorageAvailable($connection)) {
-        return false;
-    }
-    /** @var \mysqli $connection */
-
-    $stmt = $connection->prepare(
-        "INSERT INTO Rate_Limit (action, ip_address, submitted_at) VALUES (?, ?, NOW())"
-    );
-    if ($stmt === false) {
-        return false;
-    }
-
-    $stmt->bind_param("ss", $actionType, $ipAddress);
-    $success = $stmt->execute();
-    $stmt->close();
-    
-    return $success;
+    $normalized = preg_replace('/[^a-zA-Z0-9_-]/', '', $action) ?? '';
+    return $normalized !== '' ? $normalized : 'unknown';
 }
 
 /**
- * Logs suspicious request attempts with an hourly cap per IP.
+ * Returns recent rate-limit timestamps for an action, pruning expired entries.
  *
- * Uses the existing Rate_Limit table with a dedicated action bucket
- * ("suspicious") so logging cannot flood application logs.
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $windowSeconds Rolling window length in seconds
+ * @return list<int>
+ */
+function getSessionRateLimitTimestamps(string $action, int $windowSeconds): array
+{
+    ensureAppSession();
+
+    $actionKey = normalizeRateLimitAction($action);
+    $cutoff = time() - $windowSeconds;
+
+    $all = $_SESSION[RATE_LIMIT_SESSION_KEY] ?? [];
+    if (!is_array($all)) {
+        $all = [];
+    }
+
+    $timestamps = $all[$actionKey] ?? [];
+    if (!is_array($timestamps)) {
+        $timestamps = [];
+    }
+
+    $timestamps = array_values(array_filter(
+        $timestamps,
+        static fn($timestamp) => is_int($timestamp) && $timestamp > $cutoff
+    ));
+
+    $all[$actionKey] = $timestamps;
+    $_SESSION[RATE_LIMIT_SESSION_KEY] = $all;
+
+    return $timestamps;
+}
+
+/**
+ * Checks whether the current session is within the rate limit for an action.
  *
- * @param mixed $connection Database connection (mysqli|null accepted for fail-open)
- * @param string $operation High-level operation name (save, submit, ...)
- * @param string $reason Rejection reason
- * @param string|null $ipAddress Optional client IP, auto-detected when omitted
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $maxRequests Maximum allowed requests in the rolling window
+ * @param int $windowSeconds Rolling window length in seconds
+ * @return bool True if within limit, false if exceeded
+ */
+function checkSessionRateLimit(string $action, int $maxRequests, int $windowSeconds = 3600): bool
+{
+    return count(getSessionRateLimitTimestamps($action, $windowSeconds)) < $maxRequests;
+}
+
+/**
+ * Records a rate-limited event for the current session.
+ *
+ * @param string $action Action bucket (save, submit, feedback, suspicious)
+ * @param int $windowSeconds Rolling window length used when pruning stale entries
  * @return void
  */
-function logSuspiciousAttempt(
-    $connection,
-    string $operation,
-    string $reason,
-    ?string $ipAddress = null
-): void
+function recordSessionRateLimit(string $action, int $windowSeconds = 3600): void
 {
-    $clientIp = $ipAddress ?: getClientIp();
-    // Sanitize operation and reason to prevent injection into logs or DB
-    $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
-    $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
-    $fallbackMessage = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe}) from IP {$clientIp}";
+    getSessionRateLimitTimestamps($action, $windowSeconds);
+    $actionKey = normalizeRateLimitAction($action);
+    $_SESSION[RATE_LIMIT_SESSION_KEY][$actionKey][] = time();
+}
 
-    // If rate-limit storage is unavailable, log once without throttling.
-    if (!isRateLimitStorageAvailable($connection)) {
-        error_log($fallbackMessage);
+/**
+ * Logs suspicious request attempts with a session-scoped hourly cap.
+ *
+ * @param string $operation High-level operation name (save, submit, ...)
+ * @param string $reason Rejection reason
+ * @param bool $timerWasMissing When true, the interaction timer was just restored after missing session state — skip logging
+ * @return void
+ */
+function logSuspiciousAttempt(string $operation, string $reason, bool $timerWasMissing = false): void
+{
+    if ($timerWasMissing) {
         return;
     }
 
+    $operationSafe = preg_replace('/[^a-zA-Z0-9_-]/', '_', $operation);
+    $reasonSafe = preg_replace('/[\x00-\x1F\x7F]/', '', $reason);
+    $message = "[SECURITY]: Suspicious {$operationSafe} attempt blocked ({$reasonSafe})";
+
     try {
-        // Check if logging this attempt would exceed hourly cap; if so, skip to preserve disk space
-        if (!checkRateLimit(
-            $connection,
-            $clientIp,
-            'suspicious',
-            RATE_LIMIT_SUSPICIOUS_LOG_MAX,
-            RATE_LIMIT_WINDOW_SECONDS
-        )) {
+        if (!checkSessionRateLimit('suspicious', RATE_LIMIT_SUSPICIOUS_LOG_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
             return;
         }
 
-        error_log($fallbackMessage);
-        recordRateLimit($connection, $clientIp, 'suspicious');
+        error_log($message);
+        recordSessionRateLimit('suspicious', RATE_LIMIT_WINDOW_SECONDS);
     } catch (Throwable $exception) {
-        // Never break request handling because suspicious logging failed.
-        error_log($fallbackMessage . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
+        error_log($message . ' [log-throttle fallback: ' . $exception->getMessage() . ']');
     }
+}
+
+/**
+ * Validates all security checks for a given operation context and exits on failure.
+ *
+ * Handles honeypot, CSRF, rate limiting, and minimum interaction time in order.
+ * On success, records the rate-limit event and resets the interaction timer.
+ * All error responses use the format: {'success': false, 'message': '...'}.
+ *
+ * @param string $context One of 'feedback', 'save', or 'submit'
+ * @param array<string, mixed> $postData The POST data
+ * @return void Exits immediately on any security failure
+ */
+function validateRequestSecurity(string $context, array $postData): void
+{
+    $configs = [
+        'feedback' => [
+            'rateLimitMax'        => RATE_LIMIT_FEEDBACK_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_FEEDBACK_SECONDS,
+            'interactionScope'    => 'feedback',
+            'resetScope'          => 'feedback',
+            'tooFastMessage'      => 'Form filled out too quickly. Please take more time.',
+            'csrfHttpCode'        => 403,
+            'rateLimitHttpCode'   => 429,
+            'honeypotFakeSuccess' => true,
+        ],
+        'save' => [
+            'rateLimitMax'        => RATE_LIMIT_SAVE_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_SAVE_SECONDS,
+            'interactionScope'    => 'form',
+            'resetScope'          => 'form',
+            'tooFastMessage'      => 'Please take time to review your metadata before saving.',
+            'csrfHttpCode'        => 400,
+            'rateLimitHttpCode'   => 400,
+            'honeypotFakeSuccess' => false,
+        ],
+        'submit' => [
+            'rateLimitMax'        => RATE_LIMIT_SUBMIT_MAX,
+            'minSeconds'          => (float) MIN_INTERACTION_SUBMIT_SECONDS,
+            'interactionScope'    => 'form',
+            'resetScope'          => 'form',
+            'tooFastMessage'      => 'Please take time to review your submission before submitting.',
+            'csrfHttpCode'        => 400,
+            'rateLimitHttpCode'   => 400,
+            'honeypotFakeSuccess' => false,
+        ],
+    ];
+
+    $cfg = $configs[$context] ?? $configs['save'];
+
+    $flushBuffers = static function (): void {
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+    };
+
+    // Check 1: Honeypot
+    if (!validateHoneypot(getSubmittedHoneypotValue($postData))) {
+        logSuspiciousAttempt($context, 'honeypot triggered');
+        $flushBuffers();
+        header('Content-Type: application/json');
+        if ($cfg['honeypotFakeSuccess']) {
+            // Silently return fake success to not alert the bot
+            echo json_encode(['success' => true, 'message' => 'Feedback successfully sent']);
+        } else {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Invalid request.']);
+        }
+        exit;
+    }
+
+    // Check 2: CSRF Token
+    if (!validateCsrfToken(getSubmittedCsrfToken($postData))) {
+        logSuspiciousAttempt($context, 'invalid csrf token');
+        http_response_code($cfg['csrfHttpCode']);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Invalid request. Please reload the page and try again.']);
+        exit;
+    }
+
+    // Check 3: Rate limiting
+    if (!checkSessionRateLimit($context, $cfg['rateLimitMax'], RATE_LIMIT_WINDOW_SECONDS)) {
+        logSuspiciousAttempt($context, 'rate limit exceeded');
+        http_response_code($cfg['rateLimitHttpCode']);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'Too many requests. Please try again later.']);
+        exit;
+    }
+
+    // Check 4: Minimum interaction time
+    $timeCheck = evaluateInteractionTime($cfg['minSeconds'], $cfg['interactionScope']);
+    if (!$timeCheck['isValid']) {
+        logSuspiciousAttempt(
+            $context,
+            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, minimum={$timeCheck['minimumSeconds']}s)",
+            $timeCheck['timerWasMissing']
+        );
+        http_response_code(400);
+        $flushBuffers();
+        header('Content-Type: application/json');
+        $message = $timeCheck['timerWasMissing']
+            ? 'Sorry, we had an issue with your session. Please try again. The page reload is not necessary.'
+            : $cfg['tooFastMessage'];
+        echo json_encode(['success' => false, 'message' => $message]);
+        exit;
+    }
+
+    // All checks passed — record rate limit and reset interaction timer
+    recordSessionRateLimit($context, RATE_LIMIT_WINDOW_SECONDS);
+    resetPageInteractionTime($cfg['resetScope']);
 }
 ?>

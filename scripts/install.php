@@ -1,17 +1,23 @@
 <?php
 /**
  *
- * This script handles the database installation process via AJAX requests.
+ * This script handles the database installation process via the command line.
  * It provides two installation options:
  * 1. Basic installation with required lookup data
  * 2. Complete installation including test data
  *
  */
 
+$isDirectInstallationRequest = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__;
+if ($isDirectInstallationRequest && PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit();
+}
+
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    $settingsPath = __DIR__ . '/settings.php';
+    $settingsPath = dirname(__DIR__) . '/settings.php';
     if (!file_exists($settingsPath)) {
         $msg = 'Error: settings.php not found. ' .
             'Please copy sample_settings.php to settings.php and update your database credentials.';
@@ -81,7 +87,6 @@ function dropTables($connection)
         'Resource_has_Related_Work',
         'Funding_Reference',
         'Resource_has_Funding_Reference',
-        'Rate_Limit',
         // ICGEM-specific variables to describe beautiful GGMs 
         'GGM_Properties',
         'Resource_has_GGM_Properties',
@@ -686,16 +691,6 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
     FOREIGN KEY (`data_source_id`) REFERENCES `Data_Sources`(`data_source_id`) ON DELETE CASCADE
         );",
-
-        // Unified rate limiting table for spam protection across all actions (feedback, save, submit)
-        "Rate_Limit" => "CREATE TABLE IF NOT EXISTS `Rate_Limit` (
-    `id` INT NOT NULL AUTO_INCREMENT,
-    `action` VARCHAR(50) NOT NULL,
-    `ip_address` VARCHAR(45) NOT NULL,
-    `submitted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (`id`),
-    INDEX `idx_action_ip_time` (`action`, `ip_address`, `submitted_at`)
-        );",
     ];
 
     $created = 0;
@@ -734,19 +729,19 @@ function insertLookupData($connection)
         "Resource_Type" => [
             ["resource_type_general" => "Audiovisual", "description" => "A series of visual representations imparting an impression of motion when shown in succession. May or may not include sound."],
             ["resource_type_general" => "Collection", "description" => "An aggregation of resources, which may encompass collections of one resourceType as well as those of mixed types. A collection is described as a group; its parts may also be separately described."],
-            ["resource_type_general" => "ComputationalNotebook", "description" => "A virtual notebook environment used for literate programming."],
-            ["resource_type_general" => "DataPaper", "description" => "A factual and objective publication with a focused intent to identify and describe specific data, sets of data, or data collections to facilitate discoverability."],
+            ["resource_type_general" => "Computational Notebook", "description" => "A virtual notebook environment used for literate programming."],
+            ["resource_type_general" => "Data Paper", "description" => "A factual and objective publication with a focused intent to identify and describe specific data, sets of data, or data collections to facilitate discoverability."],
             ["resource_type_general" => "Dataset", "description" => "Data encoded in a defined structure."],
             ["resource_type_general" => "Event", "description" => "A non-persistent, time-based occurrence."],
             ["resource_type_general" => "Image", "description" => "A visual representation other than text."],
-            ["resource_type_general" => "InteractiveResource", "description" => "A resource requiring interaction from the user to be understood, executed, or experienced."],
+            ["resource_type_general" => "Interactive Resource", "description" => "A resource requiring interaction from the user to be understood, executed, or experienced."],
             ["resource_type_general" => "Model", "description" => "An abstract, conceptual, graphical, mathematical or visualization model that represents empirical objects, phenomena, or physical processes."],
-            ["resource_type_general" => "OutputManagementPlan", "description" => "A formal document that outlines how research outputs are to be handled both during a research project and after the project is completed."],
+            ["resource_type_general" => "Output Management Plan", "description" => "A formal document that outlines how research outputs are to be handled both during a research project and after the project is completed."],
             ["resource_type_general" => "Preprint", "description" => "A version of a scholarly or scientific paper that precedes formal peer review and publication in a peer-reviewed scholarly or scientific journal."],
-            ["resource_type_general" => "Software", "description" => "A computer program other than a computational notebook, in either source code (text) or compiled form. Use this type for general software components supporting scholarly research. Use the \"ComputationalNotebook\" value for virtual notebooks."],
+            ["resource_type_general" => "Software", "description" => "A computer program other than a computational notebook, in either source code (text) or compiled form. Use this type for general software components supporting scholarly research. Use the \"Computational Notebook\" value for virtual notebooks."],
             ["resource_type_general" => "Sound", "description" => "A resource primarily intended to be heard."],
             ["resource_type_general" => "Standard", "description" => "Something established by authority, custom, or general consent as a model, example, or point of reference."],
-            ["resource_type_general" => "StudyRegistration", "description" => "A detailed, time-stamped description of a research plan, often openly shared in a registry or published in a journal before the study is conducted to lend accountability and transparency in the hypothesis generating and testing process."],
+            ["resource_type_general" => "Study Registration", "description" => "A detailed, time-stamped description of a research plan, often openly shared in a registry or published in a journal before the study is conducted to lend accountability and transparency in the hypothesis generating and testing process."],
             ["resource_type_general" => "Text", "description" => "A resource consisting primarily of words for reading that is not covered by any other textual resource type in this list."],
             ["resource_type_general" => "Workflow", "description" => "A structured series of steps which can be executed to produce a final outcome, allowing users a means to specify and enact their work in a more reproducible manner."],
             ["resource_type_general" => "Other", "description" => "If selected, supply a value for ResourceType."],
@@ -931,19 +926,22 @@ function insertTestResourceData($connection)
             ["institutionname" => "Institut für Luft- und Raumfahrt"]
         ],
         "Author" => [
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
+            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 4, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 5, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 6, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 7, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 8, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 9, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 10, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 11, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 12, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 13, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 3]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -1108,20 +1106,23 @@ function insertTestResourceData($connection)
 
     $helpTableData = [
         "Resource_has_Author" => [
-            ["Resource_resource_id" => 3, "Author_author_id" => 1],
-            ["Resource_resource_id" => 2, "Author_author_id" => 3],
-            ["Resource_resource_id" => 1, "Author_author_id" => 2],
-            ["Resource_resource_id" => 4, "Author_author_id" => 4],
-            ["Resource_resource_id" => 4, "Author_author_id" => 5],
-            ["Resource_resource_id" => 4, "Author_author_id" => 6],
-            ["Resource_resource_id" => 5, "Author_author_id" => 7],
-            ["Resource_resource_id" => 5, "Author_author_id" => 8],
-            ["Resource_resource_id" => 5, "Author_author_id" => 9],
-            ["Resource_resource_id" => 5, "Author_author_id" => 5],     // dr. prof. Flectner co-authored models 4 AND 5                               
-            ["Resource_resource_id" => 4, "Author_author_id" => 10],
-            ["Resource_resource_id" => 4, "Author_author_id" => 11],
-            ["Resource_resource_id" => 4, "Author_author_id" => 12],
-            ["Resource_resource_id" => 4, "Author_author_id" => 13]
+            ["Resource_resource_id" => 3, "Author_author_id" => 1, "sort_order" => 0],
+            ["Resource_resource_id" => 2, "Author_author_id" => 3, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 2, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 14, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 4, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Author_author_id" => 5, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 6, "sort_order" => 2],
+            ["Resource_resource_id" => 4, "Author_author_id" => 10, "sort_order" => 3],
+            ["Resource_resource_id" => 4, "Author_author_id" => 11, "sort_order" => 4],
+            ["Resource_resource_id" => 4, "Author_author_id" => 12, "sort_order" => 5],
+            ["Resource_resource_id" => 4, "Author_author_id" => 13, "sort_order" => 6],
+            ["Resource_resource_id" => 4, "Author_author_id" => 15, "sort_order" => 7],
+            ["Resource_resource_id" => 5, "Author_author_id" => 7, "sort_order" => 0],
+            ["Resource_resource_id" => 5, "Author_author_id" => 8, "sort_order" => 1],
+            ["Resource_resource_id" => 5, "Author_author_id" => 9, "sort_order" => 2],
+            ["Resource_resource_id" => 5, "Author_author_id" => 5, "sort_order" => 3],
+            ["Resource_resource_id" => 5, "Author_author_id" => 16, "sort_order" => 4]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
@@ -1307,14 +1308,14 @@ function processInstallation($connection, $action): array
             insertTestResourceData($connection);
             return [
                 'status' => 'success',
-                'message' => 'Database installed successfully with all test data. Please do not forget to delete the files install.php and install.html now!',
+                'message' => 'Database installed successfully with all test data.',
                 'progress' => 100
             ];
         }
 
         return [
             'status' => 'success',
-            'message' => 'Database installed successfully with required data. Please do not forget to delete the files install.php and install.html now!',
+            'message' => 'Database installed successfully with required data.',
             'progress' => 100
         ];
 
@@ -1327,31 +1328,52 @@ function processInstallation($connection, $action): array
     }
 }
 
-// Handle AJAX requests
-if (isset($_POST['action'])) {
-    header('Content-Type: application/json');
-    // Ensure connection exists
-    if (!isset($connection)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Database connection not available.'
-        ]);
-        exit(1);
+/**
+ * Validate the CLI arguments and return the requested installation mode.
+ *
+ * @param list<string> $arguments
+ */
+function parseInstallationAction(array $arguments): string
+{
+    $action = $arguments[1] ?? '';
+    if (!in_array($action, ['basic', 'complete'], true)) {
+        throw new InvalidArgumentException('Usage: php scripts/install.php <basic|complete>');
     }
-    $result = processInstallation($connection, $_POST['action']);
-    echo json_encode($result);
-    exit;
+
+    return $action;
 }
 
-// Handle CLI requests
-if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
-    $action = $argv[1] ?? 'basic';
-    // Ensure connection exists
+/**
+ * @param list<string> $arguments
+ */
+function runInstallationCli(array $arguments): int
+{
+    global $connection;
+
+    try {
+        $action = parseInstallationAction($arguments);
+    } catch (InvalidArgumentException $exception) {
+        fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+        return 2;
+    }
+
     if (!isset($connection)) {
         fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
-        exit(1);
+        return 1;
     }
+
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);
-    exit($result['status'] === 'success' ? 0 : 1);
+    return $result['status'] === 'success' ? 0 : 1;
+}
+
+if ($isDirectInstallationRequest) {
+    $arguments = [];
+    foreach ($_SERVER['argv'] ?? [] as $argument) {
+        if (is_string($argument)) {
+            $arguments[] = $argument;
+        }
+    }
+
+    exit(runInstallationCli($arguments));
 }

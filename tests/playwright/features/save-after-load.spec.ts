@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { navigateToHome, expectNavbarVisible } from '../utils/navigation';
 import { completeMinimalDatasetForm } from '../utils/flows';
+import { registerGoogleMapsNoopRoute, waitForFormInteractionReady } from '../utils/waits';
 
 /** Console errors that are expected and can be ignored in the E2E environment. */
 const BENIGN_CONSOLE_PATTERNS = [
@@ -16,6 +17,7 @@ const BENIGN_CONSOLE_PATTERNS = [
 
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
+    await registerGoogleMapsNoopRoute(page);
     // Collect unexpected console errors for assertion at end of test
     const consoleErrors: string[] = [];
     page.on('console', msg => {
@@ -40,8 +42,7 @@ test.describe('Save after Load – Issue #1043', () => {
     const saveAsModal = page.locator('#modal-saveas');
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-test');
-    // Wait 3+ seconds to meet backend minimum interaction time for save (generously increased)
-    await page.waitForTimeout(3100);
+    await waitForFormInteractionReady(page, 'save');
     await page.locator('#button-saveas-save').click();
 
     const download = await downloadPromise;
@@ -122,8 +123,7 @@ test.describe('Save after Load – Issue #1043', () => {
     await page.locator('#button-form-save').click();
     await expect(saveAsModal).toBeVisible({ timeout: 10000 });
     await page.locator('#input-saveas-filename').fill('e2e-roundtrip-resaved');
-    // Wait 3+ seconds to meet backend minimum interaction time for save (generously increased)
-    await page.waitForTimeout(3100);
+    await waitForFormInteractionReady(page, 'save');
     await page.locator('#button-saveas-save').click();
 
     const secondDownload = await secondDownloadPromise;

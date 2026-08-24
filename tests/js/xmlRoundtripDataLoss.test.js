@@ -18,6 +18,10 @@ const path = require("path");
 const vm = require("vm");
 
 function loadMappingModule(contextOverrides = {}) {
+  const resourceTypeUtilsCode = fs.readFileSync(
+    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
+    "utf8"
+  );
   const code = fs.readFileSync(
     path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
     "utf8"
@@ -37,6 +41,8 @@ function loadMappingModule(contextOverrides = {}) {
     ...contextOverrides,
   };
   vm.createContext(context);
+  vm.runInContext(resourceTypeUtilsCode, context);
+  context.window.resourceTypeUtils = context.resourceTypeUtils;
   vm.runInContext(code, context);
   return context;
 }
@@ -277,6 +283,40 @@ describe("funderIdentifierType import via XPath (regression for querySelector bu
 // ─── awardURI import verification ───────────────────────────────────────────
 
 describe("awardURI import from namespaced XML", () => {
+  test("awardURI is imported when awardNumber has no text content", () => {
+    document.body.innerHTML = `
+      <div id="group-fundingreference">
+        <div class="row">
+          <input name="funder[]" value="" />
+          <input name="funderId[]" value="" />
+          <input name="funderidtyp[]" value="" />
+          <input name="grantNummer[]" value="" />
+          <input name="grantName[]" value="" />
+          <input name="awardURI[]" value="" />
+        </div>
+      </div>
+      <button id="button-fundingreference-add"></button>`;
+
+    const $ = createJQuery();
+    const ctx = loadMappingModule({ $ });
+
+    const xml = buildNsPrefixXml(`
+      <ns:fundingReferences>
+        <ns:fundingReference>
+          <ns:funderName>URI Only Foundation</ns:funderName>
+          <ns:awardNumber awardURI="https://example.org/uri-only"/>
+        </ns:fundingReference>
+      </ns:fundingReferences>`);
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    ctx.processFunders(xmlDoc, NS_RESOLVER);
+
+    expect(document.querySelector('input[name="grantNummer[]"]').value).toBe("");
+    expect(document.querySelector('input[name="awardURI[]"]').value).toBe(
+      "https://example.org/uri-only"
+    );
+  });
+
   test("awardURI is correctly imported via XPath getAttribute", () => {
     document.body.innerHTML = `
       <div id="group-fundingreference">

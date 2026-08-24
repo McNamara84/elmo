@@ -22,6 +22,10 @@ include_once __DIR__ . '/settings.php';
 // accessible by default.
 include_once __DIR__ . '/includes/feature_toggles.php';
 
+require_once __DIR__ . '/api/security.php';
+ensureAppSession(); // for rate limiting based on session
+resetPageInteractionTime('form'); // mark when this page visit began
+
 // Treat requests without query parameters as "new records"
 $isNewRecord = empty($_GET);
 
@@ -67,7 +71,7 @@ $showUsedInstruments = $variantOverrides['showUsedInstruments'];
 $thesauriHiddenKeys = $variantOverrides['thesauriHiddenKeys'];
 
 // Include HTML components using absolute paths to ensure reliable file access
-$mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right logo-msl"> </a>';
+$mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="assets/logos/epos-logo.png" alt="MSL Logo" class="logo logo-right logo-msl"> </a>';
 
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
@@ -78,7 +82,7 @@ include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
     include $baseDir . 'formgroups/GGMsDefinition.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
-    include $baseDir . 'formgroups/GGMsDataSources.html';
+    include $baseDir . 'formgroups/ggms-data-sources.html';
     include $baseDir . 'formgroups/GGMsProperties.html';
 }
 if ($showContributorPersons) {

@@ -15,6 +15,9 @@ function saveContributorPersons($connection, $postData, $resource_id)
 {
 
     $valid_roles = getValidRoles($connection);
+    $contributorRoles = isset($postData['cbPersonRoles']) && is_array($postData['cbPersonRoles'])
+        ? $postData['cbPersonRoles']
+        : [];
 
     // Validate only on submit
     $action = $postData['action'] ?? 'save_and_download';
@@ -25,12 +28,10 @@ function saveContributorPersons($connection, $postData, $resource_id)
         $postData['cbPersonLastname'],
         $postData['cbPersonFirstname'],
         $postData['cbORCID'],
-        $postData['cbAffiliation'],
-        $postData['cbPersonRoles']
+        $postData['cbAffiliation']
     ) ||
         !is_array($postData['cbPersonLastname']) || !is_array($postData['cbPersonFirstname']) ||
-        !is_array($postData['cbORCID']) || !is_array($postData['cbAffiliation']) ||
-        !is_array($postData['cbPersonRoles'])
+        !is_array($postData['cbORCID']) || !is_array($postData['cbAffiliation'])
     ) {
         return true; // No data provided is valid
     }
@@ -43,7 +44,7 @@ function saveContributorPersons($connection, $postData, $resource_id)
             'lastname' => $postData['cbPersonLastname'][$i] ?? '',
             'firstname' => $postData['cbPersonFirstname'][$i] ?? '',
             'orcid' => $postData['cbORCID'][$i] ?? '',
-            'roles' => $postData['cbPersonRoles'][$i] ?? ''
+            'roles' => $contributorRoles[$i] ?? []
         ];
         // Remove ORCID URL prefix if present (defense against frontend bypass)
         $entry['orcid'] = str_replace(['https://orcid.org/', 'http://orcid.org/'], '', $entry['orcid']);

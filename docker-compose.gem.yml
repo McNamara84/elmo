@@ -22,10 +22,10 @@ services:
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
     security_opt:
       - no-new-privileges:true
 
@@ -86,11 +86,19 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - xml_data:/var/www/html/xml
       - storage_data:/var/www/html/storage
     security_opt:
       - no-new-privileges:true
+
+  curl:
+    image: curlimages/curl:latest
+    network_mode: host
+    entrypoint: ["sleep", "infinity"]
 
 volumes:
   xml_data:

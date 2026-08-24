@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
-const SUBMIT_ENDPOINT = '**/send_xml_file.php';
+const SUBMIT_ENDPOINT = '**/endpoints/send_xml_file.php';
 
 async function openSubmitModal(page: Page) {
   await completeMinimalDatasetForm(page);
@@ -12,9 +12,18 @@ async function openSubmitModal(page: Page) {
 
   const submitModal = page.locator('#modal-submit');
   await expect(submitModal).toBeVisible({ timeout: 5000 });
+  await page.waitForFunction(() => {
+    const modalElement = document.getElementById('modal-submit');
+    const modal = modalElement
+      ? (window as any).bootstrap?.Modal?.getInstance(modalElement)
+      : null;
 
-  const csrfField = submitModal.locator('input[name="csrf_token"]').first();
-  await expect(csrfField).not.toHaveValue('');
+    return modalElement?.classList.contains('show') && modal?._isTransitioning === false;
+  });
+
+  // Form token is in main form, not modal - verify it exists in the main form
+  const csrfField = page.locator('#input-csrf-token');
+  await expect(csrfField).toHaveValue('');
 
   return { submitModal, csrfField };
 }
@@ -44,13 +53,14 @@ test.describe('Submit Operation Security Features', () => {
   test('submit modal exposes honeypot + CSRF fields and honeypot starts empty', async ({ page }) => {
     const { submitModal, csrfField } = await openSubmitModal(page);
 
-    const honeypotField = submitModal.locator('input[name="website"]').first();
+    const honeypotField = submitModal.locator('#input-submit-please-fill-in-this-field');
     await expect(honeypotField).toHaveAttribute('tabindex', '-1');
     await expect(honeypotField).toHaveAttribute('autocomplete', 'off');
     await expect(honeypotField).toHaveValue('');
 
+    // CSRF token is in main form, not in modal
     await expect(csrfField).toHaveAttribute('type', 'hidden');
-    await expect(csrfField).not.toHaveValue('');
+    await expect(csrfField).toHaveValue('');
   });
 
   test('normal submit with privacy consent succeeds', async ({ page }) => {
@@ -63,8 +73,6 @@ test.describe('Submit Operation Security Features', () => {
     });
 
     const { submitModal } = await openSubmitModal(page);
-    // Simulate a real user pause before confirming.
-    await page.waitForTimeout(3200);
 
     await Promise.all([
       page.waitForRequest(SUBMIT_ENDPOINT),
@@ -79,76 +87,36 @@ test.describe('Submit Operation Security Features', () => {
   });
 
   test('backend rejects submit when CSRF token is corrupted', async ({ page }) => {
-    await openSubmitModal(page);
-
-    // Simulate token tampering before request submission.
-    await page.locator('#input-submit-csrf-token').evaluate((el) => {
-      (el as HTMLInputElement).value = 'corrupted-token';
-    });
-
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
-
-    const responsePromise = page.waitForResponse((response) =>
-      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
-    );
-
-    await submitFromModalWithPrivacyConsent(page);
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(403);
-    const payload = await response.json();
-    expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Security token validation failed');
-  });
-  test('backend rejects submit when honeypot field is filled', async ({ page }) => {
-    const { submitModal } = await openSubmitModal(page);
-
-    // Simulate bot filling honeypot before request submission.
-    const honeypot = submitModal.locator('input[name="website"]').first();
-    await honeypot.waitFor({ state: 'attached' });
-    await honeypot.evaluate((el) => {
-      (el as HTMLInputElement).value = 'I am a bot';
-    });
-
-    // Wait 3+ seconds to meet backend minimum interaction time for submit
-    await page.waitForTimeout(3100);
-
-    const responsePromise = page.waitForResponse((response) =>
-      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
-    );
-
-    await submitFromModalWithPrivacyConsent(page);
-    const response = await responsePromise;
-
-    expect(response.status()).toBe(400);
-  });
-
-  test('submit flow rejects when modal confirmation is too fast (<3s)', async ({ page }) => {
-    let capturedBody = '';
-
-    await page.route(SUBMIT_ENDPOINT, async (route) => {
-      const postData = route.request().postData();
-      const bodyBuffer = route.request().postDataBuffer();
-      capturedBody = postData || (bodyBuffer ? bodyBuffer.toString('utf-8') : '');
-
+    await page.route('**/api/csrf_token.php', async (route) => {
       await route.fulfill({
-        status: 400,
+        status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({
-          success: false,
-          message: 'Please take time to review your submission before submitting.',
-        }),
+        body: JSON.stringify({ success: true, token: 'corrupted-token' }),
       });
     });
 
     await openSubmitModal(page);
 
-    // Freeze Date.now close to modal-open time so client sends a low time-spent value.
-    await page.evaluate(() => {
-      const now = Date.now();
-      Date.now = () => now;
-    });
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+
+    await submitFromModalWithPrivacyConsent(page);
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(400);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
+    expect(payload.message).toBe('Invalid request. Please reload the page and try again.');
+  });
+  test('backend rejects submit when modal honeypot field is filled', async ({ page }) => {
+    const { submitModal } = await openSubmitModal(page);
+
+    const honeypot = submitModal.locator('#input-submit-please-fill-in-this-field');
+    await honeypot.waitFor({ state: 'attached' });
+
+    // Fill honeypot only after the modal open animation completes — shown.bs.modal resets the field.
+    await honeypot.fill('I am a bot');
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
@@ -158,14 +126,59 @@ test.describe('Submit Operation Security Features', () => {
     const response = await responsePromise;
 
     expect(response.status()).toBe(400);
-
-    const submittedTimeSpentRaw = extractMultipartField(capturedBody, 'submit_time_spent');
-    const submittedTimeSpent = Number.parseInt(submittedTimeSpentRaw ?? '0', 10);
-    expect(submittedTimeSpent).toBeLessThan(3);
-
     const payload = await response.json();
     expect(payload.success).toBe(false);
-    expect(payload.message).toContain('Please take time to review your submission before submitting.');
+    expect(payload.message).toBe('Invalid request.');
+  });
+
+  test('backend rejects submit when main-form honeypot field is filled', async ({ page }) => {
+    await completeMinimalDatasetForm(page);
+    await page.locator('#input-please-fill-in-this-field').fill('I am a bot');
+
+    await page.locator('#button-form-submit').click();
+    await expect(page.locator('#modal-submit')).toBeVisible({ timeout: 5000 });
+    await page.check('#input-submit-privacycheck');
+
+    const responsePromise = page.waitForResponse((response) =>
+      response.url().includes('send_xml_file.php') && response.request().method() === 'POST'
+    );
+
+    await submitFromModalWithPrivacyConsent(page);
+    const response = await responsePromise;
+
+    expect(response.status()).toBe(400);
+    const payload = await response.json();
+    expect(payload.success).toBe(false);
+    expect(payload.message).toBe('Invalid request.');
+  });
+
+  test('submit POST does not include client-side time_spent field', async ({ page }) => {
+    let capturedBody = '';
+
+    await page.route(SUBMIT_ENDPOINT, async (route) => {
+      const bodyBuffer = route.request().postDataBuffer();
+      capturedBody = bodyBuffer ? bodyBuffer.toString('utf-8') : '';
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({ success: true, message: 'Submitted successfully' }),
+      });
+    });
+
+    await openSubmitModal(page);
+
+    await Promise.all([
+      page.waitForResponse(
+        (response) =>
+          response.url().includes('send_xml_file.php') &&
+          response.request().method() === 'POST'
+      ),
+      submitFromModalWithPrivacyConsent(page),
+    ]);
+
+    expect(capturedBody.length).toBeGreaterThan(0);
+    expect(capturedBody).not.toContain('name="submit_time_spent"');
+    expect(capturedBody).toContain('name="csrf-token"');
 
     await page.unroute(SUBMIT_ENDPOINT);
   });

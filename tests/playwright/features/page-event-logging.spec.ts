@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome } from '../utils';
 
-const LOG_ENDPOINT = '**/log_page_event.php';
+const LOG_ENDPOINT = '**/endpoints/log_page_event.php';
 const ISO_INSTANT_REGEX = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?Z$/;
 
 test.describe('Page load event logging', () => {

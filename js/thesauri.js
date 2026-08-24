@@ -126,6 +126,73 @@ function hideLoadingSpinner(jsTreeId) {
 }
 
 /**
+ * Expands jsTree nodes after the datasource platforms thesaurus loads.
+ * Opens the configured root subtree first, then any initialOpenNodeTexts entries.
+ * Uses chained open_node callbacks because jsTree expands asynchronously.
+ *
+ * @param {Object} config - Thesaurus configuration.
+ */
+function expandInitialTreeNodes(config) {
+    const hasInitialOpenTexts = config.initialOpenNodeTexts && config.initialOpenNodeTexts.length > 0;
+    if (!config.rootNodeId && !hasInitialOpenTexts) return;
+
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree || typeof tree.open_node !== 'function') return;
+
+    const nodesToOpen = [];
+
+    if (config.rootNodeId) {
+        nodesToOpen.push(config.rootNodeId);
+    }
+
+    (config.initialOpenNodeTexts || []).forEach(function (text) {
+        const node = tree.get_json('#', { flat: true }).find(function (n) {
+            return n.text === text;
+        });
+        if (node && !nodesToOpen.includes(node.id)) {
+            nodesToOpen.push(node.id);
+        }
+    });
+
+    function openNext(index) {
+        if (index >= nodesToOpen.length) return;
+        tree.open_node(nodesToOpen[index], function () {
+            openNext(index + 1);
+        });
+    }
+
+    openNext(0);
+}
+
+/**
+ * Decides what activating a tree row does, so broader terms can be browsed by clicking
+ * the row instead of aiming for the small expander arrow.
+ *
+ * Rows that have narrower terms open or close, rows without children keep jsTree's
+ * default selection. Clicking the checkbox or holding Ctrl/Cmd always selects, so
+ * broader terms stay selectable as keywords.
+ *
+ * Invoked by the conditionalselect plugin with the jsTree instance as `this`.
+ *
+ * @param {Object} node - The activated jsTree node.
+ * @param {Object} [event] - Event that triggered the activation.
+ * @returns {boolean} True when jsTree should apply its default selection.
+ */
+function handleTreeNodeActivation(node, event) {
+    const selectsExplicitly = !event
+        || event.ctrlKey
+        || event.metaKey
+        || $(event.target).hasClass('jstree-checkbox');
+
+    if (selectsExplicitly || !this.is_parent(node)) {
+        return true;
+    }
+
+    this.toggle_node(node);
+    return false;
+}
+
+/**
  * Loads thesaurus vocabulary data on demand.
  * Triggered when a modal is opened for the first time OR when
  * a Tagify input field receives focus.
@@ -153,6 +220,20 @@ function loadThesaurusOnDemand(config) {
             </div>
         `);
     });
+}
+
+/**
+ * Ensures a thesaurus config is loaded, resolving a config key when needed.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ */
+export function ensureThesaurusLoaded(configKeyOrConfig) {
+    const config = typeof configKeyOrConfig === 'string'
+        ? (ensureConfigRegistered(configKeyOrConfig) || THESAURUS_CONFIG[configKeyOrConfig])
+        : configKeyOrConfig;
+    if (config) {
+        loadThesaurusOnDemand(config);
+    }
 }
 
 /**
@@ -288,10 +369,27 @@ function loadKeywordsForConfig(config, response) {
         tagifyInstance.settings.enforceWhitelist = true;
     });
 
+    $(config.jsTreeId).one('ready.jstree', function () {
+        expandInitialTreeNodes(config);
+
+        const activeTagify = getActiveTagifyForState(state);
+        if (activeTagify && activeTagify.value && activeTagify.value.length) {
+            var currentValues = activeTagify.value.map(v => v.value);
+            currentValues.forEach(function (val) {
+                var tree = $(config.jsTreeId).jstree(true);
+                if (!tree) return;
+                var node = findNodeByPath(tree, val);
+                if (node) tree.select_node(node.id);
+            });
+        }
+    });
+
     // Initialize jsTree
     $(config.jsTreeId).jstree({
         core: {
             data: processedData,
+            // A single click already opens and closes broader terms.
+            dblclick_toggle: false,
             themes: {
                 icons: false,
                 dots: false
@@ -301,7 +399,8 @@ function loadKeywordsForConfig(config, response) {
             keep_selected_style: true,
             three_state: false
         },
-        plugins: ['search', 'checkbox'],
+        conditionalselect: handleTreeNodeActivation,
+        plugins: ['search', 'checkbox', 'conditionalselect'],
         search: {
             show_only_matches: true,
             search_callback: function (str, node) {
@@ -345,16 +444,25 @@ function loadKeywordsForConfig(config, response) {
     });
 
     // Initial sync: if the active input already has tags, select corresponding nodes
-    const activeTagify = getActiveTagifyForState(state);
-    if (activeTagify && activeTagify.value && activeTagify.value.length) {
-        var currentValues = activeTagify.value.map(v => v.value);
-        currentValues.forEach(function (val) {
-            var tree = $(config.jsTreeId).jstree(true);
-            if (!tree) return;
-            var node = findNodeByPath(tree, val);
-            if (node) tree.select_node(node.id);
+    $(config.jsTreeId).one("ready.jstree", function () {
+        const activeTagify = getActiveTagifyForState(state);
+        if (!activeTagify || !activeTagify.value || !activeTagify.value.length) return;
+
+        // Sync jsTree selection from current Tagify values (store paths as a Set)
+        state.selectedPaths = new Set(activeTagify.value.map(v => v.value));
+
+        const tree = $(config.jsTreeId).jstree(true);
+        if (!tree) return;
+
+        activeTagify.value.forEach(function (tag) {
+            const node = findNodeByPath(tree, tag.value);
+            if (node) {
+                tree.select_node(node.id);
+            }
         });
-    }
+
+        updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
+    });
 }
 
 /** Returns the shared state key for a thesaurus config. */
@@ -401,6 +509,7 @@ function ensureConfigRegistered(configKey) {
     const registeredConfig = {
         apiEndpoint: config.apiEndpoint,
         rootNodeId: config.rootNodeId,
+        initialOpenNodeTexts: config.initialOpenNodeTexts,
         modalId: config.modalId,
         jsTreeId: config.jsTreeId,
         searchInputId: config.searchInputId,
@@ -648,7 +757,6 @@ export function initTagifyForInput(inputElement, configKey) {
         state.jsTreeIds.push(config.jsTreeId);
     }
 
-    // Initialize Tagify if it hasn't been already
     if (!inputElement._tagify) {
         inputElement._tagify = new Tagify(inputElement, {
             whitelist: state.whitelist,
@@ -673,6 +781,19 @@ export function initTagifyForInput(inputElement, configKey) {
         }
     }
     state.tagifyInstances.add(inputElement._tagify);
+
+    if (!inputElement.dataset.tagifyValidationBound && inputElement._tagify) {
+        inputElement.dataset.tagifyValidationBound = 'true';
+        inputElement._tagify.on('add', function () {
+            inputElement.setCustomValidity('');
+            inputElement.classList.remove('is-invalid', 'is-valid');
+            // Tagify keeps the original input as a sibling of <tags class="tagify">.
+            const tagifyWrapper = inputElement._tagify?.DOM?.scope
+                || inputElement.closest('.tagify')
+                || inputElement.parentElement?.querySelector('.tagify');
+            tagifyWrapper?.classList.remove('is-invalid', 'is-valid');
+        });
+    }
 
     if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
         window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
@@ -1097,6 +1218,7 @@ $(document).ready(function () {
             var thesaurusKeywordstagify = new Tagify(input, {
                 whitelist: state.whitelist,
                 enforceWhitelist: false,
+                delimiters: null,
                 placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
                 dropdown: {
                     maxItems: 50,
@@ -1107,6 +1229,7 @@ $(document).ready(function () {
                 editTags: false
             });
             input._tagify = thesaurusKeywordstagify;
+            input.tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
             state.tagifyInstances.add(thesaurusKeywordstagify);
 

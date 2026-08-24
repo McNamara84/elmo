@@ -20,12 +20,14 @@ session_start();
 // Buffer output
 ob_start();
 
+$projectRoot = dirname(__DIR__);
+
 // Include security functions FIRST (before settings.php to avoid duplicate includes)
-require_once __DIR__ . '/api/security.php';
+require_once $projectRoot . '/api/security.php';
 
 // Include required files
-require_once __DIR__ . '/settings.php';
-require_once __DIR__ . '/includes/save_to_db_helper.php';
+require_once $projectRoot . '/settings.php';
+require_once $projectRoot . '/includes/save_to_db_helper.php';
 
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties, $showUsedInstruments;
@@ -37,9 +39,9 @@ error_log("send_xml_file.php: Globals set, connection: " . (isset($connection) ?
 // Include PHPMailer classes
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/Exception.php';
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
-require_once __DIR__ . '/vendor/phpmailer/phpmailer/src/SMTP.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/Exception.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
+require_once $projectRoot . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 error_log("send_xml_file.php: PHPMailer included");
 
@@ -65,66 +67,6 @@ function testGfzSmtpConnectivity(): bool {
         error_log("Port {$smtpPort} on {$smtpHost} is CLOSED or FILTERED. Error: {$errno} - {$errstr}");
         return false;
     }
-}
-
-/**
- * Validate submit security (honeypot, CSRF, rate limiting, minimum time)
- *
- * @param array<string, mixed> $postData
- * @param mixed $connection
- */
-function validateSubmitSecurity(array $postData, mixed $connection): void {
-    $clientIp = getClientIp();
-
-    // Check 1: Honeypot
-    if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt($connection, 'submit', 'honeypot triggered', $clientIp);
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Invalid submission detected.']);
-        exit;
-    }
-
-    // Check 2: CSRF Token validation
-    if (!validateCsrfToken($postData['csrf_token'] ?? '')) {
-        logSuspiciousAttempt($connection, 'submit', 'invalid csrf token', $clientIp);
-        http_response_code(403);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Security token validation failed.']);
-        exit;
-    }
-
-    // Check 3: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'submit', RATE_LIMIT_SUBMIT_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt($connection, 'submit', 'rate limit exceeded', $clientIp);
-        http_response_code(429);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Too many submission attempts. Please try again later.']);
-        exit;
-    }
-
-    // Check 4: Minimum time spent
-    $timeCheck = evaluateInteractionTime((int) ($postData['submit_time_spent'] ?? 0), MIN_INTERACTION_SUBMIT_SECONDS);
-    if (!$timeCheck['isValid']) {
-        logSuspiciousAttempt(
-            $connection,
-            'submit',
-            "insufficient time spent (effective={$timeCheck['effectiveSeconds']}s, client={$timeCheck['clientSeconds']}s, server={$timeCheck['serverSeconds']}s)",
-            $clientIp
-        );
-        http_response_code(400);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Please take time to review your submission before submitting.']);
-        exit;
-    }
-
-    recordRateLimit($connection, $clientIp, 'submit');
-    invalidateCsrfToken();
-    error_log("send_xml_file.php: Submit security validation passed");
 }
 
 /**
@@ -380,16 +322,7 @@ try {
     error_log("send_xml_file.php: Try block started");
 
     // Step 0: Security Validation
-    try {
-        validateSubmitSecurity($_POST, $connection);
-    } catch (Exception $e) {
-        error_log("send_xml_file.php: Security validation exception: " . $e->getMessage());
-        http_response_code(403);
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Security validation failed.']);
-        exit;
-    }
+    validateRequestSecurity('submit', $_POST);
 
     // Capture and clean post values
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
@@ -426,7 +359,7 @@ try {
 
     if ($payloadData['generator'] === 'dataset-xml') {
         try {
-            require_once __DIR__ . '/api/v2/controllers/DatasetController.php';
+            require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
             $datasetController = new DatasetController();
             $xml_content = $datasetController->markDataCiteEnvelopeAsSubmitted($xml_content, date('Y-m-d'));
             error_log("Submit: Marked DataCite XML with dateType=Submitted.");
@@ -436,7 +369,7 @@ try {
     }
 
     // Feature toggles for simulation path
-    include_once __DIR__ . '/includes/feature_toggles.php';
+    include_once $projectRoot . '/includes/feature_toggles.php';
     $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 
     if ($simulateEmail) {

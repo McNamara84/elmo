@@ -15,15 +15,13 @@
  * @requires formgroups/*.php
  */
 
-// Guard for PHPUnit
-if (defined('PHPUNIT_RUNNING')) {
+// Only process POST requests
+if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
     return;
 }
 
-// Only process POST requests
-if (($_SERVER['REQUEST_METHOD'] ?? null) !== 'POST') {
-    exit();
-}
+// Preserve output buffers owned by callers (for example the PHPUnit request harness).
+$saveDataInitialOutputBufferLevel = ob_get_level();
 
 require_once __DIR__ . '/../api/security.php';
 
@@ -33,82 +31,20 @@ if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
 }
 global $connection;
 
-// ===== Step 0: Security check  =====
+// ========= EXECUTION PIPELINE =========
 
-/**
- * Validates security checks for save operations.
- * 
- * @param array $postData The POST data
- * @param mysqli $connection Database connection for rate limiting
- * @return array {status: bool, message: string|null, code: int}
- */
-function validateSaveSecurity($postData, $connection)
-{
-    $clientIp = getClientIp();
-    
-    // Security Check 1: Honeypot
-    if (!validateHoneypot($postData['website'] ?? '')) {
-        logSuspiciousAttempt($connection, 'save', 'honeypot triggered', $clientIp);
-        return [
-            'status' => false,
-            'message' => 'Invalid request',
-            'code' => 400
-        ];
-    }
-    
-    // Security Check 2: CSRF Token validation
-    $submittedToken = $postData['csrf_token'] ?? '';
-    if (!validateCsrfToken($submittedToken)) {
-        logSuspiciousAttempt($connection, 'save', 'invalid csrf token', $clientIp);
-        return [
-            'status' => false,
-            'message' => 'Invalid request - CSRF token validation failed',
-            'code' => 403
-        ];
-    }
-    
-    // Security Check 3: Rate limiting
-    if (!checkRateLimit($connection, $clientIp, 'save', RATE_LIMIT_SAVE_MAX, RATE_LIMIT_WINDOW_SECONDS)) {
-        logSuspiciousAttempt($connection, 'save', 'rate limit exceeded', $clientIp);
-        return [
-            'status' => false,
-            'message' => 'Too many save requests. Please try again later.',
-            'code' => 429
-        ];
-    }
-
-    // Local downloads are still protected by CSRF, honeypot, and rate limiting.
-    // Do not enforce a minimum interaction time here: users often save
-    // immediately after reviewing/editing metadata in the main form.
-
-    // Record this save for rate limiting
-    recordRateLimit($connection, $clientIp, 'save');
-
-    // Invalidate the used CSRF token only after all checks pass.
-    invalidateCsrfToken();
-    
-    return ['status' => true];
-}
-
-// Validate security first
-$securityCheck = validateSaveSecurity($_POST, $connection);
-if (!$securityCheck['status']) {
-    http_response_code($securityCheck['code'] ?? 400);
-    header('Content-Type: application/json');
-    echo json_encode(['error' => $securityCheck['message'] ?? 'Security validation failed']);
-    error_log("[💿SAVE]: Security validation failed: " . ($securityCheck['message'] ?? 'Unknown reason'));
-    return;
-}
+// Step 0: Security Validation — exits on any failure
+validateRequestSecurity('save', $_POST);
 // ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 try {
-    $resource_id = saveALL($_POST, $connection);
+    $resource_id = saveALL($_POST);
 } catch (\Throwable $e) {
     // Transaction or save operation failed
     error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());
     // Flush any buffers
-    while (ob_get_level() > 0) {
+    while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
         ob_end_clean();
     }
     http_response_code(500);
@@ -144,7 +80,7 @@ if (isset($_POST['filename'])) {
         error_log("[SAVE] Payload generated via {$generated['generator']}, length=" . strlen($payload) . " bytes");
 
         // Flush any stale output buffers before sending the response
-        while (ob_get_level() > 0) {
+        while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
             ob_end_clean();
         }
 
@@ -158,7 +94,7 @@ if (isset($_POST['filename'])) {
     } catch (\Throwable $e) {
         error_log("[SAVE] Download generation failed after DB commit for resource_id=$resource_id: " . $e->getMessage());
         // Flush any buffers from the failed generation attempt
-        while (ob_get_level() > 0) {
+        while (ob_get_level() > $saveDataInitialOutputBufferLevel) {
             ob_end_clean();
         }
         http_response_code(500);

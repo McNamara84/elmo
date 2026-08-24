@@ -74,6 +74,25 @@ describe('select module coverage', () => {
         // Mock fetch
         global.fetch = jest.fn();
 
+        const identifierTypesResponse = {
+            identifierTypes: [
+                { name: 'DOI', pattern: '^10\\.\\d{4,9}/.+$', description: 'Digital Object Identifier' },
+                { name: 'URL', pattern: '^https?://.+$', description: 'Uniform Resource Locator' }
+            ]
+        };
+        $.getJSON = jest.fn((url, success) => {
+            if (typeof success === 'function') {
+                success(identifierTypesResponse);
+            }
+            return { fail: jest.fn() };
+        });
+        $.ajax = jest.fn((options) => {
+            if (typeof options?.success === 'function') {
+                options.success(identifierTypesResponse);
+            }
+            return { fail: jest.fn(), always: jest.fn() };
+        });
+
         // Clear module cache
         jest.resetModules();
 
@@ -93,20 +112,20 @@ describe('select module coverage', () => {
     });
 
     describe('module exports', () => {
-        test('exports initializeTimezoneDropdown function', () => {
-            expect(typeof selectModule.initializeTimezoneDropdown).toBe('function');
+        test('exports setupTimezoneDropdownAjax function', () => {
+            expect(typeof selectModule.setupTimezoneDropdownAjax).toBe('function');
         });
 
-        test('exports setupResourceTypeDropdown function', () => {
-            expect(typeof selectModule.setupResourceTypeDropdown).toBe('function');
+        test('exports setupResourceTypeDropdownAjax function', () => {
+            expect(typeof selectModule.setupResourceTypeDropdownAjax).toBe('function');
         });
 
-        test('exports setupLanguageDropdown function', () => {
-            expect(typeof selectModule.setupLanguageDropdown).toBe('function');
+        test('exports setupLanguageDropdownAjax function', () => {
+            expect(typeof selectModule.setupLanguageDropdownAjax).toBe('function');
         });
 
-        test('exports setupTitleTypeDropdown function', () => {
-            expect(typeof selectModule.setupTitleTypeDropdown).toBe('function');
+        test('exports setupTitleTypeDropdownAjax function', () => {
+            expect(typeof selectModule.setupTitleTypeDropdownAjax).toBe('function');
         });
 
         test('exports setupIdentifierTypesDropdown function', () => {
@@ -287,10 +306,10 @@ describe('select module coverage', () => {
         });
     });
 
-    describe('initializeTimezoneDropdown', () => {
+    describe('setupTimezoneDropdownAjax', () => {
         test('returns early for non-existent dropdown', async () => {
             await expect(
-                selectModule.initializeTimezoneDropdown('#nonexistent', 'json/timezones.json')
+                selectModule.setupTimezoneDropdownAjax('#nonexistent', 'json/timezones.json')
             ).resolves.toBeUndefined();
         });
 
@@ -298,7 +317,7 @@ describe('select module coverage', () => {
             global.fetch.mockRejectedValueOnce(new Error('Network error'));
             
             await expect(
-                selectModule.initializeTimezoneDropdown('#input-stc-timezone', 'json/timezones.json')
+                selectModule.setupTimezoneDropdownAjax('#input-stc-timezone', 'json/timezones.json')
             ).resolves.toBeUndefined();
         });
     });

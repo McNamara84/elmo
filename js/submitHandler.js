@@ -1,7 +1,11 @@
+import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+
 /**
  * Validates that the embargo date is not before the creation date.
  * @returns {boolean} True if the dates are valid, false otherwise.
  */
+
 function validateEmbargoDate() {
     const dateCreatedInput = document.getElementById('input-date-created');
     const dateEmbargoInput = document.getElementById('input-date-embargo');
@@ -176,7 +180,10 @@ if (groupStc) {
 
 
 /**
- * Validates if a Contact Person is selected from group of Authors.
+ * Checks whether an Authors payload entry is a complete person contact.
+ *
+ * @param {Record<string, unknown>|null} author - Authors payload entry.
+ * @returns {boolean} True for a selected person contact with family name and email.
  */
 function isCompletePayloadContact(author) {
     if (!author || author.type !== 'person' || author.isContact !== true) {
@@ -187,23 +194,34 @@ function isCompletePayloadContact(author) {
         String(author.email || '').trim() !== '';
 }
 
-function validateContactPerson() {
-    var payloadInput = document.querySelector('input[name="authorsPayload"]');
-    var authorsPayload = null;
+/**
+ * Validates that the synchronized Authors payload contains a complete contact.
+ *
+ * Direct calls rebuild the payload through the shared Authors synchronization
+ * service. The optional payload is used by the `authorsPayload:updated` event,
+ * whose detail already contains the freshly synchronized value. Missing or
+ * malformed payload infrastructure is a validation failure and never falls
+ * back to legacy checkboxes.
+ *
+ * @param {Array<Record<string, unknown>>|null} [synchronizedPayload=null]
+ *        Payload supplied by an Authors update event, or null to synchronize now.
+ * @returns {boolean} True when the payload contains a complete person contact.
+ */
+function validateContactPerson(synchronizedPayload = null) {
+    var authorsPayload = Array.isArray(synchronizedPayload) ? synchronizedPayload : null;
 
-    if (payloadInput && payloadInput.value) {
+    if (!Array.isArray(authorsPayload)) {
         try {
-            authorsPayload = JSON.parse(payloadInput.value);
+            authorsPayload = synchronizeAuthorsPayload(document);
         } catch (error) {
-            authorsPayload = null;
+            console.error('Could not synchronize Authors payload for contact validation:', error);
         }
     }
 
-    var isValid = Array.isArray(authorsPayload)
-        ? authorsPayload.some(function (author) {
+    var isValid = Array.isArray(authorsPayload) &&
+        authorsPayload.some(function (author) {
             return isCompletePayloadContact(author);
-        })
-        : $('input[name="contacts[]"]:checked').length > 0;
+        });
 
     $('#contact-person-error').remove();
     // 
@@ -248,13 +266,8 @@ class SubmitHandler {
         this.autosaveService = autosaveService;
 
         // Security field references
-        this.$csrfTokenField = $('#input-submit-csrf-token');
-        this.$timeSpentField = $('#input-submit-time-spent');
-        this.$honeypotField = $('#modal-submit input[name="website"]').first();
-        this.modalOpenedAt = null;
-        this.submitSecurityDelayMs = 3200;
-        this.submitReadyAt = 0;
-        this.submitReadyTimer = null;
+        this.$mainHoneypotField = $('#input-please-fill-in-this-field');
+        this.$modalHoneypotField = $('#input-submit-please-fill-in-this-field');
 
         this.initializeEventListeners();
         this.initializeFileHandlers();
@@ -267,33 +280,25 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
-        this.$form.on('change', 'input[name="contacts[]"]', validateContactPerson);
+        this.$form.on('change', 'input[name="contacts[]"]', () => validateContactPerson());
         this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson();
             }
         });
-        document.addEventListener('authorsPayload:updated', () => {
+        document.addEventListener('authorsPayload:updated', (event) => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
-                validateContactPerson();
+                validateContactPerson(event.detail?.payload);
             }
         });
 
-        // Fetch CSRF token and reset security fields on modal open
-        $('#modal-submit').on('shown.bs.modal', async () => {
-            this.resetSubmitSecurityDelay();
-            await this.fetchCsrfToken();
-            this.modalOpenedAt = Date.now();
-            this.submitReadyAt = this.modalOpenedAt + this.submitSecurityDelayMs;
-            this.$honeypotField.val('');
-            this.$timeSpentField.val('0');
-            this.scheduleSubmitReadyState();
+        // Reset modal-scoped fields on open
+        $('#modal-submit').on('shown.bs.modal', () => {
+            this.$modalHoneypotField.val('');
             $('#input-submit-dataurl').select();
         });
 
         $('#modal-submit').on('hidden.bs.modal', () => {
-            this.clearSubmitReadyTimer();
-            this.submitReadyAt = 0;
             this.toggleSubmitButton();
         });
 
@@ -313,23 +318,6 @@ class SubmitHandler {
                 this.handleModalSubmit();
             }
         });
-    }
-
-    /**
-     * Fetch fresh CSRF token from the server
-     */
-    async fetchCsrfToken() {
-        try {
-            const response = await fetch('api/csrf_token.php');
-            const data = await response.json();
-            if (data.token) {
-                this.$csrfTokenField.val(data.token);
-            } else {
-                console.error('No token in response:', data);
-            }
-        } catch (error) {
-            console.error('Error fetching CSRF token:', error);
-        }
     }
 
     /**
@@ -365,43 +353,9 @@ class SubmitHandler {
     /**
      * Toggle submit button based on privacy checkbox
      */
-    clearSubmitReadyTimer() {
-        if (this.submitReadyTimer) {
-            clearTimeout(this.submitReadyTimer);
-            this.submitReadyTimer = null;
-        }
-    }
-
-    resetSubmitSecurityDelay() {
-        this.clearSubmitReadyTimer();
-        this.submitReadyAt = Number.POSITIVE_INFINITY;
-        this.toggleSubmitButton();
-    }
-
-    isSubmitSecurityDelaySatisfied() {
-        return !this.submitReadyAt || Date.now() >= this.submitReadyAt;
-    }
-
-    scheduleSubmitReadyState() {
-        this.clearSubmitReadyTimer();
-        const delay = Math.max(0, this.submitReadyAt - Date.now());
-
-        if (delay === 0) {
-            this.submitReadyAt = 0;
-            this.toggleSubmitButton();
-            return;
-        }
-
-        this.toggleSubmitButton();
-        this.submitReadyTimer = setTimeout(() => {
-            this.submitReadyAt = 0;
-            this.toggleSubmitButton();
-        }, delay);
-    }
-
     toggleSubmitButton() {
         const isChecked = $('#input-submit-privacycheck').is(':checked');
-        $('#button-submit-submit').prop('disabled', !isChecked || !this.isSubmitSecurityDelaySatisfied());
+        $('#button-submit-submit').prop('disabled', !isChecked);
     }
 
     /**
@@ -451,43 +405,55 @@ class SubmitHandler {
     }
 
     /**
-     * Handle modal submit
+     * Submits the validated form using the same freshly generated Authors
+     * payload used by contact validation and file saving.
+     *
+     * Payload synchronization failures abort submission, display the standard
+     * submit error, and prevent stale legacy author fields from reaching the
+     * backend.
+     *
+     * @returns {Promise<void>} Promise resolved after handing data to the AJAX submission.
      */
     async handleModalSubmit() {
-        if (!this.isSubmitSecurityDelaySatisfied()) {
-            this.toggleSubmitButton();
-            return;
-        }
-
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
-        
-        // Calculate time spent in modal
-        if (this.modalOpenedAt) {
-            const timeSpent = Math.floor((Date.now() - this.modalOpenedAt) / 1000);
-            this.$timeSpentField.val(timeSpent);
-        }
 
-        if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
-            window.authorStack.updatePayload();
+        let authorsPayload;
+        try {
+            authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+        } catch (error) {
+            console.error('Could not synchronize Authors payload for submission:', error);
+            this.showNotification(
+                'danger',
+                translations.alerts.errorHeading,
+                translations.alerts.submitError
+            );
+            return;
         }
 
         const submitData = new FormData(this.$form[0]);
-        const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
-        if (authorsPayloadInput) {
-            submitData.set('authorsPayload', authorsPayloadInput.value);
-        }
+        submitData.set('authorsPayload', JSON.stringify(authorsPayload));
 
-        // Explicitly add CSRF token (it's in the modal, not in the main form)
-        const csrfToken = this.$csrfTokenField.val();
+        // Ensure the form-level CSRF token is present.
+        const csrfToken = await fetchAndStoreCsrfToken('form');
         if (csrfToken) {
-            submitData.set('csrf_token', csrfToken);
+            submitData.set('csrf-token', csrfToken.toString());
         }
 
-        // Security fields live in the submit modal, so add them explicitly.
-        submitData.set('submit_time_spent', this.$timeSpentField.val());
-        submitData.set('website', this.$honeypotField.val() || '');
+        // Backend validates one honeypot field — send whichever trap was filled.
+        const mainHoneypot = (this.$mainHoneypotField.val() || '').toString().trim();
+        let modalHoneypot = '';
+        if (this.$modalHoneypotField && this.$modalHoneypotField.length > 0) {
+            const element = this.$modalHoneypotField[0];
+            if (element && element.value) {
+                modalHoneypot = String(element.value).trim();
+            }
+        }
+        const honeypotField = this.$mainHoneypotField[0] || this.$modalHoneypotField[0];
+        if (honeypotField?.name) {
+            submitData.set(honeypotField.name, mainHoneypot || modalHoneypot);
+        }
 
         submitData.append('urgency', $('#input-submit-urgency').val());
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
@@ -508,7 +474,7 @@ class SubmitHandler {
      */
     submitViaAjax(formData) {
         $.ajax({
-            url: 'send_xml_file.php',
+            url: 'endpoints/send_xml_file.php',
             type: 'POST',
             data: formData,
             processData: false,

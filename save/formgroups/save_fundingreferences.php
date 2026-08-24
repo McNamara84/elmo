@@ -72,10 +72,6 @@ function saveFundingReferenceEntry($connection, $entry, $resource_id)
         return true;
     }
 
-    if ($funder === '') {
-        return false;
-    }
-
     [$funderIdString, $funderIdType] = prepareFunderIdDetails($funderId, $entry['funderIdTyp'] ?? 'crossref');
     $awardUri = $awardUri !== '' ? $awardUri : null;
     $grantNumber = $grantNumber !== '' ? $grantNumber : null;

@@ -13,6 +13,7 @@ install.html
 
 # Playwright
 test-results/
+test-results.json
 playwright-report/
 blob-report/
 playwright/.cache/
@@ -36,3 +37,4 @@ xml/*
 # ...but do not ignore the .gitkeep file.
 !xml/.gitkeep
 xml_submit_backup.txt
+.cursor/
