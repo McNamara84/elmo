@@ -24,8 +24,8 @@ module.exports = {
     '!js/originatingLaboratories.js',
     '!js/eventhandlers/doiPrefillHandler.js',
     // Exclude GGMS files (feature-specific, wrapped in document.ready)
-    '!js/eventhandlers/formgroups/ggms-definition.js',
-    '!js/eventhandlers/formgroups/ggms-modeltypes.js',
+    '!js/eventhandlers/formgroups/ggmsDefinition.js',
+    '!js/eventhandlers/formgroups/ggmsModelTypes.js',
     '!js/eventhandlers/formgroups/ggmsProperties.js',
     '!js/eventhandlers/formgroups/feedback.js'
   ],

@@ -8,7 +8,7 @@
  *     `[id^="input-description-"]` did not match the GGMs field IDs.
  *
  *  2. Setting #input-model-type to '' without .trigger('change') left the
- *     model-specific-card visible (the ggms-modeltypes.js handler was never fired).
+ *     model-specific-card visible (the ggmsModelTypes.js handler was never fired).
  *
  *  3. Setting datasource_type[] to 'S' without .trigger('change') left the
  *     identifier columns visible when the row had been set to type M
@@ -17,7 +17,7 @@
  * Best-practices note
  * -------------------
  * jQuery's .trigger('change') is the correct idiom for programmatic select changes
- * because both ggms-modeltypes.js and ggmsDatasources.js listen via delegated
+ * because both ggmsModelTypes.js and ggmsDatasources.js listen via delegated
  * $(document).on('change', ...) / parent.on('change', ...) handlers.
  * Calling .trigger('change') propagates through both delegation chains.
  */
@@ -194,7 +194,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         document.body.innerHTML = GGMS_DOM;
 
         // ── Minimal model-type change handler ──────────────────────────────
-        // Mirrors ggms-modeltypes.js updateGroupHeader(): hide the card when
+        // Mirrors ggmsModelTypes.js updateGroupHeader(): hide the card when
         // type is empty. This is the handler that clearInputFields must fire.
         $(document).on('change.clearGgmsTest', '#input-model-type', function () {
             const val = $(this).val();
@@ -249,7 +249,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         });
 
         // ── Minimal checkbox stubs (Bug 7) ───────────────────────────────────
-        // Mirrors ggms-modeltypes.js: show/hide the associated container when
+        // Mirrors ggmsModelTypes.js: show/hide the associated container when
         // the checkbox changes.  Native + jQuery listeners both fire via trigger.
         document.getElementById('checkbox-time-variable').addEventListener('change', function () {
             const container = document.getElementById('time-variable-description-container');
