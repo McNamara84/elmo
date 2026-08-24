@@ -3,7 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
-import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';
+import { cleanupTagifyForInput, ensureThesaurusLoaded, initTagifyForInput } from '../../thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
@@ -395,6 +395,7 @@ $(document).ready(function () {
 
     datasourcePlatformsModal.on('show.bs.modal', function () {
         resetDatasourcePlatformSearch();
+        ensureThesaurusLoaded('satellitePlatforms');
     });
 
     datasourcePlatformsModal.on('hidden.bs.modal', function () {

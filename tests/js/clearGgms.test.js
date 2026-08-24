@@ -12,12 +12,12 @@
  *
  *  3. Setting datasource_type[] to 'S' without .trigger('change') left the
  *     identifier columns visible when the row had been set to type M
- *     (the ggms-datasources.js delegated handler was never fired).
+ *     (the ggmsDatasources.js delegated handler was never fired).
  *
  * Best-practices note
  * -------------------
  * jQuery's .trigger('change') is the correct idiom for programmatic select changes
- * because both ggms-modeltypes.js and ggms-datasources.js listen via delegated
+ * because both ggms-modeltypes.js and ggmsDatasources.js listen via delegated
  * $(document).on('change', ...) / parent.on('change', ...) handlers.
  * Calling .trigger('change') propagates through both delegation chains.
  */
@@ -160,7 +160,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         </div>
         <input id="input-earth-gravity-constant" name="earth_gravity_constant" type="decimal" value="3.986e14">
 
-        <!-- ── GGMs Data Sources (GGMsDataSources.html) ── -->
+        <!-- ── GGMs Data Sources (ggms-data-sources.html) ── -->
         <div id="group-datasources">
             <div class="row" data-source-row>
                 <div class="col visibility-datasources-basic">
@@ -207,7 +207,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         });
 
         // ── Minimal datasource type change handler ─────────────────────────
-        // Mirrors ggms-datasources.js updateRowState() for types S vs M.
+        // Mirrors ggmsDatasources.js updateRowState() for types S vs M.
         // clearInputFields must fire this so identifier cols hide after reset.
         $('#group-datasources').on('change.clearGgmsTest', 'select[name="datasource_type[]"]', function () {
             const val = $(this).val();
