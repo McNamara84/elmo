@@ -84,8 +84,6 @@ class CSVParser extends Parser {
 class GFCParser extends Parser {
     constructor() {
         super();
-        this.commentSection = "";
-        this.header = {};
     }
 
     validateGfcFileExtension(file) {
@@ -123,14 +121,12 @@ class GFCParser extends Parser {
                 ({ headerLines, commentLines } = this.extractSectionsByHeaderKeys(lines));
             }
 
-            // 4. Store the results in the class properties
-            this.commentSection = commentLines.join("");
-            this.header = this.parseRecords(headerLines);
+            const commentSection = commentLines.join("");
+            const header = this.parseRecords(headerLines);
 
-            // Optional: return the data directly for easier usage
             return {
-                header: this.header,
-                commentSection: this.commentSection
+                header,
+                commentSection
             };
 
         } catch (error) {
