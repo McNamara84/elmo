@@ -160,7 +160,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         </div>
         <input id="input-earth-gravity-constant" name="earth_gravity_constant" type="decimal" value="3.986e14">
 
-        <!-- ── GGMs Data Sources (GGMsDataSources.html) ── -->
+        <!-- ── GGMs Data Sources (ggms-data-sources.html) ── -->
         <div id="group-datasources">
             <div class="row" data-source-row>
                 <div class="col visibility-datasources-basic">

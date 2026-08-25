@@ -37,5 +37,4 @@ xml/*
 # ...but do not ignore the .gitkeep file.
 !xml/.gitkeep
 xml_submit_backup.txt
-
 .cursor/

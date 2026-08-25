@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { transformThesauriScript } = require('./utils');
 
 class MockTagify {
   constructor(el, settings) {
@@ -35,15 +36,11 @@ class MockTagify {
   }
 }
 
-function transformThesauriScript(source) {
-  let script = source;
-  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
-  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
-  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
-  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
-  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
-  return script;
+function transformThesauriScriptForDatasources(source) {
+  return transformThesauriScript(
+    source,
+    'getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; }',
+  );
 }
 
 describe('ggmsDatasources.js', () => {
@@ -157,6 +154,15 @@ describe('ggmsDatasources.js', () => {
           };
           build(this.data, null);
           this.selected = [];
+          this.opened = [];
+        }
+        open_node(id, callback) {
+          if (!this.opened.includes(id)) {
+            this.opened.push(id);
+          }
+          if (typeof callback === 'function') {
+            callback();
+          }
         }
         get_selected() {
           return this.selected;
@@ -205,9 +211,11 @@ describe('ggmsDatasources.js', () => {
           if (arg === 'get_selected') return inst.get_selected(arg2);
           if (arg === 'deselect_node') { inst.deselect_node(arg2); return this; }
           if (arg === 'select_node') { inst.select_node(arg2); return this; }
+          if (arg === 'open_node') { inst.open_node(arg2); return this; }
         } else if (typeof arg === 'object') {
           const inst = new JsTreeMock(this, arg);
           this.data('jstree', inst);
+          this.trigger('ready.jstree');
           return this;
         }
         return this;
@@ -240,11 +248,11 @@ describe('ggmsDatasources.js', () => {
     });
 
     const thesauriScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(transformThesauriScript(thesauriScript));
+    window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
-    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput } = window.__thesauriTestExports;');
+    script = script.replace("import { cleanupTagifyForInput, ensureThesaurusLoaded, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, ensureThesaurusLoaded, initTagifyForInput } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
@@ -421,6 +429,15 @@ describe('ggmsDatasources.js', () => {
     $('#input-platforms-thesaurussearch-ds').val('Ground');
     $('#modal-platforms-datasource').trigger('hidden.bs.modal');
     expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
+  });
+
+  test('pre-opens Space-based Platforms but not Earth Observation Satellites after thesaurus load', () => {
+    openDatasourceModal(document.getElementById('button-datasource-platforms'));
+
+    const tree = $('#jstree-platforms-datasource').jstree(true);
+    expect(tree).toBeTruthy();
+    expect(tree.opened).toContain('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
+    expect(tree.opened).not.toContain('earth-obs');
   });
 
   test('remove button deletes row', () => {
