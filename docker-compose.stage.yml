@@ -219,7 +219,6 @@ volumes:
   api_cache_volume:
   web_drafts:
   web_msl_drafts:
-  web_gem_drafts:
   web_igsn_drafts:
 
 networks:
