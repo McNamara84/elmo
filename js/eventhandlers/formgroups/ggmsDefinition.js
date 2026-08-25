@@ -175,6 +175,42 @@ function setupModelTypes() {
  * @module ggmspropertiesessential
  */
 
+/**
+ * Restores a previously selected mathematical representation after the vocab
+ * dropdown is rebuilt. Upload can set MASCON while options are still loading.
+ */
+function restoreMathematicalRepresentation(selectElement, value) {
+    const target = (value || '').toString().trim();
+    const targetLower = target.toLowerCase();
+    if (!target || targetLower === 'loading...') {
+        return;
+    }
+
+    let matched = null;
+    selectElement.find('option').each(function () {
+        const optionValue = ($(this).val() || '').toString().trim().toLowerCase();
+        const optionText = ($(this).text() || '').trim().toLowerCase();
+        if (optionValue === targetLower || optionText === targetLower) {
+            matched = $(this).val();
+            return false;
+        }
+        return true;
+    });
+
+    if (matched !== null) {
+        selectElement.val(matched);
+        return;
+    }
+
+    selectElement.append(
+        $("<option>", {
+            value: target,
+            text: target
+        })
+    );
+    selectElement.val(target);
+}
+
 function setupMathReps() {
     /**
    * accesses the select element for the ICGEM file formats 
@@ -184,6 +220,7 @@ function setupMathReps() {
     const selectId = "#input-mathematical-representation" ;
     var selectElement = $(selectId).closest(".row").find('select[name="mathematical_representation"]');
     const endpoint = "/vocabs/mathreps";
+    let preservedValue = selectElement.val();
     
     $.ajax({
         url: `api/v2${endpoint}`,
@@ -191,6 +228,10 @@ function setupMathReps() {
         dataType: "json",
         
         beforeSend: function () {
+            const currentValue = selectElement.val();
+            if (currentValue) {
+                preservedValue = currentValue;
+            }
             selectElement.prop('disabled', true);
             selectElement.empty().append(
                 $("<option>", {
@@ -201,6 +242,12 @@ function setupMathReps() {
         },
         
         success: function (response) {
+            const liveText = (selectElement.find('option:selected').text() || '').trim().toLowerCase();
+            const liveValue = selectElement.val();
+            const valueToRestore = (liveValue && liveText !== 'loading...')
+                ? liveValue
+                : preservedValue;
+
             selectElement.empty();
             
             // Placeholder option
@@ -232,6 +279,9 @@ function setupMathReps() {
                     })
                 );
             }
+
+            restoreMathematicalRepresentation(selectElement, valueToRestore);
+            selectElement.trigger('change');
         },
         
         error: function (jqXHR, textStatus, errorThrown) {
@@ -376,10 +426,15 @@ $(document).ready(function() {
 
     /** Restores previous values when leaving special model types. */
     function restorePreviousDefaults() {
-        if (mathRepSelect.length && previousMathRepValue !== '') {
-            mathRepSelect.val(previousMathRepValue).trigger('change');
-        } else if (mathRepSelect.length) {
-            mathRepSelect.val('').trigger('change');
+        const currentMathRep = normalizeModelType(mathRepSelect.val());
+        const keepCurrentMathRep = currentMathRep === 'mascon';
+
+        if (!keepCurrentMathRep) {
+            if (mathRepSelect.length && previousMathRepValue !== '') {
+                mathRepSelect.val(previousMathRepValue).trigger('change');
+            } else if (mathRepSelect.length) {
+                mathRepSelect.val('').trigger('change');
+            }
         }
 
         if (fileFormatSelect.length && previousFileFormatValue !== '') {

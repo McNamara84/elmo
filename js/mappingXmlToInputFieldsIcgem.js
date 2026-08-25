@@ -187,6 +187,23 @@ function selectOptionByText($select, text) {
 }
 
 /**
+ * Selects an option by text, creating it when the vocab dropdown is still loading.
+ * Upload of MASCON metadata must not wait for /vocabs/mathreps to finish.
+ * @param {jQuery} $select
+ * @param {string} text
+ * @returns {boolean}
+ */
+function selectOrCreateOption($select, text) {
+  if (!$select.length || !text) return false;
+  if (selectOptionByText($select, text)) {
+    return true;
+  }
+  $select.append($('<option>', { value: text, text: text }));
+  $select.val(text);
+  return $select.val() === text;
+}
+
+/**
  * Reverse-maps ICGEM densityInformationType values to form select option values.
  * XML stores "Constant", "Layer-specific", "Density model"; form uses lowercase/hyphenated.
  * @param {string} xmlValue
@@ -219,7 +236,7 @@ function populateIcgemDefinition(data) {
 
   if (scalars.mathematicalRepresentation) {
     const $select = $('#input-mathematical-representation');
-    if (!selectOptionByText($select, scalars.mathematicalRepresentation)) {
+    if (!selectOrCreateOption($select, scalars.mathematicalRepresentation)) {
       $select.val(scalars.mathematicalRepresentation);
     }
     $select.trigger('change');
@@ -728,6 +745,8 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDescriptions(data);
   populateIcgemContactPersons(xmlDoc);
 
+  $(document).trigger('icgem:form-populated');
+
   // Process DataCite keywords from <dace:subjects> elements
   // This ensures keywords are properly ingested during ICGEM uploads
   if (typeof window.processKeywords === 'function') {
@@ -758,6 +777,7 @@ if (typeof module !== 'undefined' && module.exports) {
     parseIcgemXml,
     leafChildren,
     selectOptionByText,
+    selectOrCreateOption,
     reverseDensityType,
     populateIcgemDefinition,
     populateIcgemProperties,
