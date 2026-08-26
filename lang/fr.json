@@ -356,7 +356,7 @@
             "errorReading": "Erreur lors de la lecture du fichier"
         },
         "gfcUpload": {
-            "uploadButton": "Ne pas saisir – télécharger le fichier modèle",
+            "uploadButton": "Remplir les champs de métadonnées depuis le fichier modèle",
             "modalTitle": "Télécharger le fichier modèle",
             "dropZone": "Glissez-déposez un fichier GFC ici",
             "selectFile": "ou cliquez pour sélectionner un fichier",

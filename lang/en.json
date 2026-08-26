@@ -358,7 +358,7 @@
             "errorReading": "Error reading file"
         },
         "gfcUpload": {
-            "uploadButton": "Don't type - upload the model file",
+            "uploadButton": "Fill in metadata fields from model file",
             "modalTitle": "Upload model file",
             "dropZone": "Drag and drop a GFC file here",
             "selectFile": "Or click to select a file",

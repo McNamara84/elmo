@@ -359,7 +359,7 @@
             "errorReading": "Fehler beim Lesen der Datei"
         },
         "gfcUpload": {
-            "uploadButton": "Nicht tippen – Modelldatei hochladen",
+            "uploadButton": "Metadatenfelder aus Modelldatei ausfüllen",
             "modalTitle": "Modelldatei hochladen",
             "dropZone": "GFC-Datei hierher ziehen und ablegen",
             "selectFile": "oder klicken, um eine Datei auszuwählen",
