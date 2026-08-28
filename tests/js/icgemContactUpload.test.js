@@ -295,4 +295,45 @@ describe('populateIcgemContactPersons', () => {
     expect($row.find('input[name="cpOnlineResource[]"]').val()).toBe('https://jane.example.com');
     expect($row.find('input[name="contacts[]"]').prop('checked')).toBe(true);
   });
+
+  test('warns and leaves authors untouched when grav:contact has no ContactPerson contributor', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    buildAuthorDom([
+      { familyname: 'Dahle', givenname: 'Christoph' },
+      { familyname: 'Flechtner', givenname: 'Frank' },
+    ]);
+
+    const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
+      <icgv:envelope xmlns:icgv="${ICGEM_NS}" xmlns:dc="${DACE_NS}">
+        <dc:resource>
+          <dc:creators>
+            <dc:creator>
+              <dc:creatorName nameType="Personal">Dahle, Christoph</dc:creatorName>
+              <dc:givenName>Christoph</dc:givenName>
+              <dc:familyName>Dahle</dc:familyName>
+            </dc:creator>
+            <dc:creator>
+              <dc:creatorName nameType="Personal">Flechtner, Frank</dc:creatorName>
+              <dc:givenName>Frank</dc:givenName>
+              <dc:familyName>Flechtner</dc:familyName>
+            </dc:creator>
+          </dc:creators>
+        </dc:resource>
+        <icgv:globalGravityProduct>
+          <icgv:contact>
+            <icgv:address>gfz@gfz.de</icgv:address>
+            <icgv:onlineResource>knowledge.de</icgv:onlineResource>
+          </icgv:contact>
+        </icgv:globalGravityProduct>
+      </icgv:envelope>`, 'application/xml');
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(warn).toHaveBeenCalledWith("couldn't determine the contact person from metadata");
+    $('div[data-creator-row]').each(function () {
+      expect($(this).find('input[name="cpEmail[]"]').val()).toBe('');
+      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+    });
+    warn.mockRestore();
+  });
 });

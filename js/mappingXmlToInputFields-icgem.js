@@ -418,9 +418,10 @@ function populateIcgemDataSources(data) {
  * grav:contact element (inside globalGravityProduct).
  *
  * Contact info (email/website) is stored positionally in grav:contact/grav:address
- * and grav:contact/grav:onlineResource. The i-th address and i-th onlineResource
- * correspond to the i-th ContactPerson contributor listed in the DataCite resource
- * section. Names from that section are used to locate the correct author row.
+ * and grav:contact/grav:onlineResource. Who the contact person *is* comes from
+ * DataCite contributors with contributorType="ContactPerson"; names from that
+ * section locate the matching author row. If no such contributor is present,
+ * a warning is logged and no author is marked as contact.
  *
  * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
  * does not show the hidden fields. This function explicitly checks the checkbox and
@@ -577,6 +578,13 @@ function populateIcgemContactPersons(xmlDoc) {
       affiliations: readAffiliations(node)
     });
   });
+
+  // Email lives in grav:contact because DataCite has no email field. 
+  // Who the contact *is* comes only from a DataCite ContactPerson contributor; 
+  if (contactPersons.length === 0) {
+    console.warn("couldn't determine the contact person from metadata");
+    return;
+  }
 
   for (let i = 0; i < contactPersons.length; i++) {
     const detail = contactDetails[i] || { email: '', website: '' };
