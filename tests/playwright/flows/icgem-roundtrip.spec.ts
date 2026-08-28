@@ -168,7 +168,7 @@ interface EllipsoidalParameters {
 /**
  * GGM description sections, keyed by the lowercased `section` attribute used in
  * grav:descriptions, mapped onto the accordion panel that holds them.
- * Mirrors the section→field mapping in js/mappingXmlToInputFields-icgem.js.
+ * Mirrors the section→field mapping in js/mappingXmlToInputFieldsIcgem.js.
  */
 const DESCRIPTION_SECTIONS: Record<string, { input: string; collapse: string }> = {
   'abstract': { input: '#input-abstract', collapse: '#collapse-abstract' },
@@ -274,7 +274,7 @@ function normalizeText(value: string): string {
 /**
  * Maps an ICGEM densityInformationType ("Constant", "Layer-specific",
  * "Density model") back onto the option value used by the density selects.
- * Mirrors reverseDensityType() in js/mappingXmlToInputFields-icgem.js.
+ * Mirrors reverseDensityType() in js/mappingXmlToInputFieldsIcgem.js.
  */
 function toDensityOptionValue(xmlValue: string): string {
   const lower = xmlValue.toLowerCase().trim();
@@ -578,6 +578,32 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
   }, label);
 }
 
+/**
+ * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
+ * available. CI's GEM job does not always have ERNIE, so stub the availability
+ * payload before the homepage loads.
+ */
+async function stubThesaurusAvailability(page: Page): Promise<void> {
+  await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+        platforms: { available: true, displayName: 'GCMD Platforms' },
+        instruments: { available: true, displayName: 'GCMD Instruments' },
+        chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+        gemet: { available: false, displayName: 'GEMET' },
+      }),
+    });
+  });
+}
+
+async function openGemHome(page: Page): Promise<void> {
+  await stubThesaurusAvailability(page);
+  await navigateToHome(page);
+}
+
 // ─── Upload helper ─────────────────────────────────────────────────────────────
 
 /**
@@ -595,6 +621,9 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string): Promise<void> {
 
   const loadButton = page.locator('#button-form-load');
   await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
+  await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
+  await page.evaluate(() => (window as any).thesauriReady);
+
   await loadButton.click();
 
   const uploadModal = page.locator('#modal-uploadxml');
@@ -865,7 +894,7 @@ for (const testCase of TEST_CASES) {
   // ── Step 2: fill form → save → verify XML ──────────────────────────────
 
   test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
-    await navigateToHome(page);
+    await openGemHome(page);
     await uploadXmlIntoForm(page, testCase.referenceXmlPath);
 
     const { parsedXml } = await downloadAndSaveIcgemXml(page, testCase.label);
@@ -1095,7 +1124,7 @@ for (const testCase of TEST_CASES) {
   // ── Step 3: fill form → clear → assert all fields empty ────────────────
 
   test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
-    await navigateToHome(page);
+    await openGemHome(page);
     await uploadXmlIntoForm(page, testCase.referenceXmlPath);
 
     // Trigger clear form flow
@@ -1206,7 +1235,7 @@ for (const testCase of TEST_CASES) {
     }
 
     // Upload the SAVED XML produced by Step 2, not the reference XML
-    await navigateToHome(page);
+    await openGemHome(page);
     await uploadXmlIntoForm(page, savedXmlPath);
 
     // ── Standard DataCite fields ───────────────────────────────────────────

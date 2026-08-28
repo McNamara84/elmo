@@ -1778,6 +1778,12 @@ async function loadXmlToForm(xmlDoc) {
   }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
+  // Thesaurus Tagify inputs are created after an async availability fetch.
+  // processKeywords silently skips subjects whose target Tagify is missing, so
+  // wait until that initialisation has finished (success or failure).
+  if (window.thesauriReady) {
+    await window.thesauriReady;
+  }
   // Process Keywords
   processKeywords(xmlDoc, resolver);
   // Process Related Works

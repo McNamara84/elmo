@@ -861,6 +861,17 @@ $(document).ready(function () {
     const showMslVocabs = features.showMslVocabs === true;
     const showGGMsProperties = features.showGGMsProperties === true;
 
+    let resolveThesauriReady;
+    window.thesauriReady = new Promise((resolve) => {
+        resolveThesauriReady = resolve;
+    });
+    function markThesauriReady() {
+        if (typeof resolveThesauriReady === 'function') {
+            resolveThesauriReady();
+            resolveThesauriReady = null;
+        }
+    }
+
     /**
      * GGMs-specific root node constraints that narrow each thesaurus tree
      * when ELMO_FEATURES.showGGMsProperties is enabled.
@@ -911,13 +922,19 @@ $(document).ready(function () {
      * Fetches availability, generates HTML, and sets up Tagify + lazy loading.
      */
     function initThesauri() {
-        if (!showThesauri) return;
+        if (!showThesauri) {
+            markThesauriReady();
+            return;
+        }
 
         $.getJSON('api/v2/vocabs/thesauri/availability')
             .done(function (availability) {
                 const availableThesauri = filterAvailableThesauri(availability);
 
-                if (availableThesauri.length === 0) return;
+                if (availableThesauri.length === 0) {
+                    markThesauriReady();
+                    return;
+                }
 
                 const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
                 const modalContainer = document.getElementById('thesaurusModalsContainer');
@@ -977,9 +994,11 @@ $(document).ready(function () {
                 // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
                 if (formGroup) formGroup.style.display = '';
+                markThesauriReady();
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);
+                markThesauriReady();
             });
     }
 
