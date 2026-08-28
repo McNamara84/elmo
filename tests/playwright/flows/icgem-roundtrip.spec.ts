@@ -47,6 +47,9 @@
  * ── Runs under ────────────────────────────────────────────────────────────────
  *   playwright.gem.config.ts  (showGGMsProperties=true)
  *
+ *   Cap the run at --workers=2. locally and CI. CI already limits itself to
+ *   two workers and gives this suite its own server (playwright.config.ci.ts).
+ *
  * ── NOTE on normalisation ─────────────────────────────────────────────────────
  *   Reference XML files MUST be produced by ELMOGEM (save/download), not
  *   hand-authored.  Step 3 compares the downloaded XML values verbatim against
@@ -604,11 +607,27 @@ async function fillDescriptionSection(page: Page, section: string, value: string
   if (!panel) throw new Error(`fillDescriptionSection: unknown section "${section}"`);
 
   const textarea = page.locator(panel.input);
-  if (!(await textarea.isVisible().catch(() => false))) {
-    await page.locator(`button[data-bs-target="${panel.collapse}"]`).click();
-    await expect(textarea).toBeVisible({ timeout: 5_000 });
-  }
+  await openAccordionPanel(page, textarea, panel.collapse);
   await textarea.fill(value);
+}
+
+/**
+ * Opens one Bootstrap accordion panel and waits until its field is usable.
+ */
+async function openAccordionPanel(page: Page, field: Locator, collapseSelector: string): Promise<void> {
+  if (await field.isVisible().catch(() => false)) return;
+
+  const accordion = page.locator('#accordion-description');
+  const toggle = page.locator(`button[data-bs-target="${collapseSelector}"]`);
+
+  await expect(async () => {
+    if (await field.isVisible()) return;
+    // Bootstrap ignores a toggle click that arrives while a collapse transition is still running
+    await accordion.locator('.collapsing').first().waitFor({ state: 'detached', timeout: 5_000 });
+    await toggle.click();
+    // wait for the accordion to settle, then retry until it opens.
+    await expect(field).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 20_000 });
 }
 
 /**
