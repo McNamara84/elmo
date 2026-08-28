@@ -581,7 +581,8 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
 /**
  * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
  * available. CI's GEM job does not always have ERNIE, so stub the availability
- * payload before the homepage loads.
+ * payload before the homepage loads. Vocabulary trees are left unstubbed:
+ * import must go through the same whitelist rules as a real session.
  */
 async function stubThesaurusAvailability(page: Page): Promise<void> {
   await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
@@ -623,6 +624,14 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string): Promise<void> {
   await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
   await page.evaluate(() => (window as any).thesauriReady);
+  // thesauriReady also resolves when availability fails and no GCMD inputs
+  // are created. processKeywords then skips those subjects, so wait until
+  // the Tagify instances actually exist before uploading.
+  await page.waitForFunction(() => {
+    const science = document.querySelector('#input-sciencekeyword') as { _tagify?: unknown } | null;
+    const platforms = document.querySelector('#input-platforms') as { _tagify?: unknown } | null;
+    return Boolean(science?._tagify && platforms?._tagify);
+  }, { timeout: 15_000 });
 
   await loadButton.click();
 

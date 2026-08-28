@@ -366,7 +366,10 @@ function loadKeywordsForConfig(config, response) {
 
     state.tagifyInstances.forEach(function (tagifyInstance) {
         tagifyInstance.settings.whitelist = state.whitelist;
-        tagifyInstance.settings.enforceWhitelist = true;
+        // Only enforce once there is something to enforce against. An empty
+        // payload (failed/empty ERNIE response) must not lock the field, or
+        // XML import of previously saved thesaurus keywords is dropped.
+        tagifyInstance.settings.enforceWhitelist = state.whitelist.length > 0;
     });
 
     $(config.jsTreeId).one('ready.jstree', function () {
@@ -911,11 +914,22 @@ $(document).ready(function () {
 
     ensureConfigRegistered('satellitePlatforms');
 
-    // Wait for translations, then initialize everything
-    document.addEventListener('translationsLoaded', function () {
+    // Wait for translations, then initialize everything. If translationsLoaded
+    // already fired before this module's document.ready ran (Firefox is prone
+    // to that with deferred modules), start immediately so GCMD Tagify exists
+    // before XML upload calls processKeywords().
+    let thesauriInitStarted = false;
+    function startThesauriUi() {
+        if (thesauriInitStarted) return;
+        thesauriInitStarted = true;
         initThesauri();
         initMslKeywords();
-    }, { once: true });
+    }
+    document.addEventListener('translationsLoaded', startThesauriUi, { once: true });
+    const existingTranslations = window.elmo?.translations || window.translations;
+    if (existingTranslations && existingTranslations.general) {
+        startThesauriUi();
+    }
 
     /**
      * Main initialization for ERNIE-based thesauri.
@@ -938,7 +952,10 @@ $(document).ready(function () {
 
                 const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
                 const modalContainer = document.getElementById('thesaurusModalsContainer');
-                if (!thesaurusContainer || !modalContainer) return;
+                if (!thesaurusContainer || !modalContainer) {
+                    markThesauriReady();
+                    return;
+                }
 
                 availableThesauri.forEach(function (item) {
                     const config = THESAURUS_CONFIG[item.key];

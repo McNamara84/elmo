@@ -299,6 +299,27 @@ describe('thesauri.js', () => {
     expect(input._tagify.settings.enforceWhitelist).toBe(true);
   });
 
+  test('does not enable enforceWhitelist when the vocabulary response is empty', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+
+    $.getJSON.mockImplementation((url, cb) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return {
+          done: jest.fn(function (fn) { fn(mockAvailability); return this; }),
+          fail: jest.fn().mockReturnThis(),
+        };
+      }
+      if (typeof cb === 'function') cb({ data: [] });
+      return { fail: jest.fn().mockReturnThis() };
+    });
+
+    openModal('#modal-sciencekeyword');
+
+    expect(input._tagify.settings.whitelist).toHaveLength(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+  });
+
   test('syncs selections between jsTree and Tagify after modal is opened', () => {
     const input = document.getElementById('input-sciencekeyword');
 
