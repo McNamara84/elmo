@@ -12,9 +12,16 @@
  *   step 5  Upload the downloaded XML back into the GEM and verify that the
  *           fields match the reference.
  *
+ * ── How the form gets filled ─────────────────────────────────────────────────
+ *   Through the application's own upload path, never by a bespoke filler. The
+ *   Load button hands the file to loadXmlToForm(), which runs the DataCite
+ *   mappings, processKeywords() and icgemModule.loadIcgemXmlToForm(). A field
+ *   that fails to roundtrip is therefore a defect in the feature rather than an
+ *   omission in this file, and a fixture's contents define what is covered.
+ *
  * ── Helper / utility usage by step ───────────────────────────────────────────
  *   parseIcgemXmlFile()         step 1
- *   fillIcgemForm()             step 2, step 5 (indirectly via upload)
+ *   uploadXmlIntoForm()         step 2, step 4, step 5
  *   downloadAndSaveIcgemXml()   step 2 → produces artifact consumed by step 3
  *   extractEnvelope()           step 3
  *   extractResource()           step 3
@@ -534,102 +541,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   };
 }
 
-// ─── Form-filling helper ───────────────────────────────────────────────────────
-
-/**
- * Fills all form fields in the GEM variant app from the given parsed ICGEM data.
- * Multiple affiliations are added through the dedicated Authors affiliation editor.
- * GCMD thesaurus keywords (subjects) are NOT filled here – they require a
- * complex tree-picker UI that is verified separately in the upload test.
- */
-async function addAuthorAffiliations(row: Locator, affiliations: string[]): Promise<void> {
-  if (affiliations.length === 0) {
-    return;
-  }
-
-  const editor = row.locator('[data-author-affiliation-editor]');
-  await expect(editor).toBeVisible({ timeout: 10_000 });
-
-  for (const affiliation of affiliations) {
-    await editor.locator('[data-author-affiliation-input]').fill(affiliation);
-    await editor.locator('[data-author-affiliation-add]').click();
-    await expect.poll(async () => editor.locator('[data-author-affiliation-label]').evaluateAll(
-      (inputs) => inputs.map((input) => (input as HTMLInputElement).value),
-    )).toContain(affiliation);
-  }
-}
-
-async function ensureAuthorPersonRow(page: Page, index: number): Promise<Locator> {
-  const rows = page.locator('#group-author [data-creator-row]');
-  while (await rows.count() <= index) {
-    const previousCount = await rows.count();
-    await page.evaluate(() => {
-      const stack = (window as any).authorStack;
-      if (stack && typeof stack.addPerson === 'function') {
-        stack.addPerson();
-        return;
-      }
-
-      document.querySelector<HTMLElement>('#button-author-add')?.click();
-    });
-    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
-  }
-
-  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
-  return rows.nth(index);
-}
-
-async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Locator> {
-  const rows = page.locator('#group-author [data-authorinstitution-row]');
-  while (await rows.count() <= index) {
-    const previousCount = await rows.count();
-    await page.evaluate(() => {
-      const stack = (window as any).authorStack;
-      if (stack && typeof stack.addInstitution === 'function') {
-        stack.addInstitution();
-        return;
-      }
-
-      document.querySelector<HTMLElement>('#button-authorinstitution-add')?.click();
-    });
-    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
-  }
-
-  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
-  return rows.nth(index);
-}
-
-/**
- * Fills one description accordion panel. The panels share a `data-bs-parent`,
- * so opening one collapses the previous — values already typed are retained.
- */
-async function fillDescriptionSection(page: Page, section: string, value: string): Promise<void> {
-  const panel = DESCRIPTION_SECTIONS[section];
-  if (!panel) throw new Error(`fillDescriptionSection: unknown section "${section}"`);
-
-  const textarea = page.locator(panel.input);
-  await openAccordionPanel(page, textarea, panel.collapse);
-  await textarea.fill(value);
-}
-
-/**
- * Opens one Bootstrap accordion panel and waits until its field is usable.
- */
-async function openAccordionPanel(page: Page, field: Locator, collapseSelector: string): Promise<void> {
-  if (await field.isVisible().catch(() => false)) return;
-
-  const accordion = page.locator('#accordion-description');
-  const toggle = page.locator(`button[data-bs-target="${collapseSelector}"]`);
-
-  await expect(async () => {
-    if (await field.isVisible()) return;
-    // Bootstrap ignores a toggle click that arrives while a collapse transition is still running
-    await accordion.locator('.collapsing').first().waitFor({ state: 'detached', timeout: 5_000 });
-    await toggle.click();
-    // wait for the accordion to settle, then retry until it opens.
-    await expect(field).toBeVisible({ timeout: 2_000 });
-  }).toPass({ timeout: 20_000 });
-}
+// ─── Assertion helpers ─────────────────────────────────────────────────────────
 
 /**
  * Asserts a numeric input's value by magnitude rather than by string.
@@ -644,343 +556,69 @@ async function expectNumericValue(locator: Locator, expected: string, label: str
     .toBe(Number(expected));
 }
 
-async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
-  // ── Wait for API-populated dropdowns ──────────────────────────────────────
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 15_000 },
-  );
+/**
+ * Subject labels as a deduplicated, sorted set.
+ *
+ * A GCMD platform that is also used as a data source satellite is exported
+ * twice, because save_ggms_datasources.php ingests the satellite into
+ * Thesaurus_Keywords on top of the standalone keyword. Comparing sets keeps
+ * that duplication from being mistaken for a roundtrip failure.
+ */
+function subjectTexts(subjects: Subject[]): string[] {
+  return [...new Set(subjects.map((s) => normalizeText(s.text)))].sort();
+}
 
-  // ── Standard DataCite fields ───────────────────────────────────────────────
-  // DOI: set via evaluate to avoid triggering lookup modal
-  await page.locator('#input-resourceinformation-doi').evaluate((el: HTMLInputElement, val: string) => {
-    el.value = val;
-  }, data.doi);
-  await page.locator('#input-resourceinformation-title').fill(data.title);
-  await page.locator('#input-resourceinformation-publicationyear').fill(data.publicationYear);
-
-  // Resource type – select by visible text "Dataset"
-  await page.locator('#input-resourceinformation-resourcetype').selectOption({ label: 'Dataset' });
-
-  // Language – select by visible text "English"
-  await page.locator('#input-resourceinformation-language').selectOption({ label: 'English' });
-
-  // Version (note: form pattern expects "x.y" but save does not validate)
-  await page.locator('#input-resourceinformation-version').fill(data.version);
-
-  // Date created
-  await page.locator('#input-date-created').fill(data.dateCreated);
-
-  // Rights / License – select the option whose text or value matches the CC-BY identifier
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-rights-license') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 15_000 },
-  );
-  await page.evaluate((rightsId: string) => {
-    const sel = document.querySelector<HTMLSelectElement>('#input-rights-license');
-    if (!sel) return;
-    const opt = Array.from(sel.options).find(o =>
-      o.text.includes('CC-BY-4.0') || o.text.includes('Creative Commons Attribution 4.0') || o.value === rightsId
+/** True once any Tagify instance on the page holds a tag with this label. */
+function findTagifyTag(page: Page, label: string): Promise<boolean> {
+  return page.evaluate((text: string) => {
+    type TagifyInput = HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } };
+    return Array.from(document.querySelectorAll<TagifyInput>('input')).some(
+      (input) => input._tagify?.value?.some((tag) => tag.value.trim() === text),
     );
-    if (opt) {
-      sel.value = opt.value;
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }, data.rightsIdentifier);
+  }, label);
+}
 
-  // ── Personal author (index 0) ──────────────────────────────────────────────
-  if (data.personalCreators.length > 0) {
-    const pc = data.personalCreators[0];
-    const authorRow = await ensureAuthorPersonRow(page, 0);
+// ─── Upload helper ─────────────────────────────────────────────────────────────
 
-    // ORCID – set via evaluate to prevent the ORCID lookup from racing with our fills
-    const orcidInput = authorRow.locator('[id^="input-author-orcid"]');
-    await orcidInput.waitFor({ state: 'visible', timeout: 10_000 });
-    await orcidInput.evaluate((el: HTMLInputElement, val: string) => {
-      el.value = val;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, pc.orcid);
-
-    await authorRow.locator('[id^="input-author-lastname"]').fill(pc.lastName);
-    await authorRow.locator('[id^="input-author-firstname"]').fill(pc.firstName);
-
-    await addAuthorAffiliations(authorRow, pc.affiliations);
-
-    // Mark as contact person – click the <label> (Bootstrap btn-check hides the input;
-    // clicking the input directly causes "label intercepts pointer events" error)
-    const cpLabel = authorRow.locator('label[for^="checkbox-author-contactperson"]');
-    if (await cpLabel.count() > 0) {
-      await cpLabel.click();
-      // Wait for email field to become visible
-      const emailField = authorRow.locator('input[name="cpEmail[]"]');
-      await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
-      if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
-        await emailField.fill(data.contactPersonEmail);
-      }
-      // Fill website if present
-      const websiteField = authorRow.locator('input[name="cpOnlineResource[]"]');
-      await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
-      if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
-        await websiteField.fill(data.contactPersonWebsite);
-      }
-    }
+/**
+ * Loads an XML file into the form through the application's own upload path.
+ *
+ * This is what drives every step of the roundtrip: the Load button hands the
+ * file to loadXmlToForm(), which runs the DataCite mappings, processKeywords()
+ * and – for ICGEM documents – icgemModule.loadIcgemXmlToForm(). Filling the
+ * form any other way would test the test rather than the feature.
+ */
+async function uploadXmlIntoForm(page: Page, xmlPath: string): Promise<void> {
+  if (!fs.existsSync(xmlPath)) {
+    throw new Error(`Upload source XML not found: ${xmlPath}`);
   }
 
-  // ── Author institution (organisational creator, index 0) ──────────────────
-  if (data.orgCreators.length > 0) {
-    const oc = data.orgCreators[0];
-    const instRow = await ensureAuthorInstitutionRow(page, 0);
-    await instRow.locator('[id^="input-authorinstitution-name"]').fill(oc.name);
+  const loadButton = page.locator('#button-form-load');
+  await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
+  await loadButton.click();
 
-    if (oc.affiliations.length > 0) {
-      await addAuthorAffiliations(instRow, oc.affiliations);
-    }
-  }
+  const uploadModal = page.locator('#modal-uploadxml');
+  await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
+  await page.locator('#input-uploadxml-file').setInputFiles(xmlPath);
 
-  // ── ICGEM Definition ──────────────────────────────────────────────────────
-
-  // Model type (must come before Temporal section fields become visible)
+  // The mapping is asynchronous; the model name is the last-ish ICGEM field set
   await page.waitForFunction(
-    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
+    () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
+    { timeout: 30_000 },
   );
-  await page.locator('#input-model-type').selectOption({ label: data.modelType });
-  await page.locator('#input-model-type').dispatchEvent('change');
 
-  // Mathematical representation (triggers Spherical-harmonics visibility for radius)
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
-  );
-  await page.locator('#input-mathematical-representation').selectOption({ label: data.mathRepresentation });
-  await page.locator('#input-mathematical-representation').dispatchEvent('change');
-
-  // File format
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
-  );
-  await page.locator('#input-file-format').selectOption({ label: data.fileFormat });
-
-  // Celestial body
-  await page.locator('#input-celestial-body').selectOption(data.celestialBody);
-
-  // Model name
-  await page.locator('#input-model-name').fill(data.modelName);
-
-  // ── ICGEM Properties (Characteristics) ───────────────────────────────────
-
-  // Tide system: option value matches XML value exactly ("Zero-tide")
-  await page.locator('#input-tide-system').selectOption(data.tideSystem);
-  await page.locator('#input-degree').fill(data.degree);
-
-  // Errors: form stores lowercase ("no"), XML has "No" – apply toLowerCase()
-  await page.locator('#input-errors').selectOption(data.errors.toLowerCase());
-
-  if (data.errorHandling) {
-    await page.locator('#input-error-handling-approach').fill(data.errorHandling);
-  }
-
-  await page.locator('#input-earth-gravity-constant').fill(data.earthGravityConstant);
-
-  // Radius – only visible when Spherical harmonics is selected
-  if (data.radius) {
-    const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
-    if (radiusVisible) {
-      await page.locator('#input-radius').fill(data.radius);
-    } else {
-      // Wait briefly for visibility change triggered by math-rep change event
-      await page.waitForFunction(
-        () => {
-          const el = document.querySelector<HTMLElement>('.visibility-spherical');
-          return el !== null && el.style.display !== 'none' && !el.hasAttribute('aria-hidden');
-        },
-        { timeout: 5_000 },
-      ).catch(() => { /* not spherical, skip */ });
-      const stillVisible = await page.locator('#input-radius').isVisible().catch(() => false);
-      if (stillVisible) await page.locator('#input-radius').fill(data.radius);
-    }
-  }
-
-  // ── Reference ellipsoid – only shown for Ellipsoidal harmonics ────────────
-
-  if (data.ellipsoidal) {
-    await expect(page.locator('#input-semimajor-axis')).toBeVisible({ timeout: 10_000 });
-    await page.locator('#input-semimajor-axis').fill(data.ellipsoidal.semimajorAxisA);
-
-    if (data.ellipsoidal.secondVariable) {
-      await page.locator('#input-second-variable').selectOption(data.ellipsoidal.secondVariable);
-      await page.locator('#input-second-variable-value').fill(data.ellipsoidal.secondVariableValue);
-    }
-  }
-
-  // ── ICGEM Model Types – Static section ───────────────────────────────────
-
-  if (data.modelType.toLowerCase() === 'static' && data.staticInfoTimeVariableCoefficients) {
-    await expect(page.locator('.visibility-modeltype-static')).toBeVisible({ timeout: 10_000 });
-    await page.locator('#checkbox-time-variable').check();
-    await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
-    await page.locator('#input-static-description').fill(data.staticInfoTimeVariableCoefficients);
-  }
-
-  // ── ICGEM Model Types – Temporal section ─────────────────────────────────
-
-  if (data.modelType.toLowerCase() === 'temporal') {
-    // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
-    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
-
-    await page.locator('#input-temporal-start').fill(data.temporalStart);
-    if (data.temporalEnd) await page.locator('#input-temporal-end').fill(data.temporalEnd);
-    if (data.temporalInstitution) await page.locator('#input-temporal-institution').fill(data.temporalInstitution);
-    if (data.temporalRelease) await page.locator('#input-release-number').fill(data.temporalRelease);
-
-    // The XML only carries the resolution in days, so it always comes back as a
-    // custom frequency — #select-temporal-frequency-predef is a save-time input
-    // that the export collapses into temporalResolution and cannot roundtrip.
-    if (data.temporalResolution) {
-      await page.locator('#checkbox-custom-frequency').check();
-      await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
-      await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
-    }
-  }
-
-  // ── ICGEM Model Types – Topographic section ──────────────────────────────
-
-  if (data.topographic) {
-    await expect(page.locator('.visibility-modeltype-topographic')).toBeVisible({ timeout: 10_000 });
-
-    const topo = data.topographic;
-    if (topo.layerApproach) await page.locator('#select-topo-layerapproach').selectOption(topo.layerApproach.toLowerCase());
-    if (topo.forwardModellingDomain) await page.locator('#select-topo-domain').selectOption(topo.forwardModellingDomain.toLowerCase());
-    if (topo.approximation) await page.locator('#select-topo-approximation').selectOption(topo.approximation.toLowerCase());
-
-    // The whole-model density and the crust/mantle pair are mutually exclusive:
-    // ticking #checkbox-separate-density disables the single-density inputs, so
-    // fill the whole-model density first and only then flip the toggle.
-    const densitiesByDomain = new Map(topo.densities.map(d => [d.domain.toLowerCase(), d]));
-    for (const domain of densitiesByDomain.keys()) {
-      if (!['whole', 'crust', 'mantle'].includes(domain)) {
-        throw new Error(`fillIcgemForm: unknown density domain "${domain}"`);
-      }
-    }
-
-    const fillDensity = async (suffix: string, density: DensityInformation) => {
-      await page.locator(`#select-topo-density${suffix}`).selectOption(toDensityOptionValue(density.type));
-      if (density.description) {
-        await page.locator(`#input-topo-density-details${suffix}`).fill(density.description);
-      }
-    };
-
-    const wholeDensity = densitiesByDomain.get('whole');
-    if (wholeDensity) await fillDensity('', wholeDensity);
-
-    const crustDensity = densitiesByDomain.get('crust');
-    const mantleDensity = densitiesByDomain.get('mantle');
-    if (crustDensity || mantleDensity) {
-      await page.locator('#checkbox-separate-density').check();
-      await expect(page.locator('#separate-density-container')).toBeVisible({ timeout: 5_000 });
-      if (crustDensity) await fillDensity('-crust', crustDensity);
-      if (mantleDensity) await fillDensity('-mantle', mantleDensity);
-    }
-  }
-
-  // ── Data sources ──────────────────────────────────────────────────────────
-
-  const DS_ROW = '#group-datasources .row[data-source-row]';
-
-  for (let i = 0; i < data.dataSources.length; i++) {
-    const ds = data.dataSources[i];
-
-    // Add a new row for every source after the first
-    if (i > 0) {
-      await page.locator('#button-datasource-add').click();
-      await expect(page.locator(DS_ROW)).toHaveCount(i + 1, { timeout: 5_000 });
-    }
-
-    const dsRow = page.locator(DS_ROW).nth(i);
-
-    // Datasource type: 'Satellite' → 'S'
-    const typeCodeMap: Record<string, string> = {
-      satellite: 'S',
-      'ground data': 'G',
-      altimetry: 'A',
-      model: 'M',
-      'elevation/terrain': 'T',
-    };
-    const typeCode = typeCodeMap[ds.type.toLowerCase()] ?? 'S';
-    await dsRow.locator('select[name="datasource_type[]"]').selectOption(typeCode);
-    await dsRow.locator('select[name="datasource_type[]"]').dispatchEvent('change');
-
-    await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
-
-    // Type-specific detail. The options are rebuilt on every type change and use
-    // the label as their value, so the XML value can be selected directly.
-    if (ds.details) {
-      const detailsSelect = dsRow.locator('select[name="datasource_details[]"]');
-      await detailsSelect.selectOption(ds.details);
-      await detailsSelect.dispatchEvent('change');
-    }
-
-    // Compensation depth appears only for Elevation/Terrain + "Isostasy"
-    if (ds.compensationDepth) {
-      const compensationInput = dsRow.locator('input[name="compensation_depth[]"]');
-      await expect(compensationInput).toBeVisible({ timeout: 5_000 });
-      await compensationInput.fill(ds.compensationDepth);
-    }
-
-    // Model sources carry an identifier, its type and a model name
-    if (typeCode === 'M') {
-      if (ds.identifier) {
-        const identifierInput = dsRow.locator('input[name="dIdentifier[]"]');
-        await identifierInput.fill(ds.identifier);
-        await identifierInput.dispatchEvent('input');
-      }
-      if (ds.identifierType) {
-        // Typing an identifier kicks off a debounced API lookup that repopulates
-        // the type dropdown and auto-selects the best pattern match. Wait for it
-        // to settle on the expected type before falling back to setting it by hand.
-        const identifierTypeSelect = dsRow.locator('select[name="dIdentifierType[]"]');
-        const autoDetected = await expect
-          .poll(() => identifierTypeSelect.inputValue(), { timeout: 10_000 })
-          .toBe(ds.identifierType)
-          .then(() => true, () => false);
-        if (!autoDetected) {
-          await identifierTypeSelect.selectOption({ label: ds.identifierType });
-        }
-      }
-      if (ds.name) {
-        await dsRow.locator('input[name="dName[]"]').fill(ds.name);
-      }
-    }
-
-    // Satellite platform – inject via Tagify API
-    if (typeCode === 'S' && ds.satelliteValueName) {
-      const tag = {
-        value: ds.satelliteValueName,
-        id: ds.satelliteValueUri ?? '',
-        scheme: ds.satelliteSchemeName ?? '',
-        schemeURI: ds.satelliteSchemeUri ?? '',
-      };
-      const platformInput = dsRow.locator('input[name="satellite_platform[]"]');
-      await platformInput.evaluate(
-        (el: unknown, t: typeof tag) => {
-          const tagify = (el as Record<string, unknown>)._tagify;
-          if (tagify) (tagify as { addTags: (tags: typeof tag[]) => void }).addTags([t]);
-        },
-        tag,
-      );
-    }
-  }
-
-  // ── Descriptions ──────────────────────────────────────────────────────────
-  // Filled last because the panels share an accordion parent, so opening one
-  // closes the previous. #input-abstract takes the ICGEM abstract: save appends
-  // the ELMOGEM-specific sections to the DataCite abstract, and the ICGEM
-  // exporter strips them out again.
-  for (const section of Object.keys(DESCRIPTION_SECTIONS)) {
-    const content = data.ggmDescriptions[section];
-    if (content) await fillDescriptionSection(page, section, content);
+  // The modal normally closes itself when showUploadToast fires; dismiss it via
+  // the Bootstrap API when it does not, rather than blocking on the toast.
+  if (await uploadModal.isVisible().catch(() => false)) {
+    await page.evaluate(() => {
+      const modalEl = document.getElementById('modal-uploadxml');
+      if (!modalEl) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bsModal = (window as any).bootstrap?.Modal?.getInstance?.(modalEl);
+      if (bsModal) bsModal.hide();
+      else modalEl.classList.remove('show');
+    });
+    await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
   }
 }
 
@@ -1228,7 +866,7 @@ for (const testCase of TEST_CASES) {
 
   test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
     await navigateToHome(page);
-    await fillIcgemForm(page, parsedData);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath);
 
     const { parsedXml } = await downloadAndSaveIcgemXml(page, testCase.label);
 
@@ -1443,6 +1081,14 @@ for (const testCase of TEST_CASES) {
       assertField(savedDesc, expectedContent, `description(${section})`);
     }
 
+    // Subjects – thesaurus keywords, free keywords and data source satellites
+    // all converge into dace:subjects, so compare the whole set at once.
+    const savedSubjectsNode = getNode(resource!, 'subjects') as Record<string, unknown> | undefined;
+    const savedSubjectTexts = savedSubjectsNode
+      ? [...new Set(toArray(getNode(savedSubjectsNode, 'subject')).map((s) => normalizeText(extractText(s))))].sort()
+      : [];
+    expect(savedSubjectTexts, '[FIELD: subjects]').toEqual(subjectTexts(parsedData.subjects));
+
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
 
@@ -1450,7 +1096,7 @@ for (const testCase of TEST_CASES) {
 
   test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
     await navigateToHome(page);
-    await fillIcgemForm(page, parsedData);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath);
 
     // Trigger clear form flow
     await page.locator('#button-form-reset').click();
@@ -1559,42 +1205,9 @@ for (const testCase of TEST_CASES) {
       throw new Error(`[PREREQUISITE] Saved XML not found – run Step 2 first: ${savedXmlPath}`);
     }
 
-    // Upload the saved XML produced by Step 2
+    // Upload the SAVED XML produced by Step 2, not the reference XML
     await navigateToHome(page);
-
-    // Open the upload modal via the Load button
-    const loadButton = page.locator('#button-form-load');
-    await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
-    await loadButton.click();
-
-    const uploadModal = page.locator('#modal-uploadxml');
-    await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
-
-    // Upload the SAVED XML (produced by Step 2), not the reference XML
-    await page.locator('#input-uploadxml-file').setInputFiles(savedXmlPath);
-
-    // Wait for the ICGEM mapping to populate the model name field
-    // (the modal closes automatically when showUploadToast fires, but we
-    //  do NOT block on that — dismiss it via Bootstrap API if still open)
-    await page.waitForFunction(
-      () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
-      { timeout: 30_000 },
-    );
-
-    // Dismiss modal via Bootstrap if it didn't auto-close
-    if (await uploadModal.isVisible().catch(() => false)) {
-      await page.evaluate(() => {
-        const modalEl = document.getElementById('modal-uploadxml');
-        if (modalEl) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const bs = (window as any).bootstrap;
-          const bsModal = bs?.Modal?.getInstance?.(modalEl);
-          if (bsModal) bsModal.hide();
-          else modalEl.classList.remove('show');
-        }
-      });
-      await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
-    }
+    await uploadXmlIntoForm(page, savedXmlPath);
 
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
@@ -1631,16 +1244,19 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email (required) and website (optional)
-    // Email is populated by populateIcgemContactPersons from grav:contact/grav:address.
-    // The field becomes visible after the upload toggles the contact-person checkbox.
+    // Contact person email (required) and website (optional).
+    // Email comes from grav:contact/grav:address; the matching author is the
+    // row whose contact checkbox was checked, not necessarily the first creator.
+    const contactRow = page.locator('#group-author [data-creator-row]').filter({
+      has: page.locator('input[name="contacts[]"]:checked'),
+    }).first();
     await expect(
-      page.locator('#group-author [data-creator-row]').first().locator('input[name="cpEmail[]"]'),
+      contactRow.locator('input[name="cpEmail[]"]'),
       'contactPersonEmail',
     ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
     if (parsedData.contactPersonWebsite) {
       await expect(
-        page.locator('#group-author [data-creator-row]').first().locator('input[name="cpOnlineResource[]"]'),
+        contactRow.locator('input[name="cpOnlineResource[]"]'),
         'contactPersonWebsite',
       ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
     }
@@ -1841,24 +1457,18 @@ for (const testCase of TEST_CASES) {
       ).toHaveValue(content);
     }
 
-    // ── GCMD Subjects (thesaurus keywords) ────────────────────────────────
-    // Verify that the upload handler populated at least the expected number of tags
-    const allThesaurusTags = await page.locator(
-      '[name="thesaurusKeywords[]"] ~ tags .tagify__tag, input[name*="platform"] ~ tags .tagify__tag',
-    ).count().catch(() => 0);
-    // The 3 satellite data source rows each have a platform tagify, so expect >= subject count
-    // For a lighter check: verify that subjects from the XML appear somewhere in the page tags
-    for (const subject of parsedData.subjects.slice(0, 3)) {
-      // Check via tagify internal value (more reliable than DOM text)
-      const found = await page.evaluate((text: string) => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('input[name*="Keywords"], input[name*="keyword"]');
-        return Array.from(inputs).some((inp: HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } }) =>
-          inp._tagify?.value?.some(t => t.value === text || t.value.includes(text))
-        );
-      }, subject.text);
-      if (!found) {
-        console.warn(`[WARN] Subject "${subject.text}" not found in thesaurus tagify inputs – thesaurus mapping may require server-side GCMD data`);
-      }
+    // ── GCMD Subjects (thesaurus + free keywords) ─────────────────────────
+    // Every subject must land in some Tagify field: processKeywords() routes by
+    // schemeURI into the GCMD pickers and drops anything unrecognised into free
+    // keywords. Scanning all Tagify instances rather than inputs whose name
+    // contains "keyword" also covers satellite_platform[] on the data rows.
+    for (const subject of subjectTexts(parsedData.subjects)) {
+      await expect
+        .poll(() => findTagifyTag(page, subject), {
+          message: `subject "${subject}" restored into a keyword field`,
+          timeout: 10_000,
+        })
+        .toBe(true);
     }
 
     console.log('✓ 4 – fill/save/upload roundtrip and form-value verification passed');
