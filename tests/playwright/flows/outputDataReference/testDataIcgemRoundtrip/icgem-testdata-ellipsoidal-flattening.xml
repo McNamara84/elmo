@@ -20,7 +20,13 @@
   <dace:subjects>
     <dace:subject>Mars gravity field</dace:subject>
   </dace:subjects>
-  <dace:contributors/>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Abrykosov, Oleh</dace:contributorName>
+      <dace:givenName>Oleh</dace:givenName>
+      <dace:familyName>Abrykosov</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
   <dace:dates>
     <dace:date dateType="Created">2024-05-17</dace:date>
   </dace:dates>

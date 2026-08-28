@@ -20,7 +20,13 @@
   <dace:subjects>
     <dace:subject>Time-variable gravity</dace:subject>
   </dace:subjects>
-  <dace:contributors/>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Dahle, Christoph</dace:contributorName>
+      <dace:givenName>Christoph</dace:givenName>
+      <dace:familyName>Dahle</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
   <dace:dates>
     <dace:date dateType="Created">2023-11-02</dace:date>
   </dace:dates>

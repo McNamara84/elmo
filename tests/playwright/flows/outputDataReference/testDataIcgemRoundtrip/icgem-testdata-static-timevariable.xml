@@ -20,7 +20,13 @@
   <dace:subjects>
     <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
   </dace:subjects>
-  <dace:contributors/>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Ince, Elmas Sinem</dace:contributorName>
+      <dace:givenName>Elmas Sinem</dace:givenName>
+      <dace:familyName>Ince</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
   <dace:dates>
     <dace:date dateType="Created">2024-03-01</dace:date>
   </dace:dates>

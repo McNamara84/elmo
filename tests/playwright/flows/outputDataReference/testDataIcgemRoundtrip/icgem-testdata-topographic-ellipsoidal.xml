@@ -42,7 +42,13 @@
     <dace:subject>Chikyu</dace:subject>
     <dace:subject>Integrated Ocean Drilling Program / International Ocean Discovery Program (IODP)</dace:subject>
   </dace:subjects>
-  <dace:contributors/>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Heuer, Verena B</dace:contributorName>
+      <dace:givenName>Verena B</dace:givenName>
+      <dace:familyName>Heuer</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
   <dace:dates>
     <dace:date dateType="Created">2020-01-01</dace:date>
   </dace:dates>

@@ -19,7 +19,13 @@
   <dace:subjects>
     <dace:subject>Topographic gravity</dace:subject>
   </dace:subjects>
-  <dace:contributors/>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Rexer, Moritz</dace:contributorName>
+      <dace:givenName>Moritz</dace:givenName>
+      <dace:familyName>Rexer</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
   <dace:dates>
     <dace:date dateType="Created">2022-08-09</dace:date>
   </dace:dates>
