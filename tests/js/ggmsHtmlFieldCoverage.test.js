@@ -3,7 +3,7 @@
  *
  * Fails when:
  *  - a new input/select/textarea id is added to GGMs*.html but is not referenced
- *    by the ICGEM roundtrip suite, the clear spec, or fillGEM
+ *    by the ICGEM roundtrip suite or the clear spec
  *  - a GGM field selector remains in those specs after the HTML id was removed
  *
  * The ICGEM roundtrip suite is the primary contract: every GGM field should be
@@ -35,7 +35,7 @@ describe('GGM HTML ↔ Playwright field coverage metatest', () => {
     ]));
   });
 
-  test('every HTML GGM field id is referenced by roundtrip, clear, or fillGEM', () => {
+  test('every HTML GGM field id is referenced by the roundtrip or clear spec', () => {
     const covered = new Set(coverageIds);
     const missing = htmlIds.filter((id) => !covered.has(id));
     expect(missing).toEqual([]);

@@ -454,10 +454,14 @@ export { exampleData };
 
 /**
  * Fills all GGMs/ICGEM-specific fields with representative test values.
- * Covers: Definition, Characteristics, all three Model Type sections,
- * Data Sources (2 rows), and the Abstract description.
  *
- * Intended for both the clear-reset test and any future GGMs flow tests.
+ * Unlike the roundtrip fixtures, which each describe one coherent model, this
+ * walks through every mutually exclusive branch — all three model types, both
+ * math representations, whole-body *and* separate crust/mantle density — so
+ * that inactive branches are left holding stale values. That is the state
+ * clearInputFields() has to survive, and no single reference XML can express it.
+ *
+ * Field coverage itself is owned by tests/playwright/flows/icgem-roundtrip.spec.ts.
  */
 export async function fillGEM(page: Page) {
   const DS_ROW = '#group-datasources .row[data-source-row]';
@@ -484,12 +488,28 @@ export async function fillGEM(page: Page) {
   );
   await page.locator('#input-file-format').selectOption({ index: 1 });
 
-  // ── Characteristics ───────────────────────────────────────────────────────
+  // ── Characteristics (spherical first) ─────────────────────────────────────
   await page.locator('#input-tide-system').selectOption('Zero-tide');
   await page.locator('#input-degree').fill('300');
   await page.locator('#input-errors').selectOption('calibrated');
   await page.locator('#input-error-handling-approach').fill('Calibration approach text');
   await page.locator('#input-earth-gravity-constant').fill('3.986004415e14');
+
+  // Radius is visible for Spherical harmonics (index 1 with standard mocks / API order)
+  const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
+  if (radiusVisible) {
+    await page.locator('#input-radius').fill('6378.1363');
+  }
+
+  // Exercise ellipsoidal reference-system fields, then restore spherical
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Ellipsoidal harmonics' });
+  await page.locator('#input-mathematical-representation').dispatchEvent('change');
+  await expect(page.locator('.visibility-ellipsoidal').first()).toBeVisible({ timeout: 5_000 });
+  await page.locator('#input-semimajor-axis').fill('6378.137');
+  await page.locator('#input-second-variable').selectOption('flattening');
+  await page.locator('#input-second-variable-value').fill('0.00335281');
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Spherical harmonics' });
+  await page.locator('#input-mathematical-representation').dispatchEvent('change');
 
   // ── Model Type: Static ────────────────────────────────────────────────────
   await page.locator('#input-model-type').selectOption('Static');
@@ -516,6 +536,13 @@ export async function fillGEM(page: Page) {
   await page.locator('#select-topo-density').selectOption('constant');
   await page.locator('#input-topo-density-details').fill('2670 kg/m3');
 
+  await page.locator('#checkbox-separate-density').check();
+  await expect(page.locator('#separate-density-container')).toBeVisible({ timeout: 5_000 });
+  await page.locator('#select-topo-density-crust').selectOption('constant');
+  await page.locator('#input-topo-density-details-crust').fill('2700 crust');
+  await page.locator('#select-topo-density-mantle').selectOption('density-model');
+  await page.locator('#input-topo-density-details-mantle').fill('PREM mantle');
+
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
   await page.locator('#button-datasource-add').click();
   await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
@@ -526,8 +553,26 @@ export async function fillGEM(page: Page) {
   await secondRow.locator('textarea[name="datasource_description[]"]').fill('Second source description');
   await secondRow.locator('input[name="dName[]"]').fill('GRACE-FO');
 
-  // ── Descriptions ──────────────────────────────────────────────────────────
-  await page.locator('#input-abstract').fill('Test abstract for clear test');
+  // ── Descriptions (all GGM description panels) ─────────────────────────────
+  // The panels share a `data-bs-parent`, so only one is open at a time; opening
+  // the next collapses the previous one but keeps the value already typed.
+  const descriptionPanels: Array<[string, string]> = [
+    ['abstract', 'Test abstract for clear test'],
+    ['general-model-description', 'General model description'],
+    ['input-data', 'Input data description'],
+    ['processing-procedures', 'Processing procedures'],
+    ['specific-features', 'Specific features'],
+    ['other', 'Other description'],
+  ];
+
+  for (const [slug, value] of descriptionPanels) {
+    const textarea = page.locator(`#input-${slug}`);
+    if (!(await textarea.isVisible().catch(() => false))) {
+      await page.locator(`button[data-bs-target="#collapse-${slug}"]`).click();
+      await expect(textarea).toBeVisible({ timeout: 5_000 });
+    }
+    await textarea.fill(value);
+  }
 }
 
 /**

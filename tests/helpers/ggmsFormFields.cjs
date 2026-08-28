@@ -17,11 +17,16 @@ const GGM_FORMGROUP_FILES = [
   'formgroups/GGMsDescriptions.html',
 ];
 
-/** Playwright files that together must cover every GGM HTML field id. */
+/**
+ * Playwright files that together must cover every GGM HTML field id.
+ *
+ * The roundtrip suite alone is expected to cover all of them via its reference
+ * XML fixtures; the clear spec is listed because it asserts the reset state of
+ * the same fields and so must not drift either.
+ */
 const GGM_COVERAGE_SPEC_FILES = [
   'tests/playwright/flows/icgem-roundtrip.spec.ts',
   'tests/playwright/formgroups/elmogem-specific/elmogem-clear.spec.ts',
-  'tests/playwright/utils/flows.ts',
 ];
 
 /**
