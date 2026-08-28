@@ -31,6 +31,19 @@
  *   suite can be extended by adding a new object to that array without touching
  *   any test or helper code.
  *
+ *   The fixtures are chosen so that between them every GGM input field is
+ *   exercised, including the ones that only appear behind a toggle:
+ *     datasources              spherical harmonics, satellite source
+ *     defferent-datasources    all five data source types with their details
+ *     ellipsoidal-flattening   ellipsoidal harmonics keyed on flattening,
+ *                              Isostasy source with compensation depth
+ *     static-timevariable      static model, time-variable coefficients,
+ *                              every description section
+ *     temporal                 temporal coverage and resolution
+ *     temporal-release         temporal end date, institution, release number
+ *     topographic-ellipsoidal  separate crust/mantle density, semiminor axis
+ *     topographic-whole        whole-model density, multi-layer/spectral options
+ *
  * ── Runs under ────────────────────────────────────────────────────────────────
  *   playwright.gem.config.ts  (showGGMsProperties=true)
  *
@@ -105,7 +118,55 @@ interface DataSource {
   satelliteValueUri?: string;
   satelliteSchemeName?: string;
   satelliteSchemeUri?: string;
+  /**
+   * Value of the type-specific detail element (groundDetail / altimetryDetail /
+   * elevationTerrainDetail / modelDetail). The form stores these verbatim as the
+   * option value of select[name="datasource_details[]"].
+   */
+  details?: string;
+  /** Only emitted for Elevation/Terrain sources whose detail is "Isostasy". */
+  compensationDepth?: string;
+  /** Model-type sources only. */
+  identifier?: string;
+  identifierType?: string;
+  name?: string;
 }
+
+interface DensityInformation {
+  /** 'Whole' | 'Crust' | 'Mantle' */
+  domain: string;
+  /** 'Constant' | 'Layer-specific' | 'Density model' */
+  type: string;
+  description: string;
+}
+
+interface TopographicProperties {
+  layerApproach: string;
+  forwardModellingDomain: string;
+  approximation: string;
+  densities: DensityInformation[];
+}
+
+interface EllipsoidalParameters {
+  semimajorAxisA: string;
+  /** Form option value of #input-second-variable. */
+  secondVariable: 'axis_b' | 'flattening' | 'reciprocal_flattening' | '';
+  secondVariableValue: string;
+}
+
+/**
+ * GGM description sections, keyed by the lowercased `section` attribute used in
+ * grav:descriptions, mapped onto the accordion panel that holds them.
+ * Mirrors the section→field mapping in js/mappingXmlToInputFields-icgem.js.
+ */
+const DESCRIPTION_SECTIONS: Record<string, { input: string; collapse: string }> = {
+  'abstract': { input: '#input-abstract', collapse: '#collapse-abstract' },
+  'general model description': { input: '#input-general-model-description', collapse: '#collapse-general-model-description' },
+  'input data': { input: '#input-input-data', collapse: '#collapse-input-data' },
+  'processing procedures': { input: '#input-processing-procedures', collapse: '#collapse-processing-procedures' },
+  'specific features of resulting gravity field': { input: '#input-specific-features', collapse: '#collapse-specific-features' },
+  'other': { input: '#input-other', collapse: '#collapse-other' },
+};
 
 interface IcgemParsedData {
   // ── Standard DataCite ──
@@ -135,11 +196,23 @@ interface IcgemParsedData {
   tideSystem: string;
   degree: string;
   errors: string;
+  errorHandling: string;
   radius: string;
   earthGravityConstant: string;
+  /** Reference ellipsoid, present only for Ellipsoidal harmonics models. */
+  ellipsoidal: EllipsoidalParameters | null;
+  /** Static models: description of the time-variable coefficients. */
+  staticInfoTimeVariableCoefficients: string;
   temporalStart: string;
+  temporalEnd: string;
   temporalResolution: string; // raw number of days as a string
+  temporalInstitution: string;
+  temporalRelease: string;
+  /** Topographic models: layer approach, domain, approximation and densities. */
+  topographic: TopographicProperties | null;
   dataSources: DataSource[];
+  /** All grav:descriptions keyed by lowercased section attribute. */
+  ggmDescriptions: Record<string, string>;
   ggmAbstract: string;
 }
 
@@ -175,6 +248,28 @@ function getNode(obj: Record<string, unknown>, localName: string): unknown {
   return k ? obj[k] : undefined;
 }
 
+/**
+ * Normalises free-text values before comparison.
+ *
+ * Multi-line textarea values are submitted with CRLF line endings, so carriage
+ * returns survive into the DataCite half of the envelope (serialised as `&#13;`)
+ * while the ICGEM half is normalised to LF by ICGEMController::prepare().
+ * Both sides carry identical text, so strip CR in either encoding.
+ */
+function normalizeText(value: string): string {
+  return value.replace(/&#13;/g, '').replace(/\r/g, '');
+}
+
+/**
+ * Maps an ICGEM densityInformationType ("Constant", "Layer-specific",
+ * "Density model") back onto the option value used by the density selects.
+ * Mirrors reverseDensityType() in js/mappingXmlToInputFields-icgem.js.
+ */
+function toDensityOptionValue(xmlValue: string): string {
+  const lower = xmlValue.toLowerCase().trim();
+  return lower === 'density model' ? 'density-model' : lower;
+}
+
 // ─── XML parsing ──────────────────────────────────────────────────────────────
 
 /**
@@ -199,6 +294,8 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
         'dace:description',
         'grav:inputDataSource',
         'grav:description',
+        'grav:topographicModelProperties',
+        'grav:densityInformation',
       ];
       return typeof jpath === 'string' && alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
     },
@@ -234,7 +331,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const descriptionsNode = getNode(resource, 'descriptions') as Record<string, unknown> | undefined;
   const descList = descriptionsNode ? toArray(getNode(descriptionsNode, 'description')) : [];
   const abstractEl = descList.find((d: unknown) => (d as Record<string, unknown>)['descriptionType'] === 'Abstract');
-  const abstract = extractText(abstractEl).replace(/&#13;/g, '');
+  const abstract = normalizeText(extractText(abstractEl));
 
   // Date created
   const datesNode = getNode(resource, 'dates') as Record<string, unknown> | undefined;
@@ -318,34 +415,105 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const tideSystem = String(getNode(hcm, 'tideSystem') ?? '');
   const degree = String(getNode(hcm, 'degreeOrderMax') ?? '');
   const errors = String(getNode(hcm, 'errors') ?? '');
+  const errorHandling = String(getNode(hcm, 'errorHandling') ?? '');
   const radius = String(getNode(hcm, 'radius') ?? '');
   const earthGravityConstant = String(getNode(hcm, 'earthGravityConstant') ?? '');
+
+  // Reference ellipsoid. The form offers a single "second variable" slot, so the
+  // first of axis b / flattening / reciprocal flattening present in the XML wins
+  // (the exporter can only ever have written the one the form submitted).
+  const epNode = getNode(hcm, 'ellipsoidalParameters') as Record<string, unknown> | undefined;
+  let ellipsoidal: EllipsoidalParameters | null = null;
+  if (epNode) {
+    const secondVariableCandidates: Array<[EllipsoidalParameters['secondVariable'], string]> = [
+      ['axis_b', String(getNode(epNode, 'semiminorAxisB') ?? '')],
+      ['flattening', String(getNode(epNode, 'flattening') ?? '')],
+      ['reciprocal_flattening', String(getNode(epNode, 'reciprocalFlattening') ?? '')],
+    ];
+    const [secondVariable, secondVariableValue] =
+      secondVariableCandidates.find(([, value]) => value !== '') ?? ['' as const, ''];
+    ellipsoidal = {
+      semimajorAxisA: String(getNode(epNode, 'semimajorAxisA') ?? ''),
+      secondVariable,
+      secondVariableValue,
+    };
+  }
+
+  // Static model properties
+  const smpNode = getNode(hcm, 'staticModelProperties') as Record<string, unknown> | undefined;
+  const staticInfoTimeVariableCoefficients = normalizeText(
+    String(getNode(smpNode ?? {}, 'infoTimeVariableCoefficients') ?? ''),
+  );
 
   // Temporal model properties
   const tmpNode = getNode(hcm, 'temporalModelProperties') as Record<string, unknown> | undefined;
   const temporalCoverage = String(getNode(tmpNode ?? {}, 'temporalCoverage') ?? '');
-  const [temporalStart = ''] = temporalCoverage.split('/');
+  const [rawTemporalStart = '', rawTemporalEnd = ''] = temporalCoverage.split('/');
+  // The exporter writes the placeholders "unknown"/"open" when one bound is missing.
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const temporalStart = ISO_DATE.test(rawTemporalStart) ? rawTemporalStart : '';
+  const temporalEnd = ISO_DATE.test(rawTemporalEnd) ? rawTemporalEnd : '';
   const temporalResolutionRaw = getNode(tmpNode ?? {}, 'temporalResolution');
   const temporalResolution = extractText(temporalResolutionRaw); // number of days
+  const temporalInstitution = String(getNode(tmpNode ?? {}, 'generatingInstitution') ?? '');
+  const temporalRelease = String(getNode(tmpNode ?? {}, 'release') ?? '');
+
+  // Topographic model properties (the form can only produce a single block)
+  const topNode = toArray(getNode(hcm, 'topographicModelProperties'))[0] as Record<string, unknown> | undefined;
+  const topographic: TopographicProperties | null = topNode
+    ? {
+        layerApproach: String(getNode(topNode, 'layerApproach') ?? ''),
+        forwardModellingDomain: String(getNode(topNode, 'forwardModellingDomain') ?? ''),
+        approximation: String(getNode(topNode, 'approximation') ?? ''),
+        densities: toArray(getNode(topNode, 'densityInformation')).map((d: unknown) => {
+          const dn = d as Record<string, unknown>;
+          return {
+            domain: String(getNode(dn, 'densityInformationDomain') ?? ''),
+            type: String(getNode(dn, 'densityInformationType') ?? ''),
+            description: String(getNode(dn, 'densityInformationDescription') ?? ''),
+          };
+        }),
+      }
+    : null;
 
   // Data sources
+  const optionalText = (node: Record<string, unknown>, localName: string): string | undefined =>
+    getNode(node, localName) !== undefined ? String(getNode(node, localName)) : undefined;
+
   const dataSources: DataSource[] = toArray(getNode(ggp, 'inputDataSource')).map((ds: unknown) => {
     const d = ds as Record<string, unknown>;
+    // Exactly one detail element is emitted, named after the source type.
+    const details = optionalText(d, 'groundDetail')
+      ?? optionalText(d, 'altimetryDetail')
+      ?? optionalText(d, 'elevationTerrainDetail')
+      ?? optionalText(d, 'modelDetail');
     return {
       type: String(d['type'] ?? 'Satellite'),
       description: String(getNode(d, 'description') ?? ''),
-      satelliteValueName: getNode(d, 'satelliteValueName') !== undefined ? String(getNode(d, 'satelliteValueName')) : undefined,
-      satelliteValueUri: getNode(d, 'satelliteValueUri') !== undefined ? String(getNode(d, 'satelliteValueUri')) : undefined,
-      satelliteSchemeName: getNode(d, 'satelliteSchemeName') !== undefined ? String(getNode(d, 'satelliteSchemeName')) : undefined,
-      satelliteSchemeUri: getNode(d, 'satelliteSchemeUri') !== undefined ? String(getNode(d, 'satelliteSchemeUri')) : undefined,
+      satelliteValueName: optionalText(d, 'satelliteValueName'),
+      satelliteValueUri: optionalText(d, 'satelliteValueUri'),
+      satelliteSchemeName: optionalText(d, 'satelliteSchemeName'),
+      satelliteSchemeUri: optionalText(d, 'satelliteSchemeUri'),
+      details,
+      compensationDepth: getNode(d, 'compensationDepth') !== undefined
+        ? extractText(getNode(d, 'compensationDepth'))
+        : undefined,
+      identifier: optionalText(d, 'identifier'),
+      identifierType: optionalText(d, 'identifierType'),
+      name: optionalText(d, 'name'),
     };
   });
 
-  // GGM abstract description (section="Abstract")
+  // GGM descriptions, keyed by their section attribute
   const ggmDescsNode = getNode(ggp, 'descriptions') as Record<string, unknown> | undefined;
   const ggmDescList = ggmDescsNode ? toArray(getNode(ggmDescsNode, 'description')) : [];
-  const ggmAbstractEl = ggmDescList.find((d: unknown) => String((d as Record<string, unknown>)['section'] ?? '').toLowerCase() === 'abstract');
-  const ggmAbstract = extractText(ggmAbstractEl).replace(/&#13;/g, '');
+  const ggmDescriptions: Record<string, string> = {};
+  for (const d of ggmDescList) {
+    const section = String((d as Record<string, unknown>)['section'] ?? '').toLowerCase();
+    if (!section) continue;
+    ggmDescriptions[section] = normalizeText(extractText(d));
+  }
+  const ggmAbstract = ggmDescriptions['abstract'] ?? '';
 
   return {
     doi, title, publicationYear, language, version,
@@ -354,9 +522,11 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
     contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail, contactPersonWebsite,
     subjects,
     modelName, modelType, mathRepresentation, celestialBody, fileFormat,
-    tideSystem, degree, errors, radius, earthGravityConstant,
-    temporalStart, temporalResolution,
-    dataSources, ggmAbstract,
+    tideSystem, degree, errors, errorHandling, radius, earthGravityConstant,
+    ellipsoidal, staticInfoTimeVariableCoefficients,
+    temporalStart, temporalEnd, temporalResolution, temporalInstitution, temporalRelease,
+    topographic,
+    dataSources, ggmDescriptions, ggmAbstract,
   };
 }
 
@@ -425,6 +595,35 @@ async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Lo
   return rows.nth(index);
 }
 
+/**
+ * Fills one description accordion panel. The panels share a `data-bs-parent`,
+ * so opening one collapses the previous — values already typed are retained.
+ */
+async function fillDescriptionSection(page: Page, section: string, value: string): Promise<void> {
+  const panel = DESCRIPTION_SECTIONS[section];
+  if (!panel) throw new Error(`fillDescriptionSection: unknown section "${section}"`);
+
+  const textarea = page.locator(panel.input);
+  if (!(await textarea.isVisible().catch(() => false))) {
+    await page.locator(`button[data-bs-target="${panel.collapse}"]`).click();
+    await expect(textarea).toBeVisible({ timeout: 5_000 });
+  }
+  await textarea.fill(value);
+}
+
+/**
+ * Asserts a numeric input's value by magnitude rather than by string.
+ *
+ * Radius, gravity constant and the ellipsoid parameters are stored as SQL
+ * doubles, so PHP renders values of 1e14 and above in scientific notation
+ * ("3.986004415E+14"). That is the same number the form was filled with.
+ */
+async function expectNumericValue(locator: Locator, expected: string, label: string): Promise<void> {
+  await expect
+    .poll(async () => Number(await locator.inputValue()), { message: label, timeout: 5_000 })
+    .toBe(Number(expected));
+}
+
 async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // ── Wait for API-populated dropdowns ──────────────────────────────────────
   await page.waitForFunction(
@@ -448,9 +647,6 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
 
   // Version (note: form pattern expects "x.y" but save does not validate)
   await page.locator('#input-resourceinformation-version').fill(data.version);
-
-  // Abstract
-  await page.locator('#input-abstract').fill(data.abstract);
 
   // Date created
   await page.locator('#input-date-created').fill(data.dateCreated);
@@ -562,6 +758,10 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
   // Errors: form stores lowercase ("no"), XML has "No" – apply toLowerCase()
   await page.locator('#input-errors').selectOption(data.errors.toLowerCase());
 
+  if (data.errorHandling) {
+    await page.locator('#input-error-handling-approach').fill(data.errorHandling);
+  }
+
   await page.locator('#input-earth-gravity-constant').fill(data.earthGravityConstant);
 
   // Radius – only visible when Spherical harmonics is selected
@@ -583,6 +783,27 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     }
   }
 
+  // ── Reference ellipsoid – only shown for Ellipsoidal harmonics ────────────
+
+  if (data.ellipsoidal) {
+    await expect(page.locator('#input-semimajor-axis')).toBeVisible({ timeout: 10_000 });
+    await page.locator('#input-semimajor-axis').fill(data.ellipsoidal.semimajorAxisA);
+
+    if (data.ellipsoidal.secondVariable) {
+      await page.locator('#input-second-variable').selectOption(data.ellipsoidal.secondVariable);
+      await page.locator('#input-second-variable-value').fill(data.ellipsoidal.secondVariableValue);
+    }
+  }
+
+  // ── ICGEM Model Types – Static section ───────────────────────────────────
+
+  if (data.modelType.toLowerCase() === 'static' && data.staticInfoTimeVariableCoefficients) {
+    await expect(page.locator('.visibility-modeltype-static')).toBeVisible({ timeout: 10_000 });
+    await page.locator('#checkbox-time-variable').check();
+    await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+    await page.locator('#input-static-description').fill(data.staticInfoTimeVariableCoefficients);
+  }
+
   // ── ICGEM Model Types – Temporal section ─────────────────────────────────
 
   if (data.modelType.toLowerCase() === 'temporal') {
@@ -590,12 +811,57 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
     await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
 
     await page.locator('#input-temporal-start').fill(data.temporalStart);
+    if (data.temporalEnd) await page.locator('#input-temporal-end').fill(data.temporalEnd);
+    if (data.temporalInstitution) await page.locator('#input-temporal-institution').fill(data.temporalInstitution);
+    if (data.temporalRelease) await page.locator('#input-release-number').fill(data.temporalRelease);
 
-    // Custom temporal resolution (temporalCoverage ends with "/open" so no end date)
+    // The XML only carries the resolution in days, so it always comes back as a
+    // custom frequency — #select-temporal-frequency-predef is a save-time input
+    // that the export collapses into temporalResolution and cannot roundtrip.
     if (data.temporalResolution) {
       await page.locator('#checkbox-custom-frequency').check();
       await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
       await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
+    }
+  }
+
+  // ── ICGEM Model Types – Topographic section ──────────────────────────────
+
+  if (data.topographic) {
+    await expect(page.locator('.visibility-modeltype-topographic')).toBeVisible({ timeout: 10_000 });
+
+    const topo = data.topographic;
+    if (topo.layerApproach) await page.locator('#select-topo-layerapproach').selectOption(topo.layerApproach.toLowerCase());
+    if (topo.forwardModellingDomain) await page.locator('#select-topo-domain').selectOption(topo.forwardModellingDomain.toLowerCase());
+    if (topo.approximation) await page.locator('#select-topo-approximation').selectOption(topo.approximation.toLowerCase());
+
+    // The whole-model density and the crust/mantle pair are mutually exclusive:
+    // ticking #checkbox-separate-density disables the single-density inputs, so
+    // fill the whole-model density first and only then flip the toggle.
+    const densitiesByDomain = new Map(topo.densities.map(d => [d.domain.toLowerCase(), d]));
+    for (const domain of densitiesByDomain.keys()) {
+      if (!['whole', 'crust', 'mantle'].includes(domain)) {
+        throw new Error(`fillIcgemForm: unknown density domain "${domain}"`);
+      }
+    }
+
+    const fillDensity = async (suffix: string, density: DensityInformation) => {
+      await page.locator(`#select-topo-density${suffix}`).selectOption(toDensityOptionValue(density.type));
+      if (density.description) {
+        await page.locator(`#input-topo-density-details${suffix}`).fill(density.description);
+      }
+    };
+
+    const wholeDensity = densitiesByDomain.get('whole');
+    if (wholeDensity) await fillDensity('', wholeDensity);
+
+    const crustDensity = densitiesByDomain.get('crust');
+    const mantleDensity = densitiesByDomain.get('mantle');
+    if (crustDensity || mantleDensity) {
+      await page.locator('#checkbox-separate-density').check();
+      await expect(page.locator('#separate-density-container')).toBeVisible({ timeout: 5_000 });
+      if (crustDensity) await fillDensity('-crust', crustDensity);
+      if (mantleDensity) await fillDensity('-mantle', mantleDensity);
     }
   }
 
@@ -628,6 +894,46 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
 
     await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
 
+    // Type-specific detail. The options are rebuilt on every type change and use
+    // the label as their value, so the XML value can be selected directly.
+    if (ds.details) {
+      const detailsSelect = dsRow.locator('select[name="datasource_details[]"]');
+      await detailsSelect.selectOption(ds.details);
+      await detailsSelect.dispatchEvent('change');
+    }
+
+    // Compensation depth appears only for Elevation/Terrain + "Isostasy"
+    if (ds.compensationDepth) {
+      const compensationInput = dsRow.locator('input[name="compensation_depth[]"]');
+      await expect(compensationInput).toBeVisible({ timeout: 5_000 });
+      await compensationInput.fill(ds.compensationDepth);
+    }
+
+    // Model sources carry an identifier, its type and a model name
+    if (typeCode === 'M') {
+      if (ds.identifier) {
+        const identifierInput = dsRow.locator('input[name="dIdentifier[]"]');
+        await identifierInput.fill(ds.identifier);
+        await identifierInput.dispatchEvent('input');
+      }
+      if (ds.identifierType) {
+        // Typing an identifier kicks off a debounced API lookup that repopulates
+        // the type dropdown and auto-selects the best pattern match. Wait for it
+        // to settle on the expected type before falling back to setting it by hand.
+        const identifierTypeSelect = dsRow.locator('select[name="dIdentifierType[]"]');
+        const autoDetected = await expect
+          .poll(() => identifierTypeSelect.inputValue(), { timeout: 10_000 })
+          .toBe(ds.identifierType)
+          .then(() => true, () => false);
+        if (!autoDetected) {
+          await identifierTypeSelect.selectOption({ label: ds.identifierType });
+        }
+      }
+      if (ds.name) {
+        await dsRow.locator('input[name="dName[]"]').fill(ds.name);
+      }
+    }
+
     // Satellite platform – inject via Tagify API
     if (typeCode === 'S' && ds.satelliteValueName) {
       const tag = {
@@ -645,6 +951,16 @@ async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
         tag,
       );
     }
+  }
+
+  // ── Descriptions ──────────────────────────────────────────────────────────
+  // Filled last because the panels share an accordion parent, so opening one
+  // closes the previous. #input-abstract takes the ICGEM abstract: save appends
+  // the ELMOGEM-specific sections to the DataCite abstract, and the ICGEM
+  // exporter strips them out again.
+  for (const section of Object.keys(DESCRIPTION_SECTIONS)) {
+    const content = data.ggmDescriptions[section];
+    if (content) await fillDescriptionSection(page, section, content);
   }
 }
 
@@ -832,10 +1148,36 @@ for (const testCase of TEST_CASES) {
       expect(parsedData.radius, 'radius').not.toBe('');
     }
     expect(parsedData.earthGravityConstant, 'earthGravityConstant').not.toBe('');
+
+    // Reference ellipsoid replaces the radius for Ellipsoidal harmonics models
+    if (parsedData.mathRepresentation.toLowerCase().includes('ellipsoidal')) {
+      expect(parsedData.ellipsoidal, 'ellipsoidalParameters').not.toBeNull();
+      expect(parsedData.ellipsoidal!.semimajorAxisA, 'semimajorAxisA').not.toBe('');
+      expect(parsedData.ellipsoidal!.secondVariable, 'secondVariable').not.toBe('');
+      expect(parsedData.ellipsoidal!.secondVariableValue, 'secondVariableValue').not.toBe('');
+    }
+
     // temporal fields only apply to Temporal model type
     if (parsedData.modelType.toLowerCase() === 'temporal') {
       expect(parsedData.temporalStart, 'temporalStart').not.toBe('');
       expect(parsedData.temporalResolution, 'temporalResolution').not.toBe('');
+    }
+
+    // Topographic models must describe layer approach, domain and density
+    if (parsedData.modelType.toLowerCase() === 'topographic') {
+      expect(parsedData.topographic, 'topographicModelProperties').not.toBeNull();
+      expect(parsedData.topographic!.layerApproach, 'layerApproach').not.toBe('');
+      expect(parsedData.topographic!.forwardModellingDomain, 'forwardModellingDomain').not.toBe('');
+      expect(parsedData.topographic!.densities.length, 'densityInformation.length').toBeGreaterThan(0);
+      for (const [i, d] of parsedData.topographic!.densities.entries()) {
+        expect(d.domain, `densityInformation[${i}].domain`).not.toBe('');
+        expect(d.type, `densityInformation[${i}].type`).not.toBe('');
+      }
+      // The whole-model density and the crust/mantle pair are mutually exclusive
+      const domains = parsedData.topographic!.densities.map(d => d.domain.toLowerCase());
+      if (domains.includes('crust') || domains.includes('mantle')) {
+        expect(domains, 'densityInformation domains (separate density excludes Whole)').not.toContain('whole');
+      }
     }
 
     // Data sources
@@ -847,8 +1189,12 @@ for (const testCase of TEST_CASES) {
       if (ds.satelliteValueUri) expect(ds.satelliteValueUri, `dataSources[${i}].satelliteValueUri`).toBeTruthy();
     }
 
-    // GGM description
+    // GGM descriptions – Abstract is mandatory, the other sections are optional
     expect(parsedData.ggmAbstract, 'ggmAbstract').not.toBe('');
+    for (const section of Object.keys(parsedData.ggmDescriptions)) {
+      expect(Object.keys(DESCRIPTION_SECTIONS), `description section "${section}"`).toContain(section);
+      expect(parsedData.ggmDescriptions[section], `description "${section}"`).not.toBe('');
+    }
 
     console.log('✓ 1.1 – all reference XML fields parsed successfully');
     console.log('  Title:', parsedData.title);
@@ -880,12 +1226,7 @@ for (const testCase of TEST_CASES) {
 
     // Helper: assert a single field with a meaningful label
     function assertField(actualRaw: unknown, expectedValue: string, fieldLabel: string): void {
-      let actual = extractText(actualRaw);
-      // Strip XML carriage return entities that may be present in saved XML but not in reference
-      if (fieldLabel === 'abstract' || fieldLabel === 'ggmAbstract') {
-        actual = actual.replace(/&#13;/g, '');
-      }
-      expect(actual, `[FIELD: ${fieldLabel}]`).toBe(expectedValue);
+      expect(normalizeText(extractText(actualRaw)), `[FIELD: ${fieldLabel}]`).toBe(normalizeText(expectedValue));
     }
 
     // ── DataCite fields ──
@@ -929,22 +1270,96 @@ for (const testCase of TEST_CASES) {
     // Errors: saved XML preserves the original capitalisation from the form option text ("No")
     assertField(getNode(hcm!, 'errors'), parsedData.errors, 'errors');
 
+    if (parsedData.errorHandling) {
+      assertField(getNode(hcm!, 'errorHandling'), parsedData.errorHandling, 'errorHandling');
+    }
+
     // Radius (may be absent if math representation is not Spherical harmonics)
     const savedRadius = extractText(getNode(hcm!, 'radius'));
     if (parsedData.radius) {
       expect(savedRadius, '[FIELD: radius]').toBe(parsedData.radius);
     }
 
+    // Reference ellipsoid
+    if (parsedData.ellipsoidal) {
+      const savedEp = getNode(hcm!, 'ellipsoidalParameters') as Record<string, unknown> | undefined;
+      expect(savedEp, '[FIELD: ellipsoidalParameters]').toBeTruthy();
+      assertField(getNode(savedEp!, 'semimajorAxisA'), parsedData.ellipsoidal.semimajorAxisA, 'semimajorAxisA');
+
+      const secondVariableElement: Record<string, string> = {
+        axis_b: 'semiminorAxisB',
+        flattening: 'flattening',
+        reciprocal_flattening: 'reciprocalFlattening',
+      };
+      const elementName = secondVariableElement[parsedData.ellipsoidal.secondVariable];
+      if (elementName) {
+        assertField(getNode(savedEp!, elementName), parsedData.ellipsoidal.secondVariableValue, elementName);
+      }
+    }
+
+    // Static model properties
+    if (parsedData.staticInfoTimeVariableCoefficients) {
+      const savedStatic = getNode(hcm!, 'staticModelProperties') as Record<string, unknown> | undefined;
+      expect(savedStatic, '[FIELD: staticModelProperties]').toBeTruthy();
+      assertField(
+        getNode(savedStatic!, 'infoTimeVariableCoefficients'),
+        parsedData.staticInfoTimeVariableCoefficients,
+        'infoTimeVariableCoefficients',
+      );
+    }
+
     // Temporal coverage – check start date
     const tmpNode = getNode(hcm!, 'temporalModelProperties') as Record<string, unknown> | undefined;
     if (tmpNode) {
       const coverage = extractText(getNode(tmpNode, 'temporalCoverage'));
-      const [savedStart] = coverage.split('/');
+      const [savedStart, savedEnd] = coverage.split('/');
       expect(savedStart, '[FIELD: temporalStart]').toBe(parsedData.temporalStart);
+      if (parsedData.temporalEnd) {
+        expect(savedEnd, '[FIELD: temporalEnd]').toBe(parsedData.temporalEnd);
+      }
 
       // Temporal resolution
       const savedResolution = extractText(getNode(tmpNode, 'temporalResolution'));
       expect(savedResolution, '[FIELD: temporalResolution]').toBe(parsedData.temporalResolution);
+
+      if (parsedData.temporalInstitution) {
+        assertField(getNode(tmpNode, 'generatingInstitution'), parsedData.temporalInstitution, 'generatingInstitution');
+      }
+      if (parsedData.temporalRelease) {
+        assertField(getNode(tmpNode, 'release'), parsedData.temporalRelease, 'release');
+      }
+    }
+
+    // Topographic model properties
+    if (parsedData.topographic) {
+      const savedTopo = toArray(getNode(hcm!, 'topographicModelProperties'))[0] as Record<string, unknown> | undefined;
+      expect(savedTopo, '[FIELD: topographicModelProperties]').toBeTruthy();
+      assertField(getNode(savedTopo!, 'layerApproach'), parsedData.topographic.layerApproach, 'layerApproach');
+      assertField(getNode(savedTopo!, 'forwardModellingDomain'), parsedData.topographic.forwardModellingDomain, 'forwardModellingDomain');
+      if (parsedData.topographic.approximation) {
+        assertField(getNode(savedTopo!, 'approximation'), parsedData.topographic.approximation, 'approximation');
+      }
+
+      const savedDensities = toArray(getNode(savedTopo!, 'densityInformation')) as Record<string, unknown>[];
+      expect(savedDensities.length, '[FIELD: densityInformation.length]').toBe(parsedData.topographic.densities.length);
+      for (const expectedDensity of parsedData.topographic.densities) {
+        const savedDensity = savedDensities.find(
+          d => extractText(getNode(d, 'densityInformationDomain')).toLowerCase() === expectedDensity.domain.toLowerCase(),
+        );
+        expect(savedDensity, `[FIELD: densityInformation(${expectedDensity.domain})]`).toBeTruthy();
+        assertField(
+          getNode(savedDensity!, 'densityInformationType'),
+          expectedDensity.type,
+          `densityInformation(${expectedDensity.domain}).type`,
+        );
+        if (expectedDensity.description) {
+          assertField(
+            getNode(savedDensity!, 'densityInformationDescription'),
+            expectedDensity.description,
+            `densityInformation(${expectedDensity.domain}).description`,
+          );
+        }
+      }
     }
 
     // Data sources count and fields
@@ -964,6 +1379,48 @@ for (const testCase of TEST_CASES) {
           `[FIELD: dataSources[${i}].satelliteValueName]`,
         ).toBe(ref.satelliteValueName);
       }
+
+      // Type-specific detail element, named after the source type
+      if (ref.details) {
+        const detailElement = {
+          'Ground data': 'groundDetail',
+          'Altimetry': 'altimetryDetail',
+          'Elevation/Terrain': 'elevationTerrainDetail',
+          'Model': 'modelDetail',
+        }[ref.type];
+        expect(detailElement, `[FIELD: dataSources[${i}] detail element for type ${ref.type}]`).toBeTruthy();
+        expect(
+          extractText(getNode(actual, detailElement!)),
+          `[FIELD: dataSources[${i}].${detailElement}]`,
+        ).toBe(ref.details);
+      }
+
+      if (ref.compensationDepth) {
+        expect(
+          extractText(getNode(actual, 'compensationDepth')),
+          `[FIELD: dataSources[${i}].compensationDepth]`,
+        ).toBe(ref.compensationDepth);
+      }
+
+      for (const [key, element] of [['identifier', 'identifier'], ['identifierType', 'identifierType'], ['name', 'name']] as const) {
+        const expectedValue = ref[key];
+        if (!expectedValue) continue;
+        expect(
+          extractText(getNode(actual, element)),
+          `[FIELD: dataSources[${i}].${element}]`,
+        ).toBe(expectedValue);
+      }
+    }
+
+    // GGM descriptions – every section present in the reference must survive
+    const savedGgmDescs = getNode(ggp!, 'descriptions') as Record<string, unknown> | undefined;
+    const savedGgmDescList = savedGgmDescs ? toArray(getNode(savedGgmDescs, 'description')) : [];
+    for (const [section, expectedContent] of Object.entries(parsedData.ggmDescriptions)) {
+      const savedDesc = savedGgmDescList.find(
+        d => String((d as Record<string, unknown>)['section'] ?? '').toLowerCase() === section,
+      );
+      expect(savedDesc, `[FIELD: description section "${section}"]`).toBeTruthy();
+      assertField(savedDesc, expectedContent, `description(${section})`);
     }
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
@@ -1017,20 +1474,59 @@ for (const testCase of TEST_CASES) {
     const radiusVal = await page.locator('#input-radius').inputValue().catch(() => '');
     expect(radiusVal, 'radius').toBe('');
 
+    await expect(page.locator('#input-error-handling-approach'), 'errorHandling').toHaveValue('');
+
+    // ── Reference ellipsoid ────────────────────────────────────────────────
+    await expect(page.locator('#input-semimajor-axis'), 'semimajorAxisA').toHaveValue('');
+    await expect(page.locator('#input-second-variable'), 'secondVariable').toHaveValue('');
+    await expect(page.locator('#input-second-variable-value'), 'secondVariableValue').toHaveValue('');
+
+    // ── ICGEM Static fields ────────────────────────────────────────────────
+    const timeVariableChecked = await page.locator('#checkbox-time-variable').isChecked().catch(() => false);
+    expect(timeVariableChecked, 'timeVariable checkbox').toBe(false);
+    await expect(page.locator('#input-static-description'), 'staticDescription').toHaveValue('');
+
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue('');
+    await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue('');
+    await expect(page.locator('#select-temporal-frequency-predef'), 'temporalFrequencyPredef').toHaveValue('');
+    await expect(page.locator('#input-temporal-frequency'), 'temporalFrequency').toHaveValue('');
+    await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue('');
+    await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue('');
 
     // Custom frequency checkbox should be unchecked after reset
     const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
     expect(freqChecked, 'customFrequency checkbox').toBe(false);
 
+    // ── ICGEM Topographic fields ───────────────────────────────────────────
+    await expect(page.locator('#select-topo-layerapproach'), 'topoLayerApproach').toHaveValue('');
+    await expect(page.locator('#select-topo-domain'), 'topoDomain').toHaveValue('');
+    await expect(page.locator('#select-topo-approximation'), 'topoApproximation').toHaveValue('');
+    await expect(page.locator('#select-topo-density'), 'topoDensity').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details'), 'topoDensityDetails').toHaveValue('');
+    const separateDensityChecked = await page.locator('#checkbox-separate-density').isChecked().catch(() => false);
+    expect(separateDensityChecked, 'separateDensity checkbox').toBe(false);
+    await expect(page.locator('#select-topo-density-crust'), 'topoDensityCrust').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details-crust'), 'topoDensityDetailsCrust').toHaveValue('');
+    await expect(page.locator('#select-topo-density-mantle'), 'topoDensityMantle').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details-mantle'), 'topoDensityDetailsMantle').toHaveValue('');
+
     // ── Data sources: back to 1 default empty row ──────────────────────────
     const dsRows = page.locator('#group-datasources .row[data-source-row]');
     await expect(dsRows, 'dataSources row count after clear').toHaveCount(1, { timeout: 5_000 });
+    const firstDsRow = dsRows.first();
     await expect(
-      dsRows.first().locator('textarea[name="datasource_description[]"]'),
+      firstDsRow.locator('textarea[name="datasource_description[]"]'),
       'datasource[0] description after clear',
     ).toHaveValue('');
+    await expect(firstDsRow.locator('input[name="dIdentifier[]"]'), 'datasource[0] identifier after clear').toHaveValue('');
+    await expect(firstDsRow.locator('input[name="dName[]"]'), 'datasource[0] model name after clear').toHaveValue('');
+    await expect(firstDsRow.locator('input[name="compensation_depth[]"]'), 'datasource[0] compensation depth after clear').toHaveValue('');
+
+    // ── Descriptions ───────────────────────────────────────────────────────
+    for (const { input } of Object.values(DESCRIPTION_SECTIONS)) {
+      await expect(page.locator(input), `description ${input}`).toHaveValue('');
+    }
 
     console.log('✓ 3 + 3.1 – clear-form verification passed');
   });
@@ -1084,7 +1580,8 @@ for (const testCase of TEST_CASES) {
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
     await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(parsedData.version);
-    await expect(page.locator('#input-abstract'), 'abstract').toHaveValue(parsedData.abstract);
+    // The abstract is restored from grav:descriptions (ICGEM uploads skip the
+    // DataCite description mapping), so it is asserted with the other sections below.
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue(parsedData.dateCreated);
 
     // DOI is populated from XML by the upload handler
@@ -1155,19 +1652,63 @@ for (const testCase of TEST_CASES) {
       parsedData.errors.toLowerCase(),
     );
 
-    await expect(page.locator('#input-earth-gravity-constant'), 'earthGravityConstant').toHaveValue(
+    await expectNumericValue(
+      page.locator('#input-earth-gravity-constant'),
       parsedData.earthGravityConstant,
+      'earthGravityConstant',
     );
+
+    if (parsedData.errorHandling) {
+      await expect(page.locator('#input-error-handling-approach'), 'errorHandling').toHaveValue(parsedData.errorHandling);
+    }
 
     // Radius (visible only for Spherical harmonics math representation)
     const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
     if (radiusVisible && parsedData.radius) {
-      await expect(page.locator('#input-radius'), 'radius').toHaveValue(parsedData.radius);
+      await expectNumericValue(page.locator('#input-radius'), parsedData.radius, 'radius');
+    }
+
+    // ── Reference ellipsoid ────────────────────────────────────────────────
+    if (parsedData.ellipsoidal) {
+      await expectNumericValue(
+        page.locator('#input-semimajor-axis'),
+        parsedData.ellipsoidal.semimajorAxisA,
+        'semimajorAxisA',
+      );
+      if (parsedData.ellipsoidal.secondVariable) {
+        await expect(page.locator('#input-second-variable'), 'secondVariable').toHaveValue(
+          parsedData.ellipsoidal.secondVariable,
+        );
+        await expectNumericValue(
+          page.locator('#input-second-variable-value'),
+          parsedData.ellipsoidal.secondVariableValue,
+          'secondVariableValue',
+        );
+      }
+    }
+
+    // ── ICGEM Static fields ────────────────────────────────────────────────
+    if (parsedData.staticInfoTimeVariableCoefficients) {
+      await expect(page.locator('#checkbox-time-variable'), 'timeVariable checkbox').toBeChecked();
+      await expect(page.locator('#input-static-description'), 'staticDescription').toHaveValue(
+        parsedData.staticInfoTimeVariableCoefficients,
+      );
     }
 
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     if (parsedData.temporalStart) {
       await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue(parsedData.temporalStart);
+    }
+    if (parsedData.temporalEnd) {
+      await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue(parsedData.temporalEnd);
+    }
+    if (parsedData.temporalInstitution) {
+      await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue(
+        parsedData.temporalInstitution,
+      );
+    }
+    if (parsedData.temporalRelease) {
+      await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue(parsedData.temporalRelease);
     }
 
     if (parsedData.temporalResolution) {
@@ -1176,6 +1717,46 @@ for (const testCase of TEST_CASES) {
       await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
         parsedData.temporalResolution,
       );
+    }
+
+    // ── ICGEM Topographic fields ───────────────────────────────────────────
+    if (parsedData.topographic) {
+      const topo = parsedData.topographic;
+      if (topo.layerApproach) {
+        await expect(page.locator('#select-topo-layerapproach'), 'topoLayerApproach').toHaveValue(
+          topo.layerApproach.toLowerCase(),
+        );
+      }
+      if (topo.forwardModellingDomain) {
+        await expect(page.locator('#select-topo-domain'), 'topoDomain').toHaveValue(
+          topo.forwardModellingDomain.toLowerCase(),
+        );
+      }
+      if (topo.approximation) {
+        await expect(page.locator('#select-topo-approximation'), 'topoApproximation').toHaveValue(
+          topo.approximation.toLowerCase(),
+        );
+      }
+
+      const separateExpected = topo.densities.some(d => ['crust', 'mantle'].includes(d.domain.toLowerCase()));
+      expect(
+        await page.locator('#checkbox-separate-density').isChecked(),
+        'separateDensity checkbox',
+      ).toBe(separateExpected);
+
+      for (const density of topo.densities) {
+        const suffix = { whole: '', crust: '-crust', mantle: '-mantle' }[density.domain.toLowerCase()]!;
+        await expect(
+          page.locator(`#select-topo-density${suffix}`),
+          `topoDensity(${density.domain})`,
+        ).toHaveValue(toDensityOptionValue(density.type));
+        if (density.description) {
+          await expect(
+            page.locator(`#input-topo-density-details${suffix}`),
+            `topoDensityDetails(${density.domain})`,
+          ).toHaveValue(density.description);
+        }
+      }
     }
 
     // ── Data sources ──────────────────────────────────────────────────────
@@ -1197,6 +1778,47 @@ for (const testCase of TEST_CASES) {
           ref.satelliteValueName,
         );
       }
+
+      if (ref.details) {
+        await expect(
+          dsRow.locator('select[name="datasource_details[]"]'),
+          `dataSources[${i}].details`,
+        ).toHaveValue(ref.details);
+      }
+
+      if (ref.compensationDepth) {
+        await expect(
+          dsRow.locator('input[name="compensation_depth[]"]'),
+          `dataSources[${i}].compensationDepth`,
+        ).toHaveValue(ref.compensationDepth);
+      }
+
+      if (ref.identifier) {
+        await expect(
+          dsRow.locator('input[name="dIdentifier[]"]'),
+          `dataSources[${i}].identifier`,
+        ).toHaveValue(ref.identifier);
+      }
+      if (ref.identifierType) {
+        await expect(
+          dsRow.locator('select[name="dIdentifierType[]"]'),
+          `dataSources[${i}].identifierType`,
+        ).toHaveValue(ref.identifierType);
+      }
+      if (ref.name) {
+        await expect(
+          dsRow.locator('input[name="dName[]"]'),
+          `dataSources[${i}].name`,
+        ).toHaveValue(ref.name);
+      }
+    }
+
+    // ── Descriptions ──────────────────────────────────────────────────────
+    for (const [section, content] of Object.entries(parsedData.ggmDescriptions)) {
+      await expect(
+        page.locator(DESCRIPTION_SECTIONS[section].input),
+        `description(${section})`,
+      ).toHaveValue(content);
     }
 
     // ── GCMD Subjects (thesaurus keywords) ────────────────────────────────
