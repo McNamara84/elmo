@@ -567,10 +567,19 @@ export async function fillGEM(page: Page) {
 
   for (const [slug, value] of descriptionPanels) {
     const textarea = page.locator(`#input-${slug}`);
+
+    // Bootstrap drops toggle clicks that arrive while the previous panel is
+    // still animating closed, so wait for the accordion to settle and retry.
     if (!(await textarea.isVisible().catch(() => false))) {
-      await page.locator(`button[data-bs-target="#collapse-${slug}"]`).click();
-      await expect(textarea).toBeVisible({ timeout: 5_000 });
+      await expect(async () => {
+        if (await textarea.isVisible()) return;
+        await page.locator('#accordion-description .collapsing').first()
+          .waitFor({ state: 'detached', timeout: 5_000 });
+        await page.locator(`button[data-bs-target="#collapse-${slug}"]`).click();
+        await expect(textarea).toBeVisible({ timeout: 2_000 });
+      }).toPass({ timeout: 20_000 });
     }
+
     await textarea.fill(value);
   }
 }
