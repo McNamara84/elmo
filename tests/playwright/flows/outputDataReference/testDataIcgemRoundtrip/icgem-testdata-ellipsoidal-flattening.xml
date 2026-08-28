@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <dace:identifier identifierType="DOI">10.5880/icgem.2024.012</dace:identifier>
+  <dace:creators>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Abrykosov, Oleh</dace:creatorName>
+      <dace:givenName>Oleh</dace:givenName>
+      <dace:familyName>Abrykosov</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0003-1463-412X</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</dace:affiliation>
+    </dace:creator>
+  </dace:creators>
+  <dace:titles>
+    <dace:title xml:lang="en">Test: topographic model in ellipsoidal harmonics with flattening</dace:title>
+  </dace:titles>
+  <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+  <dace:publicationYear>2024</dace:publicationYear>
+  <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+  <dace:subjects>
+    <dace:subject>Mars gravity field</dace:subject>
+  </dace:subjects>
+  <dace:contributors/>
+  <dace:dates>
+    <dace:date dateType="Created">2024-05-17</dace:date>
+  </dace:dates>
+  <dace:language>en</dace:language>
+  <dace:rightsList>
+    <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+  </dace:rightsList>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">Martian topographic potential expanded in ellipsoidal harmonics on a reference ellipsoid defined by its semimajor axis and flattening.</dace:description>
+  </dace:descriptions>
+  <dace:geoLocations/>
+</dace:resource>
+  <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>ellipsoidal.contact@gfz.de</grav:address>
+    </grav:contact>
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Test_Ellipsoidal_Flattening</grav:modelName>
+      <grav:publicationYear>2024</grav:publicationYear>
+      <grav:modelType>Topographic</grav:modelType>
+      <grav:mathematicalRepresentation>Ellipsoidal harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Mars</grav:celestialBody>
+      <grav:fileFormat>icgem1.0</grav:fileFormat>
+      <grav:tideSystem>Zero-tide</grav:tideSystem>
+      <grav:degreeOrderMax>120</grav:degreeOrderMax>
+      <grav:earthGravityConstant>42828372000000</grav:earthGravityConstant>
+      <grav:errors>Calibrated</grav:errors>
+      <grav:errorHandling>Formal errors were scaled with a degree-dependent calibration factor.</grav:errorHandling>
+      <grav:topographicModelProperties>
+        <grav:layerApproach>Single-layer</grav:layerApproach>
+        <grav:forwardModellingDomain>Spectral</grav:forwardModellingDomain>
+        <grav:approximation>Ellipsoidal</grav:approximation>
+        <grav:densityInformation>
+          <grav:densityInformationDomain>Whole</grav:densityInformationDomain>
+          <grav:densityInformationType>Density model</grav:densityInformationType>
+          <grav:densityInformationDescription>Crustal density model MARS_CRUST_2020</grav:densityInformationDescription>
+        </grav:densityInformation>
+      </grav:topographicModelProperties>
+      <grav:ellipsoidalParameters>
+        <grav:semimajorAxisA>3396.19</grav:semimajorAxisA>
+        <grav:flattening>0.005886</grav:flattening>
+      </grav:ellipsoidalParameters>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Elevation/Terrain">
+      <grav:description>Isostatic compensation applied to the topography</grav:description>
+      <grav:elevationTerrainDetail>Isostasy</grav:elevationTerrainDetail>
+      <grav:compensationDepth uom="m">30000</grav:compensationDepth>
+    </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">Martian topographic potential expanded in ellipsoidal harmonics on a reference ellipsoid defined by its semimajor axis and flattening.</grav:description>
+    </grav:descriptions>
+  </grav:globalGravityProduct>
+</grav:envelope>

@@ -111,10 +111,6 @@
         <grav:forwardModellingDomain>Spatial</grav:forwardModellingDomain>
         <grav:approximation>Ellipsoidal</grav:approximation>
         <grav:densityInformation>
-          <grav:densityInformationDomain>Whole</grav:densityInformationDomain>
-          <grav:densityInformationType>Constant</grav:densityInformationType>
-        </grav:densityInformation>
-        <grav:densityInformation>
           <grav:densityInformationDomain>Mantle</grav:densityInformationDomain>
           <grav:densityInformationType>Density model</grav:densityInformationType>
           <grav:densityInformationDescription>MANTLE_2233</grav:densityInformationDescription>

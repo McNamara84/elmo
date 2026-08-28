@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <dace:identifier identifierType="DOI">10.5880/icgem.2024.013</dace:identifier>
+  <dace:creators>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Dahle, Christoph</dace:creatorName>
+      <dace:givenName>Christoph</dace:givenName>
+      <dace:familyName>Dahle</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-4733-9242</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</dace:affiliation>
+    </dace:creator>
+  </dace:creators>
+  <dace:titles>
+    <dace:title xml:lang="en">Test: temporal model with release and institution</dace:title>
+  </dace:titles>
+  <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+  <dace:publicationYear>2023</dace:publicationYear>
+  <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+  <dace:subjects>
+    <dace:subject>Time-variable gravity</dace:subject>
+  </dace:subjects>
+  <dace:contributors/>
+  <dace:dates>
+    <dace:date dateType="Created">2023-11-02</dace:date>
+  </dace:dates>
+  <dace:language>en</dace:language>
+  <dace:rightsList>
+    <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+  </dace:rightsList>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">Monthly gravity field solutions covering the full GRACE mission period, released as RL06 by GFZ.</dace:description>
+  </dace:descriptions>
+  <dace:geoLocations/>
+</dace:resource>
+  <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>temporal.contact@gfz.de</grav:address>
+      <grav:onlineResource>icgem.gfz.de/temporal-series</grav:onlineResource>
+    </grav:contact>
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Test_Temporal_RL06</grav:modelName>
+      <grav:publicationYear>2023</grav:publicationYear>
+      <grav:modelType>Temporal</grav:modelType>
+      <grav:mathematicalRepresentation>Spherical harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Earth</grav:celestialBody>
+      <grav:fileFormat>icgem2.0</grav:fileFormat>
+      <grav:tideSystem>Mean-tide</grav:tideSystem>
+      <grav:degreeOrderMax>96</grav:degreeOrderMax>
+      <grav:radius>6378136.3</grav:radius>
+      <grav:earthGravityConstant>398600441500000</grav:earthGravityConstant>
+      <grav:errors>No</grav:errors>
+      <grav:temporalModelProperties>
+        <grav:temporalCoverage>2002-04-01/2017-06-30</grav:temporalCoverage>
+        <grav:generatingInstitution>GFZ Helmholtz Centre for Geosciences</grav:generatingInstitution>
+        <grav:release>RL06</grav:release>
+        <grav:temporalResolution uom="d">30</grav:temporalResolution>
+      </grav:temporalModelProperties>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Ground data">
+      <grav:description>Regional airborne campaigns used for validation</grav:description>
+      <grav:groundDetail>Airborne</grav:groundDetail>
+    </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="Abstract">Monthly gravity field solutions covering the full GRACE mission period, released as RL06 by GFZ.</grav:description>
+    </grav:descriptions>
+  </grav:globalGravityProduct>
+</grav:envelope>
