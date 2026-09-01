@@ -237,8 +237,10 @@ export function ensureThesaurusLoaded(configKeyOrConfig) {
 }
 
 /**
- * Walks a thesaurus tree and stamps each node with its full GCMD breadcrumb,
- * including scheme-root (Science Keywords / Platforms).
+ * Walks a thesaurus tree and stamps each node with its own full GCMD breadcrumb,
+ * including scheme-root (Science Keywords / Platforms). Recurses so every
+ * descendant gets its path — GEODETICS and SPHERICAL HARMONIC MODELS do not
+ * share a prefix, so a single string cannot be concatenated onto every GGM root.
  *
  * @param {Array<Object>} nodes - Tree nodes (mutated in place).
  * @param {Array<string>} [ancestorTexts] - Texts of ancestors already walked.
@@ -281,47 +283,76 @@ function getNodeFullKeyword(jsTreeInstance, node) {
 }
 
 /**
- * Resolves an imported Tagify tag to the canonical whitelist breadcrumb.
- * Prefers valueURI (`tag.id`), then exact value, then suffix match so
- * `Space-based Platforms > …` maps to `Platforms > Space-based Platforms > …`.
+ * Copies canonical whitelist fields onto an imported tag. The whitelist entry
+ * is the source of truth for `value` (the full GCMD breadcrumb).
  *
- * @param {Object} tag - Tagify tag data (`value`, optional `id`).
+ * @param {Object} tag - Imported Tagify tag.
+ * @param {Object} entry - Matching whitelist entry (`value`, `id`, scheme metadata).
+ * @returns {Object}
+ */
+function applyWhitelistEntry(tag, entry) {
+    return Object.assign({}, tag, {
+        value: entry.value,
+        id: tag.id || entry.id,
+        scheme: tag.scheme || entry.scheme,
+        schemeURI: tag.schemeURI || entry.schemeURI,
+        language: tag.language || entry.language
+    });
+}
+
+/**
+ * Maps an imported Tagify tag onto a whitelist entry that was built from
+ * stamped `fullKeyword` values. Three consecutive stages; first hit wins.
+ *
+ * The whitelist already contains the full prefixed path by design. This does
+ * not add missing keywords — if no stage matches, thesauri.js did not stamp
+ * that concept (or it is not in this filtered tree) and enforceWhitelist
+ * will drop it on save rather than invent a path.
+ *
+ * @param {Object} tag - Tagify tag data (`value`, optional `id` / valueURI).
  * @param {Array<Object>} whitelist - Tagify whitelist entries.
  * @returns {Object} Tag data with `value` set to the canonical path when resolved.
  */
 function resolveTagAgainstWhitelist(tag, whitelist) {
     if (!tag || !Array.isArray(whitelist) || whitelist.length === 0) return tag;
+
+    var xmlText = tag.value || '';
+
+    // Stage 1 — exact match: ELMO-saved XML already stores the full breadcrumb
+    // (`Platforms > Space-based Platforms > …`, `Science Keywords > …`).
+    if (xmlText) {
+        var exact = whitelist.find(function (entry) {
+            return entry && entry.value === xmlText;
+        });
+        if (exact) return applyWhitelistEntry(tag, exact);
+    }
+
+    // Stage 2 — node.id / valueURI: ICGEM subject text may omit the scheme-root
+    // while still carrying the GCMD concept URI that matches `entry.id`.
     if (tag.id) {
         var byId = whitelist.find(function (entry) {
             return entry && entry.id === tag.id;
         });
-        if (byId) {
-            return Object.assign({}, tag, {
-                value: byId.value,
-                scheme: tag.scheme || byId.scheme,
-                schemeURI: tag.schemeURI || byId.schemeURI,
-                language: tag.language || byId.language
-            });
-        }
+        if (byId) return applyWhitelistEntry(tag, byId);
     }
-    var xmlText = tag.value || '';
-    if (!xmlText) return tag;
-    var byValue = whitelist.find(function (entry) {
-        if (!entry || !entry.value) return false;
-        return entry.value === xmlText || entry.value.endsWith(' > ' + xmlText);
-    });
-    if (byValue) {
-        return Object.assign({}, tag, {
-            value: byValue.value,
-            id: tag.id || byValue.id
+
+    // Stage 3 — suffix: `Space-based Platforms > GRACE` matches the whitelist
+    // value `Platforms > Space-based Platforms > GRACE`.
+    if (xmlText) {
+        var suffix = ' > ' + xmlText;
+        var bySuffix = whitelist.find(function (entry) {
+            return entry && entry.value && entry.value.endsWith(suffix);
         });
+        if (bySuffix) return applyWhitelistEntry(tag, bySuffix);
     }
+
     return tag;
 }
 
 /**
- * Rewrites already-imported Tagify tags to canonical fullKeyword values once
- * the vocabulary whitelist is available.
+ * After the vocab whitelist is applied, rewrite any already-imported tags to
+ * the stamped fullKeyword so save writes the same string that is in the
+ * whitelist (and therefore uploadable later with a plain addTags).
  *
  * @param {Object} tagifyInstance - Tagify instance.
  * @param {Array<Object>} whitelist - Canonical whitelist entries.
@@ -455,6 +486,8 @@ function loadKeywordsForConfig(config, response) {
         if (!Array.isArray(nodes)) return;
         nodes.forEach(function (item) {
             if (!item) return;
+            // Whitelist `value` is the stamped fullKeyword, so Tagify/save emit
+            // `Platforms > Space-based Platforms > …` (scheme-root included).
             var textToAdd = (item.original && item.original.fullKeyword)
                 || item.fullKeyword
                 || parentPath.concat(item.text).join(' > ');
@@ -484,10 +517,9 @@ function loadKeywordsForConfig(config, response) {
 
     state.tagifyInstances.forEach(function (tagifyInstance) {
         tagifyInstance.settings.whitelist = state.whitelist;
-        // Upgrade imported short XML texts (or URI-only tags) to the canonical
-        // fullKeyword before turning enforceWhitelist on, so a later vocab load
-        // cannot drop Space-based Platforms > … subjects that belong in
-        // Platforms > Space-based Platforms > ….
+        // Rewrite tags already in the field to the whitelist fullKeyword (exact,
+        // then valueURI/id, then suffix) so save persists that string. Does not
+        // insert extra whitelist entries — a miss means the concept is absent.
         upgradeExistingTagsToFullKeywords(tagifyInstance, state.whitelist);
         // Only enforce once there is something to enforce against. An empty
         // payload (failed/empty ERNIE response) must not lock the field, or
@@ -551,6 +583,8 @@ function loadKeywordsForConfig(config, response) {
             if (!tree) return;
             var nodes = tree.get_selected(true);
             nodes.forEach(function (n) {
+                // Prefer stamped fullKeyword, not the cut-subtree get_path, so a
+                // click on SPHERICAL HARMONIC MODELS saves the Science Keywords > … path.
                 var p = getNodeFullKeyword(tree, n) || tree.get_path(n, " > ");
                 if (p) newCentralSet.add(p);
             });
@@ -717,7 +751,13 @@ function updateSelectedKeywordsList(listId, state) {
 }
 
 /**
- * Finds a jsTree node by its canonical fullKeyword or filtered-tree path.
+ * Finds a jsTree node for a Tagify value. Three consecutive stages; first
+ * hit wins.
+ *
+ *   1. exact — stamped original.fullKeyword
+ *   2. exact — filtered-tree get_path
+ *   3. suffix — full Tagify path ends with the visible tree path
+ *
  * Tagify stores the unfiltered GCMD breadcrumb; the visible tree may be a
  * cut GGM subtree whose get_path is only the suffix.
  *
@@ -733,9 +773,14 @@ function findNodeByPath(jsTreeInstance, path) {
         var treePath = typeof jsTreeInstance.get_path === 'function'
             ? jsTreeInstance.get_path(n, " > ")
             : '';
-        return fullKeyword === path
-            || treePath === path
-            || (treePath && path.endsWith(' > ' + treePath));
+
+        // Stage 1 — exact match on the stamped full GCMD breadcrumb.
+        if (fullKeyword === path) return true;
+        // Stage 2 — exact match on the filtered-tree get_path (cut subtree).
+        if (treePath === path) return true;
+        // Stage 3 — suffix: Tagify full path ends with the visible tree path.
+        if (treePath && path.endsWith(' > ' + treePath)) return true;
+        return false;
     }) || null;
 }
 

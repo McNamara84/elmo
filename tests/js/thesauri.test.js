@@ -763,6 +763,51 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     expect(input._tagify.value.some(v => v.value === 'UpgradeChild')).toBe(false);
   });
 
+  test('loadKeywordsForConfig upgrades short tags by suffix when id is absent (stage 3)', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'SuffixChild' }]);
+
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'suffix-parent', text: 'SuffixParent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'suffix-child', text: 'SuffixChild', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    expect(input._tagify.value.some(v => v.value === 'SuffixParent > SuffixChild')).toBe(true);
+    expect(input._tagify.value.some(v => v.value === 'SuffixChild')).toBe(false);
+  });
+
+  test('loadKeywordsForConfig leaves an already-full tag unchanged (stage 1 exact match)', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'ExactParent > ExactChild', id: 'exact-child' }]);
+
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'exact-parent', text: 'ExactParent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'exact-child', text: 'ExactChild', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    expect(input._tagify.value.filter(v => v.value === 'ExactParent > ExactChild')).toHaveLength(1);
+  });
+
   test('loadKeywordsForConfig does not add duplicate entries on repeated calls', () => {
     const config = {
       jsTreeId: '#jstree-sciencekeyword',
