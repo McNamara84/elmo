@@ -117,6 +117,14 @@ class TestableErnieService extends \ErnieService
     {
         return $this->customIdentifierTypesCacheFile ?: $this->customCacheFile;
     }
+
+    /**
+     * @param array<mixed> $data
+     */
+    public function callWriteCacheFile(string $cacheFilePath, array $data): bool
+    {
+        return $this->writeCacheFile($cacheFilePath, $data);
+    }
 }
 
 /**
@@ -1094,47 +1102,68 @@ final class ErnieServiceTest extends TestCase
     // ==================== writeCacheFile() edge cases ====================
 
     /**
-     * Test that writeCacheFile creates directory if needed
+     * Test that writeCacheFile does not create the cache directory at runtime
      */
-    public function testWriteCacheCreatesDirectoryIfNeeded(): void
+    public function testWriteCacheFailsWhenDirectoryIsMissing(): void
     {
-        // Create a service with cache file in a non-existent subdirectory
-        $nestedDir = $this->testCacheDir . '/nested/deep';
-        $nestedCacheFile = $nestedDir . '/test_cache.json';
+        $missingDir = $this->testCacheDir . '/does-not-exist';
+        $missingCacheFile = $missingDir . '/test_cache.json';
 
-        $this->setGlobalConfig('https://ernie.example.com/', 'test-key');
-        $service = new TestableErnieService($nestedCacheFile, $this->testTitleTypesCacheFile);
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $written = $service->callWriteCacheFile($missingCacheFile, [
+            ['id' => 1, 'name' => 'Test', 'description' => null]
+        ]);
 
-        // Write valid data to the nested cache path via the resource types cache
-        $testData = [['id' => 1, 'name' => 'Test', 'description' => null]];
-        // Write to the nested cache file directly (simulating what writeCacheFile does)
-        if (!is_dir($nestedDir)) {
-            mkdir($nestedDir, 0755, true);
-        }
-        $cache = [
-            'lastUpdated' => date('c'),
-            'ttl' => 21600,
-            'source' => 'ernie',
-            'data' => $testData
+        $this->assertFalse($written);
+        $this->assertDirectoryDoesNotExist($missingDir);
+    }
+
+    /**
+     * Test that a valid cache file is reused and not rewritten
+     */
+    public function testValidCacheIsReusedWithoutRewrite(): void
+    {
+        $testData = [
+            ['id' => 10, 'name' => 'Dataset', 'description' => null]
         ];
-        file_put_contents($nestedCacheFile, json_encode($cache, JSON_PRETTY_PRINT));
+        $this->writeTestCache($testData);
+        clearstatcache();
+        $mtimeBefore = filemtime($this->testCacheFile);
 
-        // Verify we can read data back via the service
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
         $result = $service->getResourceTypesWithCache();
-        $this->assertCount(1, $result);
-        $this->assertSame('Test', $result[0]['name']);
 
-        // Clean up nested directory
-        if (file_exists($nestedCacheFile)) {
-            unlink($nestedCacheFile);
-        }
-        if (is_dir($nestedDir)) {
-            rmdir($nestedDir);
-        }
-        $parentDir = dirname($nestedDir);
-        if (is_dir($parentDir)) {
-            rmdir($parentDir);
-        }
+        clearstatcache();
+        $this->assertSame($mtimeBefore, filemtime($this->testCacheFile));
+        $this->assertCount(1, $result);
+        $this->assertSame('Dataset', $result[0]['name']);
+    }
+
+    /**
+     * Test that an expired cache file is replaced even when the file itself is not writable
+     */
+    public function testWriteCacheReplacesUnwritableExpiredFile(): void
+    {
+        $expiredTime = date('c', strtotime('-7 hours'));
+        $this->writeTestCache([
+            ['id' => 1, 'name' => 'Old', 'description' => null]
+        ], $expiredTime);
+        $this->assertTrue(chmod($this->testCacheFile, 0444));
+
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $newData = [['id' => 2, 'name' => 'New', 'description' => null]];
+        $written = $service->callWriteCacheFile($this->testCacheFile, $newData);
+
+        $this->assertTrue($written);
+        $this->assertTrue(is_readable($this->testCacheFile));
+
+        $content = json_decode((string) file_get_contents($this->testCacheFile), true);
+        $this->assertIsArray($content);
+        $this->assertSame('New', $content['data'][0]['name']);
+        $this->assertSame('ernie', $content['source']);
+
+        $tmpFiles = glob($this->testCacheFile . '.tmp.*') ?: [];
+        $this->assertSame([], $tmpFiles, 'Temp cache files should be replaced away');
     }
 
     // ==================== getCacheFileStatus() edge cases ====================

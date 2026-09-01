@@ -383,20 +383,22 @@ class ErnieService
 
     /**
      * Writes data to a cache file
-     * 
+     *
+     * The cache directory is created in the image, not at runtime. Writes to a
+     * temp file and replaces the destination so an expired cache can be
+     * refreshed even if the existing file itself is not writable.
+     *
      * @param string $cacheFilePath Path to the cache file
      * @param array<mixed> $data Data to cache
      * @return bool True if cache was written successfully
      */
-    private function writeCacheFile(string $cacheFilePath, array $data): bool
+    protected function writeCacheFile(string $cacheFilePath, array $data): bool
     {
         $cacheDir = dirname($cacheFilePath);
 
-        if (!is_dir($cacheDir)) {
-            if (!mkdir($cacheDir, 0755, true)) {
-                error_log("ERNIE: Failed to create cache directory: $cacheDir");
-                return false;
-            }
+        if (!is_dir($cacheDir) || !is_writable($cacheDir)) {
+            error_log("ERNIE: Cache directory is missing or not writable: $cacheDir");
+            return false;
         }
 
         $cache = [
@@ -406,14 +408,26 @@ class ErnieService
             'data' => $data
         ];
 
-        $result = file_put_contents(
-            $cacheFilePath,
-            json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
+        $payload = json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $tempFile = $cacheFilePath . '.tmp.' . getmypid() . '.' . bin2hex(random_bytes(4));
 
+        $result = @file_put_contents($tempFile, $payload, LOCK_EX);
         if ($result === false) {
-            error_log("ERNIE: Failed to write cache file: $cacheFilePath");
+            $reason = error_get_last()['message'] ?? 'unknown error';
+            error_log("ERNIE: Failed to write cache file: $cacheFilePath ($reason)");
             return false;
+        }
+
+        @chmod($tempFile, 0664);
+
+        if (!@rename($tempFile, $cacheFilePath)) {
+            @unlink($cacheFilePath);
+            if (!@rename($tempFile, $cacheFilePath)) {
+                @unlink($tempFile);
+                $reason = error_get_last()['message'] ?? 'unknown error';
+                error_log("ERNIE: Failed to write cache file: $cacheFilePath ($reason)");
+                return false;
+            }
         }
 
         return true;
