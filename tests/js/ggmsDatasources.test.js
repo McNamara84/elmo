@@ -392,10 +392,27 @@ describe('ggmsDatasources.js', () => {
     $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
+    const compensationInput = row.find('input[name="compensation_depth[]"]');
     detailsSelect.val('Isostasy').trigger('change');
     expect(row.children('.visibility-datasources-compensation').css('display')).not.toBe('none');
+    expect(compensationInput.prop('disabled')).toBe(false);
     detailsSelect.val('Bathymetry').trigger('change');
     expect(row.children('.visibility-datasources-compensation').css('display')).toBe('none');
+    expect(compensationInput.prop('disabled')).toBe(true);
+  });
+
+  test('disables compensation depth on non-Isostasy rows so FormData stays sparse', () => {
+    const row = $('#group-datasources .row').first();
+    const compensationInput = row.find('input[name="compensation_depth[]"]');
+
+    expect(compensationInput.prop('disabled')).toBe(true);
+
+    $('#input-model-type').val('Topographic').trigger('change');
+    row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+    expect(compensationInput.prop('disabled')).toBe(true);
+
+    row.find('select[name="datasource_details[]"]').val('Isostasy').trigger('change');
+    expect(compensationInput.prop('disabled')).toBe(false);
   });
 
   test('layout adjusts when detail Isostasy is selected', () => {
