@@ -764,6 +764,7 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
   });
 
   test('loadKeywordsForConfig upgrades short tags by suffix when id is absent (stage 3)', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     const input = document.getElementById('input-sciencekeyword');
     input._tagify.addTags([{ value: 'SuffixChild' }]);
 
@@ -784,6 +785,8 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
 
     expect(input._tagify.value.some(v => v.value === 'SuffixParent > SuffixChild')).toBe(true);
     expect(input._tagify.value.some(v => v.value === 'SuffixChild')).toBe(false);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   test('loadKeywordsForConfig leaves an already-full tag unchanged (stage 1 exact match)', () => {
