@@ -115,6 +115,9 @@ $(document).ready(function () {
         const compensationField = row.children('.visibility-datasources-compensation');
         compensationField.toggle(showField);
         compensationField.attr('aria-hidden', !showField);
+        // FormData omits disabled controls. The backend consumes compensation_depth[]
+        // as a sparse queue (Isostasy rows only), so hidden rows must not submit "".
+        compensationField.find('input, select, textarea').prop('disabled', !showField);
         adjustLayoutForIsostasy(row, showField);
     }
 
