@@ -71,9 +71,9 @@ services:
       - internal
     volumes:
       # Shared API responses cache: all variants see the same cached responses.
-      # Ownership/mode come from the image cache dir (copied into a new volume).
+      # Ownership/mode come from the image (copied into a new named volume).
       - api_cache_volume:/var/www/html/storage/cache
-      # Variant-specific drafts: keep each container's draft data isolated.
+      # Variant-specific drafts: isolated data, same image-seeded permissions.
       - web_drafts:/var/www/html/storage/drafts
 
   web-msl:
