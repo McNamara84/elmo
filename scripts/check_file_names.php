@@ -81,6 +81,13 @@ function elmoFileNameCheckIsExcluded(string $path): bool
         return true;
     }
 
+    // Tool/runtime config names are fixed by ecosystem conventions
+    // (e.g. jest.config.js, babel.config.cjs, vite.config.mjs).
+    $fileName = (string) pathinfo($path, PATHINFO_BASENAME);
+    if (preg_match('/^[a-z0-9]+(?:[.-][a-z0-9]+)*\.config\.(?:js|cjs|mjs|ts)$/', $fileName) === 1) {
+        return true;
+    }
+
     $excludedPrefixes = [
         'vendor/',
         'node_modules/',

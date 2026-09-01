@@ -356,6 +356,16 @@
             "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
         },
+        "gfcUpload": {
+            "uploadButton": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "modalTitle": "Télécharger le fichier modèle",
+            "dropZone": "Glissez-déposez un fichier GFC ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "pasteHeaderLabel": "Ou collez le texte d'en-tête :",
+            "pasteHeaderPlaceholder": "Collez les lignes d'en-tête GFC ici…",
+            "fillMetadata": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "errorNoInput": "Veuillez télécharger un fichier .gfc ou coller le texte d'en-tête dans le champ libre."
+        },
         "icgemWrongApp": {
             "title": "Fichier de métadonnées ICGEM détecté",
             "body": "Cher utilisateur,\nil semble que vous souhaitiez télécharger un fichier de métadonnées ICGEM sur ELMO. Cela est certes possible, mais pas avec cette version. Veuillez vous rendre sur ELMOGEM (https://icgem.gfz.de/elmogem) pour finaliser la transmission des métadonnées relatives au produit gravimétrique.",

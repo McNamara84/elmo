@@ -57,7 +57,7 @@ services:
       DB_INIT_MODE: drop_data
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
-      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
