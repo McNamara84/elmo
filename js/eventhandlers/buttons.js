@@ -145,12 +145,6 @@ $(document).ready(function () {
       form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
-        const tagifyEl = el._tagify?.DOM?.scope
-          || el.closest('.tagify')
-          || el.parentElement?.querySelector('.tagify');
-        if (tagifyEl) {
-          tagifyEl.classList.remove('is-invalid');
-        }
       });
     }
 

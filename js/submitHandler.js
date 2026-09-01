@@ -146,58 +146,6 @@ function resetFieldState(input, feedback) {
     feedback.textContent = "";
 }
 
-function getTagifyValidationMessage(input) {
-    const feedback = input.closest('.input-group')?.querySelector('.invalid-feedback');
-    const message = feedback?.textContent?.trim();
-    if (message) return message;
-    return translations?.general?.pleaseFillOut || 'Please fill out this field.';
-}
-
-function isTagifyInputEmpty(input) {
-    if (input._tagify) {
-        return !(input._tagify.value && input._tagify.value.length);
-    }
-    return !String(input.value ?? '').trim();
-}
-
-/**
- * Resolves the visible Tagify wrapper for an original input.
- * Tagify keeps the original <input> as a sibling of <tags class="tagify">.
- */
-function getTagifyWrapper(input) {
-    if (!input) return null;
-    if (input._tagify?.DOM?.scope) {
-        return input._tagify.DOM.scope;
-    }
-    return input.closest('.tagify') || input.parentElement?.querySelector('.tagify') || null;
-}
-
-/** Sync Bootstrap invalid styling onto Tagify wrappers for constraint-validated inputs. */
-function syncTagifyInvalidState(form) {
-    if (!form) return;
-
-    // Walk original inputs that own a Tagify instance (not nested `.tagify input`,
-    // which misses the sibling DOM structure Tagify actually creates).
-    form.querySelectorAll('input').forEach((input) => {
-        if (!input._tagify) return;
-
-        const tagify = getTagifyWrapper(input);
-        const requiredEmpty = input.required && isTagifyInputEmpty(input);
-
-        // Set emptiness validity first so :invalid reflects the Tagify tag list,
-        // not a stale customValidity from a previous submit attempt.
-        if (requiredEmpty) {
-            input.setCustomValidity(getTagifyValidationMessage(input));
-        } else {
-            input.setCustomValidity('');
-        }
-
-        const invalid = input.matches(':invalid');
-        input.classList.toggle('is-invalid', invalid);
-        tagify?.classList.toggle('is-invalid', invalid);
-    });
-}
-
 // Event listeners for immediate validation
 const dateCreatedInput = document.getElementById('input-date-created');
 const dateEmbargoInput = document.getElementById('input-date-embargo');
@@ -425,10 +373,8 @@ class SubmitHandler {
             && typeof globalThis.validateAuthorAffiliationEditors === 'function'
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
-        syncTagifyInvalidState(this.$form[0]);
         if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
             this.$form.addClass('was-validated');
-            syncTagifyInvalidState(this.$form[0]);
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
                 $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -748,10 +694,9 @@ if (typeof module !== 'undefined' && module.exports) {
     validateTemporalCoverage,
         validateAllTemporalCoverageRows,
     validateContactPerson,
-    syncTagifyInvalidState,
     default: SubmitHandler
   };
 }
 
-export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson, syncTagifyInvalidState };
+export { SubmitHandler, validateEmbargoDate, validateTemporalCoverage, validateAllTemporalCoverageRows, validateContactPerson };
 export default SubmitHandler;

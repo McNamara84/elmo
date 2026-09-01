@@ -69,12 +69,11 @@ describe('ggmsDatasources.js', () => {
           <div class="col-md-3 visibility-datasources-details"><select name="datasource_details[]"></select></div>
           <div class="col-md-12 visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
           <div class="col-md-3 visibility-datasources-satellite">
-            <div class="input-group has-validation">
+            <div class="input-group">
               <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
-              <div class="invalid-feedback" data-translate="dataSources.satellitePlatformInvalid">Provide the name of the Satellite here</div>
             </div>
           </div>
-          <div class="col-md-6 visibility-datasources-identifier"><input name="dName[]" /></div>
+          <div class="col-md-6 visibility-datasources-identifier"><input id="input-datasource-modelname" name="dName[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><input name="dIdentifier[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
           <div class="input-group">
@@ -240,7 +239,7 @@ describe('ggmsDatasources.js', () => {
     })($);
 
     global.Tagify = MockTagify;
-    global.translations = { keywords: { thesaurus: { label: 'initial' } }, dataSources: { satellitePlatformInvalid: 'Provide the name of the Satellite here' } };
+    global.translations = { keywords: { thesaurus: { label: 'initial' } } };
     window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
 
     const originalIs = $.fn.is;
@@ -304,22 +303,34 @@ describe('ggmsDatasources.js', () => {
     expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
   });
 
-  test('adds js-required-on-submit to platform input when type is Satellite', () => {
+  test('does not mark satellite platform as required on submit', () => {
     const row = $('#group-datasources .row').first();
     const platformInput = row.find('input[name="satellite_platform[]"]');
-    expect(platformInput.hasClass('form-control')).toBe(true);
-    expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
     expect(platformInput.prop('required')).toBe(false);
 
     row.find('select[name="datasource_type[]"]').val('G').trigger('change');
     expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
 
     row.find('select[name="datasource_type[]"]').val('S').trigger('change');
-    expect(platformInput.hasClass('form-control')).toBe(true);
-    expect(platformInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+    expect(platformInput.prop('required')).toBe(false);
   });
 
-  test('clears required attribute when datasource type changes away from Satellite', () => {
+  test('adds js-required-on-submit to model name when type is Model', () => {
+    const row = $('#group-datasources .row').first();
+    const modelNameInput = row.find('input[name="dName[]"]');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('M').trigger('change');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(modelNameInput.prop('required')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(false);
+  });
+
+  test('clears leftover required attribute when datasource type changes', () => {
     const row = $('#group-datasources .row').first();
     const platformInput = row.find('input[name="satellite_platform[]"]');
 
@@ -340,7 +351,7 @@ describe('ggmsDatasources.js', () => {
     const clonedPlatformInput = newRow.find('input[name="satellite_platform[]"]');
 
     expect(clonedPlatformInput.prop('required')).toBe(false);
-    expect(clonedPlatformInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(clonedPlatformInput.hasClass('js-required-on-submit')).toBe(false);
   });
 
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {

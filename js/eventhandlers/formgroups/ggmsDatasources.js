@@ -36,7 +36,7 @@ $(document).ready(function () {
      * Defines which fields are required based on datasource type
      */
     const validationRules = {
-        'S': { required: ['input-datasource-platforms'] },
+        'S': { required: [] },
         'G': { required: [] },
         'A': { required: [] },
         'T': { required: [] },

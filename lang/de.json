@@ -274,8 +274,7 @@
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
         "modelNameInvalid": "Geben Sie hier den Namen des Modells ein",
-        "compensationDepth": "Ausgleichstiefe (in Metern)",
-        "satellitePlatformInvalid": "Geben Sie hier den Namen des Satelliten ein"
+        "compensationDepth": "Ausgleichstiefe (in Metern)"
     },
     "technical": {
         "title": "Technische Angaben",

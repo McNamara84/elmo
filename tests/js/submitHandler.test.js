@@ -643,55 +643,6 @@ describe('submitHandler.js', () => {
     });
   });
 
-  test('syncTagifyInvalidState marks empty required Tagify fields invalid', () => {
-    const { syncTagifyInvalidState } = requireFresh('../../js/submitHandler.js');
-    // Real Tagify DOM: original input is a sibling of <tags class="tagify">, not nested inside it.
-    document.body.innerHTML = `
-      <form id="test-form">
-        <div class="input-group has-validation">
-          <input name="satellite_platform[]" required />
-          <tags class="tagify"></tags>
-          <div class="invalid-feedback">Provide the name of the Satellite here</div>
-        </div>
-      </form>
-    `;
-    const input = document.querySelector('input');
-    const tagifyWrapper = document.querySelector('.tagify');
-    input._tagify = { value: [], DOM: { scope: tagifyWrapper } };
-
-    syncTagifyInvalidState(document.getElementById('test-form'));
-
-    expect(input.classList.contains('is-invalid')).toBe(true);
-    expect(tagifyWrapper.classList.contains('is-invalid')).toBe(true);
-    expect(input.validationMessage).toBe('Provide the name of the Satellite here');
-  });
-
-  test('syncTagifyInvalidState clears invalid state when Tagify has tags', () => {
-    const { syncTagifyInvalidState } = requireFresh('../../js/submitHandler.js');
-    document.body.innerHTML = `
-      <form id="test-form">
-        <div class="input-group has-validation">
-          <input name="satellite_platform[]" required class="is-invalid" />
-          <tags class="tagify is-invalid"></tags>
-          <div class="invalid-feedback">Provide the name of the Satellite here</div>
-        </div>
-      </form>
-    `;
-    const input = document.querySelector('input');
-    const tagifyWrapper = document.querySelector('.tagify');
-    const tagValue = [{ value: 'GRACE' }];
-    // Tagify mirrors selected tags onto the original input value.
-    input.value = JSON.stringify(tagValue);
-    input._tagify = { value: tagValue, DOM: { scope: tagifyWrapper } };
-    input.setCustomValidity('Provide the name of the Satellite here');
-
-    syncTagifyInvalidState(document.getElementById('test-form'));
-
-    expect(input.classList.contains('is-invalid')).toBe(false);
-    expect(tagifyWrapper.classList.contains('is-invalid')).toBe(false);
-    expect(input.validationMessage).toBe('');
-  });
-
   test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
     // Add a required field that is empty so :invalid selector finds it
     const reqInput = document.createElement('input');
