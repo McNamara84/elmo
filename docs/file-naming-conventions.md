@@ -18,7 +18,7 @@ A single lowercase word such as `index.php`, `logging.js`, or `favicon.svg` also
 
 ## Exceptions and externally defined names
 
-- Names required by tools, package managers, servers, or platforms, for example `composer.json`, `package-lock.json`, `.htaccess`, `Dockerfile.web`, or GitHub workflow files. These files are not freely named browser assets, even if they are static files in the repository or are read by the web server.
+- Names required by tools, package managers, servers, or platforms, for example `composer.json`, `package-lock.json`, `jest.config.js`, `playwright.config.ts`, `.htaccess`, `Dockerfile.web`, or GitHub workflow files. These files are not freely named browser assets, even if they are static files in the repository or are read by the web server.
 - Third-party, generated, coverage, cache, and runtime files.
 - `ci-router.php` keeps its existing infrastructure file name during issue #357. Renaming it would change commands and CI configuration without adding structural value.
 - Existing legacy files that are not changed in the current pull request.

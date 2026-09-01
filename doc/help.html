@@ -208,6 +208,14 @@ include_once "../settings.php";
                     </p>
                     <p><strong>Optional field. Please leave this field empty if your dataset is not published
                             yet.</strong></p>
+                    <?php if ($showGGMsProperties ?? false): ?>
+                    <p>
+                        Leave this field empty if your model does not have a DOI yet: GFZ Data Services then receives
+                        the usual submission mail and reserves a DOI; the ICGEM team waits for that DOI before
+                        uploading the model to the ICGEM database. If you enter an existing DOI, only the ICGEM team
+                        is notified and the upload can start straight away.
+                    </p>
+                    <?php endif; ?>
                 </div>
                 <div id="help-resourceinformation-publicationyear">
                     <h4>Publication Year</h4>
@@ -1456,6 +1464,9 @@ include_once "../settings.php";
                 <h3>Characteristics of the model</h3>
                 <p>
                     This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
+                </p>
+                <p>
+                    To simplify the data entry, you can click the button near the title of this form group. This will open a window, where you can upload the file or copy-paste the file header into the provided text area. The contents of the file header will be entered into the form automatically.
                 </p>
                 <div id="help-tide-system">
                     <h4>Tide system</h4>

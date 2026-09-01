@@ -12,7 +12,8 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
-    "@babel/preset-env": "^8.0.2",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
     "@playwright/test": "^1.62.0",
     "@types/node": "^26.1.2",
     "babel-jest": "^30.4.1",
@@ -31,7 +32,7 @@
     "ws": "^8.21.1",
     "yargs": "^18.1.0",
     "babel-preset-current-node-syntax": {
-    "@babel/core": "$@babel/core"
+      "@babel/core": "$@babel/core"
     },
     "minimatch": "^10.0.0",
     "brace-expansion": "^5.0.8"
