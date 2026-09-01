@@ -237,6 +237,114 @@ export function ensureThesaurusLoaded(configKeyOrConfig) {
 }
 
 /**
+ * Walks a thesaurus tree and stamps each node with its full GCMD breadcrumb,
+ * including scheme-root (Science Keywords / Platforms).
+ *
+ * @param {Array<Object>} nodes - Tree nodes (mutated in place).
+ * @param {Array<string>} [ancestorTexts] - Texts of ancestors already walked.
+ */
+function stampFullKeywords(nodes, ancestorTexts) {
+    ancestorTexts = ancestorTexts || [];
+    if (!Array.isArray(nodes)) return;
+    nodes.forEach(function (node) {
+        if (!node) return;
+        var fullKeyword = ancestorTexts.concat(node.text || '').join(' > ');
+        node.fullKeyword = fullKeyword;
+        node.original = Object.assign({}, node.original || {}, { fullKeyword: fullKeyword });
+        if (node.children) {
+            stampFullKeywords(node.children, ancestorTexts.concat(node.text || ''));
+        }
+    });
+}
+
+/**
+ * Returns the stamped full GCMD path for a jsTree node, falling back to empty
+ * string when the node was not stamped (tests / unexpected tree shapes).
+ *
+ * @param {Object} jsTreeInstance - Active jsTree instance.
+ * @param {Object} node - jsTree node or get_json flat entry.
+ * @returns {string}
+ */
+function getNodeFullKeyword(jsTreeInstance, node) {
+    if (!node) return '';
+    var internal = node;
+    if (jsTreeInstance && typeof jsTreeInstance.get_node === 'function' && node.id) {
+        internal = jsTreeInstance.get_node(node.id) || node;
+    }
+    if (internal.original && internal.original.fullKeyword) {
+        return internal.original.fullKeyword;
+    }
+    if (internal.fullKeyword) {
+        return internal.fullKeyword;
+    }
+    return '';
+}
+
+/**
+ * Resolves an imported Tagify tag to the canonical whitelist breadcrumb.
+ * Prefers valueURI (`tag.id`), then exact value, then suffix match so
+ * `Space-based Platforms > …` maps to `Platforms > Space-based Platforms > …`.
+ *
+ * @param {Object} tag - Tagify tag data (`value`, optional `id`).
+ * @param {Array<Object>} whitelist - Tagify whitelist entries.
+ * @returns {Object} Tag data with `value` set to the canonical path when resolved.
+ */
+function resolveTagAgainstWhitelist(tag, whitelist) {
+    if (!tag || !Array.isArray(whitelist) || whitelist.length === 0) return tag;
+    if (tag.id) {
+        var byId = whitelist.find(function (entry) {
+            return entry && entry.id === tag.id;
+        });
+        if (byId) {
+            return Object.assign({}, tag, {
+                value: byId.value,
+                scheme: tag.scheme || byId.scheme,
+                schemeURI: tag.schemeURI || byId.schemeURI,
+                language: tag.language || byId.language
+            });
+        }
+    }
+    var xmlText = tag.value || '';
+    if (!xmlText) return tag;
+    var byValue = whitelist.find(function (entry) {
+        if (!entry || !entry.value) return false;
+        return entry.value === xmlText || entry.value.endsWith(' > ' + xmlText);
+    });
+    if (byValue) {
+        return Object.assign({}, tag, {
+            value: byValue.value,
+            id: tag.id || byValue.id
+        });
+    }
+    return tag;
+}
+
+/**
+ * Rewrites already-imported Tagify tags to canonical fullKeyword values once
+ * the vocabulary whitelist is available.
+ *
+ * @param {Object} tagifyInstance - Tagify instance.
+ * @param {Array<Object>} whitelist - Canonical whitelist entries.
+ */
+function upgradeExistingTagsToFullKeywords(tagifyInstance, whitelist) {
+    if (!tagifyInstance || !Array.isArray(tagifyInstance.value) || tagifyInstance.value.length === 0) {
+        return;
+    }
+    if (!Array.isArray(whitelist) || whitelist.length === 0) return;
+
+    var upgraded = tagifyInstance.value.map(function (tag) {
+        return resolveTagAgainstWhitelist(tag, whitelist);
+    });
+    var changed = upgraded.some(function (tag, index) {
+        return tag.value !== tagifyInstance.value[index].value;
+    });
+    if (!changed) return;
+
+    tagifyInstance.removeAllTags();
+    tagifyInstance.addTags(upgraded);
+}
+
+/**
  * Loads and processes keyword data, initializing jsTree.
  * Called when modal is opened for the first time (lazy loading).
  *
@@ -257,6 +365,11 @@ function loadKeywordsForConfig(config, response) {
     }
 
     var availableNodes = ensureArray(data);
+
+    // Stamp every node with its unfiltered GCMD breadcrumb (including scheme-root)
+    // before cutting GGM / rootNodeId subtrees, so filtered UI nodes still know
+    // Science Keywords > … / Platforms > … even when those ancestors are not shown.
+    stampFullKeywords(availableNodes);
 
     // If rootNodes/rootNodeId exist, load only those subtrees (e.g., MSL general/domain)
     if (config.rootNodes || config.rootNodeId) {
@@ -323,11 +436,14 @@ function loadKeywordsForConfig(config, response) {
                 node.children = processNodes(node.children);
             }
             node.a_attr = node.a_attr || { title: node.description || "" };
-            node.original = node.original || {
+            node.original = Object.assign({
                 scheme: node.scheme || "",
                 schemeURI: node.schemeURI || "",
                 language: node.language || ""
-            };
+            }, node.original || {});
+            if (node.fullKeyword && !node.original.fullKeyword) {
+                node.original.fullKeyword = node.fullKeyword;
+            }
             return node;
         });
     }
@@ -339,7 +455,9 @@ function loadKeywordsForConfig(config, response) {
         if (!Array.isArray(nodes)) return;
         nodes.forEach(function (item) {
             if (!item) return;
-            var textToAdd = parentPath.concat(item.text).join(' > ');
+            var textToAdd = (item.original && item.original.fullKeyword)
+                || item.fullKeyword
+                || parentPath.concat(item.text).join(' > ');
             suggestedKeywords.push({
                 value: textToAdd,
                 id: item.id,
@@ -366,6 +484,11 @@ function loadKeywordsForConfig(config, response) {
 
     state.tagifyInstances.forEach(function (tagifyInstance) {
         tagifyInstance.settings.whitelist = state.whitelist;
+        // Upgrade imported short XML texts (or URI-only tags) to the canonical
+        // fullKeyword before turning enforceWhitelist on, so a later vocab load
+        // cannot drop Space-based Platforms > … subjects that belong in
+        // Platforms > Space-based Platforms > ….
+        upgradeExistingTagsToFullKeywords(tagifyInstance, state.whitelist);
         // Only enforce once there is something to enforce against. An empty
         // payload (failed/empty ERNIE response) must not lock the field, or
         // XML import of previously saved thesaurus keywords is dropped.
@@ -428,7 +551,7 @@ function loadKeywordsForConfig(config, response) {
             if (!tree) return;
             var nodes = tree.get_selected(true);
             nodes.forEach(function (n) {
-                var p = tree.get_path(n, " > ");
+                var p = getNodeFullKeyword(tree, n) || tree.get_path(n, " > ");
                 if (p) newCentralSet.add(p);
             });
         });
@@ -594,17 +717,26 @@ function updateSelectedKeywordsList(listId, state) {
 }
 
 /**
- * Finds a jsTree node by its rendered breadcrumb path.
+ * Finds a jsTree node by its canonical fullKeyword or filtered-tree path.
+ * Tagify stores the unfiltered GCMD breadcrumb; the visible tree may be a
+ * cut GGM subtree whose get_path is only the suffix.
  *
  * @param {Object} jsTreeInstance - Active jsTree instance.
  * @param {string} path - Full breadcrumb path using ` > ` separators.
  * @returns {Object|null} Matching jsTree node, or null when no match exists.
  */
 function findNodeByPath(jsTreeInstance, path) {
-    if (!jsTreeInstance) return null;
-    return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
-        return jsTreeInstance.get_path(n, " > ") === path;
-    });
+    if (!jsTreeInstance || !path) return null;
+    var nodes = jsTreeInstance.get_json("#", { flat: true }) || [];
+    return nodes.find(function (n) {
+        var fullKeyword = getNodeFullKeyword(jsTreeInstance, n);
+        var treePath = typeof jsTreeInstance.get_path === 'function'
+            ? jsTreeInstance.get_path(n, " > ")
+            : '';
+        return fullKeyword === path
+            || treePath === path
+            || (treePath && path.endsWith(' > ' + treePath));
+    }) || null;
 }
 
 /**
@@ -883,12 +1015,12 @@ $(document).ready(function () {
      */
     const GGM_THESAURUS_ROOT_NODES = {
         science_keywords: [
-            'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // EARTH SCIENCE > SOLID EARTH > GEODETICS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
-            'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
+            'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // Science Keywords > EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
+            'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // Science Keywords > EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
         ]
         // platforms: null,
         // instruments: null,
