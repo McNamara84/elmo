@@ -136,22 +136,19 @@ class ValidationController
             $ernieService = new \ErnieService();
 
             if ($ernieService->isConfigured(logResult: true)) {
-                $ernieTypes = $ernieService->getIdentifierTypesWithCache();
-
-                if (!empty($ernieTypes)) {
-                    // Sync to local DB (including patterns and isShown flag)
+                $ernieTypes = $ernieService->getIdentifierTypesWithCache(function (array $freshData): void {
                     require_once __DIR__ . '/VocabController.php';
                     $vocabController = new \VocabController();
-                    $vocabController->syncIdentifierTypesToDb($ernieTypes);
+                    $vocabController->syncIdentifierTypesToDb($freshData);
+                });
 
-                    // Return in the same format as before
+                if (!empty($ernieTypes)) {
                     $identifierTypes = array_map(fn($t) => [
                         'name' => $t['name'],
                         'pattern' => $t['pattern'] ?? '',
                         'description' => $t['description'] ?? '',
                     ], $ernieTypes);
 
-                    error_log("Identifier Types: Serving " . count($identifierTypes) . " types from ERNIE (cache or fresh)");
                     http_response_code(200);
                     header('Content-Type: application/json');
                     echo json_encode(['identifierTypes' => $identifierTypes]);

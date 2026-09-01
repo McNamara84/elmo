@@ -1418,7 +1418,16 @@ class ErnieService
      * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
      */
     public function getRelationTypesWithCache(): array
-    {
+    {   
+        $fileStatus = $this->getRelationTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Relation types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Relation types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Relation types] cache file is present and up-to-date. Using cached data');
+
+        }
         return $this->getDataWithCache(
             '/api/v1/relation-types/elmo',
             'relation types',
