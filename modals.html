@@ -255,7 +255,8 @@
               <label for="input-submit-dataurl" class="form-label" data-translate="modals.submit.url">URL to data</label>
               <input type="url" class="form-control" id="input-submit-dataurl" placeholder="https://...">
             </div>
-            <!-- PDF upload -->
+            <?php if (!($showGGMsProperties ?? false)): ?>
+            <!-- PDF upload (not used in ELMO-GEM) -->
             <div class="mb-3">
                 <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data
                     Description (as mentioned in the Data Description Template)</label>
@@ -268,6 +269,7 @@
                 </div>
                 <small class="form-text text-muted" id="selected-file-name"></small>
             </div>
+            <?php endif; ?>
             <!-- Privacy policy checkbox -->
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" id="input-submit-privacycheck" required>

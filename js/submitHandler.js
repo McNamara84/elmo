@@ -259,7 +259,7 @@ class SubmitHandler {
                 : null
         };
 
-        // File Input References
+        // File input is absent in ELMO-GEM (no data-description template upload).
         this.$fileInput = $('#input-submit-datadescription');
         this.$removeFileBtn = $('#remove-file-btn');
         this.$selectedFileName = $('#selected-file-name');
@@ -270,8 +270,10 @@ class SubmitHandler {
         this.$modalHoneypotField = $('#input-submit-please-fill-in-this-field');
 
         this.initializeEventListeners();
-        this.initializeFileHandlers();
-        this.$removeFileBtn.hide();
+        if (this.$fileInput.length) {
+            this.initializeFileHandlers();
+            this.$removeFileBtn.hide();
+        }
     }
 
     /**
@@ -345,6 +347,10 @@ class SubmitHandler {
      * Clear file input and reset related elements
      */
     clearFileInput() {
+        if (!this.$fileInput.length) {
+            return;
+        }
+
         this.$fileInput.val('');
         this.$selectedFileName.text('');
         this.$removeFileBtn.hide();
@@ -459,7 +465,8 @@ class SubmitHandler {
         submitData.append('dataUrl', $('#input-submit-dataurl').val());
         submitData.append('action', 'submit');
 
-        const dataDescriptionFile = $('#input-submit-datadescription')[0].files[0];
+        const dataDescriptionInput = $('#input-submit-datadescription')[0];
+        const dataDescriptionFile = dataDescriptionInput?.files?.[0];
         if (dataDescriptionFile) {
             submitData.append('dataDescription', dataDescriptionFile);
         }

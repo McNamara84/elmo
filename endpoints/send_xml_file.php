@@ -29,10 +29,13 @@ require_once $projectRoot . '/api/security.php';
 require_once $projectRoot . '/settings.php';
 require_once $projectRoot . '/includes/save_to_db_helper.php';
 
+// ELMO GEM extension: ICGEM registration mail (only when $showGGMsProperties)
+require_once $projectRoot . '/includes/ggms_registration_mail.php';
+
 // Make global variables from settings.php available
 global $connection, $showGGMsProperties, $showUsedInstruments;
 global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
-global $xmlSubmitAddress;
+global $xmlSubmitAddress, $icgemSubmitAddress;
 
 error_log("send_xml_file.php: Globals set, connection: " . (isset($connection) ? 'set' : 'not set'));
 
@@ -86,11 +89,11 @@ function getPriorityText(?int $weeks): string {
 }
 
 /**
-* Create XML filename from metadata and add as PHPMailer string attachment.
+* Create XML filename from metadata.
 *
 * @param array<string, mixed> $postData
 */
-function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string {
+function buildXmlAttachmentFilename(int $resource_id, array $postData): string {
     $firstAuthor = $postData['familynames'][0] ?? 'unknown';
     $mainTitle   = $postData['title'][0] ?? 'untitled';
 
@@ -108,7 +111,17 @@ function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resou
     $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
 
     $currentDateTime = date('Y-m-d_H-i-s');
-    $xmlFilename = "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
+
+    return "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
+}
+
+/**
+* Create XML filename from metadata and add as PHPMailer string attachment.
+*
+* @param array<string, mixed> $postData
+*/
+function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string {
+    $xmlFilename = buildXmlAttachmentFilename($resource_id, $postData);
 
     $mail->addStringAttachment($xml_content, $xmlFilename);
     error_log("XML attachment added: " . $xmlFilename);
@@ -338,6 +351,10 @@ try {
         }
     }
 
+    // ELMO GEM: an empty DOI field means GFZ Data Services must reserve one.
+    // Non-GEM always sends the usual Data Services mail.
+    $sendDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
+
     // Step 1: Save transaction structures
     try {
         $resource_id = saveALL($_POST);
@@ -369,6 +386,26 @@ try {
             error_log("Submit: Marked DataCite XML with dateType=Submitted.");
         } catch (Exception $e) {
             error_log("Submit: Failed to add Submitted date to XML content: " . $e->getMessage());
+        }
+    }
+
+    // Attachment for the Data Services mail. Non-GEM already generated that file
+    // above; GEM generated the ICGEM file, so the DatasetController envelope is
+    // produced here only when Data Services is notified.
+    $dataServicesXml = $xml_content;
+    if ($showGGMsProperties && $sendDataServicesMail) {
+        $dataServicesPayload = generateDatasetPayloadByResourceId($resource_id, [
+            'postData' => $_POST,
+            'variant' => 'gfz',
+        ]);
+        $dataServicesXml = $dataServicesPayload['payload'];
+
+        try {
+            require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
+            $datasetController = new DatasetController();
+            $dataServicesXml = $datasetController->markDataCiteEnvelopeAsSubmitted($dataServicesXml, date('Y-m-d'));
+        } catch (Exception $e) {
+            error_log("Submit: Failed to add Submitted date to Data Services XML: " . $e->getMessage());
         }
     }
 
@@ -406,7 +443,10 @@ try {
             throw new Exception("Generated XML payload is empty.");
         }
 
-        $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
+        // ICGEM keeps contact emails in grav:contact, not ISO pointOfContact.
+        $researcherConfirmationData = $showGGMsProperties
+            ? collectGGMsResearcherConfirmationDataFromXml($xml_content)
+            : collectResearcherConfirmationDataFromXml($xml_content);
     } catch (Exception $e) {
         error_log("XML Submit Prep Error: " . $e->getMessage());
 
@@ -436,128 +476,180 @@ try {
     }
 
     // --- PIPELINE PART A: DISPATCH TO CURATORS ---
-    try {
-        $mail = new PHPMailer(true);
-        $mail->isSMTP();
-        $mail->Host = $smtpHost;
-        $mail->Port = $smtpPort;
-        $mail->Timeout = 30;
-        $mail->SMTPKeepAlive = false;
+    // Non-GEM: always Data Services ($xmlSubmitAddress), usual content.
+    // GEM + empty DOI: Data Services (usual) + ICGEM ($icgemSubmitAddress).
+    // GEM + DOI set: ICGEM only.
+    $dataServicesEmailSent = false;
 
-        $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
-        if ($mail->SMTPAuth) {
-            $mail->Username = $smtpUser;
-            $mail->Password = $smtpPassword;
-        }
+    if ($sendDataServicesMail) {
+        try {
+            $mail = new PHPMailer(true);
+            $mail->isSMTP();
+            $mail->Host = $smtpHost;
+            $mail->Port = $smtpPort;
+            $mail->Timeout = 30;
+            $mail->SMTPKeepAlive = false;
 
-        if (strtolower($smtpSecure) === 'tls') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->SMTPAutoTLS = true;
-        } else {
-            $mail->SMTPAutoTLS = false;
-        }
-
-        $mail->CharSet = 'UTF-8';
-        $mail->setFrom($smtpSender, 'ELMO XML Submission System');
-        $mail->addAddress($xmlSubmitAddress);
-        $mail->addReplyTo($smtpSender, 'ELMO System');
-
-        // Append optional document description files (PDF/DOC/DOCX)
-        if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
-            $uploadedFile = $_FILES['dataDescription'];
-            $fileType = mime_content_type($uploadedFile['tmp_name']);
-            $allowedTypes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ];
-
-            if (!in_array($fileType, $allowedTypes)) {
-                throw new Exception("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
-            }
-            if ($uploadedFile['size'] > 10 * 1024 * 1024) {
-                throw new Exception("File size exceeds maximum limit of 10MB.");
+            $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
+            if ($mail->SMTPAuth) {
+                $mail->Username = $smtpUser;
+                $mail->Password = $smtpPassword;
             }
 
-            $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-            $mail->addAttachment($uploadedFile['tmp_name'], "data_description_" . $resource_id . "." . $fileExtension);
-            error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
+            if (strtolower($smtpSecure) === 'tls') {
+                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                $mail->SMTPAutoTLS = true;
+            } else {
+                $mail->SMTPAutoTLS = false;
+            }
+
+            $mail->CharSet = 'UTF-8';
+            $mail->setFrom($smtpSender, 'ELMO XML Submission System');
+            $mail->addAddress($xmlSubmitAddress);
+            $mail->addReplyTo($smtpSender, 'ELMO System');
+
+            // Append optional document description files (PDF/DOC/DOCX)
+            if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
+                $uploadedFile = $_FILES['dataDescription'];
+                $fileType = mime_content_type($uploadedFile['tmp_name']);
+                $allowedTypes = [
+                    'application/pdf',
+                    'application/msword',
+                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                ];
+
+                if (!in_array($fileType, $allowedTypes)) {
+                    throw new Exception("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
+                }
+                if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                    throw new Exception("File size exceeds maximum limit of 10MB.");
+                }
+
+                $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+                $mail->addAttachment($uploadedFile['tmp_name'], "data_description_" . $resource_id . "." . $fileExtension);
+                error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
+            }
+
+            // Perform payload file renaming assignment and attachment compilation
+            $xmlFilename = createAndAttachXmlFile($mail, $dataServicesXml, $resource_id, $_POST);
+
+            $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
+            $priorityText = getPriorityText($urgencyWeeks);
+            $dataUrlText = $dataUrl ? $dataUrl : "not provided";
+
+            $contactEmails = array_map(
+                static fn(array $contact): string => $contact['email'],
+                $researcherConfirmationData['contacts']
+            );
+            $contactEmailsText = !empty($contactEmails)
+                ? implode(', ', $contactEmails)
+                : 'not provided';
+            $contactEmailsHtml = !empty($contactEmails)
+                ? implode(', ', array_map(
+                    static fn(string $email): string => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
+                    $contactEmails
+                ))
+                : 'not provided';
+
+            $htmlBody = "
+                <h2>Neue Metadaten-Einreichung von ELMO</h2>
+                <p>Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:</p>
+                <ul>
+                    <li><strong>Ressource ID in ELMO Datenbank:</strong> {$resource_id}</li>
+                    <li><strong>Priorität:</strong> {$urgencyText} ({$priorityText})</li>
+                    <li><strong>URL zu den Daten:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "nicht angegeben") . "</li>
+                    <li><strong>Contact email addresses provided by the author(s):</strong> {$contactEmailsHtml}</li>
+                    <li><strong>Eingereicht am:</strong> " . date('d.m.Y H:i:s') . "</li>
+                </ul>
+                <p>Ich habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.</p>
+                <p>Und jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist <strong>{$priorityText}</strong>! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)</p>
+                <hr>
+                <p><small>Diese E-Mail wurde automatisch von ELMO generiert.</small></p>
+            ";
+
+            $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
+
+            if ($showGGMsProperties) {
+                $gemNote = buildGGMsDataServicesNote($icgemSubmitAddress);
+                $htmlBody .= $gemNote['html'];
+                $plainBody .= $gemNote['text'];
+            }
+
+            $mail->isHTML(true);
+            $mail->Subject = "Neue ELMO Metadaten-Einreichung (ID: {$resource_id}, Priorität: {$priorityText})";
+            $mail->Body = $htmlBody;
+            $mail->AltBody = $plainBody;
+
+            error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
+            $mail->send();
+            $dataServicesEmailSent = true;
+            error_log("XML Submit: Curator mail sent successfully.");
+        } catch (Exception $e) {
+            error_log("XML Submit Curator Mail Error: " . $e->getMessage());
+
+            // Failover recovery block logging
+            $urgencyText = $urgencyWeeks ?? 'not set';
+            $dataUrlText = $dataUrl ?: 'not provided';
+            error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
+                      "==================================================\n" .
+                      "📄 Resource ID: {$resource_id}\n" .
+                      "⏰ Urgency: {$urgencyText}\n" .
+                      "🔗 Data URL: {$dataUrlText}\n" .
+                      "🚨 Error on submission: " . $e->getMessage() . "\n" .
+                      "==================================================");
+
+            ob_clean();
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => "Sorry, we encountered an error when sending the email:\n\n" .
+                             $e->getMessage() . "\n\n" .
+                             "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
+                             "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
+                             "Thank you for your understanding.\n" .
+                             "ELMO team"
+            ]);
+            return;
         }
 
-        // Perform payload file renaming assignment and attachment compilation
-        $xmlFilename = createAndAttachXmlFile($mail, $xml_content, $resource_id, $_POST);
+    }
 
-        $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
-        $priorityText = getPriorityText($urgencyWeeks);
-        $dataUrlText = $dataUrl ? $dataUrl : "not provided";
+    if ($showGGMsProperties) {
+        try {
+            sendGGMsIcgemRegistrationMail([
+                'resourceId' => $resource_id,
+                'title' => $researcherConfirmationData['title'],
+                'doi' => trim((string) ($_POST['doi'] ?? '')),
+                'priorityText' => getPriorityText($urgencyWeeks),
+                'dataUrl' => $dataUrl,
+                'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
+                'submittedAt' => date('d.m.Y H:i:s'),
+                'icgemAddress' => $icgemSubmitAddress,
+                'senderAddress' => $smtpSender,
+                'dataServicesEmailSent' => $dataServicesEmailSent,
+                'icgemXml' => $xml_content,
+                'icgemFilename' => buildXmlAttachmentFilename($resource_id, $_POST),
+            ]);
+            error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
+                . ($dataServicesEmailSent ? 'true' : 'false') . '.');
+        } catch (Throwable $e) {
+            error_log("XML Submit GEM ICGEM Mail Error: " . $e->getMessage());
 
-        $contactEmails = array_map(
-            static fn(array $contact): string => $contact['email'],
-            $researcherConfirmationData['contacts']
-        );
-        $contactEmailsText = !empty($contactEmails)
-            ? implode(', ', $contactEmails)
-            : 'not provided';
-        $contactEmailsHtml = !empty($contactEmails)
-            ? implode(', ', array_map(
-                static fn(string $email): string => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
-                $contactEmails
-            ))
-            : 'not provided';
-
-        $htmlBody = "
-            <h2>Neue Metadaten-Einreichung von ELMO</h2>
-            <p>Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:</p>
-            <ul>
-                <li><strong>Ressource ID in ELMO Datenbank:</strong> {$resource_id}</li>
-                <li><strong>Priorität:</strong> {$urgencyText} ({$priorityText})</li>
-                <li><strong>URL zu den Daten:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "nicht angegeben") . "</li>
-                <li><strong>Contact email addresses provided by the author(s):</strong> {$contactEmailsHtml}</li>
-                <li><strong>Eingereicht am:</strong> " . date('d.m.Y H:i:s') . "</li>
-            </ul>
-            <p>Ich habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.</p>
-            <p>Und jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist <strong>{$priorityText}</strong>! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)</p>
-            <hr>
-            <p><small>Diese E-Mail wurde automatisch von ELMO generiert.</small></p>
-        ";
-
-        $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
-
-        $mail->isHTML(true);
-        $mail->Subject = "Neue ELMO Metadaten-Einreichung (ID: {$resource_id}, Priorität: {$priorityText})";
-        $mail->Body = $htmlBody;
-        $mail->AltBody = $plainBody;
-
-        error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
-        $mail->send();
-        error_log("XML Submit: Curator mail sent successfully.");
-    } catch (Exception $e) {
-        error_log("XML Submit Curator Mail Error: " . $e->getMessage());
-
-        // Failover recovery block logging
-        $urgencyText = $urgencyWeeks ?? 'not set';
-        $dataUrlText = $dataUrl ?: 'not provided';
-        error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
-                  "==================================================\n" .
-                  "📄 Resource ID: {$resource_id}\n" .
-                  "⏰ Urgency: {$urgencyText}\n" .
-                  "🔗 Data URL: {$dataUrlText}\n" .
-                  "🚨 Error on submission: " . $e->getMessage() . "\n" .
-                  "==================================================");
-
-        ob_clean();
-        http_response_code(500);
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => false,
-            'message' => "Sorry, we encountered an error when sending the email:\n\n" .
-                         $e->getMessage() . "\n\n" .
-                         "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
-                         "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
-                         "Thank you for your understanding.\n" .
-                         "ELMO team"
-        ]);
-        return;
+            ob_clean();
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => "Sorry, we encountered an error when sending the email:\n\n" .
+                             $e->getMessage() . "\n\n" .
+                             "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
+                             "Please contact the data curation team at {$icgemSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
+                             "Thank you for your understanding.\n" .
+                             "ELMO team"
+            ]);
+            return;
+        }
     }
 
     // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
