@@ -1,13 +1,13 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('ggms-modeltypes.js', () => {
+describe('ggmsModelTypes.js', () => {
     let $;
 
     beforeEach(() => {
         // Load jQuery
         $ = require('jquery');
-                // Define helper functions that are used in ggms-modeltypes.js
+                // Define helper functions that are used in ggmsModelTypes.js
         window.visibilityON = function(element) {
             element.removeClass('d-none');
             element.attr('aria-hidden', 'false');
@@ -93,7 +93,7 @@ describe('ggms-modeltypes.js', () => {
         `;
 
          // Load the script to be tested
-        const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-modeltypes.js');
+        const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsModelTypes.js');
         let scriptContent = fs.readFileSync(scriptPath, 'utf8');
 
         // Strip the $(document).ready() wrapper to ensure the code runs synchronously in the test.

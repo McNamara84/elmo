@@ -357,6 +357,16 @@
             "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
         },
+        "gfcUpload": {
+            "uploadButton": "Fill in metadata fields from model file",
+            "modalTitle": "Upload model file",
+            "dropZone": "Drag and drop a GFC file here",
+            "selectFile": "Or click to select a file",
+            "pasteHeaderLabel": "Or paste header text:",
+            "pasteHeaderPlaceholder": "Paste GFC header lines here…",
+            "fillMetadata": "Fill in metadata fields from model file",
+            "errorNoInput": "Please upload a .gfc file or paste the header text into the free text field."
+        },
         "icgemWrongApp": {
             "title": "ICGEM Metadata File Detected",
             "body": "Dear user,\n\nit looks like you are uploading an ICGEM metadata file to ELMO. This is possible, but not in this version. Please go to ELMOGEM (https://icgem.gfz.de/elmogem) to complete the metadata delivery for the gravity-related product.",
