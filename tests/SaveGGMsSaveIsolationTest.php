@@ -639,6 +639,24 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
     }
 
     /**
+     * submit: Satellite row with no platform → validateDataSourceRow throws.
+     */
+    public function testDataSourcesSubmitFailsWithMissingSatellitePlatform(): void
+    {
+        $postData = [
+            'action'                 => 'submit',
+            'datasource_type'        => ['S'],
+            'datasource_description' => [''],
+            // satellite_platform absent
+        ];
+
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessageMatches('/satellite platform/i');
+
+        saveGGMsDataSources($this->connection, $postData, $this->resourceId);
+    }
+
+    /**
      * submit: Ground data row with no details → validateDataSourceRow throws.
      */
     public function testDataSourcesSubmitFailsWithMissingGroundDetails(): void
