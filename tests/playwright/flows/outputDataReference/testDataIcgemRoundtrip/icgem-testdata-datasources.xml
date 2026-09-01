@@ -24,14 +24,14 @@
   <dace:publicationYear>2024</dace:publicationYear>
   <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
   <dace:subjects>
-    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9" xml:lang="en">GEODETICS</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/22f57987-7a8d-46d8-9b3d-37761755f8b2" xml:lang="en">GEODETICS &gt; TECHNIQUES &gt; SLR (SATELLITE LASER RANGING)</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847" xml:lang="en">Space-based Platforms</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/41de58a7-f1e3-453f-9094-80cb8e839b36" xml:lang="en">Space-based Platforms &gt; Navigation Satellites &gt; NAVSTAR</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4013d60-ac0d-478f-b18f-0098caef0f78" xml:lang="en">Space-based Platforms &gt; Navigation Satellites &gt; Navigation with Indian Constellation (NavIC)</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9" xml:lang="en">Science Keywords &gt; EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/22f57987-7a8d-46d8-9b3d-37761755f8b2" xml:lang="en">Science Keywords &gt; EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; TECHNIQUES &gt; SLR (SATELLITE LASER RANGING)</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847" xml:lang="en">Platforms &gt; Space-based Platforms</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/41de58a7-f1e3-453f-9094-80cb8e839b36" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Navigation Satellites &gt; NAVSTAR</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4013d60-ac0d-478f-b18f-0098caef0f78" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Navigation Satellites &gt; Navigation with Indian Constellation (NavIC)</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</dace:subject>
   </dace:subjects>
   <dace:contributors>
     <dace:contributor contributorType="ContactPerson">
@@ -81,21 +81,21 @@
     </grav:harmonicCoefficientsModel>
     <grav:inputDataSource type="Satellite">
       <grav:description>s1</grav:description>
-      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</grav:satelliteValueName>
+      <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
     </grav:inputDataSource>
     <grav:inputDataSource type="Satellite">
       <grav:description>s2</grav:description>
-      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</grav:satelliteValueName>
+      <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
     </grav:inputDataSource>
     <grav:inputDataSource type="Satellite">
       <grav:description>s2</grav:description>
-      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</grav:satelliteValueName>
+      <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>

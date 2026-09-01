@@ -10,9 +10,9 @@ const NODE = {
 } as const;
 
 const PATH = {
-  spaceBased: 'Space-based Platforms',
-  satellites: 'Space-based Platforms > Earth Observation Satellites',
-  grace: 'Space-based Platforms > Earth Observation Satellites > GRACE',
+  spaceBased: 'Platforms > Space-based Platforms',
+  satellites: 'Platforms > Space-based Platforms > Earth Observation Satellites',
+  grace: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE',
 } as const;
 
 /**

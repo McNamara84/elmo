@@ -145,7 +145,14 @@ describe('ggmsDatasources.js', () => {
           this.map = {};
           const build = (nodes, parent) => {
             nodes.forEach(node => {
-              const n = { id: node.id, text: node.text, parent, children: [] };
+              const n = {
+                id: node.id,
+                text: node.text,
+                parent,
+                children: [],
+                original: node.original,
+                fullKeyword: node.fullKeyword,
+              };
               this.map[node.id] = n;
               if (node.children) {
                 n.children = build(node.children, n);
@@ -166,6 +173,9 @@ describe('ggmsDatasources.js', () => {
         }
         get_selected() {
           return this.selected;
+        }
+        get_node(id) {
+          return this.map[id] || false;
         }
         get_path(node, sep) {
           let cur = node;

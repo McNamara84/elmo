@@ -26,7 +26,7 @@
   <dace:publicationYear>2020</dace:publicationYear>
   <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
   <dace:subjects>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
     <dace:subject>Hole A</dace:subject>
     <dace:subject>IODP Expedition 370</dace:subject>
     <dace:subject>Site C0023</dace:subject>
