@@ -574,13 +574,23 @@ class ErnieService
      * 
      * @return array<array{id: int, name: string, description: string|null}> Resource types from cache or ERNIE
      */
-    public function getResourceTypesWithCache(): array
+    public function getResourceTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Resource types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Resource types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Resource types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/resource-types/elmo',
             'resource types',
             $this->getCacheFile(),
-            [$this, 'getHardcodedResourceTypeFallback']
+            [$this, 'getHardcodedResourceTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -680,6 +690,15 @@ class ErnieService
      */
     public function getDescriptionTypesWithCache(): array
     {
+        $fileStatus = $this->getDescriptionTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Description types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Description types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Description types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/description-types/elmo',
             'description types',
@@ -771,13 +790,23 @@ class ErnieService
      * 
      * @return array<array{id: int, name: string, slug: string}> Title types from cache or ERNIE
      */
-    public function getTitleTypesWithCache(): array
+    public function getTitleTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getTitleTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Title types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Title types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Title types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/title-types/elmo',
             'title types',
             $this->getTitleTypesCacheFile(),
-            [$this, 'getHardcodedTitleTypeFallback']
+            [$this, 'getHardcodedTitleTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -859,13 +888,23 @@ class ErnieService
      * 
      * @return array<array{id: int, name: string, code: string}> Languages from cache or ERNIE
      */
-    public function getLanguagesWithCache(): array
+    public function getLanguagesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getLanguagesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Languages] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Languages] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Languages] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/languages/elmo',
             'languages',
             $this->getLanguagesCacheFile(),
-            [$this, 'getHardcodedLanguageFallback']
+            [$this, 'getHardcodedLanguageFallback'],
+            $onFreshData
         );
     }
 
@@ -968,6 +1007,15 @@ class ErnieService
      */
     public function getPid4instInstrumentsWithCache(): array
     {
+        $fileStatus = $this->getPid4instCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | PID4INST instruments] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | PID4INST instruments] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | PID4INST instruments] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/vocabularies/pid4inst-instruments',
             'PID4INST instruments',
@@ -1028,6 +1076,15 @@ class ErnieService
      */
     public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getContributorPersonRolesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Contributor person roles] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Contributor person roles] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Contributor person roles] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-persons/elmo',
             'contributor person roles',
@@ -1119,6 +1176,15 @@ class ErnieService
      */
     public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getContributorInstitutionRolesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Contributor institution roles] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Contributor institution roles] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Contributor institution roles] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-institutions/elmo',
             'contributor institution roles',
@@ -1228,6 +1294,15 @@ class ErnieService
     {
         // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
         $cacheFile = $this->getThesauriAvailabilityCacheFile();
+
+        $fileStatus = $this->getThesauriAvailabilityCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Thesauri availability] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Thesauri availability] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Thesauri availability] cache file is present and up-to-date. Using cached data');
+        }
 
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
@@ -1340,6 +1415,15 @@ class ErnieService
             return [];
         }
 
+        $fileStatus = $this->getThesaurusVocabularyCacheStatus($slug);
+        if (!$fileStatus['exists']) {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is not available. Fetching new from ERNIE");
+        } else if (!$fileStatus['valid']) {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is outdated. Fetching new from ERNIE");
+        } else {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is present and up-to-date. Using cached data");
+        }
+
         return $this->getDataWithCache(
             "/api/v1/vocabularies/$slug",
             "thesaurus vocabulary ($slug)",
@@ -1417,8 +1501,8 @@ class ErnieService
      * 
      * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
      */
-    public function getRelationTypesWithCache(): array
-    {   
+    public function getRelationTypesWithCache(?callable $onFreshData = null): array
+    {
         $fileStatus = $this->getRelationTypesCacheStatus();
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Relation types] cache file is not available. Fetching new from ERNIE');
@@ -1426,13 +1510,14 @@ class ErnieService
             error_log('[ERNIE service | Relation types] cache file is outdated. Fetching new from ERNIE');
         } else {
             error_log('[ERNIE service | Relation types] cache file is present and up-to-date. Using cached data');
-
         }
+
         return $this->getDataWithCache(
             '/api/v1/relation-types/elmo',
             'relation types',
             $this->getRelationTypesCacheFile(),
-            [$this, 'getHardcodedRelationTypeFallback']
+            [$this, 'getHardcodedRelationTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -1503,13 +1588,23 @@ class ErnieService
      * 
      * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Identifier types from cache or ERNIE
      */
-    public function getIdentifierTypesWithCache(): array
+    public function getIdentifierTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getIdentifierTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Identifier types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Identifier types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Identifier types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/identifier-types/elmo',
             'identifier types',
             $this->getIdentifierTypesCacheFile(),
-            [$this, 'getHardcodedIdentifierTypeFallback']
+            [$this, 'getHardcodedIdentifierTypeFallback'],
+            $onFreshData
         );
     }
 
