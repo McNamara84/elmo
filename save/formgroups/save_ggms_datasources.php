@@ -218,7 +218,7 @@ function validateDataSourceRow(array $row): array
     // Validation rules now use the postData variable names
     $typeRules = [
         'S' => [
-            'required' => ['satellite_platform'],
+            'required' => [],
             'mustBeEmpty' => ['datasource_details', 'compensation_depth', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'G' => [
