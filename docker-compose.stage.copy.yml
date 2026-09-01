@@ -1,0 +1,193 @@
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
+      MARIADB_DATABASE: ${DB_NAME}
+      MARIADB_USER: ${DB_USER}
+      MARIADB_PASSWORD: ${DB_PASSWORD}
+      TZ: Europe/Berlin
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      - internal
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
+    ports:
+      - "8080:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      SIMULATE_EMAIL: "false"
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Database install routine
+      INSTALL_ACTION: basic
+      DB_INIT_MODE: drop_data
+      # Flags for Standard ELMO
+      SHOW_MSL_MODE: "false"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      # Shared API responses cache: all variants see the same cached responses.
+      - api_cache_volume:/var/www/html/storage/cache
+      # Variant-specific drafts: keep each container's draft data isolated.
+      - web_drafts:/var/www/html/storage/drafts
+
+  web-msl:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
+    ports:
+      - "8081:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_MSL}
+      SIMULATE_EMAIL: "false"
+      TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for MSL (MSL-specific vocabularies enabled)
+      SHOW_MSL_MODE: "true"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_THESAURI: "true"
+      SHOW_FREE_KEYWORDS: "true"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
+      SHOW_RELATED_WORK: "true"
+      INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_msl_drafts:/var/www/html/storage/drafts
+
+  web-igsn:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+      target: prod
+    ports:
+      - "8083:80"
+    environment:
+      DB_HOST: db
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME}
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+      # No install routine
+      INSTALL_ACTION: skip
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASSWORD: ${SMTP_PASSWORD}
+      SMTP_AUTH: ${SMTP_AUTH}
+      SMTP_SECURE: ${SMTP_SECURE}
+      SMTP_SENDER: ${SMTP_SENDER}
+      FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
+      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS}
+      TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
+      GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
+      DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
+      LOCAL_DEVELOPMENT: "false"
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      FUNDER_PID: ${FUNDER_PID:-CFID}
+      # Flags for IGSN (minimal form - most form groups disabled)
+      SHOW_MSL_MODE: "false"
+      SHOW_GGMS_PROPERTIES: "false"
+      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_THESAURI: "false"
+      SHOW_FREE_KEYWORDS: "false"
+      SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
+      SHOW_RELATED_WORK: "false"
+      INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
+      DB_INIT_MODE: "keep_data"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - internal
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_igsn_drafts:/var/www/html/storage/drafts
+
+volumes:
+  db_data:
+  api_cache_volume:
+  web_drafts:
+  web_msl_drafts:
+  web_igsn_drafts:
+
+networks:
+  internal:
+    driver: bridge
