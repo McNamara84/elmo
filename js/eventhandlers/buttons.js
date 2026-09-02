@@ -16,13 +16,11 @@ import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';
 import './formgroups/ggmsModelTypes.js';
 import './formgroups/ggmsDefinition.js';
-import './formgroups/ggms-properties.js';
 import './formgroups/ggmsDatasources.js';
 import './formgroups/ggmsStc.js';
 import './formgroups/ggmsAltimetryModels.js';
 import './formgroups/ggmsMascons.js';
 import './formgroups/ggmsExperimentalPayload.js';
-import './formgroups/ggmsDatasources.js';
 import './formgroups/ggmsProperties.js';
 import './confirmationModal.js';
 

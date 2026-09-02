@@ -89,7 +89,6 @@ if ($showGGMsProperties) {
     // Keep coverage close to the GEM data sources; other ELMO variants retain
     // their established form order below. JavaScript manages its visibility.
     include $baseDir . 'formgroups/coverage.html';
-    include $baseDir . 'formgroups/GGMsProperties.html';
 }
 if ($showContributorPersons) {
     include $baseDir . 'formgroups/contributorPersons.html';
