@@ -140,14 +140,14 @@ test.describe('ELMO-GEM save', () => {
 
   test('saves sparse form data as XML and triggers download', async ({ page }) => {
     await navigateToHome(page);
-    await page.getByLabel('Type', { exact: true }).selectOption('A');
+    await page.locator('#input-datasource-type').selectOption('A');
     await page.locator('#input-datasource-description').click();
     await page.locator('#input-datasource-description').fill('descrA');
     await page.getByLabel('File format').selectOption('icgem2.0');
     await page.getByLabel('Model Type *').selectOption('Static');
     await page.getByRole('checkbox', { name: 'Time-variable coefficients' }).check();
     await page.locator('#button-datasource-add').click();
-    await page.getByLabel('Type*', { exact: true }).selectOption('M');
+    await page.locator('#input-datasource-type-1').selectOption('M');
     await page.locator('#input-datasource-identifier-1').dblclick();
     await page.locator('#input-datasource-identifier-1').fill('identifier');
     await page.locator('#input-datasource-identifiertype1').selectOption('');

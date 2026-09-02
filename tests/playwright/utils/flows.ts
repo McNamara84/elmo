@@ -476,7 +476,7 @@ export async function fillGEM(page: Page) {
     () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
     { timeout: 10_000 },
   );
-  await page.locator('#input-mathematical-representation').selectOption({ index: 1 });
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Spherical harmonics' });
 
   await page.waitForFunction(
     () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
@@ -517,7 +517,7 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-topo-density-details').fill('2670 kg/m3');
 
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
-  await page.locator('#button-datasource-add').click();
+  await page.locator('#group-datasources #button-datasource-add').click();
   await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
