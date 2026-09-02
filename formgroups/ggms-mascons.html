@@ -7,75 +7,16 @@
 		<div id="group-ggmsmascons">
 			<input type="hidden" id="mascons-payload" name="masconsPayload" value="null">
 			<div class="row">
-				<!-- Land MASCON -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<div class="input-group has-validation">
-						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mascon" name="land_mascon" required>
-							<label for="input-land-mascon">Land MASCON <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide land MASCON.</div>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-land-mascon" aria-hidden="true"></i>
-							</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Time Bound -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<div class="input-group has-validation">
-						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-time-bound" name="time_bound" required>
-							<label for="input-time-bound">Time bound <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide time bound.</div>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-time-bound" aria-hidden="true"></i>
-							</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Data EWH -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<div class="input-group has-validation">
-						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-data-ewh" name="data_ewh" required>
-							<label for="input-data-ewh">Data EWH <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide data EWH.</div>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-data-ewh" aria-hidden="true"></i>
-							</span>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div class="row mt-2">
-				<!-- Regularisation Method -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<div class="input-group has-validation">
-						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-regularisation-method" name="mascon_regularisation_method">
-							<label for="input-mascon-regularisation-method">Regularisation method</label>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-regularisation-method" aria-hidden="true"></i>
-							</span>
-						</div>
-					</div>
-				</div>
 				<!-- Shape of MASCON -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<div class="col-12 col-md-6 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-shape" name="mascon_shape">
+							<select class="form-select form-control input-with-help input-right-no-round-corners required-on-submit" id="input-mascon-shape" name="mascon_shape">
+								<option value="" selected>Choose...</option>
+								<option value="Equal area">Equal area</option>
+								<option value="Irregular shapes">Irregular shapes</option>
+								<option value="Other">Other</option>
+							</select>
 							<label for="input-mascon-shape">Shape of MASCON</label>
 						</div>
 						<div class="input-group-append">
@@ -85,16 +26,45 @@
 						</div>
 					</div>
 				</div>
-				<!-- Spatial Resolution -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<!-- Native resolution -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-spatial-resolution" name="mascon_spatial_resolution">
-							<label for="input-mascon-spatial-resolution">Spatial resolution (degrees or kilometers)</label>
+							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-spatial-resolution" name="mascon_spatial_resolution">
+							<label for="input-mascon-spatial-resolution">Native resolution (in degrees)</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-spatial-resolution" aria-hidden="true"></i>
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Product resampled resolution -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-product-resolution" name="mascon_product_resolution">
+							<label for="input-mascon-product-resolution">Product resolution (in degrees)</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Mascon count -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="number" min="0" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-count" name="mascon_count">
+							<label for="input-mascon-count">Mascon count</label>
+							<div class="invalid-feedback">Please provide mascon count as an integer above 0.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-count" aria-hidden="true"></i>
 							</span>
 						</div>
 					</div>
@@ -102,6 +72,28 @@
 			</div>
 
 			<div class="row mt-2">
+				<!-- Land mask -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<select class="form-control input-with-help input-right-no-round-corners" id="input-land-mask-switch" name="land_mask_switch" required>
+						<option value="" selected>Choose...</option>
+						<option value="given">Given</option>
+						<option value="not_given">Not given</option>
+					</select>
+				</div>
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mask" name="land_mask">
+							<label for="input-land-mask">Land Mask <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide land Mask.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-land-mask" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
 				<!-- Uncertainty -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
@@ -133,7 +125,22 @@
 						</div>
 					</div>
 				</div>
-
+			</div>
+			<div class="row mt-2">
+				<!-- Regularisation Method -->
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-regularisation-method" name="mascon_regularisation_method">
+							<label for="input-mascon-regularisation-method">Regularisation method</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-regularisation-method" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
 				<!-- GAD -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
