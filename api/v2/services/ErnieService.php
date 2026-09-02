@@ -520,11 +520,12 @@ class ErnieService
                 return $cachedData;
             }
         }
-
+        // If cache is not valid or empty, proceed to fetch fresh data from ERNIE
         $ernieData = $this->fetchFromErnie($endpoint, $label);
         if ($ernieData !== null && !empty($ernieData)) {
             $this->writeCacheFile($cacheFile, $ernieData);
             if ($onFreshData !== null) {
+                // trigger the onFreshData callback with the newly fetched data
                 $onFreshData($ernieData);
             }
             return $ernieData;
