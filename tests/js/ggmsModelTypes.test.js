@@ -9,9 +9,8 @@ describe('ggmsModelTypes.js', () => {
         $ = require('jquery');
         global.$ = $;
         global.jQuery = $;
-        window.$ = $;
-        window.jQuery = $;
-                // Define helper functions that are used in ggmsModelTypes.js
+
+        // Define helper functions that are used in ggmsModelTypes.js
         window.visibilityON = function(element) {
             element.removeClass('d-none');
             element.attr('aria-hidden', 'false');
@@ -96,6 +95,7 @@ describe('ggmsModelTypes.js', () => {
             </div>
         `;
 
+         // Load the script to be tested
         const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsModelTypes.js');
         let scriptContent = fs.readFileSync(scriptPath, 'utf8');
 

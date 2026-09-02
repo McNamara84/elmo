@@ -22,6 +22,8 @@ import './formgroups/ggmsStc.js';
 import './formgroups/ggmsAltimetryModels.js';
 import './formgroups/ggmsMascons.js';
 import './formgroups/ggmsExperimentalPayload.js';
+import './formgroups/ggmsDatasources.js';
+import './formgroups/ggmsProperties.js';
 import './confirmationModal.js';
 
 

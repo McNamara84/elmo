@@ -129,7 +129,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             </div>
         </div>
 
-        <!-- ── GGMs Properties / Characteristics (GGMsProperties.html) ── -->
+        <!-- ── GGMs Properties / Characteristics (ggms-properties.html) ── -->
         <select id="input-tide-system" name="tide_system">
             <option value="">Choose...</option>
             <option value="zero tide" selected>zero tide</option>
@@ -218,7 +218,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         });
 
         // ── Minimal errors change handler (Bug 4) ──────────────────────────
-        // Mirrors ggms-properties.js updateErrorHandlingVisibility():
+        // Mirrors ggmsProperties.js updateErrorHandlingVisibility():
         // hide the error-handling column unless errors === 'calibrated'.
         $(document).on('change.clearGgmsTest', '#input-errors', function () {
             const val = $(this).val();
@@ -231,7 +231,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         });
 
         // ── Minimal math-representation change handler (Bug 5) ────────────
-        // Mirrors ggms-properties.js updateReferenceSystemVisibility():
+        // Mirrors ggmsProperties.js updateReferenceSystemVisibility():
         // show spherical and hide ellipsoidal when value is empty.
         $(document).on('change.clearGgmsTest', '#input-mathematical-representation', function () {
             const val = $(this).val();

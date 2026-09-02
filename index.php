@@ -84,6 +84,7 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/ggms-altimetry-models.html';
     include $baseDir . 'formgroups/ggms-mascons.html';
     include $baseDir . 'formgroups/ggms-model-types.html';
+    include $baseDir . 'formgroups/ggms-properties.html';
     include $baseDir . 'formgroups/ggms-data-sources.html';
     // Keep coverage close to the GEM data sources; other ELMO variants retain
     // their established form order below. JavaScript manages its visibility.
