@@ -73,6 +73,7 @@
 
 			<div class="row mt-2">
 				<!-- Land mask -->
+				<!-- switch -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
@@ -81,6 +82,7 @@
 							<option value="given">Given</option>
 							<option value="not_given">Not given</option>
 						</select>
+						<label for="input-land-mask-switch">Land Mask</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -99,17 +101,31 @@
 					</div>
 				</div>
 				<!-- Uncertainty -->
+				 	<!-- switch -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-uncertainty" name="uncertainty" required>
-							<label for="input-uncertainty">Uncertainty <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide uncertainty.</div>
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty-switch" name="mascon_uncertainty_switch" required>
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-uncertainty-switch">Uncertainty</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-uncertainty" aria-hidden="true"></i>
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-uncertainty" aria-hidden="true"></i>
 							</span>
+						</div>
+					</div>					
+				</div>	
+				
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-uncertainty" name="uncertainty">
+							<label for="input-uncertainty">Uncertainty <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide uncertainty.</div>
 						</div>
 					</div>
 				</div>

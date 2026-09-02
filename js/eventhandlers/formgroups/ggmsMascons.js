@@ -68,14 +68,16 @@ function toggleMasconSpecificGroups() {
 // IDs in the HTML are written in the format "input-<variable>-switch" for the switches and "input-<variable>" for the corresponding input fields.
 function toggleMasconVariable() {
 	// identificator of the switch
-	const switchValue = $(this).val();
-	const inputField = this.id.replace('-switch', '');
+	const switchValue = $('#' + this.id).val();
+	const inputField = this.id.replace(/-switch$/, '');
 	if (switchValue.toLowerCase() === 'given') {
-		$('#' + inputField).closest('.col-12').visibilityON();
+		visibilityON($('#' + inputField).closest('.col-12'));
 	} else {
-		$('#' + inputField).closest('.col-12').visibilityOFF();
+		visibilityOFF($('#' + inputField).closest('.col-12'));
 	}
 }
+// initial toggle on page load:
+$('[id$="-switch"]').each(toggleMasconVariable);
 
 $(document).ready(function () {
 	const masconCard = $('#group-ggmsmascons').closest('.card');
@@ -85,6 +87,6 @@ $(document).ready(function () {
 
 	$(document).on('change', '#input-mathematical-representation', toggleMasconSpecificGroups);
 	$(document).on('icgem:form-populated', toggleMasconSpecificGroups);
-	$(document).on('change', '#input-land-mask-switch', toggleMasconVariable)
+	$(document).on('change', '[id$="-switch"]', toggleMasconVariable);
 	toggleMasconSpecificGroups();
 });
