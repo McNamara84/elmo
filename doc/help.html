@@ -1606,7 +1606,7 @@ include_once "../settings.php";
             </div>
             <div id="help-mascon-count" class="help-section d-none">
                 <h3>Mascon count</h3>
-                <p>Help text to be added.</p>
+                <p>Number of tiles/cells in the model file.</p>
             </div>
             <div id="help-land-mask" class="help-section d-none">
                 <h3>Land Mask</h3>
@@ -1626,7 +1626,18 @@ include_once "../settings.php";
             </div>
             <div id="help-mascon-background-models" class="help-section d-none">
                 <h3>Background force models</h3>
-                <p>Help text to be added.</p>
+                <p>This section allows to specify the background force models. The models have the following categories:</p>
+                <ul>
+                    <li><b>Gravity Field</b> - Example: GGM05C; GIF48 (d/o 180)</li>
+                    <li><b>Solid Earth Tides</b> - Example: IERS2010</li>
+                    <li><b>Ocean Tides</b> - Example: GOT4.7 (d/o 90); FES2014b</li>
+                    <li><b>Solid Pole Tide</b> - Example: IERS2010</li>
+                    <li><b>Ocean Pole Tide</b> - Example: Desai models, IERS2010</li>
+                    <li><b>AOD</b> - Example: ECMWF/MOG2D; AOD1B RL06</li>
+                    <li><b>Atmospheric Tides</b> - Example: AOD1B RL06</li>
+                    <li><b>Third-Body attractions</b> - Example: DE-430</li>
+                    <li><b>General relativity</b> - Example: IERS2010</li>
+                </ul>
             </div>
         <?php endif; ?>
     </div>
