@@ -1577,6 +1577,24 @@ include_once "../settings.php";
                 </p>
             </div>
             <!-- [ELMOGEM] formgroup MASCON  -->
+            <div id="help-mascon-properties" class="help-section d-none">
+                <h3>MASCON properties</h3>
+                <h5>Overview</h5>
+                <p>In this section, you can provide essential properties about the MASCON. If the product you are publishing is not a MASCON, please change the Mathematical representation accordingly.</p>
+                <h5>Variables</h5>
+                <p>The variablles in this section are not mandatory. Although, it is recommended to provide them if available. If your file provides Land mask, Uncertainty, or Scale factor, please choose "Given" and fill in the corresponding fields. More detailed free text metadata can be entered in the Descriptions section.</p>
+                <h5>Background force models</h5>
+                <p>We welcome you to provide information about the force models used as a background in the calculation. To add the background models, click on the "Background force models header".</p>
+
+            </div>
+            <div id="help-mascon-shape" class="help-section d-none">
+                <h3>Shape of MASCON</h3>
+                <p>This section allows you to specify the shape of the MASCON. For example:</p>
+                <ul>
+                    <li> Equal area - 1° equal-area geodesic grid</li>
+                    <li>Irregular shapes - Variable shapes for land and ocean</li>
+                </ul>
+            </div>
             <div id="help-mascon-resolution" class="help-section d-none">
                 <h3> MASCON Resolution Help</h3>
                 <p> This input field is designed for Spatial resolution provided in degrees. We collect 2 types of MASCON resolution: native resolution and product resampled resolution.</p>
@@ -1585,6 +1603,30 @@ include_once "../settings.php";
                     <li>Product resolution: The resolution of the MASCON data presented in the file.</li>
                 </ul>
                 <p> For instance, if a MASCON has an irregular shape, the native resolution will reflect the original data's spatial resolution, while the product resolution will indicate the resolution after any resampling of the irregular shapes to fit into the file format.</p>
+            </div>
+            <div id="help-mascon-count" class="help-section d-none">
+                <h3>Mascon count</h3>
+                <p>Help text to be added.</p>
+            </div>
+            <div id="help-land-mask" class="help-section d-none">
+                <h3>Land Mask</h3>
+                <p>Help text to be added.</p>
+            </div>
+            <div id="help-mascon-uncertainty" class="help-section d-none">
+                <h3>Uncertainty</h3>
+                <p>Help text to be added.</p>
+            </div>
+            <div id="help-mascon-scale-factor" class="help-section d-none">
+                <h3>Scale Factor</h3>
+                <p>Help text to be added.</p>
+            </div>
+            <div id="help-mascon-gad" class="help-section d-none">
+                <h3>GAD</h3>
+                <p>Help text to be added.</p>
+            </div>
+            <div id="help-mascon-background-models" class="help-section d-none">
+                <h3>Background force models</h3>
+                <p>Help text to be added.</p>
             </div>
         <?php endif; ?>
     </div>
