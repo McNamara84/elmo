@@ -118,9 +118,9 @@ class ValidationController
     /**
      * Retrieves all active identifier types, preferring ERNIE data with local DB fallback.
      *
-     * When ERNIE is configured, fetches identifier types from ERNIE (with caching),
-     * syncs to local DB (including patterns), and returns data.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, returns identifier types from cache (or fresh ERNIE data).
+     * DB sync only occurs when fresh data is fetched from ERNIE (cache miss),
+     * not on every read request. Falls back to local database if ERNIE is unavailable.
      *
      * Each result contains:
      * - name        → the name of the identifier type

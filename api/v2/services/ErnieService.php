@@ -688,13 +688,16 @@ class ErnieService
 
     /**
      * Gets description types with caching logic
-     * 
+     *
+     * File cache only — description types are not persisted to MariaDB, so this
+     * getter does not accept onFreshData.
+     *
      * Priority:
      * 1. Valid cache (not expired)
      * 2. Fresh data from ERNIE
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Abstract, Methods, TechnicalInfo, Other) as last resort
-     * 
+     *
      * @return array<mixed> Description types from cache or ERNIE
      */
     public function getDescriptionTypesWithCache(): array
@@ -1292,13 +1295,17 @@ class ErnieService
 
     /**
      * Gets thesauri availability with caching logic
-     * 
+     *
+     * File cache only — availability is not persisted to MariaDB, so this
+     * getter does not accept onFreshData. Cannot use generic getDataWithCache()
+     * because fetchThesauriAvailability() has custom dual-endpoint logic.
+     *
      * Priority:
      * 1. Valid cache (not expired)
      * 2. Fresh data from ERNIE (ELMO-specific, then public fallback)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (only 3 GCMD thesauri) as last resort
-     * 
+     *
      * @return array<string, array{available: bool, displayName: string}> Availability data
      */
     public function getThesauriAvailabilityWithCache(): array

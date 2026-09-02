@@ -2360,6 +2360,33 @@ final class ErnieServiceTest extends TestCase
         $this->assertCount(2, $result);
     }
 
+    /**
+     * Test that relation types onFreshData is NOT called on cache hit
+     *
+     * Same getDataWithCache hook as roles; this documents the DB-backed vocabs
+     * that now accept the callback (relations, resource types, title types,
+     * languages, identifier types).
+     */
+    public function testOnFreshDataCallbackNotCalledOnRelationTypesCacheHit(): void
+    {
+        $testData = [
+            ['id' => 1, 'name' => 'IsCitedBy', 'description' => null],
+            ['id' => 2, 'name' => 'Cites', 'description' => null]
+        ];
+        $this->writeRelationTypesTestCache($testData);
+
+        $callbackInvoked = false;
+        $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
+        $result = $service->getRelationTypesWithCache(
+            function (array $freshData) use (&$callbackInvoked) {
+                $callbackInvoked = true;
+            }
+        );
+
+        $this->assertFalse($callbackInvoked, 'onFreshData callback should NOT be called on cache hit');
+        $this->assertCount(2, $result);
+    }
+
     // ==================== Description Types: getDescriptionTypesCacheStatus() Tests ====================
 
     /**
