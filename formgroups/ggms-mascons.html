@@ -74,23 +74,27 @@
 			<div class="row mt-2">
 				<!-- Land mask -->
 				<div class="col-12 col-md-6 col-lg-4 p-1">
-					<select class="form-control input-with-help input-right-no-round-corners" id="input-land-mask-switch" name="land_mask_switch" required>
-						<option value="" selected>Choose...</option>
-						<option value="given">Given</option>
-						<option value="not_given">Not given</option>
-					</select>
-				</div>
-				<div class="col-12 col-md-6 col-lg-4 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mask" name="land_mask">
-							<label for="input-land-mask">Land Mask <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide land Mask.</div>
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-land-mask-switch" name="land_mask_switch" required>
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
 								<i class="bi bi-question-circle-fill" data-help-section-id="help-land-mask" aria-hidden="true"></i>
 							</span>
+						</div>
+					</div>					
+				</div>
+				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mask" name="land_mask">
+							<label for="input-land-mask">Land Mask details</label>
+							<div class="invalid-feedback">Please provide land Mask details or choose "Not given".</div>
 						</div>
 					</div>
 				</div>
