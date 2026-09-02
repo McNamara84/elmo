@@ -107,9 +107,10 @@ class VocabController
     /**
      * Retrieves relation types, preferring ERNIE data with local DB fallback
      *
-     * When ERNIE is configured, fetches relation types from ERNIE (with caching),
-     * syncs to local DB, and returns data with local IDs.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, loads relation types from the file cache or ERNIE.
+     * Local DB is synced only via onFreshData after a live ERNIE fetch (cache miss
+     * or expired file), not on every GET. Responses still map ERNIE rows to local IDs.
+     * Falls back to the local database if ERNIE is unavailable.
      *
      * @return void
      */
@@ -119,6 +120,7 @@ class VocabController
             $ernieService = $this->getErnieService();
 
             if ($ernieService->isConfigured(logResult: true)) {
+                // Closure is onFreshData: runs only when ERNIE was actually fetched, not on cache hit.
                 $ernieTypes = $ernieService->getRelationTypesWithCache(function (array $freshData): void {
                     $syncItems = array_map(fn($t) => [
                         'ernie_id' => $t['id'],

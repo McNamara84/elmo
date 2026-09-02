@@ -487,16 +487,24 @@ class ErnieService
      * Gets data from ERNIE with full cache fallback chain
      *
      * Priority:
-     * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
-     * 3. Stale cache (if ERNIE unavailable)
-     * 4. Hardcoded fallback as last resort
+     * 1. Valid cache file (not expired) — return it, do not call ERNIE
+     * 2. Fresh data from ERNIE — write the cache file, then run $onFreshData
+     * 3. Stale cache (ERNIE unavailable) — return expired file, no $onFreshData
+     * 4. Hardcoded fallback — last resort, no $onFreshData
+     *
+     * $onFreshData is the hook for side effects such as syncing MariaDB.
+     * ErnieService never talks to the database; the caller (usually VocabController)
+     * passes a closure that runs only on path 2. A cache hit therefore does not
+     * rewrite the DB. Omit the argument (null) when no side effect is needed.
+     *
+     * This runs on the HTTP request that needs the vocab (e.g. GET /vocabs/relations),
+     * not at container start.
      *
      * @param string $endpoint The API endpoint path
      * @param string $label Human-readable label for logging
      * @param string $cacheFile Path to the cache file
      * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
-     * @param (callable(array<mixed>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE (not on cache hit)
+     * @param (callable(array<mixed>): void)|null $onFreshData Invoked only after a successful live ERNIE fetch and cache write. Not called on cache hit, stale cache, or hardcoded fallback.
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
     private function getDataWithCache(
@@ -568,10 +576,11 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Dataset, Other) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null}> Resource types from cache or ERNIE
      */
     public function getResourceTypesWithCache(?callable $onFreshData = null): array
@@ -784,10 +793,11 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Main Title, Alternative Title, Translated Title) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, slug: string}> Title types from cache or ERNIE
      */
     public function getTitleTypesWithCache(?callable $onFreshData = null): array
@@ -882,10 +892,11 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (English, German) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, code: string}> Languages from cache or ERNIE
      */
     public function getLanguagesWithCache(?callable $onFreshData = null): array
@@ -1071,7 +1082,7 @@ class ErnieService
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
-     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string}> Contributor person roles from cache or ERNIE
      */
     public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
@@ -1171,7 +1182,7 @@ class ErnieService
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
-     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string}> Contributor institution roles from cache or ERNIE
      */
     public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
@@ -1495,10 +1506,11 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
      */
     public function getRelationTypesWithCache(?callable $onFreshData = null): array
@@ -1582,10 +1594,11 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Identifier types from cache or ERNIE
      */
     public function getIdentifierTypesWithCache(?callable $onFreshData = null): array
