@@ -64,7 +64,7 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm499.gfz.de`) && PathPrefix(`/elmo`)"
+      - "traefik.http.routers.elmo-router.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo`)"
       - "traefik.http.routers.elmo-router.entrypoints=https"
       - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
@@ -120,7 +120,7 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-msl-router.rule=Host(`env.rz-vm499.gfz.de`) && PathPrefix(`/elmo-msl`)"
+      - "traefik.http.routers.elmo-msl-router.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo-msl`)"
       - "traefik.http.routers.elmo-msl-router.entrypoints=https"
       - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
       - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
