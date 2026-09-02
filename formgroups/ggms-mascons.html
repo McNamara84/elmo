@@ -74,7 +74,7 @@
 			<div class="row mt-2">
 				<!-- Land mask -->
 				<!-- switch -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 						<select class="form-control input-with-help input-right-no-round-corners" id="input-land-mask-switch" name="land_mask_switch" required>
@@ -91,7 +91,7 @@
 						</div>
 					</div>					
 				</div>
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mask" name="land_mask">
@@ -102,7 +102,7 @@
 				</div>
 				<!-- Uncertainty -->
 				 	<!-- switch -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty-switch" name="mascon_uncertainty_switch" required>
@@ -119,60 +119,70 @@
 						</div>
 					</div>					
 				</div>	
-				
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+					<!-- input field -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-uncertainty" name="uncertainty">
-							<label for="input-uncertainty">Uncertainty <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide uncertainty.</div>
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty" name="uncertainty">
+							<label for="input-mascon-uncertainty">Uncertainty details</label>
+							<div class="invalid-feedback">Please provide uncertainty or choose "Not given".</div>
 						</div>
 					</div>
 				</div>
 
 				<!-- Scale Factor -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				  	<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-scale-factor" name="scale_factor" required>
-							<label for="input-scale-factor">Scale factor <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide scale factor.</div>
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-scale-factor-switch" name="mascon_scale_factor_switch">
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-scale-factor-switch">Scale Factor</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-scale-factor" aria-hidden="true"></i>
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-scale-factor" aria-hidden="true"></i>
 							</span>
 						</div>
-					</div>
+					</div>					
 				</div>
-			</div>
-			<div class="row mt-2">
-				<!-- Regularisation Method -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-regularisation-method" name="mascon_regularisation_method">
-							<label for="input-mascon-regularisation-method">Regularisation method</label>
-						</div>
-						<div class="input-group-append">
-							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-regularisation-method" aria-hidden="true"></i>
-							</span>
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-scale-factor" name="scale_factor">
+							<label for="input-mascon-scale-factor">Scale factor details</label>
+							<div class="invalid-feedback">Please provide scale factor or select "Not given".</div>
 						</div>
 					</div>
 				</div>
 				<!-- GAD -->
-				<div class="col-12 col-md-6 col-lg-4 p-1">
+				  	<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
-							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-gad" name="gad" required>
-							<label for="input-gad">GAD <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide GAD.</div>
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad-switch" name="mascon_gad_switch">
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-gad-switch">GAD</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
-								<i class="bi bi-question-circle-fill" data-help-section-id="help-gad" aria-hidden="true"></i>
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-gad" aria-hidden="true"></i>
 							</span>
+						</div>
+					</div>					
+				</div>
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad" name="mascon_gad">
+							<label for="input-mascon-gad">GAD <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide GAD.</div>
 						</div>
 					</div>
 				</div>
