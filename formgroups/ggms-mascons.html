@@ -188,5 +188,55 @@
 				</div>
 			</div>
 		</div>
+
+<!-- Background models -->
+		<div class="accordion p-2" id="accordion-mascon-background-models">
+			<div class="accordion-item">
+				<h2 class="accordion-header">
+				<button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-abstract"
+					aria-expanded="true" aria-controls="collapse-abstract" data-translate="descriptions.abstract">
+					Abstract
+				</button>
+				</h2>
+				<!-- Input field Abstract -->
+				<div id="collapse-abstract" class="accordion-collapse collapse show" data-bs-parent="#accordion-mascon-background-models">
+				<div class="accordion-body">
+					<label for="input-abstract" class="visually-hidden">
+						<span>Background force models</span>
+					</label>
+					<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-background-models" aria-hidden="true"></i>
+					<div class="input-group" id="mascon-background-model-input-group">
+
+					</div>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>
+<!-- reusable piece of a model -->
+			<div id="mascon-background-model" class="d-none" aria-hidden="true">	
+				<!-- Type of the background force model -->
+				<div class="form-floating">
+					<select class="form-control" id="input-background-force-model-type" name="background_force_model_type">
+						<option value="static_gravity_field">Static Gravity Field</option>
+						<option value="solid_earth_tides">Solid Earth Tides</option>
+						<option value="ocean_tides">Ocean Tides</option>
+						<option value="solid_pole_tide">Solid Pole Tide</option>
+						<option value="ocean_pole_tide">Ocean Pole Tide</option>
+						<option value="aod">AOD</option>
+						<option value="atmospheric_tides">Atmospheric Tides</option>
+						<option value="third_body_attractions">Third-Body attractions</option>
+						<option value="general_relativity">General relativity</option>
+						<option value="other">Other</option>
+					</select>
+					<label for="input-background-force-model-type">Background force model type</label>
+				</div>
+				<!-- Name of the background force model -->
+				<div class="form-floating">
+					<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-background-force-model" name="background_force_model">
+					<label for="input-background-force-model">Background force model name</label>
+					<div class="invalid-feedback">Please provide the name of the background force model.</div>
+				</div>
+				<!-- Remove button -->
+				<button type="button" class="btn btn-danger">Remove</button>
+			</div>

@@ -79,12 +79,27 @@ function toggleMasconVariable() {
 // initial toggle on page load:
 $('[id$="-switch"]').each(toggleMasconVariable);
 
+function populateAccordionWithMasconBackgroundModels() {
+	// Implementation for populating the accordion with MASCON background models goes here.
+	const reusableDiv = $('#mascon-background-model');
+	const listOfModels = reusableDiv.find('#input-background-force-model-type').find('option');
+	const accordionInputGroup = $('#mascon-background-model-input-group');
+	console.log(listOfModels);
+	listOfModels.each(function() {
+		const model = $(this);
+		const clonedDiv = reusableDiv.clone(true);
+		clonedDiv.find('#input-background-force-model-type').val(model.val());
+		visibilityON(clonedDiv);
+		accordionInputGroup.append(clonedDiv);
+	});
+}
+
 $(document).ready(function () {
 	const masconCard = $('#group-ggmsmascons').closest('.card');
 	if (!masconCard.length) {
 		return;
 	}
-
+	populateAccordionWithMasconBackgroundModels();
 	$(document).on('change', '#input-mathematical-representation', toggleMasconSpecificGroups);
 	$(document).on('icgem:form-populated', toggleMasconSpecificGroups);
 	$(document).on('change', '[id$="-switch"]', toggleMasconVariable);
