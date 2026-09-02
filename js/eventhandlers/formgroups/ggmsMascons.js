@@ -1,4 +1,4 @@
-import { visibilityOFF, visibilityON } from '../functions.js';
+import { visibilityOFF, visibilityON, createRemoveButton } from '../functions.js';
 
 /** Normalizes a lookup label for comparisons. */
 function normalizeValue(value) {
@@ -67,8 +67,7 @@ function toggleMasconSpecificGroups() {
 // Some of MASCON variables are shown-hidden based on the nearby variable
 // IDs in the HTML are written in the format "input-<variable>-switch" for the switches and "input-<variable>" for the corresponding input fields.
 function toggleMasconVariable() {
-	// identificator of the switch
-	const switchValue = $('#' + this.id).val();
+	const switchValue = String($(this).val() || '');
 	const inputField = this.id.replace(/-switch$/, '');
 	if (switchValue.toLowerCase() === 'given') {
 		visibilityON($('#' + inputField).closest('.col-12'));
@@ -76,21 +75,44 @@ function toggleMasconVariable() {
 		visibilityOFF($('#' + inputField).closest('.col-12'));
 	}
 }
-// initial toggle on page load:
-$('[id$="-switch"]').each(toggleMasconVariable);
 
-function populateAccordionWithMasconBackgroundModels() {
-	// Implementation for populating the accordion with MASCON background models goes here.
-	const reusableDiv = $('#mascon-background-model');
-	const listOfModels = reusableDiv.find('#input-background-force-model-type').find('option');
-	const accordionInputGroup = $('#mascon-background-model-input-group');
-	console.log(listOfModels);
-	listOfModels.each(function() {
-		const model = $(this);
-		const clonedDiv = reusableDiv.clone(true);
-		clonedDiv.find('#input-background-force-model-type').val(model.val());
-		visibilityON(clonedDiv);
-		accordionInputGroup.append(clonedDiv);
+/** Makes cloned background-model field ids unique and keeps labels in sync. */
+function uniquifyBackgroundModelIds($model, index) {
+	$model.find('[id]').each(function () {
+		const oldId = $(this).attr('id');
+		if (!oldId) {
+			return;
+		}
+		const newId = `${oldId}-${index}`;
+		$(this).attr('id', newId);
+		$model.find(`label[for="${oldId}"]`).attr('for', newId);
+	});
+}
+
+/**
+ * Two models share one accordion row (each is col-md-6).
+ * The first slot keeps +; extra slots get a remove button.
+ */
+function initMasconBackgroundModels() {
+	const list = $('#mascon-background-model-list');
+	if (!list.length) {
+		return;
+	}
+
+	const originalModel = list.children('[data-mascon-background-model]').first().clone();
+
+	list.on('click', '.addMasconBackgroundModel', function () {
+		const newModel = originalModel.clone();
+		newModel.find('input, select')
+			.val('')
+			.removeClass('is-invalid is-valid');
+		uniquifyBackgroundModelIds(newModel, list.children('[data-mascon-background-model]').length);
+		newModel.find('.addMasconBackgroundModel').replaceWith(createRemoveButton());
+		list.append(newModel);
+	});
+
+	list.on('click', '.removeButton', function () {
+		$(this).closest('[data-mascon-background-model]').remove();
 	});
 }
 
@@ -99,7 +121,8 @@ $(document).ready(function () {
 	if (!masconCard.length) {
 		return;
 	}
-	populateAccordionWithMasconBackgroundModels();
+	masconCard.find('[id$="-switch"]').each(toggleMasconVariable);
+	initMasconBackgroundModels();
 	$(document).on('change', '#input-mathematical-representation', toggleMasconSpecificGroups);
 	$(document).on('icgem:form-populated', toggleMasconSpecificGroups);
 	$(document).on('change', '[id$="-switch"]', toggleMasconVariable);
