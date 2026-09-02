@@ -1186,8 +1186,8 @@ include_once "../settings.php";
                 </div>
             </div>
             <?php endif; ?>
-            <!-- formgroup GGMs Properties -->
             <?php if ($showGGMsProperties ?? false): ?>
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1286,7 +1286,7 @@ include_once "../settings.php";
                 </div>
             </div>
 
-            <!-- formgroup GGMs Properties -->
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1460,6 +1460,7 @@ include_once "../settings.php";
                 </div>             
             </div>
             <hr>
+            <!-- [ELMOGEM] formgroup Characteristics of the model-->
             <div id="help-technical">
                 <h3>Characteristics of the model</h3>
                 <p>
@@ -1524,6 +1525,7 @@ include_once "../settings.php";
                     </p>
                 </div>
             </div>
+            <!-- [ELMOGEM] formgroup Model types-->
             <div id="help-no-model-type" class="help-section">
                 <h3>Model specific variables</h3>
                 <p>This section is dedicated to variables specific for each model type. Please choose a model type above to start input.</p>
@@ -1573,6 +1575,16 @@ include_once "../settings.php";
                     Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here.
                     What is more, the density information can be provided for crust and mantle separately.
                 </p>
+            </div>
+            <!-- [ELMOGEM] formgroup MASCON  -->
+            <div id="help-mascon-resolution" class="help-section d-none">
+                <h3> MASCON Resolution Help</h3>
+                <p> This input field is designed for Spatial resolution provided in degrees. We collect 2 types of MASCON resolution: native resolution and product resampled resolution.</p>
+                <ul>
+                    <li>Native resolution: The original resolution of the MASCON data in degrees.</li>
+                    <li>Product resolution: The resolution of the MASCON data presented in the file.</li>
+                </ul>
+                <p> For instance, if a MASCON has an irregular shape, the native resolution will reflect the original data's spatial resolution, while the product resolution will indicate the resolution after any resampling of the irregular shapes to fit into the file format.</p>
             </div>
         <?php endif; ?>
     </div>
