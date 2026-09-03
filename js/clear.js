@@ -176,7 +176,7 @@ function clearInputFields() {
     $firstDsRow.find('input[name="dName[]"]').val('');
     $firstDsRow.find('input[name="compensation_depth[]"]').val('');
 
-    // === GGMs Model Types (GGMsModelTypes.html) ===
+    // === GGMs Model Types (ggms-model-types.html) ===
     // Static
     // ggmsModelTypes.js registers this via native addEventListener, so we must
     // use dispatchEvent (not .trigger()) to reach it. dispatchEvent also fires
@@ -187,9 +187,9 @@ function clearInputFields() {
     // Temporal
     $('#input-temporal-start').val('');
     $('#input-temporal-end').val('');
-    $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
+    $('#select-release-frequency').prop('selectedIndex', 0).val('');
     // .trigger('change') fires the jQuery handler in ggmsModelTypes.js which
-    // hides #custom-frequency-container and re-enables #select-temporal-frequency-predef.
+    // hides #custom-frequency-container and re-enables #select-release-frequency.
     $('#checkbox-custom-frequency').prop('checked', false).trigger('change');
     $('#input-temporal-frequency').val('');
     $('#input-temporal-institution').val('');
@@ -238,7 +238,7 @@ const GGMS_SELECTORS = {
         staticDescription: '#input-static-description',
         temporalStart: '#input-temporal-start',
         temporalEnd: '#input-temporal-end',
-        temporalFreqPredef: '#select-temporal-frequency-predef',
+        releaseFrequency: '#select-release-frequency',
         customFreqCheckbox: '#checkbox-custom-frequency',
         temporalFrequency: '#input-temporal-frequency',
         temporalInstitution: '#input-temporal-institution',

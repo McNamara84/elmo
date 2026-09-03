@@ -439,7 +439,13 @@ class SubmitHandler {
         }
 
         const submitData = new FormData(this.$form[0]);
-        submitData.set('authorsPayload', JSON.stringify(authorsPayload));
+        const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
+        if (authorsPayloadInput) {
+            submitData.set('authorsPayload', authorsPayloadInput.value);
+        }
+        if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
+            window.ggmsExperimentalPayload.appendPayloadsToFormData(submitData);
+        }
 
         // Ensure the form-level CSRF token is present.
         const csrfToken = await fetchAndStoreCsrfToken('form');

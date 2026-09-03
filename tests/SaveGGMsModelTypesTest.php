@@ -207,7 +207,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $postData = [
             'temporalStart' => '2016-01-01',
             'temporalEnd' => '2024-12-31',
-            'temporalFrequencyPredef' => 'monthly',
+            'releaseFrequency' => 'monthly',
             'temporalInstitution' => 'GFZ Potsdam'
         ];
 
@@ -226,6 +226,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->assertEquals('2016-01-01', $record['start_date']);
         $this->assertEquals('2024-12-31', $record['end_date']);
         $this->assertEquals(30, $record['temporal_resolution_days']);
+        $this->assertEquals('monthly', $record['release_frequency']);
         $this->assertEquals('GFZ Potsdam', $record['generating_institution']);
 
         // Verify linking
@@ -275,7 +276,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $postData = [
             'temporalStart' => '2020-01-01',
             'temporalEnd' => '2025-01-01',
-            'temporalFrequencyPredef' => $frequency,
+            'releaseFrequency' => $frequency,
             'temporalInstitution' => null
         ];
 
@@ -516,7 +517,7 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $postData = [
             'temporalStart' => '2010-01-01',
             'temporalEnd' => '2024-12-31',
-            'temporalFrequencyPredef' => 'monthly',
+            'releaseFrequency' => 'monthly',
             'temporalInstitution' => 'JPL'
         ];
 
