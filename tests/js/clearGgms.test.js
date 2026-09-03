@@ -538,6 +538,12 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             expect($('#select-release-frequency').prop('disabled')).toBe(false);
         });
 
+        test('#select-release-frequency value is empty after clear', () => {
+            expect($('#select-release-frequency').val()).toBe('monthly');
+            clearModule.clearInputFields();
+            expect($('#select-release-frequency').val()).toBe('');
+        });
+
         test('#separate-density-container is hidden and single-density shown after clear', () => {
             // Pre-condition: separate density checkbox checked
             $('#checkbox-separate-density').prop('checked', true).trigger('change');
