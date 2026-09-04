@@ -2,6 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const { transformThesauriScript } = require('./utils');
 
+const THESAURI_SOURCE_PATH = path.resolve(__dirname, '../../js/thesauri.js');
+
+describe('thesauri.js module source', () => {
+  test('does not export the same binding twice', () => {
+    // Duplicate `export function` is a SyntaxError in ESM. Jest eval strips
+    // `export`, so sloppy function re-declarations would hide it — and
+    // ggmsDatasources.js importing this module would then take down buttons.js
+    // (empty #input-model-type, no GGM handlers).
+    const source = fs.readFileSync(THESAURI_SOURCE_PATH, 'utf8');
+    const exported = [...source.matchAll(/\bexport (?:async )?function (\w+)/g)].map((m) => m[1]);
+    const duplicates = exported.filter((name, index) => exported.indexOf(name) !== index);
+    expect(duplicates).toEqual([]);
+  });
+});
+
 class MockTagify {
   constructor(el, settings) {
     this.el = el;
