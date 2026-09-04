@@ -17,6 +17,14 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     await expect(mslInput).toHaveCount(1);
     await expect(mslInput).toHaveValue('');
 
+    // Tagify exists only after initMslKeywords binds the modal lazy-load
+    // listener. Clicking before that misses show.bs.modal ({ once: true })
+    // and leaves the empty jstree divs hidden.
+    await page.waitForFunction(
+      () => Boolean((document.querySelector('#input-mslkeyword') as { _tagify?: unknown } | null)?._tagify),
+      { timeout: 15_000 },
+    );
+
     // Click thesaurus button to open modal
     await thesaurusButton.click();
 
@@ -26,9 +34,10 @@ test.describe("EPOS Multi-Scale Laboratories Keywords (MSL)", () => {
     // Check modal title
     await expect(modal.locator('.modal-title')).toContainText('EPOS Multi-Scale Laboratories Keywords');
 
-    // Ensure both trees (general + domain) are visible
-    await expect(modal.locator('#jstree-mslkeyword-general')).toBeVisible();
-    await expect(modal.locator('#jstree-mslkeyword-domain')).toBeVisible();
+    // Empty jstree containers have zero height (Playwright: hidden) until
+    // the local MSL vocab JSON is fetched and the trees are built.
+    await expect(modal.locator('#jstree-mslkeyword-general .jstree-container-ul')).toBeVisible({ timeout: 15_000 });
+    await expect(modal.locator('#jstree-mslkeyword-domain .jstree-container-ul')).toBeVisible({ timeout: 15_000 });
 
     // Ensure search input is visible
     await expect(modal.locator('#input-mslkeyword-thesaurussearch')).toBeVisible();
