@@ -711,7 +711,7 @@ function populateIcgemDescriptions(data) {
  * (definition, properties, model types, data sources, descriptions).
  * @param {Document} xmlDoc
  */
-function loadIcgemXmlToForm(xmlDoc) {
+async function loadIcgemXmlToForm(xmlDoc) {
   const data = parseIcgemXml(xmlDoc);
   if (!data) {
     console.error('loadIcgemXmlToForm: failed to locate ICGEM root node in XML document');
@@ -734,7 +734,7 @@ function loadIcgemXmlToForm(xmlDoc) {
       }
       return null;
     }
-    window.processKeywords(xmlDoc, dataciteResolver);
+    await window.processKeywords(xmlDoc, dataciteResolver);
   }
 }
 

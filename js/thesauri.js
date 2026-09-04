@@ -236,12 +236,115 @@ function loadThesaurusOnDemand(config) {
  * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
  */
 export function ensureThesaurusLoaded(configKeyOrConfig) {
-    const config = typeof configKeyOrConfig === 'string'
-        ? (ensureConfigRegistered(configKeyOrConfig) || THESAURUS_CONFIG[configKeyOrConfig])
-        : configKeyOrConfig;
+    const config = resolveThesaurusConfig(configKeyOrConfig);
     if (config) {
         loadThesaurusOnDemand(config);
     }
+}
+
+const THESAURUS_VOCAB_WAIT_MS = 15000;
+
+/**
+ * Live keywordConfigurations entry for a THESAURUS_CONFIG key, if the UI
+ * has already registered one. That copy has `#` selectors and any GGM
+ * rootNodes applied at init; the static THESAURUS_CONFIG row does not.
+ */
+function resolveThesaurusConfig(keyOrConfig) {
+    if (!keyOrConfig) return null;
+    if (typeof keyOrConfig !== 'string') return keyOrConfig;
+
+    const registered = keywordConfigurations.find(function (entry) {
+        return entry.key === keyOrConfig || entry.stateKey === keyOrConfig;
+    });
+    if (registered) return registered;
+
+    return ensureConfigRegistered(keyOrConfig) || THESAURUS_CONFIG[keyOrConfig] || null;
+}
+
+/**
+ * Loads a thesaurus vocabulary if needed and resolves when that fetch finishes.
+ *
+ * XML import must not call Tagify addTags while the whitelist is still in
+ * flight: enforceWhitelist flipping true mid-loop drops GCMD subjects that
+ * later land in dace:subjects. A failed/empty ERNIE response still resolves
+ * so previously saved keywords can be imported with enforceWhitelist off.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ * @param {number} [timeoutMs]
+ * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>}
+ */
+export function waitForThesaurusVocabulary(configKeyOrConfig, timeoutMs) {
+    timeoutMs = typeof timeoutMs === 'number' ? timeoutMs : THESAURUS_VOCAB_WAIT_MS;
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (!config || !config.apiEndpoint) {
+        return Promise.resolve('missing');
+    }
+
+    loadThesaurusOnDemand(config);
+
+    return new Promise(function (resolve) {
+        const started = Date.now();
+        function poll() {
+            const state = loadedConfigs.get(config.jsTreeId);
+            if (state === 'loaded' || state === 'error') {
+                resolve(state);
+                return;
+            }
+            if (Date.now() - started >= timeoutMs) {
+                resolve('timeout');
+                return;
+            }
+            setTimeout(poll, 50);
+        }
+        poll();
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
+}
+
+/**
+ * Loads a thesaurus vocabulary if needed and resolves when that fetch finishes.
+ *
+ * XML import must not call Tagify addTags while the whitelist is still in
+ * flight: enforceWhitelist flipping true mid-loop drops GCMD subjects that
+ * later land in dace:subjects. A failed/empty ERNIE response still resolves
+ * so previously saved keywords can be imported with enforceWhitelist off.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ * @param {number} [timeoutMs]
+ * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>}
+ */
+export function waitForThesaurusVocabulary(configKeyOrConfig, timeoutMs) {
+    timeoutMs = typeof timeoutMs === 'number' ? timeoutMs : THESAURUS_VOCAB_WAIT_MS;
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (!config || !config.apiEndpoint) {
+        return Promise.resolve('missing');
+    }
+
+    loadThesaurusOnDemand(config);
+
+    return new Promise(function (resolve) {
+        const started = Date.now();
+        function poll() {
+            const state = loadedConfigs.get(config.jsTreeId);
+            if (state === 'loaded' || state === 'error') {
+                resolve(state);
+                return;
+            }
+            if (Date.now() - started >= timeoutMs) {
+                resolve('timeout');
+                return;
+            }
+            setTimeout(poll, 50);
+        }
+        poll();
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
 }
 
 /**
@@ -532,6 +635,7 @@ function ensureConfigRegistered(configKey) {
     if (existing) return existing;
 
     const registeredConfig = {
+        key: configKey,
         apiEndpoint: config.apiEndpoint,
         rootNodeId: config.rootNodeId,
         initialOpenNodeTexts: config.initialOpenNodeTexts,
@@ -980,6 +1084,7 @@ $(document).ready(function () {
                         : undefined;
 
                     const entry = {
+                        key: item.key,
                         inputId: '#' + config.inputId,
                         apiEndpoint: config.apiEndpoint,
                         jsTreeId: '#' + config.jsTreeId,
