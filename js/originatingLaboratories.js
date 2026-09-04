@@ -85,9 +85,9 @@ $(document).ready(function () {
             const lab = labData.find((item) => item.display_name === selectedDisplayName );
 
             if (lab) {
-                row.find('input[name="LabId[]"]').val(lab.id || '');
-                row.find('input[name="laboratoryAffiliation[]"]').val(lab.affiliation || '');
-                row.find('input[name="laboratoryRorIds[]"]').val(lab.rorid || '');
+                row.find('input[name="LabId[]"]').val(lab.identifier || '');
+                row.find('input[name="laboratoryAffiliation[]"]').val(lab.affiliation_name || '');
+                row.find('input[name="laboratoryRorIds[]"]').val(lab.affiliation_ror || '');
             } else {
                 row.find('input[name="LabId[]"]').val('');
                 row.find('input[name="laboratoryAffiliation[]"]').val('');
@@ -152,9 +152,15 @@ $(document).ready(function () {
     });
 
     if ($("#group-originatinglaboratory").length) {
-        $.getJSON("json/msl-labs.json", function (data) {
-            labData = data;
-            populateAllLabSelectOptions(data);
+        $.getJSON("/api/v2/vocabs/msl-laboratories", function (originatingLaboratories) {
+            labData = originatingLaboratories.data;
+            populateAllLabSelectOptions(labData);
+        }).fail(function (jqXHR) {
+            console.error(
+                'Failed to load MSL laboratories:',
+                jqXHR.status,
+                jqXHR.responseText
+            );
         });
     }
 });
