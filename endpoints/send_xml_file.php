@@ -358,12 +358,16 @@ try {
     // Step 1: Save transaction structures
     try {
         $resource_id = saveALL($_POST);
-    } catch (Exception $e) {
+    } catch (\Throwable $e) {
+        // This file aliases Exception to PHPMailer's class; save-layer errors are \Exception.
         error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
         http_response_code(500);
         ob_clean();
         header('Content-Type: application/json');
-        echo json_encode(['success' => false, 'message' => 'Save operation failed.']);
+        echo json_encode([
+            'success' => false,
+            'message' => 'Save operation failed: ' . $e->getMessage(),
+        ]);
         return;
     }
 
@@ -696,14 +700,14 @@ try {
         'researcher_warnings' => $researcherWarnings,
     ]);
 
-} catch (Throwable $e) {
+} catch (\Throwable $e) {
     error_log("send_xml_file.php: Unexpected execution error: " . $e->getMessage());
     http_response_code(500);
     ob_clean();
     header('Content-Type: application/json');
     echo json_encode([
         'success' => false,
-        'message' => 'Unexpected submission error.',
+        'message' => 'Unexpected submission error: ' . $e->getMessage(),
         'resource_id' => $resource_id,
     ]);
 }

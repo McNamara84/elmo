@@ -643,8 +643,6 @@ describe('submitHandler.js', () => {
     });
   });
 
-  // ── handleSubmit validation-failed modal integration test ──────────
-
   test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
     // Add a required field that is empty so :invalid selector finds it
     const reqInput = document.createElement('input');

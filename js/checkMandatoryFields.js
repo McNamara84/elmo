@@ -137,7 +137,9 @@ function escapeStcLabelSelector(value) {
         return $.escapeSelector(value);
     }
 
-    return String(value).replace(/\\/g, '\\\\').replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
+    return String(value)
+        .replace(/\\/g, '\\\\')
+        .replace(/([ #;?%&,.+*~\':"!^$[\]()=>|\/@])/g, '\\$1');
 }
 
 /**

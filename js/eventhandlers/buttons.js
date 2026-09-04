@@ -137,11 +137,25 @@ $(document).ready(function () {
   if (form) {
     const $form = $(form);
 
+    // Only real form controls — Tagify copies js-required-on-submit onto <tags>, which must not get required.
+    const submitOnlyFieldSelector = 'input.js-required-on-submit, select.js-required-on-submit, textarea.js-required-on-submit';
+
     // Reset submit-only required fields
     function resetSubmitOnlyFields() {
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
+      });
+    }
+
+    /** Applies required only to enabled js-required-on-submit fields (skips hidden/disabled rows). */
+    function applySubmitRequiredFields() {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
+        if (el.disabled) {
+          el.removeAttribute('required');
+          return;
+        }
+        el.setAttribute('required', 'required');
       });
     }
 
@@ -162,9 +176,7 @@ $(document).ready(function () {
       validateContributorPersonRequirements();
   
 
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
-        el.setAttribute('required', 'required');
-      });
+      applySubmitRequiredFields();
 
       // Validation is handled by submitHandler.handleSubmit() in validation.js.
       // The form has novalidate, so no native browser validation occurs.
