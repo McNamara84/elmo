@@ -1,3 +1,8 @@
+# This is file is for testing only
+# It allows to reproduce the stage configuration locally (copy the stage)
+# For routine development work use docker-compose.yml
+# These containers need rebuild to reflect the code changes 
+
 services:
   db:
     image: mariadb:11
@@ -16,12 +21,6 @@ services:
       retries: 5
       start_period: 30s
     restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
-      start_period: 10s
-      interval: 10s
-      timeout: 5s
-      retries: 3
     networks:
       - internal
 
@@ -63,7 +62,7 @@ services:
       DB_INIT_MODE: drop_data
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
-      SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
+      SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
@@ -75,15 +74,6 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo`)"
-      - "traefik.http.routers.elmo-router.entrypoints=https"
-      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
-      - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
-      - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"
     volumes:
       # Shared API responses cache: all variants see the same cached responses.
       # Ownership/mode come from the image (copied into a new named volume).
@@ -139,15 +129,6 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-msl-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-msl`)"
-      - "traefik.http.routers.elmo-msl-router.entrypoints=https"
-      - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
-      - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
-      - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"
     volumes:
       - api_cache_volume:/var/www/html/storage/cache
       - web_msl_drafts:/var/www/html/storage/drafts
@@ -202,15 +183,6 @@ services:
     restart: unless-stopped
     networks:
       - internal
-      - frontend
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.elmo-igsn-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-igsn`)"
-      - "traefik.http.routers.elmo-igsn-router.entrypoints=https"
-      - "traefik.http.routers.elmo-igsn-router.middlewares=elmo-igsn-stripprefix"
-      - "traefik.http.middlewares.elmo-igsn-stripprefix.stripprefix.prefixes=/elmo-igsn"
-      - "traefik.http.services.elmo-igsn-service.loadbalancer.server.port=80"
-      - "traefik.docker.network=traefik"
     volumes:
       - api_cache_volume:/var/www/html/storage/cache
       - web_igsn_drafts:/var/www/html/storage/drafts
@@ -225,6 +197,3 @@ volumes:
 networks:
   internal:
     driver: bridge
-  frontend:
-    external:
-      name: traefik
