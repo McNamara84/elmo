@@ -580,10 +580,10 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
 
 /**
  * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
- * available. CI's GEM job does not always have ERNIE, so stub the availability
- * payload before the homepage loads. Vocabulary trees stay unstubbed: import
- * waits for the real fetch (or its failure) and then addTags, matching a
- * session without ERNIE rather than inventing whitelist entries.
+ * available. CI's GEM job does not have ERNIE, so stub availability as true
+ * (inputs exist) and vocab fetches as 503 (import waits, then addTags with
+ * enforceWhitelist off). That matches a session without ERNIE instead of
+ * inventing whitelist entries.
  */
 async function stubThesaurusAvailability(page: Page): Promise<void> {
   await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
@@ -599,20 +599,19 @@ async function stubThesaurusAvailability(page: Page): Promise<void> {
       }),
     });
   });
-  // GitHub CI has no ERNIE. Stub the lazy vocab fetches as unavailable so
-  // import waits on a fast 503 instead of a hanging PHP proxy, then addTags
-  // with enforceWhitelist off — the same path as a real session without ERNIE.
-  if (process.env.CI) {
-    const unavailable = {
-      status: 503,
-      contentType: 'application/json',
-      body: JSON.stringify({ error: 'Thesaurus vocabulary currently unavailable' }),
-    };
-    for (const slug of ['gcmd-science-keywords', 'gcmd-platforms', 'gcmd-instruments']) {
-      await page.route(`**/api/v2/vocabs/thesauri/${slug}`, async (route) => {
-        await route.fulfill(unavailable);
-      });
-    }
+  // No ERNIE in GitHub CI (and often none in Docker). Stub the lazy vocab
+  // fetches as unavailable so import waits on a fast 503 instead of a hanging
+  // PHP proxy, then addTags with enforceWhitelist off — the same path as a
+  // real session without ERNIE. Always stub here so local and CI match.
+  const unavailable = {
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ error: 'Thesaurus vocabulary currently unavailable' }),
+  };
+  for (const slug of ['gcmd-science-keywords', 'gcmd-platforms', 'gcmd-instruments']) {
+    await page.route(`**/api/v2/vocabs/thesauri/${slug}`, async (route) => {
+      await route.fulfill(unavailable);
+    });
   }
 }
 
@@ -655,16 +654,20 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
   await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
   await page.locator('#input-uploadxml-file').setInputFiles(xmlPath);
 
-  // The mapping is asynchronous; the model name is the last-ish ICGEM field set
+  // Model name is written at the start of loadIcgemXmlToForm. The upload
+  // spinner stays up until loadXmlToForm returns, which is after keywords
+  // and data sources are fully applied. Saving earlier persists whatever
+  // happens to be in the POST at that moment (often satellite subjects only).
   await page.waitForFunction(
-    () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
+    () => {
+      const modelName = document.querySelector<HTMLInputElement>('#input-model-name')?.value;
+      const spinner = document.getElementById('upload-spinner-overlay');
+      return Boolean(modelName) && Boolean(spinner?.classList.contains('d-none'));
+    },
     { timeout: 30_000 },
   );
 
-  // Model name is written at the start of loadIcgemXmlToForm, before the
-  // second processKeywords pass and before lazy GCMD vocabularies settle.
-  // Save would persist satellite subjects only. Wait until every imported
-  // subject is on a Tagify instance.
+  // Wait until every imported subject is on a Tagify instance.
   for (const subject of expectedSubjects) {
     await expect
       .poll(() => findTagifyTag(page, subject), {
