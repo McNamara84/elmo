@@ -17,7 +17,7 @@ const {
   getGgmsCoverageSelectorIds,
 } = require('../helpers/ggmsFormFields.cjs');
 
-const ROUNDTRIP_SPEC = 'tests/playwright/flows/icgem-roundtrip.spec.ts';
+const ROUNDTRIP_SPEC = 'tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts';
 
 describe('GGM HTML ↔ Playwright field coverage metatest', () => {
   const htmlIds = getGgmsHtmlFieldIds();

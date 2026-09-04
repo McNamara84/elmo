@@ -461,7 +461,7 @@ export { exampleData };
  * that inactive branches are left holding stale values. That is the state
  * clearInputFields() has to survive, and no single reference XML can express it.
  *
- * Field coverage itself is owned by tests/playwright/flows/icgem-roundtrip.spec.ts.
+ * Field coverage itself is owned by tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts.
  */
 export async function fillGEM(page: Page) {
   const DS_ROW = '#group-datasources .row[data-source-row]';

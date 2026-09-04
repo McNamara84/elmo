@@ -65,14 +65,14 @@
  */
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { navigateToHome, waitForFormInteractionReady } from '../utils';
+import { navigateToHome, waitForFormInteractionReady } from '../../utils';
 import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
 // ─── Test cases ────────────────────────────────────────────────────────────────
 //
-// Drop a new .xml file into outputDataReference/testDataIcgemRoundtrip/ and it
+// Drop a new .xml file into testDataIcgemRoundtrip/ and it
 // will be picked up automatically — no code changes needed.
 
 interface IcgemTestCase {
@@ -82,7 +82,7 @@ interface IcgemTestCase {
   referenceXmlPath: string;
 }
 
-const ICGEM_ROUNDTRIP_DIR = path.join(__dirname, './outputDataReference/testDataIcgemRoundtrip');
+const ICGEM_ROUNDTRIP_DIR = path.join(__dirname, './testDataIcgemRoundtrip');
 
 // Automatically discover every .xml file in the roundtrip folder.
 // Drop a new file there and it will be picked up without any code change.

@@ -11,13 +11,13 @@ import { defineConfig, devices } from '@playwright/test';
  *
  * Parallelism is capped at two workers: the whole variant is served by one
  * single-threaded PHP dev server, and the save/download steps in
- * flows/icgem-roundtrip.spec.ts queue behind each other past the test timeout
+ * flows/elmogem-specific/icgem-roundtrip.spec.ts queue behind each other past the test timeout
  * when more workers compete for it. CI applies the same cap.
  *
  * TEST SCOPE:
  *   features, flows (excl. minimal-data-submission, contact-person-roundtrip,
  *   save-optional-formgroups), shared formgroups (excl. spatial-temporal-coverages,
- *   resource-type-ernie), elmogem-specific.
+ *   resource-type-ernie), formgroups/elmogem-specific, flows/elmogem-specific.
  *   Individual tests that require ERNIE or generic-only flows are excluded via grepInvert.
  */
 

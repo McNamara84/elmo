@@ -1776,7 +1776,7 @@ npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated Geo
 npx playwright test tests/playwright/formgroups/authors.spec.ts
 
 # Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
-npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
+npx playwright test tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
 
 # Run a single test by title
 npx playwright test -g "populates author details"

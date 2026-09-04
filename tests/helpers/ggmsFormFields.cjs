@@ -25,8 +25,8 @@ const GGM_FORMGROUP_FILES = [
  * the same fields and so must not drift either.
  */
 const GGM_COVERAGE_SPEC_FILES = [
-  'tests/playwright/flows/icgem-roundtrip.spec.ts',
-  'tests/playwright/formgroups/elmogem-specific/elmogem-clear.spec.ts',
+  'tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts',
+  'tests/playwright/flows/elmogem-specific/elmogem-clear.spec.ts',
 ];
 
 /**

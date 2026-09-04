@@ -20,6 +20,8 @@ playwright/.cache/
 debug-page.png
 tests/playwright/flows/outputDataActual/*
 !tests/playwright/flows/outputDataActual/.gitkeep
+tests/playwright/flows/elmogem-specific/outputDataActual/*
+!tests/playwright/flows/elmogem-specific/outputDataActual/.gitkeep
 
 # Autosave files
 storage/drafts/
