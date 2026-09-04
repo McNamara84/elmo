@@ -12,7 +12,7 @@ const REPO_ROOT = path.resolve(__dirname, '../..');
 
 const GGM_FORMGROUP_FILES = [
   'formgroups/GGMsDefinition.html',
-  'formgroups/GGMsProperties.html',
+  'formgroups/ggms-properties.html',
   'formgroups/GGMsModelTypes.html',
   'formgroups/GGMsDescriptions.html',
 ];
