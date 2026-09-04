@@ -383,20 +383,22 @@ class ErnieService
 
     /**
      * Writes data to a cache file
-     * 
+     *
+     * The cache directory is created in the image, not at runtime. Writes to a
+     * temp file and replaces the destination so an expired cache can be
+     * refreshed even if the existing file itself is not writable.
+     *
      * @param string $cacheFilePath Path to the cache file
      * @param array<mixed> $data Data to cache
      * @return bool True if cache was written successfully
      */
-    private function writeCacheFile(string $cacheFilePath, array $data): bool
+    protected function writeCacheFile(string $cacheFilePath, array $data): bool
     {
         $cacheDir = dirname($cacheFilePath);
 
-        if (!is_dir($cacheDir)) {
-            if (!mkdir($cacheDir, 0755, true)) {
-                error_log("ERNIE: Failed to create cache directory: $cacheDir");
-                return false;
-            }
+        if (!is_dir($cacheDir) || !is_writable($cacheDir)) {
+            error_log("ERNIE: Cache directory is missing or not writable: $cacheDir");
+            return false;
         }
 
         $cache = [
@@ -406,14 +408,26 @@ class ErnieService
             'data' => $data
         ];
 
-        $result = file_put_contents(
-            $cacheFilePath,
-            json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
-        );
+        $payload = json_encode($cache, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+        $tempFile = $cacheFilePath . '.tmp.' . getmypid() . '.' . bin2hex(random_bytes(4));
 
+        $result = @file_put_contents($tempFile, $payload, LOCK_EX);
         if ($result === false) {
-            error_log("ERNIE: Failed to write cache file: $cacheFilePath");
+            $reason = error_get_last()['message'] ?? 'unknown error';
+            error_log("ERNIE: Failed to write cache file: $cacheFilePath ($reason)");
             return false;
+        }
+
+        @chmod($tempFile, 0664);
+
+        if (!@rename($tempFile, $cacheFilePath)) {
+            @unlink($cacheFilePath);
+            if (!@rename($tempFile, $cacheFilePath)) {
+                @unlink($tempFile);
+                $reason = error_get_last()['message'] ?? 'unknown error';
+                error_log("ERNIE: Failed to write cache file: $cacheFilePath ($reason)");
+                return false;
+            }
         }
 
         return true;
@@ -473,16 +487,24 @@ class ErnieService
      * Gets data from ERNIE with full cache fallback chain
      *
      * Priority:
-     * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
-     * 3. Stale cache (if ERNIE unavailable)
-     * 4. Hardcoded fallback as last resort
+     * 1. Valid cache file (not expired) — return it, do not call ERNIE
+     * 2. Fresh data from ERNIE — write the cache file, then run $onFreshData
+     * 3. Stale cache (ERNIE unavailable) — return expired file, no $onFreshData
+     * 4. Hardcoded fallback — last resort, no $onFreshData
+     *
+     * $onFreshData is the hook for side effects such as syncing MariaDB.
+     * ErnieService never talks to the database; the caller (usually VocabController)
+     * passes a closure that runs only on path 2. A cache hit therefore does not
+     * rewrite the DB. Omit the argument (null) when no side effect is needed.
+     *
+     * This runs on the HTTP request that needs the vocab (e.g. GET /vocabs/relations),
+     * not at container start.
      *
      * @param string $endpoint The API endpoint path
      * @param string $label Human-readable label for logging
      * @param string $cacheFile Path to the cache file
      * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
-     * @param (callable(array<mixed>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE (not on cache hit)
+     * @param (callable(array<mixed>): void)|null $onFreshData Invoked only after a successful live ERNIE fetch and cache write. Not called on cache hit, stale cache, or hardcoded fallback.
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
     private function getDataWithCache(
@@ -498,11 +520,12 @@ class ErnieService
                 return $cachedData;
             }
         }
-
+        // If cache is not valid or empty, proceed to fetch fresh data from ERNIE
         $ernieData = $this->fetchFromErnie($endpoint, $label);
         if ($ernieData !== null && !empty($ernieData)) {
             $this->writeCacheFile($cacheFile, $ernieData);
             if ($onFreshData !== null) {
+                // trigger the onFreshData callback with the newly fetched data
                 $onFreshData($ernieData);
             }
             return $ernieData;
@@ -554,19 +577,30 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Dataset, Other) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null}> Resource types from cache or ERNIE
      */
-    public function getResourceTypesWithCache(): array
+    public function getResourceTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Resource types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Resource types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Resource types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/resource-types/elmo',
             'resource types',
             $this->getCacheFile(),
-            [$this, 'getHardcodedResourceTypeFallback']
+            [$this, 'getHardcodedResourceTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -655,17 +689,29 @@ class ErnieService
 
     /**
      * Gets description types with caching logic
-     * 
+     *
+     * File cache only — description types are not persisted to MariaDB, so this
+     * getter does not accept onFreshData.
+     *
      * Priority:
      * 1. Valid cache (not expired)
      * 2. Fresh data from ERNIE
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Abstract, Methods, TechnicalInfo, Other) as last resort
-     * 
+     *
      * @return array<mixed> Description types from cache or ERNIE
      */
     public function getDescriptionTypesWithCache(): array
     {
+        $fileStatus = $this->getDescriptionTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Description types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Description types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Description types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/description-types/elmo',
             'description types',
@@ -751,19 +797,30 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (Main Title, Alternative Title, Translated Title) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, slug: string}> Title types from cache or ERNIE
      */
-    public function getTitleTypesWithCache(): array
+    public function getTitleTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getTitleTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Title types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Title types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Title types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/title-types/elmo',
             'title types',
             $this->getTitleTypesCacheFile(),
-            [$this, 'getHardcodedTitleTypeFallback']
+            [$this, 'getHardcodedTitleTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -839,19 +896,30 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (English, German) as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, code: string}> Languages from cache or ERNIE
      */
-    public function getLanguagesWithCache(): array
+    public function getLanguagesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getLanguagesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Languages] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Languages] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Languages] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/languages/elmo',
             'languages',
             $this->getLanguagesCacheFile(),
-            [$this, 'getHardcodedLanguageFallback']
+            [$this, 'getHardcodedLanguageFallback'],
+            $onFreshData
         );
     }
 
@@ -954,6 +1022,15 @@ class ErnieService
      */
     public function getPid4instInstrumentsWithCache(): array
     {
+        $fileStatus = $this->getPid4instCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | PID4INST instruments] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | PID4INST instruments] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | PID4INST instruments] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/vocabularies/pid4inst-instruments',
             'PID4INST instruments',
@@ -1009,11 +1086,20 @@ class ErnieService
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
-     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string}> Contributor person roles from cache or ERNIE
      */
     public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getContributorPersonRolesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Contributor person roles] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Contributor person roles] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Contributor person roles] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-persons/elmo',
             'contributor person roles',
@@ -1100,11 +1186,20 @@ class ErnieService
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
      * 
-     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Optional callback invoked only when fresh data is fetched from ERNIE
+     * @param (callable(array<array{id: int, name: string}>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string}> Contributor institution roles from cache or ERNIE
      */
     public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getContributorInstitutionRolesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Contributor institution roles] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Contributor institution roles] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Contributor institution roles] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/roles/contributor-institutions/elmo',
             'contributor institution roles',
@@ -1201,19 +1296,32 @@ class ErnieService
 
     /**
      * Gets thesauri availability with caching logic
-     * 
+     *
+     * File cache only — availability is not persisted to MariaDB, so this
+     * getter does not accept onFreshData. Cannot use generic getDataWithCache()
+     * because fetchThesauriAvailability() has custom dual-endpoint logic.
+     *
      * Priority:
      * 1. Valid cache (not expired)
      * 2. Fresh data from ERNIE (ELMO-specific, then public fallback)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (only 3 GCMD thesauri) as last resort
-     * 
+     *
      * @return array<string, array{available: bool, displayName: string}> Availability data
      */
     public function getThesauriAvailabilityWithCache(): array
     {
         // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
         $cacheFile = $this->getThesauriAvailabilityCacheFile();
+
+        $fileStatus = $this->getThesauriAvailabilityCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Thesauri availability] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Thesauri availability] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Thesauri availability] cache file is present and up-to-date. Using cached data');
+        }
 
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
@@ -1326,6 +1434,15 @@ class ErnieService
             return [];
         }
 
+        $fileStatus = $this->getThesaurusVocabularyCacheStatus($slug);
+        if (!$fileStatus['exists']) {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is not available. Fetching new from ERNIE");
+        } else if (!$fileStatus['valid']) {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is outdated. Fetching new from ERNIE");
+        } else {
+            error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is present and up-to-date. Using cached data");
+        }
+
         return $this->getDataWithCache(
             "/api/v1/vocabularies/$slug",
             "thesaurus vocabulary ($slug)",
@@ -1397,19 +1514,30 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null}> Relation types from cache or ERNIE
      */
-    public function getRelationTypesWithCache(): array
+    public function getRelationTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getRelationTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Relation types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Relation types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Relation types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/relation-types/elmo',
             'relation types',
             $this->getRelationTypesCacheFile(),
-            [$this, 'getHardcodedRelationTypeFallback']
+            [$this, 'getHardcodedRelationTypeFallback'],
+            $onFreshData
         );
     }
 
@@ -1474,19 +1602,30 @@ class ErnieService
      * 
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE
+     * 2. Fresh data from ERNIE (then $onFreshData, if provided)
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback as last resort
-     * 
+     *
+     * @param (callable(array<mixed>): void)|null $onFreshData Side-effect hook (typically DB sync). Runs only after a live ERNIE fetch and cache write, never on cache hit. See getDataWithCache().
      * @return array<array{id: int, name: string, description: string|null, pattern: string|null}> Identifier types from cache or ERNIE
      */
-    public function getIdentifierTypesWithCache(): array
+    public function getIdentifierTypesWithCache(?callable $onFreshData = null): array
     {
+        $fileStatus = $this->getIdentifierTypesCacheStatus();
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | Identifier types] cache file is not available. Fetching new from ERNIE');
+        } else if (!$fileStatus['valid']) {
+            error_log('[ERNIE service | Identifier types] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | Identifier types] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/identifier-types/elmo',
             'identifier types',
             $this->getIdentifierTypesCacheFile(),
-            [$this, 'getHardcodedIdentifierTypeFallback']
+            [$this, 'getHardcodedIdentifierTypeFallback'],
+            $onFreshData
         );
     }
 

@@ -79,6 +79,8 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM (open beta testing)"
+    depends_on:
+      - db
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pgrep apache2 > /dev/null || exit 1"]
@@ -94,11 +96,6 @@ services:
       - storage_data:/var/www/html/storage
     security_opt:
       - no-new-privileges:true
-
-  curl:
-    image: curlimages/curl:latest
-    network_mode: host
-    entrypoint: ["sleep", "infinity"]
 
 volumes:
   xml_data:
