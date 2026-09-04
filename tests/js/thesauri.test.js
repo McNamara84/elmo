@@ -2,6 +2,21 @@ const fs = require('fs');
 const path = require('path');
 const { transformThesauriScript } = require('./utils');
 
+const THESAURI_SOURCE_PATH = path.resolve(__dirname, '../../js/thesauri.js');
+
+describe('thesauri.js module source', () => {
+  test('does not export the same binding twice', () => {
+    // Duplicate `export function` is a SyntaxError in ESM. Jest eval strips
+    // `export`, so sloppy function re-declarations would hide it — and
+    // ggmsDatasources.js importing this module would then take down buttons.js
+    // (empty #input-model-type, no GGM handlers).
+    const source = fs.readFileSync(THESAURI_SOURCE_PATH, 'utf8');
+    const exported = [...source.matchAll(/\bexport (?:async )?function (\w+)/g)].map((m) => m[1]);
+    const duplicates = exported.filter((name, index) => exported.indexOf(name) !== index);
+    expect(duplicates).toEqual([]);
+  });
+});
+
 class MockTagify {
   constructor(el, settings) {
     this.el = el;
@@ -89,7 +104,14 @@ describe('thesauri.js', () => {
           this.map = {};
           const build = (nodes, parent) => {
             nodes.forEach(node => {
-              const n = { id: node.id, text: node.text, parent, children: [] };
+              const n = {
+                id: node.id,
+                text: node.text,
+                parent,
+                children: [],
+                original: node.original,
+                fullKeyword: node.fullKeyword,
+              };
               this.map[node.id] = n;
               if (node.children) {
                 n.children = build(node.children, n);
@@ -110,6 +132,9 @@ describe('thesauri.js', () => {
             cur = cur.parent;
           }
           return parts.join(sep);
+        }
+        get_node(id) {
+          return this.map[id] || false;
         }
         get_json(root, opts) {
           if (opts && opts.flat) {
@@ -282,6 +307,29 @@ describe('thesauri.js', () => {
     expect(treeAfter).toBeDefined();
   });
 
+  test('waitForThesaurusVocabulary resolves loaded after a successful fetch', async () => {
+    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const result = await waitForThesaurusVocabulary('science_keywords');
+    expect(result).toBe('loaded');
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+  });
+
+  test('waitForThesaurusVocabulary resolves error when the vocabulary request fails', async () => {
+    $.getJSON.mockImplementation((url) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return { done: jest.fn().mockReturnThis(), fail: jest.fn().mockReturnThis() };
+      }
+      return {
+        fail: jest.fn(function (fn) { fn({}, 'error', 'fail'); return this; }),
+      };
+    });
+
+    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const result = await waitForThesaurusVocabulary('platforms');
+    expect(result).toBe('error');
+  });
+
   test('loads thesaurus data only when modal is opened (lazy loading)', () => {
     // Before opening modal, jsTree should not be initialized
     const tree = $('#jstree-sciencekeyword').jstree(true);
@@ -297,6 +345,27 @@ describe('thesauri.js', () => {
     // Tagify should now have enforceWhitelist enabled
     const input = document.getElementById('input-sciencekeyword');
     expect(input._tagify.settings.enforceWhitelist).toBe(true);
+  });
+
+  test('does not enable enforceWhitelist when the vocabulary response is empty', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+
+    $.getJSON.mockImplementation((url, cb) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return {
+          done: jest.fn(function (fn) { fn(mockAvailability); return this; }),
+          fail: jest.fn().mockReturnThis(),
+        };
+      }
+      if (typeof cb === 'function') cb({ data: [] });
+      return { fail: jest.fn().mockReturnThis() };
+    });
+
+    openModal('#modal-sciencekeyword');
+
+    expect(input._tagify.settings.whitelist).toHaveLength(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
   });
 
   test('syncs selections between jsTree and Tagify after modal is opened', () => {
@@ -709,6 +778,77 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     expect(values).toContain('Parent > Child');
   });
 
+  test('loadKeywordsForConfig upgrades short imported tags to stamped fullKeyword by id', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'UpgradeChild', id: 'upgrade-child' }]);
+
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'upgrade-parent', text: 'UpgradeParent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'upgrade-child', text: 'UpgradeChild', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    expect(input._tagify.value.some(v => v.value === 'UpgradeParent > UpgradeChild')).toBe(true);
+    expect(input._tagify.value.some(v => v.value === 'UpgradeChild')).toBe(false);
+  });
+
+  test('loadKeywordsForConfig upgrades short tags by suffix when id is absent (stage 3)', () => {
+    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+    const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'SuffixChild' }]);
+
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'suffix-parent', text: 'SuffixParent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'suffix-child', text: 'SuffixChild', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    expect(input._tagify.value.some(v => v.value === 'SuffixParent > SuffixChild')).toBe(true);
+    expect(input._tagify.value.some(v => v.value === 'SuffixChild')).toBe(false);
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  test('loadKeywordsForConfig leaves an already-full tag unchanged (stage 1 exact match)', () => {
+    const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'ExactParent > ExactChild', id: 'exact-child' }]);
+
+    const config = {
+      jsTreeId: '#jstree-sciencekeyword',
+      inputId: '#input-sciencekeyword',
+      searchInputId: '#input-sciencekeyword-thesaurussearch',
+      selectedKeywordsListId: 'selected-keywords-sciencekeyword',
+    };
+    const response = {
+      data: [{
+        id: 'exact-parent', text: 'ExactParent', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '',
+        children: [{ id: 'exact-child', text: 'ExactChild', scheme: 'S', schemeURI: 'http://s', language: 'en', description: '' }]
+      }]
+    };
+
+    exports.loadKeywordsForConfig(config, response);
+
+    expect(input._tagify.value.filter(v => v.value === 'ExactParent > ExactChild')).toHaveLength(1);
+  });
+
   test('loadKeywordsForConfig does not add duplicate entries on repeated calls', () => {
     const config = {
       jsTreeId: '#jstree-sciencekeyword',
@@ -889,21 +1029,59 @@ describe('thesauri.js — GGMs root node filtering', () => {
     window.$ = $;
     window.jQuery = $;
 
-    // Minimal jstree mock that tracks nodes loaded into it
+    // jsTree mock that preserves stamped original.fullKeyword and supports
+    // selection so changed.jstree can add the unfiltered GCMD path to Tagify.
     (function ($) {
+      function flatten(nodes) {
+        const list = [];
+        function walk(arr) {
+          if (!Array.isArray(arr)) return;
+          arr.forEach(n => { list.push(n); walk(n.children); });
+        }
+        walk(nodes);
+        return list;
+      }
       $.fn.jstree = function (arg) {
         if (arg === undefined || arg === true) return this.data('jstree');
         if (typeof arg === 'object') {
+          const $el = this;
           const inst = {
             _data: arg.core.data,
+            _selected: [],
             allNodeIds() {
-              const ids = [];
-              function walk(nodes) {
-                if (!Array.isArray(nodes)) return;
-                nodes.forEach(n => { ids.push(n.id); walk(n.children); });
+              return flatten(this._data).map(n => n.id);
+            },
+            get_node(id) {
+              return flatten(this._data).find(n => n.id === id) || false;
+            },
+            get_json(root, opts) {
+              if (opts && opts.flat) return flatten(this._data);
+              return this._data;
+            },
+            get_path(node, sep) {
+              const targetId = typeof node === 'string' ? node : node && node.id;
+              function findPath(nodes, acc) {
+                if (!Array.isArray(nodes)) return null;
+                for (const n of nodes) {
+                  const next = acc.concat(n.text);
+                  if (n.id === targetId) return next;
+                  const found = findPath(n.children, next);
+                  if (found) return found;
+                }
+                return null;
               }
-              walk(this._data);
-              return ids;
+              const parts = findPath(this._data, []) || [(node && node.text) || ''];
+              return parts.join(sep);
+            },
+            get_selected(full) {
+              return full ? this._selected : this._selected.map(n => n.id);
+            },
+            select_node(id) {
+              const node = this.get_node(id);
+              if (node && !this._selected.includes(node)) {
+                this._selected.push(node);
+                $el.trigger('changed.jstree');
+              }
             },
           };
           this.data('jstree', inst);
@@ -1030,6 +1208,28 @@ describe('thesauri.js — GGMs root node filtering', () => {
       expect(whitelistValues.some(v => v.includes('CLIMATE MODELS'))).toBe(false);
     });
 
+    test('selecting a GGM root node adds the full unfiltered GCMD path, not the leaf label', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      tree.select_node('uri:spherical-harmonic-models');
+
+      const input = document.getElementById('input-sciencekeyword');
+      const values = input._tagify.value.map(v => v.value);
+      expect(values).toContain(
+        'Science Keywords > EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS'
+      );
+      expect(values).not.toContain('SPHERICAL HARMONIC MODELS');
+    });
+
+    test('findNodeByPath matches a full GCMD Tagify value to the filtered-tree node', () => {
+      const tree = $('#jstree-sciencekeyword').jstree(true);
+      const node = exports.findNodeByPath(
+        tree,
+        'Science Keywords > EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS'
+      );
+      expect(node).toBeDefined();
+      expect(node.id).toBe('uri:spherical-harmonic-models');
+    });
+
     test('entry built for science_keywords uses rootNodes (array), not rootNodeId', () => {
       // Verify the bug is fixed: an array override must not land on rootNodeId
       const input = document.getElementById('input-sciencekeyword');
@@ -1094,8 +1294,11 @@ describe('thesauri.js — GGMs root node filtering', () => {
         // Whitelist should contain ONLY the nested path, not a standalone "ELLIPSOID CHARACTERISTICS"
         const input = document.getElementById('input-sciencekeyword');
         const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
-        expect(whitelistValues).toContain('GEODETICS > ELLIPSOID CHARACTERISTICS'); // deep canonical path ✓
+        expect(whitelistValues).toContain(
+          'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS'
+        );
         expect(whitelistValues).not.toContain('ELLIPSOID CHARACTERISTICS');          // standalone duplicate ✗
+        expect(whitelistValues).not.toContain('GEODETICS > ELLIPSOID CHARACTERISTICS');
 
         done();
       });
@@ -1160,21 +1363,28 @@ describe('thesauri.js — GGMs root node filtering', () => {
     // ── pre-population round-trip ─────────────────────────────────────────
 
     test('a value saved in a previous session is present in the filtered whitelist (round-trip compatibility)', () => {
-      // "GEODETICS > ELLIPSOID CHARACTERISTICS" is the correct deep breadcrumb path for a
-      // concept that lives inside one of the GGMs root subtrees. It must appear verbatim in
-      // the filtered Tagify whitelist so that programmatic addTags (used by XML→input mapping)
-      // does not render the tag as invalid.
+      // Full GCMD breadcrumbs (including Science Keywords) are the canonical values
+      // stored in Tagify / dace:subject. They must appear verbatim in the filtered
+      // whitelist so programmatic addTags (XML→input mapping) is not marked invalid.
       const input = document.getElementById('input-sciencekeyword');
       const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
 
-      // The deep path (canonical breadcrumb built from the filtered tree) must exist
-      expect(whitelistValues).toContain('GEODETICS > ELLIPSOID CHARACTERISTICS');
-      expect(whitelistValues).toContain('MARINE GRAVITY FIELD > OCEAN DEPTH');
-      expect(whitelistValues).toContain('SPHERICAL HARMONIC MODELS');
+      expect(whitelistValues).toContain(
+        'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS'
+      );
+      expect(whitelistValues).toContain(
+        'Science Keywords > EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD > OCEAN DEPTH'
+      );
+      expect(whitelistValues).toContain(
+        'Science Keywords > EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS'
+      );
 
-      // Simulate what mappingXmlToInputFields does: programmatically add a previously saved tag
-      input._tagify.addTags(['GEODETICS > ELLIPSOID CHARACTERISTICS']);
-      expect(input._tagify.value.some(v => v.value === 'GEODETICS > ELLIPSOID CHARACTERISTICS')).toBe(true);
+      input._tagify.addTags([
+        'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS',
+      ]);
+      expect(input._tagify.value.some(
+        v => v.value === 'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS'
+      )).toBe(true);
     });
   });
 

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <dace:identifier identifierType="DOI">10.5880/icgem.2024.011</dace:identifier>
+  <dace:creators>
+    <dace:creator>
+      <dace:creatorName nameType="Personal">Ince, Elmas Sinem</dace:creatorName>
+      <dace:givenName>Elmas Sinem</dace:givenName>
+      <dace:familyName>Ince</dace:familyName>
+      <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-8535-2274</dace:nameIdentifier>
+      <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/04z8jg394">GFZ Helmholtz Centre for Geosciences</dace:affiliation>
+    </dace:creator>
+  </dace:creators>
+  <dace:titles>
+    <dace:title xml:lang="en">Test: static model with time-variable coefficients</dace:title>
+  </dace:titles>
+  <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+  <dace:publicationYear>2024</dace:publicationYear>
+  <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
+  <dace:subjects>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+  </dace:subjects>
+  <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Ince, Elmas Sinem</dace:contributorName>
+      <dace:givenName>Elmas Sinem</dace:givenName>
+      <dace:familyName>Ince</dace:familyName>
+    </dace:contributor>
+  </dace:contributors>
+  <dace:dates>
+    <dace:date dateType="Created">2024-03-01</dace:date>
+  </dace:dates>
+  <dace:language>en</dace:language>
+  <dace:rightsList>
+    <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+  </dace:rightsList>
+  <dace:descriptions>
+    <dace:description descriptionType="Abstract" xml:lang="en">Static global gravity field model resolved up to degree and order 300, provided together with its time-variable coefficients.
+
+General model description of the static combination model.
+
+Input data are GRACE-FO inter-satellite ranging observations and terrestrial gravity anomalies.
+
+Processing procedures follow a full normal equation combination with variance component estimation.
+
+Specific features of the resulting gravity field are the reduced striping artefacts above degree 120.</dace:description>
+  </dace:descriptions>
+  <dace:geoLocations/>
+</dace:resource>
+  <grav:globalGravityProduct>
+    <grav:contact>
+      <grav:address>static.contact@gfz.de</grav:address>
+      <grav:onlineResource>icgem.gfz.de/static-model</grav:onlineResource>
+    </grav:contact>
+    <grav:harmonicCoefficientsModel>
+      <grav:modelName>Test_Static_TimeVariable</grav:modelName>
+      <grav:publicationYear>2024</grav:publicationYear>
+      <grav:modelType>Static</grav:modelType>
+      <grav:mathematicalRepresentation>Spherical harmonics</grav:mathematicalRepresentation>
+      <grav:celestialBody>Earth</grav:celestialBody>
+      <grav:fileFormat>icgem2.0</grav:fileFormat>
+      <grav:tideSystem>Tide-free</grav:tideSystem>
+      <grav:degreeOrderMax>300</grav:degreeOrderMax>
+      <grav:radius>6378136.3</grav:radius>
+      <grav:earthGravityConstant>398600441500000</grav:earthGravityConstant>
+      <grav:errors>Formal</grav:errors>
+      <grav:staticModelProperties>
+        <grav:infoTimeVariableCoefficients>Trend and annual terms are provided for degrees 2 to 60 with a reference epoch of 2010-01-01.</grav:infoTimeVariableCoefficients>
+      </grav:staticModelProperties>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Model">
+      <grav:description>Background model used for the combination</grav:description>
+      <grav:modelDetail>Global Gravitational Model</grav:modelDetail>
+      <grav:identifier>10.5880/icgem.2018.003</grav:identifier>
+      <grav:identifierType>DOI</grav:identifierType>
+      <grav:name>GOCO06s</grav:name>
+    </grav:inputDataSource>
+    <grav:descriptions>
+      <grav:description section="General model description">General model description of the static combination model.</grav:description>
+      <grav:description section="Input data">Input data are GRACE-FO inter-satellite ranging observations and terrestrial gravity anomalies.</grav:description>
+      <grav:description section="Processing procedures">Processing procedures follow a full normal equation combination with variance component estimation.</grav:description>
+      <grav:description section="Specific features of resulting gravity field">Specific features of the resulting gravity field are the reduced striping artefacts above degree 120.</grav:description>
+      <grav:description section="Abstract">Static global gravity field model resolved up to degree and order 300, provided together with its time-variable coefficients.</grav:description>
+      <grav:description section="Other">Other remarks: the model is distributed with a companion set of calibrated error estimates.</grav:description>
+    </grav:descriptions>
+  </grav:globalGravityProduct>
+</grav:envelope>

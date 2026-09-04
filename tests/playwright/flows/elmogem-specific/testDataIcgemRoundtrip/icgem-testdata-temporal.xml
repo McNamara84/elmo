@@ -65,10 +65,15 @@
   <dace:publicationYear>2019</dace:publicationYear>
   <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
   <dace:subjects>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
-    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
+    <dace:subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</dace:subject>
   </dace:subjects>
   <dace:contributors>
+    <dace:contributor contributorType="ContactPerson">
+      <dace:contributorName>Dahle, Christoph</dace:contributorName>
+      <dace:givenName>Christoph</dace:givenName>
+      <dace:familyName>Dahle</dace:familyName>
+    </dace:contributor>
     <dace:contributor contributorType="ProjectMember">
       <dace:contributorName nameType="Personal">Dahle, Christoph</dace:contributorName>
       <dace:givenName>Christoph</dace:givenName>
@@ -177,7 +182,7 @@
     </grav:harmonicCoefficientsModel>
     <grav:inputDataSource type="Satellite">
       <grav:description/>
-      <grav:satelliteValueName>Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</grav:satelliteValueName>
+      <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE-FO</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>

@@ -12,9 +12,16 @@
  *   step 5  Upload the downloaded XML back into the GEM and verify that the
  *           fields match the reference.
  *
+ * ── How the form gets filled ─────────────────────────────────────────────────
+ *   Through the application's own upload path, never by a bespoke filler. The
+ *   Load button hands the file to loadXmlToForm(), which runs the DataCite
+ *   mappings, processKeywords() and icgemModule.loadIcgemXmlToForm(). A field
+ *   that fails to roundtrip is therefore a defect in the feature rather than an
+ *   omission in this file, and a fixture's contents define what is covered.
+ *
  * ── Helper / utility usage by step ───────────────────────────────────────────
  *   parseIcgemXmlFile()         step 1
- *   fillIcgemForm()             step 2, step 5 (indirectly via upload)
+ *   uploadXmlIntoForm()         step 2, step 4, step 5
  *   downloadAndSaveIcgemXml()   step 2 → produces artifact consumed by step 3
  *   extractEnvelope()           step 3
  *   extractResource()           step 3
@@ -31,8 +38,25 @@
  *   suite can be extended by adding a new object to that array without touching
  *   any test or helper code.
  *
+ *   The fixtures are chosen so that between them every GGM input field is
+ *   exercised, including the ones that only appear behind a toggle:
+ *     datasources              spherical harmonics, satellite source
+ *     defferent-datasources    all five data source types with their details
+ *     ellipsoidal-flattening   ellipsoidal harmonics keyed on flattening,
+ *                              Isostasy source with compensation depth
+ *     static-timevariable      static model, time-variable coefficients,
+ *                              every description section
+ *     temporal                 temporal coverage and resolution
+ *     temporal-release         temporal end date, institution, release number
+ *     topographic-ellipsoidal  separate crust/mantle density, semiminor axis
+ *     topographic-whole        whole-model density, multi-layer/spectral options
+ *
  * ── Runs under ────────────────────────────────────────────────────────────────
- *   playwright.gem.config.ts  (showGGMsProperties=true)
+ *   playwright.gem.config.ts  (showGGMsProperties=true, workers capped at 2)
+ *
+ *   Every step saves and downloads through the single-threaded PHP dev server,
+ *   so more than two workers queue those requests behind each other until save
+ *   exceeds the test timeout. Both configs cap it; do not raise it via --workers.
  *
  * ── NOTE on normalisation ─────────────────────────────────────────────────────
  *   Reference XML files MUST be produced by ELMOGEM (save/download), not
@@ -41,14 +65,14 @@
  */
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { navigateToHome, waitForFormInteractionReady } from '../utils';
+import { navigateToHome, waitForFormInteractionReady } from '../../utils';
 import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
 
 // ─── Test cases ────────────────────────────────────────────────────────────────
 //
-// Drop a new .xml file into outputDataReference/testDataIcgemRoundtrip/ and it
+// Drop a new .xml file into testDataIcgemRoundtrip/ and it
 // will be picked up automatically — no code changes needed.
 
 interface IcgemTestCase {
@@ -58,7 +82,7 @@ interface IcgemTestCase {
   referenceXmlPath: string;
 }
 
-const ICGEM_ROUNDTRIP_DIR = path.join(__dirname, './outputDataReference/testDataIcgemRoundtrip');
+const ICGEM_ROUNDTRIP_DIR = path.join(__dirname, './testDataIcgemRoundtrip');
 
 // Automatically discover every .xml file in the roundtrip folder.
 // Drop a new file there and it will be picked up without any code change.
@@ -105,7 +129,55 @@ interface DataSource {
   satelliteValueUri?: string;
   satelliteSchemeName?: string;
   satelliteSchemeUri?: string;
+  /**
+   * Value of the type-specific detail element (groundDetail / altimetryDetail /
+   * elevationTerrainDetail / modelDetail). The form stores these verbatim as the
+   * option value of select[name="datasource_details[]"].
+   */
+  details?: string;
+  /** Only emitted for Elevation/Terrain sources whose detail is "Isostasy". */
+  compensationDepth?: string;
+  /** Model-type sources only. */
+  identifier?: string;
+  identifierType?: string;
+  name?: string;
 }
+
+interface DensityInformation {
+  /** 'Whole' | 'Crust' | 'Mantle' */
+  domain: string;
+  /** 'Constant' | 'Layer-specific' | 'Density model' */
+  type: string;
+  description: string;
+}
+
+interface TopographicProperties {
+  layerApproach: string;
+  forwardModellingDomain: string;
+  approximation: string;
+  densities: DensityInformation[];
+}
+
+interface EllipsoidalParameters {
+  semimajorAxisA: string;
+  /** Form option value of #input-second-variable. */
+  secondVariable: 'axis_b' | 'flattening' | 'reciprocal_flattening' | '';
+  secondVariableValue: string;
+}
+
+/**
+ * GGM description sections, keyed by the lowercased `section` attribute used in
+ * grav:descriptions, mapped onto the accordion panel that holds them.
+ * Mirrors the section→field mapping in js/mappingXmlToInputFieldsIcgem.js.
+ */
+const DESCRIPTION_SECTIONS: Record<string, { input: string; collapse: string }> = {
+  'abstract': { input: '#input-abstract', collapse: '#collapse-abstract' },
+  'general model description': { input: '#input-general-model-description', collapse: '#collapse-general-model-description' },
+  'input data': { input: '#input-input-data', collapse: '#collapse-input-data' },
+  'processing procedures': { input: '#input-processing-procedures', collapse: '#collapse-processing-procedures' },
+  'specific features of resulting gravity field': { input: '#input-specific-features', collapse: '#collapse-specific-features' },
+  'other': { input: '#input-other', collapse: '#collapse-other' },
+};
 
 interface IcgemParsedData {
   // ── Standard DataCite ──
@@ -135,11 +207,23 @@ interface IcgemParsedData {
   tideSystem: string;
   degree: string;
   errors: string;
+  errorHandling: string;
   radius: string;
   earthGravityConstant: string;
+  /** Reference ellipsoid, present only for Ellipsoidal harmonics models. */
+  ellipsoidal: EllipsoidalParameters | null;
+  /** Static models: description of the time-variable coefficients. */
+  staticInfoTimeVariableCoefficients: string;
   temporalStart: string;
+  temporalEnd: string;
   temporalResolution: string; // raw number of days as a string
+  temporalInstitution: string;
+  temporalRelease: string;
+  /** Topographic models: layer approach, domain, approximation and densities. */
+  topographic: TopographicProperties | null;
   dataSources: DataSource[];
+  /** All grav:descriptions keyed by lowercased section attribute. */
+  ggmDescriptions: Record<string, string>;
   ggmAbstract: string;
 }
 
@@ -175,6 +259,28 @@ function getNode(obj: Record<string, unknown>, localName: string): unknown {
   return k ? obj[k] : undefined;
 }
 
+/**
+ * Normalises free-text values before comparison.
+ *
+ * Multi-line textarea values are submitted with CRLF line endings, so carriage
+ * returns survive into the DataCite half of the envelope (serialised as `&#13;`)
+ * while the ICGEM half is normalised to LF by ICGEMController::prepare().
+ * Both sides carry identical text, so strip CR in either encoding.
+ */
+function normalizeText(value: string): string {
+  return value.replace(/&#13;/g, '').replace(/\r/g, '');
+}
+
+/**
+ * Maps an ICGEM densityInformationType ("Constant", "Layer-specific",
+ * "Density model") back onto the option value used by the density selects.
+ * Mirrors reverseDensityType() in js/mappingXmlToInputFieldsIcgem.js.
+ */
+function toDensityOptionValue(xmlValue: string): string {
+  const lower = xmlValue.toLowerCase().trim();
+  return lower === 'density model' ? 'density-model' : lower;
+}
+
 // ─── XML parsing ──────────────────────────────────────────────────────────────
 
 /**
@@ -199,6 +305,8 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
         'dace:description',
         'grav:inputDataSource',
         'grav:description',
+        'grav:topographicModelProperties',
+        'grav:densityInformation',
       ];
       return typeof jpath === 'string' && alwaysArray.some(tag => jpath.endsWith(`.${tag}`) || jpath === tag);
     },
@@ -234,7 +342,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const descriptionsNode = getNode(resource, 'descriptions') as Record<string, unknown> | undefined;
   const descList = descriptionsNode ? toArray(getNode(descriptionsNode, 'description')) : [];
   const abstractEl = descList.find((d: unknown) => (d as Record<string, unknown>)['descriptionType'] === 'Abstract');
-  const abstract = extractText(abstractEl).replace(/&#13;/g, '');
+  const abstract = normalizeText(extractText(abstractEl));
 
   // Date created
   const datesNode = getNode(resource, 'dates') as Record<string, unknown> | undefined;
@@ -318,34 +426,105 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const tideSystem = String(getNode(hcm, 'tideSystem') ?? '');
   const degree = String(getNode(hcm, 'degreeOrderMax') ?? '');
   const errors = String(getNode(hcm, 'errors') ?? '');
+  const errorHandling = String(getNode(hcm, 'errorHandling') ?? '');
   const radius = String(getNode(hcm, 'radius') ?? '');
   const earthGravityConstant = String(getNode(hcm, 'earthGravityConstant') ?? '');
+
+  // Reference ellipsoid. The form offers a single "second variable" slot, so the
+  // first of axis b / flattening / reciprocal flattening present in the XML wins
+  // (the exporter can only ever have written the one the form submitted).
+  const epNode = getNode(hcm, 'ellipsoidalParameters') as Record<string, unknown> | undefined;
+  let ellipsoidal: EllipsoidalParameters | null = null;
+  if (epNode) {
+    const secondVariableCandidates: Array<[EllipsoidalParameters['secondVariable'], string]> = [
+      ['axis_b', String(getNode(epNode, 'semiminorAxisB') ?? '')],
+      ['flattening', String(getNode(epNode, 'flattening') ?? '')],
+      ['reciprocal_flattening', String(getNode(epNode, 'reciprocalFlattening') ?? '')],
+    ];
+    const [secondVariable, secondVariableValue] =
+      secondVariableCandidates.find(([, value]) => value !== '') ?? ['' as const, ''];
+    ellipsoidal = {
+      semimajorAxisA: String(getNode(epNode, 'semimajorAxisA') ?? ''),
+      secondVariable,
+      secondVariableValue,
+    };
+  }
+
+  // Static model properties
+  const smpNode = getNode(hcm, 'staticModelProperties') as Record<string, unknown> | undefined;
+  const staticInfoTimeVariableCoefficients = normalizeText(
+    String(getNode(smpNode ?? {}, 'infoTimeVariableCoefficients') ?? ''),
+  );
 
   // Temporal model properties
   const tmpNode = getNode(hcm, 'temporalModelProperties') as Record<string, unknown> | undefined;
   const temporalCoverage = String(getNode(tmpNode ?? {}, 'temporalCoverage') ?? '');
-  const [temporalStart = ''] = temporalCoverage.split('/');
+  const [rawTemporalStart = '', rawTemporalEnd = ''] = temporalCoverage.split('/');
+  // The exporter writes the placeholders "unknown"/"open" when one bound is missing.
+  const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const temporalStart = ISO_DATE.test(rawTemporalStart) ? rawTemporalStart : '';
+  const temporalEnd = ISO_DATE.test(rawTemporalEnd) ? rawTemporalEnd : '';
   const temporalResolutionRaw = getNode(tmpNode ?? {}, 'temporalResolution');
   const temporalResolution = extractText(temporalResolutionRaw); // number of days
+  const temporalInstitution = String(getNode(tmpNode ?? {}, 'generatingInstitution') ?? '');
+  const temporalRelease = String(getNode(tmpNode ?? {}, 'release') ?? '');
+
+  // Topographic model properties (the form can only produce a single block)
+  const topNode = toArray(getNode(hcm, 'topographicModelProperties'))[0] as Record<string, unknown> | undefined;
+  const topographic: TopographicProperties | null = topNode
+    ? {
+        layerApproach: String(getNode(topNode, 'layerApproach') ?? ''),
+        forwardModellingDomain: String(getNode(topNode, 'forwardModellingDomain') ?? ''),
+        approximation: String(getNode(topNode, 'approximation') ?? ''),
+        densities: toArray(getNode(topNode, 'densityInformation')).map((d: unknown) => {
+          const dn = d as Record<string, unknown>;
+          return {
+            domain: String(getNode(dn, 'densityInformationDomain') ?? ''),
+            type: String(getNode(dn, 'densityInformationType') ?? ''),
+            description: String(getNode(dn, 'densityInformationDescription') ?? ''),
+          };
+        }),
+      }
+    : null;
 
   // Data sources
+  const optionalText = (node: Record<string, unknown>, localName: string): string | undefined =>
+    getNode(node, localName) !== undefined ? String(getNode(node, localName)) : undefined;
+
   const dataSources: DataSource[] = toArray(getNode(ggp, 'inputDataSource')).map((ds: unknown) => {
     const d = ds as Record<string, unknown>;
+    // Exactly one detail element is emitted, named after the source type.
+    const details = optionalText(d, 'groundDetail')
+      ?? optionalText(d, 'altimetryDetail')
+      ?? optionalText(d, 'elevationTerrainDetail')
+      ?? optionalText(d, 'modelDetail');
     return {
       type: String(d['type'] ?? 'Satellite'),
       description: String(getNode(d, 'description') ?? ''),
-      satelliteValueName: getNode(d, 'satelliteValueName') !== undefined ? String(getNode(d, 'satelliteValueName')) : undefined,
-      satelliteValueUri: getNode(d, 'satelliteValueUri') !== undefined ? String(getNode(d, 'satelliteValueUri')) : undefined,
-      satelliteSchemeName: getNode(d, 'satelliteSchemeName') !== undefined ? String(getNode(d, 'satelliteSchemeName')) : undefined,
-      satelliteSchemeUri: getNode(d, 'satelliteSchemeUri') !== undefined ? String(getNode(d, 'satelliteSchemeUri')) : undefined,
+      satelliteValueName: optionalText(d, 'satelliteValueName'),
+      satelliteValueUri: optionalText(d, 'satelliteValueUri'),
+      satelliteSchemeName: optionalText(d, 'satelliteSchemeName'),
+      satelliteSchemeUri: optionalText(d, 'satelliteSchemeUri'),
+      details,
+      compensationDepth: getNode(d, 'compensationDepth') !== undefined
+        ? extractText(getNode(d, 'compensationDepth'))
+        : undefined,
+      identifier: optionalText(d, 'identifier'),
+      identifierType: optionalText(d, 'identifierType'),
+      name: optionalText(d, 'name'),
     };
   });
 
-  // GGM abstract description (section="Abstract")
+  // GGM descriptions, keyed by their section attribute
   const ggmDescsNode = getNode(ggp, 'descriptions') as Record<string, unknown> | undefined;
   const ggmDescList = ggmDescsNode ? toArray(getNode(ggmDescsNode, 'description')) : [];
-  const ggmAbstractEl = ggmDescList.find((d: unknown) => String((d as Record<string, unknown>)['section'] ?? '').toLowerCase() === 'abstract');
-  const ggmAbstract = extractText(ggmAbstractEl).replace(/&#13;/g, '');
+  const ggmDescriptions: Record<string, string> = {};
+  for (const d of ggmDescList) {
+    const section = String((d as Record<string, unknown>)['section'] ?? '').toLowerCase();
+    if (!section) continue;
+    ggmDescriptions[section] = normalizeText(extractText(d));
+  }
+  const ggmAbstract = ggmDescriptions['abstract'] ?? '';
 
   return {
     doi, title, publicationYear, language, version,
@@ -354,297 +533,162 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
     contactPersonLastName, contactPersonFirstName, contactPersonOrcid, contactPersonEmail, contactPersonWebsite,
     subjects,
     modelName, modelType, mathRepresentation, celestialBody, fileFormat,
-    tideSystem, degree, errors, radius, earthGravityConstant,
-    temporalStart, temporalResolution,
-    dataSources, ggmAbstract,
+    tideSystem, degree, errors, errorHandling, radius, earthGravityConstant,
+    ellipsoidal, staticInfoTimeVariableCoefficients,
+    temporalStart, temporalEnd, temporalResolution, temporalInstitution, temporalRelease,
+    topographic,
+    dataSources, ggmDescriptions, ggmAbstract,
   };
 }
 
-// ─── Form-filling helper ───────────────────────────────────────────────────────
+// ─── Assertion helpers ─────────────────────────────────────────────────────────
 
 /**
- * Fills all form fields in the GEM variant app from the given parsed ICGEM data.
- * Multiple affiliations are added through the dedicated Authors affiliation editor.
- * GCMD thesaurus keywords (subjects) are NOT filled here – they require a
- * complex tree-picker UI that is verified separately in the upload test.
+ * Asserts a numeric input's value by magnitude rather than by string.
+ *
+ * Radius, gravity constant and the ellipsoid parameters are stored as SQL
+ * doubles, so PHP renders values of 1e14 and above in scientific notation
+ * ("3.986004415E+14"). That is the same number the form was filled with.
  */
-async function addAuthorAffiliations(row: Locator, affiliations: string[]): Promise<void> {
-  if (affiliations.length === 0) {
-    return;
-  }
-
-  const editor = row.locator('[data-author-affiliation-editor]');
-  await expect(editor).toBeVisible({ timeout: 10_000 });
-
-  for (const affiliation of affiliations) {
-    await editor.locator('[data-author-affiliation-input]').fill(affiliation);
-    await editor.locator('[data-author-affiliation-add]').click();
-    await expect.poll(async () => editor.locator('[data-author-affiliation-label]').evaluateAll(
-      (inputs) => inputs.map((input) => (input as HTMLInputElement).value),
-    )).toContain(affiliation);
-  }
+async function expectNumericValue(locator: Locator, expected: string, label: string): Promise<void> {
+  await expect
+    .poll(async () => Number(await locator.inputValue()), { message: label, timeout: 5_000 })
+    .toBe(Number(expected));
 }
 
-async function ensureAuthorPersonRow(page: Page, index: number): Promise<Locator> {
-  const rows = page.locator('#group-author [data-creator-row]');
-  while (await rows.count() <= index) {
-    const previousCount = await rows.count();
-    await page.evaluate(() => {
-      const stack = (window as any).authorStack;
-      if (stack && typeof stack.addPerson === 'function') {
-        stack.addPerson();
-        return;
-      }
-
-      document.querySelector<HTMLElement>('#button-author-add')?.click();
-    });
-    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
-  }
-
-  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
-  return rows.nth(index);
+/**
+ * Subject labels as a deduplicated, sorted set.
+ *
+ * A GCMD platform that is also used as a data source satellite is exported
+ * twice, because save_ggms_datasources.php ingests the satellite into
+ * Thesaurus_Keywords on top of the standalone keyword. Comparing sets keeps
+ * that duplication from being mistaken for a roundtrip failure.
+ */
+function subjectTexts(subjects: Subject[]): string[] {
+  return [...new Set(subjects.map((s) => normalizeText(s.text)))].sort();
 }
 
-async function ensureAuthorInstitutionRow(page: Page, index: number): Promise<Locator> {
-  const rows = page.locator('#group-author [data-authorinstitution-row]');
-  while (await rows.count() <= index) {
-    const previousCount = await rows.count();
-    await page.evaluate(() => {
-      const stack = (window as any).authorStack;
-      if (stack && typeof stack.addInstitution === 'function') {
-        stack.addInstitution();
-        return;
-      }
-
-      document.querySelector<HTMLElement>('#button-authorinstitution-add')?.click();
-    });
-    await expect.poll(() => rows.count(), { timeout: 5_000 }).toBeGreaterThan(previousCount);
-  }
-
-  await expect(rows.nth(index)).toBeVisible({ timeout: 5_000 });
-  return rows.nth(index);
-}
-
-async function fillIcgemForm(page: Page, data: IcgemParsedData): Promise<void> {
-  // ── Wait for API-populated dropdowns ──────────────────────────────────────
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 15_000 },
-  );
-
-  // ── Standard DataCite fields ───────────────────────────────────────────────
-  // DOI: set via evaluate to avoid triggering lookup modal
-  await page.locator('#input-resourceinformation-doi').evaluate((el: HTMLInputElement, val: string) => {
-    el.value = val;
-  }, data.doi);
-  await page.locator('#input-resourceinformation-title').fill(data.title);
-  await page.locator('#input-resourceinformation-publicationyear').fill(data.publicationYear);
-
-  // Resource type – select by visible text "Dataset"
-  await page.locator('#input-resourceinformation-resourcetype').selectOption({ label: 'Dataset' });
-
-  // Language – select by visible text "English"
-  await page.locator('#input-resourceinformation-language').selectOption({ label: 'English' });
-
-  // Version (note: form pattern expects "x.y" but save does not validate)
-  await page.locator('#input-resourceinformation-version').fill(data.version);
-
-  // Abstract
-  await page.locator('#input-abstract').fill(data.abstract);
-
-  // Date created
-  await page.locator('#input-date-created').fill(data.dateCreated);
-
-  // Rights / License – select the option whose text or value matches the CC-BY identifier
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-rights-license') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 15_000 },
-  );
-  await page.evaluate((rightsId: string) => {
-    const sel = document.querySelector<HTMLSelectElement>('#input-rights-license');
-    if (!sel) return;
-    const opt = Array.from(sel.options).find(o =>
-      o.text.includes('CC-BY-4.0') || o.text.includes('Creative Commons Attribution 4.0') || o.value === rightsId
+/** True once any Tagify instance on the page holds a tag with this label. */
+function findTagifyTag(page: Page, label: string): Promise<boolean> {
+  return page.evaluate((text: string) => {
+    type TagifyInput = HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } };
+    return Array.from(document.querySelectorAll<TagifyInput>('input')).some(
+      (input) => input._tagify?.value?.some((tag) => tag.value.trim() === text),
     );
-    if (opt) {
-      sel.value = opt.value;
-      sel.dispatchEvent(new Event('change', { bubbles: true }));
-    }
-  }, data.rightsIdentifier);
+  }, label);
+}
 
-  // ── Personal author (index 0) ──────────────────────────────────────────────
-  if (data.personalCreators.length > 0) {
-    const pc = data.personalCreators[0];
-    const authorRow = await ensureAuthorPersonRow(page, 0);
+/**
+ * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
+ * available. CI's GEM job does not have ERNIE, so stub availability as true
+ * (inputs exist) and vocab fetches as 503 (import waits, then addTags with
+ * enforceWhitelist off). That matches a session without ERNIE instead of
+ * inventing whitelist entries.
+ */
+async function stubThesaurusAvailability(page: Page): Promise<void> {
+  await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+        platforms: { available: true, displayName: 'GCMD Platforms' },
+        instruments: { available: true, displayName: 'GCMD Instruments' },
+        chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+        gemet: { available: false, displayName: 'GEMET' },
+      }),
+    });
+  });
+  // No ERNIE in GitHub CI (and often none in Docker). Stub the lazy vocab
+  // fetches as unavailable so import waits on a fast 503 instead of a hanging
+  // PHP proxy, then addTags with enforceWhitelist off — the same path as a
+  // real session without ERNIE. Always stub here so local and CI match.
+  const unavailable = {
+    status: 503,
+    contentType: 'application/json',
+    body: JSON.stringify({ error: 'Thesaurus vocabulary currently unavailable' }),
+  };
+  for (const slug of ['gcmd-science-keywords', 'gcmd-platforms', 'gcmd-instruments']) {
+    await page.route(`**/api/v2/vocabs/thesauri/${slug}`, async (route) => {
+      await route.fulfill(unavailable);
+    });
+  }
+}
 
-    // ORCID – set via evaluate to prevent the ORCID lookup from racing with our fills
-    const orcidInput = authorRow.locator('[id^="input-author-orcid"]');
-    await orcidInput.waitFor({ state: 'visible', timeout: 10_000 });
-    await orcidInput.evaluate((el: HTMLInputElement, val: string) => {
-      el.value = val;
-      el.dispatchEvent(new Event('input', { bubbles: true }));
-      el.dispatchEvent(new Event('change', { bubbles: true }));
-    }, pc.orcid);
+async function openGemHome(page: Page): Promise<void> {
+  await stubThesaurusAvailability(page);
+  await navigateToHome(page);
+}
 
-    await authorRow.locator('[id^="input-author-lastname"]').fill(pc.lastName);
-    await authorRow.locator('[id^="input-author-firstname"]').fill(pc.firstName);
+// ─── Upload helper ─────────────────────────────────────────────────────────────
 
-    await addAuthorAffiliations(authorRow, pc.affiliations);
-
-    // Mark as contact person – click the <label> (Bootstrap btn-check hides the input;
-    // clicking the input directly causes "label intercepts pointer events" error)
-    const cpLabel = authorRow.locator('label[for^="checkbox-author-contactperson"]');
-    if (await cpLabel.count() > 0) {
-      await cpLabel.click();
-      // Wait for email field to become visible
-      const emailField = authorRow.locator('input[name="cpEmail[]"]');
-      await emailField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
-      if (await emailField.isVisible().catch(() => false) && data.contactPersonEmail) {
-        await emailField.fill(data.contactPersonEmail);
-      }
-      // Fill website if present
-      const websiteField = authorRow.locator('input[name="cpOnlineResource[]"]');
-      await websiteField.waitFor({ state: 'visible', timeout: 5_000 }).catch(() => {});
-      if (await websiteField.isVisible().catch(() => false) && data.contactPersonWebsite) {
-        await websiteField.fill(data.contactPersonWebsite);
-      }
-    }
+/**
+ * Loads an XML file into the form through the application's own upload path.
+ *
+ * This is what drives every step of the roundtrip: the Load button hands the
+ * file to loadXmlToForm(), which runs the DataCite mappings, processKeywords()
+ * and – for ICGEM documents – icgemModule.loadIcgemXmlToForm(). Filling the
+ * form any other way would test the test rather than the feature.
+ */
+async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: string[] = []): Promise<void> {
+  if (!fs.existsSync(xmlPath)) {
+    throw new Error(`Upload source XML not found: ${xmlPath}`);
   }
 
-  // ── Author institution (organisational creator, index 0) ──────────────────
-  if (data.orgCreators.length > 0) {
-    const oc = data.orgCreators[0];
-    const instRow = await ensureAuthorInstitutionRow(page, 0);
-    await instRow.locator('[id^="input-authorinstitution-name"]').fill(oc.name);
+  const loadButton = page.locator('#button-form-load');
+  await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
+  await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
+  await page.evaluate(() => (window as any).thesauriReady);
+  // thesauriReady also resolves when availability fails and no GCMD inputs
+  // are created. processKeywords then skips those subjects, so wait until
+  // the Tagify instances actually exist before uploading.
+  await page.waitForFunction(() => {
+    const science = document.querySelector('#input-sciencekeyword') as { _tagify?: unknown } | null;
+    const platforms = document.querySelector('#input-platforms') as { _tagify?: unknown } | null;
+    return Boolean(science?._tagify && platforms?._tagify);
+  }, { timeout: 15_000 });
 
-    if (oc.affiliations.length > 0) {
-      await addAuthorAffiliations(instRow, oc.affiliations);
-    }
-  }
+  await loadButton.click();
 
-  // ── ICGEM Definition ──────────────────────────────────────────────────────
+  const uploadModal = page.locator('#modal-uploadxml');
+  await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
+  await page.locator('#input-uploadxml-file').setInputFiles(xmlPath);
 
-  // Model type (must come before Temporal section fields become visible)
+  // Model name is written at the start of loadIcgemXmlToForm. The upload
+  // spinner stays up until loadXmlToForm returns, which is after keywords
+  // and data sources are fully applied. Saving earlier persists whatever
+  // happens to be in the POST at that moment (often satellite subjects only).
   await page.waitForFunction(
-    () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
+    () => {
+      const modelName = document.querySelector<HTMLInputElement>('#input-model-name')?.value;
+      const spinner = document.getElementById('upload-spinner-overlay');
+      return Boolean(modelName) && Boolean(spinner?.classList.contains('d-none'));
+    },
+    { timeout: 30_000 },
   );
-  await page.locator('#input-model-type').selectOption({ label: data.modelType });
-  await page.locator('#input-model-type').dispatchEvent('change');
 
-  // Mathematical representation (triggers Spherical-harmonics visibility for radius)
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
-  );
-  await page.locator('#input-mathematical-representation').selectOption({ label: data.mathRepresentation });
-  await page.locator('#input-mathematical-representation').dispatchEvent('change');
-
-  // File format
-  await page.waitForFunction(
-    () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
-    { timeout: 10_000 },
-  );
-  await page.locator('#input-file-format').selectOption({ label: data.fileFormat });
-
-  // Celestial body
-  await page.locator('#input-celestial-body').selectOption(data.celestialBody);
-
-  // Model name
-  await page.locator('#input-model-name').fill(data.modelName);
-
-  // ── ICGEM Properties (Characteristics) ───────────────────────────────────
-
-  // Tide system: option value matches XML value exactly ("Zero-tide")
-  await page.locator('#input-tide-system').selectOption(data.tideSystem);
-  await page.locator('#input-degree').fill(data.degree);
-
-  // Errors: form stores lowercase ("no"), XML has "No" – apply toLowerCase()
-  await page.locator('#input-errors').selectOption(data.errors.toLowerCase());
-
-  await page.locator('#input-earth-gravity-constant').fill(data.earthGravityConstant);
-
-  // Radius – only visible when Spherical harmonics is selected
-  if (data.radius) {
-    const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
-    if (radiusVisible) {
-      await page.locator('#input-radius').fill(data.radius);
-    } else {
-      // Wait briefly for visibility change triggered by math-rep change event
-      await page.waitForFunction(
-        () => {
-          const el = document.querySelector<HTMLElement>('.visibility-spherical');
-          return el !== null && el.style.display !== 'none' && !el.hasAttribute('aria-hidden');
-        },
-        { timeout: 5_000 },
-      ).catch(() => { /* not spherical, skip */ });
-      const stillVisible = await page.locator('#input-radius').isVisible().catch(() => false);
-      if (stillVisible) await page.locator('#input-radius').fill(data.radius);
-    }
+  // Wait until every imported subject is on a Tagify instance.
+  for (const subject of expectedSubjects) {
+    await expect
+      .poll(() => findTagifyTag(page, subject), {
+        message: `subject "${subject}" imported into a keyword field before save`,
+        timeout: 20_000,
+      })
+      .toBe(true);
   }
 
-  // ── ICGEM Model Types – Temporal section ─────────────────────────────────
-
-  if (data.modelType.toLowerCase() === 'temporal') {
-    // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
-    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
-
-    await page.locator('#input-temporal-start').fill(data.temporalStart);
-
-    // Custom temporal resolution (temporalCoverage ends with "/open" so no end date)
-    if (data.temporalResolution) {
-      await page.locator('#checkbox-custom-frequency').check();
-      await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
-      await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
-    }
-  }
-
-  // ── Data sources ──────────────────────────────────────────────────────────
-
-  const DS_ROW = '#group-datasources .row[data-source-row]';
-
-  for (let i = 0; i < data.dataSources.length; i++) {
-    const ds = data.dataSources[i];
-
-    // Add a new row for every source after the first
-    if (i > 0) {
-      await page.locator('#button-datasource-add').click();
-      await expect(page.locator(DS_ROW)).toHaveCount(i + 1, { timeout: 5_000 });
-    }
-
-    const dsRow = page.locator(DS_ROW).nth(i);
-
-    // Datasource type: 'Satellite' → 'S'
-    const typeCodeMap: Record<string, string> = {
-      satellite: 'S',
-      'ground data': 'G',
-      altimetry: 'A',
-      model: 'M',
-      'elevation/terrain': 'T',
-    };
-    const typeCode = typeCodeMap[ds.type.toLowerCase()] ?? 'S';
-    await dsRow.locator('select[name="datasource_type[]"]').selectOption(typeCode);
-    await dsRow.locator('select[name="datasource_type[]"]').dispatchEvent('change');
-
-    await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
-
-    // Satellite platform – inject via Tagify API
-    if (typeCode === 'S' && ds.satelliteValueName) {
-      const tag = {
-        value: ds.satelliteValueName,
-        id: ds.satelliteValueUri ?? '',
-        scheme: ds.satelliteSchemeName ?? '',
-        schemeURI: ds.satelliteSchemeUri ?? '',
-      };
-      const platformInput = dsRow.locator('input[name="satellite_platform[]"]');
-      await platformInput.evaluate(
-        (el: unknown, t: typeof tag) => {
-          const tagify = (el as Record<string, unknown>)._tagify;
-          if (tagify) (tagify as { addTags: (tags: typeof tag[]) => void }).addTags([t]);
-        },
-        tag,
-      );
-    }
+  // The modal normally closes itself when showUploadToast fires; dismiss it via
+  // the Bootstrap API when it does not, rather than blocking on the toast.
+  if (await uploadModal.isVisible().catch(() => false)) {
+    await page.evaluate(() => {
+      const modalEl = document.getElementById('modal-uploadxml');
+      if (!modalEl) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const bsModal = (window as any).bootstrap?.Modal?.getInstance?.(modalEl);
+      if (bsModal) bsModal.hide();
+      else modalEl.classList.remove('show');
+    });
+    await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
   }
 }
 
@@ -832,10 +876,36 @@ for (const testCase of TEST_CASES) {
       expect(parsedData.radius, 'radius').not.toBe('');
     }
     expect(parsedData.earthGravityConstant, 'earthGravityConstant').not.toBe('');
+
+    // Reference ellipsoid replaces the radius for Ellipsoidal harmonics models
+    if (parsedData.mathRepresentation.toLowerCase().includes('ellipsoidal')) {
+      expect(parsedData.ellipsoidal, 'ellipsoidalParameters').not.toBeNull();
+      expect(parsedData.ellipsoidal!.semimajorAxisA, 'semimajorAxisA').not.toBe('');
+      expect(parsedData.ellipsoidal!.secondVariable, 'secondVariable').not.toBe('');
+      expect(parsedData.ellipsoidal!.secondVariableValue, 'secondVariableValue').not.toBe('');
+    }
+
     // temporal fields only apply to Temporal model type
     if (parsedData.modelType.toLowerCase() === 'temporal') {
       expect(parsedData.temporalStart, 'temporalStart').not.toBe('');
       expect(parsedData.temporalResolution, 'temporalResolution').not.toBe('');
+    }
+
+    // Topographic models must describe layer approach, domain and density
+    if (parsedData.modelType.toLowerCase() === 'topographic') {
+      expect(parsedData.topographic, 'topographicModelProperties').not.toBeNull();
+      expect(parsedData.topographic!.layerApproach, 'layerApproach').not.toBe('');
+      expect(parsedData.topographic!.forwardModellingDomain, 'forwardModellingDomain').not.toBe('');
+      expect(parsedData.topographic!.densities.length, 'densityInformation.length').toBeGreaterThan(0);
+      for (const [i, d] of parsedData.topographic!.densities.entries()) {
+        expect(d.domain, `densityInformation[${i}].domain`).not.toBe('');
+        expect(d.type, `densityInformation[${i}].type`).not.toBe('');
+      }
+      // The whole-model density and the crust/mantle pair are mutually exclusive
+      const domains = parsedData.topographic!.densities.map(d => d.domain.toLowerCase());
+      if (domains.includes('crust') || domains.includes('mantle')) {
+        expect(domains, 'densityInformation domains (separate density excludes Whole)').not.toContain('whole');
+      }
     }
 
     // Data sources
@@ -847,8 +917,12 @@ for (const testCase of TEST_CASES) {
       if (ds.satelliteValueUri) expect(ds.satelliteValueUri, `dataSources[${i}].satelliteValueUri`).toBeTruthy();
     }
 
-    // GGM description
+    // GGM descriptions – Abstract is mandatory, the other sections are optional
     expect(parsedData.ggmAbstract, 'ggmAbstract').not.toBe('');
+    for (const section of Object.keys(parsedData.ggmDescriptions)) {
+      expect(Object.keys(DESCRIPTION_SECTIONS), `description section "${section}"`).toContain(section);
+      expect(parsedData.ggmDescriptions[section], `description "${section}"`).not.toBe('');
+    }
 
     console.log('✓ 1.1 – all reference XML fields parsed successfully');
     console.log('  Title:', parsedData.title);
@@ -861,8 +935,8 @@ for (const testCase of TEST_CASES) {
   // ── Step 2: fill form → save → verify XML ──────────────────────────────
 
   test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
-    await navigateToHome(page);
-    await fillIcgemForm(page, parsedData);
+    await openGemHome(page);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     const { parsedXml } = await downloadAndSaveIcgemXml(page, testCase.label);
 
@@ -880,12 +954,7 @@ for (const testCase of TEST_CASES) {
 
     // Helper: assert a single field with a meaningful label
     function assertField(actualRaw: unknown, expectedValue: string, fieldLabel: string): void {
-      let actual = extractText(actualRaw);
-      // Strip XML carriage return entities that may be present in saved XML but not in reference
-      if (fieldLabel === 'abstract' || fieldLabel === 'ggmAbstract') {
-        actual = actual.replace(/&#13;/g, '');
-      }
-      expect(actual, `[FIELD: ${fieldLabel}]`).toBe(expectedValue);
+      expect(normalizeText(extractText(actualRaw)), `[FIELD: ${fieldLabel}]`).toBe(normalizeText(expectedValue));
     }
 
     // ── DataCite fields ──
@@ -929,22 +998,96 @@ for (const testCase of TEST_CASES) {
     // Errors: saved XML preserves the original capitalisation from the form option text ("No")
     assertField(getNode(hcm!, 'errors'), parsedData.errors, 'errors');
 
+    if (parsedData.errorHandling) {
+      assertField(getNode(hcm!, 'errorHandling'), parsedData.errorHandling, 'errorHandling');
+    }
+
     // Radius (may be absent if math representation is not Spherical harmonics)
     const savedRadius = extractText(getNode(hcm!, 'radius'));
     if (parsedData.radius) {
       expect(savedRadius, '[FIELD: radius]').toBe(parsedData.radius);
     }
 
+    // Reference ellipsoid
+    if (parsedData.ellipsoidal) {
+      const savedEp = getNode(hcm!, 'ellipsoidalParameters') as Record<string, unknown> | undefined;
+      expect(savedEp, '[FIELD: ellipsoidalParameters]').toBeTruthy();
+      assertField(getNode(savedEp!, 'semimajorAxisA'), parsedData.ellipsoidal.semimajorAxisA, 'semimajorAxisA');
+
+      const secondVariableElement: Record<string, string> = {
+        axis_b: 'semiminorAxisB',
+        flattening: 'flattening',
+        reciprocal_flattening: 'reciprocalFlattening',
+      };
+      const elementName = secondVariableElement[parsedData.ellipsoidal.secondVariable];
+      if (elementName) {
+        assertField(getNode(savedEp!, elementName), parsedData.ellipsoidal.secondVariableValue, elementName);
+      }
+    }
+
+    // Static model properties
+    if (parsedData.staticInfoTimeVariableCoefficients) {
+      const savedStatic = getNode(hcm!, 'staticModelProperties') as Record<string, unknown> | undefined;
+      expect(savedStatic, '[FIELD: staticModelProperties]').toBeTruthy();
+      assertField(
+        getNode(savedStatic!, 'infoTimeVariableCoefficients'),
+        parsedData.staticInfoTimeVariableCoefficients,
+        'infoTimeVariableCoefficients',
+      );
+    }
+
     // Temporal coverage – check start date
     const tmpNode = getNode(hcm!, 'temporalModelProperties') as Record<string, unknown> | undefined;
     if (tmpNode) {
       const coverage = extractText(getNode(tmpNode, 'temporalCoverage'));
-      const [savedStart] = coverage.split('/');
+      const [savedStart, savedEnd] = coverage.split('/');
       expect(savedStart, '[FIELD: temporalStart]').toBe(parsedData.temporalStart);
+      if (parsedData.temporalEnd) {
+        expect(savedEnd, '[FIELD: temporalEnd]').toBe(parsedData.temporalEnd);
+      }
 
       // Temporal resolution
       const savedResolution = extractText(getNode(tmpNode, 'temporalResolution'));
       expect(savedResolution, '[FIELD: temporalResolution]').toBe(parsedData.temporalResolution);
+
+      if (parsedData.temporalInstitution) {
+        assertField(getNode(tmpNode, 'generatingInstitution'), parsedData.temporalInstitution, 'generatingInstitution');
+      }
+      if (parsedData.temporalRelease) {
+        assertField(getNode(tmpNode, 'release'), parsedData.temporalRelease, 'release');
+      }
+    }
+
+    // Topographic model properties
+    if (parsedData.topographic) {
+      const savedTopo = toArray(getNode(hcm!, 'topographicModelProperties'))[0] as Record<string, unknown> | undefined;
+      expect(savedTopo, '[FIELD: topographicModelProperties]').toBeTruthy();
+      assertField(getNode(savedTopo!, 'layerApproach'), parsedData.topographic.layerApproach, 'layerApproach');
+      assertField(getNode(savedTopo!, 'forwardModellingDomain'), parsedData.topographic.forwardModellingDomain, 'forwardModellingDomain');
+      if (parsedData.topographic.approximation) {
+        assertField(getNode(savedTopo!, 'approximation'), parsedData.topographic.approximation, 'approximation');
+      }
+
+      const savedDensities = toArray(getNode(savedTopo!, 'densityInformation')) as Record<string, unknown>[];
+      expect(savedDensities.length, '[FIELD: densityInformation.length]').toBe(parsedData.topographic.densities.length);
+      for (const expectedDensity of parsedData.topographic.densities) {
+        const savedDensity = savedDensities.find(
+          d => extractText(getNode(d, 'densityInformationDomain')).toLowerCase() === expectedDensity.domain.toLowerCase(),
+        );
+        expect(savedDensity, `[FIELD: densityInformation(${expectedDensity.domain})]`).toBeTruthy();
+        assertField(
+          getNode(savedDensity!, 'densityInformationType'),
+          expectedDensity.type,
+          `densityInformation(${expectedDensity.domain}).type`,
+        );
+        if (expectedDensity.description) {
+          assertField(
+            getNode(savedDensity!, 'densityInformationDescription'),
+            expectedDensity.description,
+            `densityInformation(${expectedDensity.domain}).description`,
+          );
+        }
+      }
     }
 
     // Data sources count and fields
@@ -964,7 +1107,57 @@ for (const testCase of TEST_CASES) {
           `[FIELD: dataSources[${i}].satelliteValueName]`,
         ).toBe(ref.satelliteValueName);
       }
+
+      // Type-specific detail element, named after the source type
+      if (ref.details) {
+        const detailElement = {
+          'Ground data': 'groundDetail',
+          'Altimetry': 'altimetryDetail',
+          'Elevation/Terrain': 'elevationTerrainDetail',
+          'Model': 'modelDetail',
+        }[ref.type];
+        expect(detailElement, `[FIELD: dataSources[${i}] detail element for type ${ref.type}]`).toBeTruthy();
+        expect(
+          extractText(getNode(actual, detailElement!)),
+          `[FIELD: dataSources[${i}].${detailElement}]`,
+        ).toBe(ref.details);
+      }
+
+      if (ref.compensationDepth) {
+        expect(
+          extractText(getNode(actual, 'compensationDepth')),
+          `[FIELD: dataSources[${i}].compensationDepth]`,
+        ).toBe(ref.compensationDepth);
+      }
+
+      for (const [key, element] of [['identifier', 'identifier'], ['identifierType', 'identifierType'], ['name', 'name']] as const) {
+        const expectedValue = ref[key];
+        if (!expectedValue) continue;
+        expect(
+          extractText(getNode(actual, element)),
+          `[FIELD: dataSources[${i}].${element}]`,
+        ).toBe(expectedValue);
+      }
     }
+
+    // GGM descriptions – every section present in the reference must survive
+    const savedGgmDescs = getNode(ggp!, 'descriptions') as Record<string, unknown> | undefined;
+    const savedGgmDescList = savedGgmDescs ? toArray(getNode(savedGgmDescs, 'description')) : [];
+    for (const [section, expectedContent] of Object.entries(parsedData.ggmDescriptions)) {
+      const savedDesc = savedGgmDescList.find(
+        d => String((d as Record<string, unknown>)['section'] ?? '').toLowerCase() === section,
+      );
+      expect(savedDesc, `[FIELD: description section "${section}"]`).toBeTruthy();
+      assertField(savedDesc, expectedContent, `description(${section})`);
+    }
+
+    // Subjects – thesaurus keywords, free keywords and data source satellites
+    // all converge into dace:subjects, so compare the whole set at once.
+    const savedSubjectsNode = getNode(resource!, 'subjects') as Record<string, unknown> | undefined;
+    const savedSubjectTexts = savedSubjectsNode
+      ? [...new Set(toArray(getNode(savedSubjectsNode, 'subject')).map((s) => normalizeText(extractText(s))))].sort()
+      : [];
+    expect(savedSubjectTexts, '[FIELD: subjects]').toEqual(subjectTexts(parsedData.subjects));
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
@@ -972,8 +1165,8 @@ for (const testCase of TEST_CASES) {
   // ── Step 3: fill form → clear → assert all fields empty ────────────────
 
   test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
-    await navigateToHome(page);
-    await fillIcgemForm(page, parsedData);
+    await openGemHome(page);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     // Trigger clear form flow
     await page.locator('#button-form-reset').click();
@@ -1017,20 +1210,59 @@ for (const testCase of TEST_CASES) {
     const radiusVal = await page.locator('#input-radius').inputValue().catch(() => '');
     expect(radiusVal, 'radius').toBe('');
 
+    await expect(page.locator('#input-error-handling-approach'), 'errorHandling').toHaveValue('');
+
+    // ── Reference ellipsoid ────────────────────────────────────────────────
+    await expect(page.locator('#input-semimajor-axis'), 'semimajorAxisA').toHaveValue('');
+    await expect(page.locator('#input-second-variable'), 'secondVariable').toHaveValue('');
+    await expect(page.locator('#input-second-variable-value'), 'secondVariableValue').toHaveValue('');
+
+    // ── ICGEM Static fields ────────────────────────────────────────────────
+    const timeVariableChecked = await page.locator('#checkbox-time-variable').isChecked().catch(() => false);
+    expect(timeVariableChecked, 'timeVariable checkbox').toBe(false);
+    await expect(page.locator('#input-static-description'), 'staticDescription').toHaveValue('');
+
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue('');
+    await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue('');
+    await expect(page.locator('#select-temporal-frequency-predef'), 'temporalFrequencyPredef').toHaveValue('');
+    await expect(page.locator('#input-temporal-frequency'), 'temporalFrequency').toHaveValue('');
+    await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue('');
+    await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue('');
 
     // Custom frequency checkbox should be unchecked after reset
     const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
     expect(freqChecked, 'customFrequency checkbox').toBe(false);
 
+    // ── ICGEM Topographic fields ───────────────────────────────────────────
+    await expect(page.locator('#select-topo-layerapproach'), 'topoLayerApproach').toHaveValue('');
+    await expect(page.locator('#select-topo-domain'), 'topoDomain').toHaveValue('');
+    await expect(page.locator('#select-topo-approximation'), 'topoApproximation').toHaveValue('');
+    await expect(page.locator('#select-topo-density'), 'topoDensity').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details'), 'topoDensityDetails').toHaveValue('');
+    const separateDensityChecked = await page.locator('#checkbox-separate-density').isChecked().catch(() => false);
+    expect(separateDensityChecked, 'separateDensity checkbox').toBe(false);
+    await expect(page.locator('#select-topo-density-crust'), 'topoDensityCrust').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details-crust'), 'topoDensityDetailsCrust').toHaveValue('');
+    await expect(page.locator('#select-topo-density-mantle'), 'topoDensityMantle').toHaveValue('');
+    await expect(page.locator('#input-topo-density-details-mantle'), 'topoDensityDetailsMantle').toHaveValue('');
+
     // ── Data sources: back to 1 default empty row ──────────────────────────
     const dsRows = page.locator('#group-datasources .row[data-source-row]');
     await expect(dsRows, 'dataSources row count after clear').toHaveCount(1, { timeout: 5_000 });
+    const firstDsRow = dsRows.first();
     await expect(
-      dsRows.first().locator('textarea[name="datasource_description[]"]'),
+      firstDsRow.locator('textarea[name="datasource_description[]"]'),
       'datasource[0] description after clear',
     ).toHaveValue('');
+    await expect(firstDsRow.locator('input[name="dIdentifier[]"]'), 'datasource[0] identifier after clear').toHaveValue('');
+    await expect(firstDsRow.locator('input[name="dName[]"]'), 'datasource[0] model name after clear').toHaveValue('');
+    await expect(firstDsRow.locator('input[name="compensation_depth[]"]'), 'datasource[0] compensation depth after clear').toHaveValue('');
+
+    // ── Descriptions ───────────────────────────────────────────────────────
+    for (const { input } of Object.values(DESCRIPTION_SECTIONS)) {
+      await expect(page.locator(input), `description ${input}`).toHaveValue('');
+    }
 
     console.log('✓ 3 + 3.1 – clear-form verification passed');
   });
@@ -1043,48 +1275,16 @@ for (const testCase of TEST_CASES) {
       throw new Error(`[PREREQUISITE] Saved XML not found – run Step 2 first: ${savedXmlPath}`);
     }
 
-    // Upload the saved XML produced by Step 2
-    await navigateToHome(page);
-
-    // Open the upload modal via the Load button
-    const loadButton = page.locator('#button-form-load');
-    await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
-    await loadButton.click();
-
-    const uploadModal = page.locator('#modal-uploadxml');
-    await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
-
-    // Upload the SAVED XML (produced by Step 2), not the reference XML
-    await page.locator('#input-uploadxml-file').setInputFiles(savedXmlPath);
-
-    // Wait for the ICGEM mapping to populate the model name field
-    // (the modal closes automatically when showUploadToast fires, but we
-    //  do NOT block on that — dismiss it via Bootstrap API if still open)
-    await page.waitForFunction(
-      () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
-      { timeout: 30_000 },
-    );
-
-    // Dismiss modal via Bootstrap if it didn't auto-close
-    if (await uploadModal.isVisible().catch(() => false)) {
-      await page.evaluate(() => {
-        const modalEl = document.getElementById('modal-uploadxml');
-        if (modalEl) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const bs = (window as any).bootstrap;
-          const bsModal = bs?.Modal?.getInstance?.(modalEl);
-          if (bsModal) bsModal.hide();
-          else modalEl.classList.remove('show');
-        }
-      });
-      await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
-    }
+    // Upload the SAVED XML produced by Step 2, not the reference XML
+    await openGemHome(page);
+    await uploadXmlIntoForm(page, savedXmlPath, subjectTexts(parsedData.subjects));
 
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
     await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(parsedData.version);
-    await expect(page.locator('#input-abstract'), 'abstract').toHaveValue(parsedData.abstract);
+    // The abstract is restored from grav:descriptions (ICGEM uploads skip the
+    // DataCite description mapping), so it is asserted with the other sections below.
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue(parsedData.dateCreated);
 
     // DOI is populated from XML by the upload handler
@@ -1114,16 +1314,19 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email (required) and website (optional)
-    // Email is populated by populateIcgemContactPersons from grav:contact/grav:address.
-    // The field becomes visible after the upload toggles the contact-person checkbox.
+    // Contact person email (required) and website (optional).
+    // Email comes from grav:contact/grav:address; the matching author is the
+    // row whose contact checkbox was checked, not necessarily the first creator.
+    const contactRow = page.locator('#group-author [data-creator-row]').filter({
+      has: page.locator('input[name="contacts[]"]:checked'),
+    }).first();
     await expect(
-      page.locator('#group-author [data-creator-row]').first().locator('input[name="cpEmail[]"]'),
+      contactRow.locator('input[name="cpEmail[]"]'),
       'contactPersonEmail',
     ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
     if (parsedData.contactPersonWebsite) {
       await expect(
-        page.locator('#group-author [data-creator-row]').first().locator('input[name="cpOnlineResource[]"]'),
+        contactRow.locator('input[name="cpOnlineResource[]"]'),
         'contactPersonWebsite',
       ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
     }
@@ -1155,19 +1358,63 @@ for (const testCase of TEST_CASES) {
       parsedData.errors.toLowerCase(),
     );
 
-    await expect(page.locator('#input-earth-gravity-constant'), 'earthGravityConstant').toHaveValue(
+    await expectNumericValue(
+      page.locator('#input-earth-gravity-constant'),
       parsedData.earthGravityConstant,
+      'earthGravityConstant',
     );
+
+    if (parsedData.errorHandling) {
+      await expect(page.locator('#input-error-handling-approach'), 'errorHandling').toHaveValue(parsedData.errorHandling);
+    }
 
     // Radius (visible only for Spherical harmonics math representation)
     const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
     if (radiusVisible && parsedData.radius) {
-      await expect(page.locator('#input-radius'), 'radius').toHaveValue(parsedData.radius);
+      await expectNumericValue(page.locator('#input-radius'), parsedData.radius, 'radius');
+    }
+
+    // ── Reference ellipsoid ────────────────────────────────────────────────
+    if (parsedData.ellipsoidal) {
+      await expectNumericValue(
+        page.locator('#input-semimajor-axis'),
+        parsedData.ellipsoidal.semimajorAxisA,
+        'semimajorAxisA',
+      );
+      if (parsedData.ellipsoidal.secondVariable) {
+        await expect(page.locator('#input-second-variable'), 'secondVariable').toHaveValue(
+          parsedData.ellipsoidal.secondVariable,
+        );
+        await expectNumericValue(
+          page.locator('#input-second-variable-value'),
+          parsedData.ellipsoidal.secondVariableValue,
+          'secondVariableValue',
+        );
+      }
+    }
+
+    // ── ICGEM Static fields ────────────────────────────────────────────────
+    if (parsedData.staticInfoTimeVariableCoefficients) {
+      await expect(page.locator('#checkbox-time-variable'), 'timeVariable checkbox').toBeChecked();
+      await expect(page.locator('#input-static-description'), 'staticDescription').toHaveValue(
+        parsedData.staticInfoTimeVariableCoefficients,
+      );
     }
 
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     if (parsedData.temporalStart) {
       await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue(parsedData.temporalStart);
+    }
+    if (parsedData.temporalEnd) {
+      await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue(parsedData.temporalEnd);
+    }
+    if (parsedData.temporalInstitution) {
+      await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue(
+        parsedData.temporalInstitution,
+      );
+    }
+    if (parsedData.temporalRelease) {
+      await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue(parsedData.temporalRelease);
     }
 
     if (parsedData.temporalResolution) {
@@ -1176,6 +1423,46 @@ for (const testCase of TEST_CASES) {
       await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
         parsedData.temporalResolution,
       );
+    }
+
+    // ── ICGEM Topographic fields ───────────────────────────────────────────
+    if (parsedData.topographic) {
+      const topo = parsedData.topographic;
+      if (topo.layerApproach) {
+        await expect(page.locator('#select-topo-layerapproach'), 'topoLayerApproach').toHaveValue(
+          topo.layerApproach.toLowerCase(),
+        );
+      }
+      if (topo.forwardModellingDomain) {
+        await expect(page.locator('#select-topo-domain'), 'topoDomain').toHaveValue(
+          topo.forwardModellingDomain.toLowerCase(),
+        );
+      }
+      if (topo.approximation) {
+        await expect(page.locator('#select-topo-approximation'), 'topoApproximation').toHaveValue(
+          topo.approximation.toLowerCase(),
+        );
+      }
+
+      const separateExpected = topo.densities.some(d => ['crust', 'mantle'].includes(d.domain.toLowerCase()));
+      expect(
+        await page.locator('#checkbox-separate-density').isChecked(),
+        'separateDensity checkbox',
+      ).toBe(separateExpected);
+
+      for (const density of topo.densities) {
+        const suffix = { whole: '', crust: '-crust', mantle: '-mantle' }[density.domain.toLowerCase()]!;
+        await expect(
+          page.locator(`#select-topo-density${suffix}`),
+          `topoDensity(${density.domain})`,
+        ).toHaveValue(toDensityOptionValue(density.type));
+        if (density.description) {
+          await expect(
+            page.locator(`#input-topo-density-details${suffix}`),
+            `topoDensityDetails(${density.domain})`,
+          ).toHaveValue(density.description);
+        }
+      }
     }
 
     // ── Data sources ──────────────────────────────────────────────────────
@@ -1197,26 +1484,61 @@ for (const testCase of TEST_CASES) {
           ref.satelliteValueName,
         );
       }
+
+      if (ref.details) {
+        await expect(
+          dsRow.locator('select[name="datasource_details[]"]'),
+          `dataSources[${i}].details`,
+        ).toHaveValue(ref.details);
+      }
+
+      if (ref.compensationDepth) {
+        await expect(
+          dsRow.locator('input[name="compensation_depth[]"]'),
+          `dataSources[${i}].compensationDepth`,
+        ).toHaveValue(ref.compensationDepth);
+      }
+
+      if (ref.identifier) {
+        await expect(
+          dsRow.locator('input[name="dIdentifier[]"]'),
+          `dataSources[${i}].identifier`,
+        ).toHaveValue(ref.identifier);
+      }
+      if (ref.identifierType) {
+        await expect(
+          dsRow.locator('select[name="dIdentifierType[]"]'),
+          `dataSources[${i}].identifierType`,
+        ).toHaveValue(ref.identifierType);
+      }
+      if (ref.name) {
+        await expect(
+          dsRow.locator('input[name="dName[]"]'),
+          `dataSources[${i}].name`,
+        ).toHaveValue(ref.name);
+      }
     }
 
-    // ── GCMD Subjects (thesaurus keywords) ────────────────────────────────
-    // Verify that the upload handler populated at least the expected number of tags
-    const allThesaurusTags = await page.locator(
-      '[name="thesaurusKeywords[]"] ~ tags .tagify__tag, input[name*="platform"] ~ tags .tagify__tag',
-    ).count().catch(() => 0);
-    // The 3 satellite data source rows each have a platform tagify, so expect >= subject count
-    // For a lighter check: verify that subjects from the XML appear somewhere in the page tags
-    for (const subject of parsedData.subjects.slice(0, 3)) {
-      // Check via tagify internal value (more reliable than DOM text)
-      const found = await page.evaluate((text: string) => {
-        const inputs = document.querySelectorAll<HTMLInputElement>('input[name*="Keywords"], input[name*="keyword"]');
-        return Array.from(inputs).some((inp: HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } }) =>
-          inp._tagify?.value?.some(t => t.value === text || t.value.includes(text))
-        );
-      }, subject.text);
-      if (!found) {
-        console.warn(`[WARN] Subject "${subject.text}" not found in thesaurus tagify inputs – thesaurus mapping may require server-side GCMD data`);
-      }
+    // ── Descriptions ──────────────────────────────────────────────────────
+    for (const [section, content] of Object.entries(parsedData.ggmDescriptions)) {
+      await expect(
+        page.locator(DESCRIPTION_SECTIONS[section].input),
+        `description(${section})`,
+      ).toHaveValue(content);
+    }
+
+    // ── GCMD Subjects (thesaurus + free keywords) ─────────────────────────
+    // Every subject must land in some Tagify field: processKeywords() routes by
+    // schemeURI into the GCMD pickers and drops anything unrecognised into free
+    // keywords. Scanning all Tagify instances rather than inputs whose name
+    // contains "keyword" also covers satellite_platform[] on the data rows.
+    for (const subject of subjectTexts(parsedData.subjects)) {
+      await expect
+        .poll(() => findTagifyTag(page, subject), {
+          message: `subject "${subject}" restored into a keyword field`,
+          timeout: 10_000,
+        })
+        .toBe(true);
     }
 
     console.log('✓ 4 – fill/save/upload roundtrip and form-value verification passed');

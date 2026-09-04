@@ -109,6 +109,7 @@ describe('mappingXmlToInputFields module coverage', () => {
         delete global.Tagify;
         delete global.translations;
         delete window.updateMapOverlay;
+        delete window.waitForThesaurusVocabulary;
     });
 
     describe('module exports', () => {
@@ -929,6 +930,45 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Custom Keyword' })
             ]);
+        });
+
+        test('waits for thesaurus vocabulary before adding GCMD tags', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            let resolveWait;
+            window.waitForThesaurusVocabulary = jest.fn(() => new Promise((resolve) => {
+                resolveWait = resolve;
+            }));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            const done = mappingModule.processKeywords(xmlDoc, resolver);
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
+
+            resolveWait('loaded');
+            await done;
+
+            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
+            expect(scienceTagify.update).toHaveBeenCalled();
         });
     });
 });
