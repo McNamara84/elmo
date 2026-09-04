@@ -581,8 +581,9 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
 /**
  * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
  * available. CI's GEM job does not always have ERNIE, so stub the availability
- * payload before the homepage loads. Vocabulary trees are left unstubbed:
- * import must go through the same whitelist rules as a real session.
+ * payload before the homepage loads. Vocabulary trees stay unstubbed: import
+ * waits for the real fetch (or its failure) and then addTags, matching a
+ * session without ERNIE rather than inventing whitelist entries.
  */
 async function stubThesaurusAvailability(page: Page): Promise<void> {
   await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
@@ -598,6 +599,21 @@ async function stubThesaurusAvailability(page: Page): Promise<void> {
       }),
     });
   });
+  // GitHub CI has no ERNIE. Stub the lazy vocab fetches as unavailable so
+  // import waits on a fast 503 instead of a hanging PHP proxy, then addTags
+  // with enforceWhitelist off — the same path as a real session without ERNIE.
+  if (process.env.CI) {
+    const unavailable = {
+      status: 503,
+      contentType: 'application/json',
+      body: JSON.stringify({ error: 'Thesaurus vocabulary currently unavailable' }),
+    };
+    for (const slug of ['gcmd-science-keywords', 'gcmd-platforms', 'gcmd-instruments']) {
+      await page.route(`**/api/v2/vocabs/thesauri/${slug}`, async (route) => {
+        await route.fulfill(unavailable);
+      });
+    }
+  }
 }
 
 async function openGemHome(page: Page): Promise<void> {
@@ -615,7 +631,7 @@ async function openGemHome(page: Page): Promise<void> {
  * and – for ICGEM documents – icgemModule.loadIcgemXmlToForm(). Filling the
  * form any other way would test the test rather than the feature.
  */
-async function uploadXmlIntoForm(page: Page, xmlPath: string): Promise<void> {
+async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: string[] = []): Promise<void> {
   if (!fs.existsSync(xmlPath)) {
     throw new Error(`Upload source XML not found: ${xmlPath}`);
   }
@@ -644,6 +660,19 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string): Promise<void> {
     () => (document.querySelector<HTMLInputElement>('#input-model-name'))?.value !== '',
     { timeout: 30_000 },
   );
+
+  // Model name is written at the start of loadIcgemXmlToForm, before the
+  // second processKeywords pass and before lazy GCMD vocabularies settle.
+  // Save would persist satellite subjects only. Wait until every imported
+  // subject is on a Tagify instance.
+  for (const subject of expectedSubjects) {
+    await expect
+      .poll(() => findTagifyTag(page, subject), {
+        message: `subject "${subject}" imported into a keyword field before save`,
+        timeout: 20_000,
+      })
+      .toBe(true);
+  }
 
   // The modal normally closes itself when showUploadToast fires; dismiss it via
   // the Bootstrap API when it does not, rather than blocking on the toast.
@@ -904,7 +933,7 @@ for (const testCase of TEST_CASES) {
 
   test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
     await openGemHome(page);
-    await uploadXmlIntoForm(page, testCase.referenceXmlPath);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     const { parsedXml } = await downloadAndSaveIcgemXml(page, testCase.label);
 
@@ -1134,7 +1163,7 @@ for (const testCase of TEST_CASES) {
 
   test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
     await openGemHome(page);
-    await uploadXmlIntoForm(page, testCase.referenceXmlPath);
+    await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     // Trigger clear form flow
     await page.locator('#button-form-reset').click();
@@ -1245,7 +1274,7 @@ for (const testCase of TEST_CASES) {
 
     // Upload the SAVED XML produced by Step 2, not the reference XML
     await openGemHome(page);
-    await uploadXmlIntoForm(page, savedXmlPath);
+    await uploadXmlIntoForm(page, savedXmlPath, subjectTexts(parsedData.subjects));
 
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);

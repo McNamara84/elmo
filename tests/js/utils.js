@@ -64,6 +64,10 @@ function transformThesauriScript(source, extraExportEntries = '') {
     exportsList.push('ensureThesaurusLoaded');
   }
 
+  if (/\bfunction waitForThesaurusVocabulary\b/.test(script)) {
+    exportsList.push('waitForThesaurusVocabulary');
+  }
+
   if (extraExportEntries) {
     exportsList.push(extraExportEntries);
   }

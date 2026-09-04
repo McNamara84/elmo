@@ -292,6 +292,29 @@ describe('thesauri.js', () => {
     expect(treeAfter).toBeDefined();
   });
 
+  test('waitForThesaurusVocabulary resolves loaded after a successful fetch', async () => {
+    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const result = await waitForThesaurusVocabulary('science_keywords');
+    expect(result).toBe('loaded');
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+  });
+
+  test('waitForThesaurusVocabulary resolves error when the vocabulary request fails', async () => {
+    $.getJSON.mockImplementation((url) => {
+      if (url === 'api/v2/vocabs/thesauri/availability') {
+        return { done: jest.fn().mockReturnThis(), fail: jest.fn().mockReturnThis() };
+      }
+      return {
+        fail: jest.fn(function (fn) { fn({}, 'error', 'fail'); return this; }),
+      };
+    });
+
+    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const result = await waitForThesaurusVocabulary('platforms');
+    expect(result).toBe('error');
+  });
+
   test('loads thesaurus data only when modal is opened (lazy loading)', () => {
     // Before opening modal, jsTree should not be initialized
     const tree = $('#jstree-sciencekeyword').jstree(true);
