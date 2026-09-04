@@ -774,7 +774,7 @@ function findLabNameById(labId) {
     console.error("labData is not available");
     return null;
   }
-  return labData.find((lab) => lab.id === labId) || null;
+  return labData.find((lab) => lab.identifier === labId) || null;
 }
 
 /**
@@ -814,7 +814,7 @@ function setLabDataInRow(row, labId) {
     // Set affiliation
     const inputAffiliation = row.find('input[name="laboratoryAffiliation[]"]');
     if (inputAffiliation.length) {
-      inputAffiliation.val(lab.affiliation || "");
+      inputAffiliation.val(lab.affiliation_name || "");
     }
 
     // Set hidden fields
@@ -822,8 +822,8 @@ function setLabDataInRow(row, labId) {
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
 
-    if (hiddenRorId.length) hiddenRorId.val(lab.rorid || "");
-    if (hiddenLabId.length) hiddenLabId.val(lab.id);
+    if (hiddenRorId.length) hiddenRorId.val(lab.affiliation_ror || "");
+    if (hiddenLabId.length) hiddenLabId.val(lab.identifier || "");
   } catch (error) {
     console.error("Error in setLabDataInRow:", error);
     console.error("Error stack:", error.stack);
@@ -1684,7 +1684,10 @@ async function loadXmlToForm(xmlDoc) {
   // Warte auf das Laden der Labordaten, falls noch nicht geschehen
   if (!labData || labData.length === 0) {
     try {
-      labData = await $.getJSON("json/msl-labs.json");
+      const originatingLaboratories = await $.getJSON(
+        "/api/v2/vocabs/msl-laboratories"
+      );
+      labData = originatingLaboratories.data;
     } catch (error) {
       console.error("Error loading laboratory data:", error);
       labData = [];
