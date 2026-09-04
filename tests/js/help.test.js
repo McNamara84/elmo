@@ -1,3 +1,4 @@
+const fs = require('fs');
 const path = require('path');
 
 describe('help.js', () => {
@@ -96,5 +97,46 @@ describe('help.js', () => {
     expect(evt.defaultPrevented).toBe(true);
     expect(openSpy).toHaveBeenCalledWith('doc/help.php', '_blank');
     openSpy.mockRestore();
+  });
+
+  test('displayHelpSection extracts nested MASCON field help by id', () => {
+    const htmlData = `
+      <div id="help-mascon-properties">
+        <h3>MASCON properties</h3>
+        <div id="help-mascon-shape"><h4>Shape of MASCON</h4><p>shape help</p></div>
+      </div>
+    `;
+    help.displayHelpSection('help-mascon-shape', htmlData);
+    expect($('#helpModal .modal-body').html()).toContain('shape help');
+    help.displayHelpSection('help-mascon-properties', htmlData);
+    expect($('#helpModal .modal-body').html()).toContain('MASCON properties');
+    expect($('#helpModal .modal-body').html()).toContain('shape help');
+  });
+});
+
+describe('help.html visibility', () => {
+  const helpHtml = fs.readFileSync(path.resolve(__dirname, '../../doc/help.html'), 'utf8');
+
+  test('model-type and MASCON help sections exist and are not hidden with d-none', () => {
+    const ids = [
+      'help-no-model-type',
+      'help-static',
+      'help-temporal',
+      'help-topographic',
+      'help-mascon-properties',
+      'help-mascon-shape',
+      'help-mascon-resolution',
+      'help-mascon-count',
+      'help-land-mask',
+      'help-mascon-uncertainty',
+      'help-mascon-scale-factor',
+      'help-mascon-gad',
+      'help-mascon-background-models',
+    ];
+    ids.forEach((id) => {
+      const tag = helpHtml.match(new RegExp(`<div[^>]*\\bid="${id}"[^>]*>`));
+      expect(tag).not.toBeNull();
+      expect(tag[0]).not.toMatch(/\bd-none\b/);
+    });
   });
 });
