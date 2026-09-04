@@ -27,7 +27,6 @@ return [
     ['GET', '/affiliations/search', [new AffiliationController(), 'search']],
 
     // Vocabulary update endpoints
-    ['GET', '/update/vocabs/msl/labs', [new VocabController(), 'updateMslLabs']],
     ['GET', '/update/vocabs/msl', [new VocabController(), 'getMslVocab']],
     ['GET', '/update/timezones', [new VocabController(), 'updateTimezones']],
     ['GET', '/update/ror', [new VocabController(), 'getRorAffiliations']],
