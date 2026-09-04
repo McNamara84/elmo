@@ -97,13 +97,13 @@ describe("mappingXmlToInputFields helpers", () => {
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
     vm.runInContext(
-      `labData = [{id: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation: 'Max Planck Society', rorid: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
+      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation_name: 'Max Planck Society', affiliation_ror: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
 
-    expect(lab).toEqual({ id: "MSL-001", name: "Max Planck Institute for Astronomy",
-      display_name: "Max Planck Institute for Astronomy - Max Planck Society", affiliation: "Max Planck Society", rorid: "https://ror.org/05y42nb95", scientific_domain: "Astronomy", country: "Germany" });
+    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy",
+      display_name: "Max Planck Institute for Astronomy - Max Planck Society", affiliation_name: "Max Planck Society", affiliation_ror: "https://ror.org/05y42nb95", scientific_domain: "Astronomy", country: "Germany" });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
@@ -322,7 +322,7 @@ describe("mappingXmlToInputFields helpers", () => {
     const ctx = loadMappingModule({ $ });
 
     vm.runInContext(`labData = [{
-      id: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation: 'Aff1', rorid: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
+      identifier: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation_name: 'Aff1', affiliation_ror: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");
