@@ -190,52 +190,6 @@ class VocabController
         $stmt->close();
     }
 
-    /**
-    * Fetches MSL Laboratories from the ERNIE API and normalizes them
-    * for the local ELMO vocabulary file.
-    *
-    * @return array<int, array{
-    *     id: string,
-    *     name: string,
-    *     display_name: string,
-    *     affiliation: string,
-    *     rorid: string,
-    *     scientific_domain: string,
-    *     country: string
-    * }>
-    *
-    * @throws Exception If ERNIE is not configured or returns invalid data.
-    */
-    public function fetchAndProcessMslLabs(): array
-    {
-        $ernieService = $this->getErnieService();
-
-        if (!$ernieService->isConfigured(logResult: true)) {
-            throw new Exception('ERNIE service is not configured.');
-        }
-
-        $response = $ernieService->fetchMslLaboratories();
-
-        if (
-            $response === null
-            || !isset($response['data'])
-            || !is_array($response['data'])
-        ) {
-            throw new Exception('Unable to retrieve MSL laboratories from ERNIE.');
-        }
-
-        return array_map(static function (array $lab): array {
-            return [
-                'id' => (string) ($lab['identifier'] ?? ''),
-                'name' => (string) ($lab['name'] ?? ''),
-                'display_name' => (string) ($lab['display_name'] ?? ''),
-                'affiliation' => (string) ($lab['affiliation_name'] ?? ''),
-                'rorid' => (string) ($lab['affiliation_ror'] ?? ''),
-                'scientific_domain' => (string) ($lab['scientific_domain'] ?? ''),
-                'country' => (string) ($lab['country'] ?? ''),
-            ];
-        }, $response['data']);
-    }
 
     /**
      * Gets the latest version number for the combined vocabulary file.
@@ -417,49 +371,6 @@ class VocabController
         }
     }
 
-    /**
-     * Updates the MSL Labs vocabulary by fetching and processing data, then saving it as JSON.
-     *
-     * @return void
-     */
-    public function updateMslLabs()
-    {
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
-        try {
-            $mslLabs = $this->fetchAndProcessMslLabs();
-
-            $jsonString = json_encode(
-                $mslLabs,
-                JSON_PRETTY_PRINT |
-                JSON_UNESCAPED_UNICODE |
-                JSON_UNESCAPED_SLASHES
-            );
-
-            if ($jsonString === false) {
-                throw new Exception('Error encoding data to JSON: ' . json_last_error_msg());
-            }
-
-            $result = file_put_contents(
-                __DIR__ . '/../../../json/msl-labs.json',
-                $jsonString,
-                LOCK_EX
-            );
-
-            if ($result === false) {
-                throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
-            }
-
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['message' => 'MSL Labs vocabulary successfully updated']);
-
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
 
     /**
      * Retrieves roles, preferring ERNIE data with local DB fallback

@@ -570,18 +570,6 @@ class ErnieService
         );
     }
     
-    /**
-    * Fetches the MSL laboratories vocabulary from ERNIE.
-    *
-    * @return array<string, mixed>|null API response with version metadata and data.
-    */
-    public function fetchMslLaboratories(): ?array
-    {
-        return $this->fetchFromErnie(
-            '/api/v1/vocabularies/msl-laboratories',
-            'MSL laboratories'
-        );
-    }
 
     /**
      * Returns hardcoded fallback resource types
