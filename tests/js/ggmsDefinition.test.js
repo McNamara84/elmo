@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('ggms-definition.js', () => {
+describe('ggmsDefinition.js', () => {
     let $;
 
     beforeEach(() => {
@@ -103,7 +103,7 @@ describe('ggms-definition.js', () => {
         window.jQuery = $;
 
         // Load and modify the script
-        let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-definition.js'), 'utf8');
+        let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDefinition.js'), 'utf8');
         script = script.replace(/\$\(document\)\.ready\(function\(\) \{/g, '(function() {');
         script = script.replace(/\n\}\);\s*$/g, '\n})();');
         window.eval(script);

@@ -46,6 +46,7 @@ describe('saveHandler.js', () => {
         <input id="input-please-fill-in-this-field" name="please-fill-in-this-field">
         <div class="embargo-invalid"></div>
         <div id="group-author">
+          <input type="hidden" name="authorsPayload" value="[]">
           <input type="checkbox" name="contacts[]" value="1">
           <input type="checkbox" name="contacts[]" value="2">
         </div>
@@ -102,12 +103,19 @@ describe('saveHandler.js', () => {
         }
       }
     };
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        const payloadInput = document.querySelector('input[name="authorsPayload"]');
+        return payloadInput ? JSON.parse(payloadInput.value) : [];
+      })
+    };
     loadScript();
   });
 
   afterEach(() => {
     jest.useRealTimers();
     delete global.validateAuthorAffiliationEditors;
+    delete window.authorStack;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -284,6 +292,16 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload sends jsonld format', async () => {
+    const currentAuthorsPayload = [
+      { type: 'person', familyname: 'Payload', givenname: 'Jane', affiliations: [] }
+    ];
+    const currentAuthors = JSON.stringify(currentAuthorsPayload);
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        document.querySelector('input[name="authorsPayload"]').value = currentAuthors;
+        return currentAuthorsPayload;
+      })
+    };
     global.fetch = createSaveHandlerFetchMock({
       saveFilename: 'dataset.jsonld',
       blob: new Blob([], { type: 'application/ld+json' })
@@ -297,7 +315,27 @@ describe('saveHandler.js', () => {
     // Find the save/download fetch call
     const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
     expect(saveCall).toBeDefined();
+    expect(window.authorStack.updatePayload).toHaveBeenCalledTimes(1);
+    expect(saveCall[1].body.get('authorsPayload')).toBe(currentAuthors);
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
+    delete window.authorStack;
+    delete global.fetch;
+  });
+
+  test('saveAndDownload aborts visibly when the Authors payload field is missing', async () => {
+    document.querySelector('input[name="authorsPayload"]').remove();
+    global.fetch = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset', 'jsonld');
+
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+
+    consoleSpy.mockRestore();
     delete global.fetch;
   });
 

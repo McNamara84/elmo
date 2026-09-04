@@ -130,7 +130,7 @@ abstract class DatabaseTestCase extends TestCase
 
         $this->connection = self::$sharedConnection;    
         // Drop existing tables to ensure clean state
-        require_once __DIR__ . '/../install.php';
+        require_once __DIR__ . '/../scripts/install.php';
         dropTables($this->connection);
         
         // Create database structure

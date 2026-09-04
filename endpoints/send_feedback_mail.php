@@ -10,9 +10,10 @@
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-require 'vendor/autoload.php';
-require __DIR__ . '/api/security.php';
-include __DIR__ . '/settings.php';
+$projectRoot = dirname(__DIR__);
+require $projectRoot . '/vendor/autoload.php';
+require $projectRoot . '/api/security.php';
+include $projectRoot . '/settings.php';
 
 ensureAppSession();
 

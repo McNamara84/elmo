@@ -107,9 +107,10 @@ class VocabController
     /**
      * Retrieves relation types, preferring ERNIE data with local DB fallback
      *
-     * When ERNIE is configured, fetches relation types from ERNIE (with caching),
-     * syncs to local DB, and returns data with local IDs.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, loads relation types from the file cache or ERNIE.
+     * Local DB is synced only via onFreshData after a live ERNIE fetch (cache miss
+     * or expired file), not on every GET. Responses still map ERNIE rows to local IDs.
+     * Falls back to the local database if ERNIE is unavailable.
      *
      * @return void
      */
@@ -119,27 +120,16 @@ class VocabController
             $ernieService = $this->getErnieService();
 
             if ($ernieService->isConfigured(logResult: true)) {
-                $ernieTypes = $ernieService->getRelationTypesWithCache();
+                // onFreshData: runs only when ERNIE was actually fetched, not on cache hit.
+                $ernieTypes = $ernieService->getRelationTypesWithCache(
+                    fn(array $freshData) => $this->syncRelationTypesFromErnie($freshData)
+                );
 
                 if (!empty($ernieTypes)) {
-                    // Sync to local DB for storage purposes
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name'],
-                        'description' => $t['description'] ?? null
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Relation', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'name',
-                        'description_col' => 'description'
-                    ]);
-
-                    // Return ERNIE data with local IDs
                     $relations = $this->mapErnieToLocalIds(
                         'Relation', $ernieTypes, 'relation_id', 'ernie_id',
                         ['name' => 'name', 'description' => 'description']
                     );
-                    error_log("Relations: Serving " . count($relations) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode(['relations' => $relations]);
                     return;
@@ -395,7 +385,6 @@ class VocabController
 
         $content = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
 
         return ($httpCode == 200) ? $content : false;
     }
@@ -498,6 +487,7 @@ class VocabController
                 // Fetch person roles from ERNIE if requested
                 if (in_array($type, ['all', 'person'], true)) {
                     $personRoles = $ernieService->getContributorPersonRolesWithCache(
+                        // If the callback has the data, trigger the sync to DB
                         fn(array $freshData) => $this->syncRolesToDb($freshData, 0)
                     );
                     if (!empty($personRoles)) {
@@ -544,7 +534,6 @@ class VocabController
                     }
                     $allRoles = array_values($uniqueRoles);
 
-                    error_log("Roles ($type): Serving " . count($allRoles) . " roles from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($allRoles);
                     return;
@@ -1335,7 +1324,12 @@ class VocabController
     }
 
     /**
-     * Retrieves resource types - first tries ERNIE with cache, then falls back to local DB
+     * Retrieves resource types, preferring ERNIE data with local DB fallback
+     *
+     * When ERNIE is configured, returns resource types from cache (or fresh ERNIE data).
+     * DB sync only occurs when fresh data is fetched from ERNIE (cache miss),
+     * not on every read request. Falls back to local database if ERNIE is
+     * unavailable or not configured.
      *
      * @return void Outputs JSON response directly
      */
@@ -1344,29 +1338,16 @@ class VocabController
         try {
             $ernieService = $this->getErnieService();
 
-            // Only try ERNIE if it's configured (log configuration status)
             if ($ernieService->isConfigured(logResult: true)) {
-                $ernieTypes = $ernieService->getResourceTypesWithCache();
+                $ernieTypes = $ernieService->getResourceTypesWithCache(
+                    fn(array $freshData) => $this->syncResourceTypesFromErnie($freshData)
+                );
 
                 if (!empty($ernieTypes)) {
-                    // Sync to local DB for storage purposes
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name'],
-                        'description' => $t['description'] ?? null
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Resource_Type', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'resource_type_general',
-                        'description_col' => 'description'
-                    ]);
-
-                    // Return ERNIE data with local IDs
                     $types = $this->mapErnieToLocalIds(
                         'Resource_Type', $ernieTypes, 'resource_name_id', 'ernie_id',
                         ['name' => 'resource_type_general', 'description' => 'description']
                     );
-                    error_log("Resource Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
                     return;
@@ -1417,6 +1398,73 @@ class VocabController
 
         header('Content-Type: application/json');
         echo json_encode($types);
+    }
+
+    /**
+     * Syncs ERNIE resource types into Resource_Type.
+     *
+     * Used from GET via onFreshData (live fetch only) and from admin refresh
+     * afterRefresh (unconditional, because refresh already wrote a valid cache).
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Resource types from ERNIE
+     * @return void
+     */
+    private function syncResourceTypesFromErnie(array $ernieTypes): void
+    {
+        $syncItems = array_map(fn($t) => [
+            'ernie_id' => $t['id'],
+            'name' => $t['name'],
+            'description' => $t['description'] ?? null
+        ], $ernieTypes);
+        $this->syncErnieToDb('Resource_Type', $syncItems, [
+            'ernie_id_col' => 'ernie_id',
+            'name_col' => 'resource_type_general',
+            'description_col' => 'description'
+        ]);
+    }
+
+    /**
+     * Syncs ERNIE title types into Title_Type.
+     *
+     * Used from GET via onFreshData (live fetch only) and from admin refresh
+     * afterRefresh (unconditional, because refresh already wrote a valid cache).
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Title types from ERNIE
+     * @return void
+     */
+    private function syncTitleTypesFromErnie(array $ernieTypes): void
+    {
+        $syncItems = array_map(fn($t) => [
+            'ernie_id' => $t['id'],
+            'name' => $t['name']
+        ], $ernieTypes);
+        $this->syncErnieToDb('Title_Type', $syncItems, [
+            'ernie_id_col' => 'ernie_id',
+            'name_col' => 'name'
+        ]);
+    }
+
+    /**
+     * Syncs ERNIE relation types into Relation.
+     *
+     * Used from GET via onFreshData (live fetch only) and from admin refresh
+     * afterRefresh (unconditional, because refresh already wrote a valid cache).
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Relation types from ERNIE
+     * @return void
+     */
+    private function syncRelationTypesFromErnie(array $ernieTypes): void
+    {
+        $syncItems = array_map(fn($t) => [
+            'ernie_id' => $t['id'],
+            'name' => $t['name'],
+            'description' => $t['description'] ?? null
+        ], $ernieTypes);
+        $this->syncErnieToDb('Relation', $syncItems, [
+            'ernie_id_col' => 'ernie_id',
+            'name_col' => 'name',
+            'description_col' => 'description'
+        ]);
     }
 
     /**
@@ -1491,8 +1539,8 @@ class VocabController
      * Transforms ERNIE response format to the format expected by the frontend,
      * using local database IDs for storage compatibility.
      *
-     * Important: Must be called after syncErnieToDb() to ensure all ERNIE items
-     * have corresponding local database records with mapped ernie_id values.
+     * Requires matching local rows (from a previous onFreshData sync, admin
+     * afterRefresh, or install.php seed). Does not write the database itself.
      *
      * @param string $dbTable The database table name
      * @param array<int, array<string, mixed>> $ernieItems Raw items from ERNIE (each with 'id' key)
@@ -1551,18 +1599,11 @@ class VocabController
             'getCacheStatus',
             'Resource types',
             function ($ernieService) {
+                // Refresh already wrote a valid cache, so get*WithCache() is a hit
+                // and onFreshData would not fire. Sync from that cache explicitly.
                 $ernieTypes = $ernieService->getResourceTypesWithCache();
                 if (!empty($ernieTypes)) {
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name'],
-                        'description' => $t['description'] ?? null
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Resource_Type', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'resource_type_general',
-                        'description_col' => 'description'
-                    ]);
+                    $this->syncResourceTypesFromErnie($ernieTypes);
                 }
             }
         );
@@ -1581,9 +1622,10 @@ class VocabController
     /**
      * Retrieves all languages, preferring ERNIE data with local DB fallback
      *
-     * When ERNIE is configured, fetches languages from ERNIE (with caching),
-     * syncs to local DB, and returns data with local IDs.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, returns languages from cache (or fresh ERNIE data).
+     * DB sync only occurs when fresh data is fetched from ERNIE (cache miss),
+     * not on every read request. Falls back to local database if ERNIE is
+     * unavailable or not configured.
      *
      * @return void Outputs JSON response directly
      */
@@ -1593,15 +1635,12 @@ class VocabController
             $ernieService = $this->getErnieService();
 
             if ($ernieService->isConfigured(logResult: true)) {
-                $ernieLanguages = $ernieService->getLanguagesWithCache();
+                $ernieLanguages = $ernieService->getLanguagesWithCache(
+                    fn(array $freshData) => $this->syncLanguagesToDb($freshData)
+                );
 
                 if (!empty($ernieLanguages)) {
-                    // Sync to local DB via code matching
-                    $this->syncLanguagesToDb($ernieLanguages);
-
-                    // Return with local IDs (mapped via code)
                     $languages = $this->mapLanguagesByCode($ernieLanguages);
-                    error_log("Languages: Serving " . count($languages) . " languages from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($languages);
                     return;
@@ -1691,6 +1730,9 @@ class VocabController
      * Looks up the local language_id for each ERNIE language by its unique code,
      * returning data in the format expected by the frontend.
      *
+     * Requires matching local rows (from a previous onFreshData sync, admin
+     * afterRefresh, or install.php seed). Does not write the database itself.
+     *
      * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
      * @return array<array{id: int|null, name: string, code: string}> Languages with local IDs
      */
@@ -1729,7 +1771,8 @@ class VocabController
      * When ERNIE is configured, fetches description types from ERNIE (with caching).
      * The ERNIE response contains { "value": [...] } - the "value" array is extracted.
      * Falls back to hardcoded types (Abstract, Methods, TechnicalInfo, Other) if unavailable.
-     * No DB sync needed since description types are not stored in a local table.
+     * File cache only: description types are not stored in a local table, so there is
+     * no onFreshData / DB sync.
      *
      * @return void Outputs JSON response directly
      */
@@ -1744,7 +1787,6 @@ class VocabController
                 if (!empty($ernieData)) {
                     // ERNIE API returns { "value": [...] } - extract the array
                     $types = isset($ernieData['value']) ? $ernieData['value'] : $ernieData;
-                    error_log("Description Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
                     return;
@@ -1803,9 +1845,10 @@ class VocabController
     /**
      * Retrieves all title types, preferring ERNIE data with local DB fallback
      *
-     * When ERNIE is configured, fetches title types from ERNIE (with caching),
-     * syncs to local DB, and returns data with local IDs.
-     * Falls back to local database if ERNIE is unavailable.
+     * When ERNIE is configured, returns title types from cache (or fresh ERNIE data).
+     * DB sync only occurs when fresh data is fetched from ERNIE (cache miss),
+     * not on every read request. Falls back to local database if ERNIE is
+     * unavailable or not configured.
      *
      * @return void Outputs JSON response directly
      */
@@ -1814,27 +1857,16 @@ class VocabController
         try {
             $ernieService = $this->getErnieService();
 
-            // Only try ERNIE if it's configured (log configuration status)
             if ($ernieService->isConfigured(logResult: true)) {
-                $ernieTypes = $ernieService->getTitleTypesWithCache();
+                $ernieTypes = $ernieService->getTitleTypesWithCache(
+                    fn(array $freshData) => $this->syncTitleTypesFromErnie($freshData)
+                );
 
                 if (!empty($ernieTypes)) {
-                    // Sync to local DB for storage purposes
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name']
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Title_Type', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'name'
-                    ]);
-
-                    // Return ERNIE data with local IDs
                     $types = $this->mapErnieToLocalIds(
                         'Title_Type', $ernieTypes, 'title_type_id', 'ernie_id',
                         ['name' => 'name']
                     );
-                    error_log("Title Types: Serving " . count($types) . " types from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($types);
                     return;
@@ -1899,16 +1931,11 @@ class VocabController
             'getTitleTypesCacheStatus',
             'Title types',
             function ($ernieService) {
+                // Refresh already wrote a valid cache, so get*WithCache() is a hit
+                // and onFreshData would not fire. Sync from that cache explicitly.
                 $ernieTypes = $ernieService->getTitleTypesWithCache();
                 if (!empty($ernieTypes)) {
-                    $syncItems = array_map(fn($t) => [
-                        'ernie_id' => $t['id'],
-                        'name' => $t['name']
-                    ], $ernieTypes);
-                    $this->syncErnieToDb('Title_Type', $syncItems, [
-                        'ernie_id_col' => 'ernie_id',
-                        'name_col' => 'name'
-                    ]);
+                    $this->syncTitleTypesFromErnie($ernieTypes);
                 }
             }
         );
@@ -1957,7 +1984,9 @@ class VocabController
      * @param string $refreshMethod ErnieService method to refresh the cache
      * @param string $statusMethod ErnieService method to get cache status after refresh
      * @param string $label Human-readable label for messages
-     * @param callable|null $afterRefresh Optional callback executed after successful refresh (e.g. DB sync)
+     * @param callable|null $afterRefresh Optional callback after a successful refresh (e.g. DB sync).
+     *        Needed for vocabs persisted to MariaDB: refresh already writes a valid cache,
+     *        so a following get*WithCache() is a hit and onFreshData would not run.
      * @return void Outputs JSON response directly
      */
     private function handleCacheRefresh(
@@ -2028,6 +2057,8 @@ class VocabController
             'getLanguagesCacheStatus',
             'Languages',
             function ($ernieService) {
+                // Refresh already wrote a valid cache, so get*WithCache() is a hit
+                // and onFreshData would not fire. Sync from that cache explicitly.
                 $ernieLanguages = $ernieService->getLanguagesWithCache();
                 if (!empty($ernieLanguages)) {
                     $this->syncLanguagesToDb($ernieLanguages);
@@ -2075,7 +2106,6 @@ class VocabController
                         ];
                     }, $result['data']);
 
-                    error_log("PID4INST: Serving " . count($instruments) . " instruments from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($instruments);
                     return;
@@ -2137,6 +2167,8 @@ class VocabController
             'getContributorPersonRolesCacheStatus',
             'Contributor person roles',
             function ($ernieService) {
+                // Refresh already wrote a valid cache, so get*WithCache() is a hit
+                // and onFreshData would not fire. Sync from that cache explicitly.
                 $ernieRoles = $ernieService->getContributorPersonRolesWithCache();
                 if (!empty($ernieRoles)) {
                     $this->syncRolesToDb($ernieRoles, 0);
@@ -2167,6 +2199,8 @@ class VocabController
             'getContributorInstitutionRolesCacheStatus',
             'Contributor institution roles',
             function ($ernieService) {
+                // Refresh already wrote a valid cache, so get*WithCache() is a hit
+                // and onFreshData would not fire. Sync from that cache explicitly.
                 $ernieRoles = $ernieService->getContributorInstitutionRolesWithCache();
                 if (!empty($ernieRoles)) {
                     $this->syncRolesToDb($ernieRoles, 1);
@@ -2191,6 +2225,7 @@ class VocabController
      * Returns thesauri availability from ERNIE (with caching)
      * 
      * Tells the frontend which thesauri are currently enabled.
+     * File cache only: availability is not stored in MariaDB, so there is no onFreshData / DB sync.
      *
      * @return void Outputs JSON response directly
      */
@@ -2233,7 +2268,6 @@ class VocabController
             if ($ernieService->isConfigured()) {
                 $data = $ernieService->getThesaurusVocabularyWithCache($slug);
                 if (!empty($data)) {
-                    error_log("Thesaurus ($slug): Serving " . count($data) . " items from ERNIE (cache or fresh)");
                     header('Content-Type: application/json');
                     echo json_encode($data);
                     return;
@@ -2346,6 +2380,9 @@ class VocabController
     /**
      * Syncs relation types to local DB after a cache refresh
      *
+     * Admin refresh already wrote a valid cache, so getRelationTypesWithCache()
+     * is a hit and onFreshData would not fire. Sync from that cache explicitly.
+     *
      * @param \ErnieService $ernieService The ERNIE service instance
      * @return void
      */
@@ -2353,16 +2390,7 @@ class VocabController
     {
         $ernieTypes = $ernieService->getRelationTypesWithCache();
         if (!empty($ernieTypes)) {
-            $syncItems = array_map(fn($t) => [
-                'ernie_id' => $t['id'],
-                'name' => $t['name'],
-                'description' => $t['description'] ?? null
-            ], $ernieTypes);
-            $this->syncErnieToDb('Relation', $syncItems, [
-                'ernie_id_col' => 'ernie_id',
-                'name_col' => 'name',
-                'description_col' => 'description'
-            ]);
+            $this->syncRelationTypesFromErnie($ernieTypes);
         }
     }
 
@@ -2396,6 +2424,9 @@ class VocabController
 
     /**
      * Syncs identifier types to local DB after a cache refresh
+     *
+     * Admin refresh already wrote a valid cache, so getIdentifierTypesWithCache()
+     * is a hit and onFreshData would not fire. Sync from that cache explicitly.
      *
      * @param \ErnieService $ernieService The ERNIE service instance
      * @return void

@@ -1,17 +1,23 @@
 <?php
 /**
  *
- * This script handles the database installation process via AJAX requests.
+ * This script handles the database installation process via the command line.
  * It provides two installation options:
  * 1. Basic installation with required lookup data
  * 2. Complete installation including test data
  *
  */
 
+$isDirectInstallationRequest = realpath($_SERVER['SCRIPT_FILENAME'] ?? '') === __FILE__;
+if ($isDirectInstallationRequest && PHP_SAPI !== 'cli') {
+    http_response_code(404);
+    exit();
+}
+
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
-    $settingsPath = __DIR__ . '/settings.php';
+    $settingsPath = dirname(__DIR__) . '/settings.php';
     if (!file_exists($settingsPath)) {
         $msg = 'Error: settings.php not found. ' .
             'Please copy sample_settings.php to settings.php and update your database credentials.';
@@ -920,19 +926,22 @@ function insertTestResourceData($connection)
             ["institutionname" => "Institut für Luft- und Raumfahrt"]
         ],
         "Author" => [
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => 1],
-            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => 2],
-            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => 3]
+            ["Author_Person_author_person_id" => 1, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 2, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 3, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 4, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 5, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 6, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 7, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 8, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 9, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 10, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 11, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 12, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => 13, "Author_Institution_author_institution_id" => null],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 1],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 2],
+            ["Author_Person_author_person_id" => null, "Author_Institution_author_institution_id" => 3]
         ],
         "Affiliation" => [
             ["name" => "GFZ German Research Centre for Geosciences", "rorId" => "04z8jg394"],
@@ -1097,20 +1106,23 @@ function insertTestResourceData($connection)
 
     $helpTableData = [
         "Resource_has_Author" => [
-            ["Resource_resource_id" => 3, "Author_author_id" => 1],
-            ["Resource_resource_id" => 2, "Author_author_id" => 3],
-            ["Resource_resource_id" => 1, "Author_author_id" => 2],
-            ["Resource_resource_id" => 4, "Author_author_id" => 4],
-            ["Resource_resource_id" => 4, "Author_author_id" => 5],
-            ["Resource_resource_id" => 4, "Author_author_id" => 6],
-            ["Resource_resource_id" => 5, "Author_author_id" => 7],
-            ["Resource_resource_id" => 5, "Author_author_id" => 8],
-            ["Resource_resource_id" => 5, "Author_author_id" => 9],
-            ["Resource_resource_id" => 5, "Author_author_id" => 5],     // dr. prof. Flectner co-authored models 4 AND 5                               
-            ["Resource_resource_id" => 4, "Author_author_id" => 10],
-            ["Resource_resource_id" => 4, "Author_author_id" => 11],
-            ["Resource_resource_id" => 4, "Author_author_id" => 12],
-            ["Resource_resource_id" => 4, "Author_author_id" => 13]
+            ["Resource_resource_id" => 3, "Author_author_id" => 1, "sort_order" => 0],
+            ["Resource_resource_id" => 2, "Author_author_id" => 3, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 2, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Author_author_id" => 14, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 4, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Author_author_id" => 5, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Author_author_id" => 6, "sort_order" => 2],
+            ["Resource_resource_id" => 4, "Author_author_id" => 10, "sort_order" => 3],
+            ["Resource_resource_id" => 4, "Author_author_id" => 11, "sort_order" => 4],
+            ["Resource_resource_id" => 4, "Author_author_id" => 12, "sort_order" => 5],
+            ["Resource_resource_id" => 4, "Author_author_id" => 13, "sort_order" => 6],
+            ["Resource_resource_id" => 4, "Author_author_id" => 15, "sort_order" => 7],
+            ["Resource_resource_id" => 5, "Author_author_id" => 7, "sort_order" => 0],
+            ["Resource_resource_id" => 5, "Author_author_id" => 8, "sort_order" => 1],
+            ["Resource_resource_id" => 5, "Author_author_id" => 9, "sort_order" => 2],
+            ["Resource_resource_id" => 5, "Author_author_id" => 5, "sort_order" => 3],
+            ["Resource_resource_id" => 5, "Author_author_id" => 16, "sort_order" => 4]
         ],
         "Author_has_Affiliation" => [
             ["Author_author_id" => 1, "Affiliation_affiliation_id" => 2],
@@ -1296,14 +1308,14 @@ function processInstallation($connection, $action): array
             insertTestResourceData($connection);
             return [
                 'status' => 'success',
-                'message' => 'Database installed successfully with all test data. Please do not forget to delete the files install.php and install.html now!',
+                'message' => 'Database installed successfully with all test data.',
                 'progress' => 100
             ];
         }
 
         return [
             'status' => 'success',
-            'message' => 'Database installed successfully with required data. Please do not forget to delete the files install.php and install.html now!',
+            'message' => 'Database installed successfully with required data.',
             'progress' => 100
         ];
 
@@ -1316,31 +1328,52 @@ function processInstallation($connection, $action): array
     }
 }
 
-// Handle AJAX requests
-if (isset($_POST['action'])) {
-    header('Content-Type: application/json');
-    // Ensure connection exists
-    if (!isset($connection)) {
-        echo json_encode([
-            'status' => 'error',
-            'message' => 'Database connection not available.'
-        ]);
-        exit(1);
+/**
+ * Validate the CLI arguments and return the requested installation mode.
+ *
+ * @param list<string> $arguments
+ */
+function parseInstallationAction(array $arguments): string
+{
+    $action = $arguments[1] ?? '';
+    if (!in_array($action, ['basic', 'complete'], true)) {
+        throw new InvalidArgumentException('Usage: php scripts/install.php <basic|complete>');
     }
-    $result = processInstallation($connection, $_POST['action']);
-    echo json_encode($result);
-    exit;
+
+    return $action;
 }
 
-// Handle CLI requests
-if (php_sapi_name() === 'cli' && isset($argc) && $argc >= 2) {
-    $action = $argv[1] ?? 'basic';
-    // Ensure connection exists
+/**
+ * @param list<string> $arguments
+ */
+function runInstallationCli(array $arguments): int
+{
+    global $connection;
+
+    try {
+        $action = parseInstallationAction($arguments);
+    } catch (InvalidArgumentException $exception) {
+        fwrite(STDERR, $exception->getMessage() . PHP_EOL);
+        return 2;
+    }
+
     if (!isset($connection)) {
         fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
-        exit(1);
+        return 1;
     }
+
     $result = processInstallation($connection, $action);
     fwrite(STDOUT, $result['message'] . PHP_EOL);
-    exit($result['status'] === 'success' ? 0 : 1);
+    return $result['status'] === 'success' ? 0 : 1;
+}
+
+if ($isDirectInstallationRequest) {
+    $arguments = [];
+    foreach ($_SERVER['argv'] ?? [] as $argument) {
+        if (is_string($argument)) {
+            $arguments[] = $argument;
+        }
+    }
+
+    exit(runInstallationCli($arguments));
 }

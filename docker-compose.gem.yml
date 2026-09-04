@@ -21,11 +21,11 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
     security_opt:
       - no-new-privileges:true
 
@@ -54,6 +54,8 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      # ICGEM registration mail; Data Services still uses XML_SUBMIT_ADDRESS
+      ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS}
       SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
@@ -77,6 +79,8 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM (open beta testing)"
+    depends_on:
+      - db
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pgrep apache2 > /dev/null || exit 1"]
@@ -84,6 +88,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - xml_data:/var/www/html/xml
       - storage_data:/var/www/html/storage

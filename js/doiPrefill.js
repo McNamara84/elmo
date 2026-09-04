@@ -182,7 +182,7 @@ async function getTitleTypeMapping() {
       _titleTypeMappingCache['MainTitle'] = main.id.toString();
     }
   } catch {
-    _titleTypeMappingCache = { '': '1', MainTitle: '1', AlternativeTitle: '2', TranslatedTitle: '3' };
+    _titleTypeMappingCache = { '': '', MainTitle: '', AlternativeTitle: '', TranslatedTitle: '' };
   }
   return _titleTypeMappingCache;
 }
@@ -224,7 +224,7 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
 
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
-  return mapping[key] || mapping[''] || '1';
+  return mapping[key] ?? mapping[''] ?? '';
 }
 
 /* ================================================================== */

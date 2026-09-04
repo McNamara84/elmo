@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { transformThesauriScript } = require('./utils');
 
 class MockTagify {
   constructor(el, settings) {
@@ -35,18 +36,14 @@ class MockTagify {
   }
 }
 
-function transformThesauriScript(source) {
-  let script = source;
-  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
-  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
-  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
-  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
-  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, cleanupTagifyForInput, initTagifyForInput, getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; } };';
-  return script;
+function transformThesauriScriptForDatasources(source) {
+  return transformThesauriScript(
+    source,
+    'getTagifyInstanceCount(configKey) { const config = THESAURUS_CONFIG[configKey]; return sharedState[config.stateKey]?.tagifyInstances?.size ?? 0; }',
+  );
 }
 
-describe('ggms-datasources.js', () => {
+describe('ggmsDatasources.js', () => {
   let $;
   beforeEach(() => {
     document.body.innerHTML = `
@@ -71,15 +68,18 @@ describe('ggms-datasources.js', () => {
           <div class="col-md-5 visibility-datasources-basic"><textarea name="datasource_description[]"></textarea></div>
           <div class="col-md-3 visibility-datasources-details"><select name="datasource_details[]"></select></div>
           <div class="col-md-12 visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
-          <div class="col-md-3 visibility-datasources-satellite">sat</div>
-          <div class="col-md-6 visibility-datasources-identifier"><input name="dName[]" /></div>
+          <div class="col-md-3 visibility-datasources-satellite">
+            <div class="input-group">
+              <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
+            </div>
+          </div>
+          <div class="col-md-6 visibility-datasources-identifier"><input id="input-datasource-modelname" name="dName[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><input name="dIdentifier[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
           <div class="input-group">
             <input class="input-with-help" />
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
-          <input id="input-datasource-platforms-0" name="satellite_platform[]" />
           <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
             <button class="addDataSource"></button>
@@ -125,7 +125,9 @@ describe('ggms-datasources.js', () => {
               {
                 id: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
                 text: 'Space-based Platforms',
-                children: [ { id: 'sat', text: 'Satellite' } ]
+                children: [
+                  { id: 'earth-obs', text: 'Earth Observation Satellites', children: [ { id: 'sat', text: 'GRACE' } ] }
+                ]
               },
               { id: 'ground', text: 'Ground-based Platforms' }
             ]
@@ -157,6 +159,26 @@ describe('ggms-datasources.js', () => {
           };
           build(this.data, null);
           this.selected = [];
+          this.opened = [];
+        }
+        get_node(id) {
+          const node = this.map[id];
+          if (!node) return { id, parents: [] };
+          const parents = [];
+          let cur = node.parent;
+          while (cur) {
+            parents.unshift(cur.id);
+            cur = cur.parent;
+          }
+          return { id: node.id, text: node.text, parents: ['#'].concat(parents) };
+        }
+        open_node(id, callback) {
+          if (!this.opened.includes(id)) {
+            this.opened.push(id);
+          }
+          if (typeof callback === 'function') {
+            callback();
+          }
         }
         get_selected() {
           return this.selected;
@@ -205,9 +227,11 @@ describe('ggms-datasources.js', () => {
           if (arg === 'get_selected') return inst.get_selected(arg2);
           if (arg === 'deselect_node') { inst.deselect_node(arg2); return this; }
           if (arg === 'select_node') { inst.select_node(arg2); return this; }
+          if (arg === 'open_node') { inst.open_node(arg2); return this; }
         } else if (typeof arg === 'object') {
           const inst = new JsTreeMock(this, arg);
           this.data('jstree', inst);
+          this.trigger('ready.jstree');
           return this;
         }
         return this;
@@ -240,11 +264,11 @@ describe('ggms-datasources.js', () => {
     });
 
     const thesauriScript = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
-    window.eval(transformThesauriScript(thesauriScript));
+    window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
-    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggms-datasources.js'), 'utf8');
+    let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
     script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
-    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput } = window.__thesauriTestExports;');
+    script = script.replace("import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
     window.eval(script);
@@ -279,6 +303,57 @@ describe('ggms-datasources.js', () => {
     expect(row.children('.visibility-datasources-identifier').css('display')).toBe('none');
   });
 
+  test('does not mark satellite platform as required on submit', () => {
+    const row = $('#group-datasources .row').first();
+    const platformInput = row.find('input[name="satellite_platform[]"]');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+    expect(platformInput.prop('required')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+    expect(platformInput.prop('required')).toBe(false);
+  });
+
+  test('adds js-required-on-submit to model name when type is Model', () => {
+    const row = $('#group-datasources .row').first();
+    const modelNameInput = row.find('input[name="dName[]"]');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('M').trigger('change');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(true);
+    expect(modelNameInput.prop('required')).toBe(false);
+
+    row.find('select[name="datasource_type[]"]').val('S').trigger('change');
+    expect(modelNameInput.hasClass('js-required-on-submit')).toBe(false);
+  });
+
+  test('clears leftover required attribute when datasource type changes', () => {
+    const row = $('#group-datasources .row').first();
+    const platformInput = row.find('input[name="satellite_platform[]"]');
+
+    platformInput.attr('required', 'required');
+    row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+
+    expect(platformInput.prop('required')).toBe(false);
+    expect(platformInput.hasClass('js-required-on-submit')).toBe(false);
+  });
+
+  test('cloned row does not inherit required from template row', () => {
+    const templateRow = $('#group-datasources .row').first();
+    templateRow.find('input[name="satellite_platform[]"]').attr('required', 'required');
+
+    $('.addDataSource').trigger('click');
+
+    const newRow = $('#group-datasources .row').last();
+    const clonedPlatformInput = newRow.find('input[name="satellite_platform[]"]');
+
+    expect(clonedPlatformInput.prop('required')).toBe(false);
+    expect(clonedPlatformInput.hasClass('js-required-on-submit')).toBe(false);
+  });
+
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {
     const input = $('input[name="satellite_platform[]"]')[0];
     expect(input._tagify).toBeInstanceOf(MockTagify);
@@ -306,6 +381,7 @@ describe('ggms-datasources.js', () => {
 
   test('changing type to T populates terrain options', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const options = row.find('select[name="datasource_details[]"] option').map((i, el) => el.value).get();
     expect(options).toEqual(['Bathymetry', 'Isostasy', 'Digital Elevation Model (DEM/DTM)', 'Density Model']);
@@ -313,16 +389,35 @@ describe('ggms-datasources.js', () => {
 
   test('shows compensation depth when detail is Isostasy', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
+    const compensationInput = row.find('input[name="compensation_depth[]"]');
     detailsSelect.val('Isostasy').trigger('change');
     expect(row.children('.visibility-datasources-compensation').css('display')).not.toBe('none');
+    expect(compensationInput.prop('disabled')).toBe(false);
     detailsSelect.val('Bathymetry').trigger('change');
     expect(row.children('.visibility-datasources-compensation').css('display')).toBe('none');
+    expect(compensationInput.prop('disabled')).toBe(true);
+  });
+
+  test('disables compensation depth on non-Isostasy rows so FormData stays sparse', () => {
+    const row = $('#group-datasources .row').first();
+    const compensationInput = row.find('input[name="compensation_depth[]"]');
+
+    expect(compensationInput.prop('disabled')).toBe(true);
+
+    $('#input-model-type').val('Topographic').trigger('change');
+    row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+    expect(compensationInput.prop('disabled')).toBe(true);
+
+    row.find('select[name="datasource_details[]"]').val('Isostasy').trigger('change');
+    expect(compensationInput.prop('disabled')).toBe(false);
   });
 
   test('layout adjusts when detail Isostasy is selected', () => {
     const row = $('#group-datasources .row').first();
+    $('#input-model-type').val('Topographic').trigger('change');
     row.find('select[name="datasource_type[]"]').val('T').trigger('change');
     const detailsSelect = row.find('select[name="datasource_details[]"]');
     const compField = row.children('.visibility-datasources-compensation');
@@ -421,6 +516,15 @@ describe('ggms-datasources.js', () => {
     $('#input-platforms-thesaurussearch-ds').val('Ground');
     $('#modal-platforms-datasource').trigger('hidden.bs.modal');
     expect($('#input-platforms-thesaurussearch-ds').val()).toBe('');
+  });
+
+  test('pre-opens Space-based Platforms but not Earth Observation Satellites after thesaurus load', () => {
+    openDatasourceModal(document.getElementById('button-datasource-platforms'));
+
+    const tree = $('#jstree-platforms-datasource').jstree(true);
+    expect(tree).toBeTruthy();
+    expect(tree.opened).toContain('https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847');
+    expect(tree.opened).not.toContain('earth-obs');
   });
 
   test('remove button deletes row', () => {

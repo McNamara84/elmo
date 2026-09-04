@@ -93,10 +93,13 @@
         </div>
         <!-- Model Name (Text Input)-->
         <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 visibility-datasources-identifier">
-          <div class="input-group">
+          <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control" id="input-datasource-modelname" name="dName[]" />
               <label for="input-datasource-modelname" data-translate="dataSources.modelName">Model name</label>
+              <div class="invalid-feedback" data-translate="dataSources.modelNameInvalid">
+                Provide the name of the model here
+              </div>
             </div>
           </div>
         </div>

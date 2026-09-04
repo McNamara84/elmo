@@ -113,6 +113,9 @@ $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 // Target address for XML submit
 $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
+// Target address for the ELMO GEM ICGEM registration mail.
+$icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
+
 function getSettings($setting)
 {
     global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
