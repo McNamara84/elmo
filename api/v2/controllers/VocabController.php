@@ -373,6 +373,65 @@ class VocabController
 
 
     /**
+     * Retrieves MSL laboratories from ERNIE via the local cache.
+     *
+     * The ERNIE response contains file-metadata and the laboratory list
+     * in its "data" property. The response is forwarded unchanged so that
+     * version, lastUpdated and total remain available to the frontend.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getMslLabs(): void
+    {
+        try {
+            $ernieService = $this->getErnieService();
+
+            if (!$ernieService->isConfigured(logResult: true)) {
+                error_log('Laboratories: ERNIE service is not configured');
+
+                http_response_code(503);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'error' => 'MSL laboratories are currently unavailable'
+                ]);
+                return;
+            }
+
+            $laboratoriesVocabulary = $ernieService->getMslLabsWithCache();
+
+            if (!empty($laboratoriesVocabulary['data'])) {
+                $total = $laboratoriesVocabulary['total']
+                    ?? count($laboratoriesVocabulary['data']);
+
+                error_log(
+                    'Laboratories: Serving ' . $total
+                    . ' laboratories from ERNIE (cache or fresh)'
+                );
+
+                header('Content-Type: application/json');
+                echo json_encode($laboratoriesVocabulary);
+                return;
+            }
+
+            error_log('Laboratories: No data available from ERNIE or cache');
+
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'MSL laboratories are currently unavailable'
+            ]);
+        } catch (\Exception $e) {
+            error_log('API Error in getMslLabs: ' . $e->getMessage());
+
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'Unable to retrieve MSL laboratories'
+            ]);
+        }
+    }
+
+    /**
      * Retrieves roles, preferring ERNIE data with local DB fallback
      *
      * When ERNIE is configured, returns roles from cache (or fresh ERNIE data).
@@ -2025,6 +2084,35 @@ class VocabController
     public function getPid4instCacheStatus(): void
     {
         $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
+    }
+
+    // ==================== MSL Laboratories cache endpoints ====================
+
+    /**
+     * Refreshes the ERNIE MSL laboratories cache.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshMslLabsCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshMslLabsCache',
+            'getMslLabsCacheStatus',
+            'MSL laboratories'
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE MSL laboratories cache.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getMslLabsCacheStatus(): void
+    {
+        $this->handleCacheStatus(
+            'getMslLabsCacheStatus',
+            'MSL laboratories'
+        );
     }
 
     // ==================== Contributor Roles cache endpoints ====================

@@ -35,6 +35,7 @@ return [
 
     // Vocabulary retrieval endpoints
     ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']],
+    ['GET', '/vocabs/msl-laboratories', [new VocabController(), 'getMslLabs']],
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
     ['GET', '/vocabs/licenses/software', [new VocabController(), 'getSoftwareLicenses']],
