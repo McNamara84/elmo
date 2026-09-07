@@ -85,6 +85,9 @@ jobs:
         "
 
     - name: Create settings.php
+      env:
+        ERNIE_URL: ${{ secrets.ERNIE_URL }}
+        ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
         cat << 'EOF' > settings.php
         <?php
