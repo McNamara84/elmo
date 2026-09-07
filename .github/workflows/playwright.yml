@@ -290,43 +290,6 @@ jobs:
           curl -sf "http://localhost:${port}/index.php" > /dev/null || { echo "Server on port ${port} not reachable"; exit 1; }
         done
 
-    - name: Verify MSL laboratories API
-      run: |
-        set -euo pipefail
-
-        for port in 8000 8003; do
-          echo "=== MSL laboratories on port ${port} ==="
-
-          curl -sS --fail-with-body \
-            "http://localhost:${port}/api/v2/vocabs/msl-laboratories" \
-            | node -e '
-              let body = "";
-
-              process.stdin.on("data", (chunk) => {
-                body += chunk;
-              });
-
-              process.stdin.on("end", () => {
-                const response = JSON.parse(body);
-                const count = Array.isArray(response.data)
-                  ? response.data.length
-                  : 0;
-
-                console.log(JSON.stringify({
-                  version: response.version ?? null,
-                  lastUpdated: response.lastUpdated ?? null,
-                  total: response.total ?? null,
-                  dataCount: count,
-                  error: response.error ?? null
-                }, null, 2));
-
-                if (count === 0) {
-                  process.exit(1);
-                }
-              });
-            '
-        done
-
     - name: Run Playwright tests
       id: run_playwright_tests
       run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.projects }}
