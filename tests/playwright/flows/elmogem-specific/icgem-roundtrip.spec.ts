@@ -624,7 +624,7 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
       const spinner = document.getElementById('upload-spinner-overlay');
       return Boolean(modelName) && Boolean(spinner?.classList.contains('d-none'));
     },
-    { timeout: 30_000 },
+    { timeout: 60_000 },
   );
 
   // Wait until every imported subject is on a Tagify instance.
@@ -767,7 +767,7 @@ for (const testCase of TEST_CASES) {
   const parsedData = parseIcgemXmlFile(testCase.referenceXmlPath);
 
   test.describe.serial(`ICGEM roundtrip – ${testCase.label}`, () => {
-  test.describe.configure({ timeout: 90_000 });
+  test.describe.configure({ timeout: 120_000 });
 
   test.beforeAll(() => {
     if (!fs.existsSync(testCase.referenceXmlPath)) {

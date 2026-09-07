@@ -352,14 +352,51 @@ function populateIcgemModelTypes(data) {
 }
 
 /**
+ * Writes a satellite platform tag into a datasource Tagify (or the raw input)
+ * and flushes the hidden value so save POSTs the JSON, not only the UI chips.
+ * @param {HTMLInputElement|undefined} platformInput
+ * @param {Object} tag
+ */
+function applySatellitePlatformTag(platformInput, tag) {
+  if (platformInput && platformInput._tagify) {
+    platformInput._tagify.addTags([tag]);
+    if (typeof platformInput._tagify.update === 'function') {
+      platformInput._tagify.update();
+    } else if (typeof platformInput._tagify._updateHiddenField === 'function') {
+      platformInput._tagify._updateHiddenField();
+    }
+    return;
+  }
+  if (platformInput) {
+    $(platformInput).val(JSON.stringify([tag]));
+  }
+}
+
+/**
  * Populates the GGMsDataSources form rows.
  * Each data source entry becomes one form row; the datasource type 'change' event
  * is triggered so row visibility updates correctly.
+ *
+ * Satellite platform chips save into dace:subjects. Wait for the GCMD
+ * platforms tree already requested at thesauri init (same payload as the
+ * datasource tree) before addTags, then flush the hidden input so
+ * ingestSatellitePlatformAsKeyword sees the JSON. Do not start the lazy
+ * satellitePlatforms fetch here — that would duplicate the in-flight
+ * gcmd-platforms request. A timeout still imports: save must not depend
+ * on the chip UI alone.
+ *
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
  */
-function populateIcgemDataSources(data) {
+async function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
+
+  const needsSatelliteVocab = dataSources.some(
+    (ds) => ds.inputDataSourceType === 'Satellite' && ds.satelliteValueName
+  );
+  if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
+    await window.waitForThesaurusVocabulary('platforms');
+  }
 
   for (let i = 0; i < dataSources.length; i++) {
     const ds = dataSources[i];
@@ -377,18 +414,12 @@ function populateIcgemDataSources(data) {
 
     if (ds.inputDataSourceType === 'Satellite') {
       if (ds.satelliteValueName) {
-        const platformInput = $row.find('input[name="satellite_platform[]"]')[0];
-        const tag = {
+        applySatellitePlatformTag($row.find('input[name="satellite_platform[]"]')[0], {
           value: ds.satelliteValueName,
           id: ds.satelliteValueUri || '',
           scheme: ds.satelliteSchemeName || '',
           schemeURI: ds.satelliteSchemeUri || ''
-        };
-        if (platformInput && platformInput._tagify) {
-          platformInput._tagify.addTags([tag]);
-        } else if (platformInput) {
-          $(platformInput).val(JSON.stringify([tag]));
-        }
+        });
       }
     } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
@@ -720,7 +751,7 @@ async function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDefinition(data);
   populateIcgemProperties(data);
   populateIcgemModelTypes(data);
-  populateIcgemDataSources(data);
+  await populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
   populateIcgemContactPersons(xmlDoc);
 

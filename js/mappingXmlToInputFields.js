@@ -1409,7 +1409,8 @@ function processDates(xmlDoc, resolver) {
  * Thesaurus Tagify inputs exist after thesauriReady, which now waits until
  * each ERNIE keyword tree has settled (loaded or failed). processKeywords
  * still waits per-key in case a thesaurus was registered later. A timeout
- * means the whitelist is still in flight, so those GCMD subjects are skipped.
+ * still imports: GCMD platforms is a large tree and CI can exceed the wait,
+ * but previously saved subjects must land in Tagify (whitelist still off).
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
@@ -1506,14 +1507,12 @@ async function processKeywords(xmlDoc, resolver) {
       thesaurusKeys.add(targetGroup);
     }
   }
-  const thesaurusWaitResults = {};
   if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
     const keys = [...thesaurusKeys];
     const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
     keys.forEach((key, index) => {
-      thesaurusWaitResults[key] = results[index];
       if (results[index] === "timeout") {
-        console.warn("Thesaurus vocabulary still loading; skipping import for", key);
+        console.warn("Thesaurus vocabulary still loading; importing", key, "with whitelist off");
       }
     });
   }
@@ -1530,12 +1529,6 @@ async function processKeywords(xmlDoc, resolver) {
 
     // Ignore keywords if the target form group is disabled
     if (!targetTagify) {
-      continue;
-    }
-
-    // Do not addTags while the whitelist fetch is still in flight: a later
-    // enforceWhitelist flip drops GCMD subjects that already landed in the field.
-    if (thesaurusWaitResults[targetGroup] === "timeout") {
       continue;
     }
 

@@ -971,7 +971,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(scienceTagify.update).toHaveBeenCalled();
         });
 
-        test('skips GCMD tags when thesaurus vocabulary wait times out', async () => {
+        test('imports GCMD tags when thesaurus vocabulary wait times out', async () => {
             document.body.innerHTML = `
             <input id="input-sciencekeyword">
             <input id="input-freekeyword">
@@ -1004,7 +1004,9 @@ describe('mappingXmlToInputFields module coverage', () => {
             await mappingModule.processKeywords(xmlDoc, resolver);
 
             expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
-            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Custom Keyword' })
             ]);
