@@ -150,7 +150,7 @@ test.describe('Dataset Save with XML Verification', () => {
     console.log('✓ Extended dataset XML verification passed');
   });
 
-  test.skip('extended with multiple entries - save and verify XML', async ({ page }) => {
+  test('extended with multiple entries - save and verify XML', async ({ page }) => {
     await navigateToHome(page);
     await completeExtendedMultipleEntries(page);
     const { refRoot, actualRoot, refEnvelope, actualEnvelope } = await prepareReferencaeAndActualXml(page, 'extended-multiple');
