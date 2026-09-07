@@ -578,33 +578,6 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
   }, label);
 }
 
-/**
- * GCMD Tagify inputs are created after thesauri availability is true.
- * Stub availability so the inputs exist even if the live availability call is
- * slow. Keyword trees are fetched from ERNIE during thesauri init; upload
- * waits on window.thesauriReady, which settles after those fetches.
- */
-async function stubThesaurusAvailability(page: Page): Promise<void> {
-  await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
-        platforms: { available: true, displayName: 'GCMD Platforms' },
-        instruments: { available: true, displayName: 'GCMD Instruments' },
-        chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
-        gemet: { available: false, displayName: 'GEMET' },
-      }),
-    });
-  });
-}
-
-async function openGemHome(page: Page): Promise<void> {
-  await stubThesaurusAvailability(page);
-  await navigateToHome(page);
-}
-
 // ─── Upload helper ─────────────────────────────────────────────────────────────
 
 /**
@@ -623,8 +596,8 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
   const loadButton = page.locator('#button-form-load');
   await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
-  // thesauriReady resolves after init has fetched every keyword tree (or the
-  // fetch failed). XML upload can then addTags against a finished whitelist.
+  // thesauriReady resolves after init has fetched every keyword tree from ERNIE
+  // (or the fetch failed). XML upload can then addTags against a finished whitelist.
   await page.waitForFunction(async () => {
     await (window as any).thesauriReady;
     return true;
@@ -923,7 +896,7 @@ for (const testCase of TEST_CASES) {
   // ── Step 2: fill form → save → verify XML ──────────────────────────────
 
   test('Step 2 – fill form from parsed data, save, and verify saved XML', async ({ page }) => {
-    await openGemHome(page);
+    await navigateToHome(page);
     await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     const { parsedXml } = await downloadAndSaveIcgemXml(page, testCase.label);
@@ -1153,7 +1126,7 @@ for (const testCase of TEST_CASES) {
   // ── Step 3: fill form → clear → assert all fields empty ────────────────
 
   test('Step 3 – fill form, clear, assert all fields empty', async ({ page }) => {
-    await openGemHome(page);
+    await navigateToHome(page);
     await uploadXmlIntoForm(page, testCase.referenceXmlPath, subjectTexts(parsedData.subjects));
 
     // Trigger clear form flow
@@ -1264,7 +1237,7 @@ for (const testCase of TEST_CASES) {
     }
 
     // Upload the SAVED XML produced by Step 2, not the reference XML
-    await openGemHome(page);
+    await navigateToHome(page);
     await uploadXmlIntoForm(page, savedXmlPath, subjectTexts(parsedData.subjects));
 
     // ── Standard DataCite fields ───────────────────────────────────────────
