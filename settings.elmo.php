@@ -33,11 +33,7 @@ $mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
 // API Key for https://timezonedb.com/
 $apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
 
-// ERNIE Integration (External Vocabulary Service)
-$ernieUrl = getenv('ERNIE_URL') ?: '';
-$ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-// Cache TTL for all ERNIE data in seconds (default: 6 hours)
-$ernieCacheTtl = 21600;
+
 
 // Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
 $funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
@@ -80,6 +76,12 @@ $showMslDefaultFreeKeywords = false;
 
 // MSL data sources.
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
+
+// ERNIE Integration (External Vocabulary Service)
+$ernieUrl = getenv('ERNIE_URL') ?: '';
+$ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
+// Cache TTL for all ERNIE data in seconds (default: 6 hours)
+$ernieCacheTtl = 21600;
 
 // Single source of truth for all MSL-specific features.
 $showMslMode = false;
