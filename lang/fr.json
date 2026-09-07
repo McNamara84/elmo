@@ -273,6 +273,7 @@
         "identifierType": "Type d'identifiant",
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
         "modelName": "Nom du modèle",
+        "modelNameInvalid": "Indiquez ici le nom du modèle",
         "compensationDepth": "Profondeur de compensation (en mètres)"
     },
     "technical": {
@@ -354,6 +355,16 @@
             "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
             "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
             "errorReading": "Erreur lors de la lecture du fichier"
+        },
+        "gfcUpload": {
+            "uploadButton": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "modalTitle": "Télécharger le fichier modèle",
+            "dropZone": "Glissez-déposez un fichier GFC ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "pasteHeaderLabel": "Ou collez le texte d'en-tête :",
+            "pasteHeaderPlaceholder": "Collez les lignes d'en-tête GFC ici…",
+            "fillMetadata": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "errorNoInput": "Veuillez télécharger un fichier .gfc ou coller le texte d'en-tête dans le champ libre."
         },
         "icgemWrongApp": {
             "title": "Fichier de métadonnées ICGEM détecté",

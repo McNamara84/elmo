@@ -134,11 +134,14 @@ function saveALL(array $postData): int {
  * controller path.
  *
  * @param int $resourceId Database identifier of the resource used as the export base.
- * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>} $options
- *        Export format and optional current form data.
+ * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>, variant?: 'gfz'|'icgem'|string} $options
+ *        Export format, optional current form data, and an optional XML variant
+ *        override. Without an override the variant follows $showGGMsProperties.
+ *        ELMO GEM submissions need both variants from a single submit, so they
+ *        request them explicitly instead of toggling the global.
  * @return array{payload: string, contentType: string, extension: string, generator: string}
  *
- * @throws InvalidArgumentException When the requested format is unsupported.
+ * @throws InvalidArgumentException When the requested format or variant is unsupported.
  * @throws RuntimeException When payload generation produces an empty document.
  * @throws Throwable When database access or a controller transformation fails.
  */
@@ -147,7 +150,15 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
     global $connection;
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
     $postData = $options['postData'] ?? null;
-    $useIcgem = (bool) ($GLOBALS['showGGMsProperties'] ?? false);
+    $requestedVariant = isset($options['variant']) ? strtolower((string) $options['variant']) : null;
+
+    if ($requestedVariant !== null && !in_array($requestedVariant, ['gfz', 'icgem'], true)) {
+        throw new InvalidArgumentException("Unsupported download variant: {$requestedVariant}");
+    }
+
+    $useIcgem = $requestedVariant !== null
+        ? $requestedVariant === 'icgem'
+        : (bool) ($GLOBALS['showGGMsProperties'] ?? false);
 
     if ($downloadFormat === 'jsonld') {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';

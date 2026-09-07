@@ -140,10 +140,10 @@ function clearInputFields() {
 
     // === GGMs Definition fields (GGMsDefinition.html) ===
     // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
-    // the delegated handler in ggms-modeltypes.js, which hides the model-specific-card
+    // the delegated handler in ggmsModelTypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
     $('#input-model-type').prop('selectedIndex', 0).val('').trigger('change');
-    // .trigger('change') calls updateReferenceSystemVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateReferenceSystemVisibility() in ggmsProperties.js,
     // which resets the model properties FG back to the default spherical layout.
     $('#input-mathematical-representation').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
@@ -151,10 +151,10 @@ function clearInputFields() {
     $('#input-model-name').val('');
     $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
 
-    // === GGMs Characteristics fields (GGMsProperties.html) ===
+    // === GGMs Characteristics fields (ggms-properties.html) ===
     $('#input-tide-system').prop('selectedIndex', 0).val('');
     $('#input-degree').val('');
-    // .trigger('change') calls updateErrorHandlingVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateErrorHandlingVisibility() in ggmsProperties.js,
     // which hides the error-handling approach field when errors is reset to empty.
     $('#input-errors').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-error-handling-approach').val('');
@@ -178,7 +178,7 @@ function clearInputFields() {
 
     // === GGMs Model Types (GGMsModelTypes.html) ===
     // Static
-    // ggms-modeltypes.js registers this via native addEventListener, so we must
+    // ggmsModelTypes.js registers this via native addEventListener, so we must
     // use dispatchEvent (not .trigger()) to reach it. dispatchEvent also fires
     // any jQuery handlers listening on the same element.
     const cbTimeVar = document.getElementById('checkbox-time-variable');
@@ -188,7 +188,7 @@ function clearInputFields() {
     $('#input-temporal-start').val('');
     $('#input-temporal-end').val('');
     $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
-    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // .trigger('change') fires the jQuery handler in ggmsModelTypes.js which
     // hides #custom-frequency-container and re-enables #select-temporal-frequency-predef.
     $('#checkbox-custom-frequency').prop('checked', false).trigger('change');
     $('#input-temporal-frequency').val('');
@@ -200,7 +200,7 @@ function clearInputFields() {
     $('#select-topo-approximation').prop('selectedIndex', 0).val('');
     $('#select-topo-density').prop('selectedIndex', 0).val('');
     $('#input-topo-density-details').val('');
-    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // .trigger('change') fires the jQuery handler in ggmsModelTypes.js which
     // shows #single-density-container and hides #separate-density-container.
     $('#checkbox-separate-density').prop('checked', false).trigger('change');
     $('#select-topo-density-crust').prop('selectedIndex', 0).val('');

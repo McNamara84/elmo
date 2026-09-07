@@ -218,7 +218,7 @@ function validateDataSourceRow(array $row): array
     // Validation rules now use the postData variable names
     $typeRules = [
         'S' => [
-            'required' => ['satellite_platform'],
+            'required' => [],
             'mustBeEmpty' => ['datasource_details', 'compensation_depth', 'dIdentifier', 'dIdentifierType', 'dName']
         ],
         'G' => [
@@ -597,8 +597,6 @@ function saveGGMsDataSources(mysqli $connection, array $postData, int $resourceI
             $expandedRows = expandSatellitePlatformsToRows($row);
             if (!empty($expandedRows)) {
                 $allRows = array_merge($allRows, $expandedRows);
-            } elseif ($action === 'submit') {
-                throw new Exception("Satellite data source row is missing required satellite platform");
             } else {
                 // save_and_download: keep the row as-is so the partial record is persisted
                 $allRows[] = $row;

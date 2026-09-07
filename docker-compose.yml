@@ -3,8 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.db
-    tmpfs:  # <-- In-memory, no disk, auto-cleared on restart
-      - /var/lib/mysql:rw,uid=65532,gid=65532,mode=0770
+    volumes:
+      - db_data:/var/lib/mysql
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
       MARIADB_DATABASE: ${DB_NAME}

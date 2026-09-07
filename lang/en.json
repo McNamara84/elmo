@@ -272,6 +272,7 @@
         "identifierType": "Identifier type",
         "identifierInvalid": "Please enter a valid identifier.",
         "modelName": "Model name",
+        "modelNameInvalid": "Provide the name of the model here",
         "compensationDepth": "Compensation depth (in meters)"
     },
     "technical": {
@@ -356,6 +357,16 @@
             "invalidFileType": "Please upload an XML or JSON-LD file.",
             "errorProcessing": "Error processing metadata file",
             "errorReading": "Error reading file"
+        },
+        "gfcUpload": {
+            "uploadButton": "Fill in metadata fields from model file",
+            "modalTitle": "Upload model file",
+            "dropZone": "Drag and drop a GFC file here",
+            "selectFile": "Or click to select a file",
+            "pasteHeaderLabel": "Or paste header text:",
+            "pasteHeaderPlaceholder": "Paste GFC header lines here…",
+            "fillMetadata": "Fill in metadata fields from model file",
+            "errorNoInput": "Please upload a .gfc file or paste the header text into the free text field."
         },
         "icgemWrongApp": {
             "title": "ICGEM Metadata File Detected",

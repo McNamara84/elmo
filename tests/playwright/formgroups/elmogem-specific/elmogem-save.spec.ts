@@ -178,7 +178,8 @@ test.describe('ELMO-GEM save', () => {
 
   test('saves model with satellite and isostasy terrain data sources as XML and triggers download', async ({ page }) => {
     await navigateToHome(page);
-    await page.getByLabel('Model Type *').selectOption('Simulated');
+    // Elevation/Terrain (Isostasy) is only available for Topographic models.
+    await page.getByLabel('Model Type *').selectOption('Topographic');
     await page.locator('#button-datasource-add').click();
     await page.locator('#input-datasource-description').click();
     await page.locator('#input-datasource-description').fill('descrS');

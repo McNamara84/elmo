@@ -3,7 +3,7 @@
  * @module datasources
  */
 import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
-import { cleanupTagifyForInput, ensureThesaurusLoaded, initTagifyForInput } from '../../thesauri.js';
+import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';
 
 $(document).ready(function () {
     const datasourceGroup = $("#group-datasources");
@@ -40,37 +40,38 @@ $(document).ready(function () {
         'G': { required: [] },
         'A': { required: [] },
         'T': { required: [] },
-        'M': { required: ['dName'] }
+        'M': { required: ['input-datasource-modelname'] }
     };
 
+    function makeSpecificFieldsRequired(row, selectedType) {
+        const rules = validationRules[selectedType];
+        if (!rules) return;
+
+        for (const requiredFieldId of rules.required) {
+            row.find(`[id^="${requiredFieldId}"]:enabled`).addClass('js-required-on-submit');
+        }
+    }
+
+    function clearRequiredAttributes(row) {
+        row.find('input, select, textarea').removeAttr('required');
+    }
+
+    function clearSubmitRequiredMarkers(row) {
+        row.find('.js-required-on-submit').removeClass('js-required-on-submit');
+    }
+
     /**
-     * Updates required attributes on form fields based on datasource type
+     * Updates js-required-on-submit markers on form fields based on datasource type.
+     * Clears stale required attributes so cloned or retyped rows do not keep hidden required fields.
      * @param {jQuery} row - The data source row to process
      */
     function updateRequiredAttributes(row) {
         const typeSelect = row.find('select[name="datasource_type[]"]');
         const selectedType = typeSelect.val();
-        const rules = validationRules[selectedType];
 
-        if (!rules) return;
-
-        // Get all input/select/textarea elements in the row
-        const allFields = row.find('input, select, textarea');
-
-        allFields.each(function() {
-            const fieldName = $(this).attr('name');
-            if (!fieldName) return;
-
-            // Extract the base field name (without [])
-            const baseFieldName = fieldName.replace('[]', '');
-
-            // Check if this field is in the required list
-            if (rules.required.includes(baseFieldName)) {
-                $(this).prop('required', true).addClass('required-field');
-            } else {
-                $(this).prop('required', false).removeClass('required-field');
-            }
-        });
+        clearRequiredAttributes(row);
+        clearSubmitRequiredMarkers(row);
+        makeSpecificFieldsRequired(row, selectedType);
     }
 
     // --- Core functionality -------------------------------------------------
@@ -79,31 +80,31 @@ $(document).ready(function () {
      * It adds or removes the 'Elevation/Terrain' option based on the main 'Model Type' selection.
      * If 'Elevation/Terrain' is selected and the model type changes, it defaults the selection to 'Satellite'.
      */
-    function updateAllDatasourceTypeOptions() {
+    function updateTypeOptionsTopographicModels() {
+        datasourceGroup.children('.row').each(function () {
+            updateTypeOptionsTopographicModelsRow(this);
+        });
+    }
+
+    function updateTypeOptionsTopographicModelsRow(row) {
+        const $row = $(row);
         const modelType = $('#input-model-type').val();
         const isTopoModel = (modelType === 'Topographic');
+        const typeSelect = $row.find('select[name="datasource_type[]"]');
+        const hasTopoOption = typeSelect.find('option[value="T"]').length > 0;
 
-        // Iterate over each data source type dropdown
-        $('select[name="datasource_type[]"]').each(function() {
-            const typeSelect = $(this);
-            const hasTopoOption = typeSelect.find('option[value="T"]').length > 0;
+        if (isTopoModel && !hasTopoOption) {
+            typeSelect.append($('<option>', { value: 'T', text: 'Elevation/Terrain' }));
+            return;
+        }
 
-            if (isTopoModel && !hasTopoOption) {
-                // If the model is Topographic and the option doesn't exist, add it.
-                typeSelect.append($('<option>', { value: 'T', text: 'Elevation/Terrain' }));
-            } else if (!isTopoModel && hasTopoOption) {
-                // If the model is NOT Topographic and the option exists, remove it.
-                // First, check if it's the currently selected option.
-                if (typeSelect.val() === 'T') {
-                    // If it is, change the selection to a default value (e.g., 'S' for Satellite).
-                    typeSelect.val('S');
-                    // Trigger the change event to update the rest of the row's UI.
-                    typeSelect.trigger('change');
-                }
-                // Now, remove the option from the dropdown.
-                typeSelect.find('option[value="T"]').remove();
+        if (!isTopoModel && hasTopoOption) {
+            if (typeSelect.val() === 'T') {
+                typeSelect.val('S');
+                typeSelect.trigger('change');
             }
-        });
+            typeSelect.find('option[value="T"]').remove();
+        }
     }
 
     function handleIsostasyField(row) {
@@ -114,6 +115,9 @@ $(document).ready(function () {
         const compensationField = row.children('.visibility-datasources-compensation');
         compensationField.toggle(showField);
         compensationField.attr('aria-hidden', !showField);
+        // FormData omits disabled controls. The backend consumes compensation_depth[]
+        // as a sparse queue (Isostasy rows only), so hidden rows must not submit "".
+        compensationField.find('input, select, textarea').prop('disabled', !showField);
         adjustLayoutForIsostasy(row, showField);
     }
 
@@ -191,6 +195,7 @@ $(document).ready(function () {
     }
 
     /**
+     * A collector function that controls the visibility and layout. called for type updates and new rows.
      * Updates the visibility of fields and populates dropdowns for a given data source row.
      * @param {jQuery} row - The jQuery object for the data source row.
      */
@@ -215,18 +220,25 @@ $(document).ready(function () {
         const detailsContainer = row.children('.visibility-datasources-details');
         if (detailsContainer.is(':visible')) {
             const detailsSelect = detailsContainer.find('select[name="datasource_details[]"]');
-            detailsSelect.empty();
             const options = detailsOptions[selectedType] || [];
+            const currentValue = detailsSelect.val();
+            const existingValues = detailsSelect.find('option').map((_, option) => option.value).get();
+            const needsRepopulate = existingValues.length !== options.length
+                || options.some(option => !existingValues.includes(option));
 
-            options.forEach(detail => {
-                detailsSelect.append($('<option>', { value: detail, text: detail }));
-            });
-            // If there are options, select the first one by default
-            if(options.length > 0) {
-                detailsSelect.val(options[0]);
+            if (needsRepopulate) {
+                detailsSelect.empty();
+                options.forEach(detail => {
+                    detailsSelect.append($('<option>', { value: detail, text: detail }));
+                });
+                if (options.includes(currentValue)) {
+                    detailsSelect.val(currentValue);
+                } else if (options.length > 0) {
+                    detailsSelect.val(options[0]);
+                }
             }
         }
-
+        updateTypeOptionsTopographicModelsRow(row);
         handleIsostasyField(row);
         adjustLayoutForModel(row, selectedType === 'M');
 
@@ -239,6 +251,19 @@ $(document).ready(function () {
 
         // Update required attributes based on type rules
         updateRequiredAttributes(row);
+        resetValidationDisplay(row);
+        restoreHelpButtons(row);
+    }
+
+    /**
+     * Clears stale validation styling so Bootstrap can show feedback again on submit.
+     *
+     * @param {jQuery} row
+     */
+    function resetValidationDisplay(row) {
+        row.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
+        row.find('.tagify.is-invalid, .tagify.is-valid').removeClass('is-invalid is-valid');
+        row.find('.invalid-feedback').removeAttr('style');
     }
 
     /**
@@ -250,7 +275,7 @@ $(document).ready(function () {
     function restoreHelpButtons(row) {
         const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
         
-        row.find('div.help-placeholder').each(function () {
+        row.find('.help-placeholder').each(function () {
             const placeholder = $(this);
             const helpSectionId = placeholder.data('help-section-id') || '';
 
@@ -296,6 +321,19 @@ $(document).ready(function () {
     }
 
     /**
+     * One-time widget setup for a row (Tagify on platform input).
+     *
+     * @param {jQuery} row
+     */
+    function initializeRowWidgets(row) {
+        const platformInput = row.find('input[name="satellite_platform[]"]')[0];
+        if (!platformInput) return;
+
+        initTagifyForInput(platformInput, 'satellitePlatforms');
+        applyDatasourcePlatformPlaceholder(platformInput);
+    }
+
+    /**
      * Applies the datasource-specific placeholder to a platform input and its Tagify UI.
      *
      * @param {HTMLInputElement} inputElement - Datasource platform input enhanced by Tagify.
@@ -325,15 +363,13 @@ $(document).ready(function () {
         }
     }
 
-    // --- EVENT HANDLERS (Delegated from the static parent 'datasourceGroup') ---
+    // --- EVENT HANDLERS  ---
 
     // Add new data source entry.
     datasourceGroup.on("click", ".addDataSource", function () {
         const newRow = originalDataSourceRow.clone();
 
-        newRow.find("input, textarea, select").val("");
-        newRow.find(".is-invalid, .is-valid").removeClass("is-invalid is-valid");
-        newRow.find(".invalid-feedback").hide();
+        newRow.find("input, textarea, select").val("").removeAttr("required");
 
         // Generate unique IDs for all elements and update their corresponding labels
         const rowCount = datasourceGroup.children('.row').length;
@@ -347,22 +383,15 @@ $(document).ready(function () {
             // Find any label associated with the old ID and update its 'for' attribute
             newRow.find(`label[for="${oldId}"]`).attr('for', newId);
         });
-
-        replaceHelpButtonInClonedRows(newRow);
-        newRow.find(".addDataSource").replaceWith(createRemoveButton());
-        
-        // Set the default value to Satellite for the new row.
         newRow.find('select[name="datasource_type[]"]').val('S');
 
-        datasourceGroup.append(newRow);
-        updateRowState(newRow); // Immediately set the correct visibility.
-        restoreHelpButtons(newRow);
+        resetDatasourcePlatformSearch();
+        replaceHelpButtonInClonedRows(newRow);
+        newRow.find(".addDataSource").replaceWith(createRemoveButton());
+        updateRowState(newRow);
+        initializeRowWidgets(newRow);
 
-        const newInputElem = newRow.find('input[name="satellite_platform[]"]')[0];
-        if (newInputElem) {
-            initTagifyForInput(newInputElem, 'satellitePlatforms');
-            applyDatasourcePlatformPlaceholder(newInputElem);
-        }
+        datasourceGroup.append(newRow);
     });
 
     // Remove a data source entry.
@@ -381,18 +410,11 @@ $(document).ready(function () {
         row.remove();
     });
 
-    // Update fields when the data source type changes.
-    datasourceGroup.on('change', 'select[name="datasource_type[]"]', function () {
-        const row = $(this).closest('.row');
-        updateRowState(row);
-        restoreHelpButtons(row);
+    // Update row when type or details selection changes.
+    datasourceGroup.on('change', 'select[name="datasource_type[]"], select[name="datasource_details[]"]', function () {
+        updateRowState($(this).closest('.row'));
     });
-
-    datasourceGroup.on('change', 'select[name="datasource_details[]"]', function () {
-        const row = $(this).closest('.row');
-        handleIsostasyField(row);
-    });
-
+    // Load keywords when a search modal is loaded
     datasourcePlatformsModal.on('show.bs.modal', function () {
         resetDatasourcePlatformSearch();
         ensureThesaurusLoaded('satellitePlatforms');
@@ -403,18 +425,18 @@ $(document).ready(function () {
     });
     
     $(document).on('change', '#input-model-type', function() {
-        updateAllDatasourceTypeOptions();
+        updateTypeOptionsTopographicModels();
     });
 
     // --- INITIALIZATION ---
 
-    document.querySelectorAll('input[name="satellite_platform[]"]').forEach(function (input) {
-        initTagifyForInput(input, 'satellitePlatforms');
-        applyDatasourcePlatformPlaceholder(input);
-    });
-
-    // Set the correct visibility for the first row when the page loads.
-    if (datasourceGroup.children(".row").length > 0) {
-        updateRowState(datasourceGroup.children(".row").first());
+    function initializeAllDatasourceRows() {
+        datasourceGroup.children('.row').each(function () {
+            const row = $(this);
+            updateRowState(row);
+            initializeRowWidgets(row);
+        });
     }
+
+    initializeAllDatasourceRows();
 });

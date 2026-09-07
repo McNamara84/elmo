@@ -37,6 +37,9 @@ final class FileNameConventionTest extends TestCase
             'Playwright spec' => ['tests/playwright/feedback-security.spec.ts'],
             'legacy CI router exception' => ['ci-router.php'],
             'tool configuration' => ['composer.json'],
+            'Jest config exception' => ['jest.config.js'],
+            'Playwright config exception' => ['playwright.gem.config.ts'],
+            'Babel config exception' => ['babel.config.cjs'],
             'excluded dependency' => ['vendor/PackageName.php'],
         ];
     }

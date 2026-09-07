@@ -984,6 +984,11 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);
+        $serialized = $xml->asXML();
+        $this->assertNotFalse($serialized);
+        $this->assertStringContainsString('compensationDepth', $serialized);
+        $this->assertStringContainsString('>1000</', $serialized);
+        $this->assertStringContainsString('uom="m"', $serialized);
     }
 
     /**

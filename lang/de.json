@@ -273,6 +273,7 @@
         "identifierType": "Identifikatortyp",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
+        "modelNameInvalid": "Geben Sie hier den Namen des Modells ein",
         "compensationDepth": "Ausgleichstiefe (in Metern)"
     },
     "technical": {
@@ -357,6 +358,16 @@
             "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
             "errorReading": "Fehler beim Lesen der Datei"
+        },
+        "gfcUpload": {
+            "uploadButton": "Metadatenfelder aus Modelldatei ausfüllen",
+            "modalTitle": "Modelldatei hochladen",
+            "dropZone": "GFC-Datei hierher ziehen und ablegen",
+            "selectFile": "oder klicken, um eine Datei auszuwählen",
+            "pasteHeaderLabel": "Oder Kopfzeilentext einfügen:",
+            "pasteHeaderPlaceholder": "GFC-Kopfzeilen hier einfügen…",
+            "fillMetadata": "Metadatenfelder aus Modelldatei ausfüllen",
+            "errorNoInput": "Bitte laden Sie eine .gfc-Datei hoch oder fügen Sie den Kopfzeilentext in das Freitextfeld ein."
         },
         "icgemWrongApp": {
             "title": "ICGEM-Metadatendatei erkannt",
