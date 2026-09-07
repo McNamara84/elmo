@@ -133,10 +133,6 @@ jobs:
         $feedbackAddress = 'feedback@test.com';
         $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
-        $ernieUrl = getenv('ERNIE_URL') ?: '';
-        $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-        $ernieCacheTtl = 21600;
-
         // Feature toggles from environment variables (set per PHP server instance)
         $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'true', FILTER_VALIDATE_BOOLEAN);
 
@@ -188,9 +184,6 @@ jobs:
       run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
 
     - name: Start PHP servers for all ELMO instances
-      env:
-        ERNIE_URL: ${{ secrets.ERNIE_URL }}
-        ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
         # ELMO Standard (Port 8000)
         SHOW_MSL_MODE=false \
