@@ -294,6 +294,8 @@ jobs:
       run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.projects }}
       env:
         CI: true
+        ERNIE_URL: ${{ secrets.ERNIE_URL }}
+        ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
 
     - name: Publish ELMO performance metrics
       id: publish_performance_metrics
