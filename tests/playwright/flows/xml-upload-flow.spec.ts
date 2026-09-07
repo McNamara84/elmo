@@ -303,7 +303,13 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
   'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
   'json/funders.json': MOCK_FUNDERS,
-  'json/msl-labs.json': MOCK_LABS,
+  // 'json/msl-labs.json': MOCK_LABS,
+  '/api/v2/vocabs/msl-laboratories': {
+    version: 'test',
+    lastUpdated: '2026-09-07T00:00:00+00:00',
+    total: MOCK_LABS.length,
+    data: MOCK_LABS,
+  },
   'json/affiliations.json': [{
     id: 'aff-1',
     name: 'GFZ German Research Centre for Geosciences',
