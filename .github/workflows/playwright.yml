@@ -289,33 +289,6 @@ jobs:
           curl -sf "http://localhost:${port}/index.php" > /dev/null || { echo "Server on port ${port} not reachable"; exit 1; }
         done
 
-    - name: Diagnose MSL laboratories endpoint
-      run: |
-        set -o pipefail
-
-        echo "=== Chromium instance: port 8000 ==="
-        curl -sS -i \
-          "http://localhost:8000/api/v2/vocabs/msl-laboratories" \
-          || true
-
-        echo
-        echo "=== WebKit MSL instance: port 8003 ==="
-        curl -sS -i \
-          "http://localhost:8003/api/v2/vocabs/msl-laboratories" \
-          || true
-
-        echo
-        echo "=== Relevant MSL server log entries ==="
-        grep -iE "laborator|ernie|cache|error|fatal" server-msl.log \
-          | tail -100 \
-          || true
-
-        echo
-        echo "=== Relevant standard server log entries ==="
-        grep -iE "laborator|ernie|cache|error|fatal" server-elmo.log \
-          | tail -100 \
-          || true
-
     - name: Run Playwright tests
       id: run_playwright_tests
       run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.projects }}
