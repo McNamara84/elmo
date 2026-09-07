@@ -52,11 +52,7 @@
  *     topographic-whole        whole-model density, multi-layer/spectral options
  *
  * ── Runs under ────────────────────────────────────────────────────────────────
- *   playwright.gem.config.ts  (showGGMsProperties=true, workers capped at 2)
- *
- *   Every step saves and downloads through the single-threaded PHP dev server,
- *   so more than two workers queue those requests behind each other until save
- *   exceeds the test timeout. Both configs cap it; do not raise it via --workers.
+ *   playwright.gem.config.ts  (showGGMsProperties=true)
  *
  * ── NOTE on normalisation ─────────────────────────────────────────────────────
  *   Reference XML files MUST be produced by ELMOGEM (save/download), not

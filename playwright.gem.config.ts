@@ -7,12 +7,7 @@ import { defineConfig, devices } from '@playwright/test';
  * Usage:  npx playwright test --config=playwright.gem.config.ts
  *
  * Applies GEM settings to settings.php once (via the setup project), then
- * runs all GEM tests in parallel for fast local feedback.
- *
- * Parallelism is capped at two workers: the whole variant is served by one
- * single-threaded PHP dev server, and the save/download steps in
- * flows/elmogem-specific/icgem-roundtrip.spec.ts queue behind each other past the test timeout
- * when more workers compete for it. CI applies the same cap.
+ * runs all GEM tests in parallel across multiple workers for fast local feedback.
  *
  * TEST SCOPE:
  *   features, flows (excl. minimal-data-submission, contact-person-roundtrip,
@@ -26,7 +21,7 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
 export default defineConfig({
   testDir: './tests/playwright',
   fullyParallel: true,
-  workers: 2,
+  workers: undefined, // use all available CPU cores
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [
