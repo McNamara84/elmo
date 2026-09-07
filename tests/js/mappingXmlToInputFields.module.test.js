@@ -970,5 +970,73 @@ describe('mappingXmlToInputFields module coverage', () => {
             ]);
             expect(scienceTagify.update).toHaveBeenCalled();
         });
+
+        test('skips GCMD tags when thesaurus vocabulary wait times out', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+            <input id="input-freekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('timeout'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                    <ns:subject>Custom Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Custom Keyword' })
+            ]);
+        });
+
+        test('imports GCMD tags when thesaurus vocabulary fetch errors', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('error'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
+        });
     });
 });

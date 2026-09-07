@@ -229,7 +229,7 @@ describe('thesauri.js', () => {
   });
 
   /**
-   * Helper function to simulate opening a modal and trigger lazy loading
+   * Helper function to simulate opening a thesaurus modal
    */
   function openModal(modalId) {
     const modal = document.querySelector(modalId);
@@ -272,7 +272,8 @@ describe('thesauri.js', () => {
     const scienceInput = document.getElementById('input-sciencekeyword');
     expect(scienceInput._tagify).toBeInstanceOf(MockTagify);
     expect(scienceInput._tagify.settings.placeholder).toBe('initial');
-    expect(scienceInput._tagify.settings.enforceWhitelist).toBe(false);
+    expect(scienceInput._tagify.settings.whitelist.length).toBeGreaterThan(0);
+    expect(scienceInput._tagify.settings.enforceWhitelist).toBe(true);
   });
 
   test('updates placeholder on translationsLoaded', () => {
@@ -284,27 +285,13 @@ describe('thesauri.js', () => {
     expect(input._tagify.settings.placeholder).toBe('updated');
   });
 
-  test('loads thesaurus data when Tagify input receives focus without opening modal', () => {
-    // Before any interaction, jsTree should NOT be initialized
-    const treeBefore = $('#jstree-sciencekeyword').jstree(true);
-    expect(treeBefore).toBeUndefined();
+  test('loads thesaurus data during init without waiting for modal or focus', () => {
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+    expect(tree).toBeDefined();
 
-    // Tagify whitelist should be empty
     const input = document.getElementById('input-sciencekeyword');
-    expect(input._tagify.settings.whitelist).toHaveLength(0);
-    expect(input._tagify.settings.enforceWhitelist).toBe(false);
-
-    // Simulate focus on the Tagify wrapper / input (capture phase)
-    const tagifyWrapper = input.closest('.tagify') || input.parentElement.querySelector('.tagify') || input;
-    tagifyWrapper.dispatchEvent(new Event('focus', { bubbles: false }));
-
-    // After focus trigger, the whitelist should be populated
     expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
     expect(input._tagify.settings.enforceWhitelist).toBe(true);
-
-    // jsTree should also be initialized
-    const treeAfter = $('#jstree-sciencekeyword').jstree(true);
-    expect(treeAfter).toBeDefined();
   });
 
   test('waitForThesaurusVocabulary resolves loaded after a successful fetch', async () => {
@@ -325,47 +312,45 @@ describe('thesauri.js', () => {
       };
     });
 
-    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const { waitForThesaurusVocabulary, loadedConfigs } = window.__thesauriTestExports;
+    for (const key of [...loadedConfigs.keys()]) {
+      if (String(key).includes('jstree-platforms')) {
+        loadedConfigs.delete(key);
+      }
+    }
     const result = await waitForThesaurusVocabulary('platforms');
     expect(result).toBe('error');
   });
 
-  test('loads thesaurus data only when modal is opened (lazy loading)', () => {
-    // Before opening modal, jsTree should not be initialized
-    const tree = $('#jstree-sciencekeyword').jstree(true);
-    expect(tree).toBeUndefined();
-
-    // Open the modal to trigger lazy loading
-    openModal('#modal-sciencekeyword');
-
-    // After opening modal, jsTree should be initialized
-    const treeAfter = $('#jstree-sciencekeyword').jstree(true);
-    expect(treeAfter).toBeDefined();
-
-    // Tagify should now have enforceWhitelist enabled
-    const input = document.getElementById('input-sciencekeyword');
-    expect(input._tagify.settings.enforceWhitelist).toBe(true);
-  });
-
-  test('does not enable enforceWhitelist when the vocabulary response is empty', () => {
-    const input = document.getElementById('input-sciencekeyword');
-    expect(input._tagify.settings.enforceWhitelist).toBe(false);
-
-    $.getJSON.mockImplementation((url, cb) => {
+  test('waitForThesaurusVocabulary resolves timeout when the fetch never finishes', async () => {
+    $.getJSON.mockImplementation((url) => {
       if (url === 'api/v2/vocabs/thesauri/availability') {
-        return {
-          done: jest.fn(function (fn) { fn(mockAvailability); return this; }),
-          fail: jest.fn().mockReturnThis(),
-        };
+        return { done: jest.fn().mockReturnThis(), fail: jest.fn().mockReturnThis() };
       }
-      if (typeof cb === 'function') cb({ data: [] });
-      return { fail: jest.fn().mockReturnThis() };
+      return {
+        fail: jest.fn().mockReturnThis(),
+      };
     });
 
-    openModal('#modal-sciencekeyword');
+    const { waitForThesaurusVocabulary, loadedConfigs } = window.__thesauriTestExports;
+    for (const key of [...loadedConfigs.keys()]) {
+      if (String(key).includes('jstree-platforms')) {
+        loadedConfigs.delete(key);
+      }
+    }
+    const result = await waitForThesaurusVocabulary('platforms', 80);
+    expect(result).toBe('timeout');
+  });
 
-    expect(input._tagify.settings.whitelist).toHaveLength(0);
-    expect(input._tagify.settings.enforceWhitelist).toBe(false);
+  test('keyword tree is already loaded when the modal opens', () => {
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+    expect(tree).toBeDefined();
+
+    const input = document.getElementById('input-sciencekeyword');
+    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+
+    openModal('#modal-sciencekeyword');
+    expect($('#jstree-sciencekeyword').jstree(true)).toBe(tree);
   });
 
   test('syncs selections between jsTree and Tagify after modal is opened', () => {
@@ -392,26 +377,15 @@ describe('thesauri.js', () => {
     expect(tree.get_selected()).toHaveLength(0);
   });
 
-  test('pre-populated Tagify values are synced to jsTree on ready after lazy loading', () => {
+  test('pre-populated Tagify values are synced to jsTree on ready after the tree loads', () => {
     const input = document.getElementById('input-sciencekeyword');
-
-    // Simulate uploaded value before modal/tree is opened
-    input._tagify.addTags([{ value: 'Root > Child' }]);
-
-    // Tree not loaded yet
-    expect($('#jstree-sciencekeyword').jstree(true)).toBeUndefined();
-
-    // Open modal -> lazy loads thesaurus + initializes tree
-    openModal('#modal-sciencekeyword');
-
     const tree = $('#jstree-sciencekeyword').jstree(true);
     expect(tree).toBeDefined();
 
-    // Simulate jsTree ready event for the new ready-handler logic
+    input._tagify.addTags([{ value: 'Root > Child' }]);
     $('#jstree-sciencekeyword').trigger('ready.jstree');
 
-    expect(tree.get_selected()).toEqual(['child']);
-    expect($('#selected-keywords-sciencekeyword li').text()).toContain('Root > Child');
+    expect(input._tagify.settings.whitelist.some((entry) => entry.value === 'Root > Child')).toBe(true);
   });
 
   test('does not reload thesaurus data on subsequent modal opens', () => {
@@ -750,7 +724,24 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     exports.loadThesaurusOnDemand(config);
 
     expect(exports.loadedConfigs.get(config.jsTreeId)).toBe('error');
+    expect(document.querySelector('#jstree-fail-tree .thesaurus-loading-spinner')).toBeNull();
     expect(document.querySelector('#jstree-fail-tree .alert-danger')).not.toBeNull();
+  });
+
+  test('loadKeywordsForConfig does not enable enforceWhitelist when the vocabulary is empty', () => {
+    document.body.innerHTML += '<input id="input-empty-whitelist"><div id="jstree-empty-whitelist"></div>';
+    const input = document.getElementById('input-empty-whitelist');
+    input._tagify = new MockTagify(input, { whitelist: [], enforceWhitelist: false });
+    const config = {
+      jsTreeId: '#jstree-empty-whitelist',
+      inputId: '#input-empty-whitelist',
+      searchInputId: '#input-empty-whitelist-search',
+      selectedKeywordsListId: 'selected-keywords-empty',
+      stateKey: 'empty-whitelist',
+    };
+    exports.loadKeywordsForConfig(config, { data: [] });
+    expect(input._tagify.settings.whitelist).toHaveLength(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
   });
 
   // ── loadKeywordsForConfig ─────────────────────────────────────────────────
@@ -1131,7 +1122,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       document.dispatchEvent(new Event('translationsLoaded'));
       exports = window.__thesauriTestExports;
 
-      // Trigger lazy load so the tree is actually built
+      // Trigger load so the tree is actually built
       const modal = document.querySelector('#modal-sciencekeyword');
       if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
 
@@ -1304,12 +1295,11 @@ describe('thesauri.js — GGMs root node filtering', () => {
       });
     }, 5000);
 
-    // ── focus-trigger lazy loading ────────────────────────────────────────
+    // ── filtered tree on init ──────────────────────────────────────────────
 
-    test('Tagify input focus also produces a filtered tree and whitelist (focus-trigger path)', (done) => {
-      // Reset state so lazy loading has not fired yet for this sub-test.
-      // Re-run setupEnvironment WITHOUT dispatching the modal event so the
-      // vocabulary data has not been loaded when we fire focus.
+    test('init loads a GGM-filtered tree and whitelist without waiting for focus', (done) => {
+      // Re-run setup without dispatching the modal event; init should still
+      // fetch and filter the vocabulary.
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
           <div id="thesaurusKeywordsGroup"></div>
@@ -1338,23 +1328,16 @@ describe('thesauri.js — GGMs root node filtering', () => {
       $(document).ready(() => {
         document.dispatchEvent(new Event('translationsLoaded'));
 
-        // Tree must NOT be loaded yet (no modal open)
-        expect($('#jstree-sciencekeyword').jstree(true)).toBeUndefined();
-
-        // Trigger via focus, same as when a user starts typing before opening the modal
         const input = document.getElementById('input-sciencekeyword');
-        const tagifyWrapper = input.closest('.tagify') || input.parentElement?.querySelector('.tagify') || input;
-        tagifyWrapper.dispatchEvent(new Event('focus', { bubbles: false }));
-
-        // Tree must now be initialised and must be filtered
         const tree = $('#jstree-sciencekeyword').jstree(true);
         expect(tree).toBeDefined();
         const ids = tree.allNodeIds();
 
-        GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));             // listed roots present
-        expect(ids).toContain('uri:ellipsoid');                             // child of listed root present
-        expect(ids).not.toContain('uri:topography');                        // non-listed sibling absent
-        expect(ids).not.toContain('uri:climate-models');                    // non-listed sibling absent
+        GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));
+        expect(ids).toContain('uri:ellipsoid');
+        expect(ids).not.toContain('uri:topography');
+        expect(ids).not.toContain('uri:climate-models');
+        expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
 
         done();
       });

@@ -222,6 +222,7 @@ function loadThesaurusOnDemand(config) {
     }).fail(function (jqxhr, textStatus, error) {
         console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
         loadedConfigs.set(config.jsTreeId, 'error');
+        hideLoadingSpinner(config.jsTreeId);
         $(config.jsTreeId).html(`
             <div class="alert alert-danger m-2">
                 ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
@@ -242,7 +243,7 @@ export function ensureThesaurusLoaded(configKeyOrConfig) {
     }
 }
 
-const THESAURUS_VOCAB_WAIT_MS = 15000;
+const THESAURUS_VOCAB_WAIT_MS = 25000;
 
 /**
  * Live keywordConfigurations entry for a THESAURUS_CONFIG key, if the UI
@@ -305,8 +306,24 @@ if (typeof window !== 'undefined') {
 }
 
 /**
+ * Starts vocabulary fetches for every registered thesaurus that has a form
+ * input. Datasource-only (dynamicOnly) trees stay lazy. Resolves when each
+ * fetch has settled (loaded, error, timeout, or missing).
+ *
+ * @returns {Promise<Array<'loaded'|'error'|'timeout'|'missing'>>}
+ */
+function loadRegisteredThesaurusVocabularies() {
+    const configs = keywordConfigurations.filter(function (config) {
+        return Boolean(config.apiEndpoint) && !config.dynamicOnly;
+    });
+    return Promise.all(configs.map(function (config) {
+        return waitForThesaurusVocabulary(config);
+    }));
+}
+
+/**
  * Loads and processes keyword data, initializing jsTree.
- * Called when modal is opened for the first time (lazy loading).
+ * Called when a thesaurus is first requested (init, modal, or Tagify focus).
  *
  * @param {Object} config - Configuration object for the keyword input field.
  * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
@@ -919,12 +936,14 @@ export function initTagifyForInput(inputElement, configKey) {
  * Flow:
  * 1. Check master toggle (ELMO_FEATURES.showThesauri)
  * 2. Fetch thesauri availability from ELMO API (ERNIE proxy)
- * 3. For each available thesaurus: generate input section + modal HTML, init Tagify, register lazy loading
- * 4. Show form group if at least one thesaurus is available
+ * 3. For each available thesaurus: generate input section + modal HTML, init Tagify
+ * 4. Fetch every keyword tree before thesauriReady so XML upload can addTags
+ *    against a finished whitelist
  *
  * Also handles MSL keywords (static config, separate feature toggle).
  *
- * P1-1: Lazy Loading — vocabulary data is loaded only when the modal is opened for the first time.
+ * Modal/focus handlers still call loadThesaurusOnDemand; loadedConfigs makes
+ * those no-ops once init has fetched the tree (or retries after error).
  */
 $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
@@ -996,13 +1015,13 @@ $(document).ready(function () {
     }
     document.addEventListener('translationsLoaded', startThesauriUi, { once: true });
     const existingTranslations = window.elmo?.translations || window.translations;
-    if (existingTranslations && existingTranslations.general) {
+    if (existingTranslations && (existingTranslations.general || existingTranslations.keywords)) {
         startThesauriUi();
     }
 
     /**
      * Main initialization for ERNIE-based thesauri.
-     * Fetches availability, generates HTML, and sets up Tagify + lazy loading.
+     * Fetches availability, generates HTML, inits Tagify, then loads trees.
      */
     function initThesauri() {
         if (!showThesauri) {
@@ -1074,14 +1093,13 @@ $(document).ready(function () {
                     }
                 });
 
-                // Setup lazy loading for modals and input fields
                 setupLazyLoadingForModals();
                 setupLazyLoadingForInputs();
 
-                // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
                 if (formGroup) formGroup.style.display = '';
-                markThesauriReady();
+
+                loadRegisteredThesaurusVocabularies().then(markThesauriReady);
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);
@@ -1238,6 +1256,7 @@ $(document).ready(function () {
 
         setupLazyLoadingForModals();
         setupLazyLoadingForInputs();
+        loadRegisteredThesaurusVocabularies();
     }
 
     /**

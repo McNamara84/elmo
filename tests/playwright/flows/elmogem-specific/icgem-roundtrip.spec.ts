@@ -579,11 +579,10 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
 }
 
 /**
- * GCMD Tagify inputs are created only after ERNIE reports those thesauri as
- * available. CI's GEM job does not have ERNIE, so stub availability as true
- * (inputs exist) and vocab fetches as 503 (import waits, then addTags with
- * enforceWhitelist off). That matches a session without ERNIE instead of
- * inventing whitelist entries.
+ * GCMD Tagify inputs are created after thesauri availability is true.
+ * Stub availability so the inputs exist even if the live availability call is
+ * slow. Keyword trees are fetched from ERNIE during thesauri init; upload
+ * waits on window.thesauriReady, which settles after those fetches.
  */
 async function stubThesaurusAvailability(page: Page): Promise<void> {
   await page.route('**/api/v2/vocabs/thesauri/availability', async (route) => {
@@ -599,20 +598,6 @@ async function stubThesaurusAvailability(page: Page): Promise<void> {
       }),
     });
   });
-  // No ERNIE in GitHub CI (and often none in Docker). Stub the lazy vocab
-  // fetches as unavailable so import waits on a fast 503 instead of a hanging
-  // PHP proxy, then addTags with enforceWhitelist off — the same path as a
-  // real session without ERNIE. Always stub here so local and CI match.
-  const unavailable = {
-    status: 503,
-    contentType: 'application/json',
-    body: JSON.stringify({ error: 'Thesaurus vocabulary currently unavailable' }),
-  };
-  for (const slug of ['gcmd-science-keywords', 'gcmd-platforms', 'gcmd-instruments']) {
-    await page.route(`**/api/v2/vocabs/thesauri/${slug}`, async (route) => {
-      await route.fulfill(unavailable);
-    });
-  }
 }
 
 async function openGemHome(page: Page): Promise<void> {
@@ -638,10 +623,12 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
   const loadButton = page.locator('#button-form-load');
   await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
-  await page.evaluate(() => (window as any).thesauriReady);
-  // thesauriReady also resolves when availability fails and no GCMD inputs
-  // are created. processKeywords then skips those subjects, so wait until
-  // the Tagify instances actually exist before uploading.
+  // thesauriReady resolves after init has fetched every keyword tree (or the
+  // fetch failed). XML upload can then addTags against a finished whitelist.
+  await page.waitForFunction(async () => {
+    await (window as any).thesauriReady;
+    return true;
+  }, { timeout: 40_000 });
   await page.waitForFunction(() => {
     const science = document.querySelector('#input-sciencekeyword') as { _tagify?: unknown } | null;
     const platforms = document.querySelector('#input-platforms') as { _tagify?: unknown } | null;
@@ -807,6 +794,7 @@ for (const testCase of TEST_CASES) {
   const parsedData = parseIcgemXmlFile(testCase.referenceXmlPath);
 
   test.describe.serial(`ICGEM roundtrip – ${testCase.label}`, () => {
+  test.describe.configure({ timeout: 90_000 });
 
   test.beforeAll(() => {
     if (!fs.existsSync(testCase.referenceXmlPath)) {
