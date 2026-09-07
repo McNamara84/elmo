@@ -61,6 +61,11 @@ class ErnieService
     private string $contributorInstitutionRolesCacheFile;
 
     /**
+     * @var string Path to the MSL laboratories cache file
+     */
+    private string $mslLabsCacheFile;
+
+    /**
      * @var string Path to the thesauri availability cache file
      */
     private string $thesauriAvailabilityCacheFile;
@@ -129,6 +134,7 @@ class ErnieService
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
         $this->contributorPersonRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json';
         $this->contributorInstitutionRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json';
+        $this->mslLabsCacheFile = __DIR__ . '/../../../storage/cache/ernie_msl_labs.json';
         $this->thesauriAvailabilityCacheFile = __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json';
         $this->scienceKeywordsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_science_keywords.json';
         $this->platformsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_platforms.json';
@@ -205,6 +211,16 @@ class ErnieService
     protected function getContributorInstitutionRolesCacheFile(): string
     {
         return $this->contributorInstitutionRolesCacheFile;
+    }
+
+    /**
+     * Gets the MSL laboratories cache file path
+     *
+     * @return string Path to the MSL laboratories cache file
+     */
+    protected function getMslLabsCacheFile(): string
+    {
+        return $this->mslLabsCacheFile;
     }
 
     /**
@@ -603,6 +619,7 @@ class ErnieService
             $onFreshData
         );
     }
+    
 
     /**
      * Returns hardcoded fallback resource types
@@ -1061,6 +1078,102 @@ class ErnieService
     public function getPid4instCacheStatus(): array
     {
         return $this->getCacheFileStatus($this->getPid4instCacheFile());
+    }
+
+    // ──────────────────────────────────────────────────────────────
+    //  MSL Laboratories
+    // ──────────────────────────────────────────────────────────────
+
+    /**
+     * Fetches the MSL laboratories from the ERNIE API.
+     *
+     * The response contains file-metadata and the actual laboratories
+     * in the "data" property.
+     *
+     * @return array<string, mixed>|null MSL laboratories or null on failure
+     */
+    public function fetchMslLabs(): ?array
+    {
+        return $this->fetchFromErnie(
+            '/api/v1/vocabularies/msl-laboratories',
+            'MSL laboratories'
+        );
+    }
+
+    /**
+     * Gets the MSL laboratories with caching logic.
+     *
+     * Priority:
+     * 1. Valid cache (not expired)
+     * 2. Fresh data from ERNIE
+     * 3. Stale cache if ERNIE is unavailable
+     * 4. Empty array as last resort
+     *
+     * The returned structure is the ERNIE response:
+     * {
+     *   version: string,
+     *   lastUpdated: string,
+     *   total: int,
+     *   data: array
+     * }
+     *
+     * @return array<string, mixed> MSL laboratories
+     */
+    public function getMslLabsWithCache(): array
+    {
+        return $this->getDataWithCache(
+            '/api/v1/vocabularies/msl-laboratories',
+            'MSL laboratories',
+            $this->getMslLabsCacheFile(),
+            static fn(): array => []
+        );
+    }
+
+    /**
+     * Forces the MSL laboratories cache to refresh from ERNIE.
+     *
+     * @return bool True if the refresh was successful
+     */
+    public function refreshMslLabsCache(): bool
+    {
+        return $this->refreshCacheFromApi(
+            '/api/v1/vocabularies/msl-laboratories',
+            'MSL laboratories',
+            $this->getMslLabsCacheFile()
+        );
+    }
+
+    /**
+     * Gets status information for the MSL laboratories cache.
+     *
+     * @return array{
+     *     exists: bool,
+     *     valid: bool,
+     *     lastUpdated: string|null,
+     *     age: int|null,
+     *     ageFormatted?: string|null,
+     *     ttl?: int,
+     *     itemCount: int,
+     *     error?: string
+     * }
+     */
+    public function getMslLabsCacheStatus(): array
+    {
+        $status = $this->getCacheFileStatus(
+            $this->getMslLabsCacheFile()
+        );
+
+        $laboratoriesVocabulary = $this->readCacheFile(
+            $this->getMslLabsCacheFile(),
+            true
+        );
+
+        if (isset($laboratoriesVocabulary['data']) &&
+            is_array($laboratoriesVocabulary['data'])) {
+            $status['itemCount'] = count($laboratoriesVocabulary['data']);
+        }
+
+        return $status;
     }
 
     // ──────────────────────────────────────────────────────────────

@@ -20,11 +20,6 @@ if (!defined('UNIT_TESTING')) {
 class VocabController
 {
     /**
-     * @var string The URL for MSL Labs data.
-     */
-    private $url;
-
-    /**
      * @var string The base URL for MSL vocabularies.
      */
     private $mslVocabsUrl;
@@ -41,9 +36,7 @@ class VocabController
      */
     public function __construct()
     {
-        global $mslLabsUrl;
         global $mslVocabsUrl;
-        $this->url = $mslLabsUrl;
         $this->mslVocabsUrl = $mslVocabsUrl;
     }
 
@@ -187,51 +180,6 @@ class VocabController
         $stmt->close();
     }
 
-    /**
-     * Fetches MSL Labs data from a remote URL, processes it, and returns the necessary fields.
-     *
-     * @return array<mixed> Processed MSL Labs data.
-     * @throws Exception If fetching or decoding the data fails.
-     */
-    public function fetchAndProcessMslLabs(): array
-    {
-        $opts = [
-            'http' => [
-                'method' => 'GET',
-                'header' => [
-                    'User-Agent: PHP Script',
-                    'Accept: application/json',
-                    'Accept-Charset: UTF-8'
-                ]
-            ]
-        ];
-        $context = stream_context_create($opts);
-
-        $jsonData = file_get_contents($this->url, false, $context);
-
-        if ($jsonData === false) {
-            throw new Exception('Error fetching data from GitHub: ' . error_get_last()['message']);
-        }
-
-        // Decode JSON data
-        $labs = json_decode($jsonData, true);
-
-        if ($labs === null) {
-            throw new Exception('Error decoding JSON data: ' . json_last_error_msg());
-        }
-
-        // Process data and retain only necessary fields
-        $processedLabs = array_map(function ($lab) {
-            return [
-                'id' => $lab['identifier'],
-                'name' => $lab['name'],
-                'affiliation' => $lab['affiliation_name'],
-                'rorid' => $lab['affiliation_ror']
-            ];
-        }, $labs);
-
-        return $processedLabs;
-    }
 
     /**
      * Gets the latest version number for the combined vocabulary file.
@@ -413,47 +361,63 @@ class VocabController
         }
     }
 
+
     /**
-     * Updates the MSL Labs vocabulary by fetching and processing data, then saving it as JSON.
+     * Retrieves MSL laboratories from ERNIE via the local cache.
      *
-     * @return void
+     * The ERNIE response contains file-metadata and the laboratory list
+     * in its "data" property. The response is forwarded unchanged so that
+     * version, lastUpdated and total remain available to the frontend.
+     *
+     * @return void Outputs JSON response directly
      */
-    public function updateMslLabs()
+    public function getMslLabs(): void
     {
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
         try {
-            $mslLabs = $this->fetchAndProcessMslLabs();
+            $ernieService = $this->getErnieService();
 
-            $jsonString = json_encode(
-                $mslLabs,
-                JSON_PRETTY_PRINT |
-                JSON_UNESCAPED_UNICODE |
-                JSON_UNESCAPED_SLASHES
-            );
+            if (!$ernieService->isConfigured(logResult: true)) {
+                error_log('Laboratories: ERNIE service is not configured');
 
-            if ($jsonString === false) {
-                throw new Exception('Error encoding data to JSON: ' . json_last_error_msg());
+                http_response_code(503);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'error' => 'MSL laboratories are currently unavailable'
+                ]);
+                return;
             }
 
-            $result = file_put_contents(
-                __DIR__ . '/../../../json/msl-labs.json',
-                $jsonString,
-                LOCK_EX
-            );
+            $laboratoriesVocabulary = $ernieService->getMslLabsWithCache();
 
-            if ($result === false) {
-                throw new Exception('Error saving JSON file: ' . error_get_last()['message']);
+            if (!empty($laboratoriesVocabulary['data'])) {
+                $total = $laboratoriesVocabulary['total']
+                    ?? count($laboratoriesVocabulary['data']);
+
+                error_log(
+                    'Laboratories: Serving ' . $total
+                    . ' laboratories from ERNIE (cache or fresh)'
+                );
+
+                header('Content-Type: application/json');
+                echo json_encode($laboratoriesVocabulary);
+                return;
             }
 
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode(['message' => 'MSL Labs vocabulary successfully updated']);
+            error_log('Laboratories: No data available from ERNIE or cache');
 
-        } catch (Exception $e) {
+            http_response_code(503);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'MSL laboratories are currently unavailable'
+            ]);
+        } catch (\Exception $e) {
+            error_log('API Error in getMslLabs: ' . $e->getMessage());
+
             http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'error' => 'Unable to retrieve MSL laboratories'
+            ]);
         }
     }
 
@@ -2151,6 +2115,35 @@ class VocabController
     public function getPid4instCacheStatus(): void
     {
         $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
+    }
+
+    // ==================== MSL Laboratories cache endpoints ====================
+
+    /**
+     * Refreshes the ERNIE MSL laboratories cache.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function refreshMslLabsCache(): void
+    {
+        $this->handleCacheRefresh(
+            'refreshMslLabsCache',
+            'getMslLabsCacheStatus',
+            'MSL laboratories'
+        );
+    }
+
+    /**
+     * Gets the status of the ERNIE MSL laboratories cache.
+     *
+     * @return void Outputs JSON response directly
+     */
+    public function getMslLabsCacheStatus(): void
+    {
+        $this->handleCacheStatus(
+            'getMslLabsCacheStatus',
+            'MSL laboratories'
+        );
     }
 
     // ==================== Contributor Roles cache endpoints ====================

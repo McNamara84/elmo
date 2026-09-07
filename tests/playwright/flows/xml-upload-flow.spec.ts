@@ -241,8 +241,11 @@ const MOCK_LABS = [
   {
     identifier: 'lab-123',
     name: 'Sample Lab',
+    display_name: 'Sample Lab - GFZ German Research Centre for Geosciences',
     affiliation_name: 'GFZ German Research Centre for Geosciences',
     affiliation_ror: 'https://ror.org/04abcd123',
+    scientific_domain: 'Geoscience',
+    country: 'Germany',
   },
 ];
 
@@ -684,7 +687,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue('Grants database');
 
     const labSelect = page.locator('select[name="laboratoryName[]"]').first();
-    await expect(labSelect).toHaveValue('Sample Lab');
+    await expect(labSelect).toHaveValue('Sample Lab - GFZ German Research Centre for Geosciences');
     await expect(page.locator('input[name="LabId[]"]').first()).toHaveValue('lab-123');
 
     await expect(page.locator('input[name="rIdentifier[]"]').first()).toHaveValue('10.5555/example');
