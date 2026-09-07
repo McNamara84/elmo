@@ -4,7 +4,7 @@ import {
     whitelistValueFromNode,
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
-} from './thesaurusFullKeywords.js';
+} from './thesauriHelpers.js';
 
 /**
  * Recursively searches a jsTree data array for a specific node ID.

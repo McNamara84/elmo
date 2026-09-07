@@ -9,9 +9,9 @@ const {
   resolveTagAgainstWhitelist,
   upgradeExistingTagsToFullKeywords,
   findNodeByPath,
-} = require('../../js/thesaurusFullKeywords.js');
+} = require('../../js/thesauriHelpers.js');
 
-describe('thesaurusFullKeywords', () => {
+describe('thesauriHelpers', () => {
   describe('stampFullKeywords', () => {
     test('stamps each descendant with its own unfiltered breadcrumb', () => {
       const tree = [{
@@ -102,11 +102,13 @@ describe('thesaurusFullKeywords', () => {
         value: [{ value: 'Child', id: 'child' }],
         removeAllTags: jest.fn(function () { this.value = []; }),
         addTags: jest.fn(function (tags) { this.value = tags; }),
+        update: jest.fn(),
       };
       upgradeExistingTagsToFullKeywords(tagify, [
         { value: 'Parent > Child', id: 'child' },
       ]);
       expect(tagify.value[0].value).toBe('Parent > Child');
+      expect(tagify.update).toHaveBeenCalled();
     });
   });
 

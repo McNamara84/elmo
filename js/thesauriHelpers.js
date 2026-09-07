@@ -1,10 +1,11 @@
 /**
- * Full GCMD breadcrumb helpers for thesaurus trees and Tagify.
+ * Thesaurus helpers for GCMD breadcrumb paths and Tagify form sync.
  *
  * GGM (and other) UIs show a cut subtree, but saved keyword text must be the
  * unfiltered path including scheme-root (`Science Keywords > …`, `Platforms > …`).
  * These helpers stamp that path on every node, put it on the whitelist, resolve
- * imported tags onto it, and match Tagify values back to filtered-tree nodes.
+ * imported tags onto it, match Tagify values back to filtered-tree nodes, and
+ * flush Tagify chips onto original inputs before save/submit.
  */
 
 /**
@@ -173,6 +174,11 @@ export function upgradeExistingTagsToFullKeywords(tagifyInstance, whitelist) {
 
     tagifyInstance.removeAllTags();
     tagifyInstance.addTags(upgraded);
+    if (typeof tagifyInstance.update === 'function') {
+        tagifyInstance.update();
+    } else if (typeof tagifyInstance._updateHiddenField === 'function') {
+        tagifyInstance._updateHiddenField();
+    }
 }
 
 /**
@@ -207,4 +213,52 @@ export function findNodeByPath(jsTreeInstance, path) {
         if (treePath && path.endsWith(' > ' + treePath)) return true;
         return false;
     }) || null;
+}
+
+/**
+ * Copies live Tagify chip state onto the original inputs so FormData includes them.
+ *
+ * Tagify.value can show chips in the UI while the original input is still empty
+ * (late whitelist upgrade, Firefox). FormData(form) reads only those originals,
+ * and omits disabled controls.
+ *
+ * @param {ParentNode} root - Form or document that owns the Tagify inputs.
+ */
+export function synchronizeTagifyInputs(root) {
+    if (!root || typeof root.querySelectorAll !== 'function') {
+        return;
+    }
+
+    root.querySelectorAll('input').forEach((input) => {
+        const tagify = input._tagify;
+        if (!tagify) {
+            return;
+        }
+
+        if (typeof tagify.update === 'function') {
+            tagify.update();
+        } else if (typeof tagify._updateHiddenField === 'function') {
+            tagify._updateHiddenField();
+        }
+
+        if (input.disabled) {
+            input.disabled = false;
+        }
+
+        if ((!input.value || input.value === '[]') && Array.isArray(tagify.value) && tagify.value.length > 0) {
+            input.value = JSON.stringify(tagify.value);
+        }
+    });
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = {
+        stampFullKeywords,
+        getNodeFullKeyword,
+        whitelistValueFromNode,
+        resolveTagAgainstWhitelist,
+        upgradeExistingTagsToFullKeywords,
+        findNodeByPath,
+        synchronizeTagifyInputs,
+    };
 }
