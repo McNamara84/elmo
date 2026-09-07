@@ -184,6 +184,9 @@ jobs:
       run: echo '[{"crossRefId":"100000001","name":"National Science Foundation"}]' > json/funders.json
 
     - name: Start PHP servers for all ELMO instances
+      env:
+        ERNIE_URL: ${{ secrets.ERNIE_URL }}
+        ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
         # ELMO Standard (Port 8000)
         SHOW_MSL_MODE=false \
