@@ -74,8 +74,6 @@ $defaultLicense = 'CC-BY-4.0';
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
 $showMslLabs = false;
-// URL to the source with all laboratories for MSL
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 // Show MSL vocabularies
 $showMslVocabs = false;
 // URL to the source with all vocabularies for MSL

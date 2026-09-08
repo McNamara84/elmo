@@ -139,7 +139,6 @@ jobs:
           $showLicense = true;
           $defaultLicense = 'CC-BY-4.0';
           $showMslLabs = false;
-          $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
           $showMslVocabs = false;
           $mslVocabsUrl = '';
           $showUsedInstruments = false;

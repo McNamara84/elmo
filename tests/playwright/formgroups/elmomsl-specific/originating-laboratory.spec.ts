@@ -2,27 +2,27 @@ import { test, expect } from '@playwright/test';
 import { enableHelp, expectNavbarVisible, navigateToHome, SELECTORS } from '../../utils';
 
 test.describe('Originating Laboratory', () => {
-    test.beforeEach(async ({ page }) => {
-        await navigateToHome(page);
-        await expectNavbarVisible(page);
-        await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible();
-    });
+  test.beforeEach(async ({ page }) => {
+    await navigateToHome(page);
+    await expectNavbarVisible(page);
+    await expect(page.locator(SELECTORS.formGroups.originatingLaboratory)).toBeVisible();
+  });
 
 
   test('Laboratory select loads options from JSON', async ({ page }) => {
-  // Warte hier auf das Laden der Optionen
-  await page.waitForFunction(() =>
-    document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
-  );
+    // Warte hier auf das Laden der Optionen
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#input-originatinglaboratory-name option').length > 1
+    );
 
-  const select = page.locator('#input-originatinglaboratory-name');
-  const options = select.locator('option');
-  const count = await options.count();
-  expect(count).toBeGreaterThan(1);
+    const select = page.locator('#input-originatinglaboratory-name');
+    const options = select.locator('option');
+    const count = await options.count();
+    expect(count).toBeGreaterThan(1);
 
-  const optionTexts = await options.allTextContents();
-  expect(optionTexts.join(' ')).toContain('');
-});
+    const optionTexts = await options.allTextContents();
+    expect(optionTexts.join(' ')).toContain('');
+  });
 
 
   test('Selecting a lab fills hidden fields correctly', async ({ page }) => {
@@ -32,7 +32,10 @@ test.describe('Originating Laboratory', () => {
     );
 
     const select = page.locator('#input-originatinglaboratory-name');
-    const firstVisibleOptionValue = await select.locator('option:nth-child(2)').getAttribute('value');
+    const firstVisibleOptionValue = await select
+      .locator('option:not([value=""])')
+      .first()
+      .getAttribute('value');
 
     // Select first actual lab
     await select.selectOption(firstVisibleOptionValue!);
@@ -86,5 +89,57 @@ test.describe('Originating Laboratory', () => {
 
     await expect(modal).toBeVisible();
     await expect(modal.locator('.modal-body')).toContainText('Originating Laboratory');
+  });
+
+  test('Laboratories are grouped by scientific domain', async ({ page }) => {
+    await page.waitForFunction(() =>
+      document.querySelectorAll(
+        '#input-originatinglaboratory-name optgroup'
+      ).length > 0
+    );
+
+    const select = page.locator('#input-originatinglaboratory-name');
+    const optionGroups = select.locator('optgroup');
+
+    // Verify that at least one scientific-domain group exists.
+    expect(await optionGroups.count()).toBeGreaterThan(0);
+
+    // Verify that every group has a visible heading.
+    const groupLabels = await optionGroups.evaluateAll((groups) =>
+      groups.map((group) => group.getAttribute('label') || '')
+    );
+
+    expect(groupLabels.every((label) => label.trim() !== '')).toBe(true);
+
+    // Verify that scientific-domain headings are alphabetically sorted.
+    const sortedGroupLabels = [...groupLabels].sort((firstDomain, secondDomain) =>
+      firstDomain.localeCompare(secondDomain)
+    );
+
+    expect(groupLabels).toEqual(sortedGroupLabels);
+  });
+
+  test('Laboratories are sorted within each scientific domain', async ({ page }) => {
+    await page.waitForFunction(() =>
+      document.querySelectorAll(
+        '#input-originatinglaboratory-name optgroup'
+      ).length > 0
+    );
+
+    const optionGroups = page.locator(
+      '#input-originatinglaboratory-name optgroup'
+    );
+
+    const groups = await optionGroups.all();
+
+    for (const group of groups) {
+      const laboratoryNames = await group.locator('option').allTextContents();
+
+      const sortedLaboratoryNames = [...laboratoryNames].sort(
+        (firstLab, secondLab) => firstLab.localeCompare(secondLab)
+      );
+
+      expect(laboratoryNames).toEqual(sortedLaboratoryNames);
+    }
   });
 });

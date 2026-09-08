@@ -805,7 +805,8 @@ function setLabDataInRow(row, labId) {
 
   try {
     // Set the select value to the lab name
-    selectName.val(lab.name);
+    selectName.val(lab.display_name);
+
 
     // Trigger change event to ensure any attached handlers run
     selectName.trigger("change");
@@ -820,8 +821,9 @@ function setLabDataInRow(row, labId) {
     const hiddenRorId = row.find('input[name="laboratoryRorIds[]"]');
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
+
     if (hiddenRorId.length) hiddenRorId.val(lab.affiliation_ror || "");
-    if (hiddenLabId.length) hiddenLabId.val(lab.identifier);
+    if (hiddenLabId.length) hiddenLabId.val(lab.identifier || "");
   } catch (error) {
     console.error("Error in setLabDataInRow:", error);
     console.error("Error stack:", error.stack);
@@ -1682,7 +1684,10 @@ async function loadXmlToForm(xmlDoc) {
   // Warte auf das Laden der Labordaten, falls noch nicht geschehen
   if (!labData || labData.length === 0) {
     try {
-      labData = await $.getJSON("json/msl-labs.json");
+      const originatingLaboratories = await $.getJSON(
+        "/api/v2/vocabs/msl-laboratories"
+      );
+      labData = originatingLaboratories.data;
     } catch (error) {
       console.error("Error loading laboratory data:", error);
       labData = [];
