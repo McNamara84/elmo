@@ -1119,13 +1119,14 @@ class ErnieService
      *
      * @return array<string, mixed> MSL laboratories
      */
-    public function getMslLabsWithCache(): array
+    public function getMslLabsWithCache(?callable $onFreshData = null): array
     {
         return $this->getDataWithCache(
             '/api/v1/vocabularies/msl-laboratories',
             'MSL laboratories',
             $this->getMslLabsCacheFile(),
-            static fn(): array => []
+            static fn(): array => [],
+            $onFreshData
         );
     }
 
