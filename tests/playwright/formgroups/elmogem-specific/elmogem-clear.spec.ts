@@ -49,7 +49,7 @@ const MT = {
   // Temporal
   temporalStart:        '#input-temporal-start',
   temporalEnd:          '#input-temporal-end',
-  temporalFreqPredef:   '#select-temporal-frequency-predef',
+  releaseFrequency:     '#select-release-frequency',
   customFreqCheckbox:   '#checkbox-custom-frequency',
   temporalFrequency:    '#input-temporal-frequency',
   temporalInstitution:  '#input-temporal-institution',
@@ -135,7 +135,7 @@ test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
 
     await expect(page.locator(MT.temporalStart)).toHaveValue('');
     await expect(page.locator(MT.temporalEnd)).toHaveValue('');
-    await expect(page.locator(MT.temporalFreqPredef)).toHaveValue('');
+    await expect(page.locator(MT.releaseFrequency)).toHaveValue('');
     await expect(page.locator(MT.temporalInstitution)).toHaveValue('');
     await expect(page.locator(MT.releaseNumber)).toHaveValue('');
     await expect(page.locator(MT.customFreqCheckbox)).not.toBeChecked();

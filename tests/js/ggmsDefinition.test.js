@@ -295,6 +295,57 @@ describe('ggmsDefinition.js', () => {
             expect(selectElement.prop('disabled')).toBe(false);
         });
 
+        test('should keep MASCON selected when vocab options reload', () => {
+            const selectElement = $('select[name="mathematical_representation"]');
+            selectElement.append($('<option>', { value: 'MASCON', text: 'MASCON' }));
+            selectElement.val('MASCON');
+
+            const mockReps = [{
+                name: 'Spherical harmonics',
+                description: 'SH'
+            }, {
+                name: 'MASCON',
+                description: 'Mass Concentration representation.'
+            }];
+
+            jest.spyOn($, 'ajax').mockImplementation(options => {
+                if (options.url.includes('/vocabs/mathreps')) {
+                    if (options.beforeSend) options.beforeSend();
+                    if (options.success) options.success(mockReps);
+                    if (options.complete) options.complete();
+                }
+            });
+
+            window.setupMathReps();
+
+            expect(selectElement.val()).toBe('MASCON');
+        });
+
+        test('should keep MASCON when it is set while vocab request is in flight', () => {
+            const selectElement = $('select[name="mathematical_representation"]');
+            const mockReps = [{
+                name: 'Spherical harmonics',
+                description: 'SH'
+            }, {
+                name: 'MASCON',
+                description: 'Mass Concentration representation.'
+            }];
+
+            jest.spyOn($, 'ajax').mockImplementation(options => {
+                if (options.url.includes('/vocabs/mathreps')) {
+                    if (options.beforeSend) options.beforeSend();
+                    selectElement.append($('<option>', { value: 'MASCON', text: 'MASCON' }));
+                    selectElement.val('MASCON');
+                    if (options.success) options.success(mockReps);
+                    if (options.complete) options.complete();
+                }
+            });
+
+            window.setupMathReps();
+
+            expect(selectElement.val()).toBe('MASCON');
+        });
+
         test('should show message when no math reps are available', () => {
             jest.spyOn($, 'ajax').mockImplementation(options => {
                 if (options.url.includes('/vocabs/mathreps')) {

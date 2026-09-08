@@ -977,6 +977,8 @@ $(document).ready(function () {
                 // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
                 if (formGroup) formGroup.style.display = '';
+
+                document.dispatchEvent(new CustomEvent('keywordsReady'));
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);

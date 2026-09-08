@@ -1186,8 +1186,8 @@ include_once "../settings.php";
                 </div>
             </div>
             <?php endif; ?>
-            <!-- formgroup GGMs Properties -->
             <?php if ($showGGMsProperties ?? false): ?>
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1286,7 +1286,7 @@ include_once "../settings.php";
                 </div>
             </div>
 
-            <!-- formgroup GGMs Properties -->
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1460,6 +1460,7 @@ include_once "../settings.php";
                 </div>             
             </div>
             <hr>
+            <!-- [ELMOGEM] formgroup Characteristics of the model-->
             <div id="help-technical">
                 <h3>Characteristics of the model</h3>
                 <p>
@@ -1524,6 +1525,7 @@ include_once "../settings.php";
                     </p>
                 </div>
             </div>
+            <!-- [ELMOGEM] formgroup Model types-->
             <div id="help-no-model-type" class="help-section">
                 <h3>Model specific variables</h3>
                 <p>This section is dedicated to variables specific for each model type. Please choose a model type above to start input.</p>
@@ -1573,6 +1575,69 @@ include_once "../settings.php";
                     Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here.
                     What is more, the density information can be provided for crust and mantle separately.
                 </p>
+            </div>
+            <!-- [ELMOGEM] formgroup MASCON  -->
+            <div id="help-mascon-properties" class="help-section d-none">
+                <h3>MASCON properties</h3>
+                <h5>Overview</h5>
+                <p>In this section, you can provide essential properties about the MASCON. If the product you are publishing is not a MASCON, please change the Mathematical representation accordingly.</p>
+                <h5>Variables</h5>
+                <p>The variablles in this section are not mandatory. Although, it is recommended to provide them if available. If your file provides Land mask, Uncertainty, or Scale factor, please choose "Given" and fill in the corresponding fields. More detailed free text metadata can be entered in the Descriptions section.</p>
+                <h5>Background force models</h5>
+                <p>We welcome you to provide information about the force models used as a background in the calculation. To add the background models, click on the "Background force models header".</p>
+
+            </div>
+            <div id="help-mascon-shape" class="help-section d-none">
+                <h3>Shape of MASCON</h3>
+                <p>This section allows you to specify the shape of the MASCON. For example:</p>
+                <ul>
+                    <li> Equal area - 1° equal-area geodesic grid</li>
+                    <li>Irregular shapes - Variable shapes for land and ocean</li>
+                </ul>
+            </div>
+            <div id="help-mascon-resolution" class="help-section d-none">
+                <h3> MASCON Resolution Help</h3>
+                <p> This input field is designed for Spatial resolution provided in degrees. We collect 2 types of MASCON resolution: native resolution and product resampled resolution.</p>
+                <ul>
+                    <li>Native resolution: The original resolution of the MASCON data in degrees.</li>
+                    <li>Product resolution: The resolution of the MASCON data presented in the file.</li>
+                </ul>
+                <p> For instance, if a MASCON has an irregular shape, the native resolution will reflect the original data's spatial resolution, while the product resolution will indicate the resolution after any resampling of the irregular shapes to fit into the file format.</p>
+            </div>
+            <div id="help-mascon-count" class="help-section d-none">
+                <h3>Mascon count</h3>
+                <p>Number of tiles/cells in the model file.</p>
+            </div>
+            <div id="help-land-mask" class="help-section d-none">
+                <h3>Land Mask</h3>
+                <p>Whether the landmask is provided in the model file.</p>
+            </div>
+            <div id="help-mascon-uncertainty" class="help-section d-none">
+                <h3>Uncertainty</h3>
+                <p>Whether the uncertainty estimations are provided in the model file.</p>
+            </div>
+            <div id="help-mascon-scale-factor" class="help-section d-none">
+                <h3>Scale Factor</h3>
+                <p>Whether a scale factor is provided in the model file.</p>
+            </div>
+            <div id="help-mascon-gad" class="help-section d-none">
+                <h3>GAD</h3>
+                <p>Whether the GAD information is provided in the model file.</p>
+            </div>
+            <div id="help-mascon-background-models" class="help-section d-none">
+                <h3>Background force models</h3>
+                <p>This section allows to specify the background force models. The models have the following categories:</p>
+                <ul>
+                    <li><b>Gravity Field</b> - Example: GGM05C; GIF48 (d/o 180)</li>
+                    <li><b>Solid Earth Tides</b> - Example: IERS2010</li>
+                    <li><b>Ocean Tides</b> - Example: GOT4.7 (d/o 90); FES2014b</li>
+                    <li><b>Solid Pole Tide</b> - Example: IERS2010</li>
+                    <li><b>Ocean Pole Tide</b> - Example: Desai models, IERS2010</li>
+                    <li><b>AOD</b> - Example: ECMWF/MOG2D; AOD1B RL06</li>
+                    <li><b>Atmospheric Tides</b> - Example: AOD1B RL06</li>
+                    <li><b>Third-Body attractions</b> - Example: DE-430</li>
+                    <li><b>General relativity</b> - Example: IERS2010</li>
+                </ul>
             </div>
         <?php endif; ?>
     </div>

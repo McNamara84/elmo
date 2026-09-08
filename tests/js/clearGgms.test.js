@@ -68,7 +68,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             </div>
         </div>
 
-        <!-- ── Model-specific card (GGMsModelTypes.html) ── -->
+        <!-- ── Model-specific card (ggms-model-types.html) ── -->
         <!-- Starts visible (as if user picked a model type before) -->
         <div id="model-specific-card">
             <i class="bi bi-question-circle-fill" data-help-section-id="help-static"></i>
@@ -84,7 +84,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             <!-- Temporal inputs -->
             <input id="input-temporal-start" name="temporalStart" type="date" value="2002-04-01">
             <input id="input-temporal-end" name="temporalEnd" type="date" value="2023-06-30">
-            <select id="select-temporal-frequency-predef" name="temporalFrequencyPredef">
+            <select id="select-release-frequency" name="releaseFrequency">
                 <option value=""></option>
                 <option value="monthly" selected>Monthly</option>
             </select>
@@ -263,10 +263,10 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
         $('#checkbox-custom-frequency').on('change.clearGgmsTest', function () {
             if ($(this).is(':checked')) {
                 $('#custom-frequency-container').show().removeClass('d-none');
-                $('#select-temporal-frequency-predef').prop('disabled', true);
+                $('#select-release-frequency').prop('disabled', true);
             } else {
                 $('#custom-frequency-container').hide().addClass('d-none');
-                $('#select-temporal-frequency-predef').prop('disabled', false);
+                $('#select-release-frequency').prop('disabled', false);
             }
         });
 
@@ -525,17 +525,23 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
             expect($('#time-variable-description-container').css('display')).toBe('none');
         });
 
-        test('#custom-frequency-container is hidden and predefined select re-enabled after clear', () => {
+        test('#custom-frequency-container is hidden and release-frequency select re-enabled after clear', () => {
             // Pre-condition: custom frequency checkbox checked, container visible, select disabled
             $('#checkbox-custom-frequency').prop('checked', true).trigger('change');
             expect($('#custom-frequency-container').css('display')).not.toBe('none');
-            expect($('#select-temporal-frequency-predef').prop('disabled')).toBe(true);
+            expect($('#select-release-frequency').prop('disabled')).toBe(true);
 
             clearModule.clearInputFields();
 
             expect($('#checkbox-custom-frequency').is(':checked')).toBe(false);
             expect($('#custom-frequency-container').css('display')).toBe('none');
-            expect($('#select-temporal-frequency-predef').prop('disabled')).toBe(false);
+            expect($('#select-release-frequency').prop('disabled')).toBe(false);
+        });
+
+        test('#select-release-frequency value is empty after clear', () => {
+            expect($('#select-release-frequency').val()).toBe('monthly');
+            clearModule.clearInputFields();
+            expect($('#select-release-frequency').val()).toBe('');
         });
 
         test('#separate-density-container is hidden and single-density shown after clear', () => {

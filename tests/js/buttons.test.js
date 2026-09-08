@@ -63,6 +63,31 @@ describe('buttons.js', () => {
     jest.clearAllTimers();
   });
 
+  test('relative module imports resolve to existing camelCase files', () => {
+    const buttonsPath = path.resolve(__dirname, '../../js/eventhandlers/buttons.js');
+    const script = fs.readFileSync(buttonsPath, 'utf8');
+    const specs = [...script.matchAll(/^import\s+(?:[^'"\n]+\s+from\s+)?['"](\.[^'"]+)['"]/gm)]
+      .map((match) => match[1]);
+
+    expect(specs.length).toBeGreaterThan(0);
+    expect(new Set(specs).size).toBe(specs.length);
+
+    const formgroupsDir = path.resolve(__dirname, '../../js/eventhandlers/formgroups');
+    for (const spec of specs) {
+      const resolved = path.resolve(path.dirname(buttonsPath), spec);
+      expect(fs.existsSync(resolved)).toBe(true);
+
+      if (resolved.startsWith(formgroupsDir + path.sep) && resolved.endsWith('.js')) {
+        const fileName = path.basename(resolved, '.js');
+        // New and renamed modules must be camelCase. Legacy hyphenated files
+        // (contributor-person.js, …) stay until they are migrated.
+        if (fileName.startsWith('ggms')) {
+          expect(fileName).toMatch(/^[a-z][A-Za-z0-9]*$/);
+        }
+      }
+    }
+  });
+
   test('shows help icons by default', () => {
     loadScript();
     expect($('.input-group-text').first().css('display')).not.toBe('none');

@@ -209,6 +209,9 @@ class SaveHandler {
             const authorsPayload = synchronizeAuthorsPayload(formEl);
             const formData = new FormData(formEl);
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
+            if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
+                window.ggmsExperimentalPayload.appendPayloadsToFormData(formData);
+            }
             formData.append('filename', filename);
 
             const csrfToken = await fetchAndStoreCsrfToken('form');
