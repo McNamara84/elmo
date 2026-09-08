@@ -1109,11 +1109,21 @@ for (const testCase of TEST_CASES) {
     }
 
     // Subjects – thesaurus keywords, free keywords and data source satellites
-    // all converge into dace:subjects, so compare the whole set at once.
+    // the keywords from satellite data sources converge into dace:subjects, so compare thesauri keywords UNION satellite keywords with the saved subjects.
     const savedSubjectsNode = getNode(resource!, 'subjects') as Record<string, unknown> | undefined;
     const savedSubjectTexts = savedSubjectsNode
       ? [...new Set(toArray(getNode(savedSubjectsNode, 'subject')).map((s) => normalizeText(extractText(s))))].sort()
       : [];
+
+    // find satellite keywords within the data sources (dataSources already exists as an array in reference data)
+    for (let i = 0; i < parsedData.dataSources.length; i++) {
+      const dataSource = parsedData.dataSources[i];
+      const satelliteKeyword = dataSource.satelliteValueName;
+      if (satelliteKeyword) {
+        savedSubjectTexts.push(normalizeText(satelliteKeyword));
+      }
+    }
+
     expect(savedSubjectTexts, '[FIELD: subjects]').toEqual(subjectTexts(parsedData.subjects));
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
