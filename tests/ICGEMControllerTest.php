@@ -1709,6 +1709,52 @@ EOT;
         $this->assertNotNull($sourceNs->new);
     }
 
+    /**
+     * Envelope wrapping must keep GCMD Platforms subjects (with schemeURI attributes
+     * and xml:lang) alongside free-keyword subjects. This is the ICGEM-only step
+     * after DataCite XML is generated.
+     */
+    public function testEnvelopePrefixingKeepsPlatformsAndFreeKeywordSubjects(): void
+    {
+        $dataciteNs = 'http://datacite.org/schema/kernel-4';
+        $icgemNs = 'http://icgem.gfz.de/schema';
+        $graceFo = 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO';
+        $graceFoXml = htmlspecialchars($graceFo, ENT_XML1 | ENT_QUOTES, 'UTF-8');
+
+        $dataciteXml = <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="{$dataciteNs}">
+  <subjects>
+    <subject subjectScheme="NASA/GCMD Earth Platforms Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632" xml:lang="en">{$graceFoXml}</subject>
+    <subject>Hole A</subject>
+  </subjects>
+</resource>
+XML;
+
+        $envelope = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>'
+            . '<grav:envelope xmlns:grav="' . $icgemNs . '" '
+            . 'xmlns:dace="' . $dataciteNs . '" '
+            . 'xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>'
+        );
+
+        $reflection = new \ReflectionClass($this->controller);
+        $append = $reflection->getMethod('simplexmlAppend');
+        $prefix = $reflection->getMethod('addNamespacePrefixToChildren');
+
+        $append->invoke($this->controller, $envelope, new \SimpleXMLElement($dataciteXml));
+        $prefix->invoke($this->controller, $envelope, 'dace', $dataciteNs);
+
+        $xml = (string) $envelope->asXML();
+        $this->assertStringContainsString('dace:subject', $xml);
+        $this->assertStringContainsString($graceFoXml, $xml);
+        $this->assertStringContainsString('Hole A', $xml);
+        $this->assertStringContainsString(
+            'schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms"',
+            $xml
+        );
+    }
+
     // ============================================
     // PART 4: insertContact TESTS
     // ============================================
