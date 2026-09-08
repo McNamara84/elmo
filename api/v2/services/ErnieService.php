@@ -1121,6 +1121,16 @@ class ErnieService
      */
     public function getMslLabsWithCache(): array
     {
+        $fileStatus = $this->getMslLabsCacheStatus();
+
+        if (!$fileStatus['exists']) {
+            error_log('[ERNIE service | MSL laboratories] cache file is not available. Fetching new from ERNIE');
+        } elseif (!$fileStatus['valid']) {
+            error_log('[ERNIE service | MSL laboratories] cache file is outdated. Fetching new from ERNIE');
+        } else {
+            error_log('[ERNIE service | MSL laboratories] cache file is present and up-to-date. Using cached data');
+        }
+
         return $this->getDataWithCache(
             '/api/v1/vocabularies/msl-laboratories',
             'MSL laboratories',
