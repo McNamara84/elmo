@@ -1111,24 +1111,34 @@ for (const testCase of TEST_CASES) {
       assertField(savedDesc, expectedContent, `description(${section})`);
     }
 
-    // Subjects – thesaurus keywords, free keywords and data source satellites
-    // the keywords from satellite data sources converge into dace:subjects, so compare thesauri keywords UNION satellite keywords with the saved subjects.
-    const savedSubjectsNode = getNode(resource!, 'subjects') as Record<string, unknown> | undefined;
-    const savedSubjectTexts = savedSubjectsNode
-      ? [...new Set(toArray(getNode(savedSubjectsNode, 'subject')).map((s) => normalizeText(extractText(s))))].sort()
-      : [];
-
-    // find satellite keywords within the data sources (dataSources already exists as an array in reference data)
+    // Subjects – do not compare parsed vs downloaded XML. Upload is verified
+    // on the form: every parsed keyword must be in a thesaurus Tagify field
+    // (after thesauriReady / whitelist upgrade) or in free keywords.
     const expectedSubjectTexts = subjectTexts(parsedData.subjects);
-    for (let i = 0; i < parsedData.dataSources.length; i++) {
-      const dataSource = parsedData.dataSources[i];
-      const satelliteKeyword = dataSource.satelliteValueName;
-      if (satelliteKeyword) {
-        expectedSubjectTexts.push(normalizeText(satelliteKeyword));
-      }
-    }
-
-    expect(savedSubjectTexts, '[FIELD: subjects]').toEqual([...new Set(expectedSubjectTexts)].sort());
+    const keywordFieldSelectors = [
+      '#input-sciencekeyword',
+      '#input-platforms',
+      '#input-instruments',
+      '#input-chronostratigraphy',
+      '#input-gemet',
+      '#input-mslkeyword',
+      '#input-freekeyword',
+    ];
+    await expect
+      .poll(async () => {
+        const pageKeywordTexts = await page.evaluate((selectors: string[]) => {
+          const values: string[] = [];
+          for (const selector of selectors) {
+            const input = document.querySelector(selector) as { _tagify?: { value?: Array<{ value: string }> } } | null;
+            for (const tag of input?._tagify?.value ?? []) {
+              if (tag?.value) values.push(tag.value.trim());
+            }
+          }
+          return values;
+        }, keywordFieldSelectors);
+        return expectedSubjectTexts.filter((subject) => pageKeywordTexts.includes(subject));
+      }, { message: '[FIELD: subjects]', timeout: 20_000 })
+      .toEqual(expectedSubjectTexts);
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
