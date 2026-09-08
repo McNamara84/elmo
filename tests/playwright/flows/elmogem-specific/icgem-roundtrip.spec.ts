@@ -1116,15 +1116,16 @@ for (const testCase of TEST_CASES) {
       : [];
 
     // find satellite keywords within the data sources (dataSources already exists as an array in reference data)
+    const expectedSubjectTexts = subjectTexts(parsedData.subjects);
     for (let i = 0; i < parsedData.dataSources.length; i++) {
       const dataSource = parsedData.dataSources[i];
       const satelliteKeyword = dataSource.satelliteValueName;
       if (satelliteKeyword) {
-        savedSubjectTexts.push(normalizeText(satelliteKeyword));
+        expectedSubjectTexts.push(normalizeText(satelliteKeyword));
       }
     }
 
-    expect(savedSubjectTexts, '[FIELD: subjects]').toEqual(subjectTexts(parsedData.subjects));
+    expect(savedSubjectTexts, '[FIELD: subjects]').toEqual([...new Set(expectedSubjectTexts)].sort());
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
