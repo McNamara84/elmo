@@ -672,6 +672,9 @@ async function downloadAndSaveIcgemXml(
     await route.fulfill({ response, body });
   });
 
+  // Tagify writes satellite chips asynchronously; wait so the hidden input is set before save.
+  await page.waitForTimeout(1000);
+
   const saveButton = page.locator('#button-form-save');
   await saveButton.waitFor({ state: 'visible', timeout: 5_000 });
   await saveButton.click();
