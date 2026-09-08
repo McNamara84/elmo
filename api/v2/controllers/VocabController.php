@@ -387,9 +387,7 @@ class VocabController
                 return;
             }
 
-            $laboratoriesVocabulary = $ernieService->getMslLabsWithCache(
-                fn(array $freshData) => $this->syncMslLabsToDb($freshData)
-            );
+            $laboratoriesVocabulary = $ernieService->getMslLabsWithCache();
 
             if (!empty($laboratoriesVocabulary['data'])) {
                 $total = $laboratoriesVocabulary['total']
