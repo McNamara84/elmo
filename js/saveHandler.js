@@ -6,7 +6,7 @@
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
-import { synchronizeTagifyInputs } from './thesauriHelpers.js';
+import { synchronizeTagifyInputs, logThesaurusKeywordPost } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -210,6 +210,7 @@ class SaveHandler {
             const authorsPayload = synchronizeAuthorsPayload(formEl);
             synchronizeTagifyInputs(formEl);
             const formData = new FormData(formEl);
+            logThesaurusKeywordPost(formData, '[SAVE]', 'save');
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
             formData.append('filename', filename);
 

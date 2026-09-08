@@ -38,6 +38,7 @@ validateRequestSecurity('save', $_POST);
 // ===== Step 1: save the info into the database.  =====
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
+logThesaurusKeywordPostData($_POST, '[SAVE]');
 try {
     $resource_id = saveALL($_POST);
 } catch (\Throwable $e) {

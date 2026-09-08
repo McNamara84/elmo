@@ -32,6 +32,10 @@ async function logEvent(eventType, status = '', timeSpent = '') {
     }
 }
 
+if (typeof window !== 'undefined') {
+    window.logEvent = logEvent;
+}
+
 // Log when page loads
 if (document.readyState === 'loading') {
 // DOM still loading, wait for it

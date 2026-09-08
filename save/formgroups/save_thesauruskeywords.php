@@ -2,6 +2,121 @@
 require_once __DIR__ . '/../validation.php';
 
 /**
+ * Summarizes a thesaurus (or free-keyword) POST value as present/absent tag `value`s.
+ *
+ * @param mixed $raw Missing, JSON string, list of JSON strings, or decoded tags.
+ * @return array{present: bool, count?: int, values?: list<string>, jsonError?: string, rawLength?: int}
+ */
+function summarizeThesaurusKeywordPostField(mixed $raw): array
+{
+    if ($raw === null) {
+        return ['present' => false];
+    }
+
+    if (is_array($raw)) {
+        if ($raw === []) {
+            return ['present' => true, 'count' => 0, 'values' => []];
+        }
+
+        $values = [];
+        foreach ($raw as $item) {
+            if (is_array($item) && array_key_exists('value', $item) && $item['value'] !== null) {
+                $values[] = (string) $item['value'];
+                continue;
+            }
+            if (is_string($item)) {
+                $part = summarizeThesaurusKeywordPostField($item);
+                if (!empty($part['jsonError'])) {
+                    return [
+                        'present' => true,
+                        'jsonError' => $part['jsonError'],
+                        'rawLength' => strlen($item),
+                    ];
+                }
+                if (!empty($part['values'])) {
+                    $values = array_merge($values, $part['values']);
+                }
+                continue;
+            }
+            $encoded = json_encode($item, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+            $values[] = is_string($encoded) ? $encoded : '';
+        }
+
+        return ['present' => true, 'count' => count($values), 'values' => $values];
+    }
+
+    if (!is_string($raw)) {
+        $raw = (string) $raw;
+    }
+    if ($raw === '') {
+        return ['present' => true, 'count' => 0, 'values' => []];
+    }
+
+    $decoded = json_decode($raw, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        return [
+            'present' => true,
+            'jsonError' => json_last_error_msg(),
+            'rawLength' => strlen($raw),
+        ];
+    }
+    if (!is_array($decoded)) {
+        return [
+            'present' => true,
+            'jsonError' => 'not-array',
+            'rawLength' => strlen($raw),
+        ];
+    }
+
+    return summarizeThesaurusKeywordPostField($decoded);
+}
+
+/**
+ * Builds one greppable log line for a thesaurus POST field.
+ *
+ * @param string $tag Log prefix such as `[SAVE]` or `[💿SAVE]`.
+ * @param string $field POST key.
+ * @param array{present: bool, count?: int, values?: list<string>, jsonError?: string, rawLength?: int} $summary
+ */
+function formatThesaurusKeywordPostLogLine(string $tag, string $field, array $summary): string
+{
+    if (empty($summary['present'])) {
+        return "{$tag} thesaurus POST {$field}: present=no";
+    }
+    if (!empty($summary['jsonError'])) {
+        $rawLength = $summary['rawLength'] ?? 0;
+        return "{$tag} thesaurus POST {$field}: present=yes jsonError={$summary['jsonError']} rawLength={$rawLength}";
+    }
+    $count = $summary['count'] ?? 0;
+    $values = json_encode($summary['values'] ?? [], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    return "{$tag} thesaurus POST {$field}: present=yes count={$count} values={$values}";
+}
+
+/**
+ * Logs summarized thesaurus keyword fields from PHP `$_POST`.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @param string               $tag      Greppable log prefix.
+ */
+function logThesaurusKeywordPostData(array $postData, string $tag = '[SAVE]'): void
+{
+    // `freekeywords` is PHP's name for the form field `freekeywords[]`.
+    $fields = [
+        'gcmdScienceKeywords',
+        'MSLKeywords',
+        'platforms',
+        'instruments',
+        'chronostratKeywords',
+        'gemetKeywords',
+        'freekeywords',
+    ];
+    foreach ($fields as $field) {
+        $raw = array_key_exists($field, $postData) ? $postData[$field] : null;
+        error_log(formatThesaurusKeywordPostLogLine($tag, $field, summarizeThesaurusKeywordPostField($raw)));
+    }
+}
+
+/**
  * Saves the thesaurus keywords into the database.
  *
  * @param mysqli $connection  The database connection.
@@ -12,6 +127,8 @@ require_once __DIR__ . '/../validation.php';
  */
 function saveKeywords($connection, $postData, $resource_id)
 {
+    logThesaurusKeywordPostData($postData, '[💿SAVE]');
+
     // Defines the fields to process
     $fieldsToProcess = [
         'gcmdScienceKeywords',  // GCMD Science Keywords
