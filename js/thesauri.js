@@ -104,6 +104,7 @@ export const THESAURUS_CONFIG = {
 export let currentActiveInput = null;
 
 const loadedConfigs = new Map();
+const readinessByConfig = new Map();
 const sharedState = {};
 let keywordConfigurations = [];
 
@@ -213,15 +214,26 @@ function loadThesaurusOnDemand(config) {
     if (currentState === 'loading' || currentState === 'loaded') return;
 
     loadedConfigs.set(config.jsTreeId, 'loading');
+    resetThesaurusReadiness(config);
     showLoadingSpinner(config.jsTreeId);
 
     $.getJSON(config.apiEndpoint, function (data) {
-        loadKeywordsForConfig(config, data);
+        if (!loadKeywordsForConfig(config, data)) {
+            loadedConfigs.set(config.jsTreeId, 'error');
+            hideLoadingSpinner(config.jsTreeId);
+            $(config.jsTreeId).html(`
+                <div class="alert alert-danger m-2">
+                    ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
+                </div>
+            `);
+            return;
+        }
         loadedConfigs.set(config.jsTreeId, 'loaded');
         hideLoadingSpinner(config.jsTreeId);
     }).fail(function (jqxhr, textStatus, error) {
         console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
         loadedConfigs.set(config.jsTreeId, 'error');
+        resetThesaurusReadiness(config);
         hideLoadingSpinner(config.jsTreeId);
         $(config.jsTreeId).html(`
             <div class="alert alert-danger m-2">
@@ -262,13 +274,106 @@ function resolveThesaurusConfig(keyOrConfig) {
     return ensureConfigRegistered(keyOrConfig) || THESAURUS_CONFIG[keyOrConfig] || null;
 }
 
+function ensureThesaurusReadiness(config) {
+    const readinessKey = config.jsTreeId;
+    if (!readinessByConfig.has(readinessKey)) {
+        readinessByConfig.set(readinessKey, {
+            whitelistApplied: false,
+            treeReady: false
+        });
+    }
+    return readinessByConfig.get(readinessKey);
+}
+
+function resetThesaurusReadiness(config) {
+    const readiness = ensureThesaurusReadiness(config);
+    readiness.whitelistApplied = false;
+    readiness.treeReady = false;
+}
+
+function synchronizeTreeWithTagify(config, state) {
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree) return false;
+
+    const activeTagify = getActiveTagifyForState(state);
+    const tagValues = activeTagify && Array.isArray(activeTagify.value)
+        ? activeTagify.value.map(function (tag) {
+            return tag && tag.value ? tag.value : '';
+        }).filter(Boolean)
+        : [];
+
+    state.isSyncingTree = true;
+    clearTreeSelection(tree);
+    state.selectedPaths = new Set(tagValues);
+
+    let allMatched = true;
+    tagValues.forEach(function (value) {
+        const node = findNodeByPath(tree, value);
+        if (!node) {
+            allMatched = false;
+            return;
+        }
+        if (typeof tree.select_node === 'function') {
+            tree.select_node(node.id);
+        }
+    });
+
+    state.isSyncingTree = false;
+    updateSelectedKeywordsList(config.selectedKeywordsListId || config.selectedListId, state);
+    return allMatched;
+}
+
+function finalizeThesaurusTreeReady(config, state) {
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree) return false;
+
+    expandInitialTreeNodes(config);
+    const synchronized = synchronizeTreeWithTagify(config, state);
+    ensureThesaurusReadiness(config).treeReady = synchronized;
+    return synchronized;
+}
+
+function isThesaurusConsumerReady(config) {
+    const state = ensureSharedState(config);
+    const readiness = ensureThesaurusReadiness(config);
+    const tree = $(config.jsTreeId).jstree(true);
+
+    if (!readiness.whitelistApplied || !readiness.treeReady || !tree) {
+        return false;
+    }
+    if (!state.tagifyInstances || state.tagifyInstances.size === 0) {
+        return false;
+    }
+
+    let ready = true;
+    state.tagifyInstances.forEach(function (tagifyInstance) {
+        if (!tagifyInstance || !tagifyInstance.settings || tagifyInstance.settings.whitelist !== state.whitelist) {
+            ready = false;
+            return;
+        }
+
+        const tagValues = Array.isArray(tagifyInstance.value)
+            ? tagifyInstance.value.map(function (tag) {
+                return tag && tag.value ? tag.value : '';
+            }).filter(Boolean)
+            : [];
+
+        if (!tagValues.every(function (value) {
+            return Boolean(findNodeByPath(tree, value));
+        })) {
+            ready = false;
+        }
+    });
+
+    return ready;
+}
+
 /**
- * Loads a thesaurus vocabulary if needed and resolves when that fetch finishes.
+ * Loads a thesaurus vocabulary if needed and resolves when its consumer-facing
+ * state is ready: whitelist applied to Tagify and jsTree initialized/synced.
  *
- * XML import must not call Tagify addTags while the whitelist is still in
- * flight: enforceWhitelist flipping true mid-loop drops GCMD subjects that
- * later land in dace:subjects. A failed/empty ERNIE response still resolves
- * so previously saved keywords can be imported with enforceWhitelist off.
+ * XML import must not call Tagify addTags before Tagify and jsTree are both
+ * available and synchronized for the same thesaurus state.
  *
  * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
  * @param {number} [timeoutMs]
@@ -287,8 +392,12 @@ export function waitForThesaurusVocabulary(configKeyOrConfig, timeoutMs) {
         const started = Date.now();
         function poll() {
             const state = loadedConfigs.get(config.jsTreeId);
-            if (state === 'loaded' || state === 'error') {
-                resolve(state);
+            if (state === 'error') {
+                resolve('error');
+                return;
+            }
+            if (state === 'loaded' && isThesaurusConsumerReady(config)) {
+                resolve('loaded');
                 return;
             }
             if (Date.now() - started >= timeoutMs) {
@@ -330,6 +439,7 @@ function loadRegisteredThesaurusVocabularies() {
  */
 function loadKeywordsForConfig(config, response) {
     const state = ensureSharedState(config);
+    const readiness = ensureThesaurusReadiness(config);
 
     const data = response.data ? response.data : response;
     var filteredData = data;
@@ -372,7 +482,7 @@ function loadKeywordsForConfig(config, response) {
             });
             if (collected.length === 0) {
                 console.error('No valid rootNodes found in', config.apiEndpoint);
-                return;
+                return false;
             }
 
             // Remove any collected node that is already reachable as a descendant of
@@ -400,7 +510,7 @@ function loadKeywordsForConfig(config, response) {
             if (sel) filteredData = [sel];
             else {
                 console.error('Root node with ID', config.rootNodeId, 'not found in', config.apiEndpoint);
-                return;
+                return false;
             }
         }
     }
@@ -468,20 +578,10 @@ function loadKeywordsForConfig(config, response) {
         // XML import of previously saved thesaurus keywords is dropped.
         tagifyInstance.settings.enforceWhitelist = state.whitelist.length > 0;
     });
+    readiness.whitelistApplied = true;
 
     $(config.jsTreeId).one('ready.jstree', function () {
-        expandInitialTreeNodes(config);
-
-        const activeTagify = getActiveTagifyForState(state);
-        if (activeTagify && activeTagify.value && activeTagify.value.length) {
-            var currentValues = activeTagify.value.map(v => v.value);
-            currentValues.forEach(function (val) {
-                var tree = $(config.jsTreeId).jstree(true);
-                if (!tree) return;
-                var node = findNodeByPath(tree, val);
-                if (node) tree.select_node(node.id);
-            });
-        }
+        finalizeThesaurusTreeReady(config, state);
     });
 
     // Initialize jsTree
@@ -545,26 +645,8 @@ function loadKeywordsForConfig(config, response) {
         }
     });
 
-    // Initial sync: if the active input already has tags, select corresponding nodes
-    $(config.jsTreeId).one("ready.jstree", function () {
-        const activeTagify = getActiveTagifyForState(state);
-        if (!activeTagify || !activeTagify.value || !activeTagify.value.length) return;
-
-        // Sync jsTree selection from current Tagify values (store paths as a Set)
-        state.selectedPaths = new Set(activeTagify.value.map(v => v.value));
-
-        const tree = $(config.jsTreeId).jstree(true);
-        if (!tree) return;
-
-        activeTagify.value.forEach(function (tag) {
-            const node = findNodeByPath(tree, tag.value);
-            if (node) {
-                tree.select_node(node.id);
-            }
-        });
-
-        updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
-    });
+    finalizeThesaurusTreeReady(config, state);
+    return true;
 }
 
 /** Returns the shared state key for a thesaurus config. */

@@ -395,7 +395,10 @@ async function populateIcgemDataSources(data) {
     (ds) => ds.inputDataSourceType === 'Satellite' && ds.satelliteValueName
   );
   if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
-    await window.waitForThesaurusVocabulary('platforms');
+    const result = await window.waitForThesaurusVocabulary('platforms');
+    if (result !== 'loaded') {
+      throw new Error('GCMD platforms vocabulary not ready for satellite import');
+    }
   }
 
   for (let i = 0; i < dataSources.length; i++) {

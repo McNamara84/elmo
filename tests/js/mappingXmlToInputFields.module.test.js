@@ -902,7 +902,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             ]);
         });
 
-        test('ignores keywords when the target field is not available', () => {
+        test('rejects keywords when the target thesaurus field is not available', async () => {
             document.body.innerHTML = `
             <input id="input-freekeyword">
         `;
@@ -923,13 +923,12 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
+                'Target keyword field not initialized: science_keywords'
+            );
 
             expect(freeTagify.removeAllTags).toHaveBeenCalled();
-            expect(freeTagify.addTags).toHaveBeenCalledTimes(1);
-            expect(freeTagify.addTags).toHaveBeenCalledWith([
-                expect.objectContaining({ value: 'Custom Keyword' })
-            ]);
+            expect(freeTagify.addTags).not.toHaveBeenCalled();
         });
 
         test('waits for thesaurus vocabulary before adding GCMD tags', async () => {
@@ -971,7 +970,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(scienceTagify.update).toHaveBeenCalled();
         });
 
-        test('imports GCMD tags when thesaurus vocabulary wait times out', async () => {
+        test('rejects GCMD tag import when thesaurus vocabulary wait times out', async () => {
             document.body.innerHTML = `
             <input id="input-sciencekeyword">
             <input id="input-freekeyword">
@@ -1001,18 +1000,16 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            await mappingModule.processKeywords(xmlDoc, resolver);
+            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
+                'Thesaurus vocabularies not ready for import: science_keywords'
+            );
 
             expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
-            expect(scienceTagify.addTags).toHaveBeenCalledWith([
-                expect.objectContaining({ value: 'Earth Science' })
-            ]);
-            expect(freeTagify.addTags).toHaveBeenCalledWith([
-                expect.objectContaining({ value: 'Custom Keyword' })
-            ]);
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(freeTagify.addTags).not.toHaveBeenCalled();
         });
 
-        test('imports GCMD tags when thesaurus vocabulary fetch errors', async () => {
+        test('rejects GCMD tag import when thesaurus vocabulary fetch errors', async () => {
             document.body.innerHTML = `
             <input id="input-sciencekeyword">
         `;
@@ -1034,11 +1031,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            await mappingModule.processKeywords(xmlDoc, resolver);
+            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
+                'Thesaurus vocabularies not ready for import: science_keywords'
+            );
 
-            expect(scienceTagify.addTags).toHaveBeenCalledWith([
-                expect.objectContaining({ value: 'Earth Science' })
-            ]);
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
         });
     });
 });

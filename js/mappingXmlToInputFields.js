@@ -1421,18 +1421,22 @@ async function processKeywords(xmlDoc, resolver) {
   // Keys for GCMD / GEMET / chronostrat match THESAURUS_CONFIG in thesauri.js.
   // This file is a classic script, so it cannot import that object; the input
   // ids below are the same values as THESAURUS_CONFIG[key].inputId.
-  const tagifyMap = {
-    free: document.querySelector("#input-freekeyword")?._tagify || null,
-    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
-    science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
-    platforms: document.querySelector("#input-platforms")?._tagify || null,
-    instruments: document.querySelector("#input-instruments")?._tagify || null,
-    chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
-    gemet: document.querySelector("#input-gemet")?._tagify || null,
-  };
+  function getTagifyMap() {
+    return {
+      free: document.querySelector("#input-freekeyword")?._tagify || null,
+      msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+      science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
+      platforms: document.querySelector("#input-platforms")?._tagify || null,
+      instruments: document.querySelector("#input-instruments")?._tagify || null,
+      chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+      gemet: document.querySelector("#input-gemet")?._tagify || null,
+    };
+  }
+
+  let tagifyMap = getTagifyMap();
 
   // Keep only initialized Tagify fields
-  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  let allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
     console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
@@ -1503,18 +1507,20 @@ async function processKeywords(xmlDoc, resolver) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const { subjectScheme, schemeURI } = buildTagData(subjectNode);
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
-    if (targetGroup !== "free" && targetGroup !== "msl" && tagifyMap[targetGroup]) {
+    if (targetGroup !== "free" && targetGroup !== "msl") {
       thesaurusKeys.add(targetGroup);
     }
   }
   if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
     const keys = [...thesaurusKeys];
     const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
-    keys.forEach((key, index) => {
-      if (results[index] === "timeout") {
-        console.warn("Thesaurus vocabulary still loading; importing", key, "with whitelist off");
-      }
-    });
+    const notReady = keys.filter((key, index) => results[index] !== 'loaded');
+    if (notReady.length > 0) {
+      throw new Error('Thesaurus vocabularies not ready for import: ' + notReady.join(', '));
+    }
+
+    tagifyMap = getTagifyMap();
+    allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
   }
 
   // Clear existing tags before importing new ones
@@ -1527,8 +1533,10 @@ async function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
-    // Ignore keywords if the target form group is disabled
     if (!targetTagify) {
+      if (targetGroup !== 'free') {
+        throw new Error('Target keyword field not initialized: ' + targetGroup);
+      }
       continue;
     }
 

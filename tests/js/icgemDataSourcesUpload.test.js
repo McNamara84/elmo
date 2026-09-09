@@ -81,7 +81,7 @@ describe('populateIcgemDataSources satellite platforms', () => {
     expect(tagify.update).toHaveBeenCalled();
   });
 
-  test('still adds satellite tags when platforms vocabulary wait times out', async () => {
+  test('rejects satellite tags when platforms vocabulary wait times out', async () => {
     const tagify = {
       addTags: jest.fn(),
       update: jest.fn()
@@ -89,17 +89,15 @@ describe('populateIcgemDataSources satellite platforms', () => {
     buildDatasourceDom(tagify);
     window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('timeout'));
 
-    await icgemModule.populateIcgemDataSources({
+    await expect(icgemModule.populateIcgemDataSources({
       dataSources: [{
         inputDataSourceType: 'Satellite',
         satelliteValueName: graceFo
       }]
-    });
+    })).rejects.toThrow('GCMD platforms vocabulary not ready for satellite import');
 
-    expect(tagify.addTags).toHaveBeenCalledWith([
-      expect.objectContaining({ value: graceFo })
-    ]);
-    expect(tagify.update).toHaveBeenCalled();
+    expect(tagify.addTags).not.toHaveBeenCalled();
+    expect(tagify.update).not.toHaveBeenCalled();
   });
 
   test('does not wait when there is no satellite platform', async () => {

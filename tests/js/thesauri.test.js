@@ -300,6 +300,7 @@ describe('thesauri.js', () => {
     expect(result).toBe('loaded');
     const input = document.getElementById('input-sciencekeyword');
     expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+    expect($('#jstree-sciencekeyword').jstree(true)).toBeDefined();
   });
 
   test('waitForThesaurusVocabulary resolves error when the vocabulary request fails', async () => {
