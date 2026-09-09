@@ -902,25 +902,6 @@ $GLOBALS['expectedXmlWithDataNoNamespace'] = <<<'XML'
       <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
     </subjects>
     <contributors>
-              <dace:contributor contributorType="Producer">
-        <dace:contributorName nameType="Personal">Ince, E. Sinem</dace:contributorName>
-        <dace:givenName>E. Sinem</dace:givenName>
-        <dace:familyName>Ince</dace:familyName>
-        <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</dace:nameIdentifier>
-      </dace:contributor>
-      <dace:contributor contributorType="Other">
-        <dace:contributorName nameType="Personal">Carberry, Josiah</dace:contributorName>
-        <dace:givenName>Josiah</dace:givenName>
-        <dace:familyName>Carberry</dace:familyName>
-        <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1825-0097</dace:nameIdentifier>
-        <dace:affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04n800n16">South Pointe Hospital</dace:affiliation>
-      </dace:contributor>
-      <dace:contributor contributorType="Other">
-        <dace:contributorName nameType="Personal">Bob, Alice</dace:contributorName>
-        <dace:givenName>Alice</dace:givenName>
-        <dace:familyName>Bob</dace:familyName>
-        <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0009-0009-8527-0993</dace:nameIdentifier>
-      </dace:contributor>
       <contributor contributorType="DataCurator">
         <contributorName nameType="Personal">Ince, E. Sinem</contributorName>
         <givenName>E. Sinem</givenName>
@@ -1181,25 +1162,25 @@ final class ICGEMDataciteAdditionsTest extends TestCase
 {
     public function testNoNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlNoNamespace']);
+        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlNoNamespace'], true, true);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlNoNamespace'], $result);
     }
 
     public function testWithNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithNamespace']);
+        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithNamespace'], true, true);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithNamespace'], $result);
     }
 
     public function testWithDataWithNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataWithNamespace']);
+        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataWithNamespace'], true, true);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithDataWithNamespace'], $result);
     }
 
     public function testWithDataNoNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataNoNamespace']);
+        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataNoNamespace'], true, true);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithDataNoNamespace'], $result);
     }
 }

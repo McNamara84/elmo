@@ -214,11 +214,23 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
     ];
 }
 
-// ELMO-GEM specific additions to the DataCite part of the XML here.
-// Function determines the appropriate DataCite namespace and applies ELMO-GEM specific additions to the Datacite schema.
-// Adds HARDCODED contributors, format and subjects, according to publication standard at GFZ Data Services.
-function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
-{
+/**
+ * Apply ELMO-GEM DataCite additions (contributors, format, GCMD subjects).
+ *
+ * Guarded for send_xml_file.php call sites:
+ * - non-GEM: return input unchanged
+ * - GEM Data Services envelope (default xmlns, empty prefix): only when $elmogemSendsDataServicesMail
+ * - GEM ICGEM envelope (dace: prefix): always when $showGGMsProperties
+ */
+function applyElmoGemAdditionsToDataciteXml(
+    string $xmlContent,
+    bool $showGGMsProperties,
+    bool $elmogemSendsDataServicesMail,
+): string {
+    if (!$showGGMsProperties) {
+        return $xmlContent;
+    }
+
     $dom = new DOMDocument();
     $dom->preserveWhiteSpace = false;
     $dom->formatOutput = true;
@@ -239,6 +251,13 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
 
     $dataciteNs = $resource->namespaceURI;
     $datacitePrefix = $resource->prefix; // '' for default xmlns, e.g. 'dace' for ICGEM
+
+    // DatasetController / Data Services envelopes use default xmlns (empty prefix).
+    // Skip when GEM does not send that mail; ICGEM envelopes keep the dace: prefix.
+    if (!$elmogemSendsDataServicesMail && $datacitePrefix === '') {
+        return $xmlContent;
+    }
+
     $xpath->registerNamespace('dc', $dataciteNs);
 
     // Helper to build a tag name honoring the discovered prefix

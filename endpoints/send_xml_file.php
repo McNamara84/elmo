@@ -353,7 +353,7 @@ try {
 
     // ELMO GEM: an empty DOI field means GFZ Data Services must reserve one.
     // Non-GEM always sends the usual Data Services mail.
-    $sendDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
+    $elmogemSendsDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
 
     // Step 1: Save transaction structures
     try {
@@ -394,13 +394,16 @@ try {
     // above; GEM generated the ICGEM file, so the DatasetController envelope is
     // produced here only when Data Services is notified.
     $elmogemToDataServicesXml = $xml_content;
-    if ($showGGMsProperties && $sendDataServicesMail) {
+    if ($showGGMsProperties && $elmogemSendsDataServicesMail) {
         $dataServicesPayload = generateDatasetPayloadByResourceId($resource_id, [
             'postData' => $_POST,
             'variant' => 'gfz',
         ]);
-        $elmogemToDataServicesXml = $dataServicesPayload['payload'];
-        $elmogemToDataServicesXml = applyElmoGemAdditionsToDataciteXml($elmogemToDataServicesXml);
+        $elmogemToDataServicesXml = applyElmoGemAdditionsToDataciteXml(
+            $dataServicesPayload['payload'],
+            $showGGMsProperties,
+            $elmogemSendsDataServicesMail
+        );
 
         try {
             require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
@@ -483,7 +486,7 @@ try {
     // GEM + DOI set: ICGEM only.
     $dataServicesEmailSent = false;
 
-    if ($sendDataServicesMail) {
+    if ($elmogemSendsDataServicesMail) {
         try {
             $mail = new PHPMailer(true);
             $mail->isSMTP();
@@ -533,7 +536,7 @@ try {
             }
 
             // Perform payload file renaming assignment and attachment compilation
-            $xmlFilename = createAndAttachXmlFile($mail, $dataServicesXml, $resource_id, $_POST);
+            $xmlFilename = createAndAttachXmlFile($mail, $elmogemToDataServicesXml, $resource_id, $_POST);
 
             $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
             $priorityText = getPriorityText($urgencyWeeks);
@@ -622,7 +625,11 @@ try {
     // ELMO-GEM special: send ICGEM registration mail with the ICGEM metadata schema
     if ($showGGMsProperties) {
         // Add ELMO-GEM specific additions to the DataCite part of the XML: contributors, format, and subjects.
-        $xml_content = applyElmoGemAdditionsToDataciteXml($xml_content);
+        $xml_content = applyElmoGemAdditionsToDataciteXml(
+            $xml_content,
+            $showGGMsProperties,
+            $elmogemSendsDataServicesMail
+        );
         try {
             sendGGMsIcgemRegistrationMail([
                 'resourceId' => $resource_id,
