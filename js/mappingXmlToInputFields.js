@@ -1535,10 +1535,9 @@ async function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
+    // Ignore keywords if the target field is not initialized
+    // Different versions may have different thesaurus selections
     if (!targetTagify) {
-      if (targetGroup !== 'free') {
-        throw new Error('Target keyword field not initialized: ' + targetGroup);
-      }
       continue;
     }
 
