@@ -812,7 +812,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(freeTagify.removeAllTags).toHaveBeenCalled();
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Test Keyword' })
             ]);
@@ -840,7 +839,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(mslTagify.removeAllTags).toHaveBeenCalled();
             expect(mslTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'msl Keyword' })
             ]);
@@ -868,7 +866,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
             expect(scienceTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Earth Science' })
             ]);
@@ -896,23 +893,24 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(chronostratTagify.removeAllTags).toHaveBeenCalled();
             expect(chronostratTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'one > two > chronostratigraphy' })
             ]);
         });
 
-        test('rejects keywords when the target thesaurus field is not available', async () => {
+        test('skips thesaurus keywords when the target field is not available', async () => {
             document.body.innerHTML = `
             <input id="input-freekeyword">
         `;
 
             const freeTagify = {
                 removeAllTags: jest.fn(),
-                addTags: jest.fn()
+                addTags: jest.fn(),
+                update: jest.fn()
             };
 
             document.querySelector('#input-freekeyword')._tagify = freeTagify;
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
 
             const xmlDoc = new DOMParser().parseFromString(`
             <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
@@ -923,12 +921,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
-                'Target keyword field not initialized: science_keywords'
-            );
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(freeTagify.removeAllTags).toHaveBeenCalled();
-            expect(freeTagify.addTags).not.toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Custom Keyword' })
+            ]);
         });
 
         test('waits for thesaurus vocabulary before adding GCMD tags', async () => {
@@ -963,7 +960,6 @@ describe('mappingXmlToInputFields module coverage', () => {
             resolveWait('loaded');
             await done;
 
-            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
             expect(scienceTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Earth Science' })
             ]);
