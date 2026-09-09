@@ -3,12 +3,11 @@
 
 declare(strict_types=1);
 
-use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 
-$testXmlNoNamespace = <<<XML
+$GLOBALS['testXmlNoNamespace'] = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <envelope>
     
@@ -188,7 +187,7 @@ $testXmlNoNamespace = <<<XML
 </envelope>
 XML;
 
-$expectedXmlNoNamespace = <<<XML
+$GLOBALS['expectedXmlNoNamespace'] = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <envelope>
     
@@ -390,7 +389,7 @@ $expectedXmlNoNamespace = <<<XML
 XML;
 
 
-referenceXmlNamespace = <<<XML
+$referenceXmlNamespace = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
   <dace:resource>
@@ -442,7 +441,7 @@ referenceXmlNamespace = <<<XML
 </grav:envelope>
 XML;
 
-referenceXmlNamespace = <<<XML
+$referenceXmlNamespace = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>
 <grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
   <dace:resource>
