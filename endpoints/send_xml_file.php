@@ -389,21 +389,23 @@ try {
         }
     }
 
+    // ELMO-GEM special:
     // Attachment for the Data Services mail. Non-GEM already generated that file
     // above; GEM generated the ICGEM file, so the DatasetController envelope is
     // produced here only when Data Services is notified.
-    $dataServicesXml = $xml_content;
+    $elmogemToDataServicesXml = $xml_content;
     if ($showGGMsProperties && $sendDataServicesMail) {
         $dataServicesPayload = generateDatasetPayloadByResourceId($resource_id, [
             'postData' => $_POST,
             'variant' => 'gfz',
         ]);
-        $dataServicesXml = $dataServicesPayload['payload'];
+        $elmogemToDataServicesXml = $dataServicesPayload['payload'];
+        $elmogemToDataServicesXml = applyElmoGemAdditionsToDataciteXml($elmogemToDataServicesXml);
 
         try {
             require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
             $datasetController = new DatasetController();
-            $dataServicesXml = $datasetController->markDataCiteEnvelopeAsSubmitted($dataServicesXml, date('Y-m-d'));
+            $elmogemToDataServicesXml = $datasetController->markDataCiteEnvelopeAsSubmitted($elmogemToDataServicesXml, date('Y-m-d'));
         } catch (Exception $e) {
             error_log("Submit: Failed to add Submitted date to Data Services XML: " . $e->getMessage());
         }
@@ -569,6 +571,8 @@ try {
 
             $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
 
+            // ELMO-GEM special:
+            // modify the message to include icgem adress for further communication
             if ($showGGMsProperties) {
                 $gemNote = buildGGMsDataServicesNote($icgemSubmitAddress);
                 $htmlBody .= $gemNote['html'];
@@ -615,7 +619,10 @@ try {
 
     }
 
+    // ELMO-GEM special: send ICGEM registration mail with the ICGEM metadata schema
     if ($showGGMsProperties) {
+        // Add ELMO-GEM specific additions to the DataCite part of the XML: contributors, format, and subjects.
+        $xml_content = applyElmoGemAdditionsToDataciteXml($xml_content);
         try {
             sendGGMsIcgemRegistrationMail([
                 'resourceId' => $resource_id,
