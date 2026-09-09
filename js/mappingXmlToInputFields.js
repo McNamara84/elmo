@@ -1407,12 +1407,9 @@ function processDates(xmlDoc, resolver) {
 }
 
 /**
- * Process Subjects from XML and populate the Keyword fields.
- * Thesaurus Tagify inputs exist after thesauriReady, which now waits until
- * each ERNIE keyword tree has settled (loaded or failed). processKeywords
- * still waits per-key in case a thesaurus was registered later. A timeout
- * still imports: GCMD platforms is a large tree and CI can exceed the wait,
- * but previously saved subjects must land in Tagify (whitelist still off).
+ * Populate keyword Tagify fields from XML subjects.
+ * processKeywords collects thesaurus keys referenced in the XML, 
+ * waits for each via waitForThesaurusVocabulary (whitelist applied, jsTree ready), then imports. On timeout/error, import is aborted so Tagify does not silently drop tags.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */

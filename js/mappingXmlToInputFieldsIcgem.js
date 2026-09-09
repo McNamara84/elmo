@@ -377,13 +377,8 @@ function applySatellitePlatformTag(platformInput, tag) {
  * Each data source entry becomes one form row; the datasource type 'change' event
  * is triggered so row visibility updates correctly.
  *
- * Satellite platform chips save into dace:subjects. Wait for the GCMD
- * platforms tree already requested at thesauri init (same payload as the
- * datasource tree) before addTags, then flush the hidden input so
- * ingestSatellitePlatformAsKeyword sees the JSON. Do not start the lazy
- * satellitePlatforms fetch here — that would duplicate the in-flight
- * gcmd-platforms request. A timeout still imports: save must not depend
- * on the chip UI alone.
+ * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
+ * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
  *
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
  */
