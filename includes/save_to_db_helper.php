@@ -213,3 +213,118 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         'generator' => $generator,
     ];
 }
+
+// ELMO-GEM specific additions to the DataCite part of the XML here.
+// Function determines the appropriate DataCite namespace and applies ELMO-GEM specific additions to the Datacite schema.
+// Adds HARDCODED contributors, format and subjects, according to publication standard at GFZ Data Services.
+function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
+{
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    $dom->loadXML($xmlContent);
+
+    $root = $dom->documentElement;
+
+    // --- 1. Find the DataCite namespace prefix ---
+    $dataciteNs = null;
+    $datacitePrefix = null; // may end up '' (empty) if it's the default namespace
+    // Find datacite namespace: in the root element find xmlns attribute that is equal to "http://datacite.org/schema*". Take note of what comes after xmlns in this element. Might be empty!
+    foreach ($root->attributes as $attr) {
+        // xmlns="http://datacite.org/schema/..."  -> nodeName "xmlns"
+        // xmlns:foo="http://datacite.org/schema/..." -> nodeName "xmlns:foo"
+        if (str_starts_with($attr->nodeName, 'xmlns') && str_starts_with($attr->nodeValue, 'http://datacite.org/schema')) {
+            $dataciteNs = $attr->nodeValue;
+            $parts = explode(':', $attr->nodeName, 2);
+            $datacitePrefix = $parts[1] ?? ''; // '' means default namespace
+            break;
+        }
+    }
+
+    if ($dataciteNs === null) {
+        throw new RuntimeException('DataCite namespace not found on root element.');
+    }
+
+    // Helper to build a tag name honoring the discovered prefix
+    $tag = function (string $localName) use ($datacitePrefix): string {
+        return $datacitePrefix === '' ? $localName : "$datacitePrefix:$localName";
+    };
+
+    // Helper to create a namespaced element with optional text content
+    $createEl = function (string $localName, ?string $text = null) use ($dom, $dataciteNs, $tag) {
+        $el = $dom->createElementNS($dataciteNs, $tag($localName));
+        if ($text !== null) {
+            $el->appendChild($dom->createTextNode($text));
+        }
+        return $el;
+    };
+
+    // --- 2. Add Contributors ---
+    $contributorsData = [
+        [
+            'contributorType' => 'DataCurator',
+            'name' => 'Ince, E. Sinem',
+            'givenName' => 'E. Sinem',
+            'familyName' => 'Ince',
+            'orcid' => '0000-0002-3393-1392',
+            'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        ],
+        [
+            'contributorType' => 'DataManager',
+            'name' => 'Reißland, Sven',
+            'givenName' => 'Sven',
+            'familyName' => 'Reißland',
+            'orcid' => '0000-0001-6293-5336',
+            'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        ],
+    ];
+
+    foreach ($contributorsData as $c) {
+        $contributor = $createEl('contributor');
+        $contributor->setAttribute('contributorType', $c['contributorType']);
+
+        $contributorName = $createEl('contributorName', $c['name']);
+        $contributorName->setAttribute('nameType', 'Personal');
+        $contributor->appendChild($contributorName);
+
+        $contributor->appendChild($createEl('givenName', $c['givenName']));
+        $contributor->appendChild($createEl('familyName', $c['familyName']));
+
+        $nameIdentifier = $createEl('nameIdentifier', $c['orcid']);
+        $nameIdentifier->setAttribute('nameIdentifierScheme', 'ORCID');
+        $nameIdentifier->setAttribute('schemeURI', 'https://orcid.org/');
+        $contributor->appendChild($nameIdentifier);
+
+        $contributor->appendChild($createEl('affiliation', $c['affiliation']));
+
+        $root->appendChild($contributor);
+    }
+
+    // --- 3. Add format ---
+    $formats = $createEl('formats');
+    $formats->appendChild($createEl('format', 'ICGEM-format'));
+    $root->appendChild($formats);
+
+    // --- 4. Add subjects ---
+    $subjectsData = [
+        [
+            'text' => 'GEOID CHARACTERISTICS',
+            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614',
+        ],
+        [
+            'text' => 'GRAVITY/GRAVITATIONAL FIELD',
+            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa',
+        ],
+    ];
+
+    foreach ($subjectsData as $s) {
+        $subject = $createEl('subject', $s['text']);
+        // xml:lang uses the reserved 'xml' namespace, not the DataCite one
+        $subject->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:lang', 'en');
+        $subject->setAttribute('subjectScheme', 'Science Keywords');
+        $subject->setAttribute('schemeURI', 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords');
+        $subject->setAttribute('valueURI', $s['valueURI']);
+        $root->appendChild($subject);
+    }
+}
+
