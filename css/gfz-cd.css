@@ -685,3 +685,53 @@ header .ms-auto.d-flex {
     align-items: center;
     justify-content: center;
 }
+
+
+@supports (appearance: base-select) {
+
+    #input-originatinglaboratory-name,
+    #input-originatinglaboratory-name::picker(select) {
+        appearance: base-select;
+    }
+
+    /* Preserve the existing Bootstrap styling of the select field */
+    #input-originatinglaboratory-name {
+        width: 100%;
+        box-sizing: border-box;
+        height: auto;
+        min-height: 58px;
+        padding-top: 1.625rem;
+        padding-bottom: 0.5rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+    }
+
+    /* Hide the additional picker arrow */
+    #input-originatinglaboratory-name::picker-icon {
+        display: none;
+    }
+
+    /* Match the dropdown menu width to the select field */
+    #input-originatinglaboratory-name::picker(select) {
+        width: anchor-size(width);
+        max-width: anchor-size(width);
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 0;
+    }
+
+    /* Wrap long laboratory names within a single option */
+    #input-originatinglaboratory-name option {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Highlight an option in blue on hover */
+    #input-originatinglaboratory-name option:hover {
+        background-color: #00589C;
+        color: #fff;
+    }
+}

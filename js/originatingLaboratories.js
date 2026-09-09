@@ -15,38 +15,74 @@ $(document).ready(function () {
             return;
         }
 
-        // Find all lab name select elements
-        $('select[name="laboratoryName[]"]').each(function () {
-            const selectElement = $(this)[0];
+        // Group all laboratories by their scientific domain.
+        // Laboratories without a scientific domain are placed in the "Other"(fallback) group.
+        const labsByScientificDomain = data.reduce((groups, lab) => {
+            const scientificDomain = lab.scientific_domain || 'Other';
 
-            // Clear existing options
+            if (!groups[scientificDomain]) {
+                groups[scientificDomain] = [];
+            }
+
+            groups[scientificDomain].push(lab);
+
+            return groups;
+        }, {});
+
+        // Sort scientific domains alphabetically before creating the option groups.
+        const sortedScientificDomains = Object.keys(labsByScientificDomain)
+            .sort((firstDomain, secondDomain) =>
+                firstDomain.localeCompare(secondDomain)
+            );
+
+        // Populate every laboratory select, including dynamically added rows.
+        $('select[name="laboratoryName[]"]').each(function () {
+            const selectElement = this;
+
+            // Remove previously rendered options and option groups.
             selectElement.innerHTML = '';
 
-            // Add empty option with data-translate attribute
+            // Add an initially empty, non-selectable option so no laboratory is selected by default.
             const emptyOption = document.createElement('option');
             emptyOption.value = '';
             emptyOption.hidden = true;
             emptyOption.textContent = '';
             selectElement.appendChild(emptyOption);
 
-            // Add lab options
-            data.forEach(function (lab) {
-                const option = document.createElement('option');
-                option.value = lab.name;
-                option.textContent = lab.name + ' (' + lab.affiliation_name + ')';
-                selectElement.appendChild(option);
+            sortedScientificDomains.forEach(function (scientificDomain) {
+                // Create a non-selectable heading for each scientific domain.
+                const optionGroup = document.createElement('optgroup');
+                optionGroup.label = scientificDomain;
+
+                // Sort laboratories alphabetically within their scientific domain.
+                const sortedLabs = labsByScientificDomain[scientificDomain]
+                    .sort((firstLab, secondLab) =>
+                        firstLab.display_name.localeCompare(secondLab.display_name)
+                    );
+
+                sortedLabs.forEach(function (lab) {
+                    const option = document.createElement('option');
+
+                    // Store the laboratory ID as the selected value
+                    option.value = lab.display_name;
+                    option.textContent = lab.display_name;
+                    optionGroup.appendChild(option);
+                });
+
+                // Add the complete scientific-domain group to the select field.
+                selectElement.appendChild(optionGroup);
             });
         });
 
-        attachChangeListeners(); // <- wichtig
+        attachChangeListeners();
     }
 
     function attachChangeListeners() {
         $('select[name="laboratoryName[]"]').off('change').on('change', function () {
-            const selectedName = $(this).val();
+            const selectedDisplayName = $(this).val();
             const row = $(this).closest('.row');
 
-            const lab = labData.find(item => item.name === selectedName);
+            const lab = labData.find((item) => item.display_name === selectedDisplayName );
 
             if (lab) {
                 row.find('input[name="LabId[]"]').val(lab.identifier || '');
@@ -116,9 +152,15 @@ $(document).ready(function () {
     });
 
     if ($("#group-originatinglaboratory").length) {
-        $.getJSON("json/msl-labs.json", function (data) {
-            labData = data;
-            populateAllLabSelectOptions(data);
+        $.getJSON("/api/v2/vocabs/msl-laboratories", function (originatingLaboratories) {
+            labData = originatingLaboratories.data;
+            populateAllLabSelectOptions(labData);
+        }).fail(function (jqXHR) {
+            console.error(
+                'Failed to load MSL laboratories:',
+                jqXHR.status,
+                jqXHR.responseText
+            );
         });
     }
 });

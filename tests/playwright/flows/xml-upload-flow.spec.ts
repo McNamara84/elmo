@@ -241,8 +241,11 @@ const MOCK_LABS = [
   {
     identifier: 'lab-123',
     name: 'Sample Lab',
+    display_name: 'Sample Lab - GFZ German Research Centre for Geosciences',
     affiliation_name: 'GFZ German Research Centre for Geosciences',
     affiliation_ror: 'https://ror.org/04abcd123',
+    scientific_domain: 'Geoscience',
+    country: 'Germany',
   },
 ];
 
@@ -300,7 +303,13 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
   'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
   'json/funders.json': MOCK_FUNDERS,
-  'json/msl-labs.json': MOCK_LABS,
+  // 'json/msl-labs.json': MOCK_LABS,
+  '/api/v2/vocabs/msl-laboratories': {
+    version: 'test',
+    lastUpdated: '2026-09-07T00:00:00+00:00',
+    total: MOCK_LABS.length,
+    data: MOCK_LABS,
+  },
   'json/affiliations.json': [{
     id: 'aff-1',
     name: 'GFZ German Research Centre for Geosciences',
@@ -684,7 +693,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue('Grants database');
 
     const labSelect = page.locator('select[name="laboratoryName[]"]').first();
-    await expect(labSelect).toHaveValue('Sample Lab');
+    await expect(labSelect).toHaveValue('Sample Lab - GFZ German Research Centre for Geosciences');
     await expect(page.locator('input[name="LabId[]"]').first()).toHaveValue('lab-123');
 
     await expect(page.locator('input[name="rIdentifier[]"]').first()).toHaveValue('10.5555/example');
