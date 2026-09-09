@@ -1,6 +1,6 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
-import { synchronizeTagifyInputs, logThesaurusKeywordPost } from './thesauriHelpers.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -441,7 +441,6 @@ class SubmitHandler {
 
         synchronizeTagifyInputs(this.$form[0]);
         const submitData = new FormData(this.$form[0]);
-        logThesaurusKeywordPost(submitData, '[SAVE]', 'submit');
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
 
         // Ensure the form-level CSRF token is present.
