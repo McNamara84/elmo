@@ -415,22 +415,6 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Starts vocabulary fetches for every registered thesaurus that has a form
- * input. Datasource-only (dynamicOnly) trees stay lazy. Resolves when each
- * fetch has settled (loaded, error, timeout, or missing).
- *
- * @returns {Promise<Array<'loaded'|'error'|'timeout'|'missing'>>}
- */
-function loadRegisteredThesaurusVocabularies() {
-    const configs = keywordConfigurations.filter(function (config) {
-        return Boolean(config.apiEndpoint) && !config.dynamicOnly;
-    });
-    return Promise.all(configs.map(function (config) {
-        return waitForThesaurusVocabulary(config);
-    }));
-}
-
-/**
  * Loads and processes keyword data, initializing jsTree.
  * Called when a thesaurus is first requested (init, modal, or Tagify focus).
  *
@@ -1019,13 +1003,12 @@ export function initTagifyForInput(inputElement, configKey) {
  * 1. Check master toggle (ELMO_FEATURES.showThesauri)
  * 2. Fetch thesauri availability from ELMO API (ERNIE proxy)
  * 3. For each available thesaurus: generate input section + modal HTML, init Tagify
- * 4. Fetch every keyword tree before thesauriReady so XML upload can addTags
- *    against a finished whitelist
+ * 4. Build the inputs first; XML upload then waits only for the thesauri
+ *    actually referenced in the uploaded subjects
  *
  * Also handles MSL keywords (static config, separate feature toggle).
  *
- * Modal/focus handlers still call loadThesaurusOnDemand; loadedConfigs makes
- * those no-ops once init has fetched the tree (or retries after error).
+ * Modal/focus handlers call loadThesaurusOnDemand on first use.
  */
 $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
@@ -1084,10 +1067,10 @@ $(document).ready(function () {
 
     ensureConfigRegistered('satellitePlatforms');
 
-    // Wait for translations, then initialize everything. If translationsLoaded
-    // already fired before this module's document.ready ran (Firefox is prone
-    // to that with deferred modules), start immediately so GCMD Tagify exists
-    // before XML upload calls processKeywords().
+    // Wait for translations, then initialize the input scaffolding. If
+    // translationsLoaded already fired before this module's document.ready ran
+    // (Firefox is prone to that with deferred modules), start immediately so
+    // Tagify inputs exist before XML upload calls processKeywords().
     let thesauriInitStarted = false;
     function startThesauriUi() {
         if (thesauriInitStarted) return;
@@ -1102,8 +1085,8 @@ $(document).ready(function () {
     }
 
     /**
-     * Main initialization for ERNIE-based thesauri.
-     * Fetches availability, generates HTML, inits Tagify, then loads trees.
+    * Main initialization for ERNIE-based thesauri.
+    * Fetches availability, generates HTML, and initializes Tagify inputs.
      */
     function initThesauri() {
         if (!showThesauri) {
@@ -1181,7 +1164,7 @@ $(document).ready(function () {
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
                 if (formGroup) formGroup.style.display = '';
 
-                loadRegisteredThesaurusVocabularies().then(markThesauriReady);
+                markThesauriReady();
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);
@@ -1338,7 +1321,6 @@ $(document).ready(function () {
 
         setupLazyLoadingForModals();
         setupLazyLoadingForInputs();
-        loadRegisteredThesaurusVocabularies();
     }
 
     /**

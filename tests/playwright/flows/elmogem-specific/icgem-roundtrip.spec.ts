@@ -592,8 +592,8 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
   const loadButton = page.locator('#button-form-load');
   await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
   await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
-  // thesauriReady resolves after init has fetched every keyword tree from ERNIE
-  // (or the fetch failed). XML upload can then addTags against a finished whitelist.
+  // thesauriReady resolves after thesaurus inputs exist. XML upload then waits
+  // only for the keyword vocabularies actually referenced by the uploaded XML.
   await page.waitForFunction(async () => {
     await (window as any).thesauriReady;
     return true;

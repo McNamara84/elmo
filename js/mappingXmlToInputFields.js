@@ -1821,12 +1821,12 @@ async function loadXmlToForm(xmlDoc) {
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
   // Thesaurus Tagify inputs are created after an async availability fetch.
-  // processKeywords silently skips subjects whose target Tagify is missing, so
-  // wait until that initialisation has finished (success or failure).
+  // Wait until that input scaffolding exists; processKeywords() then waits for
+  // only the thesaurus vocabularies referenced by the uploaded subjects.
   if (window.thesauriReady) {
     await window.thesauriReady;
   }
-  // Process Keywords (async: waits for lazy thesaurus vocabularies)
+  // Process Keywords (async: waits for the referenced thesaurus vocabularies)
   await processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);

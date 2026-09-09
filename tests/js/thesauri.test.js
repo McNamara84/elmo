@@ -272,8 +272,8 @@ describe('thesauri.js', () => {
     const scienceInput = document.getElementById('input-sciencekeyword');
     expect(scienceInput._tagify).toBeInstanceOf(MockTagify);
     expect(scienceInput._tagify.settings.placeholder).toBe('initial');
-    expect(scienceInput._tagify.settings.whitelist.length).toBeGreaterThan(0);
-    expect(scienceInput._tagify.settings.enforceWhitelist).toBe(true);
+    expect(scienceInput._tagify.settings.whitelist.length).toBe(0);
+    expect(scienceInput._tagify.settings.enforceWhitelist).toBe(false);
   });
 
   test('updates placeholder on translationsLoaded', () => {
@@ -285,13 +285,14 @@ describe('thesauri.js', () => {
     expect(input._tagify.settings.placeholder).toBe('updated');
   });
 
-  test('loads thesaurus data during init without waiting for modal or focus', () => {
+  test('initializes thesaurus input during init without fetching the tree yet', () => {
     const tree = $('#jstree-sciencekeyword').jstree(true);
-    expect(tree).toBeDefined();
+    expect(tree).toBeUndefined();
 
     const input = document.getElementById('input-sciencekeyword');
-    expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
-    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+    expect(input._tagify).toBeDefined();
+    expect(input._tagify.settings.whitelist.length).toBe(0);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
   });
 
   test('waitForThesaurusVocabulary resolves loaded after a successful fetch', async () => {
@@ -343,15 +344,17 @@ describe('thesauri.js', () => {
     expect(result).toBe('timeout');
   });
 
-  test('keyword tree is already loaded when the modal opens', () => {
-    const tree = $('#jstree-sciencekeyword').jstree(true);
-    expect(tree).toBeDefined();
+  test('opening the modal lazy-loads the keyword tree', () => {
+    expect($('#jstree-sciencekeyword').jstree(true)).toBeUndefined();
 
     const input = document.getElementById('input-sciencekeyword');
-    expect(input._tagify.settings.enforceWhitelist).toBe(true);
+    expect(input._tagify.settings.enforceWhitelist).toBe(false);
 
     openModal('#modal-sciencekeyword');
-    expect($('#jstree-sciencekeyword').jstree(true)).toBe(tree);
+
+    const tree = $('#jstree-sciencekeyword').jstree(true);
+    expect(tree).toBeDefined();
+    expect(input._tagify.settings.enforceWhitelist).toBe(true);
   });
 
   test('syncs selections between jsTree and Tagify after modal is opened', () => {
@@ -378,13 +381,17 @@ describe('thesauri.js', () => {
     expect(tree.get_selected()).toHaveLength(0);
   });
 
-  test('pre-populated Tagify values are synced to jsTree on ready after the tree loads', () => {
+  test('pre-populated Tagify values are synced when the tree loads lazily', async () => {
     const input = document.getElementById('input-sciencekeyword');
+    input._tagify.addTags([{ value: 'Root > Child' }]);
+
+    const { waitForThesaurusVocabulary } = window.__thesauriTestExports;
+    const result = await waitForThesaurusVocabulary('science_keywords');
+    expect(result).toBe('loaded');
+
     const tree = $('#jstree-sciencekeyword').jstree(true);
     expect(tree).toBeDefined();
-
-    input._tagify.addTags([{ value: 'Root > Child' }]);
-    $('#jstree-sciencekeyword').trigger('ready.jstree');
+    expect(tree.get_selected()).toEqual(['child']);
 
     expect(input._tagify.settings.whitelist.some((entry) => entry.value === 'Root > Child')).toBe(true);
   });
@@ -1298,9 +1305,9 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     // ── filtered tree on init ──────────────────────────────────────────────
 
-    test('init loads a GGM-filtered tree and whitelist without waiting for focus', (done) => {
-      // Re-run setup without dispatching the modal event; init should still
-      // fetch and filter the vocabulary.
+    test('waitForThesaurusVocabulary loads a GGM-filtered tree and whitelist on demand', (done) => {
+      // Re-run setup without opening the modal; the explicit readiness wait
+      // should fetch and filter only this vocabulary on demand.
       document.body.innerHTML = `
         <div id="thesaurusKeywordsFormGroup" style="display: none;">
           <div id="thesaurusKeywordsGroup"></div>
@@ -1330,17 +1337,20 @@ describe('thesauri.js — GGMs root node filtering', () => {
         document.dispatchEvent(new Event('translationsLoaded'));
 
         const input = document.getElementById('input-sciencekeyword');
-        const tree = $('#jstree-sciencekeyword').jstree(true);
-        expect(tree).toBeDefined();
-        const ids = tree.allNodeIds();
+        window.__thesauriTestExports.waitForThesaurusVocabulary('science_keywords').then((result) => {
+          expect(result).toBe('loaded');
+          const tree = $('#jstree-sciencekeyword').jstree(true);
+          expect(tree).toBeDefined();
+          const ids = tree.allNodeIds();
 
-        GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));
-        expect(ids).toContain('uri:ellipsoid');
-        expect(ids).not.toContain('uri:topography');
-        expect(ids).not.toContain('uri:climate-models');
-        expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
+          GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));
+          expect(ids).toContain('uri:ellipsoid');
+          expect(ids).not.toContain('uri:topography');
+          expect(ids).not.toContain('uri:climate-models');
+          expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
 
-        done();
+          done();
+        }).catch(done);
       });
     }, 5000);
 
