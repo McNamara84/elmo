@@ -224,26 +224,22 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
     $dom->formatOutput = true;
     $dom->loadXML($xmlContent);
 
-    $root = $dom->documentElement;
+    $xpath = new DOMXPath($dom);
+    // DataCite's document element is always <resource>. In envelopes it is a child
+    // of <envelope> / <grav:envelope>, not the XML document root.
+    // PHP DOM does not expose xmlns declarations as attributes; namespaceURI/prefix
+    // on the resource element are the equivalent of that xmlns.
+    $resource = $xpath->query(
+        '//*[local-name()="resource" and starts-with(namespace-uri(), "http://datacite.org/schema")]'
+    )->item(0);
 
-    // --- 1. Find the DataCite namespace prefix ---
-    $dataciteNs = null;
-    $datacitePrefix = null; // may end up '' (empty) if it's the default namespace
-    // Find datacite namespace: in the root element find xmlns attribute that is equal to "http://datacite.org/schema*". Take note of what comes after xmlns in this element. Might be empty!
-    foreach ($root->attributes as $attr) {
-        // xmlns="http://datacite.org/schema/..."  -> nodeName "xmlns"
-        // xmlns:foo="http://datacite.org/schema/..." -> nodeName "xmlns:foo"
-        if (str_starts_with($attr->nodeName, 'xmlns') && str_starts_with($attr->nodeValue, 'http://datacite.org/schema')) {
-            $dataciteNs = $attr->nodeValue;
-            $parts = explode(':', $attr->nodeName, 2);
-            $datacitePrefix = $parts[1] ?? ''; // '' means default namespace
-            break;
-        }
+    if (!$resource instanceof DOMElement) {
+        throw new RuntimeException('DataCite resource element not found.');
     }
 
-    if ($dataciteNs === null) {
-        throw new RuntimeException('DataCite namespace not found on root element.');
-    }
+    $dataciteNs = $resource->namespaceURI;
+    $datacitePrefix = $resource->prefix; // '' for default xmlns, e.g. 'dace' for ICGEM
+    $xpath->registerNamespace('dc', $dataciteNs);
 
     // Helper to build a tag name honoring the discovered prefix
     $tag = function (string $localName) use ($datacitePrefix): string {
@@ -259,7 +255,17 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
         return $el;
     };
 
-    // --- 2. Add Contributors ---
+    $getOrCreateChild = function (string $localName) use ($xpath, $resource, $createEl): DOMElement {
+        $existing = $xpath->query('dc:' . $localName, $resource)->item(0);
+        if ($existing instanceof DOMElement) {
+            return $existing;
+        }
+        $el = $createEl($localName);
+        $resource->appendChild($el);
+        return $el;
+    };
+
+    // --- 2. Fill existing contributors ---
     $contributorsData = [
         [
             'contributorType' => 'DataCurator',
@@ -279,6 +285,7 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
         ],
     ];
 
+    $contributors = $getOrCreateChild('contributors');
     foreach ($contributorsData as $c) {
         $contributor = $createEl('contributor');
         $contributor->setAttribute('contributorType', $c['contributorType']);
@@ -297,15 +304,14 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
 
         $contributor->appendChild($createEl('affiliation', $c['affiliation']));
 
-        $root->appendChild($contributor);
+        $contributors->appendChild($contributor);
     }
 
-    // --- 3. Add format ---
-    $formats = $createEl('formats');
+    // --- 3. Add format (create <formats> if the resource does not already have one) ---
+    $formats = $getOrCreateChild('formats');
     $formats->appendChild($createEl('format', 'ICGEM-format'));
-    $root->appendChild($formats);
 
-    // --- 4. Add subjects ---
+    // --- 4. Fill existing subjects ---
     $subjectsData = [
         [
             'text' => 'GEOID CHARACTERISTICS',
@@ -317,6 +323,7 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
         ],
     ];
 
+    $subjects = $getOrCreateChild('subjects');
     foreach ($subjectsData as $s) {
         $subject = $createEl('subject', $s['text']);
         // xml:lang uses the reserved 'xml' namespace, not the DataCite one
@@ -324,7 +331,9 @@ function applyElmoGemAdditionsToDataciteXml(string $xmlContent): string
         $subject->setAttribute('subjectScheme', 'Science Keywords');
         $subject->setAttribute('schemeURI', 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords');
         $subject->setAttribute('valueURI', $s['valueURI']);
-        $root->appendChild($subject);
+        $subjects->appendChild($subject);
     }
+
+    return $dom->saveXML();
 }
 
