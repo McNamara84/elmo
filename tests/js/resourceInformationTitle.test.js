@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('resourceinformation-title.js', () => {
+describe('resourceInformationTitle.js', () => {
   let $;
 
   beforeEach(() => {
@@ -66,7 +66,7 @@ describe('resourceinformation-title.js', () => {
 
     // Load and eval the script — strip ES module import and wrap document.ready
     let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceinformation-title.js'),
+      path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceInformationTitle.js'),
       'utf8'
     );
     script = script.replace(/^import.*$/gm, '');
