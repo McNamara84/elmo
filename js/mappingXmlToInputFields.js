@@ -1515,6 +1515,7 @@ async function processKeywords(xmlDoc, resolver) {
   }
   if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
     const keys = [...thesaurusKeys];
+    // all existing thesauri inputs will wait for the corresponding fields to be ready
     const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
     const notReady = keys.filter((key, index) => results[index] !== 'loaded');
     if (notReady.length > 0) {
@@ -1525,8 +1526,8 @@ async function processKeywords(xmlDoc, resolver) {
     allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
   }
 
-  // Clear existing tags before importing new ones
-  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
+  // We don't clear existing tags before importing new ones
+
 
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
