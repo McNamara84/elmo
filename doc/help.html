@@ -812,6 +812,14 @@ include_once "../settings.php";
             <?php endif; ?>
             <!-- Thesaurus help sections — shown dynamically based on ERNIE availability -->
             <?php if ($showThesauri ?? true): ?>
+            <div id="help-thesauriKeywords" class="section-content">
+                <h3>Thesauri Keywords</h3>
+                <p>
+                    Thesauri provide controlled vocabularies for describing your dataset
+                    with standardised keywords. They help make metadata more consistent,
+                    searchable and discoverable.
+                </p>
+            </div>
             <div class="thesaurus-help" data-thesaurus="platforms" style="display:none">
                 <div id="help-platformsKeywords" class="section-content">
                     <div id="help-gcmd-platforms-keyword">
