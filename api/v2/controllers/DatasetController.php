@@ -4,6 +4,11 @@ if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
 }
 require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 
+// Skip class definition if already defined (e.g., mock in tests)
+if (class_exists('DatasetController', false)) {
+    return;
+}
+
 class DatasetController
 {
     protected mysqli $connection;

@@ -1,6 +1,11 @@
 <?php
 require_once __DIR__ . '/DatasetController.php';
 
+// Skip class definition if already defined (e.g., mock in tests)
+if (class_exists('ICGEMController', false)) {
+    return;
+}
+
 class ICGEMController extends DatasetController
 {
     private const ICGEM_NAMESPACE_PREFIX = 'grav';

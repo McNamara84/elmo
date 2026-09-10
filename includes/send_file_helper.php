@@ -105,7 +105,11 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
         $xmlContent = $payloadData['payload'];
 
         if ($payloadData['generator'] === 'dataset-xml') {
-            require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+            // Only require real controller if not already defined (e.g., via mock in tests)
+            // Use false to prevent autoloader from loading real class
+            if (!class_exists('DatasetController', false)) {
+                require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+            }
             $datasetController = new DatasetController();
             $xmlContent = $datasetController->markDataCiteEnvelopeAsSubmitted($xmlContent, date('Y-m-d'));
         }
