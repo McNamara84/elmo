@@ -288,6 +288,8 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 /**
  * Generate and send the ICGEM submission for ELMO-GEM.
  *
+ * @param int $resourceId
+ * @param array<string, mixed> $postData
  * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
  * @param array<string, mixed> $context
  * @return array{
