@@ -322,7 +322,6 @@ function processGGMsIcgemSubmission(int $resourceId, array $postData, array $set
     }
 
     if ((bool) $context['simulateEmail']) {
-        error_log('XML Submit: Simulation mode enabled - skipping ICGEM SMTP send');
         return [
             'generatedFile' => $generatedFile,
             'icgemEmailSent' => false,
@@ -363,8 +362,6 @@ $resource_id = null;
 // ========= EXECUTION PIPELINE =========
 
 try {
-    error_log("send_xml_file.php: Try block started");
-
     validateRequestSecurity('submit', $_POST);
 
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
@@ -437,73 +434,86 @@ try {
             if ($simulateEmail) {
                 error_log('XML Submit: Simulation mode enabled - skipping Data Services SMTP send');
             } else {
-                $mail = new PHPMailer(true);
-                $mail->isSMTP();
-                $mail->Host = $smtpHost;
-                $mail->Port = $smtpPort;
-                $mail->Timeout = 30;
-                $mail->SMTPKeepAlive = false;
+                error_log("XML Submit: Attempting to send metadata email to GFZ Data Services ({$xmlSubmitAddress})");
 
-                $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
-                if ($mail->SMTPAuth) {
-                    $mail->Username = $smtpUser;
-                    $mail->Password = $smtpPassword;
-                }
+                try {
+                    $mail = new PHPMailer(true);
+                    $mail->isSMTP();
+                    $mail->Host = $smtpHost;
+                    $mail->Port = $smtpPort;
+                    $mail->Timeout = 30;
+                    $mail->SMTPKeepAlive = false;
 
-                if (strtolower($smtpSecure) === 'tls') {
-                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                    $mail->SMTPAutoTLS = true;
-                } else {
-                    $mail->SMTPAutoTLS = false;
-                }
-
-                $mail->CharSet = 'UTF-8';
-                $mail->setFrom($smtpSender, 'ELMO XML Submission System');
-                $mail->addAddress($xmlSubmitAddress);
-                $mail->addReplyTo($smtpSender, 'ELMO System');
-
-                if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
-                    $uploadedFile = $_FILES['dataDescription'];
-                    $fileType = mime_content_type($uploadedFile['tmp_name']);
-                    $allowedTypes = [
-                        'application/pdf',
-                        'application/msword',
-                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                    ];
-
-                    if (!in_array($fileType, $allowedTypes)) {
-                        throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
-                    }
-                    if ($uploadedFile['size'] > 10 * 1024 * 1024) {
-                        throw new Exception('File size exceeds maximum limit of 10MB.');
+                    $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
+                    if ($mail->SMTPAuth) {
+                        $mail->Username = $smtpUser;
+                        $mail->Password = $smtpPassword;
                     }
 
-                    $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-                    $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resource_id . '.' . $fileExtension);
-                    error_log('XML Submit: Added file attachment: data_description_' . $resource_id . '.' . $fileExtension);
+                    if (strtolower($smtpSecure) === 'tls') {
+                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                        $mail->SMTPAutoTLS = true;
+                    } else {
+                        $mail->SMTPAutoTLS = false;
+                    }
+
+                    $mail->CharSet = 'UTF-8';
+                    $mail->setFrom($smtpSender, 'ELMO XML Submission System');
+                    $mail->addAddress($xmlSubmitAddress);
+                    $mail->addReplyTo($smtpSender, 'ELMO System');
+
+                    if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
+                        $uploadedFile = $_FILES['dataDescription'];
+                        $fileType = mime_content_type($uploadedFile['tmp_name']);
+                        $allowedTypes = [
+                            'application/pdf',
+                            'application/msword',
+                            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                        ];
+
+                        if (!in_array($fileType, $allowedTypes)) {
+                            throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+                        }
+                        if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                            throw new Exception('File size exceeds maximum limit of 10MB.');
+                        }
+
+                        $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+                        $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resource_id . '.' . $fileExtension);
+                        error_log('XML Submit: Added file attachment: data_description_' . $resource_id . '.' . $fileExtension);
+                    }
+
+                    createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], (int) $resource_id, $_POST);
+
+                    $mail->isHTML(true);
+                    $mail->Subject = $emailText['subject'];
+                    $mail->Body = $emailText['html'];
+                    $mail->AltBody = $emailText['text'];
+
+                    $mail->send();
+                    $dataServicesEmailSent = true;
+                    error_log('XML Submit: ✓ Successfully sent metadata email to GFZ Data Services (Resource ID: ' . $resource_id . ')');
+                } catch (Exception $mailError) {
+                    error_log('XML Submit: ✗ Failed to send metadata email to GFZ Data Services. Error: ' . $mailError->getMessage());
+                    throw $mailError;
                 }
-
-                createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], (int) $resource_id, $_POST);
-
-                $mail->isHTML(true);
-                $mail->Subject = $emailText['subject'];
-                $mail->Body = $emailText['html'];
-                $mail->AltBody = $emailText['text'];
-
-                error_log('XML Submit: Sende E-Mail über GFZ SMTP an ' . $xmlSubmitAddress);
-                $mail->send();
-                $dataServicesEmailSent = true;
-                error_log('XML Submit: Curator mail sent successfully.');
             }
         }
 
         if ($showGGMsProperties) {
+            error_log("XML Submit: Attempting ICGEM registration (Resource ID: {$resource_id})");
+            
             $icgemResult = processGGMsIcgemSubmission((int) $resource_id, $_POST, $fileGenerationSettings, [
                 'simulateEmail' => $simulateEmail,
                 'urgencyWeeks' => $urgencyWeeks,
                 'dataUrl' => $dataUrl,
                 'dataServicesEmailSent' => $dataServicesEmailSent,
             ]);
+            
+            if ($icgemResult['icgemEmailSent']) {
+                error_log("XML Submit: ✓ ICGEM registration email sent successfully (Resource ID: {$resource_id})");
+            }
+            
             $researcherConfirmationData = $icgemResult['generatedFile']['researcherConfirmationData'];
         }
     } catch (Throwable $e) {
@@ -538,20 +548,16 @@ try {
     // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
     $researcherWarnings = [];
 
-    if (!empty($researcherConfirmationData['invalidContacts'])) {
-        $invalidAddresses = array_map(
-            static fn(array $contact): string => $contact['fullName'] . ' <' . $contact['email'] . '>',
-            $researcherConfirmationData['invalidContacts']
-        );
-        $warningMessage = 'WARNING: The data is sent to curators, but the contact adresses: '
-            . implode(', ', $invalidAddresses)
-            . ' were invalid!';
-        error_log($warningMessage);
-        $researcherWarnings[] = $warningMessage;
-    }
-
     try {
+        if (!empty($researcherConfirmationData['contacts'])) {
+            error_log("XML Submit: Attempting to send confirmation emails to " . count($researcherConfirmationData['contacts']) . " researcher contact(s) (Resource ID: {$resource_id})");
+        }
+        
         $researcherSendResult = sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
+
+        if ($researcherSendResult['sent'] > 0) {
+            error_log("XML Submit: ✓ Researcher confirmation emails sent successfully ({$researcherSendResult['sent']} email(s), Resource ID: {$resource_id})");
+        }
 
         foreach ($researcherSendResult['failed'] as $failedContact) {
             $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
@@ -563,7 +569,7 @@ try {
     } catch (Exception $e) {
         $warningMessage = 'WARNING: The data is sent to curators, but researcher confirmation emails failed: '
             . $e->getMessage();
-        error_log($warningMessage);
+        error_log('XML Submit: ✗ ' . $warningMessage . ' (Resource ID: ' . $resource_id . ')');
         $researcherWarnings[] = $warningMessage;
     }
 
