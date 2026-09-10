@@ -28,6 +28,7 @@ require_once $projectRoot . '/api/security.php';
 // Include required files
 require_once $projectRoot . '/settings.php';
 require_once $projectRoot . '/includes/save_to_db_helper.php';
+require_once $projectRoot . '/includes/send_file_helper.php';
 
 // ELMO GEM extension: ICGEM registration mail (only when $showGGMsProperties)
 require_once $projectRoot . '/includes/ggms_registration_mail.php';
@@ -86,47 +87,6 @@ function getPriorityText(?int $weeks): string {
         default:
             return "undefined";
     }
-}
-
-/**
-* Create XML filename from metadata.
-*
-* @param array<string, mixed> $postData
-*/
-function buildXmlAttachmentFilename(int $resource_id, array $postData): string {
-    $firstAuthor = $postData['familynames'][0] ?? 'unknown';
-    $mainTitle   = $postData['title'][0] ?? 'untitled';
-
-    $abbreviateTitle = substr($mainTitle, 0, 30);
-
-    $deUmlauts = ['ä' => 'ae', 'ö' => 'oe', 'ü' => 'ue', 'Ä' => 'Ae', 'Ö' => 'Oe', 'Ü' => 'Ue', 'ß' => 'ss'];
-    $firstAuthor = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $firstAuthor);
-    $abbreviateTitle = str_replace(array_keys($deUmlauts), array_values($deUmlauts), $abbreviateTitle);
-
-    setlocale(LC_ALL, 'en_US.UTF-8');
-    $firstAuthor = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $firstAuthor) ?: $firstAuthor;
-    $abbreviateTitle = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $abbreviateTitle) ?: $abbreviateTitle;
-
-    $cleanAuthor = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $firstAuthor)), '_') ?: 'unknown';
-    $cleanTitle  = trim(preg_replace('/_+/', '_', preg_replace('/[^a-zA-Z0-9._-]/', '_', $abbreviateTitle)), '_') ?: 'untitled';
-
-    $currentDateTime = date('Y-m-d_H-i-s');
-
-    return "metadata{$resource_id}-{$cleanAuthor}-{$cleanTitle}-{$currentDateTime}.xml";
-}
-
-/**
-* Create XML filename from metadata and add as PHPMailer string attachment.
-*
-* @param array<string, mixed> $postData
-*/
-function createAndAttachXmlFile(PHPMailer $mail, string $xml_content, int $resource_id, array $postData): string {
-    $xmlFilename = buildXmlAttachmentFilename($resource_id, $postData);
-
-    $mail->addStringAttachment($xml_content, $xmlFilename);
-    error_log("XML attachment added: " . $xmlFilename);
-
-    return $xmlFilename;
 }
 
 /**
@@ -325,6 +285,152 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
     return ['sent' => $processedCount, 'failed' => $failed];
 }
 
+/**
+ * Send curator and ICGEM submission emails according to the generated file plan.
+ *
+ * @param array{
+ *   dataServicesPayload: ?string,
+ *   icgemPayload: ?string,
+ *   researcherConfirmationData: array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>},
+ *   shouldSendDataServicesMail: bool,
+ *   shouldSendIcgemMail: bool
+ * } $generatedFile
+ * @param array<string, mixed> $context
+ * @return array{dataServicesEmailSent: bool, icgemEmailSent: bool, simulated: bool}
+ */
+function sendSubmissionEmails(array $generatedFile, array $context): array
+{
+    global $showGGMsProperties;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
+    global $xmlSubmitAddress, $icgemSubmitAddress;
+
+    $resourceId = (int) $context['resourceId'];
+    $postData = $context['postData'];
+    $simulateEmail = (bool) $context['simulateEmail'];
+    $urgencyWeeks = $context['urgencyWeeks'];
+    $dataUrl = (string) $context['dataUrl'];
+    $researcherConfirmationData = $generatedFile['researcherConfirmationData'];
+
+    if ($generatedFile['shouldSendDataServicesMail'] && empty(trim((string) $generatedFile['dataServicesPayload']))) {
+        throw new Exception('Generated XML payload is empty.');
+    }
+
+    if ($generatedFile['shouldSendIcgemMail'] && empty(trim((string) $generatedFile['icgemPayload']))) {
+        throw new Exception('Generated ICGEM XML payload is empty.');
+    }
+
+    if ($simulateEmail) {
+        error_log('XML Submit: Simulation mode enabled - skipping curator and ICGEM SMTP send');
+        return [
+            'dataServicesEmailSent' => false,
+            'icgemEmailSent' => false,
+            'simulated' => true,
+        ];
+    }
+
+    if (!testGfzSmtpConnectivity()) {
+        throw new Exception('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
+    }
+
+    $dataServicesEmailSent = false;
+    if ($generatedFile['shouldSendDataServicesMail']) {
+        $mail = new PHPMailer(true);
+        $mail->isSMTP();
+        $mail->Host = $smtpHost;
+        $mail->Port = $smtpPort;
+        $mail->Timeout = 30;
+        $mail->SMTPKeepAlive = false;
+
+        $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
+        if ($mail->SMTPAuth) {
+            $mail->Username = $smtpUser;
+            $mail->Password = $smtpPassword;
+        }
+
+        if (strtolower($smtpSecure) === 'tls') {
+            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+            $mail->SMTPAutoTLS = true;
+        } else {
+            $mail->SMTPAutoTLS = false;
+        }
+
+        $mail->CharSet = 'UTF-8';
+        $mail->setFrom($smtpSender, 'ELMO XML Submission System');
+        $mail->addAddress($xmlSubmitAddress);
+        $mail->addReplyTo($smtpSender, 'ELMO System');
+
+        if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
+            $uploadedFile = $_FILES['dataDescription'];
+            $fileType = mime_content_type($uploadedFile['tmp_name']);
+            $allowedTypes = [
+                'application/pdf',
+                'application/msword',
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+            ];
+
+            if (!in_array($fileType, $allowedTypes)) {
+                throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+            }
+            if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                throw new Exception('File size exceeds maximum limit of 10MB.');
+            }
+
+            $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+            $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resourceId . '.' . $fileExtension);
+            error_log('XML Submit: Added file attachment: data_description_' . $resourceId . '.' . $fileExtension);
+        }
+
+        createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], $resourceId, $postData);
+
+        $emailText = generateEmailText([
+            'resourceId' => $resourceId,
+            'urgencyWeeks' => $urgencyWeeks,
+            'dataUrl' => $dataUrl,
+            'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
+            'showGGMsProperties' => (bool) $showGGMsProperties,
+            'icgemSubmitAddress' => $icgemSubmitAddress,
+            'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
+        ]);
+
+        $mail->isHTML(true);
+        $mail->Subject = $emailText['subject'];
+        $mail->Body = $emailText['html'];
+        $mail->AltBody = $emailText['text'];
+
+        error_log('XML Submit: Sende E-Mail über GFZ SMTP an ' . $xmlSubmitAddress);
+        $mail->send();
+        $dataServicesEmailSent = true;
+        error_log('XML Submit: Curator mail sent successfully.');
+    }
+
+    $icgemEmailSent = false;
+    if ($generatedFile['shouldSendIcgemMail']) {
+        sendGGMsIcgemRegistrationMail([
+            'resourceId' => $resourceId,
+            'title' => $researcherConfirmationData['title'],
+            'doi' => trim((string) ($postData['doi'] ?? '')),
+            'priorityText' => getPriorityText($urgencyWeeks),
+            'dataUrl' => $dataUrl,
+            'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
+            'submittedAt' => date('d.m.Y H:i:s'),
+            'icgemAddress' => $icgemSubmitAddress,
+            'senderAddress' => $smtpSender,
+            'dataServicesEmailSent' => $dataServicesEmailSent,
+            'icgemXml' => $generatedFile['icgemPayload'],
+            'icgemFilename' => buildXmlAttachmentFilename($resourceId, $postData),
+        ]);
+        $icgemEmailSent = true;
+        error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
+            . ($dataServicesEmailSent ? 'true' : 'false') . '.');
+    }
+
+    return [
+        'dataServicesEmailSent' => $dataServicesEmailSent,
+        'icgemEmailSent' => $icgemEmailSent,
+        'simulated' => false,
+    ];
+}
+
 // Initialize execution variables
 $dataUrl = '';
 $urgencyWeeks = null;
@@ -335,10 +441,8 @@ $resource_id = null;
 try {
     error_log("send_xml_file.php: Try block started");
 
-    // Step 0: Security Validation
     validateRequestSecurity('submit', $_POST);
 
-    // Capture and clean post values
     $urgencyWeeks = isset($_POST['urgency']) ? intval($_POST['urgency']) : null;
     $dataUrl = isset($_POST['dataUrl']) ? filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL) : '';
 
@@ -352,11 +456,11 @@ try {
         }
     }
 
-    // Step 1: Save transaction structures
+    $elmogemSendsDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
+
     try {
         $resource_id = saveALL($_POST);
     } catch (\Throwable $e) {
-        // This file aliases Exception to PHPMailer's class; save-layer errors are \Exception.
         error_log("send_xml_file.php: Save operation failed: " . $e->getMessage());
         http_response_code(500);
         ob_clean();
@@ -368,81 +472,27 @@ try {
         return;
     }
 
-    error_log("send_xml_file.php: All data saved successfully with Resource ID: " . $resource_id);
+    error_log('send_xml_file.php: All data saved successfully with Resource ID: ' . $resource_id);
 
-    // Step 2: Generate Payload File Structure
-    $payloadData = generateDatasetPayloadByResourceId($resource_id, ['postData' => $_POST]);
-    $xml_content = $payloadData['payload'];
-    error_log("send_xml_file.php: XML content payload generated successfully");
+    $generatedFile = generateFile((int) $resource_id, $_POST, [
+        'showGGMsProperties' => (bool) $showGGMsProperties,
+        'elmogemSendsDataServicesMail' => $elmogemSendsDataServicesMail,
+    ]);
+    $researcherConfirmationData = $generatedFile['researcherConfirmationData'];
 
-    if ($payloadData['generator'] === 'dataset-xml') {
-        try {
-            require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
-            $datasetController = new DatasetController();
-            $xml_content = $datasetController->markDataCiteEnvelopeAsSubmitted($xml_content, date('Y-m-d'));
-            error_log("Submit: Marked DataCite XML with dateType=Submitted.");
-        } catch (Exception $e) {
-            error_log("Submit: Failed to add Submitted date to XML content: " . $e->getMessage());
-        }
-    }
-    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
-
-    // ELMO-GEM special:
-    // Attachment for the Data Services mail. Non-GEM already generated that file
-    // above; GEM generated the ICGEM file, so the DatasetController envelope is
-    // produced here only when Data Services is notified.
-    if ($showGGMsProperties && $elmogemSendsDataServicesMail) {
-        
-        // Apply ICGEM additions to the Datacite part
-        $xml_content = applyElmoGemAdditionsToDataciteXml(
-            $xml_content,
-            $showGGMsProperties,
-            $elmogemSendsDataServicesMail
-        );
-
-        // ICGEM keeps contact emails in grav:contact, not ISO pointOfContact.
-        $researcherConfirmationData = collectGGMsResearcherConfirmationDataFromXml($xml_content);
-
-        // Non-GEM always sends the usual Data Services mail.   an empty DOI field means GFZ Data Services reserves one.
-        $elmogemSendsDataServicesMail = trim((string) ($_POST['doi'] ?? '')) === '';
-    }
-
-    // SIMULATION PATH
     include_once $projectRoot . '/includes/feature_toggles.php';
     $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 
-    if ($simulateEmail) {
-        error_log('XML Submit: Simulation mode enabled - skipping SMTP send');
-        ob_clean();
-        header('Content-Type: application/json');
-        echo json_encode([
-            'success' => true,
-            'message' => 'SIMULATED: Email sending was skipped.',
-            'resource_id' => $resource_id,
-            'simulated' => true
-        ]);
-        return;
-    }
-
-    // Step 3: Production Live System Email Delivery
-    $researcherConfirmationData = [
-        'title' => '',
-        'contacts' => [],
-        'invalidContacts' => [],
-    ];
-
-    // --- PREP: payload readiness and SMTP connectivity ---
     try {
-        if (!testGfzSmtpConnectivity()) {
-            throw new Exception("GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.");
-        }
-
-        if (empty(trim($xml_content))) {
-            throw new Exception("Generated XML payload is empty.");
-        }
-
-    } catch (Exception $e) {
-        error_log("XML Submit Prep Error: " . $e->getMessage());
+        $submissionSendResult = sendSubmissionEmails($generatedFile, [
+            'resourceId' => (int) $resource_id,
+            'postData' => $_POST,
+            'simulateEmail' => $simulateEmail,
+            'urgencyWeeks' => $urgencyWeeks,
+            'dataUrl' => $dataUrl,
+        ]);
+    } catch (Throwable $e) {
+        error_log('XML Submit Mail Error: ' . $e->getMessage());
 
         $urgencyText = $urgencyWeeks ?? 'not set';
         $dataUrlText = $dataUrl ?: 'not provided';
@@ -459,203 +509,18 @@ try {
         header('Content-Type: application/json');
         echo json_encode([
             'success' => false,
-            'message' => "Sorry, we encountered an error when preparing the email:\n\n" .
-                         $e->getMessage() . "\n\n" .
-                         "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
-                         "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
-                         "Thank you for your understanding.\n" .
-                         "ELMO team"
+            'message' => "Sorry, we encountered an error when sending the email:\n\n"
+                . $e->getMessage()
+                . "\n\nYour data has been saved in our system with Resource ID: {$resource_id}\n\n"
+                . 'Please contact the data curation team at '
+                . ($showGGMsProperties ? $icgemSubmitAddress : $xmlSubmitAddress)
+                . '. In your Email, make sure to reference this Resource ID.\n\n'
+                . "Thank you for your understanding.\nELMO team",
         ]);
         return;
     }
 
-    // --- PIPELINE PART A: DISPATCH TO CURATORS ---
-    // Non-GEM: always Data Services ($xmlSubmitAddress), usual content.
-    // GEM + empty DOI: Data Services (usual) + ICGEM ($icgemSubmitAddress).
-    // GEM + DOI set: ICGEM only.
-    $dataServicesEmailSent = false;
-
-    if ($elmogemSendsDataServicesMail) {
-        try {
-            $mail = new PHPMailer(true);
-            $mail->isSMTP();
-            $mail->Host = $smtpHost;
-            $mail->Port = $smtpPort;
-            $mail->Timeout = 30;
-            $mail->SMTPKeepAlive = false;
-
-            $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
-            if ($mail->SMTPAuth) {
-                $mail->Username = $smtpUser;
-                $mail->Password = $smtpPassword;
-            }
-
-            if (strtolower($smtpSecure) === 'tls') {
-                $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                $mail->SMTPAutoTLS = true;
-            } else {
-                $mail->SMTPAutoTLS = false;
-            }
-
-            $mail->CharSet = 'UTF-8';
-            $mail->setFrom($smtpSender, 'ELMO XML Submission System');
-            $mail->addAddress($xmlSubmitAddress);
-            $mail->addReplyTo($smtpSender, 'ELMO System');
-
-            // Append optional document description files (PDF/DOC/DOCX)
-            if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
-                $uploadedFile = $_FILES['dataDescription'];
-                $fileType = mime_content_type($uploadedFile['tmp_name']);
-                $allowedTypes = [
-                    'application/pdf',
-                    'application/msword',
-                    'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-                ];
-
-                if (!in_array($fileType, $allowedTypes)) {
-                    throw new Exception("Invalid file type. Only PDF, DOC, and DOCX files are allowed.");
-                }
-                if ($uploadedFile['size'] > 10 * 1024 * 1024) {
-                    throw new Exception("File size exceeds maximum limit of 10MB.");
-                }
-
-                $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-                $mail->addAttachment($uploadedFile['tmp_name'], "data_description_" . $resource_id . "." . $fileExtension);
-                error_log("XML Submit: Added file attachment: data_description_" . $resource_id . "." . $fileExtension);
-            }
-
-            // Perform payload file renaming assignment and attachment compilation
-            $xmlFilename = createAndAttachXmlFile($mail, $xml_content, $resource_id, $_POST);
-
-            $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
-            $priorityText = getPriorityText($urgencyWeeks);
-            $dataUrlText = $dataUrl ? $dataUrl : "not provided";
-
-            $contactEmails = array_map(
-                static fn(array $contact): string => $contact['email'],
-                $researcherConfirmationData['contacts']
-            );
-            $contactEmailsText = !empty($contactEmails)
-                ? implode(', ', $contactEmails)
-                : 'not provided';
-            $contactEmailsHtml = !empty($contactEmails)
-                ? implode(', ', array_map(
-                    static fn(string $email): string => htmlspecialchars($email, ENT_QUOTES, 'UTF-8'),
-                    $contactEmails
-                ))
-                : 'not provided';
-
-            $htmlBody = "
-                <h2>Neue Metadaten-Einreichung von ELMO</h2>
-                <p>Hallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:</p>
-                <ul>
-                    <li><strong>Ressource ID in ELMO Datenbank:</strong> {$resource_id}</li>
-                    <li><strong>Priorität:</strong> {$urgencyText} ({$priorityText})</li>
-                    <li><strong>URL zu den Daten:</strong> " . ($dataUrl ? "<a href='{$dataUrl}'>{$dataUrl}</a>" : "nicht angegeben") . "</li>
-                    <li><strong>Contact email addresses provided by the author(s):</strong> {$contactEmailsHtml}</li>
-                    <li><strong>Eingereicht am:</strong> " . date('d.m.Y H:i:s') . "</li>
-                </ul>
-                <p>Ich habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.</p>
-                <p>Und jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist <strong>{$priorityText}</strong>! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)</p>
-                <hr>
-                <p><small>Diese E-Mail wurde automatisch von ELMO generiert.</small></p>
-            ";
-
-            $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resource_id}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . (isset($_FILES['dataDescription']) ? " und die Datenbeschreibung" : "") . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
-
-            // ELMO-GEM special:
-            // modify the message to include icgem adress for further communication
-            if ($showGGMsProperties) {
-                $gemNote = buildGGMsDataServicesNote($icgemSubmitAddress);
-                $htmlBody .= $gemNote['html'];
-                $plainBody .= $gemNote['text'];
-            }
-
-            $mail->isHTML(true);
-            $mail->Subject = "Neue ELMO Metadaten-Einreichung (ID: {$resource_id}, Priorität: {$priorityText})";
-            $mail->Body = $htmlBody;
-            $mail->AltBody = $plainBody;
-
-            error_log("XML Submit: Sende E-Mail über GFZ SMTP an {$xmlSubmitAddress}");
-            $mail->send();
-            $dataServicesEmailSent = true;
-            error_log("XML Submit: Curator mail sent successfully.");
-        } catch (Exception $e) {
-            error_log("XML Submit Curator Mail Error: " . $e->getMessage());
-
-            // Failover recovery block logging
-            $urgencyText = $urgencyWeeks ?? 'not set';
-            $dataUrlText = $dataUrl ?: 'not provided';
-            error_log("💁 FAILED XML SUBMISSION - ACTION REQUIRED \n" .
-                      "==================================================\n" .
-                      "📄 Resource ID: {$resource_id}\n" .
-                      "⏰ Urgency: {$urgencyText}\n" .
-                      "🔗 Data URL: {$dataUrlText}\n" .
-                      "🚨 Error on submission: " . $e->getMessage() . "\n" .
-                      "==================================================");
-
-            ob_clean();
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => "Sorry, we encountered an error when sending the email:\n\n" .
-                             $e->getMessage() . "\n\n" .
-                             "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
-                             "Please contact the data curation team at {$xmlSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
-                             "Thank you for your understanding.\n" .
-                             "ELMO team"
-            ]);
-            return;
-        }
-
-    }
-
-    // ELMO-GEM PATH: send ICGEM registration mail with the ICGEM metadata schema
-    $icgemPayloadData = generateDatasetPayloadByResourceId($resource_id, ['postData' => $_POST, 'variant' => 'icgem']);
-    $icgem_xml_content = $icgemPayloadData['payload'];
-    if ($showGGMsProperties) {
-        // Add ELMO-GEM specific additions to the DataCite part of the XML: contributors, format, and subjects.
-        $icgem_xml_content = applyElmoGemAdditionsToDataciteXml(
-            $icgem_xml_content,
-            $showGGMsProperties,
-            false
-        );
-        try {
-            sendGGMsIcgemRegistrationMail([
-                'resourceId' => $resource_id,
-                'title' => $researcherConfirmationData['title'],
-                'doi' => trim((string) ($_POST['doi'] ?? '')),
-                'priorityText' => getPriorityText($urgencyWeeks),
-                'dataUrl' => $dataUrl,
-                'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
-                'submittedAt' => date('d.m.Y H:i:s'),
-                'icgemAddress' => $icgemSubmitAddress,
-                'senderAddress' => $smtpSender,
-                'dataServicesEmailSent' => $dataServicesEmailSent,
-                'icgemXml' => $icgem_xml_content,
-                'icgemFilename' => buildXmlAttachmentFilename($resource_id, $_POST),
-            ]);
-            error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
-                . ($dataServicesEmailSent ? 'true' : 'false') . '.');
-        } catch (Throwable $e) {
-            error_log("XML Submit GEM ICGEM Mail Error: " . $e->getMessage());
-
-            ob_clean();
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => "Sorry, we encountered an error when sending the email:\n\n" .
-                             $e->getMessage() . "\n\n" .
-                             "Your data has been saved in our system with Resource ID: {$resource_id}\n\n" .
-                             "Please contact the data curation team at {$icgemSubmitAddress}. In your Email, make sure to reference this Resource ID.\n\n" .
-                             "Thank you for your understanding.\n" .
-                             "ELMO team"
-            ]);
-            return;
-        }
-    }
+    $dataServicesEmailSent = $submissionSendResult['dataServicesEmailSent'];
 
     // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
     $researcherWarnings = [];
