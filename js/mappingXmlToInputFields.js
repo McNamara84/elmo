@@ -1407,35 +1407,40 @@ function processDates(xmlDoc, resolver) {
 }
 
 /**
- * Process Subjects from XML and populate the Keyword fields
+ * Populate keyword Tagify fields from XML subjects.
+ * processKeywords collects thesaurus keys referenced in the XML, 
+ * waits for each via waitForThesaurusVocabulary (whitelist applied, jsTree ready), then imports. On timeout/error, import is aborted so Tagify does not silently drop tags.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
-function processKeywords(xmlDoc, resolver) {
+async function processKeywords(xmlDoc, resolver) {
   // Collect all subject nodes from the XML
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
-  // Map each keyword group to its Tagify instance (if available)
-  const tagifyMap = {
-    free: document.querySelector("#input-freekeyword")?._tagify || null,
-    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
-    gcmdScience: document.querySelector("#input-sciencekeyword")?._tagify || null,
-    gcmdPlatforms: document.querySelector("#input-platforms")?._tagify || null,
-    gcmdInstruments: document.querySelector("#input-instruments")?._tagify || null,
-    chronostrat: document.querySelector("#input-chronostratigraphy")?._tagify || null,
-    gemet: document.querySelector("#input-gemet")?._tagify || null,
-  };
+  // Keys for GCMD / GEMET / chronostrat match THESAURUS_CONFIG in thesauri.js.
+  // This file is a classic script, so it cannot import that object; the input
+  // ids below are the same values as THESAURUS_CONFIG[key].inputId.
+  function getTagifyMap() {
+    return {
+      free: document.querySelector("#input-freekeyword")?._tagify || null,
+      msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+      science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
+      platforms: document.querySelector("#input-platforms")?._tagify || null,
+      instruments: document.querySelector("#input-instruments")?._tagify || null,
+      chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+      gemet: document.querySelector("#input-gemet")?._tagify || null,
+    };
+  }
+
+  let tagifyMap = getTagifyMap();
 
   // Keep only initialized Tagify fields
-  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  let allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
     console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
     return;
   }
-
-  // Clear existing tags before importing new ones
-  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
   function buildTagData(subjectNode) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
@@ -1467,19 +1472,19 @@ function processKeywords(xmlDoc, resolver) {
   // Resolve which form group a subject belongs to
   function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      return "gcmdScience";
+      return "science_keywords";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      return "gcmdPlatforms";
+      return "platforms";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      return "gcmdInstruments";
+      return "instruments";
     }
 
     if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
-      return "chronostrat";
+      return "chronostratigraphy";
     }
 
     if (
@@ -1496,6 +1501,31 @@ function processKeywords(xmlDoc, resolver) {
     return "free";
   }
 
+  const thesaurusKeys = new Set();
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const { subjectScheme, schemeURI } = buildTagData(subjectNode);
+    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
+    if (targetGroup !== "free" && targetGroup !== "msl") {
+      thesaurusKeys.add(targetGroup);
+    }
+  }
+  if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
+    const keys = [...thesaurusKeys];
+    // all existing thesauri inputs will wait for the corresponding fields to be ready
+    const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
+    const notReady = keys.filter((key, index) => results[index] !== 'loaded');
+    if (notReady.length > 0) {
+      throw new Error('Thesaurus vocabularies not ready for import: ' + notReady.join(', '));
+    }
+
+    tagifyMap = getTagifyMap();
+    allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  }
+
+  // We don't clear existing tags before importing new ones
+
+
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
@@ -1503,13 +1533,22 @@ function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
-    // Ignore keywords if the target form group is disabled
+    // Ignore keywords if the target field is not initialized
+    // Different versions may have different thesaurus selections
     if (!targetTagify) {
       continue;
     }
 
     targetTagify.addTags([tagData]);
   }
+
+  allTagifyInstances.forEach((tagify) => {
+    if (typeof tagify.update === "function") {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === "function") {
+      tagify._updateHiddenField();
+    }
+  });
 }
 
 /**
@@ -1783,8 +1822,14 @@ async function loadXmlToForm(xmlDoc) {
   }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
-  // Process Keywords
-  processKeywords(xmlDoc, resolver);
+  // Thesaurus Tagify inputs are created after an async availability fetch.
+  // Wait until that input scaffolding exists; processKeywords() then waits for
+  // only the thesaurus vocabularies referenced by the uploaded subjects.
+  if (window.thesauriReady) {
+    await window.thesauriReady;
+  }
+  // Process Keywords (async: waits for the referenced thesaurus vocabularies)
+  await processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Used Instruments (IsCollectedBy entries)
@@ -1795,7 +1840,7 @@ async function loadXmlToForm(xmlDoc) {
   processDates(xmlDoc, resolver);
   // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
   if (isIcgem) {
-    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+    await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
 }
 

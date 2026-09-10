@@ -1,5 +1,6 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -438,6 +439,7 @@ class SubmitHandler {
             return;
         }
 
+        synchronizeTagifyInputs(this.$form[0]);
         const submitData = new FormData(this.$form[0]);
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
 
