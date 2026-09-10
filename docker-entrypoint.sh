@@ -81,5 +81,7 @@ INSTALL_ACTION="${INSTALL_ACTION:-basic}"
 echo "Running database setup via scripts/install.php (${INSTALL_ACTION})..."
 php /var/www/html/scripts/install.php "${INSTALL_ACTION}"
 echo "Database setup finished."
+# Do sync to DB so that ERNIE ids are correctly mapped. 
+php /var/www/html/includes/sync_on_start.php
 
 exec "$@"
