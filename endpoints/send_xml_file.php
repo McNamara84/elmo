@@ -286,147 +286,69 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
 }
 
 /**
- * Send curator and ICGEM submission emails according to the generated file plan.
+ * Generate and send the ICGEM submission for ELMO-GEM.
  *
- * @param array{
- *   dataServicesPayload: ?string,
- *   icgemPayload: ?string,
- *   researcherConfirmationData: array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>},
- *   shouldSendDataServicesMail: bool,
- *   shouldSendIcgemMail: bool
- * } $generatedFile
+ * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
  * @param array<string, mixed> $context
- * @return array{dataServicesEmailSent: bool, icgemEmailSent: bool, simulated: bool}
+ * @return array{
+ *   generatedFile: array{
+ *     icgemPayload: ?string,
+ *     icgemPayloadData: ?array{payload: string, contentType: string, extension: string, generator: string},
+ *     researcherConfirmationData: array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>},
+ *     shouldSendIcgemMail: bool
+ *   },
+ *   icgemEmailSent: bool,
+ *   simulated: bool
+ * }
  */
-function sendSubmissionEmails(array $generatedFile, array $context): array
+function processGGMsIcgemSubmission(int $resourceId, array $postData, array $settings, array $context): array
 {
-    global $showGGMsProperties;
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpAuth, $smtpSecure, $smtpSender;
-    global $xmlSubmitAddress, $icgemSubmitAddress;
+    global $smtpSender, $icgemSubmitAddress;
 
-    $resourceId = (int) $context['resourceId'];
-    $postData = $context['postData'];
-    $simulateEmail = (bool) $context['simulateEmail'];
-    $urgencyWeeks = $context['urgencyWeeks'];
-    $dataUrl = (string) $context['dataUrl'];
-    $researcherConfirmationData = $generatedFile['researcherConfirmationData'];
+    $generatedFile = generateICGEMFile($resourceId, $postData, $settings);
 
-    if ($generatedFile['shouldSendDataServicesMail'] && empty(trim((string) $generatedFile['dataServicesPayload']))) {
-        throw new Exception('Generated XML payload is empty.');
+    if (!$generatedFile['shouldSendIcgemMail']) {
+        return [
+            'generatedFile' => $generatedFile,
+            'icgemEmailSent' => false,
+            'simulated' => (bool) $context['simulateEmail'],
+        ];
     }
 
-    if ($generatedFile['shouldSendIcgemMail'] && empty(trim((string) $generatedFile['icgemPayload']))) {
+    if (empty(trim((string) $generatedFile['icgemPayload']))) {
         throw new Exception('Generated ICGEM XML payload is empty.');
     }
 
-    if ($simulateEmail) {
-        error_log('XML Submit: Simulation mode enabled - skipping curator and ICGEM SMTP send');
+    if ((bool) $context['simulateEmail']) {
+        error_log('XML Submit: Simulation mode enabled - skipping ICGEM SMTP send');
         return [
-            'dataServicesEmailSent' => false,
+            'generatedFile' => $generatedFile,
             'icgemEmailSent' => false,
             'simulated' => true,
         ];
     }
 
-    if (!testGfzSmtpConnectivity()) {
-        throw new Exception('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
-    }
-
-    $dataServicesEmailSent = false;
-    if ($generatedFile['shouldSendDataServicesMail']) {
-        $mail = new PHPMailer(true);
-        $mail->isSMTP();
-        $mail->Host = $smtpHost;
-        $mail->Port = $smtpPort;
-        $mail->Timeout = 30;
-        $mail->SMTPKeepAlive = false;
-
-        $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
-        if ($mail->SMTPAuth) {
-            $mail->Username = $smtpUser;
-            $mail->Password = $smtpPassword;
-        }
-
-        if (strtolower($smtpSecure) === 'tls') {
-            $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-            $mail->SMTPAutoTLS = true;
-        } else {
-            $mail->SMTPAutoTLS = false;
-        }
-
-        $mail->CharSet = 'UTF-8';
-        $mail->setFrom($smtpSender, 'ELMO XML Submission System');
-        $mail->addAddress($xmlSubmitAddress);
-        $mail->addReplyTo($smtpSender, 'ELMO System');
-
-        if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
-            $uploadedFile = $_FILES['dataDescription'];
-            $fileType = mime_content_type($uploadedFile['tmp_name']);
-            $allowedTypes = [
-                'application/pdf',
-                'application/msword',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-            ];
-
-            if (!in_array($fileType, $allowedTypes)) {
-                throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
-            }
-            if ($uploadedFile['size'] > 10 * 1024 * 1024) {
-                throw new Exception('File size exceeds maximum limit of 10MB.');
-            }
-
-            $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-            $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resourceId . '.' . $fileExtension);
-            error_log('XML Submit: Added file attachment: data_description_' . $resourceId . '.' . $fileExtension);
-        }
-
-        createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], $resourceId, $postData);
-
-        $emailText = generateEmailText([
-            'resourceId' => $resourceId,
-            'urgencyWeeks' => $urgencyWeeks,
-            'dataUrl' => $dataUrl,
-            'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
-            'showGGMsProperties' => (bool) $showGGMsProperties,
-            'icgemSubmitAddress' => $icgemSubmitAddress,
-            'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
-        ]);
-
-        $mail->isHTML(true);
-        $mail->Subject = $emailText['subject'];
-        $mail->Body = $emailText['html'];
-        $mail->AltBody = $emailText['text'];
-
-        error_log('XML Submit: Sende E-Mail über GFZ SMTP an ' . $xmlSubmitAddress);
-        $mail->send();
-        $dataServicesEmailSent = true;
-        error_log('XML Submit: Curator mail sent successfully.');
-    }
-
-    $icgemEmailSent = false;
-    if ($generatedFile['shouldSendIcgemMail']) {
-        sendGGMsIcgemRegistrationMail([
-            'resourceId' => $resourceId,
-            'title' => $researcherConfirmationData['title'],
-            'doi' => trim((string) ($postData['doi'] ?? '')),
-            'priorityText' => getPriorityText($urgencyWeeks),
-            'dataUrl' => $dataUrl,
-            'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
-            'submittedAt' => date('d.m.Y H:i:s'),
-            'icgemAddress' => $icgemSubmitAddress,
-            'senderAddress' => $smtpSender,
-            'dataServicesEmailSent' => $dataServicesEmailSent,
-            'icgemXml' => $generatedFile['icgemPayload'],
-            'icgemFilename' => buildXmlAttachmentFilename($resourceId, $postData),
-        ]);
-        $icgemEmailSent = true;
-        error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
-            . ($dataServicesEmailSent ? 'true' : 'false') . '.');
-    }
+    $researcherConfirmationData = $generatedFile['researcherConfirmationData'];
+    sendGGMsIcgemRegistrationMail([
+        'resourceId' => $resourceId,
+        'title' => $researcherConfirmationData['title'],
+        'doi' => trim((string) ($postData['doi'] ?? '')),
+        'priorityText' => getPriorityText($context['urgencyWeeks']),
+        'dataUrl' => (string) $context['dataUrl'],
+        'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
+        'submittedAt' => date('d.m.Y H:i:s'),
+        'icgemAddress' => $icgemSubmitAddress,
+        'senderAddress' => $smtpSender,
+        'dataServicesEmailSent' => (bool) $context['dataServicesEmailSent'],
+        'icgemXml' => $generatedFile['icgemPayload'],
+        'icgemFilename' => buildXmlAttachmentFilename($resourceId, $postData),
+    ]);
+    error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '
+        . ((bool) $context['dataServicesEmailSent'] ? 'true' : 'false') . '.');
 
     return [
-        'dataServicesEmailSent' => $dataServicesEmailSent,
-        'icgemEmailSent' => $icgemEmailSent,
+        'generatedFile' => $generatedFile,
+        'icgemEmailSent' => true,
         'simulated' => false,
     ];
 }
@@ -484,13 +406,104 @@ try {
     $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 
     try {
-        $submissionSendResult = sendSubmissionEmails($generatedFile, [
+        $fileGenerationSettings = [
+            'showGGMsProperties' => (bool) $showGGMsProperties,
+            'elmogemSendsDataServicesMail' => $elmogemSendsDataServicesMail,
+        ];
+        $emailText = generateEmailText([
             'resourceId' => (int) $resource_id,
-            'postData' => $_POST,
-            'simulateEmail' => $simulateEmail,
             'urgencyWeeks' => $urgencyWeeks,
             'dataUrl' => $dataUrl,
-        ]);
+            'contactEmails' => array_column($researcherConfirmationData['contacts'], 'email'),
+            'icgemSubmitAddress' => $icgemSubmitAddress,
+            'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
+            'doi' => trim((string) ($_POST['doi'] ?? '')),
+        ], $fileGenerationSettings);
+
+        if (!$simulateEmail && ($generatedFile['shouldSendDataServicesMail'] || $showGGMsProperties)) {
+            if (!testGfzSmtpConnectivity()) {
+                throw new Exception('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
+            }
+        }
+
+        $dataServicesEmailSent = false;
+        if ($generatedFile['shouldSendDataServicesMail']) {
+            if (empty(trim((string) $generatedFile['dataServicesPayload']))) {
+                throw new Exception('Generated XML payload is empty.');
+            }
+
+            if ($simulateEmail) {
+                error_log('XML Submit: Simulation mode enabled - skipping Data Services SMTP send');
+            } else {
+                $mail = new PHPMailer(true);
+                $mail->isSMTP();
+                $mail->Host = $smtpHost;
+                $mail->Port = $smtpPort;
+                $mail->Timeout = 30;
+                $mail->SMTPKeepAlive = false;
+
+                $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
+                if ($mail->SMTPAuth) {
+                    $mail->Username = $smtpUser;
+                    $mail->Password = $smtpPassword;
+                }
+
+                if (strtolower($smtpSecure) === 'tls') {
+                    $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+                    $mail->SMTPAutoTLS = true;
+                } else {
+                    $mail->SMTPAutoTLS = false;
+                }
+
+                $mail->CharSet = 'UTF-8';
+                $mail->setFrom($smtpSender, 'ELMO XML Submission System');
+                $mail->addAddress($xmlSubmitAddress);
+                $mail->addReplyTo($smtpSender, 'ELMO System');
+
+                if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
+                    $uploadedFile = $_FILES['dataDescription'];
+                    $fileType = mime_content_type($uploadedFile['tmp_name']);
+                    $allowedTypes = [
+                        'application/pdf',
+                        'application/msword',
+                        'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+                    ];
+
+                    if (!in_array($fileType, $allowedTypes)) {
+                        throw new Exception('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+                    }
+                    if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+                        throw new Exception('File size exceeds maximum limit of 10MB.');
+                    }
+
+                    $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+                    $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resource_id . '.' . $fileExtension);
+                    error_log('XML Submit: Added file attachment: data_description_' . $resource_id . '.' . $fileExtension);
+                }
+
+                createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], (int) $resource_id, $_POST);
+
+                $mail->isHTML(true);
+                $mail->Subject = $emailText['subject'];
+                $mail->Body = $emailText['html'];
+                $mail->AltBody = $emailText['text'];
+
+                error_log('XML Submit: Sende E-Mail über GFZ SMTP an ' . $xmlSubmitAddress);
+                $mail->send();
+                $dataServicesEmailSent = true;
+                error_log('XML Submit: Curator mail sent successfully.');
+            }
+        }
+
+        if ($showGGMsProperties) {
+            $icgemResult = processGGMsIcgemSubmission((int) $resource_id, $_POST, $fileGenerationSettings, [
+                'simulateEmail' => $simulateEmail,
+                'urgencyWeeks' => $urgencyWeeks,
+                'dataUrl' => $dataUrl,
+                'dataServicesEmailSent' => $dataServicesEmailSent,
+            ]);
+            $researcherConfirmationData = $icgemResult['generatedFile']['researcherConfirmationData'];
+        }
     } catch (Throwable $e) {
         error_log('XML Submit Mail Error: ' . $e->getMessage());
 
@@ -519,8 +532,6 @@ try {
         ]);
         return;
     }
-
-    $dataServicesEmailSent = $submissionSendResult['dataServicesEmailSent'];
 
     // --- PIPELINE PART B: DISPATCH TO RESEARCHERS ---
     $researcherWarnings = [];
