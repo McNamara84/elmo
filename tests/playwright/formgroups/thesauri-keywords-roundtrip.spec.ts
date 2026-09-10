@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT } from '../utils';
-import { injectModuleScript, injectScript, injectStylesheet } from '../utils/assets';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 declare function processKeywords(xmlDoc: Document, resolver: Function): void;
@@ -144,6 +144,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
     await page.evaluate(() => {
       (window as any).ELMO_FEATURES = { showThesauri: true };
       (window as any).translations = {
+        general: { loading: 'Loading...' },
         keywords: {
           thesaurus: { label: 'Thesaurus keywords', name: 'Thesauri Keywords' },
           searchPlaceholder: 'Search...',
@@ -164,7 +165,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
       }
     });
 
-    await injectModuleScript(page, 'js/thesauri.js');
+    await page.addScriptTag({ url: '/js/thesauri.js', type: 'module' });
 
     await triggerTranslationsAndWaitForThesauri(page);
   });
@@ -173,14 +174,13 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
     // Inject the production mapping module so processKeywords is available globally
     await injectScript(page, 'js/mappingXmlToInputFields.js');
 
-    const tagData = await page.evaluate((xmlString) => {
+    const tagData = await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
       const ns = 'http://datacite.org/schema/kernel-4';
       const resolver = (prefix: string) => prefix === 'ns' ? ns : null;
 
-      // Call the production processKeywords function
-      (window as any).processKeywords(xmlDoc, resolver);
+      await (window as any).processKeywords(xmlDoc, resolver);
 
       const tagifyGCMD = (document.querySelector('#input-sciencekeyword') as any)?._tagify;
       const tagifyFree = (document.querySelector('#input-freekeyword') as any)?._tagify;
@@ -194,22 +194,22 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
     // Verify GCMD tags have all required metadata
     expect(tagData.gcmd).toHaveLength(2);
 
-    // First tag: has explicit xml:lang="en" and valueURI
+    // First tag: XML valueURI is rewritten to the loaded whitelist node id
     expect(tagData.gcmd[0]).toMatchObject({
       value: expect.stringContaining('AGRICULTURE'),
       scheme: 'GCMD',
       schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
-      id: 'https://gcmd.earthdata.nasa.gov/kms/concept/sk-3',
+      id: 'sk-3',
       language: 'en',
     });
 
-    // Second tag: has explicit xml:lang="de", no valueURI → id should be empty string
+    // Second tag: matched to the EARTH SCIENCE whitelist node after the tree loads
     expect(tagData.gcmd[1]).toMatchObject({
       value: expect.stringContaining('EARTH SCIENCE'),
       scheme: 'GCMD',
       schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
-      id: '',
-      language: 'de',
+      id: 'sk-2',
+      language: 'en',
     });
 
     // Free keyword: no xml:lang attribute → no language property
@@ -224,14 +224,13 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
     // Inject the production mapping module so processKeywords is available globally
     await injectScript(page, 'js/mappingXmlToInputFields.js');
 
-    await page.evaluate((xmlString) => {
+    await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();
       const xmlDoc = parser.parseFromString(xmlString, 'application/xml');
       const ns = 'http://datacite.org/schema/kernel-4';
       const resolver = (prefix: string) => prefix === 'ns' ? ns : null;
 
-      // Call the production processKeywords function
-      (window as any).processKeywords(xmlDoc, resolver);
+      await (window as any).processKeywords(xmlDoc, resolver);
     }, TEST_XML);
 
     // Read the hidden input value that FormData would send

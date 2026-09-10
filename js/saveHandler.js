@@ -6,6 +6,7 @@
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -207,6 +208,7 @@ class SaveHandler {
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
             const authorsPayload = synchronizeAuthorsPayload(formEl);
+            synchronizeTagifyInputs(formEl);
             const formData = new FormData(formEl);
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
             formData.append('filename', filename);

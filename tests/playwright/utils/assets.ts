@@ -47,6 +47,12 @@ export async function fulfillWithLocalAsset(route: Route) {
 
   if (isLocalhostRequest || isBaseUrlHostRequest) {
     const pathname = decodeURIComponent(url.pathname);
+    // Never intercept API calls as static files. `**/*.json` would otherwise
+    // steal vocab/availability requests and skip Playwright API stubs.
+    if (pathname.includes('/api/')) {
+      await route.fallback();
+      return;
+    }
     const repoRelativePath = getRepositoryRelativePath(pathname);
     const filePath = path.join(REPO_ROOT, repoRelativePath);
 
