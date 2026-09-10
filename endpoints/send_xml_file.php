@@ -265,6 +265,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
         }
 
         if ($simulateEmail) {
+            error_log("Simulating researcher confirmation email to {$fullName} <{$email}>.");
             $processedCount++;
             continue;
         }
@@ -351,10 +352,6 @@ try {
         }
     }
 
-    // ELMO GEM: an empty DOI field means GFZ Data Services must reserve one.
-    // Non-GEM always sends the usual Data Services mail.
-    $elmogemSendsDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
-
     // Step 1: Save transaction structures
     try {
         $resource_id = saveALL($_POST);
@@ -388,33 +385,29 @@ try {
             error_log("Submit: Failed to add Submitted date to XML content: " . $e->getMessage());
         }
     }
+    $researcherConfirmationData = collectResearcherConfirmationDataFromXml($xml_content);
 
     // ELMO-GEM special:
     // Attachment for the Data Services mail. Non-GEM already generated that file
     // above; GEM generated the ICGEM file, so the DatasetController envelope is
     // produced here only when Data Services is notified.
-    $elmogemToDataServicesXml = $xml_content;
     if ($showGGMsProperties && $elmogemSendsDataServicesMail) {
-        $dataServicesPayload = generateDatasetPayloadByResourceId($resource_id, [
-            'postData' => $_POST,
-            'variant' => 'gfz',
-        ]);
-        $elmogemToDataServicesXml = applyElmoGemAdditionsToDataciteXml(
-            $dataServicesPayload['payload'],
+        
+        // Apply ICGEM additions to the Datacite part
+        $xml_content = applyElmoGemAdditionsToDataciteXml(
+            $xml_content,
             $showGGMsProperties,
             $elmogemSendsDataServicesMail
         );
 
-        try {
-            require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
-            $datasetController = new DatasetController();
-            $elmogemToDataServicesXml = $datasetController->markDataCiteEnvelopeAsSubmitted($elmogemToDataServicesXml, date('Y-m-d'));
-        } catch (Exception $e) {
-            error_log("Submit: Failed to add Submitted date to Data Services XML: " . $e->getMessage());
-        }
+        // ICGEM keeps contact emails in grav:contact, not ISO pointOfContact.
+        $researcherConfirmationData = collectGGMsResearcherConfirmationDataFromXml($xml_content);
+
+        // Non-GEM always sends the usual Data Services mail.   an empty DOI field means GFZ Data Services reserves one.
+        $elmogemSendsDataServicesMail = trim((string) ($_POST['doi'] ?? '')) === '';
     }
 
-    // Feature toggles for simulation path
+    // SIMULATION PATH
     include_once $projectRoot . '/includes/feature_toggles.php';
     $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
 
@@ -448,10 +441,6 @@ try {
             throw new Exception("Generated XML payload is empty.");
         }
 
-        // ICGEM keeps contact emails in grav:contact, not ISO pointOfContact.
-        $researcherConfirmationData = $showGGMsProperties
-            ? collectGGMsResearcherConfirmationDataFromXml($xml_content)
-            : collectResearcherConfirmationDataFromXml($xml_content);
     } catch (Exception $e) {
         error_log("XML Submit Prep Error: " . $e->getMessage());
 
@@ -536,7 +525,7 @@ try {
             }
 
             // Perform payload file renaming assignment and attachment compilation
-            $xmlFilename = createAndAttachXmlFile($mail, $elmogemToDataServicesXml, $resource_id, $_POST);
+            $xmlFilename = createAndAttachXmlFile($mail, $xml_content, $resource_id, $_POST);
 
             $urgencyText = $urgencyWeeks ? "$urgencyWeeks weeks" : "not specified";
             $priorityText = getPriorityText($urgencyWeeks);
@@ -622,13 +611,15 @@ try {
 
     }
 
-    // ELMO-GEM special: send ICGEM registration mail with the ICGEM metadata schema
+    // ELMO-GEM PATH: send ICGEM registration mail with the ICGEM metadata schema
+    $icgemPayloadData = generateDatasetPayloadByResourceId($resource_id, ['postData' => $_POST, 'variant' => 'icgem']);
+    $icgem_xml_content = $icgemPayloadData['payload'];
     if ($showGGMsProperties) {
         // Add ELMO-GEM specific additions to the DataCite part of the XML: contributors, format, and subjects.
-        $xml_content = applyElmoGemAdditionsToDataciteXml(
-            $xml_content,
+        $icgem_xml_content = applyElmoGemAdditionsToDataciteXml(
+            $icgem_xml_content,
             $showGGMsProperties,
-            $elmogemSendsDataServicesMail
+            false
         );
         try {
             sendGGMsIcgemRegistrationMail([
@@ -642,7 +633,7 @@ try {
                 'icgemAddress' => $icgemSubmitAddress,
                 'senderAddress' => $smtpSender,
                 'dataServicesEmailSent' => $dataServicesEmailSent,
-                'icgemXml' => $xml_content,
+                'icgemXml' => $icgem_xml_content,
                 'icgemFilename' => buildXmlAttachmentFilename($resource_id, $_POST),
             ]);
             error_log('XML Submit: ELMO GEM ICGEM registration mail sent. Data Services mail sent: '

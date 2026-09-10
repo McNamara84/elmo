@@ -134,11 +134,10 @@ function saveALL(array $postData): int {
  * controller path.
  *
  * @param int $resourceId Database identifier of the resource used as the export base.
- * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>, variant?: 'gfz'|'icgem'|string} $options
- *        Export format, optional current form data, and an optional XML variant
- *        override. Without an override the variant follows $showGGMsProperties.
- *        ELMO GEM submissions need both variants from a single submit, so they
- *        request them explicitly instead of toggling the global.
+ * @param array{format?: string, postData?: array<string, mixed>, variant?: string} $options Export options:
+ *   - format (string): 'xml' or 'jsonld', defaults to 'xml'
+ *   - postData (array): Optional current form data for author payload override
+ *   - variant (string): 'gfz' or 'icgem' XML variant; if null, variant follows $showGGMsProperties
  * @return array{payload: string, contentType: string, extension: string, generator: string}
  *
  * @throws InvalidArgumentException When the requested format or variant is unsupported.
