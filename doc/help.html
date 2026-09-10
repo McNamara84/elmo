@@ -1117,38 +1117,16 @@ include_once "../settings.php";
                         }
                         $relationTypes = $ernieService->getRelationTypesWithCache();
 
-                        global $connection;
-                        
-                        $descriptionByName = [];
-                        
-                        $result = $connection->query(
-                        'SELECT name, description
-                        FROM Relation
-                        WHERE description IS NOT NULL
-                        AND description <> \'\''
-                            );
-                        
-                            while ($row = $result->fetch_assoc()) {
-                            $descriptionByName[$row['name']] = $row['description'];
-                            }
-
                         if (is_array($relationTypes) && count($relationTypes) > 0) {
                             echo '<ul>';
                             foreach ($relationTypes as $type) {
                                 $name = htmlspecialchars($type['name'] ?? '');
-                                $relationNameKey = str_replace(' ', '', $type['name'] ?? '');
-                                
-                                $description = htmlspecialchars(
-                                $descriptionByName[$relationNameKey] ?? ''
-                                );
-
+                                $description = htmlspecialchars($type['description'] ?? '');
                                 echo '<li><strong>' . $name . ':</strong>';
-                                
-                                    if ($description !== '') {
+                                if (!empty($description)) {
                                     echo ' ' . $description;
-                                    }
-                                
-                                    echo '</li>';
+                                }
+                                echo '</li>';
                             }
                             echo '</ul>';
                         } else {
