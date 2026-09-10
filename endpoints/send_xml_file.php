@@ -322,6 +322,7 @@ function processGGMsIcgemSubmission(int $resourceId, array $postData, array $set
     }
 
     if ((bool) $context['simulateEmail']) {
+        error_log('XML Submit: ICGEM Payload (SIMULATION):' . "\n" . $generatedFile['icgemPayload']);
         return [
             'generatedFile' => $generatedFile,
             'icgemEmailSent' => false,
@@ -433,6 +434,7 @@ try {
 
             if ($simulateEmail) {
                 error_log('XML Submit: Simulation mode enabled - skipping Data Services SMTP send');
+                error_log('XML Submit: Data Services Payload (SIMULATION):' . "\n" . $generatedFile['dataServicesPayload']);
             } else {
                 error_log("XML Submit: Attempting to send metadata email to GFZ Data Services ({$xmlSubmitAddress})");
 
