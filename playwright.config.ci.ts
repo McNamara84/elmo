@@ -27,13 +27,16 @@ export default defineConfig({
         'flows/**/!(icgem-roundtrip).spec.ts',
         'formgroups/*.spec.ts',
       ],
+      testIgnore: [
+        '**/elmogem-specific/**',
+      ],
     },
     {
       name: 'firefox-gem',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
       testMatch: [
         'formgroups/elmogem-specific/**/*.spec.ts',
-        'flows/icgem-roundtrip.spec.ts',
+        'flows/elmogem-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
       ],
     },
