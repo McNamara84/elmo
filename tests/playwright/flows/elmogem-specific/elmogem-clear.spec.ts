@@ -165,5 +165,10 @@ test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
     // ── Assert Descriptions are reset ─────────────────────────────────────
 
     await expect(page.locator('#input-abstract')).toHaveValue('');
+    await expect(page.locator('#input-general-model-description')).toHaveValue('');
+    await expect(page.locator('#input-input-data')).toHaveValue('');
+    await expect(page.locator('#input-processing-procedures')).toHaveValue('');
+    await expect(page.locator('#input-specific-features')).toHaveValue('');
+    await expect(page.locator('#input-other')).toHaveValue('');
   });
 });
