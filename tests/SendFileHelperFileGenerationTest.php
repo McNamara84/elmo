@@ -35,7 +35,7 @@ if (!class_exists('ICGEMController', false)) {
     ');
 }
 
-require_once __DIR__ . '/../includes/send_file_helper.php';
+require_once __DIR__ . '/../includes/SendFileHelper.php';
 
 /**
  * Unit tests for generateFile and generateICGEMFile routing logic and file generation behavior.

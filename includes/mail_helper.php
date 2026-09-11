@@ -183,7 +183,7 @@ function sendElmoMail(array $message, bool $simulate = false): void
 function generateEmailText(array $context, array $settings = []): array
 {
     if (!function_exists('resolveFileGenerationSettings')) {
-        require_once __DIR__ . '/send_file_helper.php';
+        require_once __DIR__ . '/SendFileHelper.php';
     }
 
     $resolvedSettings = resolveFileGenerationSettings(['doi' => $context['doi'] ?? ''], $settings);

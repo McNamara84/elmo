@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use PHPMailer\PHPMailer\PHPMailer;
 
-require_once __DIR__ . '/../includes/send_file_helper.php';
+require_once __DIR__ . '/../includes/SendFileHelper.php';
 
 /**
  * Test class for XML filename generation logic.

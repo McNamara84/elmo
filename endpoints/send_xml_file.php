@@ -28,7 +28,7 @@ require_once $projectRoot . '/api/security.php';
 // Include required files
 require_once $projectRoot . '/settings.php';
 require_once $projectRoot . '/includes/save_to_db_helper.php';
-require_once $projectRoot . '/includes/send_file_helper.php';
+require_once $projectRoot . '/includes/SendFileHelper.php';
 require_once $projectRoot . '/includes/mail_helper.php';
 
 // ELMO GEM extension: ICGEM registration mail (only when $showGGMsProperties)
