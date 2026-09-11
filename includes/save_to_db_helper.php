@@ -273,17 +273,42 @@ function applyElmoGemAdditionsToDataciteXml(
         return $el;
     };
 
-    $getOrCreateChild = function (string $localName) use ($xpath, $resource, $createEl): DOMElement {
-        $existing = $xpath->query('dc:' . $localName, $resource)->item(0);
+    $childText = function (DOMElement $parent, string $localName) use ($xpath): string {
+        $node = $xpath->query('dc:' . $localName, $parent)->item(0);
+        return $node instanceof DOMNode ? trim($node->textContent) : '';
+    };
+
+    // Find a namespaced child. $matches is optional: without it the first element
+    // of that local name is returned (full element presence). With it, equality is
+    // whatever the callback checks — e.g. contributorType + givenName + familyName.
+    $findChild = function (DOMElement $parent, string $localName, ?callable $matches = null) use ($xpath): ?DOMElement {
+        foreach ($xpath->query('dc:' . $localName, $parent) as $existing) {
+            if (!$existing instanceof DOMElement) {
+                continue;
+            }
+            if ($matches === null || $matches($existing)) {
+                return $existing;
+            }
+        }
+        return null;
+    };
+
+    $getOrCreateChild = function (
+        string $localName,
+        ?DOMElement $parent = null,
+        ?callable $matches = null,
+    ) use ($findChild, $resource, $createEl): DOMElement {
+        $parent ??= $resource;
+        $existing = $findChild($parent, $localName, $matches);
         if ($existing instanceof DOMElement) {
             return $existing;
         }
         $el = $createEl($localName);
-        $resource->appendChild($el);
+        $parent->appendChild($el);
         return $el;
     };
 
-    // --- 2. Fill existing contributors ---
+    // --- 2. Fill existing contributors (skip per person if type+given+family match) ---
     $contributorsData = [
         [
             'contributorType' => 'DataCurator',
@@ -305,6 +330,19 @@ function applyElmoGemAdditionsToDataciteXml(
 
     $contributors = $getOrCreateChild('contributors');
     foreach ($contributorsData as $c) {
+        $alreadyPresent = $findChild(
+            $contributors,
+            'contributor',
+            function (DOMElement $el) use ($c, $childText): bool {
+                return $el->getAttribute('contributorType') === $c['contributorType']
+                    && $childText($el, 'givenName') === $c['givenName']
+                    && $childText($el, 'familyName') === $c['familyName'];
+            }
+        );
+        if ($alreadyPresent instanceof DOMElement) {
+            continue;
+        }
+
         $contributor = $createEl('contributor');
         $contributor->setAttribute('contributorType', $c['contributorType']);
 
@@ -327,9 +365,16 @@ function applyElmoGemAdditionsToDataciteXml(
 
     // --- 3. Add format (create <formats> if the resource does not already have one) ---
     $formats = $getOrCreateChild('formats');
-    $formats->appendChild($createEl('format', 'ICGEM-format'));
+    $alreadyHasFormat = $findChild(
+        $formats,
+        'format',
+        fn (DOMElement $el): bool => trim($el->textContent) === 'ICGEM-format'
+    );
+    if (!$alreadyHasFormat instanceof DOMElement) {
+        $formats->appendChild($createEl('format', 'ICGEM-format'));
+    }
 
-    // --- 4. Fill existing subjects ---
+    // --- 4. Fill existing subjects (skip a keyword already present by text or valueURI) ---
     $subjectsData = [
         [
             'text' => 'GEOID CHARACTERISTICS',
@@ -343,6 +388,21 @@ function applyElmoGemAdditionsToDataciteXml(
 
     $subjects = $getOrCreateChild('subjects');
     foreach ($subjectsData as $s) {
+        $alreadyPresent = $findChild(
+            $subjects,
+            'subject',
+            function (DOMElement $el) use ($s): bool {
+                if (trim($el->textContent) === $s['text']) {
+                    return true;
+                }
+                $uri = $el->getAttribute('valueURI');
+                return $uri !== '' && $uri === $s['valueURI'];
+            }
+        );
+        if ($alreadyPresent instanceof DOMElement) {
+            continue;
+        }
+
         $subject = $createEl('subject', $s['text']);
         // xml:lang uses the reserved 'xml' namespace, not the DataCite one
         $subject->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:lang', 'en');

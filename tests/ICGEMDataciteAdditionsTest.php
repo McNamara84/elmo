@@ -1183,4 +1183,163 @@ final class ICGEMDataciteAdditionsTest extends TestCase
         $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataNoNamespace'], true, true);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithDataNoNamespace'], $result);
     }
+
+    public function testDoesNotDuplicatePartialContributorsMatchedOnTypeGivenAndFamilyName(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors>
+    <contributor contributorType="DataCurator">
+      <givenName>E. Sinem</givenName>
+      <familyName>Ince</familyName>
+    </contributor>
+    <contributor contributorType="DataManager">
+      <givenName>Sven</givenName>
+      <familyName>Reißland</familyName>
+    </contributor>
+  </contributors>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="contributor"]'));
+    }
+
+    public function testAddsOnlyMissingContributorIndependently(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors>
+    <contributor contributorType="DataCurator">
+      <givenName>E. Sinem</givenName>
+      <familyName>Ince</familyName>
+    </contributor>
+  </contributors>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="contributor"]'));
+    }
+
+    public function testAddsOnlyMissingSinemWhenSvenAlreadyPresent(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors>
+    <contributor contributorType="DataManager">
+      <givenName>Sven</givenName>
+      <familyName>Reißland</familyName>
+    </contributor>
+  </contributors>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="contributor"]'));
+    }
+
+    public function testSamePersonDifferentContributorTypeIsStillAdded(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors>
+    <contributor contributorType="Producer">
+      <givenName>E. Sinem</givenName>
+      <familyName>Ince</familyName>
+    </contributor>
+  </contributors>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('Producer', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
+    }
+
+    public function testDoesNotDuplicateExistingKeywords(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects>
+    <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
+    <subject>GRAVITY/GRAVITATIONAL FIELD</subject>
+  </subjects>
+  <contributors/>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
+    }
+
+    public function testAddsOnlyMissingKeywordIndependently(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects>
+    <subject>GEOID CHARACTERISTICS</subject>
+  </subjects>
+  <contributors/>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
+    }
+
+    public function testAdditionsAreIdempotent(): void
+    {
+        $xml = $this->minimalEnvelope("<subjects/><contributors/>");
+        $once = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $twice = applyElmoGemAdditionsToDataciteXml($once, true, true);
+
+        $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
+        $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
+        $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
+        $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
+        $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
+    }
+
+    private function contributorQuery(string $type, string $givenName, string $familyName): string
+    {
+        return sprintf(
+            '//*[local-name()="contributor"][@contributorType="%s"]'
+            . '[*[local-name()="givenName" and normalize-space()="%s"]'
+            . ' and *[local-name()="familyName" and normalize-space()="%s"]]',
+            $type,
+            $givenName,
+            $familyName
+        );
+    }
+
+    private function countXpath(string $xml, string $query): int
+    {
+        $dom = new DOMDocument();
+        $dom->loadXML($xml);
+        $xpath = new DOMXPath($dom);
+
+        return $xpath->query($query)->length;
+    }
+
+    private function minimalEnvelope(string $innerXml): string
+    {
+        return <<<XML
+<?xml version="1.0" encoding="UTF-8"?>
+<envelope>
+  <resource xmlns="http://datacite.org/schema/kernel-4">
+{$innerXml}
+  </resource>
+</envelope>
+XML;
+    }
 }

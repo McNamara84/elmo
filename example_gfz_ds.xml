@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<envelope>
+  <resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+    <identifier identifierType="DOI"/>
+    <creators>
+      <creator>
+        <creatorName nameType="Personal">Koch, Beate</creatorName>
+        <givenName>Beate</givenName>
+        <familyName>Koch</familyName>
+        <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-9625-8230</nameIdentifier>
+      </creator>
+    </creators>
+    <titles>
+      <title xml:lang="en">ITSG-Grace2018 - Monthly, Daily and Static Gravity Field Solutions from GRACE</title>
+    </titles>
+    <publisher xml:lang="en">GFZ Data Services</publisher>
+    <publicationYear>2018</publicationYear>
+    <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+    <subjects>
+      <subject>GRACE</subject>
+      <subject>ICGEM</subject>
+      <subject>gravity field</subject>
+      <subject>temporal gravity field models</subject>
+      <subject>EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
+      <subject>EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITY</subject>
+      <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
+      <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
+    </subjects>
+    <contributors>
+      <contributor contributorType="ContactPerson">
+        <contributorName>Koch, Beate</contributorName>
+        <givenName>Beate</givenName>
+        <familyName>Koch</familyName>
+        <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-9625-8230</nameIdentifier>
+      </contributor>
+      <contributor contributorType="DataCurator">
+        <contributorName nameType="Personal">Ince, Sinem</contributorName>
+        <givenName>Sinem</givenName>
+        <familyName>Ince</familyName>
+        <affiliation>GFZ German Research Centre for Geosciences, Potsdam, Germany</affiliation>
+      </contributor>
+      <contributor contributorType="DataManager">
+        <contributorName nameType="Personal">Rei\xc3\x9fland, Sven</contributorName>
+        <givenName>Sven</givenName>
+        <familyName>Rei\xc3\x9fland</familyName>
+      </contributor>
+      <contributor contributorType="DataCurator">
+        <contributorName nameType="Personal">Ince, E. Sinem</contributorName>
+        <givenName>E. Sinem</givenName>
+        <familyName>Ince</familyName>
+        <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</nameIdentifier>
+        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+      </contributor>
+      <contributor contributorType="DataManager">
+        <contributorName nameType="Personal">Rei\xc3\x9fland, Sven</contributorName>
+        <givenName>Sven</givenName>
+        <familyName>Rei\xc3\x9fland</familyName>
+        <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</nameIdentifier>
+        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+      </contributor>
+    </contributors>
+    <dates>
+      <date dateType="Submitted">2026-09-10</date>
+    </dates>
+    <language>en</language>
+    <relatedIdentifiers>
+      <relatedIdentifier relatedIdentifierType="URL" relationType="References">https://meetingorganizer.copernicus.org/EGU2018/EGU2018-11833.pdf</relatedIdentifier>
+    </relatedIdentifiers>
+    <rightsList>
+      <rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</rights>
+    </rightsList>
+    <descriptions>
+      <description descriptionType="Abstract" xml:lang="en">The ITSG-Grace2018 gravity field model is the latest GRACE-only gravity field model computed at Graz University of Technology, providing unconstrained monthly and regularized daily solutions as well as a long-term static field. For each month of the observation period, sets of spherical harmonic coefficients for different maximum degrees (60, 96, 120) were estimated without applying any regularization.&#13;
+      In order to resolve high-frequency gravity field variations as detailed as possible, a set of spherical harmonic coefficients up to degree and order 40 was co-estimated. K-band range rates with a sampling of 5 seconds and kinematic orbits with a sampling of 5 minutes were used as observations. The kinematic orbits of the GRACE satellites (Zehentner and Mayer-G\xc3\xbcrr 2013, 2014) were processed using the GPS orbits and clock solutions provided by CODE. Additionally, a full accelerometer scale factor matrix was estimated per day (Klinger and Mayer-G\xc3\xbcrr, 2016). The accelerometer bias was modelled through cubic splines with a node interval of six hours and estimated for each axis and day. Detailed information about ITSG-Grace2018 is available at http://ifg.tugraz.at/ITSG-Grace2018. The monthly and daily data covers the period between April 2002 and August 2016.</description>
+    </descriptions>
+    <geoLocations>
+      <geoLocation>
+        <geoLocationPlace>ITSG-Grace2018 daily and monthly models</geoLocationPlace>
+        <geoLocationBox>
+          <westBoundLongitude>-180</westBoundLongitude>
+          <eastBoundLongitude>180</eastBoundLongitude>
+          <southBoundLatitude>-90</southBoundLatitude>
+          <northBoundLatitude>90</northBoundLatitude>
+        </geoLocationBox>
+      </geoLocation>
+    </geoLocations>
+    <formats>
+      <format>ICGEM-format</format>
+    </formats>
+  </resource>
+  <MD_Metadata xmlns="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco" xmlns:gsr="http://www.isotc211.org/2005/gsr" xmlns:gss="http://www.isotc211.org/2005/gss" xmlns:gts="http://www.isotc211.org/2005/gts" xmlns:gml="http://www.opengis.net/gml" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.isotc211.org/2005/gmd file:///C:/xampp/htdocs/msl-mde/schemas/ISO/gmd.xsd">
+    <fileIdentifier>
+      <gco:CharacterString>doi:N/A</gco:CharacterString>
+    </fileIdentifier>
+    <language>
+      <LanguageCode codeList="http://www.loc.gov/standards/iso639-1/" codeListValue="en">en</LanguageCode>
+    </language>
+    <characterSet>
+      <MD_CharacterSetCode codeList="http://www.isotc211.org/2005/resources/codeList.xml#MD_CharacterSetCode" codeListValue="utf8"/>
+    </characterSet>
+    <hierarchyLevel>
+      <MD_ScopeCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#MD_ScopeCode" codeListValue="dataset">dataset</MD_ScopeCode>
+    </hierarchyLevel>
+    <contact>
+      <CI_ResponsibleParty>
+        <organisationName>
+          <gco:CharacterString>GFZ Helmholtz Centre for Geosciences</gco:CharacterString>
+        </organisationName>
+        <contactInfo>
+          <CI_Contact>
+            <address>
+              <CI_Address>
+                <electronicMailAddress>
+                  <gco:CharacterString>xmlsubmit@example.com</gco:CharacterString>
+                </electronicMailAddress>
+              </CI_Address>
+            </address>
+            <onlineResource>
+              <CI_OnlineResource>
+                <linkage>
+                  <URL>h
