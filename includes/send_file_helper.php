@@ -247,3 +247,199 @@ function generateEmailText(array $context, array $settings = []): array
         'shouldSendDataServicesMail' => true,
     ];
 }
+
+/**
+ * Apply ELMO-GEM DataCite additions (contributors, format, GCMD subjects).
+ *
+ * Guarded for send_xml_file.php call sites:
+ * - non-GEM: return input unchanged
+ * - GEM Data Services envelope (default xmlns, empty prefix): only when $elmogemSendsDataServicesMail
+ * - GEM ICGEM envelope (dace: prefix): always when $showGGMsProperties
+ */
+function applyElmoGemAdditionsToDataciteXml(
+    string $xmlContent,
+    bool $showGGMsProperties,
+    bool $elmogemSendsDataServicesMail,
+): string {
+    if (!$showGGMsProperties) {
+        return $xmlContent;
+    }
+
+    $dom = new DOMDocument();
+    $dom->preserveWhiteSpace = false;
+    $dom->formatOutput = true;
+    $dom->loadXML($xmlContent);
+
+    $xpath = new DOMXPath($dom);
+    // DataCite's document element is always <resource>. In envelopes it is a child
+    // of <envelope> / <grav:envelope>, not the XML document root.
+    // PHP DOM does not expose xmlns declarations as attributes; namespaceURI/prefix
+    // on the resource element are the equivalent of that xmlns.
+    $resource = $xpath->query(
+        '//*[local-name()="resource" and starts-with(namespace-uri(), "http://datacite.org/schema")]'
+    )->item(0);
+
+    if (!$resource instanceof DOMElement) {
+        throw new RuntimeException('DataCite resource element not found.');
+    }
+
+    $dataciteNs = $resource->namespaceURI;
+    $datacitePrefix = $resource->prefix; // '' for default xmlns, e.g. 'dace' for ICGEM
+
+    // DatasetController / Data Services envelopes use default xmlns (empty prefix).
+    // Skip when GEM does not send that mail; ICGEM envelopes keep the dace: prefix.
+    if (!$elmogemSendsDataServicesMail && $datacitePrefix === '') {
+        return $xmlContent;
+    }
+
+    $xpath->registerNamespace('dc', $dataciteNs);
+
+    // Helper to build a tag name honoring the discovered prefix
+    $tag = function (string $localName) use ($datacitePrefix): string {
+        return $datacitePrefix === '' ? $localName : "$datacitePrefix:$localName";
+    };
+
+    // Helper to create a namespaced element with optional text content
+    $createEl = function (string $localName, ?string $text = null) use ($dom, $dataciteNs, $tag) {
+        $el = $dom->createElementNS($dataciteNs, $tag($localName));
+        if ($text !== null) {
+            $el->appendChild($dom->createTextNode($text));
+        }
+        return $el;
+    };
+
+    $childText = function (DOMElement $parent, string $localName) use ($xpath): string {
+        $node = $xpath->query('dc:' . $localName, $parent)->item(0);
+        return $node instanceof DOMNode ? trim($node->textContent) : '';
+    };
+
+    // Find a namespaced child. $matches is optional: without it the first element
+    // of that local name is returned (full element presence). With it, equality is
+    // whatever the callback checks — e.g. contributorType + givenName + familyName.
+    $findChild = function (DOMElement $parent, string $localName, ?callable $matches = null) use ($xpath): ?DOMElement {
+        foreach ($xpath->query('dc:' . $localName, $parent) as $existing) {
+            if (!$existing instanceof DOMElement) {
+                continue;
+            }
+            if ($matches === null || $matches($existing)) {
+                return $existing;
+            }
+        }
+        return null;
+    };
+
+    $getOrCreateChild = function (
+        string $localName,
+        ?DOMElement $parent = null,
+        ?callable $matches = null,
+    ) use ($findChild, $resource, $createEl): DOMElement {
+        $parent ??= $resource;
+        $existing = $findChild($parent, $localName, $matches);
+        if ($existing instanceof DOMElement) {
+            return $existing;
+        }
+        $el = $createEl($localName);
+        $parent->appendChild($el);
+        return $el;
+    };
+
+    // --- 2. Fill existing contributors (skip per person if type+given+family match) ---
+    $contributorsData = [
+        [
+            'contributorType' => 'DataCurator',
+            'name' => 'Ince, E. Sinem',
+            'givenName' => 'E. Sinem',
+            'familyName' => 'Ince',
+            'orcid' => '0000-0002-3393-1392',
+            'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        ],
+        [
+            'contributorType' => 'DataManager',
+            'name' => 'Reißland, Sven',
+            'givenName' => 'Sven',
+            'familyName' => 'Reißland',
+            'orcid' => '0000-0001-6293-5336',
+            'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+        ],
+    ];
+
+    $contributors = $getOrCreateChild('contributors');
+    foreach ($contributorsData as $c) {
+        $alreadyPresent = $findChild(
+            $contributors,
+            'contributor',
+            function (DOMElement $el) use ($c, $childText): bool {
+                return $el->getAttribute('contributorType') === $c['contributorType']
+                    && $childText($el, 'givenName') === $c['givenName']
+                    && $childText($el, 'familyName') === $c['familyName'];
+            }
+        );
+        if ($alreadyPresent instanceof DOMElement) {
+            continue;
+        }
+
+        $contributor = $createEl('contributor');
+        $contributor->setAttribute('contributorType', $c['contributorType']);
+
+        $contributorName = $createEl('contributorName', $c['name']);
+        $contributorName->setAttribute('nameType', 'Personal');
+        $contributor->appendChild($contributorName);
+
+        $contributor->appendChild($createEl('givenName', $c['givenName']));
+        $contributor->appendChild($createEl('familyName', $c['familyName']));
+
+        $nameIdentifier = $createEl('nameIdentifier', $c['orcid']);
+        $nameIdentifier->setAttribute('nameIdentifierScheme', 'ORCID');
+        $nameIdentifier->setAttribute('schemeURI', 'https://orcid.org/');
+        $contributor->appendChild($nameIdentifier);
+
+        $contributor->appendChild($createEl('affiliation', $c['affiliation']));
+
+        $contributors->appendChild($contributor);
+    }
+
+    // --- 3. Add format (create <formats> if the resource does not already have one) ---
+    $formats = $getOrCreateChild('formats');
+    $alreadyHasFormat = $findChild(
+        $formats,
+        'format',
+        fn (DOMElement $el): bool => trim($el->textContent) === 'ICGEM-format'
+    );
+    if (!$alreadyHasFormat instanceof DOMElement) {
+        $formats->appendChild($createEl('format', 'ICGEM-format'));
+    }
+
+    // --- 4. Fill existing subjects (skip a keyword already present by valueURI) ---
+    $subjectsData = [
+        [
+            'text' => 'GEOID CHARACTERISTICS',
+            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614',
+        ],
+        [
+            'text' => 'GRAVITY/GRAVITATIONAL FIELD',
+            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa',
+        ],
+    ];
+
+    $subjects = $getOrCreateChild('subjects');
+    foreach ($subjectsData as $s) {
+        $alreadyPresent = $findChild(
+            $subjects,
+            'subject',
+            fn (DOMElement $el): bool => $el->getAttribute('valueURI') === $s['valueURI']
+        );
+        if ($alreadyPresent instanceof DOMElement) {
+            continue;
+        }
+
+        $subject = $createEl('subject', $s['text']);
+        // xml:lang uses the reserved 'xml' namespace, not the DataCite one
+        $subject->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:lang', 'en');
+        $subject->setAttribute('subjectScheme', 'Science Keywords');
+        $subject->setAttribute('schemeURI', 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords');
+        $subject->setAttribute('valueURI', $s['valueURI']);
+        $subjects->appendChild($subject);
+    }
+
+    return $dom->saveXML();
+}

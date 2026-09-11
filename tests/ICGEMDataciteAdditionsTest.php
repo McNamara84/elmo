@@ -5,7 +5,7 @@ declare(strict_types=1);
 
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../includes/save_to_db_helper.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 
 $GLOBALS['testXmlNoNamespace'] = <<<XML
 <?xml version="1.0" encoding="UTF-8"?>

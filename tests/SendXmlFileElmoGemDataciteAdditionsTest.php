@@ -9,7 +9,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../includes/save_to_db_helper.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 
 /**
  * Guards applyElmoGemAdditionsToDataciteXml call-site behaviour from send_xml_file.php.
