@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT, SELECTORS } from '../utils';
-import { injectModuleScript, injectScript, injectStylesheet } from '../utils/assets';
+import { injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 
@@ -191,6 +191,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       (window as any).ELMO_FEATURES = { showThesauri: true };
 
       (window as any).translations = {
+        general: { loading: 'Loading...' },
         keywords: {
           thesaurus: {
             label: 'Open thesaurus to choose keywords or start typing...',
@@ -216,7 +217,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       };
     });
 
-    await injectModuleScript(page, 'js/thesauri.js');
+    await page.addScriptTag({ url: '/js/thesauri.js', type: 'module' });
 
     // Set up language handlers and fire translationsLoaded to trigger dynamic init
     await page.evaluate(() => {

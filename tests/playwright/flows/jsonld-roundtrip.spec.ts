@@ -14,9 +14,15 @@ const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
   /third-party cookie/i,
   /API key not found/i,
-  /thesauri availability/i,
   /503 \(Service Unavailable\)/,
 ];
+
+function isUnexpectedConsoleError(text: string): boolean {
+  if (/thesaur/i.test(text)) {
+    return true;
+  }
+  return !BENIGN_CONSOLE_PATTERNS.some(pattern => pattern.test(text));
+}
 
 async function closeNotificationModalIfPresent(page: import('@playwright/test').Page) {
   const notificationModal = page.locator('#modal-notification');
@@ -101,7 +107,7 @@ test.describe('JSON-LD roundtrip flow', () => {
       }
 
       const text = msg.text();
-      if (!BENIGN_CONSOLE_PATTERNS.some(pattern => pattern.test(text))) {
+      if (isUnexpectedConsoleError(text)) {
         consoleErrors.push(text);
       }
     });

@@ -11,9 +11,15 @@ const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
   /third-party cookie/i,
   /API key not found/i,
-  /thesauri availability/i,
   /503 \(Service Unavailable\)/,
 ];
+
+function isUnexpectedConsoleError(text: string): boolean {
+  if (/thesaur/i.test(text)) {
+    return true;
+  }
+  return !BENIGN_CONSOLE_PATTERNS.some(p => p.test(text));
+}
 
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
@@ -23,7 +29,7 @@ test.describe('Save after Load – Issue #1043', () => {
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        if (!BENIGN_CONSOLE_PATTERNS.some(p => p.test(text))) {
+        if (isUnexpectedConsoleError(text)) {
           consoleErrors.push(text);
         }
       }
