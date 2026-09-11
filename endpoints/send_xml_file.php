@@ -375,7 +375,8 @@ try {
             $dataUrl = "https://" . $dataUrl;
         }
         if (!filter_var($dataUrl, FILTER_VALIDATE_URL)) {
-            throw new Exception("Invalid data URL provided");
+        // TODO: throw a warning here instead of exception    
+        throw new Exception("Invalid data URL provided");
         }
     }
 
@@ -440,30 +441,7 @@ try {
                 error_log("XML Submit: Attempting to send metadata email to GFZ Data Services ({$xmlSubmitAddress})");
 
                 try {
-                    $mail = new PHPMailer(true);
-                    $mail->isSMTP();
-                    $mail->Host = $smtpHost;
-                    $mail->Port = $smtpPort;
-                    $mail->Timeout = 30;
-                    $mail->SMTPKeepAlive = false;
-
-                    $mail->SMTPAuth = filter_var($smtpAuth, FILTER_VALIDATE_BOOLEAN);
-                    if ($mail->SMTPAuth) {
-                        $mail->Username = $smtpUser;
-                        $mail->Password = $smtpPassword;
-                    }
-
-                    if (strtolower($smtpSecure) === 'tls') {
-                        $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
-                        $mail->SMTPAutoTLS = true;
-                    } else {
-                        $mail->SMTPAutoTLS = false;
-                    }
-
-                    $mail->CharSet = 'UTF-8';
-                    $mail->setFrom($smtpSender, 'ELMO XML Submission System');
-                    $mail->addAddress($xmlSubmitAddress);
-                    $mail->addReplyTo($smtpSender, 'ELMO System');
+                    $attachments = [];
 
                     if (isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK) {
                         $uploadedFile = $_FILES['dataDescription'];
@@ -482,18 +460,29 @@ try {
                         }
 
                         $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
-                        $mail->addAttachment($uploadedFile['tmp_name'], 'data_description_' . $resource_id . '.' . $fileExtension);
+                        $attachments[] = [
+                            'filename' => 'data_description_' . $resource_id . '.' . $fileExtension,
+                            'path' => $uploadedFile['tmp_name'],
+                        ];
                         error_log('XML Submit: Added file attachment: data_description_' . $resource_id . '.' . $fileExtension);
                     }
 
-                    createAndAttachXmlFile($mail, $generatedFile['dataServicesPayload'], (int) $resource_id, $_POST);
+                    $xmlFilename = buildXmlAttachmentFilename((int) $resource_id, $_POST);
+                    $attachments[] = [
+                        'filename' => $xmlFilename,
+                        'content' => $generatedFile['dataServicesPayload'],
+                    ];
 
-                    $mail->isHTML(true);
-                    $mail->Subject = $emailText['subject'];
-                    $mail->Body = $emailText['html'];
-                    $mail->AltBody = $emailText['text'];
+                    sendElmoMail([
+                        'to' => $xmlSubmitAddress,
+                        'subject' => $emailText['subject'],
+                        'html' => $emailText['html'],
+                        'text' => $emailText['text'],
+                        'fromName' => 'ELMO XML Submission System',
+                        'replyTo' => ['address' => $smtpSender, 'name' => 'ELMO System'],
+                        'attachments' => $attachments,
+                    ], $simulateEmail);
 
-                    $mail->send();
                     $dataServicesEmailSent = true;
                     error_log('XML Submit: ✓ Successfully sent metadata email to GFZ Data Services (Resource ID: ' . $resource_id . ')');
                 } catch (Exception $mailError) {
