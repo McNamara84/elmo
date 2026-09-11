@@ -374,7 +374,7 @@ function applyElmoGemAdditionsToDataciteXml(
         $formats->appendChild($createEl('format', 'ICGEM-format'));
     }
 
-    // --- 4. Fill existing subjects (skip a keyword already present by text or valueURI) ---
+    // --- 4. Fill existing subjects (skip a keyword already present by valueURI) ---
     $subjectsData = [
         [
             'text' => 'GEOID CHARACTERISTICS',
@@ -391,13 +391,7 @@ function applyElmoGemAdditionsToDataciteXml(
         $alreadyPresent = $findChild(
             $subjects,
             'subject',
-            function (DOMElement $el) use ($s): bool {
-                if (trim($el->textContent) === $s['text']) {
-                    return true;
-                }
-                $uri = $el->getAttribute('valueURI');
-                return $uri !== '' && $uri === $s['valueURI'];
-            }
+            fn (DOMElement $el): bool => $el->getAttribute('valueURI') === $s['valueURI']
         );
         if ($alreadyPresent instanceof DOMElement) {
             continue;

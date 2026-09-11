@@ -1264,24 +1264,40 @@ XML);
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
     }
 
-    public function testDoesNotDuplicateExistingKeywords(): void
+    public function testDoesNotDuplicateKeywordsWithMatchingValueUri(): void
     {
         $xml = $this->minimalEnvelope(<<<'XML'
   <subjects>
     <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
-    <subject>GRAVITY/GRAVITATIONAL FIELD</subject>
+    <subject valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
   </subjects>
   <contributors/>
 XML);
 
         $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
 
-        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
-        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
         $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
     }
 
-    public function testAddsOnlyMissingKeywordIndependently(): void
+    public function testAddsOnlyMissingKeywordUriIndependently(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects>
+    <subject valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
+  </subjects>
+  <contributors/>
+XML);
+
+        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
+    }
+
+    public function testSameKeywordTextWithoutValueUriDoesNotPreventAddition(): void
     {
         $xml = $this->minimalEnvelope(<<<'XML'
   <subjects>
@@ -1292,9 +1308,9 @@ XML);
 
         $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
 
-        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
-        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
-        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
     }
 
     public function testAdditionsAreIdempotent(): void
@@ -1305,9 +1321,17 @@ XML);
 
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
-        $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
-        $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="subject"][normalize-space()="GRAVITY/GRAVITATIONAL FIELD"]'));
+        $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
+        $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
         $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
+    }
+
+    private function subjectUriQuery(string $valueUri): string
+    {
+        return sprintf(
+            '//*[local-name()="subject"][@valueURI="%s"]',
+            $valueUri
+        );
     }
 
     private function contributorQuery(string $type, string $givenName, string $familyName): string
