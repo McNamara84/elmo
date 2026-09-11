@@ -290,13 +290,27 @@ include_once "../settings.php";
                 </div>
                 <div id="help-resourceinformation-titletype">
                     <h5>Title Type</h5>
-                    <p>Indicates the type of title being provided, such as an alternative title or translated title.
-                        Mandatory for every title except the main title in the first row.</p>
+                    <p>
+                        Indicates the type of title being provided. It is required for every
+                        title except the main title in the first row.
+                    </p>
                     <ul>
-                        <li><strong>Alternative Title:</strong> You can also add an alternative title if required.
+                        <li>
+                            <strong>Alternative Title:</strong> Another title by which the
+                            dataset is known.
                         </li>
-                        <li><strong>Translated Title:</strong> If the dataset is also to be published with a
-                            translated title, this title should have this title type.</li>
+                        <li>
+                            <strong>Subtitle:</strong> A supplementary title that provides
+                            additional information about the main title.
+                        </li>
+                        <li>
+                            <strong>Translated Title:</strong> A version of the title in
+                            another language.
+                        </li>
+                        <li>
+                            <strong>Other:</strong> A title type that does not fit into the
+                            other available categories.
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -812,6 +826,14 @@ include_once "../settings.php";
             <?php endif; ?>
             <!-- Thesaurus help sections — shown dynamically based on ERNIE availability -->
             <?php if ($showThesauri ?? true): ?>
+            <div id="help-thesauriKeywords" class="section-content">
+                <h3>Thesauri Keywords</h3>
+                <p>
+                    Thesauri provide controlled vocabularies for describing your dataset
+                    with standardised keywords. They help make metadata more consistent,
+                    searchable and discoverable.
+                </p>
+            </div>
             <div class="thesaurus-help" data-thesaurus="platforms" style="display:none">
                 <div id="help-platformsKeywords" class="section-content">
                     <div id="help-gcmd-platforms-keyword">

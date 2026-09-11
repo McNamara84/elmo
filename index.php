@@ -103,7 +103,7 @@ if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showThesauri) {
-    include $baseDir . 'formgroups/thesaurusKeywords.html';
+    include $baseDir . 'formgroups/thesaurus-keywords.html';
 }
 if ($showFreeKeywords) {
     include $baseDir . 'formgroups/freeKeywords.html';

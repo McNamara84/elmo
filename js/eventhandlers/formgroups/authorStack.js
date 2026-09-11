@@ -146,7 +146,9 @@ $(document).ready(function () {
     const editor = $('<div class="col-12 mt-2" data-author-affiliation-editor></div>');
     const panel = $('<div class="border rounded bg-body-tertiary p-3"></div>');
     const header = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2"></div>');
+    const titleGroup = $('<div class="d-flex align-items-center gap-1"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
+    const helpButton = $('<i class="bi bi-question-circle-fill" ' + 'data-help-section-id="help-contributorinstitutions-affiliation" ' + 'data-author-affiliation-help></i>');
     const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-author-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
@@ -158,7 +160,8 @@ $(document).ready(function () {
       .append('<span data-author-affiliation-add-label></span>');
     const results = $('<div class="list-group mt-2 d-none" data-author-affiliation-results></div>');
 
-    header.append(title, count);
+    titleGroup.append(title, helpButton);
+    header.append(titleGroup, count);
     controls.append(input, searchButton, addButton);
     panel.append(header, list, controls, results);
     return editor.append(panel);
@@ -195,6 +198,14 @@ $(document).ready(function () {
     let editor = row.find('[data-author-affiliation-editor]').first();
     if (!editor.length) {
       editor = createAffiliationEditor();
+      // Show the affiliation help button only once across all author entries.
+      const hasAffiliationHelp = stack
+        .find('[data-author-affiliation-help]')
+        .length > 0;
+
+      if (hasAffiliationHelp) {
+        editor.find('[data-author-affiliation-help]').remove();
+      }
     }
 
     if (fieldsContainer.length && !editor.parent().is(fieldsContainer)) {
@@ -414,7 +425,22 @@ $(document).ready(function () {
     resetRow(row);
     row.find('.addAuthor, .addauthorinstitution').remove();
     ensureCardScaffold(row, type);
-    replaceHelpButtonInClonedRows(row);
+    // Keep person-specific help buttons visible only for the first person entry.
+    const isFirstPerson = type === 'person' &&
+      stack.find('[data-creator-row]').length === 0;
+
+    // Hide duplicate help buttons in later cloned rows while preserving the first set.
+    replaceHelpButtonInClonedRows(row,
+      "input-right-with-round-corners",
+      isFirstPerson
+        ? [
+          "help-author-orcid",
+          "help-contactperson-email",
+          "help-contactperson-website"
+        ]
+        : []
+    );
+
     translateClonedRow(row);
     setupContactFields(row);
     return row;
