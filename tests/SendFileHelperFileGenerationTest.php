@@ -39,14 +39,14 @@ final class SendFileHelperFileGenerationTest extends TestCase
      * Mock payload data returned by generateDatasetPayloadByResourceId.
      */
     private const MOCK_DATASET_PAYLOAD = [
-        'payload' => '<?xml version="1.0"?><dataset><title>Test Dataset</title></dataset>',
+        'payload' => '<?xml version="1.0"?><envelope><resource xmlns="http://datacite.org/schema/kernel-4"><titles><title>Test Dataset</title></titles><subjects/><contributors/></resource></envelope>',
         'contentType' => 'application/xml',
         'extension' => 'xml',
         'generator' => 'xml',
     ];
 
     private const MOCK_ICGEM_PAYLOAD = [
-        'payload' => '<?xml version="1.0"?><grav:envelope><resource><title>Test Model</title></resource></grav:envelope>',
+        'payload' => '<?xml version="1.0"?><grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4"><dace:resource><dace:titles><dace:title>Test Model</dace:title></dace:titles><dace:subjects/><dace:contributors><dace:contributor contributorType="ContactPerson"><dace:contributorName>Jane Smith</dace:contributorName></dace:contributor></dace:contributors></dace:resource><grav:contact><grav:address>jane@example.com</grav:address></grav:contact></grav:envelope>',
         'contentType' => 'application/xml',
         'extension' => 'xml',
         'generator' => 'xml',
@@ -75,11 +75,6 @@ final class SendFileHelperFileGenerationTest extends TestCase
             $this->mockGenerateDatasetPayloadByResourceId();
         }
 
-        // Mock applyElmoGemAdditionsToDataciteXml to return modified XML
-        if (!function_exists('applyElmoGemAdditionsToDataciteXml')) {
-            $this->mockApplyElmoGemAdditionsToDataciteXml();
-        }
-
         // Mock collectResearcherConfirmationDataFromXml
         if (!function_exists('collectResearcherConfirmationDataFromXml')) {
             $this->mockCollectResearcherConfirmationDataFromXml();
@@ -88,16 +83,6 @@ final class SendFileHelperFileGenerationTest extends TestCase
         // Mock collectGGMsResearcherConfirmationDataFromXml
         if (!function_exists('collectGGMsResearcherConfirmationDataFromXml')) {
             $this->mockCollectGGMsResearcherConfirmationDataFromXml();
-        }
-
-        // Mock getPriorityText
-        if (!function_exists('getPriorityText')) {
-            $this->mockGetPriorityText();
-        }
-
-        // Mock buildGGMsDataServicesNote
-        if (!function_exists('buildGGMsDataServicesNote')) {
-            $this->mockBuildGGMsDataServicesNote();
         }
     }
 
@@ -114,26 +99,6 @@ final class SendFileHelperFileGenerationTest extends TestCase
                     return ' . var_export(self::MOCK_ICGEM_PAYLOAD, true) . ';
                 }
                 return ' . var_export(self::MOCK_DATASET_PAYLOAD, true) . ';
-            }
-        ');
-    }
-
-    private function mockApplyElmoGemAdditionsToDataciteXml(): void
-    {
-        if (function_exists('applyElmoGemAdditionsToDataciteXml')) {
-            return;
-        }
-
-        eval('
-            function applyElmoGemAdditionsToDataciteXml(
-                string $xmlContent,
-                bool $showGGMsProperties,
-                bool $elmogemSendsDataServicesMail
-            ): string {
-                if (!$showGGMsProperties) {
-                    return $xmlContent;
-                }
-                return str_replace("</dataset>", "<gemAdditions>Applied</gemAdditions></dataset>", $xmlContent);
             }
         ');
     }
@@ -164,32 +129,6 @@ final class SendFileHelperFileGenerationTest extends TestCase
         ');
     }
 
-    private function mockGetPriorityText(): void
-    {
-        if (function_exists('getPriorityText')) {
-            return;
-        }
-
-        eval('
-            function getPriorityText(?int $weeks): string {
-                return "normal";
-            }
-        ');
-    }
-
-    private function mockBuildGGMsDataServicesNote(): void
-    {
-        if (function_exists('buildGGMsDataServicesNote')) {
-            return;
-        }
-
-        eval('
-            function buildGGMsDataServicesNote(string $icgemAddress): array {
-                return ["html" => "<p>GEM Note</p>", "text" => "GEM Note"];
-            }
-        ');
-    }
-
     /**
      * Scenario 1: Non-GEM mode
      * - No ELMO-GEM additions applied
@@ -206,8 +145,7 @@ final class SendFileHelperFileGenerationTest extends TestCase
         $this->assertTrue($result['shouldSendDataServicesMail']);
         $this->assertNotNull($result['dataServicesPayload']);
         $this->assertStringContainsString('Test Dataset', $result['dataServicesPayload']);
-        // Should NOT have GEM additions
-        $this->assertStringNotContainsString('gemAdditions', $result['dataServicesPayload']);
+        $this->assertStringNotContainsString('ICGEM-format', $result['dataServicesPayload']);
         $this->assertEqualsCanonicalizing(
             self::MOCK_RESEARCHER_CONFIRMATION['contacts'],
             $result['researcherConfirmationData']['contacts']
@@ -253,7 +191,7 @@ final class SendFileHelperFileGenerationTest extends TestCase
 
         $this->assertTrue($result['shouldSendDataServicesMail']);
         $this->assertNotNull($result['dataServicesPayload']);
-        $this->assertStringContainsString('gemAdditions', $result['dataServicesPayload']);
+        $this->assertStringContainsString('ICGEM-format', $result['dataServicesPayload']);
         $this->assertEqualsCanonicalizing(
             self::MOCK_RESEARCHER_CONFIRMATION['contacts'],
             $result['researcherConfirmationData']['contacts']
