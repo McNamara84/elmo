@@ -11,6 +11,7 @@ require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
 require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
+require_once __DIR__ . '/author_payload_xml.php';
 
 global $showGGMsProperties, $showMslMode;
 
@@ -34,7 +35,7 @@ if ($showMslMode ?? false) {
  * @throws Exception If the callback returns false
  */
 if (!function_exists('executeSaveFunction')) {
-function executeSaveFunction($callback, ...$args)
+function executeSaveFunction(callable $callback, mixed ...$args): mixed
 {
     $functionName = is_array($callback) ? $callback[1] : $callback;
 
@@ -54,7 +55,14 @@ function executeSaveFunction($callback, ...$args)
 }
 } // end function_exists('executeSaveFunction')
 
-// includes all save functions and executes them with database connection
+/**
+ * Saves every enabled form group in a single database transaction.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return int Database identifier of the saved resource.
+ *
+ * @throws Exception When a form-group save or transaction operation fails.
+ */
 function saveALL(array $postData): int {
     global $connection, $showMslMode, $showContributorPersons, $showContributorInstitutions;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
@@ -117,24 +125,48 @@ function saveALL(array $postData): int {
 }
 
 /**
- * Generate dataset export payload for a saved resource.
+ * Generates an XML or JSON-LD download payload for a saved resource.
  *
- * @param mysqli $connection Active database connection
- * @param int $resourceId Resource ID for export
- * @param array{format?: string, postData?: array<string, mixed>} $options Export options (format: 'xml' or 'jsonld')
+ * For regular ELMO exports, an Authors section supplied in the current form
+ * data replaces the database-derived Authors and ContactPersons sections before
+ * any XSLT transformation. This keeps XML and JSON-LD downloads aligned with
+ * the current Authors form state. ICGEM XML generation retains its specialized
+ * controller path.
+ *
+ * @param int $resourceId Database identifier of the resource used as the export base.
+ * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>, variant?: 'gfz'|'icgem'|string} $options
+ *        Export format, optional current form data, and an optional XML variant
+ *        override. Without an override the variant follows $showGGMsProperties.
+ *        ELMO GEM submissions need both variants from a single submit, so they
+ *        request them explicitly instead of toggling the global.
  * @return array{payload: string, contentType: string, extension: string, generator: string}
+ *
+ * @throws InvalidArgumentException When the requested format or variant is unsupported.
+ * @throws RuntimeException When payload generation produces an empty document.
+ * @throws Throwable When database access or a controller transformation fails.
  */
 function generateDatasetPayloadByResourceId(int $resourceId, array $options = []): array
 {
     global $connection;
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
     $postData = $options['postData'] ?? null;
-    $useIcgem = (bool) ($GLOBALS['showGGMsProperties'] ?? false);
+    $requestedVariant = isset($options['variant']) ? strtolower((string) $options['variant']) : null;
+
+    if ($requestedVariant !== null && !in_array($requestedVariant, ['gfz', 'icgem'], true)) {
+        throw new InvalidArgumentException("Unsupported download variant: {$requestedVariant}");
+    }
+
+    $useIcgem = $requestedVariant !== null
+        ? $requestedVariant === 'icgem'
+        : (bool) ($GLOBALS['showGGMsProperties'] ?? false);
 
     if ($downloadFormat === 'jsonld') {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         $controller = new DatasetController();
-        $payload = (string) $controller->transformResourceToJsonLd($resourceId);
+        $sourceXml = is_array($postData)
+            ? buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData)
+            : null;
+        $payload = (string) $controller->transformResourceToJsonLd($resourceId, $sourceXml);
 
         if ($payload === '') {
             throw new RuntimeException("Download generation returned empty JSON-LD for resource {$resourceId}");
@@ -159,7 +191,6 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         $generator = 'icgem-xml';
     } else {
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-        require_once __DIR__ . '/../includes/author_payload_xml.php';
         $controller = new DatasetController();
 
         $sourceXml = null;

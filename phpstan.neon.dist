@@ -2,12 +2,10 @@ parameters:
     level: 6
     paths:
         - api
-        - api.php
-        - generate_xml_files.php
+        - endpoints
+        - scripts
+        - includes/http_routing.php
         - index.php
-        - install.php
-        - send_feedback_mail.php
-        - send_xml_file.php
     bootstrapFiles:
         - vendor/autoload.php
     excludePaths:

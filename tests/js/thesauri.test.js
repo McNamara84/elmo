@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { transformThesauriScript } = require('./utils');
 
 class MockTagify {
   constructor(el, settings) {
@@ -59,17 +60,6 @@ const mockVocabularyData = {
     ] }
   ]
 };
-
-function transformThesauriScript(source) {
-  let script = source;
-  script = script.replace('export function filterTreeByRoot', 'function filterTreeByRoot');
-  script = script.replace('export const THESAURUS_CONFIG =', 'const THESAURUS_CONFIG =');
-  script = script.replace('export let currentActiveInput = null;', 'let currentActiveInput = null;');
-  script = script.replace('export function cleanupTagifyForInput', 'function cleanupTagifyForInput');
-  script = script.replace('export function initTagifyForInput', 'function initTagifyForInput');
-  script += '\nwindow.__thesauriTestExports = { filterTreeByRoot, THESAURUS_CONFIG, initTagifyForInput, showLoadingSpinner, hideLoadingSpinner, loadThesaurusOnDemand, loadKeywordsForConfig, loadedConfigs };';
-  return script;
-}
 
 describe('thesauri.js', () => {
   let $;
@@ -733,6 +723,67 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     exports.loadKeywordsForConfig(config, response);
     const countAfterSecond = document.getElementById('input-sciencekeyword')._tagify.settings.whitelist.length;
     expect(countAfterSecond).toBe(countAfterFirst);
+  });
+
+  // Clicking a row must browse the hierarchy for broader terms while keeping every
+  // term selectable, so these cases pin down the whole interaction contract.
+  describe('handleTreeNodeActivation', () => {
+    function createTreeStub(isParent) {
+      return {
+        is_parent: jest.fn(() => isParent),
+        toggle_node: jest.fn(),
+      };
+    }
+
+    function clickOn(className) {
+      const target = document.createElement('i');
+      target.className = className;
+      return { target };
+    }
+
+    test('opens or closes a broader term instead of selecting it', () => {
+      const tree = createTreeStub(true);
+      const node = { id: 'parent' };
+
+      const selects = exports.handleTreeNodeActivation.call(tree, node, clickOn('jstree-icon'));
+
+      expect(selects).toBe(false);
+      expect(tree.toggle_node).toHaveBeenCalledWith(node);
+    });
+
+    test('selects a term without narrower terms', () => {
+      const tree = createTreeStub(false);
+
+      const selects = exports.handleTreeNodeActivation.call(tree, { id: 'leaf' }, clickOn('jstree-icon'));
+
+      expect(selects).toBe(true);
+      expect(tree.toggle_node).not.toHaveBeenCalled();
+    });
+
+    test('keeps broader terms selectable through their checkbox', () => {
+      const tree = createTreeStub(true);
+
+      const selects = exports.handleTreeNodeActivation.call(tree, { id: 'parent' }, clickOn('jstree-icon jstree-checkbox'));
+
+      expect(selects).toBe(true);
+      expect(tree.toggle_node).not.toHaveBeenCalled();
+    });
+
+    test('keeps broader terms selectable with a modifier key', () => {
+      const tree = createTreeStub(true);
+      const event = clickOn('jstree-icon');
+      event.ctrlKey = true;
+
+      expect(exports.handleTreeNodeActivation.call(tree, { id: 'parent' }, event)).toBe(true);
+      expect(tree.toggle_node).not.toHaveBeenCalled();
+    });
+
+    test('leaves programmatic activation without an event untouched', () => {
+      const tree = createTreeStub(true);
+
+      expect(exports.handleTreeNodeActivation.call(tree, { id: 'parent' })).toBe(true);
+      expect(tree.toggle_node).not.toHaveBeenCalled();
+    });
   });
 
 });

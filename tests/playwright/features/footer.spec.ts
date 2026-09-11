@@ -24,7 +24,7 @@ test.describe('Footer Tests', () => {
       'href',
       'https://dataservices.gfz.de/web/about-us/legal-notice'
     );
-    await expect(privacyPolicy).toHaveAttribute('href', 'doc/privacyPolicy.html');
+    await expect(privacyPolicy).toHaveAttribute('href', 'doc/privacy-policy.html');
     await expect(elmoGuide).toHaveAttribute('href', 'doc/help.php');
   });
 
@@ -64,7 +64,7 @@ test.describe('Footer Tests', () => {
     const privacyPolicyPage = await pagePromise;
     
     await privacyPolicyPage.waitForLoadState('domcontentloaded');
-    await expect(privacyPolicyPage).toHaveURL(/privacyPolicy.html/);
+    await expect(privacyPolicyPage).toHaveURL(/privacy-policy.html/);
     await privacyPolicyPage.close();
   });
 

@@ -5,6 +5,7 @@
  */
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -165,9 +166,17 @@ class SaveHandler {
     }
 
     /**
-     * Save data and trigger download
-     * @param {string} filename - Chosen filename
-     * @param {string} [format=this.currentFormat] - Download format
+     * Saves the current form state and triggers the generated file download.
+     *
+     * Before `FormData` is created, the structured Authors payload is rebuilt
+     * from the live Authors stack. A missing payload field, an uninitialized
+     * stack, or an invalid generated payload aborts the request and is reported
+     * through the standard error notification; incomplete/stale Authors data is
+     * never sent through legacy form fields as a silent fallback.
+     *
+     * @param {string} filename - Chosen filename.
+     * @param {string} [format=this.currentFormat] - Download format.
+     * @returns {Promise<void>} Promise resolved after download or error handling completes.
      */
     async saveAndDownload(filename, format = this.currentFormat) {
         const formatConfig = this.getFormatConfig(format);
@@ -197,15 +206,9 @@ class SaveHandler {
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
-            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
-                window.authorStack.updatePayload();
-            }
-
-            const formData = new FormData(this.$form[0]);
-            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
-            if (authorsPayloadInput) {
-                formData.set('authorsPayload', authorsPayloadInput.value);
-            }
+            const authorsPayload = synchronizeAuthorsPayload(formEl);
+            const formData = new FormData(formEl);
+            formData.set('authorsPayload', JSON.stringify(authorsPayload));
             formData.append('filename', filename);
 
             const csrfToken = await fetchAndStoreCsrfToken('form');

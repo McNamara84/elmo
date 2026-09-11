@@ -20,7 +20,7 @@ export async function navigateToHome(page: Page) {
     // page-event-logging.spec.ts) before the request reaches the server.
     // When no prior mock exists the request goes to the PHP server, but
     // that single small POST is negligible.
-    await page.route('**/log_page_event.php', route => route.fallback());
+    await page.route('**/endpoints/log_page_event.php', route => route.fallback());
 
     pagesWithRoutes.add(page);
   }

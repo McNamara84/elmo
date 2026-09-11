@@ -50,7 +50,7 @@ $(document).ready(function () {
     const feedbackData = feedbackForm.serialize();
 
     $.ajax({
-      url: "send_feedback_mail.php",
+      url: "endpoints/send_feedback_mail.php",
       type: "POST",
       data: feedbackData,
       success: function () {

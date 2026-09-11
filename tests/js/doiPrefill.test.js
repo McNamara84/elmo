@@ -140,6 +140,11 @@ describe('doiPrefill.js', () => {
     test('falls back to default for unknown type', () => {
       expect(mod.mapTitleTypeFromJson('UnknownType', mapping)).toBe('1');
     });
+
+    test('falls back to empty string when mapping has no default', () => {
+      expect(mod.mapTitleTypeFromJson('UnknownType', {})).toBe('');
+      expect(mod.mapTitleTypeFromJson('', {})).toBe('');
+    });
   });
 
   /* ── prefillResourceInfo ────────────────────────────────────── */

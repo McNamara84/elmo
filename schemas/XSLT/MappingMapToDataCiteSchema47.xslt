@@ -180,9 +180,11 @@ http://www.altova.com/mapforce
 					<xsl:for-each select="*[local-name()='Titles' and namespace-uri()='']/*[local-name()='Title' and namespace-uri()='']">
 						<xsl:variable name="var10_cur" select="."/>
 						<title>
-							<xsl:if test="not(contains(*[local-name()='type' and namespace-uri()=''], 'Main Title'))">
+							<xsl:variable name="titleTypeCamel" select="translate(*[local-name()='type' and namespace-uri()=''], ' ', '')"/>
+							<!-- CamelCase all title types; omit titleType for Main Title. -->
+							<xsl:if test="$titleTypeCamel != 'MainTitle'">
 								<xsl:attribute name="titleType" namespace="">
-									<xsl:value-of select="concat(substring-before(*[local-name()='type' and namespace-uri()=''], ' '), substring-after(*[local-name()='type' and namespace-uri()=''], ' '))"/>
+									<xsl:value-of select="$titleTypeCamel"/>
 								</xsl:attribute>
 							</xsl:if>
 							<xsl:if test="contains(*[local-name()='type' and namespace-uri()=''], 'Main Title')">

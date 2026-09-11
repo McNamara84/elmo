@@ -16,8 +16,8 @@ const KEY_SECTIONS = [
 
 const MEASUREMENT_RUNS = process.env.CI ? 1 : 3;
 const HEADER_LOGO_ASSETS = [
-  'logos/GFZ-logo.svg',
-  'logos/gfz-data-services-logo.svg',
+  'assets/logos/gfz-logo.svg',
+  'assets/logos/gfz-data-services-logo.svg',
 ];
 const LEGACY_HEADER_LOGO_ASSETS = [
   'logos/GFZ-logo.png',

@@ -78,9 +78,15 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("mapTitleType maps known types to option values", () => {
     const ctx = loadMappingModule();
-    expect(ctx.mapTitleType("AlternativeTitle")).toBe("2");
-    expect(ctx.mapTitleType("TranslatedTitle")).toBe("3");
-    expect(ctx.mapTitleType("UnknownType")).toBe("1");
+    const mapping = {
+      MainTitle: "6",
+      AlternativeTitle: "1",
+      TranslatedTitle: "16",
+      "": "6",
+    };
+    expect(ctx.mapTitleType("AlternativeTitle", mapping)).toBe("1");
+    expect(ctx.mapTitleType("TranslatedTitle", mapping)).toBe("16");
+    expect(ctx.mapTitleType("UnknownType", mapping)).toBe("6");
   });
 
   test("normalizeRole inserts whitespace in contributor roles", () => {
@@ -91,11 +97,13 @@ describe("mappingXmlToInputFields helpers", () => {
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
     vm.runInContext(
-      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', affiliation_ror: 'https://ror.org/05y42nb95', affiliation_name: 'Max Planck Society'}];`,
+      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation_name: 'Max Planck Society', affiliation_ror: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
-    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy", affiliation_ror: "https://ror.org/05y42nb95", affiliation_name: "Max Planck Society" });
+
+    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy",
+      display_name: "Max Planck Institute for Astronomy - Max Planck Society", affiliation_name: "Max Planck Society", affiliation_ror: "https://ror.org/05y42nb95", scientific_domain: "Astronomy", country: "Germany" });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
@@ -117,11 +125,17 @@ describe("mappingXmlToInputFields helpers", () => {
           <ns:creatorName nameType="Personal">Doe, Jane</ns:creatorName>
           <ns:givenName>Jane</ns:givenName>
           <ns:familyName>Doe</ns:familyName>
+          <ns:nameIdentifier nameIdentifierScheme="ORCID">https://orcid.org/0000-0002-1825-0097</ns:nameIdentifier>
           <ns:affiliation affiliationIdentifier="https://ror.org/04z8jg394">GFZ</ns:affiliation>
+          <ns:affiliation>Additional University</ns:affiliation>
         </ns:creator>
         <ns:creator>
           <ns:creatorName nameType="Organizational">Payload Institute</ns:creatorName>
           <ns:affiliation affiliationIdentifier="https://ror.org/03qjp1d79">Helmholtz</ns:affiliation>
+        </ns:creator>
+        <ns:creator>
+          <ns:creatorName nameType="Personal">Sukarno</ns:creatorName>
+          <ns:familyName>Sukarno</ns:familyName>
         </ns:creator>
       </ns:creators>
     </ns:resource>`;
@@ -136,12 +150,65 @@ describe("mappingXmlToInputFields helpers", () => {
           type: "person",
           familyname: "Doe",
           givenname: "Jane",
-          affiliations: [{ label: "GFZ", rorId: "04z8jg394" }]
+          orcid: "0000-0002-1825-0097",
+          affiliations: [
+            { label: "GFZ", rorId: "04z8jg394" },
+            { label: "Additional University", rorId: "" }
+          ]
         }),
         expect.objectContaining({
           type: "institution",
           institutionname: "Payload Institute",
           affiliations: [{ label: "Helmholtz", rorId: "03qjp1d79" }]
+        }),
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: ""
+        })
+      ]);
+    } finally {
+      delete window.authorStack;
+    }
+  });
+
+  test("processContactPersons restores contact state for a mononymous authorStack entry", () => {
+    const setAuthors = jest.fn();
+    window.authorStack = {
+      collectPayload: jest.fn(() => [{
+        type: "person",
+        familyname: "Sukarno",
+        givenname: "",
+        orcid: "",
+        isContact: false,
+        email: "",
+        website: "",
+        affiliations: []
+      }]),
+      setAuthors
+    };
+    const ctx = loadMappingModule();
+    const xml = `<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+      <ns:contributors>
+        <ns:contributor contributorType="ContactPerson">
+          <ns:contributorName nameType="Personal">Sukarno</ns:contributorName>
+          <ns:familyName>Sukarno</ns:familyName>
+        </ns:contributor>
+      </ns:contributors>
+    </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+
+    try {
+      ctx.processContactPersons(xmlDoc);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: "",
+          isContact: true,
+          email: "",
+          website: ""
         })
       ]);
     } finally {
@@ -237,26 +304,30 @@ describe("mappingXmlToInputFields helpers", () => {
     const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
     const fallback = await ctxFail.createTitleTypeMapping();
     expect(failingGetJSON).toHaveBeenCalled();
-    expect(fallback[""]).toBe("1");
-    expect(fallback.AlternativeTitle).toBe("2");
+    expect(fallback[""]).toBe("");
+    expect(fallback.AlternativeTitle).toBe("");
+    expect(fallback.MainTitle).toBe("");
+    expect(fallback.TranslatedTitle).toBe("");
   });
 
   test("setLabDataInRow populates fields and triggers change", () => {
     document.body.innerHTML = `
       <div id="row">
-        <select name="laboratoryName[]"><option></option><option value="Lab1">Lab1</option></select>
+        <select name="laboratoryName[]"><option></option><option value="Lab1 - Aff1">Lab1 - Aff1</option></select>
         <input name="laboratoryAffiliation[]" />
         <input name="laboratoryRorIds[]" />
         <input name="LabId[]" />
       </div>`;
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
-    vm.runInContext(`labData = [{ identifier: 'LAB1', name: 'Lab1', affiliation_ror: 'R1', affiliation_name: 'Aff1' }];`, ctx);
+
+    vm.runInContext(`labData = [{
+      identifier: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation_name: 'Aff1', affiliation_ror: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");
 
-    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1");
+    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1 - Aff1");
     expect(row.find('input[name="laboratoryAffiliation[]"]').val()).toBe("Aff1");
     expect(row.find('input[name="laboratoryRorIds[]"]').val()).toBe("R1");
     expect(row.find('input[name="LabId[]"]').val()).toBe("LAB1");

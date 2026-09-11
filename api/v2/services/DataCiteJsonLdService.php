@@ -1,5 +1,13 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * Converts canonical DataCite XML into ELMO's compact JSON-LD representation.
+ *
+ * Element attributes are stored below an `attrs` key, direct text content
+ * below `value`, and repeated sibling elements as ordered lists.
+ */
 class DataCiteJsonLdService
 {
     private const DEFAULT_CONTEXT_URL = 'https://schema.stage.datacite.org/linked-data/context/fullcontext.jsonld';
@@ -9,18 +17,30 @@ class DataCiteJsonLdService
      *
      * The output follows the XML-shaped DataCite JSON-LD pattern used by the
      * DataCite linked-data runner example with attrs/value keys.
+     *
+     * @param string $xmlString Canonical DataCite XML document.
+     * @return string Pretty-printed JSON-LD document.
+     *
+     * @throws InvalidArgumentException When the XML is invalid or has an unexpected root element.
+     * @throws JsonException When the converted payload cannot be encoded as JSON.
      */
     public function convertXmlStringToJsonLd(string $xmlString): string
     {
         $payload = $this->convertXmlStringToArray($xmlString);
 
-        return json_encode($payload, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return json_encode(
+            $payload,
+            JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR
+        );
     }
 
     /**
      * Convert a DataCite XML document into a compact JSON-LD array.
      *
+     * @param string $xmlString Canonical DataCite XML document.
      * @return array<string, mixed>
+     *
+     * @throws InvalidArgumentException When the XML is invalid or has an unexpected root element.
      */
     public function convertXmlStringToArray(string $xmlString): array
     {
@@ -55,6 +75,9 @@ class DataCiteJsonLdService
     }
 
     /**
+     * Groups direct element children by local name while preserving order.
+     *
+     * @param DOMElement $element Parent whose direct children are collected.
      * @return array<string, list<DOMElement>>
      */
     private function collectElementChildren(DOMElement $element): array
@@ -73,7 +96,9 @@ class DataCiteJsonLdService
     }
 
     /**
-     * @param list<DOMElement> $elements
+     * Converts one or more same-named XML elements.
+     *
+     * @param list<DOMElement> $elements Elements to convert in document order.
      * @return array<string, mixed>|list<array<string, mixed>>
      */
     private function convertElements(array $elements): array
@@ -84,6 +109,9 @@ class DataCiteJsonLdService
     }
 
     /**
+     * Converts an XML element, its attributes, children, and direct text.
+     *
+     * @param DOMElement $element Element to convert.
      * @return array<string, mixed>
      */
     private function convertElement(DOMElement $element): array
@@ -108,6 +136,9 @@ class DataCiteJsonLdService
     }
 
     /**
+     * Copies XML attributes into JSON-LD attribute names and values.
+     *
+     * @param DOMElement $element Element whose attributes are collected.
      * @return array<string, string>
      */
     private function collectAttributes(DOMElement $element): array
@@ -126,6 +157,12 @@ class DataCiteJsonLdService
         return $attributes;
     }
 
+    /**
+     * Returns trimmed direct text without concatenating descendant text.
+     *
+     * @param DOMElement $element Element whose direct text nodes are inspected.
+     * @return string|null Direct text or null when it is empty.
+     */
     private function extractDirectTextContent(DOMElement $element): ?string
     {
         $text = '';
@@ -139,6 +176,11 @@ class DataCiteJsonLdService
         return $text === '' ? null : $text;
     }
 
+    /**
+     * Resolves the configured DataCite JSON-LD context URL.
+     *
+     * @return string Configured URL or the built-in DataCite staging context.
+     */
     private function getContextUrl(): string
     {
         $configuredUrl = getenv('DATACITE_JSONLD_CONTEXT_URL');
@@ -149,6 +191,15 @@ class DataCiteJsonLdService
         return self::DEFAULT_CONTEXT_URL;
     }
 
+    /**
+     * Builds the JSON-LD resource identifier from the DataCite identifier.
+     *
+     * DOI values are normalized to resolver URLs; other identifiers are
+     * returned unchanged.
+     *
+     * @param DOMElement $resource DataCite resource root.
+     * @return string|null JSON-LD identifier or null when no value exists.
+     */
     private function buildResourceId(DOMElement $resource): ?string
     {
         foreach ($resource->childNodes as $childNode) {

@@ -1,12 +1,17 @@
 name: Feature Request
 description: Suggest a new feature or improvement for one of the ELMOs
 title: "[FEATURE] "
-labels: ["enhancement"]
+labels: ["enhancement", "DoR not met"]
+projects: ["McNamara84/10"]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for suggesting a feature! Please describe your idea below.
+
+        ## Use ELMO terms
+
+        Please use the exact terms shown in the affected ELMO. Do not use abbreviations. For example, a digital dataset is named **Resource**, and a physical sample is named **IGSN**.
 
   - type: textarea
     id: user-story
@@ -14,7 +19,7 @@ body:
       label: User Story
       description: Describe the feature from a user's perspective.
       value: |
-        As a **…**, I want **…**, so that **…**.
+        As a **...**, I want **...**, so that **...**.
     validations:
       required: true
 
@@ -46,6 +51,21 @@ body:
     validations:
       required: false
 
+  - type: checkboxes
+    id: definition-of-ready
+    attributes:
+      label: Definition of Ready
+      description: Check every item that is already true for this feature request.
+      options:
+        - label: The user role or target user (not Product Owner, not Scrum Master) is named at least in the user story.
+        - label: The user story follows the INVEST criteria (Independent, Negotiable, Valuable, Estimable, Small, Testable).
+        - label: The affected ELMO page, route, workflow, or data type is named.
+        - label: The problem or user need is clear.
+        - label: The acceptance criteria follow the Given-When-Then format.
+        - label: Acceptance criteria are testable.
+        - label: Relevant Resource or Sample is included/linked when relevant.
+        - label: Sketches, mockups, or wireframes are attached when they could be helpful.
+
   - type: textarea
     id: additional-context
     attributes:
@@ -53,3 +73,8 @@ body:
       description: Any mockups, references, or further information.
     validations:
       required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Ready for work?** This issue is created with the `DoR not met` label by default. Remove it only when the Definition of Ready is met.

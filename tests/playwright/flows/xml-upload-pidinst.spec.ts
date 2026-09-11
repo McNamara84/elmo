@@ -179,7 +179,13 @@ const MOCK_API_DATA: Record<string, any> = {
     other: ['GFZ'],
   }],
   'json/funders.json': [],
-  'json/msl-labs.json': [],
+  // 'json/msl-labs.json': [],
+  '/api/v2/vocabs/msl-laboratories': {
+    version: 'test',
+    lastUpdated: '2026-09-07T00:00:00+00:00',
+    total: 0,
+    data: [],
+  },
   'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
   'api/v2/vocabs/languages': MOCK_LANGUAGES,
   'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
@@ -377,6 +383,8 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Inject app scripts
     const appScripts = [
       'js/clear.js',
+      'js/dropdownUtils.js',
+      'js/dropdownAjax.js',
       'js/select.js',
       'js/affiliations.js',
       'js/usedInstruments.js',

@@ -79,7 +79,6 @@ $showMslVocabs = false;
 $showMslDefaultFreeKeywords = false;
 
 // MSL data sources.
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // Single source of truth for all MSL-specific features.
@@ -163,6 +162,9 @@ $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
 $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+
+// Target address for the ELMO GEM ICGEM registration mail.
+$icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
 
 function getSettings($setting)
 {

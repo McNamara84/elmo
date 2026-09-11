@@ -10,7 +10,7 @@ describe('setupLicenseDropdown', () => {
     global.$ = $;
     global.jQuery = $;
 
-    // Stub fetch used by initializeTimezoneDropdown
+    // Stub fetch used by setupTimezoneDropdownAjax
     global.fetch = jest.fn().mockResolvedValue({
       json: async () => [],
     });

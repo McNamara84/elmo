@@ -204,17 +204,17 @@ describe('mappingXmlToInputFields module coverage', () => {
 
         test('uses default mapping when empty mapping provided', () => {
             const result = mappingModule.mapTitleType('MainTitle', {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('handles empty string input', () => {
             const result = mappingModule.mapTitleType('', {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('handles undefined input', () => {
             const result = mappingModule.mapTitleType(undefined, {});
-            expect(result).toBe('1');
+            expect(result).toBe('');
         });
 
         test('normalizes spaces in title type', () => {

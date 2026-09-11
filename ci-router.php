@@ -3,26 +3,51 @@
 /**
  * Router script for PHP's built-in web server used in CI.
  *
- * The built-in server does not support .htaccess rewrite rules,
- * so API routes (api/v2/…) would return 404 without this router.
+ * The built-in server does not support .htaccess rewrite rules, so this file
+ * mirrors the compatibility aliases, script access boundary and API routing.
  *
- * Usage:
- *   php -S localhost:8000 ci-router.php
+ * Usage: php -S localhost:8000 ci-router.php
  */
 
-$uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+$projectRoot = __DIR__;
+require_once $projectRoot . '/includes/http_routing.php';
 
-// Existing files (JS, CSS, JSON, images, PHP) – let the built-in server
-// handle them natively for maximum performance.
-if ($uri !== '/' && is_file(__DIR__ . $uri)) {
+$uri = elmoRequestPath($_SERVER['REQUEST_URI'] ?? '/');
+
+if (elmoIsHttpBlockedPath($uri)) {
+    http_response_code(404);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Not Found';
+    return true;
+}
+
+$compatibilityTarget = elmoCompatibilityTarget($uri);
+if ($compatibilityTarget !== null) {
+    $targetFile = $projectRoot . $compatibilityTarget;
+    if (!is_file($targetFile)) {
+        http_response_code(404);
+        return true;
+    }
+
+    if (str_ends_with($targetFile, '.php')) {
+        require $targetFile;
+        return true;
+    }
+
+    header('Content-Type: ' . elmoStaticContentType($targetFile));
+    readfile($targetFile);
+    return true;
+}
+
+// Existing assets and PHP files are handled natively by the built-in server.
+if ($uri !== '/' && is_file($projectRoot . $uri)) {
     return false;
 }
 
-// Rewrite API routes to the API entry point (replaces .htaccess RewriteRule).
 if (preg_match('#^/api(/|$)#', $uri)) {
-    require __DIR__ . '/api/index.php';
-    return;
+    require $projectRoot . '/api/index.php';
+    return true;
 }
 
-// Everything else (including /) → index.php
-require __DIR__ . '/index.php';
+require $projectRoot . '/index.php';
+return true;

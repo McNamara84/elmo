@@ -8,8 +8,10 @@ use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 use PHPMailer\PHPMailer\PHPMailer;
 
-define('PHPUNIT_RUNNING', true);
-require_once __DIR__ . '/../send_xml_file.php';
+if (!defined('PHPUNIT_RUNNING')) {
+    define('PHPUNIT_RUNNING', true);
+}
+require_once __DIR__ . '/../endpoints/send_xml_file.php';
 
 /**
  * Test class for XML filename generation logic.

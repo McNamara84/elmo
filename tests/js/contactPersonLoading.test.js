@@ -532,7 +532,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     });
   });
 
-  test('skips DataCite contributor when familyName is missing', () => {
+  test('loads a mononymous DataCite contact when familyName is missing', () => {
     const xmlDoc = new DOMParser().parseFromString(
       `<?xml version="1.0" encoding="UTF-8"?>
        <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
@@ -548,9 +548,26 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
 
     expect(() => mappingModule.processContactPersonsFromDataCite(xmlDoc)).not.toThrow();
 
-    $('div[data-creator-row]').each(function () {
-      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+    const $rows = $('div[data-creator-row]');
+    expect($rows).toHaveLength(2);
+    expect($rows.eq(1).find('input[name="familynames[]"]').val()).toBe('');
+    expect($rows.eq(1).find('input[name="givennames[]"]').val()).toBe('Erika');
+    expect($rows.eq(1).find('input[name="contacts[]"]').prop('checked')).toBe(true);
+  });
+
+  test('loads a mononymous DataCite contact when givenName is missing', () => {
+    const xmlDoc = makeDataCiteXml({
+      familyName: 'Sukarno',
+      givenName: '',
     });
+
+    mappingModule.processContactPersonsFromDataCite(xmlDoc);
+
+    const $rows = $('div[data-creator-row]');
+    expect($rows).toHaveLength(2);
+    expect($rows.eq(1).find('input[name="familynames[]"]').val()).toBe('Sukarno');
+    expect($rows.eq(1).find('input[name="givennames[]"]').val()).toBe('');
+    expect($rows.eq(1).find('input[name="contacts[]"]').prop('checked')).toBe(true);
   });
 });
 

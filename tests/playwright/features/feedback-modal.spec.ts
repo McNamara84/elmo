@@ -34,7 +34,7 @@ function computeContrastRatio(foreground: string, background: string) {
   return (lighter + 0.05) / (darker + 0.05);
 }
 
-const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
+const FEEDBACK_ENDPOINT = '**/endpoints/send_feedback_mail.php';
 const DEFAULT_NETWORK_DELAY_MS = 150;
 
 function delay(ms: number) {
