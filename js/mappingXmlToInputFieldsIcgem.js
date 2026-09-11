@@ -352,14 +352,49 @@ function populateIcgemModelTypes(data) {
 }
 
 /**
+ * Writes a satellite platform tag into a datasource Tagify (or the raw input)
+ * and flushes the hidden value so save POSTs the JSON, not only the UI chips.
+ * @param {HTMLInputElement|undefined} platformInput
+ * @param {Object} tag
+ */
+function applySatellitePlatformTag(platformInput, tag) {
+  if (platformInput && platformInput._tagify) {
+    platformInput._tagify.addTags([tag]);
+    if (typeof platformInput._tagify.update === 'function') {
+      platformInput._tagify.update();
+    } else if (typeof platformInput._tagify._updateHiddenField === 'function') {
+      platformInput._tagify._updateHiddenField();
+    }
+    return;
+  }
+  if (platformInput) {
+    $(platformInput).val(JSON.stringify([tag]));
+  }
+}
+
+/**
  * Populates the GGMsDataSources form rows.
  * Each data source entry becomes one form row; the datasource type 'change' event
  * is triggered so row visibility updates correctly.
+ *
+ * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
+ * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
+ *
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
  */
-function populateIcgemDataSources(data) {
+async function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
+
+  const needsSatelliteVocab = dataSources.some(
+    (ds) => ds.inputDataSourceType === 'Satellite' && ds.satelliteValueName
+  );
+  if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
+    const result = await window.waitForThesaurusVocabulary('platforms');
+    if (result !== 'loaded') {
+      throw new Error('GCMD platforms vocabulary not ready for satellite import');
+    }
+  }
 
   for (let i = 0; i < dataSources.length; i++) {
     const ds = dataSources[i];
@@ -377,18 +412,12 @@ function populateIcgemDataSources(data) {
 
     if (ds.inputDataSourceType === 'Satellite') {
       if (ds.satelliteValueName) {
-        const platformInput = $row.find('input[name="satellite_platform[]"]')[0];
-        const tag = {
+        applySatellitePlatformTag($row.find('input[name="satellite_platform[]"]')[0], {
           value: ds.satelliteValueName,
           id: ds.satelliteValueUri || '',
           scheme: ds.satelliteSchemeName || '',
           schemeURI: ds.satelliteSchemeUri || ''
-        };
-        if (platformInput && platformInput._tagify) {
-          platformInput._tagify.addTags([tag]);
-        } else if (platformInput) {
-          $(platformInput).val(JSON.stringify([tag]));
-        }
+        });
       }
     } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
@@ -703,7 +732,7 @@ function populateIcgemDescriptions(data) {
  * (definition, properties, model types, data sources, descriptions).
  * @param {Document} xmlDoc
  */
-function loadIcgemXmlToForm(xmlDoc) {
+async function loadIcgemXmlToForm(xmlDoc) {
   const data = parseIcgemXml(xmlDoc);
   if (!data) {
     console.error('loadIcgemXmlToForm: failed to locate ICGEM root node in XML document');
@@ -712,22 +741,10 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDefinition(data);
   populateIcgemProperties(data);
   populateIcgemModelTypes(data);
-  populateIcgemDataSources(data);
+  await populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
   populateIcgemContactPersons(xmlDoc);
 
-  // Process DataCite keywords from <dace:subjects> elements
-  // This ensures keywords are properly ingested during ICGEM uploads
-  if (typeof window.processKeywords === 'function') {
-    // Create a resolver that maps "ns" to the DataCite namespace
-    function dataciteResolver(prefix) {
-      if (prefix === 'ns') {
-        return 'http://datacite.org/schema/kernel-4';
-      }
-      return null;
-    }
-    window.processKeywords(xmlDoc, dataciteResolver);
-  }
 }
 
 // Expose as browser module
