@@ -123,7 +123,7 @@ function sendElmoMail(array $message, bool $simulate = false): void
     $addressList = implode(', ', array_column($recipients, 'address'));
 
     if ($simulate) {
-        error_log("Mail (simulated): '{$subject}' to {$addressList}");
+        error_log("Mail SIMULATED: '{$subject}' to {$addressList}" . " if you see this in production, check the SIMULATE_EMAIL setting variable.");
         return;
     }
 
@@ -222,11 +222,12 @@ function generateEmailText(array $context, array $settings = []): array
 
     $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resourceId}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . ($hasDataDescription ? ' und die Datenbeschreibung' : '') . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
 
-    if ($showGGMsProperties) {
+    if ($settings['showGGMsProperties']) {
         if (!function_exists('buildGGMsDataServicesNote')) {
             require_once __DIR__ . '/ggms_registration_mail.php';
         }
         $gemNote = buildGGMsDataServicesNote($icgemSubmitAddress);
+        // The ICGEM note to GFZ Data Services is added to the existing email body
         $htmlBody .= $gemNote['html'];
         $plainBody .= $gemNote['text'];
     }
