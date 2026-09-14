@@ -133,12 +133,17 @@ function saveALL(array $postData): int {
  * the current Authors form state. ICGEM XML generation retains its specialized
  * controller path.
  *
+ * The returned generator value is one of:
+ * - dataset-xml: DatasetController DataCite envelope (GFZ Data Services)
+ * - icgem-xml: ICGEMController grav:envelope
+ * - dataset-jsonld: DatasetController compact JSON-LD
+ *
  * @param int $resourceId Database identifier of the resource used as the export base.
  * @param array{format?: string, postData?: array<string, mixed>, variant?: string} $options Export options:
  *   - format (string): 'xml' or 'jsonld', defaults to 'xml'
  *   - postData (array): Optional current form data for author payload override
  *   - variant (string): 'gfz' or 'icgem' XML variant; if null, variant follows $showGGMsProperties
- * @return array{payload: string, contentType: string, extension: string, generator: string}
+ * @return array{payload: string, contentType: string, extension: string, generator: 'dataset-xml'|'icgem-xml'|'dataset-jsonld'}
  *
  * @throws InvalidArgumentException When the requested format or variant is unsupported.
  * @throws RuntimeException When payload generation produces an empty document.
