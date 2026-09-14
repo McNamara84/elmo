@@ -6,26 +6,30 @@ namespace Tests;
 
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\Attributes\DataProvider;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunTestsInSeparateProcesses;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
-
-if (!defined('PHPUNIT_RUNNING')) {
-    define('PHPUNIT_RUNNING', true);
-}
 
 require_once __DIR__ . '/../includes/send_file_helper.php';
 
 /**
  * Unit tests for generateFile and generateICGEMFile routing logic and file generation behavior.
  *
+ * Isolated from other test classes so the generateDatasetPayloadByResourceId()
+ * mock is not shadowed by save_to_db_helper.php (loaded by download tests).
+ *
  * Tests the three core scenarios:
  * 1. Non-GEM: normal file generation, no ELMO-GEM additions, no ICGEM generation
  * 2. GEM + DOI: ICGEM file only, no Data Services mail or file
  * 3. GEM + no DOI: both Data Services file (with ELMO-GEM additions) and ICGEM file
  */
+#[RunTestsInSeparateProcesses]
+#[PreserveGlobalState(false)]
 #[CoversFunction('generateFile')]
 #[CoversFunction('generateICGEMFile')]
 #[CoversFunction('resolveFileGenerationSettings')]
+#[CoversFunction('markDataCiteEnvelopeAsSubmitted')]
 final class SendFileHelperFileGenerationTest extends TestCase
 {
     /**
@@ -35,14 +39,14 @@ final class SendFileHelperFileGenerationTest extends TestCase
         'payload' => '<?xml version="1.0"?><resource xmlns="http://datacite.org/schema/kernel-4"><title>Test Dataset</title><resourceType>Dataset</resourceType></resource>',
         'contentType' => 'application/xml',
         'extension' => 'xml',
-        'generator' => 'xml',
+        'generator' => 'dataset-xml',
     ];
 
     private const MOCK_ICGEM_PAYLOAD = [
         'payload' => '<?xml version="1.0"?><grav:envelope xmlns:grav="http://icgem.gfz.de/schema"><dace:resource xmlns:dace="http://datacite.org/schema/kernel-4"><title>Test Model</title><resourceType>Model</resourceType></dace:resource></grav:envelope>',
         'contentType' => 'application/xml',
         'extension' => 'xml',
-        'generator' => 'xml',
+        'generator' => 'icgem-xml',
     ];
 
     private const MOCK_RESEARCHER_CONFIRMATION = [
@@ -199,6 +203,8 @@ final class SendFileHelperFileGenerationTest extends TestCase
         $this->assertNotNull($result['payload']);
         $this->assertStringContainsString('Test Dataset', $result['payload']);
         $this->assertStringNotContainsString('gemAdditions', $result['payload']);
+        $this->assertStringContainsString('dateType="Submitted"', $result['payload']);
+        $this->assertStringContainsString(date('Y-m-d'), $result['payload']);
         $this->assertSame('Test Dataset', $result['researcherConfirmationData']['title']);
     }
 
@@ -242,6 +248,7 @@ final class SendFileHelperFileGenerationTest extends TestCase
         $this->assertStringContainsString('contributor', $result['payload']);
         $this->assertStringContainsString('contributors', $result['payload']);
         $this->assertStringContainsString('DataCurator', $result['payload']);
+        $this->assertStringContainsString('dateType="Submitted"', $result['payload']);
     }
 
     /**
