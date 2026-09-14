@@ -48,7 +48,7 @@ require_once __DIR__ . '/../includes/send_file_helper.php';
 #[CoversFunction('generateFile')]
 #[CoversFunction('generateICGEMFile')]
 #[CoversFunction('resolveFileGenerationSettings')]
-final class send_file_helperFileGenerationTest extends TestCase
+final class SendFileHelperFileGenerationTest extends TestCase
 {
     /**
      * Mock payload data returned by generateDatasetPayloadByResourceId.
