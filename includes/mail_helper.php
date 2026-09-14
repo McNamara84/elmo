@@ -15,7 +15,7 @@ require_once dirname(__DIR__) . '/vendor/phpmailer/phpmailer/src/PHPMailer.php';
 require_once dirname(__DIR__) . '/vendor/phpmailer/phpmailer/src/SMTP.php';
 
 if (!function_exists('resolveFileGenerationSettings')) {
-    require_once __DIR__ . '/SendFileHelper.php';
+    require_once __DIR__ . '/send_file_helper.php';
 }
 
 /**

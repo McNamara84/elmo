@@ -35,7 +35,7 @@ if (!class_exists('ICGEMController', false)) {
     ');
 }
 
-require_once __DIR__ . '/../includes/SendFileHelper.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 
 /**
  * Unit tests for generateFile and generateICGEMFile routing logic and file generation behavior.
@@ -48,7 +48,7 @@ require_once __DIR__ . '/../includes/SendFileHelper.php';
 #[CoversFunction('generateFile')]
 #[CoversFunction('generateICGEMFile')]
 #[CoversFunction('resolveFileGenerationSettings')]
-final class SendFileHelperFileGenerationTest extends TestCase
+final class send_file_helperFileGenerationTest extends TestCase
 {
     /**
      * Mock payload data returned by generateDatasetPayloadByResourceId.

@@ -10,7 +10,7 @@ use PHPUnit\Framework\TestCase;
 if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
 }
-require_once __DIR__ . '/../includes/SendFileHelper.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 require_once __DIR__ . '/../includes/mail_helper.php';
 
 #[CoversFunction('collectResearcherConfirmationDataFromXml')]
