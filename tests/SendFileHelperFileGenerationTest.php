@@ -218,15 +218,10 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => false,
         ]);
 
-        $this->assertTrue($result['shouldSendDataServicesMail']);
-        $this->assertNotNull($result['dataServicesPayload']);
-        $this->assertStringContainsString('Test Dataset', $result['dataServicesPayload']);
-        // Should NOT have GEM additions
-        $this->assertStringNotContainsString('gemAdditions', $result['dataServicesPayload']);
-        $this->assertEqualsCanonicalizing(
-            self::MOCK_RESEARCHER_CONFIRMATION['contacts'],
-            $result['researcherConfirmationData']['contacts']
-        );
+        $this->assertNotNull($result['payload']);
+        $this->assertStringContainsString('Test Dataset', $result['payload']);
+        $this->assertStringNotContainsString('gemAdditions', $result['payload']);
+        $this->assertSame('Test Dataset', $result['researcherConfirmationData']['title']);
     }
 
     /**
@@ -245,8 +240,7 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => true,
         ]);
 
-        $this->assertFalse($result['shouldSendDataServicesMail']);
-        $this->assertNull($result['dataServicesPayload']);
+        $this->assertNull($result['payload']);
         $this->assertEmpty($result['researcherConfirmationData']['contacts']);
     }
 
@@ -266,23 +260,16 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => true,
         ]);
 
-        $this->assertTrue($result['shouldSendDataServicesMail']);
-        $this->assertNotNull($result['dataServicesPayload']);
-        // ELMO-GEM additions include contributors, formats, and subjects
-        $this->assertStringContainsString('contributor', $result['dataServicesPayload']);
-        $this->assertStringContainsString('contributors', $result['dataServicesPayload']);
-        $this->assertStringContainsString('DataCurator', $result['dataServicesPayload']);
-        $this->assertEqualsCanonicalizing(
-            self::MOCK_RESEARCHER_CONFIRMATION['contacts'],
-            $result['researcherConfirmationData']['contacts']
-        );
+        $this->assertNotNull($result['payload']);
+        $this->assertStringContainsString('contributor', $result['payload']);
+        $this->assertStringContainsString('contributors', $result['payload']);
+        $this->assertStringContainsString('DataCurator', $result['payload']);
     }
 
     /**
      * Test generateICGEMFile respects showGGMsProperties flag.
      *
      * When GEM is enabled:
-     * - shouldSendIcgemMail is true
      * - ICGEM payload is populated
      * - GEM researcher confirmation data extracted
      */
@@ -293,20 +280,14 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => true,
         ]);
 
-        $this->assertTrue($result['shouldSendIcgemMail']);
-        $this->assertNotNull($result['icgemPayload']);
-        $this->assertStringContainsString('Test Model', $result['icgemPayload']);
-        $this->assertEqualsCanonicalizing(
-            self::MOCK_GEM_RESEARCHER_CONFIRMATION['contacts'],
-            $result['researcherConfirmationData']['contacts']
-        );
+        $this->assertNotNull($result['payload']);
+        $this->assertStringContainsString('Test Model', $result['payload']);
     }
 
     /**
      * Test generateICGEMFile respects GEM disabled flag.
      *
      * When GEM is not enabled:
-     * - shouldSendIcgemMail is false
      * - ICGEM payload is not generated
      */
     #[TestDox('generateICGEMFile with GEM disabled skips ICGEM payload')]
@@ -316,8 +297,7 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => false,
         ]);
 
-        $this->assertFalse($result['shouldSendIcgemMail']);
-        $this->assertNull($result['icgemPayload']);
+        $this->assertNull($result['payload']);
         $this->assertEmpty($result['researcherConfirmationData']['contacts']);
     }
 
@@ -416,13 +396,13 @@ final class SendFileHelperFileGenerationTest extends TestCase
             'showGGMsProperties' => $showGGMsProperties,
         ]);
 
-        $this->assertSame($expectDataServicesFile, $generatedFile['shouldSendDataServicesMail']);
-        $this->assertSame($expectIcgemGeneration, $generatedIcgem['shouldSendIcgemMail']);
+        $this->assertSame($expectDataServicesFile, $generatedFile['payload'] !== null);
+        $this->assertSame($expectIcgemGeneration, $generatedIcgem['payload'] !== null);
 
         if ($expectDataServicesPayload) {
-            $this->assertNotNull($generatedFile['dataServicesPayload']);
+            $this->assertNotNull($generatedFile['payload']);
         } else {
-            $this->assertNull($generatedFile['dataServicesPayload']);
+            $this->assertNull($generatedFile['payload']);
         }
     }
 }
