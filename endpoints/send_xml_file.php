@@ -31,8 +31,9 @@ global $SIMULATE_EMAIL;
 $resource_id = null;
 
 try {
+    // step 0: security
     validateRequestSecurity('submit', $_POST);
-
+    // validate the data URL if provided
     $dataUrl = isset($_POST['dataUrl']) ? trim((string) filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL)) : '';
     if ($dataUrl !== '') {
         if (!preg_match('~^(?:f|ht)tps?://~i', $dataUrl)) {
@@ -42,7 +43,7 @@ try {
             throw new RuntimeException('Invalid data URL provided');
         }
     }
-
+    // generate settings object that will be re-used by the functions below
     $settings = resolveFileGenerationSettings($_POST, [
         'showGGMsProperties' => (bool) $showGGMsProperties,
         'simulateEmail' => resolveFeatureToggle($SIMULATE_EMAIL ?? null, false),
@@ -52,7 +53,7 @@ try {
         'dataUrl' => $dataUrl,
         'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
     ]);
-
+    // step 1: save to the database
     try {
         $resource_id = saveALL($_POST);
     } catch (Throwable $e) {
@@ -66,18 +67,19 @@ try {
         ]);
         return;
     }
-
-    error_log('send_xml_file.php: All data saved successfully with Resource ID: ' . $resource_id);
-
+    // step 2: generate an XML file for the saved resource
     $generated = generateFile((int) $resource_id, $_POST, $settings);
+    // step 3: send the generated XML file to the designated submission address
     sendElmoMail($generated, generateEmailText($generated, $settings), $settings['xmlSubmitAddress'], $settings);
 
+    // ICGEM-only track: generate and save the file in ICGEM schema to the ICGEM email
     if ($settings['showGGMsProperties']) {
         $generatedICGEM = generateICGEMFile((int) $resource_id, $_POST, $settings);
         sendElmoMail($generatedICGEM, generateICGEMText($generatedICGEM, $settings), $settings['icgemSubmitAddress'], $settings);
         $generated['researcherConfirmationData'] = $generatedICGEM['researcherConfirmationData'];
     }
-
+    
+    // step 4: researcher confirmations 
     $researcherWarnings = [];
     try {
         $researcherSendResult = sendResearcherConfirmationEmails(
@@ -97,7 +99,8 @@ try {
         error_log($warningMessage);
         $researcherWarnings[] = $warningMessage;
     }
-
+    
+    // step 5: prepare the success message for the frontend
     $successMessage = empty($researcherWarnings)
         ? 'Backend reports: XML submission and confirmation emails sent successfully.'
         : 'Backend reports: XML submission sent to curators successfully. Some researcher confirmation emails could not be sent.';
@@ -111,6 +114,7 @@ try {
         'simulated' => (bool) $settings['simulateEmail'],
         'researcher_warnings' => $researcherWarnings,
     ]);
+// catching error for the whole process
 } catch (Throwable $e) {
     error_log('send_xml_file.php: ' . $e->getMessage());
 
