@@ -95,19 +95,17 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
             'contacts' => [],
             'invalidContacts' => [],
         ],
-        'shouldSendDataServicesMail' => !$showGGMsProperties || $elmogemSendsDataServicesMail,
     ];
 
     if ($showGGMsProperties && !$elmogemSendsDataServicesMail) {
+        // If GGMs properties are shown but Data Services mail should not be sent,
+        $generated ['success'] = "earlyReturn";    // we return the generated array early.
         return $generated;
     }
 
-    if ($generated['shouldSendDataServicesMail']) {
+    try {
         $dataServicesOptions = ['postData' => $postData];
-        if ($showGGMsProperties) {
-            $dataServicesOptions['variant'] = 'gfz';
-        }
-
+        $dataServicesOptions['variant'] = 'gfz';
         $payloadData = generateDatasetPayloadByResourceId($resourceId, $dataServicesOptions);
         $xmlContent = $payloadData['payload'];
 
@@ -121,6 +119,7 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
             $xmlContent = $datasetController->markDataCiteEnvelopeAsSubmitted($xmlContent, date('Y-m-d'));
         }
 
+        // apply ELMO-GEM additions to the DataCite XML if needed
         if ($showGGMsProperties) {
             $xmlContent = applyElmoGemAdditionsToDataciteXml($xmlContent, true, true);
         }
@@ -133,6 +132,11 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
             'generator' => $payloadData['generator'],
         ];
         $generated['researcherConfirmationData'] = collectResearcherConfirmationDataFromXml($generated['dataServicesPayload']);
+        $generated['success'] = true;
+    }
+    catch (\Exception $e) {
+        $generated['success'] = false;
+        error_log('SUBMIT error in generateFile: ' . $e->getMessage());
     }
 
     return $generated;
