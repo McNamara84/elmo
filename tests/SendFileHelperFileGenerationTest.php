@@ -9,30 +9,8 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
-// Define PHPUNIT_RUNNING to prevent real controller initialization
 if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
-}
-
-// Mock controllers in global namespace before any includes
-if (!class_exists('DatasetController', false)) {
-    eval('
-        class DatasetController {
-            public function markDataCiteEnvelopeAsSubmitted(string $xmlContent, string $date): string {
-                return str_replace("</dataset>", "<submitted>" . $date . "</submitted></dataset>", $xmlContent);
-            }
-        }
-    ');
-}
-
-if (!class_exists('ICGEMController', false)) {
-    eval('
-        class ICGEMController {
-            public function createICGEMxml(int $resourceId): string {
-                return "<?xml version=\"1.0\"?><grav:envelope><resource><title>Test Model</title></resource></grav:envelope>";
-            }
-        }
-    ');
 }
 
 require_once __DIR__ . '/../includes/send_file_helper.php';
