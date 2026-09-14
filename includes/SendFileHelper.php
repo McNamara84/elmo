@@ -52,66 +52,199 @@ function createAndAttachXmlFile($mail, string $xmlContent, int $resourceId, arra
 }
 
 /**
- * Resolve the shared ELMO-GEM routing toggle inputs.
+ * Shared submit objects.
+ *
+ * settings: routing and request fields, resolved once.
+ * generated: XML package for one mail track (Data Services or ICGEM).
  *
  * @param array<string, mixed> $postData
- * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
- * @return array{showGGMsProperties: bool, elmogemSendsDataServicesMail: bool}
+ * @param array<string, mixed> $settings
+ * @return array<string, mixed>
  */
 function resolveFileGenerationSettings(array $postData, array $settings = []): array
 {
     $showGGMsProperties = (bool) ($settings['showGGMsProperties'] ?? false);
+    $doi = trim((string) ($settings['doi'] ?? $postData['doi'] ?? ''));
 
-    return [
-        'showGGMsProperties' => $showGGMsProperties,
-        'elmogemSendsDataServicesMail' => (bool) ($settings['elmogemSendsDataServicesMail']
-            ?? (!$showGGMsProperties || trim((string) ($postData['doi'] ?? '')) === '')),
-    ];
+    $settings['showGGMsProperties'] = $showGGMsProperties;
+    $settings['doi'] = $doi;
+    $settings['elmogemSendsDataServicesMail'] = (bool) ($settings['elmogemSendsDataServicesMail']
+        ?? (!$showGGMsProperties || $doi === ''));
+    $settings['simulateEmail'] = (bool) ($settings['simulateEmail'] ?? false);
+
+    return $settings;
 }
 
 /**
- * Prepare the Data Services payload required by the submit workflow.
- *
- * @param array<string, mixed> $postData
- * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
  * @return array{
- *   dataServicesPayload: ?string,
- *   dataServicesPayloadData: ?array{payload: string, contentType: string, extension: string, generator: string},
+ *   resourceId: int,
+ *   payload: ?string,
+ *   filename: ?string,
  *   researcherConfirmationData: array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>},
- *   shouldSendDataServicesMail: bool
+ *   attachments: array<int, array{filename: string, content?: string, path?: string}>
  * }
  */
-function generateFile(int $resourceId, array $postData, array $settings = []): array
+function emptyGeneratedFile(int $resourceId): array
 {
-    $resolvedSettings = resolveFileGenerationSettings($postData, $settings);
-    $showGGMsProperties = $resolvedSettings['showGGMsProperties'];
-    $elmogemSendsDataServicesMail = $resolvedSettings['elmogemSendsDataServicesMail'];
-
-    $generated = [
-        'dataServicesPayload' => null,
-        'dataServicesPayloadData' => null,
+    return [
+        'resourceId' => $resourceId,
+        'payload' => null,
+        'filename' => null,
         'researcherConfirmationData' => [
             'title' => '',
             'contacts' => [],
             'invalidContacts' => [],
         ],
+        'attachments' => [],
+    ];
+}
+
+/**
+ * Optional data-description upload for the Data Services mail.
+ *
+ * @return array<int, array{filename: string, path: string}>
+ *
+ * @throws RuntimeException When the upload is the wrong type or too large.
+ */
+function collectDataDescriptionAttachments(int $resourceId): array
+{
+    if (!isset($_FILES['dataDescription']) || $_FILES['dataDescription']['error'] !== UPLOAD_ERR_OK) {
+        return [];
+    }
+
+    $uploadedFile = $_FILES['dataDescription'];
+    $fileType = mime_content_type($uploadedFile['tmp_name']);
+    $allowedTypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     ];
 
-    if ($showGGMsProperties && !$elmogemSendsDataServicesMail) {
-        // If GGMs properties are shown but Data Services mail should not be sent,
-        $generated ['success'] = "earlyReturn";    // we return the generated array early.
+    if (!in_array($fileType, $allowedTypes, true)) {
+        throw new RuntimeException('Invalid file type. Only PDF, DOC, and DOCX files are allowed.');
+    }
+    if ($uploadedFile['size'] > 10 * 1024 * 1024) {
+        throw new RuntimeException('File size exceeds maximum limit of 10MB.');
+    }
+
+    $fileExtension = strtolower(pathinfo($uploadedFile['name'], PATHINFO_EXTENSION));
+
+    return [[
+        'filename' => 'data_description_' . $resourceId . '.' . $fileExtension,
+        'path' => $uploadedFile['tmp_name'],
+    ]];
+}
+
+/**
+ * Extract title and unique researcher contacts from Data Services XML.
+ *
+ * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>}
+ */
+function collectResearcherConfirmationDataFromXml(string $xmlContent): array
+{
+    $title = '';
+    $contacts = [];
+    $invalidContacts = [];
+    $seen = [];
+
+    if (trim($xmlContent) === '') {
+        error_log('Researcher confirmation: XML content is empty.');
+        return [
+            'title' => $title,
+            'contacts' => $contacts,
+            'invalidContacts' => $invalidContacts,
+        ];
+    }
+
+    try {
+        $xml = new SimpleXMLElement($xmlContent);
+
+        $titleNodes = $xml->xpath('//*[local-name()="title"]');
+        if (!empty($titleNodes)) {
+            $title = trim((string) $titleNodes[0]);
+        }
+
+        $pointOfContactNodes = $xml->xpath('//*[local-name()="pointOfContact"]');
+
+        foreach ($pointOfContactNodes ?: [] as $pointOfContactNode) {
+            $nameNodes = $pointOfContactNode->xpath('.//*[local-name()="individualName"]//*[local-name()="CharacterString"]');
+            $emailNodes = $pointOfContactNode->xpath('.//*[local-name()="electronicMailAddress"]//*[local-name()="CharacterString"]');
+
+            $fullName = '';
+            $email = '';
+
+            if (!empty($nameNodes)) {
+                $fullName = trim((string) $nameNodes[0]);
+            }
+            if (!empty($emailNodes)) {
+                $email = trim((string) $emailNodes[0]);
+            }
+            if ($fullName === '') {
+                $fullName = 'researcher';
+            }
+            if (strpos($fullName, ',') !== false) {
+                $nameParts = array_map('trim', explode(',', $fullName, 2));
+                $fullName = trim(($nameParts[1] ?? '') . ' ' . $nameParts[0]);
+            }
+
+            if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $invalidContacts[] = [
+                    'fullName' => $fullName,
+                    'email' => $email === '' ? '(empty)' : $email,
+                ];
+                continue;
+            }
+
+            $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
+            if (isset($seen[$key])) {
+                continue;
+            }
+
+            $seen[$key] = true;
+            $contacts[] = [
+                'fullName' => $fullName,
+                'email' => $email,
+            ];
+        }
+
+        error_log('Researcher confirmation: Extracted ' . count($contacts) . ' contact(s) from XML.');
+    } catch (Exception $e) {
+        error_log('Researcher confirmation: Failed to parse XML. ' . $e->getMessage());
+    }
+
+    return [
+        'title' => $title,
+        'contacts' => $contacts,
+        'invalidContacts' => $invalidContacts,
+    ];
+}
+
+/**
+ * Prepare the Data Services XML package.
+ *
+ * @param array<string, mixed> $postData
+ * @param array<string, mixed> $settings
+ * @return array<string, mixed>
+ *
+ * @throws RuntimeException When XML generation fails or the payload is empty.
+ */
+function generateFile(int $resourceId, array $postData, array $settings = []): array
+{
+    $settings = resolveFileGenerationSettings($postData, $settings);
+    $generated = emptyGeneratedFile($resourceId);
+
+    if (!$settings['elmogemSendsDataServicesMail']) {
         return $generated;
     }
 
     try {
-        $dataServicesOptions = ['postData' => $postData];
-        $dataServicesOptions['variant'] = 'gfz';
-        $payloadData = generateDatasetPayloadByResourceId($resourceId, $dataServicesOptions);
+        $payloadData = generateDatasetPayloadByResourceId($resourceId, [
+            'postData' => $postData,
+            'variant' => 'gfz',
+        ]);
         $xmlContent = $payloadData['payload'];
 
         if ($payloadData['generator'] === 'dataset-xml') {
-            // Only require real controller if not already defined (e.g., via mock in tests)
-            // Use false to prevent autoloader from loading real class
             if (!class_exists('DatasetController', false)) {
                 require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
             }
@@ -119,77 +252,62 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
             $xmlContent = $datasetController->markDataCiteEnvelopeAsSubmitted($xmlContent, date('Y-m-d'));
         }
 
-        // apply ELMO-GEM additions to the DataCite XML if needed
-        if ($showGGMsProperties) {
+        if ($settings['showGGMsProperties']) {
             $xmlContent = applyElmoGemAdditionsToDataciteXml($xmlContent, true, true);
         }
 
-        $generated['dataServicesPayload'] = $xmlContent;
-        $generated['dataServicesPayloadData'] = [
-            'payload' => $xmlContent,
-            'contentType' => $payloadData['contentType'],
-            'extension' => $payloadData['extension'],
-            'generator' => $payloadData['generator'],
-        ];
-        $generated['researcherConfirmationData'] = collectResearcherConfirmationDataFromXml($generated['dataServicesPayload']);
-        $generated['success'] = true;
-    }
-    catch (\Exception $e) {
-        $generated['success'] = false;
-        error_log('SUBMIT error in generateFile: ' . $e->getMessage());
-    }
+        if (trim((string) $xmlContent) === '') {
+            throw new RuntimeException('Generated XML payload is empty.');
+        }
 
-    return $generated;
+        $generated['payload'] = $xmlContent;
+        $generated['filename'] = buildXmlAttachmentFilename($resourceId, $postData);
+        $generated['researcherConfirmationData'] = collectResearcherConfirmationDataFromXml($xmlContent);
+        $generated['attachments'] = collectDataDescriptionAttachments($resourceId);
+
+        return $generated;
+    } catch (Throwable $e) {
+        throw new RuntimeException('generateFile: ' . $e->getMessage(), 0, $e);
+    }
 }
 
 /**
- * Prepare the ICGEM payload for ELMO-GEM submissions.
+ * Prepare the ICGEM XML package.
  *
  * @param array<string, mixed> $postData
- * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
- * @return array{
- *   icgemPayload: ?string,
- *   icgemPayloadData: ?array{payload: string, contentType: string, extension: string, generator: string},
- *   researcherConfirmationData: array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>},
- *   shouldSendIcgemMail: bool
- * }
+ * @param array<string, mixed> $settings
+ * @return array<string, mixed>
+ *
+ * @throws RuntimeException When ICGEM XML generation fails or the payload is empty.
  */
 function generateICGEMFile(int $resourceId, array $postData, array $settings = []): array
 {
-    $resolvedSettings = resolveFileGenerationSettings($postData, $settings);
-    $showGGMsProperties = $resolvedSettings['showGGMsProperties'];
+    $settings = resolveFileGenerationSettings($postData, $settings);
+    $generated = emptyGeneratedFile($resourceId);
 
-    $generated = [
-        'icgemPayload' => null,
-        'icgemPayloadData' => null,
-        'researcherConfirmationData' => [
-            'title' => '',
-            'contacts' => [],
-            'invalidContacts' => [],
-        ],
-        'shouldSendIcgemMail' => $showGGMsProperties,
-    ];
-
-    if (!$showGGMsProperties) {
+    if (!$settings['showGGMsProperties']) {
         return $generated;
     }
 
-    $payloadData = generateDatasetPayloadByResourceId($resourceId, [
-        'postData' => $postData,
-        'variant' => 'icgem',
-    ]);
-    $xmlContent = applyElmoGemAdditionsToDataciteXml($payloadData['payload'], true, false);
+    try {
+        $payloadData = generateDatasetPayloadByResourceId($resourceId, [
+            'postData' => $postData,
+            'variant' => 'icgem',
+        ]);
+        $xmlContent = applyElmoGemAdditionsToDataciteXml($payloadData['payload'], true, false);
 
-    $generated['icgemPayload'] = $xmlContent;
-    $generated['icgemPayloadData'] = [
-        'payload' => $xmlContent,
-        'contentType' => $payloadData['contentType'],
-        'extension' => $payloadData['extension'],
-        'generator' => $payloadData['generator'],
-    ];
-    $generated['researcherConfirmationData'] = collectGGMsResearcherConfirmationDataFromXml($xmlContent);
+        if (trim((string) $xmlContent) === '') {
+            throw new RuntimeException('Generated ICGEM XML payload is empty.');
+        }
 
-    return $generated;
+        $generated['payload'] = $xmlContent;
+        $generated['filename'] = buildXmlAttachmentFilename($resourceId, $postData);
+        $generated['researcherConfirmationData'] = collectGGMsResearcherConfirmationDataFromXml($xmlContent);
+
+        return $generated;
+    } catch (Throwable $e) {
+        throw new RuntimeException('generateICGEMFile: ' . $e->getMessage(), 0, $e);
+    }
 }
 
 /**
