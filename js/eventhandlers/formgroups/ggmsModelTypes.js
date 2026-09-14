@@ -1,3 +1,5 @@
+import { visibilityOFF, visibilityON } from '../functions.js';
+
 $(document).ready(function() {
     // VISIBILITY HANDLING
     // First, the whole form group and the contents
@@ -11,8 +13,10 @@ $(document).ready(function() {
 
         // Check if a valid model type is selected.
         // This covers null, undefined, and empty strings ''.
-        if (modelType && modelType.toLowerCase() !== 'choose...' && modelType.toLowerCase() !== 'simulated') {
-            // If a valid model type is selected (not 'Choose...' or 'Simulated'), show the card and enable inputs.
+        const modelTypeLower = (modelType || '').toLowerCase();
+        const isSpecialType = modelTypeLower === 'altimetry-derived';
+        if (modelType && modelTypeLower !== 'choose...' && modelTypeLower !== 'simulated' && !isSpecialType) {
+            // If a valid model type is selected (not 'Choose...', 'Simulated', or altimetry-derived), show the card and enable inputs.
             visibilityON(modelSpecificCard);
         } else {
             // Otherwise, hide the card and disable inputs inside.
@@ -102,54 +106,43 @@ $(document).ready(function() {
     // Initial check to set the correct visibility on page load
     toggleDensityInputs();
 
-    // TEMPORAL FREQUENCY CHECKBOX AND CONTENT HANDLING
+    // RELEASE FREQUENCY CHECKBOX AND CONTENT HANDLING
     /**
-     * Handles the mutual exclusivity between predefined frequency selection and custom frequency input.
-     * Shows/hides and validates the custom input based on checkbox state.
+     * Handles mutual exclusivity between predefined release-frequency selection
+     * and the custom days input. Shows/hides and validates based on checkbox state.
      */
-    function setupTemporalFrequencyInputs() {
-        // Cache jQuery selectors for better performance
+    function setupReleaseFrequencyInputs() {
         const $customFrequencyCheckbox = $('#checkbox-custom-frequency');
         const $customFrequencyContainer = $('#custom-frequency-container');
         const $customFrequencyInput = $('#input-temporal-frequency');
-        const $predefinedFrequencySelect = $('#select-temporal-frequency-predef');
-        
-        /**
-         * Toggles visibility of custom input based on checkbox state
-         */
+        const $releaseFrequencySelect = $('#select-release-frequency');
+
         function toggleCustomFrequencyInput() {
             if ($customFrequencyCheckbox.is(':checked')) {
-                // Enable custom input, disable dropdown
                 visibilityON($customFrequencyContainer);
-                $predefinedFrequencySelect.prop('disabled', true).val('');
-                $predefinedFrequencySelect.removeClass('is-valid is-invalid');
+                $releaseFrequencySelect.prop('disabled', true).val('');
+                $releaseFrequencySelect.removeClass('is-valid is-invalid');
                 $customFrequencyContainer.addClass('required');
                 $customFrequencyInput.focus();
             } else {
-                // Disable custom input, enable dropdown
                 visibilityOFF($customFrequencyContainer);
                 $customFrequencyInput.val('').removeClass('is-valid is-invalid');
-                $predefinedFrequencySelect.prop('disabled', false);
-                
-                // Remove any validation messages
+                $releaseFrequencySelect.prop('disabled', false);
                 $customFrequencyContainer.find('.invalid-feedback').remove();
             }
         }
-        
-        // Event handlers
+
         $customFrequencyCheckbox.on('change', toggleCustomFrequencyInput);
-        $predefinedFrequencySelect.on('change', function() {
+        $releaseFrequencySelect.on('change', function() {
             if ($(this).val()) {
                 $customFrequencyCheckbox.prop('checked', false);
                 toggleCustomFrequencyInput();
             }
         });
-        
-        // Initialize state
+
         toggleCustomFrequencyInput();
-    }  
-    // Initialize the temporal frequency functionality
-    setupTemporalFrequencyInputs();
+    }
+    setupReleaseFrequencyInputs();
 
     // TIME VARIABLE CHECKBOX HANDLING
     const timeVariableCheckbox = document.getElementById('checkbox-time-variable');

@@ -7,7 +7,10 @@ describe('ggmsModelTypes.js', () => {
     beforeEach(() => {
         // Load jQuery
         $ = require('jquery');
-                // Define helper functions that are used in ggmsModelTypes.js
+        global.$ = $;
+        global.jQuery = $;
+
+        // Define helper functions that are used in ggmsModelTypes.js
         window.visibilityON = function(element) {
             element.removeClass('d-none');
             element.attr('aria-hidden', 'false');
@@ -51,21 +54,21 @@ describe('ggmsModelTypes.js', () => {
                         <h5 class="mb-3">Temporal models special variables</h5>
                         <hr>
                         <div class="row mb-3">
-                            <div class="col-sm-5 col-lg-5 p-1">
+                            <div class="col-sm-2 col-lg-2 p-1">
                                 <div class="form-floating mb-1">
-                                    <select class="form-select" id="select-temporal-frequency-predef" name="temporalFrequencyPredef[]">
+                                    <select class="form-select" id="select-release-frequency" name="releaseFrequency">
                                         <option selected value=""></option>
                                         <option value="monthly">Monthly</option>
                                     </select>
-                                    <label for="select-temporal-frequency-predef">Release frequency / temporal resolution</label>
+                                    <label for="select-release-frequency">Release frequency</label>
                                 </div>
                                 <div class="form-check">
                                     <input class="form-check-input no-validation-style" type="checkbox" id="checkbox-custom-frequency">
-                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom frequency value</label>
+                                    <label class="form-check-label" for="checkbox-custom-frequency">Use custom release frequency</label>
                                 </div>
                                 <div class="form-floating mt-1 d-none" id="custom-frequency-container">
-                                    <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency[]">
-                                    <label for="input-temporal-frequency">Custom frequency (days)</label>
+                                    <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency">
+                                    <label for="input-temporal-frequency">Custom release frequency (days)</label>
                                 </div>
                             </div>
                         </div>
@@ -96,18 +99,24 @@ describe('ggmsModelTypes.js', () => {
         const scriptPath = path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsModelTypes.js');
         let scriptContent = fs.readFileSync(scriptPath, 'utf8');
 
-        // Strip the $(document).ready() wrapper to ensure the code runs synchronously in the test.
         scriptContent = scriptContent
+            .replace(
+                "import { visibilityOFF, visibilityON } from '../functions.js';",
+                "const { visibilityOFF, visibilityON } = require('../../js/eventhandlers/functions.js');"
+            )
             .replace('$(document).ready(function() {', '')
-            .replace(/}\);?\s*$/, ''); // Removes the final }); or });
-        
-        // Use a function constructor to scope the script and pass jQuery
-        new Function('$', scriptContent)($);
+            .replace(/}\);?\s*$/, '');
+
+        new Function('$', 'require', scriptContent)($, require);
     });
 
     afterEach(() => {
         // Clean up the DOM
         document.body.innerHTML = '';
+        delete global.$;
+        delete global.jQuery;
+        delete window.$;
+        delete window.jQuery;
         // Reset modules to ensure clean state for each test
         jest.resetModules();
     });
@@ -159,40 +168,40 @@ describe('ggmsModelTypes.js', () => {
         });
     });
 
-    describe('Custom Temporal Frequency', () => {
+    describe('Custom Release Frequency', () => {
         test('should show custom input and disable dropdown when checkbox is checked', () => {
             const customCheckbox = $('#checkbox-custom-frequency');
             const customContainer = $('#custom-frequency-container');
-            const predefinedSelect = $('#select-temporal-frequency-predef');
+            const releaseFrequencySelect = $('#select-release-frequency');
 
             // Initial state: checkbox is unchecked
             expect(customContainer.hasClass('d-none')).toBe(true);
-            expect(predefinedSelect.prop('disabled')).toBe(false);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(false);
 
             // Action: check the box
             customCheckbox.prop('checked', true).trigger('change');
 
             // Assert: custom input is visible, dropdown is disabled
             expect(customContainer.hasClass('d-none')).toBe(false);
-            expect(predefinedSelect.prop('disabled')).toBe(true);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(true);
         });
 
         test('should hide custom input and enable dropdown when checkbox is unchecked', () => {
             const customCheckbox = $('#checkbox-custom-frequency');
             const customContainer = $('#custom-frequency-container');
-            const predefinedSelect = $('#select-temporal-frequency-predef');
+            const releaseFrequencySelect = $('#select-release-frequency');
 
             // Setup: start with the checkbox checked
             customCheckbox.prop('checked', true).trigger('change');
             expect(customContainer.hasClass('d-none')).toBe(false);
-            expect(predefinedSelect.prop('disabled')).toBe(true);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(true);
 
             // Action: uncheck the box
             customCheckbox.prop('checked', false).trigger('change');
 
             // Assert: custom input is hidden, dropdown is enabled
             expect(customContainer.hasClass('d-none')).toBe(true);
-            expect(predefinedSelect.prop('disabled')).toBe(false);
+            expect(releaseFrequencySelect.prop('disabled')).toBe(false);
         });
     });
 });

@@ -35,7 +35,7 @@
             <hr>
             <div class="row mb-3">
                 <!-- Start date -->
-                <div class="col-sm-2 col-lg-2 p-1">
+                <div class="col-sm-6 col-md-3 col-lg-3 p-1">
                     <div class="input-group">
                         <div class="form-floating">
                             <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-temporal-start" name="temporalStart">
@@ -49,7 +49,7 @@
                     </div>
                 </div>
                 <!-- End date -->
-                <div class="col-sm-2 col-lg-2 p-1">
+                <div class="col-sm-6 col-md-3 col-lg-3 p-1">
                     <div class="input-group">
                         <div class="form-floating">
                             <input type="date" class="form-control input-with-help input-right-no-round-corners" id="input-temporal-end" name="temporalEnd">
@@ -62,11 +62,11 @@
                         </div>
                     </div>
                 </div>
-                <!-- Release frequency / temporal resolution -->
-                <div class="col-sm-4 col-lg-4 p-1">
+                <!-- Release frequency -->
+                <div class="col-sm-6 col-md-3 col-lg-2 p-1">
                     <div class="input-group">
                         <div class="form-floating mb-1">
-                            <select class="form-select input-with-help input-right-no-round-corners" id="select-temporal-frequency-predef" name="temporalFrequencyPredef">
+                            <select class="form-select input-with-help input-right-no-round-corners" id="select-release-frequency" name="releaseFrequency">
                                 <option selected value=""></option>
                                 <option value="daily">Daily</option>
                                 <option value="weekly">Weekly</option>
@@ -74,33 +74,33 @@
                                 <option value="quarterly">Quarterly</option>
                                 <option value="yearly">Yearly</option>
                             </select>
-                            <label for="select-temporal-frequency-predef">
-                                Release frequency / temporal resolution
+                            <label for="select-release-frequency">
+                                Release frequency
                             </label>
                         </div>
-                        <div class="input-group-append">
+                        <div class="input-group-append align-items-start">
                             <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-temporal-release-frequency" aria-hidden="true"></i></span>
                         </div>
                     </div>
                     <div class="form-check">
                         <input class="form-check-input no-validation-style" type="checkbox" id="checkbox-custom-frequency">
                         <label class="form-check-label" for="checkbox-custom-frequency">
-                            Use custom frequency value
+                            Use custom release frequency
                         </label>
                     </div>
                     <div class="form-floating mt-1 d-none" id="custom-frequency-container">
                         <input type="text" class="form-control" id="input-temporal-frequency" name="temporalFrequency" placeholder="Enter a numeric value"
                         pattern="^\d+$">
                         <label for="input-temporal-frequency">
-                            Custom frequency (days)
+                            Custom release frequency (days)
                         </label>
                         <div class="invalid-feedback" data-translate="general.numericTemporalResolutionInvalid">
-                            Please enter a valid temporal resolution. Only numbers are allowed.
+                            Please enter a valid release frequency. Only numbers are allowed.
                         </div>
                     </div>
                 </div>
                 <!-- Generating institution -->
-                <div class="col-sm-2 col-lg-2 p-1">
+                <div class="col-sm-3 col-lg-2 p-1">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="input-temporal-institution" name="temporalInstitution"
                             autocomplete="off">
@@ -109,7 +109,7 @@
                         </label>
                     </div>
                 </div>
-                <div class="col-sm-2 col-lg-2 p-1">
+                <div class="col-sm-3 col-lg-2 p-1">
                     <div class="form-floating">
                         <input type="text" class="form-control" id="input-release-number" name="releaseNumber"
                             autocomplete="off">

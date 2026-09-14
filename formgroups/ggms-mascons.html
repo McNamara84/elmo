@@ -1,0 +1,245 @@
+<div class="card mb-2 d-none" aria-hidden="true">
+	<div class="card-header">
+		<b>MASCON properties</b>
+		<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-properties" aria-hidden="true"></i>
+	</div>
+	<div class="card-body">
+		<div id="group-ggmsmascons">
+			<input type="hidden" id="mascons-payload" name="masconsPayload" value="null">
+			<div class="row">
+				<!-- Shape of MASCON -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-select form-control input-with-help input-right-no-round-corners required-on-submit" id="input-mascon-shape" name="mascon_shape">
+								<option value="" selected>Choose...</option>
+								<option value="Equal area">Equal area</option>
+								<option value="Irregular shapes">Irregular shapes</option>
+								<option value="Other">Other</option>
+							</select>
+							<label for="input-mascon-shape">Shape of MASCON</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-shape" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Native resolution -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-spatial-resolution" name="mascon_spatial_resolution">
+							<label for="input-mascon-spatial-resolution">Native resolution (in degrees)</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Product resampled resolution -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-product-resolution" name="mascon_product_resolution">
+							<label for="input-mascon-product-resolution">Product resolution (in degrees)</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Mascon count -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="number" min="0" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-count" name="mascon_count">
+							<label for="input-mascon-count">Mascon count</label>
+							<div class="invalid-feedback">Please provide mascon count as an integer above 0.</div>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-count" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="row mt-2">
+				<!-- Land mask -->
+				<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-land-mask-switch" name="land_mask_switch" required>
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-land-mask-switch">Land Mask</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-land-mask" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>					
+				</div>
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-land-mask" name="land_mask">
+							<label for="input-land-mask">Land Mask details</label>
+							<div class="invalid-feedback">Please provide land Mask details or choose "Not given".</div>
+						</div>
+					</div>
+				</div>
+				<!-- Uncertainty -->
+				 	<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty-switch" name="mascon_uncertainty_switch" required>
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-uncertainty-switch">Uncertainty</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-uncertainty" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>					
+				</div>	
+					<!-- input field -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty" name="uncertainty">
+							<label for="input-mascon-uncertainty">Uncertainty details</label>
+							<div class="invalid-feedback">Please provide uncertainty or choose "Not given".</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Scale Factor -->
+				  	<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-scale-factor-switch" name="mascon_scale_factor_switch">
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-scale-factor-switch">Scale Factor</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-scale-factor" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>					
+				</div>
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-scale-factor" name="scale_factor">
+							<label for="input-mascon-scale-factor">Scale factor details</label>
+							<div class="invalid-feedback">Please provide scale factor or select "Not given".</div>
+						</div>
+					</div>
+				</div>
+				<!-- GAD -->
+				  	<!-- switch -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad-switch" name="mascon_gad_switch">
+							<option value="" selected>Choose...</option>
+							<option value="given">Given</option>
+							<option value="not_given">Not given</option>
+						</select>
+						<label for="input-mascon-gad-switch">GAD</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-gad" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>					
+				</div>
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad" name="mascon_gad">
+							<label for="input-mascon-gad">GAD <span class="text-danger">*</span></label>
+							<div class="invalid-feedback">Please provide GAD.</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion mt-2" id="accordion-mascon-background-models">
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button" type="button" data-bs-toggle="collapse"
+							data-bs-target="#collapse-mascon-background-models" aria-expanded="true"
+							aria-controls="collapse-mascon-background-models">
+							Background force models
+							<i class="bi bi-question-circle-fill ms-2" data-help-section-id="help-mascon-background-models" aria-hidden="true"></i>
+						</button>
+					</h2>
+					<div id="collapse-mascon-background-models" class="accordion-collapse collapse show"
+						data-bs-parent="#accordion-mascon-background-models">
+						<div class="accordion-body">
+							<div class="row" id="mascon-background-model-list">
+								<!-- One background model occupies half a row: type, name, add/remove -->
+								<div class="col-12 col-md-6 p-1" data-mascon-background-model>
+									<div class="row g-1 align-items-center">
+										<div class="col">
+											<div class="form-floating">
+												<select class="form-select form-control" id="input-mascon-background-model-type" name="mascon_background_model_type[]">
+													<option value="" selected>Choose...</option>
+													<option value="static_gravity_field">Static Gravity Field</option>
+													<option value="solid_earth_tides">Solid Earth Tides</option>
+													<option value="ocean_tides">Ocean Tides</option>
+													<option value="solid_pole_tide">Solid Pole Tide</option>
+													<option value="ocean_pole_tide">Ocean Pole Tide</option>
+													<option value="aod">AOD</option>
+													<option value="atmospheric_tides">Atmospheric Tides</option>
+													<option value="third_body_attractions">Third-Body attractions</option>
+													<option value="general_relativity">General relativity</option>
+													<option value="other">Other</option>
+												</select>
+												<label for="input-mascon-background-model-type">Background model type</label>
+											</div>
+										</div>
+										<div class="col">
+											<div class="form-floating">
+												<input type="text" class="form-control" id="input-mascon-background-model-name" name="mascon_background_model_name[]">
+												<label for="input-mascon-background-model-name">Background model name</label>
+												<div class="invalid-feedback">Please provide the name of the background force model.</div>
+											</div>
+										</div>
+										<div class="col-auto d-flex align-items-center">
+											<button type="button" class="btn btn-primary addMasconBackgroundModel add-button" id="button-mascon-background-model-add" aria-label="Add background model" style="width: 36px;">+</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>

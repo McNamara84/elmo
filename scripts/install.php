@@ -101,6 +101,12 @@ function dropTables($connection)
         'Resource_has_Static_Model_Properties',
         'Ellipsoidal_Parameters',
         'Resource_has_Ellipsoidal_Parameters',
+        'Altimetry_Derived_Gravity_Over_Oceans_Properties',
+        'Resource_has_Altimetry_Derived_Gravity_Over_Oceans_Properties',
+        'Altimetry_Derived_Properties',
+        'Resource_has_Altimetry_Derived_Properties',
+        'MASCON_Properties',
+        'Resource_has_MASCON_Properties',
         'Data_Sources',
         'Resource_has_Data_Sources',
         'GGM_Definition',
@@ -614,6 +620,7 @@ function createDatabaseStructure($connection): array
         "Temporal_Model_Properties" => "CREATE TABLE IF NOT EXISTS `Temporal_Model_Properties` (
     `temporal_model_property_id` INT NOT NULL AUTO_INCREMENT,
     `generating_institution` VARCHAR(300) NULL,
+    `release_frequency` VARCHAR(100) NULL,
     `temporal_resolution_days` INT NULL,
     `start_date` DATE NULL,
     `end_date` DATE NULL,
@@ -667,6 +674,71 @@ function createDatabaseStructure($connection): array
     FOREIGN KEY (`ellipsoidal_parameter_id`) REFERENCES `Ellipsoidal_Parameters`(`ellipsoidal_parameter_id`) ON DELETE CASCADE
         );",
 
+        "Altimetry_Derived_Properties" => "CREATE TABLE IF NOT EXISTS `Altimetry_Derived_Properties` (
+    `altimetry_derived_property_id` INT NOT NULL AUTO_INCREMENT,
+    `release_data_format` TEXT NULL,
+    `data_format` VARCHAR(50) NOT NULL DEFAULT 'NetCDF',
+    `reference_ellipsoid` VARCHAR(200) NULL,
+    `tide_system` VARCHAR(100) NULL DEFAULT 'NetCDF',
+    `spatial_resolution` TEXT NULL,
+    `spatial_coverage` TEXT NULL,
+    `dateStart` DATE NULL,
+    `dateEnd` DATE NULL,
+    `gravity_field_method` VARCHAR(200) NULL,
+    `calculation_method` VARCHAR(200) NULL,
+    PRIMARY KEY (`altimetry_derived_property_id`)
+        );",
+
+        "Resource_has_Altimetry_Derived_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Altimetry_Derived_Properties` (
+    `resource_has_altimetry_derived_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `altimetry_derived_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_altimetry_derived_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`altimetry_derived_property_id`) REFERENCES `Altimetry_Derived_Properties`(`altimetry_derived_property_id`) ON DELETE CASCADE
+        );",
+
+        "Altimetry_Derived_Gravity_Over_Oceans_Properties" => "CREATE TABLE IF NOT EXISTS `Altimetry_Derived_Gravity_Over_Oceans_Properties` (
+    `altimetry_derived_gravity_over_oceans_property_id` INT NOT NULL AUTO_INCREMENT,
+    `file_name` VARCHAR(500) NULL,
+    `spatial_resolution` TEXT NULL,
+    `spatial_coverage` TEXT NULL,
+    `calculation_method` TEXT NULL,
+    PRIMARY KEY (`altimetry_derived_gravity_over_oceans_property_id`)
+        );",
+
+        "Resource_has_Altimetry_Derived_Gravity_Over_Oceans_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_Altimetry_Derived_Gravity_Over_Oceans_Properties` (
+    `resource_has_altimetry_derived_gravity_over_oceans_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `altimetry_derived_gravity_over_oceans_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_altimetry_derived_gravity_over_oceans_properties_id`),
+    CONSTRAINT `fk_gra_resource` FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    CONSTRAINT `fk_gra_properties` FOREIGN KEY (`altimetry_derived_gravity_over_oceans_property_id`) REFERENCES `Altimetry_Derived_Gravity_Over_Oceans_Properties`(`altimetry_derived_gravity_over_oceans_property_id`) ON DELETE CASCADE
+        );",
+
+        "MASCON_Properties" => "CREATE TABLE IF NOT EXISTS `MASCON_Properties` (
+    `mascon_property_id` INT NOT NULL AUTO_INCREMENT,
+    `land_mascon` TEXT NULL,
+    `time_bound` TEXT NULL,
+    `data_ewh` TEXT NULL,
+    `uncertainty` TEXT NULL,
+    `scale_factor` TEXT NULL,
+    `gad` TEXT NULL,
+    `regularisation_method` TEXT NULL,
+    `shape` TEXT NULL,
+    `spatial_resolution` TEXT NULL,
+    PRIMARY KEY (`mascon_property_id`)
+        );",
+
+        "Resource_has_MASCON_Properties" => "CREATE TABLE IF NOT EXISTS `Resource_has_MASCON_Properties` (
+    `resource_has_mascon_properties_id` INT NOT NULL AUTO_INCREMENT,
+    `resource_id` INT NOT NULL,
+    `mascon_property_id` INT NOT NULL,
+    PRIMARY KEY (`resource_has_mascon_properties_id`),
+    FOREIGN KEY (`resource_id`) REFERENCES `Resource`(`resource_id`) ON DELETE CASCADE,
+    FOREIGN KEY (`mascon_property_id`) REFERENCES `MASCON_Properties`(`mascon_property_id`) ON DELETE CASCADE
+        );",
+
         "Data_Sources" => "CREATE TABLE IF NOT EXISTS `Data_Sources` (
     `data_source_id` INT NOT NULL AUTO_INCREMENT,
     `type` VARCHAR(100) NOT NULL,
@@ -708,6 +780,26 @@ function createDatabaseStructure($connection): array
                 'progress' => ($created / $total) * 100
             ];
         }
+    }
+
+    // `CREATE TABLE IF NOT EXISTS` does not evolve existing installations.
+    // Keep this additive migration next to the table definition so the new
+    // temporal release-frequency field is available after a schema update.
+    $releaseFrequencyColumn = $connection->query("SHOW COLUMNS FROM `Temporal_Model_Properties` LIKE 'release_frequency'");
+    if ($releaseFrequencyColumn === false) {
+        return [
+            'status' => 'error',
+            'message' => 'Unable to inspect Temporal_Model_Properties: ' . $connection->error,
+            'progress' => ($created / $total) * 100,
+        ];
+    }
+    if ($releaseFrequencyColumn->num_rows === 0
+        && !$connection->query("ALTER TABLE `Temporal_Model_Properties` ADD COLUMN `release_frequency` VARCHAR(100) NULL AFTER `generating_institution`")) {
+        return [
+            'status' => 'error',
+            'message' => 'Unable to add release_frequency: ' . $connection->error,
+            'progress' => ($created / $total) * 100,
+        ];
     }
 
     return [
@@ -859,17 +951,21 @@ function insertLookupData($connection)
         // ICGEM-related lookup insert
         "File_Format" => [
             ["name" => "icgem1.0", "description" => "icgem1.0 or ICGEM-format is a Linux /Unix ASCII-format for the representation of Earth Gravity Field models in terms of spherical harmonic coefficients"],
-            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"]
-        ],
+            ["name" => "icgem2.0", "description" => "icgem2.0 has been introduced to indicate time-limited validity periods of the time-varying coefficients"],
+            ["name" => "NetCDF", "description" => "NetCDF (Network Common Data Form) is a set of software libraries and machine-independent data formats that support the creation, access, and sharing of array-oriented scientific data"]
+            ],
         "Model_Type" => [
             ["name" => "Static", "description" => "Models of gravity field potential computed from the satellite-based gravity measurements and the spatial details of the gravity field (i.e. short wavelengths or high frequencies) are collected via terrestrial, airborne and shipborne gravity measurements and radar altimetry."],
             ["name" => "Temporal", "description" => "Models derived from input data of dedicated time periods, enabling to monitor the temporal changes in the gravity field."],
             ["name" => "Topographic", "description" => "Models represent the gravitational potential generated by the attraction of the Earth's topographic masses. Gravity from these models is computed based on very high-resolution digital elevation models which describe the shape of the Earth and model of mass densities inside the topography therefore, they are not based on real gravity measurements."],
+            ["name" => "Altimetry-derived", "description" => "Models derived from satellite radar altimetry data"],
             ["name" => "Simulated", "description" => "Models based on simulated data, not based on any measurements."]
         ],
         "Mathematical_Representation" => [
             ["name" => "Spherical harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of solid spherical harmonics, which are solutions to Laplace's equation in a spherical coordinate system. This representation is the most common for global gravity field models"],
-            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series expansion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."]
+            ["name" => "Ellipsoidal harmonics", "description" => "The gravitational potential is expressed as a series exsion in terms of ellipsoidal harmonics, which are solutions to Laplace's equation in an ellipsoidal coordinate system."],
+            ["name" => "Gridded dataset", "description" => "Gridded representation of a gravity-field product."],
+            ["name" => "MASCON", "description" => "Mass Concentration representation."]
         ],
 
     ];
