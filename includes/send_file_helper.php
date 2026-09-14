@@ -3,8 +3,9 @@
 /**
  * Submit-path XML payload helpers.
  *
- * File generation, DataCite GEM additions, and XML attachment filenames live
- * here. Mail transport and Data Services mail text live in mail_helper.php.
+ * File generation, DataCite GEM additions, Submitted-date stamping, and XML
+ * attachment filenames live here. Mail transport and Data Services mail text
+ * live in mail_helper.php.
  */
 
 /**
@@ -220,7 +221,122 @@ function collectResearcherConfirmationDataFromXml(string $xmlContent): array
 }
 
 /**
+ * Adds or updates the DataCite Submitted date in an already generated XML envelope.
+ *
+ * Normal exports intentionally do not call this function. It is used by the real
+ * submit flow after XML generation so saved drafts and API downloads are not
+ * marked as submitted.
+ *
+ * @param string $xml Raw DataCite XML or all-format envelope XML.
+ * @param string|null $submissionDate Date to write as YYYY-MM-DD; defaults to today.
+ * @return string XML with exactly one DataCite Submitted date per DataCite resource.
+ */
+function markDataCiteEnvelopeAsSubmitted(string $xml, ?string $submissionDate = null): string
+{
+    $submissionDate = $submissionDate ?: date('Y-m-d');
+
+    $dom = new DOMDocument();
+    $dom->formatOutput = true;
+    if (!$dom->loadXML($xml)) {
+        return $xml;
+    }
+
+    $ns = 'http://datacite.org/schema/kernel-4';
+    $xpath = new DOMXPath($dom);
+    $xpath->registerNamespace('dc', $ns);
+
+    $resources = $xpath->query('//dc:resource');
+    foreach ($resources as $resource) {
+        if (!$resource instanceof DOMElement) {
+            continue;
+        }
+
+        $dates = $xpath->query('dc:dates', $resource)->item(0);
+        if (!$dates instanceof DOMElement) {
+            $dates = $dom->createElementNS($ns, 'dates');
+            $insertBefore = findDataCiteDatesInsertBefore($xpath, $resource);
+            if ($insertBefore !== null) {
+                $resource->insertBefore($dates, $insertBefore);
+            } else {
+                $resource->appendChild($dates);
+            }
+        }
+
+        $submittedDate = null;
+        $duplicates = [];
+        $submittedDates = $xpath->query('dc:date[@dateType="Submitted"]', $dates);
+        foreach ($submittedDates as $dateNode) {
+            if (!$dateNode instanceof DOMElement) {
+                continue;
+            }
+            if ($submittedDate === null) {
+                $submittedDate = $dateNode;
+                continue;
+            }
+            $duplicates[] = $dateNode;
+        }
+
+        foreach ($duplicates as $duplicate) {
+            $duplicate->parentNode->removeChild($duplicate);
+        }
+
+        if (!$submittedDate instanceof DOMElement) {
+            $submittedDate = $dom->createElementNS($ns, 'date');
+            $submittedDate->setAttribute('dateType', 'Submitted');
+            $dates->appendChild($submittedDate);
+        }
+
+        while ($submittedDate->firstChild) {
+            $submittedDate->removeChild($submittedDate->firstChild);
+        }
+        $submittedDate->setAttribute('dateType', 'Submitted');
+        $submittedDate->appendChild($dom->createTextNode($submissionDate));
+    }
+
+    return $dom->saveXML();
+}
+
+/**
+ * Finds the first DataCite child that must follow <dates> in schema order.
+ *
+ * Copied from DatasetController so submit-path XML can be stamped without
+ * constructing a controller (and its mysqli connection).
+ *
+ * @param DOMXPath $xpath XPath configured with the DataCite namespace.
+ * @param DOMElement $resource DataCite resource element.
+ * @return DOMNode|null Node before which <dates> should be inserted.
+ */
+function findDataCiteDatesInsertBefore(DOMXPath $xpath, DOMElement $resource): ?DOMNode
+{
+    $followingDateElements = [
+        'language',
+        'alternateIdentifiers',
+        'relatedIdentifiers',
+        'sizes',
+        'formats',
+        'version',
+        'rightsList',
+        'descriptions',
+        'geoLocations',
+        'fundingReferences',
+        'relatedItems'
+    ];
+
+    foreach ($followingDateElements as $elementName) {
+        $node = $xpath->query("dc:{$elementName}", $resource)->item(0);
+        if ($node instanceof DOMNode) {
+            return $node;
+        }
+    }
+
+    return null;
+}
+
+/**
  * Prepare the Data Services XML package.
+ *
+ * Always requests the gfz variant, so generateDatasetPayloadByResourceId()
+ * returns generator dataset-xml. That payload is then marked Submitted.
  *
  * @param array<string, mixed> $postData
  * @param array<string, mixed> $settings
@@ -245,11 +361,7 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
         $xmlContent = $payloadData['payload'];
 
         if ($payloadData['generator'] === 'dataset-xml') {
-            if (!class_exists('DatasetController', false)) {
-                require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-            }
-            $datasetController = new DatasetController();
-            $xmlContent = $datasetController->markDataCiteEnvelopeAsSubmitted($xmlContent, date('Y-m-d'));
+            $xmlContent = markDataCiteEnvelopeAsSubmitted($xmlContent, date('Y-m-d'));
         }
 
         if ($settings['showGGMsProperties']) {
