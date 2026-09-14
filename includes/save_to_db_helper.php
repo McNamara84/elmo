@@ -43,13 +43,13 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
         $result = $callback(...$args);
 
         if ($result === false) {
-            error_log("[💿SAVE]: Save operation failed: " . $functionName . " returned false");
+            error_log("[SAVE]: Save operation failed: " . $functionName . " returned false");
             throw new Exception("Save operation failed: " . $functionName . " returned false");
         }
 
         return $result;
     } catch (Exception $e) {
-        error_log("[💿SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
+        error_log("[SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
         throw $e; // Re-throw so outer catch can handle it
     }
 }
@@ -71,9 +71,8 @@ function saveALL(array $postData): int {
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
-        error_log("[💿SAVE]:Starting save process in save_data.php");
         $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
-        error_log("[💿SAVE]:the id generated is " . $resource_id);
+        error_log("[SAVE]:the id generated is " . $resource_id);
         executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
         executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
         if ($showMslMode ?? false) {
@@ -113,14 +112,14 @@ function saveALL(array $postData): int {
 
         // Validate transaction commit
         if (!$connection->commit()) {
-            throw new Exception("Transaction commit failed - database returned false");
+            throw new Exception("[SAVE]: Transaction commit failed - database returned false");
         }
 
-        error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
+        error_log("[SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
         return $resource_id;
     } catch (Exception $e) {
         $connection->rollback();
-        throw $e;
+        throw new Exception("[SAVE]: Transaction rolled back due to an error: " . $e->getMessage());
     }
 }
 
