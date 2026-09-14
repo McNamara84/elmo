@@ -291,8 +291,8 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, boo
  *
  * @param int $resourceId
  * @param array<string, mixed> $postData
- * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool} $settings
- * @param array<string, mixed> $context
+ * @param array{showGGMsProperties?: bool, elmogemSendsDataServicesMail?: bool, simulateEmail?: bool} $settings
+ * @param array{urgencyWeeks?: ?int, dataUrl?: string, dataServicesEmailSent?: bool} $context
  * @return array{
  *   generatedFile: array{
  *     icgemPayload: ?string,
@@ -314,7 +314,7 @@ function processGGMsIcgemSubmission(int $resourceId, array $postData, array $set
         return [
             'generatedFile' => $generatedFile,
             'icgemEmailSent' => false,
-            'simulated' => (bool) $context['simulateEmail'],
+            'simulated' => (bool) $settings['simulateEmail'],
         ];
     }
 
@@ -322,7 +322,7 @@ function processGGMsIcgemSubmission(int $resourceId, array $postData, array $set
         throw new Exception('Generated ICGEM XML payload is empty.');
     }
 
-    if ((bool) $context['simulateEmail']) {
+    if ((bool) $settings['simulateEmail']) {
         error_log('XML Submit: ICGEM Payload (SIMULATION):' . "\n" . $generatedFile['icgemPayload']);
         return [
             'generatedFile' => $generatedFile,
@@ -380,7 +380,15 @@ try {
         }
     }
 
-    $elmogemSendsDataServicesMail = !$showGGMsProperties || trim((string) ($_POST['doi'] ?? '')) === '';
+    // === BUILD CENTRALIZED SETTINGS OBJECT ===
+    include_once $projectRoot . '/includes/feature_toggles.php';
+    $resolvedFileSettings = resolveFileGenerationSettings(['doi' => trim((string) ($_POST['doi'] ?? ''))], []);
+
+    $settings = [
+        'showGGMsProperties' => (bool) $showGGMsProperties,
+        'elmogemSendsDataServicesMail' => $resolvedFileSettings['elmogemSendsDataServicesMail'],
+        'simulateEmail' => resolveFeatureToggle($SIMULATE_EMAIL ?? null, false),
+    ];
 
     try {
         $resource_id = saveALL($_POST);
@@ -398,20 +406,12 @@ try {
 
     error_log('send_xml_file.php: All data saved successfully with Resource ID: ' . $resource_id);
 
-    $generatedFile = generateFile((int) $resource_id, $_POST, [
-        'showGGMsProperties' => (bool) $showGGMsProperties,
-        'elmogemSendsDataServicesMail' => $elmogemSendsDataServicesMail,
-    ]);
+    // Generate file using centralized settings
+    $generatedFile = generateFile((int) $resource_id, $_POST, $settings);
     $researcherConfirmationData = $generatedFile['researcherConfirmationData'];
 
-    include_once $projectRoot . '/includes/feature_toggles.php';
-    $simulateEmail = resolveFeatureToggle($SIMULATE_EMAIL ?? null, false);
-
     try {
-        $fileGenerationSettings = [
-            'showGGMsProperties' => (bool) $showGGMsProperties,
-            'elmogemSendsDataServicesMail' => $elmogemSendsDataServicesMail,
-        ];
+        // Generate email using centralized settings
         $emailText = generateEmailText([
             'resourceId' => (int) $resource_id,
             'urgencyWeeks' => $urgencyWeeks,
@@ -420,9 +420,9 @@ try {
             'icgemSubmitAddress' => $icgemSubmitAddress,
             'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
             'doi' => trim((string) ($_POST['doi'] ?? '')),
-        ], $fileGenerationSettings);
+        ], $settings);
 
-        if (!$simulateEmail && ($generatedFile['shouldSendDataServicesMail'] || $showGGMsProperties)) {
+        if (!$settings['simulateEmail'] && ($generatedFile['shouldSendDataServicesMail'] || $settings['showGGMsProperties'])) {
             if (!testGfzSmtpConnectivity()) {
                 throw new Exception('GFZ SMTP Server nicht erreichbar. Siehe Logs für Details.');
             }
@@ -434,7 +434,7 @@ try {
                 throw new Exception('Generated XML payload is empty.');
             }
 
-            if ($simulateEmail) {
+            if ($settings['simulateEmail']) {
                 error_log('XML Submit: Simulation mode enabled - skipping Data Services SMTP send');
                 error_log('XML Submit: Data Services Payload (SIMULATION):' . "\n" . $generatedFile['dataServicesPayload']);
             } else {
@@ -481,7 +481,7 @@ try {
                         'fromName' => 'ELMO XML Submission System',
                         'replyTo' => ['address' => $smtpSender, 'name' => 'ELMO System'],
                         'attachments' => $attachments,
-                    ], $simulateEmail);
+                    ], $settings['simulateEmail']);
 
                     $dataServicesEmailSent = true;
                     error_log('XML Submit: ✓ Successfully sent metadata email to GFZ Data Services (Resource ID: ' . $resource_id . ')');
@@ -492,11 +492,10 @@ try {
             }
         }
 
-        if ($showGGMsProperties) {
+        if ($settings['showGGMsProperties']) {
             error_log("XML Submit: Attempting ICGEM registration (Resource ID: {$resource_id})");
             
-            $icgemResult = processGGMsIcgemSubmission((int) $resource_id, $_POST, $fileGenerationSettings, [
-                'simulateEmail' => $simulateEmail,
+            $icgemResult = processGGMsIcgemSubmission((int) $resource_id, $_POST, $settings, [
                 'urgencyWeeks' => $urgencyWeeks,
                 'dataUrl' => $dataUrl,
                 'dataServicesEmailSent' => $dataServicesEmailSent,
@@ -545,7 +544,7 @@ try {
             error_log("XML Submit: Attempting to send confirmation emails to " . count($researcherConfirmationData['contacts']) . " researcher contact(s) (Resource ID: {$resource_id})");
         }
         
-        $researcherSendResult = sendResearcherConfirmationEmails($researcherConfirmationData, $simulateEmail);
+        $researcherSendResult = sendResearcherConfirmationEmails($researcherConfirmationData, $settings['simulateEmail']);
 
         if ($researcherSendResult['sent'] > 0) {
             error_log("XML Submit: ✓ Researcher confirmation emails sent successfully ({$researcherSendResult['sent']} email(s), Resource ID: {$resource_id})");
