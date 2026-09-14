@@ -10,7 +10,8 @@ use PHPUnit\Framework\TestCase;
 if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
 }
-require_once __DIR__ . '/../endpoints/send_xml_file.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
+require_once __DIR__ . '/../includes/mail_helper.php';
 
 #[CoversFunction('collectResearcherConfirmationDataFromXml')]
 #[CoversFunction('sendResearcherConfirmationEmails')]
@@ -119,7 +120,7 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(1, $result['sent']);
         $this->assertSame([], $result['failed']);
@@ -140,7 +141,7 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(0, $result['sent']);
         $this->assertCount(1, $result['failed']);
