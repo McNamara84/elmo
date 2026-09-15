@@ -48,6 +48,9 @@ export default defineConfig({
         'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
       ],
+      testIgnore: [
+        '**/elmogem-specific/**',
+      ],
     },
   ],
 });

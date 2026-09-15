@@ -81,7 +81,7 @@ describe('ICGEM contact person import', () => {
     window.$ = $;
     window.jQuery = $;
     jest.resetModules();
-    icgemModule = require('../../js/mappingXmlToInputFields-icgem.js');
+    icgemModule = require('../../js/mappingXmlToInputFieldsIcgem.js');
   });
 
   afterEach(() => {

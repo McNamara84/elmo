@@ -399,15 +399,21 @@ test.describe('Contact Person Roundtrip (Issue #1046)', () => {
     await expect(page.locator('#input-uploadxml-file')).toBeEnabled();
     await expect(page.locator('#upload-spinner-overlay')).toHaveClass(/d-none/);
 
-    // Filter known CI-environment messages
+    // Filter known CI-environment messages (maps, favicon, other 503s).
+    // Thesaurus/ERNIE failures are real errors: vocab is reachable from CI.
     const realErrors = consoleErrors.filter(
-      (e) =>
-        !e.includes('favicon.ico') &&
-        !e.includes('google.maps') &&
-        !e.includes('installHook') &&
-        !e.includes('API key not found') &&
-        !e.includes('503') &&
-        !e.includes('thesauri availability'),
+      (e) => {
+        if (/thesaur/i.test(e)) {
+          return true;
+        }
+        return (
+          !e.includes('favicon.ico') &&
+          !e.includes('google.maps') &&
+          !e.includes('installHook') &&
+          !e.includes('API key not found') &&
+          !e.includes('503')
+        );
+      },
     );
     expect(realErrors, `Unexpected console errors: ${realErrors.join('\n')}`).toEqual([]);
   });

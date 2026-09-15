@@ -352,14 +352,49 @@ function populateIcgemModelTypes(data) {
 }
 
 /**
+ * Writes a satellite platform tag into a datasource Tagify (or the raw input)
+ * and flushes the hidden value so save POSTs the JSON, not only the UI chips.
+ * @param {HTMLInputElement|undefined} platformInput
+ * @param {Object} tag
+ */
+function applySatellitePlatformTag(platformInput, tag) {
+  if (platformInput && platformInput._tagify) {
+    platformInput._tagify.addTags([tag]);
+    if (typeof platformInput._tagify.update === 'function') {
+      platformInput._tagify.update();
+    } else if (typeof platformInput._tagify._updateHiddenField === 'function') {
+      platformInput._tagify._updateHiddenField();
+    }
+    return;
+  }
+  if (platformInput) {
+    $(platformInput).val(JSON.stringify([tag]));
+  }
+}
+
+/**
  * Populates the GGMsDataSources form rows.
  * Each data source entry becomes one form row; the datasource type 'change' event
  * is triggered so row visibility updates correctly.
+ *
+ * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
+ * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
+ *
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
  */
-function populateIcgemDataSources(data) {
+async function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
+
+  const needsSatelliteVocab = dataSources.some(
+    (ds) => ds.inputDataSourceType === 'Satellite' && ds.satelliteValueName
+  );
+  if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
+    const result = await window.waitForThesaurusVocabulary('platforms');
+    if (result !== 'loaded') {
+      throw new Error('GCMD platforms vocabulary not ready for satellite import');
+    }
+  }
 
   for (let i = 0; i < dataSources.length; i++) {
     const ds = dataSources[i];
@@ -377,18 +412,12 @@ function populateIcgemDataSources(data) {
 
     if (ds.inputDataSourceType === 'Satellite') {
       if (ds.satelliteValueName) {
-        const platformInput = $row.find('input[name="satellite_platform[]"]')[0];
-        const tag = {
+        applySatellitePlatformTag($row.find('input[name="satellite_platform[]"]')[0], {
           value: ds.satelliteValueName,
           id: ds.satelliteValueUri || '',
           scheme: ds.satelliteSchemeName || '',
           schemeURI: ds.satelliteSchemeUri || ''
-        };
-        if (platformInput && platformInput._tagify) {
-          platformInput._tagify.addTags([tag]);
-        } else if (platformInput) {
-          $(platformInput).val(JSON.stringify([tag]));
-        }
+        });
       }
     } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
@@ -418,9 +447,10 @@ function populateIcgemDataSources(data) {
  * grav:contact element (inside globalGravityProduct).
  *
  * Contact info (email/website) is stored positionally in grav:contact/grav:address
- * and grav:contact/grav:onlineResource. The i-th address and i-th onlineResource
- * correspond to the i-th ContactPerson contributor listed in the DataCite resource
- * section. Names from that section are used to locate the correct author row.
+ * and grav:contact/grav:onlineResource. Who the contact person *is* comes from
+ * DataCite contributors with contributorType="ContactPerson"; names from that
+ * section locate the matching author row. If no such contributor is present,
+ * a warning is logged and no author is marked as contact.
  *
  * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
  * does not show the hidden fields. This function explicitly checks the checkbox and
@@ -578,6 +608,13 @@ function populateIcgemContactPersons(xmlDoc) {
     });
   });
 
+  // Email lives in grav:contact because DataCite has no email field. 
+  // Who the contact *is* comes only from a DataCite ContactPerson contributor; 
+  if (contactPersons.length === 0) {
+    console.warn("couldn't determine the contact person from metadata");
+    return;
+  }
+
   for (let i = 0; i < contactPersons.length; i++) {
     const detail = contactDetails[i] || { email: '', website: '' };
 
@@ -703,7 +740,7 @@ function populateIcgemDescriptions(data) {
  * (definition, properties, model types, data sources, descriptions).
  * @param {Document} xmlDoc
  */
-function loadIcgemXmlToForm(xmlDoc) {
+async function loadIcgemXmlToForm(xmlDoc) {
   const data = parseIcgemXml(xmlDoc);
   if (!data) {
     console.error('loadIcgemXmlToForm: failed to locate ICGEM root node in XML document');
@@ -712,22 +749,10 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDefinition(data);
   populateIcgemProperties(data);
   populateIcgemModelTypes(data);
-  populateIcgemDataSources(data);
+  await populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
   populateIcgemContactPersons(xmlDoc);
 
-  // Process DataCite keywords from <dace:subjects> elements
-  // This ensures keywords are properly ingested during ICGEM uploads
-  if (typeof window.processKeywords === 'function') {
-    // Create a resolver that maps "ns" to the DataCite namespace
-    function dataciteResolver(prefix) {
-      if (prefix === 'ns') {
-        return 'http://datacite.org/schema/kernel-4';
-      }
-      return null;
-    }
-    window.processKeywords(xmlDoc, dataciteResolver);
-  }
 }
 
 // Expose as browser module
