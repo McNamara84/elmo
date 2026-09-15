@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test';
-import { navigateToHome, SELECTORS } from '../utils';
+import { test, expect, type Locator, type Page } from '@playwright/test';
+import { disableHelp, enableHelp, navigateToHome, SELECTORS } from '../utils';
 
 async function expectAuthorAffiliations(row, expectedNames: string[]) {
   const chips = row.locator('[data-author-affiliation-chip]');
@@ -14,6 +14,65 @@ async function addFirstAuthor(page) {
   const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
   await expect(authorRow).toBeVisible();
   return authorRow;
+}
+
+const PERSON_HELP_SECTION_IDS = [
+  'help-author-orcid',
+  'help-contactperson-email',
+  'help-contactperson-website',
+] as const;
+
+function authorCard(page: Page) {
+  return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`).first();
+}
+
+async function switchAuthorType(page: Page, type: 'person' | 'institution') {
+  await authorCard(page).locator(`[data-author-type-option="${type}"]`).click();
+  await expect(authorCard(page)).toHaveAttribute('data-author-entry-type', type);
+  return authorCard(page);
+}
+
+async function setContactPerson(row: Locator, enabled: boolean) {
+  const emailInput = row.locator('input[name="cpEmail[]"]');
+  const isVisible = await emailInput.isVisible();
+  if (isVisible === enabled) {
+    return;
+  }
+
+  await row.locator('[data-author-contact-toggle]').click();
+  if (enabled) {
+    await expect(emailInput).toBeVisible();
+  } else {
+    await expect(emailInput).toBeHidden();
+  }
+}
+
+async function expectAffiliationHelp(row: Locator, visible: boolean) {
+  const icon = row.locator('[data-author-affiliation-help]');
+  await expect(icon).toHaveCount(1);
+  await expect(icon).toHaveAttribute('data-help-section-id', 'help-contributorinstitutions-affiliation');
+  await expect(icon).toHaveClass(/help-icon-author-affiliation/);
+  if (visible) {
+    await expect(icon).toBeVisible();
+  } else {
+    await expect(icon).toBeHidden();
+  }
+}
+
+async function expectPersonHelpIcons(row: Locator, visible: boolean) {
+  await setContactPerson(row, true);
+  for (const helpSectionId of PERSON_HELP_SECTION_IDS) {
+    const icon = row.locator(`[data-help-section-id="${helpSectionId}"]`);
+    await expect(icon).toHaveCount(1);
+    if (visible) {
+      await expect(icon).toBeVisible();
+    } else {
+      await expect(icon).toBeHidden();
+    }
+  }
+  await expectAffiliationHelp(row, visible);
+  // Contact person counts as content and locks the type switcher.
+  await setContactPerson(row, false);
 }
 
 const mockOrcidRecord = {
@@ -308,6 +367,54 @@ test.describe('Author(s) form group', () => {
     await lastName.fill('Ali?=§&');
     isValid = await lastName.evaluate(el => (el as HTMLInputElement).checkValidity());
     expect(isValid).toBe(false);
+  });
+
+  test('keeps author help icons in sync when toggling help and switching person/institution', async ({ page }) => {
+    await addFirstAuthor(page);
+
+    await test.step('Help Off hides person help icons', async () => {
+      await expectPersonHelpIcons(authorCard(page), true);
+      await disableHelp(page);
+      await expectPersonHelpIcons(authorCard(page), false);
+    });
+
+    await test.step('Help Off stays off after switching to institution', async () => {
+      const institutionRow = await switchAuthorType(page, 'institution');
+      await expectAffiliationHelp(institutionRow, false);
+    });
+
+    await test.step('Help On shows institution help icons', async () => {
+      await enableHelp(page);
+      await expectAffiliationHelp(authorCard(page), true);
+    });
+
+    await test.step('Help On stays on after switching to person', async () => {
+      const personRow = await switchAuthorType(page, 'person');
+      await expectPersonHelpIcons(personRow, true);
+    });
+
+    await test.step('Help Off then On again follows the current author type', async () => {
+      await disableHelp(page);
+      await expectPersonHelpIcons(authorCard(page), false);
+
+      const institutionRow = await switchAuthorType(page, 'institution');
+      await expectAffiliationHelp(institutionRow, false);
+
+      await enableHelp(page);
+      await expectAffiliationHelp(authorCard(page), true);
+
+      await disableHelp(page);
+      await expectAffiliationHelp(authorCard(page), false);
+
+      await enableHelp(page);
+      await expectAffiliationHelp(authorCard(page), true);
+
+      await switchAuthorType(page, 'person');
+      await switchAuthorType(page, 'person');
+      await switchAuthorType(page, 'institution');
+      const personRow = await switchAuthorType(page, 'person');
+      await expectPersonHelpIcons(personRow, true);
+    });
   });
 
 });
