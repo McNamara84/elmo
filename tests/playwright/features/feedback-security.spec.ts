@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { navigateToHome, SELECTORS } from '../utils';
 
-const FEEDBACK_ENDPOINT = '**/send_feedback_mail.php';
+const FEEDBACK_ENDPOINT = '**/endpoints/send_feedback_mail.php';
 const CSRF_ENDPOINT = '**/api/csrf_token.php';
 const INTERACTION_ENDPOINT = '**/api/interaction_start.php';
 

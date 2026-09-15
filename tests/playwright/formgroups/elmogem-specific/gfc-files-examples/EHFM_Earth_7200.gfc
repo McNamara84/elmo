@@ -1,0 +1,74 @@
+EHFM_Earth_7200:
+Ellipsoidal Harmonic Forward Model derived from Earth2014 topographies up to d/o 7200
+====================================================================
+
+When using the data please cite:
+Liu, Cong; Wang, Zhengtao (2024): Ellipsoidal Harmonic Forward Model 
+derived from Earth2014 topographies up to d/o 7200: EHFM_Earth_7200. 
+GFZ Data Services. https://doi.org/10.5880/icgem.2024.002
+
+license: Creative Commons Attribution 4.0 International (CC BY 4.0); 
+http://creativecommons.org/licenses/by/4.0/
+
+
+Abstract
+--------
+The model named EHFM_Earth_7200 was derived by layer-based forward 
+modeling technique in ellipsoidal harmonics, the maximum degree of 
+this model reaches 7200. The relief information was provided by 
+Earth2014 relief model. EHFM_Earth_7200 provides very detailed (~3 km) 
+information for the Earth’s short-scale gravity field, and it is expected 
+to be able to augment or refine existing global gravity models. To meet 
+the existing standard, here we provide spherical harmonic coefficients, 
+which are transformed from original ellipsoidal harmonic coefficients. 
+The maximum degree of the spherical harmonic coefficients is 7300.
+
+
+Processing Procedures:
+----------------------
+- Compute global equiangular reduced latitude grids from degree 10800 
+Earth2014 SHCs and expanded these grids into EHCs. The grids are band-
+limited in spherical harmonics instead of in ellipsoidal harmonics so 
+extra degrees beyond the truncation degree are also calculated. We obtained 
+surface EHCs up to degree and order (d/o) 11000 but truncated them to d/o 7200. 
+
+- Calculate potential models of three layers (crust, water and ice) 
+separately from Earth2014 reliefs by new developed ellipsoidal harmonic 
+forward modeling formulas. The densities of the three layers are 2670, 
+1030, and 917 kg/m^3. 
+
+- Sum up results from the three layers and obtain EHFM_Earth_7200 ellipsoidal 
+harmonic coefficients. 
+
+- Convert ellipsoidal harmonic coefficients to spherical harmonic coefficients. 
+The maximum degree of the spherical harmonic coefficients is 7300.
+
+
+References:
+-----------
+Hirt C, Rexer M. (2015). Earth2014: 1 arc-min shape, topography, bedrock 
+and ice-sheet models – Available as gridded data and degree-10,800 spherical 
+harmonics. International Journal of Applied Earth Observation and Geoinformation, 
+39, 103-112. doi: 10.1016/j.jag.2015.03.001.
+
+Rexer M, Hirt C, Claessens S, Tenzer R. (2016). Layer-Based Modelling of 
+the Earth's Gravitational Potential up to 10-km Scale in Spherical Harmonics 
+in Spherical and Ellipsoidal Approximation. Surveys in Geophysics, 37, 1035-
+1074. doi: 10.1007/s10712-016-9382-2.
+
+Wang YM, Yang X. (2013). On the spherical and spheroidal harmonic expansion 
+of the gravitational potential of the topographic masses. Journal of Geodesy, 
+87, 909-921. doi: 10.1007/s00190-013-0654-z.
+
+
+begin_of_head =======================================
+product_type                  gravity_field                 
+modelname                     EHFM_Earth_7200               
+earth_gravity_constant        3.986004418E+14               
+radius                        6.378137000E+06               
+max_degree                    7300                          
+errors                        no                            
+norm                          fully_normalized              
+ 
+key    L    M         C         S
+end_of_head =========================================

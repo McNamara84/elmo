@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\MockObject\MockObject;
 
@@ -13,6 +14,7 @@ use PHPUnit\Framework\MockObject\MockObject;
  * Part 1: GET* functions - Mock database responses and verify data fetching/transformation
  * These tests use reflection to instantiate the controller without triggering the global $connection
  */
+#[AllowMockObjectsWithoutExpectations]
 final class ICGEMControllerTest extends TestCase
 {
     private \ICGEMController $controller;
@@ -67,12 +69,10 @@ final class ICGEMControllerTest extends TestCase
 
         // Set the mock connection via reflection
         $connectionProperty = $reflection->getParentClass()->getProperty('connection');
-        $connectionProperty->setAccessible(true);
         $connectionProperty->setValue($this->controller, $this->mockConnection);
         
         // Initialize $logger property (required, typed as mixed but uninitialized)
         $loggerProperty = $reflection->getParentClass()->getProperty('logger');
-        $loggerProperty->setAccessible(true);
         $loggerProperty->setValue($this->controller, null);
     }
 
@@ -131,7 +131,6 @@ final class ICGEMControllerTest extends TestCase
         // Use reflection to call protected method
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('getGGMData');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $this->mockConnection, $resourceId);
 
         $this->assertIsArray($result);
@@ -194,7 +193,6 @@ final class ICGEMControllerTest extends TestCase
         // Use reflection to call protected method
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('getGGMData');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $this->mockConnection, $resourceId);
 
         // Should contain only non-null values (file_format_name, model_name, product_type, radius, tide_system, publication_year, model_type_name, earth_gravity_constant = 8 values)
@@ -244,7 +242,6 @@ final class ICGEMControllerTest extends TestCase
         // Use reflection to call protected method
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('getGGMData');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $this->mockConnection, $resourceId);
 
         $this->assertNull($result);
@@ -306,7 +303,7 @@ final class ICGEMControllerTest extends TestCase
             ->method('get_result')
             ->willReturn($mockResult);
 
-        $mockResult->expects($this->any())
+        $mockResult
             ->method('fetch_assoc')
             ->willReturnOnConsecutiveCalls(
                 $expectedDataSources[0],
@@ -671,7 +668,6 @@ final class ICGEMControllerTest extends TestCase
         // Use reflection to call protected method
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('getGGMData');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $this->mockConnection, $resourceId);
 
         $this->assertNull($result);
@@ -709,7 +705,6 @@ final class ICGEMControllerTest extends TestCase
         // Call the insert method using reflection since it's protected
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertSphericalHarmonicModelProperties');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $ggmData);
 
         // Verify XML structure
@@ -745,7 +740,6 @@ final class ICGEMControllerTest extends TestCase
         // Call with null data
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertSphericalHarmonicModelProperties');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, null);
 
         // XML should have no children added
@@ -772,7 +766,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertSphericalHarmonicModelProperties');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $ggmData);
 
         // Should only have modelName and degree (not empty/null ones)
@@ -800,7 +793,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertErrors');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $ggmData);
 
         // Verify errors and errorHandling are flat siblings directly on $shm
@@ -830,7 +822,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertErrors');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $ggmData);
 
         // Should not add errors element if errors field is empty
@@ -932,7 +923,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertInputDataSources');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $dataSources);
 
         // Verify data source elements
@@ -994,6 +984,11 @@ final class ICGEMControllerTest extends TestCase
         $this->assertEquals('Isostasy input', (string)$sourceChildren->description);
         $this->assertEquals('Isostasy', (string)$sourceChildren->elevationTerrainDetail);
         $this->assertEquals('1000', (string)$sourceChildren->compensationDepth);
+        $serialized = $xml->asXML();
+        $this->assertNotFalse($serialized);
+        $this->assertStringContainsString('compensationDepth', $serialized);
+        $this->assertStringContainsString('>1000</', $serialized);
+        $this->assertStringContainsString('uom="m"', $serialized);
     }
 
     /**
@@ -1008,7 +1003,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertInputDataSources');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, []);
 
         // Should not add any inputDataSource elements (SimpleXMLElement returns empty object for non-existent elements)
@@ -1042,7 +1036,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertTopographicModelPropertiesIcgem');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $properties);
 
         // Verify structure
@@ -1083,7 +1076,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertTemporalModelPropertiesIcgem');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $properties);
 
         // Verify structure
@@ -1117,7 +1109,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertStaticModelPropertiesIcgem');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $properties);
 
         // Verify structure
@@ -1153,7 +1144,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertEllipsoidalParametersIcgem');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $parameters);
 
         // Verify structure
@@ -1182,7 +1172,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertEllipsoidalParametersIcgem');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, []);
 
         // Should not add ellipsoidal parameters element (SimpleXMLElement returns empty object)
@@ -1222,7 +1211,7 @@ final class ICGEMControllerTest extends TestCase
             ->method('get_result')
             ->willReturn($mockResult);
 
-        $mockResult->expects($this->any())
+        $mockResult
             ->method('fetch_assoc')
             ->willReturnOnConsecutiveCalls(
                 $descriptions[0],
@@ -1242,7 +1231,6 @@ final class ICGEMControllerTest extends TestCase
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertDescriptions');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $resourceId);
 
         // Verify descriptions were added (only valid types)
@@ -1285,7 +1273,7 @@ final class ICGEMControllerTest extends TestCase
             ->method('get_result')
             ->willReturn($mockResult);
 
-        $mockResult->expects($this->any())
+        $mockResult
             ->method('fetch_assoc')
             ->willReturnOnConsecutiveCalls(
                 $descriptions[0],
@@ -1303,7 +1291,6 @@ final class ICGEMControllerTest extends TestCase
         
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertDescriptions');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, $resourceId);
 
         // Should have descriptions element but no child elements (all invalid types filtered out)
@@ -1330,7 +1317,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('prepare');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, '<script>alert("xss")</script>', 'description');
         $this->assertStringContainsString('&lt;script&gt;', $result);
@@ -1345,7 +1331,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('prepare');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, 'tide free', 'tideSystem');
         $this->assertEquals('Tide-free', $result);
@@ -1361,7 +1346,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('prepare');
-        $method->setAccessible(true);
 
         // Replace underscores with spaces
         $result = $method->invoke($this->controller, 'Density_model', 'densityInformationType');
@@ -1383,7 +1367,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('prepare');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, 'static', 'modelType');
         $this->assertEquals('Static', $result);
@@ -1402,7 +1385,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('prepare');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, '  some value  ', 'description');
         $this->assertEquals('some value', $result);
@@ -1419,7 +1401,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('normalizeDescriptionType');
-        $method->setAccessible(true);
 
         $result = $method->invoke($this->controller, 'GENERAL MODEL DESCRIPTION');
         $this->assertEquals('General model description', $result);
@@ -1444,7 +1425,6 @@ final class ICGEMControllerTest extends TestCase
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
-        $method->setAccessible(true);
 
         $abstract = <<<EOT
 This is the main abstract.
@@ -1476,7 +1456,6 @@ EOT;
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
-        $method->setAccessible(true);
 
         $abstract = <<<EOT
 Main abstract line.
@@ -1508,7 +1487,6 @@ EOT;
     {
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('removeElmogEmTextFromAbstract');
-        $method->setAccessible(true);
 
         $abstract = 'This is the main content';
         $elmogem_texts = [];
@@ -1539,7 +1517,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $dataciteXml, 'icgem2.0');
 
         // Parse result and verify formats element exists
@@ -1571,7 +1548,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $dataciteXml, 'format & type: <binary>');
 
         // < and & must be escaped in XML text content to produce valid XML
@@ -1602,7 +1578,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $dataciteXml, '');
 
         // Should still add formats element, but with empty format child
@@ -1631,7 +1606,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('injectFormatsIntoDataCiteXml');
-        $method->setAccessible(true);
         $result = $method->invoke($this->controller, $dataciteXml, 'application/xml');
 
         // Formats should NOT have a namespace prefix (should use default namespace)
@@ -1651,7 +1625,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('simplexmlAppend');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $to, $from);
 
         // Check that both elements exist - original and appended source
@@ -1676,7 +1649,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('simplexmlAppend');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $to, $from);
 
         // Original element should still exist
@@ -1698,7 +1670,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('simplexmlAppend');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $to, $from);
 
         // Original child should still exist
@@ -1726,7 +1697,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('simplexmlAppend');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $to, $from);
 
         // Check both namespaced elements exist
@@ -1759,12 +1729,12 @@ EOT;
         $affStmt       = $this->createMock(\mysqli_stmt::class);
         $affResult     = $this->createMock(\mysqli_result::class);
 
-        $contactStmt->expects($this->any())->method('bind_param');
-        $contactStmt->expects($this->any())->method('execute');
-        $contactStmt->expects($this->any())->method('get_result')->willReturn($contactResult);
+        $contactStmt->method('bind_param');
+        $contactStmt->method('execute');
+        $contactStmt->method('get_result')->willReturn($contactResult);
 
         $index = 0;
-        $contactResult->expects($this->any())
+        $contactResult
             ->method('fetch_assoc')
             ->willReturnCallback(function () use ($rows, &$index) {
                 if ($index < count($rows)) {
@@ -1773,15 +1743,15 @@ EOT;
                 return null;
             });
 
-        $affStmt->expects($this->any())->method('bind_param');
-        $affStmt->expects($this->any())->method('execute');
-        $affStmt->expects($this->any())->method('get_result')->willReturn($affResult);
-        $affResult->expects($this->any())
+        $affStmt->method('bind_param');
+        $affStmt->method('execute');
+        $affStmt->method('get_result')->willReturn($affResult);
+        $affResult
             ->method('fetch_assoc')
             ->willReturn(null);
 
         $prepareCalls = 0;
-        $this->mockConnection->expects($this->any())
+        $this->mockConnection
             ->method('prepare')
             ->willReturnCallback(function () use (&$prepareCalls, $contactStmt, $affStmt) {
                 $prepareCalls++;
@@ -1813,7 +1783,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertContact');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, 1);
 
         $ns = 'http://icgem.gfz.de/schema';
@@ -1849,7 +1818,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertContact');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, 2);
 
         $ns = 'http://icgem.gfz.de/schema';
@@ -1893,7 +1861,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertContact');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, 1);
 
         $ns = 'http://icgem.gfz.de/schema';
@@ -1923,7 +1890,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertContact');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, 99);
 
         $ns = 'http://icgem.gfz.de/schema';
@@ -1970,7 +1936,6 @@ EOT;
 
         $reflection = new \ReflectionClass($this->controller);
         $method = $reflection->getMethod('insertContact');
-        $method->setAccessible(true);
         $method->invoke($this->controller, $xml, 1);
 
         $ns = 'http://icgem.gfz.de/schema';
@@ -2012,7 +1977,6 @@ EOT;
         // Simulate createICGEMxml order: insertContact first, then harmonicCoefficientsModel
         $reflection = new \ReflectionClass($this->controller);
         $insertContact = $reflection->getMethod('insertContact');
-        $insertContact->setAccessible(true);
         $insertContact->invoke($this->controller, $xml, 1);
 
         $xml->addChild('grav:harmonicCoefficientsModel', null, $ns);

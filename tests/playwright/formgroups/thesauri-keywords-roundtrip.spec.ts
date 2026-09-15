@@ -7,7 +7,7 @@ import { injectModuleScript, injectScript, injectStylesheet } from '../utils/ass
 declare const translations: any;
 declare function processKeywords(xmlDoc: Document, resolver: Function): void;
 
-const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
+const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurus-keywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
 const FREEKEYWORD_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/freeKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
 
 const MOCK_SCIENCE_KEYWORDS = {

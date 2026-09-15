@@ -7,7 +7,7 @@
  * @param {number|string} [timeSpent=''] - Optional time spent on the page in seconds
  * @returns {Promise<void>} 
  * @throws {Error} Logs a warning to console if the fetch request fails
- * @description Sends an event log to 'log_page_event.php' with the event type, status, and current timestamp.
+ * @description Sends an event log to 'endpoints/log_page_event.php' with the event type, status, and current timestamp.
  */
 async function logEvent(eventType, status = '', timeSpent = '') {
     try {
@@ -21,7 +21,7 @@ async function logEvent(eventType, status = '', timeSpent = '') {
             params.time_spent = String(timeSpent);
         }
 
-        await fetch('log_page_event.php', {
+        await fetch('endpoints/log_page_event.php', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
         credentials: 'include',

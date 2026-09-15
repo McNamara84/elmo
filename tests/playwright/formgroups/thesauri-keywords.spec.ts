@@ -9,7 +9,7 @@ declare const translations: any;
 const SCIENCE_PATH = 'Science Keywords > EARTH SCIENCE > AGRICULTURE > AGRICULTURAL AQUATIC SCIENCES > AQUACULTURE';
 const PLATFORMS_PATH = 'Platforms > Air-based Platforms > BALLOONS';
 
-const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurusKeywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
+const THESAURI_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/thesaurus-keywords.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '');
 
 /**
  * Minimal mock vocabulary data used instead of large production JSON files.

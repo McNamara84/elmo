@@ -9,14 +9,24 @@
 
 * Replaces help buttons in cloned rows with invisible placeholders.
 * This helps maintain the structure and prevents changes in field sizes.
+* Help buttons listed in visibleHelpSectionIds remain visible.
 *
 * @param {jQuery} row - The cloned row from which to replace help buttons.
-* @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class for rounded corners.
+* @param {string} [roundCornersClass="input-right-with-round-corners"] - The CSS class for inputs whose help button is hidden.
+* @param {string[]} [visibleHelpSectionIds=[]] - Help section IDs whose buttons remain visible in cloned rows.
 */
-function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
+function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners", visibleHelpSectionIds = []) {
   row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-    const helpSectionId = $(this).find('i').data('help-section-id') || '';
-    $(this)
+    const $helpButton = $(this);
+    const helpSectionId = $helpButton.find("i").data("help-section-id") || '';
+
+    // Keep configured help buttons visible in cloned rows.
+    if (visibleHelpSectionIds.includes(helpSectionId)) {
+      return;
+    }
+
+    // Hide other help buttons while preserving the input layout.
+    $helpButton
       .addClass("help-placeholder")
       .attr("data-help-section-id", helpSectionId)
       .css({
@@ -25,9 +35,22 @@ function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-wit
         height: "38px"
       });
   });
-  row.find(".input-with-help")
-    .removeClass("input-right-no-round-corners")
-    .addClass(roundCornersClass);
+
+  // Update input border styles based on the visibility of their help buttons.
+  row.find(".input-with-help").each(function () {
+    const $input = $(this);
+    const helpSectionId = $input
+      .closest(".input-group")
+      .find("i.bi-question-circle-fill")
+      .data("help-section-id");
+
+    // Round the input only when its related help button is hidden.
+    if (!visibleHelpSectionIds.includes(helpSectionId)) {
+      $input
+        .removeClass("input-right-no-round-corners")
+        .addClass(roundCornersClass);
+    }
+  });
 }
 
 

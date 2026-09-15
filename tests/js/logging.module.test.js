@@ -40,10 +40,10 @@ describe('logging module coverage', () => {
     });
 
     describe('logEvent', () => {
-        test('sends POST request to log_page_event.php', async () => {
+        test('sends POST request to endpoints/log_page_event.php', async () => {
             await loggingModule.logEvent('test event', 'success');
 
-            expect(fetch).toHaveBeenCalledWith('log_page_event.php', expect.objectContaining({
+            expect(fetch).toHaveBeenCalledWith('endpoints/log_page_event.php', expect.objectContaining({
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                 credentials: 'include'

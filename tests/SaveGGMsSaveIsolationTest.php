@@ -641,7 +641,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
     /**
      * submit: Satellite row with no platform → validateDataSourceRow throws.
      */
-    public function testDataSourcesSubmitFailsWithMissingSatellitePlatform(): void
+    public function testDataSourcesSubmitSucceedsWithMissingSatellitePlatform(): void
     {
         $postData = [
             'action'                 => 'submit',
@@ -650,10 +650,23 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             // satellite_platform absent
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches('/satellite platform/i');
-
+        // Should not throw
         saveGGMsDataSources($this->connection, $postData, $this->resourceId);
+
+        $stmt = $this->connection->prepare(
+            "SELECT ds.type, ds.S_value_name
+             FROM `Data_Sources` ds
+             JOIN `Resource_has_Data_Sources` rhds ON rhds.data_source_id = ds.data_source_id
+             WHERE rhds.resource_id = ?"
+        );
+        $stmt->bind_param('i', $this->resourceId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($row, 'Data_Sources record should be created on save despite missing platform');
+        $this->assertEquals('S', $row['type']);
+        $this->assertNull($row['S_value_name']);
     }
 
     /**
