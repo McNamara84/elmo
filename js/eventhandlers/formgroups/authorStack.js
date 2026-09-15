@@ -148,7 +148,7 @@ $(document).ready(function () {
     const header = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2"></div>');
     const titleGroup = $('<div class="d-flex align-items-center gap-1"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
-    const helpButton = $('<i class="bi bi-question-circle-fill" ' + 'data-help-section-id="help-contributorinstitutions-affiliation" ' + 'data-author-affiliation-help></i>');
+    const helpButton = $('<i class="bi bi-question-circle-fill help-icon-author-affiliation" ' + 'data-help-section-id="help-contributorinstitutions-affiliation" ' + 'data-author-affiliation-help></i>');
     const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-author-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');

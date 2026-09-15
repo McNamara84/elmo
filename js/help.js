@@ -17,6 +17,8 @@ function updateHelpStatus() {
   $('#bd-help-icon').toggleClass('bi bi-question-square', status === 'help-off');
   $('.input-with-help').toggleClass('input-right-no-round-corners', status === 'help-on');
   $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
+  $('.help-icon-author-affiliation').toggleClass('bi d-none', status === 'help-off');
+  $('.help-icon-author-affiliation').toggleClass('bi bi-question-circle-fill', status === 'help-on');
 }
 
 function getSelectedResourceType() {
