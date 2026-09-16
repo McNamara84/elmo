@@ -175,52 +175,27 @@ $(document).ready(function () {
   }
 
   function syncAffiliationHelpButtons() {
-    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
-    const helpOn = helpStatus === 'help-on';
     const editors = stack.find('[data-author-affiliation-editor]');
-    
-    editors.each(function (index) {
+    editors.each(function () {
       const editor = $(this);
       const help = editor.find('[data-author-affiliation-help]');
-      const isFirst = index === 0;
-      const shouldHaveHelp = isFirst && helpOn;
-      
-      if (shouldHaveHelp) {
-        // First author with help enabled: ensure help button exists
-        if (!help.length) {
-          editor.find('[data-author-affiliation-title]').first().after(createAffiliationHelpButton());
-        }
-      } else {
-        // Not first author, or help disabled: remove help button
-        help.remove();
+      if (!help.length) {
+        editor.find('[data-author-affiliation-title]').first().after(createAffiliationHelpButton());
       }
+      editor.find('[data-author-affiliation-help]').addClass('help-icon-author-affiliation');
     });
   }
 
   function syncPersonHelpButtons() {
-    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
-    const helpOn = helpStatus === 'help-on';
     const personRows = stack.find('[data-creator-row]');
     const helpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
-    
-    personRows.each(function (index) {
+
+    personRows.each(function () {
       const row = $(this);
-      const isFirst = index === 0;
-      
       helpSectionIds.forEach(function (sectionId) {
         const help = row.find(`[data-help-section-id="${sectionId}"]`);
-        const helpSpan = help.closest('span.input-group-text');
-        
         if (help.length) {
-          // Mark with class for consistent help.js handling
           help.addClass('help-icon-author-affiliation');
-          
-          // Show only if first author AND help is on
-          if (isFirst && helpOn) {
-            helpSpan.removeClass('d-none').attr('aria-hidden', 'false');
-          } else {
-            helpSpan.addClass('d-none').attr('aria-hidden', 'true');
-          }
         }
       });
     });
@@ -229,6 +204,27 @@ $(document).ready(function () {
   function applyAuthorHelpStatus() {
     syncAffiliationHelpButtons();
     syncPersonHelpButtons();
+
+    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
+    const helpOn = helpStatus === 'help-on';
+    const rows = stack.children('[data-author-entry-row]');
+
+    rows.each(function (index) {
+      const row = $(this);
+      const isFirst = index === 0;
+      const rowIcons = row.find('.help-icon-author-affiliation');
+
+      rowIcons.each(function () {
+        const icon = $(this);
+        const wrapper = icon.closest('span.input-group-text');
+        const shouldBeVisible = helpOn && isFirst;
+
+        icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+        if (wrapper.length) {
+          wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+        }
+      });
+    });
   }
 
   function getAffiliationFieldConfig(row) {
@@ -680,7 +676,8 @@ $(document).ready(function () {
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');
     }
-
+    
+    applyAuthorHelpStatus();
     return updatePayload();
   }
 
@@ -1394,7 +1391,10 @@ $(document).ready(function () {
       axis: 'y',
       tolerance: 'pointer',
       containment: 'parent',
-      update: updatePayload
+      update: function () {
+        updatePayload();
+        applyAuthorHelpStatus();
+      }
     });
   }
 
@@ -1554,6 +1554,7 @@ $(document).ready(function () {
     });
     updateReorderControls();
     updateSummary(collectPayload());
+    applyAuthorHelpStatus();
   });
 
   document.addEventListener('helpStatus:changed', function () {
