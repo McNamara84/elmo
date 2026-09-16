@@ -222,6 +222,12 @@ $(document).ready(function () {
         icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
         if (wrapper.length) {
           wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+          // Restore visibility for help buttons that should be shown (e.g., after reordering)
+          if (shouldBeVisible) {
+            wrapper.css('visibility', '');
+          } else {
+            wrapper.css('visibility', 'hidden');
+          }
         }
       });
     });
@@ -676,7 +682,7 @@ $(document).ready(function () {
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');
     }
-    
+
     applyAuthorHelpStatus();
     return updatePayload();
   }
