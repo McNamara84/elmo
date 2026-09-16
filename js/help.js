@@ -18,8 +18,12 @@ function updateHelpStatus() {
   $('#bd-help-icon').toggleClass('bi bi-question-square', status === 'help-off');
   $('.input-with-help').toggleClass('input-right-no-round-corners', helpOn);
   $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
-  $('.help-icon-author-affiliation').toggleClass('bi d-none', !helpOn);
-  $('.help-icon-author-affiliation').toggleClass('bi bi-question-circle-fill', helpOn);
+  if (helpOn) {
+    visibilityON('.help-icon-author-affiliation');
+  } else {
+    visibilityOFF('.help-icon-author-affiliation');
+  }
+  
   // Re-apply after author type switches recreate help icons from templates.
   $('span.input-group-text:has(i[data-help-section-id])').css('display', helpOn ? '' : 'none');
 }
