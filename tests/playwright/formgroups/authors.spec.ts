@@ -417,4 +417,48 @@ test.describe('Author(s) form group', () => {
     });
   });
 
+  test('shows help icons on new first author after deleting previous first author', async ({ page }) => {
+    await test.step('Add two authors and enable help', async () => {
+      await page.locator('#button-author-add').click();
+      await page.locator('#button-author-add').click();
+
+      const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`);
+      await expect(authorRows).toHaveCount(2);
+
+      await enableHelp(page);
+    });
+
+    await test.step('First author has help icons visible, second author does not', async () => {
+      const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
+      const firstAuthor = authorRows.nth(0);
+      const secondAuthor = authorRows.nth(1);
+
+      // First author should have all person help icons visible
+      await expectPersonHelpIcons(firstAuthor, true);
+
+      // Second author should NOT have person help icons visible (only first author shows them)
+      for (const helpSectionId of PERSON_HELP_SECTION_IDS) {
+        const icon = secondAuthor.locator(`[data-help-section-id="${helpSectionId}"]`);
+        await expect(icon).toHaveCount(1);
+        await expect(icon).toBeHidden();
+      }
+      await expectAffiliationHelp(secondAuthor, false);
+    });
+
+    await test.step('After deleting first author, former second author shows all help icons', async () => {
+      const authorRows = page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
+      const firstAuthor = authorRows.nth(0);
+
+      // Delete first author
+      await firstAuthor.locator('.removeButton').click();
+
+      // Verify only one author remains
+      await expect(authorRows).toHaveCount(1);
+
+      // The former second author is now first and should show all help icons
+      const nowFirstAuthor = authorRows.nth(0);
+      await expectPersonHelpIcons(nowFirstAuthor, true);
+    });
+  });
+
 });
