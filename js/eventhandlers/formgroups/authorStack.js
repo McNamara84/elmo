@@ -197,11 +197,38 @@ $(document).ready(function () {
     });
   }
 
+  function syncPersonHelpButtons() {
+    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
+    const helpOn = helpStatus === 'help-on';
+    const personRows = stack.find('[data-creator-row]');
+    const helpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
+    
+    personRows.each(function (index) {
+      const row = $(this);
+      const isFirst = index === 0;
+      
+      helpSectionIds.forEach(function (sectionId) {
+        const help = row.find(`[data-help-section-id="${sectionId}"]`);
+        const helpSpan = help.closest('span.input-group-text');
+        
+        if (help.length) {
+          // Mark with class for consistent help.js handling
+          help.addClass('help-icon-author-affiliation');
+          
+          // Show only if first author AND help is on
+          if (isFirst && helpOn) {
+            helpSpan.removeClass('d-none').attr('aria-hidden', 'false');
+          } else {
+            helpSpan.addClass('d-none').attr('aria-hidden', 'true');
+          }
+        }
+      });
+    });
+  }
+
   function applyAuthorHelpStatus() {
     syncAffiliationHelpButtons();
-    if (typeof updateHelpStatus === 'function') {
-      updateHelpStatus();
-    }
+    syncPersonHelpButtons();
   }
 
   function getAffiliationFieldConfig(row) {
