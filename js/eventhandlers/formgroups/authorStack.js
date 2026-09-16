@@ -485,6 +485,7 @@ $(document).ready(function () {
     initializeAffiliationAutocomplete(row);
     initializeTooltips(row);
     updatePayload();
+    applyAuthorHelpStatus();
     if (options.focus !== false) {
       focusFirstEditableField(row);
     }
@@ -1050,7 +1051,6 @@ $(document).ready(function () {
         button.removeAttr('title data-bs-title');
       }
     });
-    applyAuthorHelpStatus();
   }
 
   function switchEntryType(row, targetType) {
@@ -1082,6 +1082,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     focusFirstEditableField(replacement);
     return replacement;
   }
@@ -1299,6 +1300,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     const preferredButton = row.find(direction < 0 ? '[data-author-move-up]' : '[data-author-move-down]');
     const fallbackButton = row.find(direction < 0 ? '[data-author-move-down]' : '[data-author-move-up]');
     const focusButton = preferredButton.prop('disabled') ? fallbackButton : preferredButton;
