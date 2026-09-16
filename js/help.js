@@ -26,6 +26,9 @@ function updateHelpStatus() {
   
   // Re-apply after author type switches recreate help icons from templates.
   $('span.input-group-text:has(i[data-help-section-id])').css('display', helpOn ? '' : 'none');
+  
+  // Trigger author stack sync to update affiliation help button visibility
+  document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status } }));
 }
 
 function getSelectedResourceType() {

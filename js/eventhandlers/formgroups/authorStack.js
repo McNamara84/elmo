@@ -175,15 +175,23 @@ $(document).ready(function () {
   }
 
   function syncAffiliationHelpButtons() {
+    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
+    const helpOn = helpStatus === 'help-on';
     const editors = stack.find('[data-author-affiliation-editor]');
+    
     editors.each(function (index) {
       const editor = $(this);
       const help = editor.find('[data-author-affiliation-help]');
-      if (index === 0) {
+      const isFirst = index === 0;
+      const shouldHaveHelp = isFirst && helpOn;
+      
+      if (shouldHaveHelp) {
+        // First author with help enabled: ensure help button exists
         if (!help.length) {
           editor.find('[data-author-affiliation-title]').first().after(createAffiliationHelpButton());
         }
       } else {
+        // Not first author, or help disabled: remove help button
         help.remove();
       }
     });
@@ -1484,6 +1492,7 @@ $(document).ready(function () {
     row.remove();
     authorUiState.delete(entryKey);
     updatePayload();
+    applyAuthorHelpStatus();
     focusAfterRemove(nextFocusTarget);
   });
 
@@ -1518,6 +1527,10 @@ $(document).ready(function () {
     });
     updateReorderControls();
     updateSummary(collectPayload());
+  });
+
+  document.addEventListener('helpStatus:changed', function () {
+    applyAuthorHelpStatus();
   });
 
   window.validateAuthorAffiliationEditors = validateAuthorAffiliationEditors;
