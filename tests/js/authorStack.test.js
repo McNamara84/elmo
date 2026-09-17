@@ -27,6 +27,9 @@ describe('authorStack.js', () => {
             <label for="checkbox-author-contactperson">Contact Person</label>
             <input id="input-author-orcid" name="orcids[]">
             <label for="input-author-orcid">ORCID</label>
+            <span class="input-group-text orcid-help-icon">
+              <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
+            </span>
             <input id="input-author-lastname" name="familynames[]">
             <label for="input-author-lastname">Last Name</label>
             <input id="input-author-firstname" name="givennames[]">
@@ -38,10 +41,16 @@ describe('authorStack.js', () => {
             <div class="contact-person-input">
               <input id="input-contactperson-email" name="cpEmail[]">
               <label for="input-contactperson-email">Email</label>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" data-help-section-id="help-contactperson-email"></i>
+              </span>
             </div>
             <div class="contact-person-input">
               <input id="input-contactperson-website" name="cpOnlineResource[]">
               <label for="input-contactperson-website">Website</label>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" data-help-section-id="help-contactperson-website"></i>
+              </span>
             </div>
           </div>
           <div class="row" data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
@@ -414,6 +423,35 @@ describe('authorStack.js', () => {
     expect(newCard.attr('data-author-entry-type')).toBe('person');
     expect(newCard.find('[data-author-edit-panel]').hasClass('show')).toBe(true);
     expect(document.activeElement).toBe(newCard.find('input[name="familynames[]"]').get(0));
+  });
+
+  test('keeps a single person help icon per section and shows it on the new first author', () => {
+    const funcs = require('../../js/eventhandlers/functions.js');
+    window.replaceHelpButtonInClonedRows = funcs.replaceHelpButtonInClonedRows;
+    localStorage.setItem('helpStatus', 'help-on');
+
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
+    const rows = $('[data-author-entry-row]');
+    expect(rows.length).toBe(2);
+
+    personHelpSectionIds.forEach((sectionId) => {
+      expect(rows.eq(0).find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
+      expect(rows.eq(0).find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(false);
+      expect(rows.eq(1).find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
+      expect(rows.eq(1).find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(true);
+    });
+
+    rows.eq(0).find('.removeButton').trigger('click');
+
+    const remaining = $('[data-author-entry-row]');
+    expect(remaining.length).toBe(1);
+    personHelpSectionIds.forEach((sectionId) => {
+      expect(remaining.find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
+      expect(remaining.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(false);
+    });
   });
 
   test('moves focus to the next card or add button after removing a card', () => {
