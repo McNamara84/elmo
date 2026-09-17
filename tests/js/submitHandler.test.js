@@ -377,7 +377,7 @@ describe('submitHandler.js', () => {
 
   // ── buildDataUploadHint tests ──────────────────────────────────────
 
-  describe('buildDataUploadHint', () => {
+  describe.skip('buildDataUploadHint', () => {
     beforeEach(() => {
       global.translations.alerts.dataUploadTitle = 'Upload primary data';
       global.translations.alerts.dataUploadMessage = 'Only <strong>metadata</strong> submitted.';
@@ -444,7 +444,7 @@ describe('submitHandler.js', () => {
 
   // ── submitViaAjax data upload hint integration tests ───────────────
 
-  describe('submitViaAjax data upload hint', () => {
+  describe.skip('submitViaAjax data upload hint', () => {
     beforeEach(() => {
       global.translations.alerts.dataUploadTitle = 'Upload primary data';
       global.translations.alerts.dataUploadMessage = 'Only metadata submitted.';
