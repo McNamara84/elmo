@@ -32,6 +32,7 @@ $(document).ready(function () {
   const affiliationSearchDebounceMs = 250;
   const affiliationSearchTimers = new WeakMap();
   let affiliationSearchRequestId = 0;
+  const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
 
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -188,12 +189,13 @@ $(document).ready(function () {
 
   function syncPersonHelpButtons() {
     const personRows = stack.find('[data-creator-row]');
-    const helpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
 
     personRows.each(function () {
       const row = $(this);
-      helpSectionIds.forEach(function (sectionId) {
-        const help = row.find(`[data-help-section-id="${sectionId}"]`);
+      personHelpSectionIds.forEach(function (sectionId) {
+        // Target the icon only. Cloned-row placeholders copy data-help-section-id
+        // onto the wrapper span, and that duplicate must not be treated as a help icon.
+        const help = row.find(`i[data-help-section-id="${sectionId}"]`);
         if (help.length) {
           help.addClass('help-icon-author-affiliation');
         }
@@ -224,7 +226,10 @@ $(document).ready(function () {
           wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
           // Restore visibility for help buttons that should be shown (e.g., after reordering)
           if (shouldBeVisible) {
-            wrapper.css('visibility', '');
+            wrapper
+              .removeClass('help-placeholder')
+              .removeAttr('data-help-section-id')
+              .css({ visibility: '', width: '', height: '' });
           } else {
             wrapper.css('visibility', 'hidden');
           }
@@ -483,21 +488,8 @@ $(document).ready(function () {
     resetRow(row);
     row.find('.addAuthor, .addauthorinstitution').remove();
     ensureCardScaffold(row, type);
-    // Keep person-specific help buttons visible only for the first person entry.
-    const isFirstPerson = type === 'person' &&
-      stack.find('[data-creator-row]').length === 0;
-
-    // Hide duplicate help buttons in later cloned rows while preserving the first set.
-    replaceHelpButtonInClonedRows(row,
-      "input-right-with-round-corners",
-      isFirstPerson
-        ? [
-          "help-author-orcid",
-          "help-contactperson-email",
-          "help-contactperson-website"
-        ]
-        : []
-    );
+    // Keep person help icons as real buttons on every clone. applyAuthorHelpStatus()
+    replaceHelpButtonInClonedRows(row, "input-right-with-round-corners", personHelpSectionIds);
 
     translateClonedRow(row);
     setupContactFields(row);
