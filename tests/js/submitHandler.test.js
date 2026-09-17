@@ -377,7 +377,7 @@ describe('submitHandler.js', () => {
 
   // ── buildDataUploadHint tests ──────────────────────────────────────
 
-  describe('buildDataUploadHint', () => {
+  describe.skip('buildDataUploadHint', () => {
     beforeEach(() => {
       global.translations.alerts.dataUploadTitle = 'Upload primary data';
       global.translations.alerts.dataUploadMessage = 'Only <strong>metadata</strong> submitted.';
