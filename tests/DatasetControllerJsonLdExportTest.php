@@ -69,6 +69,14 @@ XML;
         $this->assertSame('Earth Science', $payload['subjects']['subject']['value']);
         $this->assertSame('Test Funder', $payload['fundingReferences']['fundingReference']['funderName']['value']);
         $this->assertSame('10.1234/test', $payload['relatedIdentifiers']['relatedIdentifier']['value']);
+        $this->assertSame(
+            'IsCitedBy',
+            $payload['relatedIdentifiers']['relatedIdentifier']['attrs']['relationType']
+        );
+        $this->assertSame(
+            'DOI',
+            $payload['relatedIdentifiers']['relatedIdentifier']['attrs']['relatedIdentifierType']
+        );
     }
 
     public function testTransformResourceToJsonLdForwardsPreparedStructuredPayloadSourceXml(): void
@@ -125,6 +133,10 @@ XML;
         self::assertSame(
             '10.1234/payload-related-work',
             $payload['relatedIdentifiers']['relatedIdentifier']['value']
+        );
+        self::assertSame(
+            'IsReferencedBy',
+            $payload['relatedIdentifiers']['relatedIdentifier']['attrs']['relationType']
         );
     }
 }

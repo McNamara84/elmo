@@ -208,6 +208,8 @@ describe('relatedwork.js card stack', () => {
     }));
     const onProgress = jest.fn();
     const yieldControl = jest.fn().mockResolvedValue();
+    const payloadListener = jest.fn();
+    document.addEventListener('relatedWorksPayload:updated', payloadListener);
     $.fn.sortable.mockClear();
     window.elmo.updateIdentifierValidationPattern.mockClear();
 
@@ -230,7 +232,72 @@ describe('relatedwork.js card stack', () => {
     expect(yieldControl).toHaveBeenCalledTimes(2);
     expect($.fn.sortable).toHaveBeenCalledTimes(1);
     expect($.fn.sortable).toHaveBeenCalledWith('refresh');
+    expect(payloadListener).toHaveBeenCalledTimes(1);
     expect(window.elmo.updateIdentifierValidationPattern).not.toHaveBeenCalled();
+
+    document.removeEventListener('relatedWorksPayload:updated', payloadListener);
+  });
+
+  test('loads 401 issue-769 entries completely, in order, and within the import budget', async () => {
+    const entries = Array.from({ length: 401 }, (_, index) => ({
+      entryKey: `digis-e-2024-007-related-${index + 1}`,
+      identifier: `10.5880/digis.e.2024.007.related-${String(index + 1).padStart(3, '0')}`,
+      relation: index % 2 === 0 ? 'References' : 'IsReferencedBy',
+      relationId: index % 2 === 0 ? '2' : '3',
+      identifierType: 'DOI'
+    }));
+    const onProgress = jest.fn();
+    const yieldControl = jest.fn().mockResolvedValue();
+    const payloadListener = jest.fn();
+    document.addEventListener('relatedWorksPayload:updated', payloadListener);
+    $.fn.sortable.mockClear();
+    window.elmo.updateIdentifierValidationPattern.mockClear();
+
+    const startedAt = Date.now();
+    const result = await window.relatedWorkStack.setRelatedWorks(entries, {
+      bulk: true,
+      batchSize: 50,
+      onProgress,
+      yieldControl
+    });
+    const elapsedMs = Date.now() - startedAt;
+
+    expect(elapsedMs).toBeLessThan(15000);
+    expect($('[data-related-work-entry]')).toHaveLength(401);
+    expect(result).toHaveLength(401);
+    expect(result.map((entry) => entry.entryKey)).toEqual(entries.map((entry) => entry.entryKey));
+    expect(result.map((entry) => entry.identifier)).toEqual(entries.map((entry) => entry.identifier));
+    expect(new Set(result.map((entry) => entry.entryKey)).size).toBe(401);
+    expect(onProgress).toHaveBeenNthCalledWith(1, { processed: 0, total: 401 });
+    expect(onProgress).toHaveBeenLastCalledWith({ processed: 401, total: 401 });
+    expect(onProgress.mock.calls.some(([progress]) => progress.processed > 0 && progress.processed < 401)).toBe(true);
+    expect(yieldControl).toHaveBeenCalledTimes(8);
+    expect($.fn.sortable).toHaveBeenCalledTimes(1);
+    expect($.fn.sortable).toHaveBeenCalledWith('refresh');
+    expect(payloadListener).toHaveBeenCalledTimes(1);
+    expect(window.elmo.updateIdentifierValidationPattern).not.toHaveBeenCalled();
+
+    document.removeEventListener('relatedWorksPayload:updated', payloadListener);
+  }, 20000);
+
+  test('removes the second and then the first/last card before adding again for issue 812', () => {
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },
+      { entryKey: 'second', identifier: 'second', relationId: '2', relation: 'References', identifierType: 'URL' }
+    ]);
+
+    $('[data-related-work-entry]').eq(1).find('[data-related-work-remove]').trigger('click');
+    expect(payload().map((entry) => entry.entryKey)).toEqual(['first']);
+    expect(document.activeElement).toBe($('[data-related-work-toggle-edit]')[0]);
+
+    $('[data-related-work-entry]').first().find('[data-related-work-remove]').trigger('click');
+    expect($('[data-related-work-entry]')).toHaveLength(0);
+    expect(payload()).toEqual([]);
+    expect(document.activeElement).toBe($('#button-relatedwork-add')[0]);
+
+    $('#button-relatedwork-add').trigger('click');
+    expect($('[data-related-work-entry]')).toHaveLength(1);
+    expect(document.activeElement).toBe($('[data-related-work-entry] select[name="relation[]"]')[0]);
   });
 
   test('moves cards with keyboard-accessible buttons and updates focus and order', () => {
@@ -242,6 +309,8 @@ describe('relatedwork.js card stack', () => {
     $('[data-related-work-entry]').eq(1).find('[data-related-work-move-up]').trigger('click');
 
     expect(payload().map((entry) => entry.entryKey)).toEqual(['second', 'first']);
+    expect($('[data-related-work-summary-identifier]').map((_, element) => $(element).text()).get())
+      .toEqual(['second', 'first']);
     const movedCard = $('[data-related-work-entry]').first();
     expect(movedCard.find('[data-related-work-move-up]').prop('disabled')).toBe(true);
     expect(movedCard.find('[data-related-work-move-down]')[0]).toBe(document.activeElement);
@@ -259,6 +328,8 @@ describe('relatedwork.js card stack', () => {
 
     expect(payload().map((entry) => entry.entryKey)).toEqual(['second', 'first']);
     expect(payload().map((entry) => entry.order)).toEqual([0, 1]);
+    expect($('[data-related-work-summary-identifier]').map((_, element) => $(element).text()).get())
+      .toEqual(['second', 'first']);
   });
 
   test('collapses, reopens, and removes cards without changing their data', () => {
