@@ -182,6 +182,15 @@ $(document).ready(function () {
     return candidate;
   }
 
+  function createReservedEntryKey(preferredKey, fallbackIndex, reservedKeys) {
+    let candidate = preferredKey ? String(preferredKey) : `related-work-${fallbackIndex}`;
+    while (reservedKeys.has(candidate)) {
+      candidate = `related-work-${entryIndex++}`;
+    }
+    reservedKeys.add(candidate);
+    return candidate;
+  }
+
   function ensureCardScaffold(row) {
     row.attr({
       'data-related-work-entry': '',
@@ -431,29 +440,43 @@ $(document).ready(function () {
   function addRelatedWork(entry = null, options = {}) {
     const row = template.clone(false);
     const index = entryIndex++;
-    row.attr('data-related-work-entry-key', createUniqueEntryKey(entry && entry.entryKey, index));
+    const entryKey = options.reservedEntryKeys
+      ? createReservedEntryKey(entry && entry.entryKey, index, options.reservedEntryKeys)
+      : createUniqueEntryKey(entry && entry.entryKey, index);
+    row.attr('data-related-work-entry-key', entryKey);
     updateIds(row, index);
     resetRow(row);
     row.find('#button-relatedwork-add, [data-related-work-add]').remove();
     replaceHelpButtonInClonedRows(
       row,
       'input-right-with-round-corners',
-      stack.children('[data-related-work-entry]').length === 0
+      (options.isFirstEntry ?? stack.children('[data-related-work-entry]').length === 0)
         ? ['help-relatedwork-relation', 'help-relatedwork-identifier', 'help-relatedwork-identifiertype']
         : []
     );
     translateClonedRow(row);
     ensureCardScaffold(row);
     if (window.elmo && typeof window.elmo.applyRelatedWorkDropdowns === 'function') {
-      window.elmo.applyRelatedWorkDropdowns(row[0], { notify: false });
+      window.elmo.applyRelatedWorkDropdowns(row[0], {
+        notify: false,
+        refreshChosen: options.refreshChosen !== false
+      });
     }
     populateRow(row, entry);
-    stack.append(row);
-    if (window.elmo && typeof window.elmo.updateIdentifierValidationPattern === 'function') {
+    if (options.appendTarget && typeof options.appendTarget.appendChild === 'function') {
+      options.appendTarget.appendChild(row[0]);
+    } else {
+      stack.append(row);
+    }
+    if (options.updateValidation !== false
+      && window.elmo
+      && typeof window.elmo.updateIdentifierValidationPattern === 'function') {
       window.elmo.updateIdentifierValidationPattern(row.find('select[name="rIdentifierType[]"]')[0]);
     }
-    initializeTooltips(row);
-    if (typeof stack.sortable === 'function') {
+    if (options.initializeTooltips !== false) {
+      initializeTooltips(row);
+    }
+    if (options.refreshSortable !== false && typeof stack.sortable === 'function') {
       stack.sortable('refresh');
     }
     if (options.update !== false) {
@@ -476,10 +499,84 @@ $(document).ready(function () {
     return Array.isArray(entries) ? entries : [];
   }
 
-  function setRelatedWorks(entries) {
+  function yieldForRelatedWorkRendering() {
+    const view = stack[0] && stack[0].ownerDocument
+      ? stack[0].ownerDocument.defaultView
+      : window;
+    if (view && typeof view.requestAnimationFrame === 'function') {
+      return new Promise(function (resolve) {
+        view.requestAnimationFrame(function () { resolve(); });
+      });
+    }
+    return new Promise(function (resolve) {
+      setTimeout(resolve, 0);
+    });
+  }
+
+  async function setRelatedWorksBulk(entries, options = {}) {
     stack.children('[data-related-work-entry]').remove();
-    normalizeEntries(entries).forEach(function (entry) {
-      addRelatedWork(entry, { focus: false, update: false });
+    const batchSize = Number.isInteger(options.batchSize) && options.batchSize > 0
+      ? options.batchSize
+      : 50;
+    const onProgress = typeof options.onProgress === 'function' ? options.onProgress : null;
+    const yieldControl = typeof options.yieldControl === 'function'
+      ? options.yieldControl
+      : yieldForRelatedWorkRendering;
+    const reservedEntryKeys = new Set();
+    const total = entries.length;
+
+    if (onProgress) {
+      onProgress({ processed: 0, total });
+    }
+
+    for (let start = 0; start < total; start += batchSize) {
+      const fragment = document.createDocumentFragment();
+      const end = Math.min(start + batchSize, total);
+      for (let index = start; index < end; index++) {
+        addRelatedWork(entries[index], {
+          appendTarget: fragment,
+          focus: false,
+          update: false,
+          refreshSortable: false,
+          refreshChosen: false,
+          updateValidation: false,
+          initializeTooltips: false,
+          isFirstEntry: index === 0,
+          reservedEntryKeys
+        });
+      }
+      stack[0].appendChild(fragment);
+      if (onProgress) {
+        onProgress({ processed: end, total });
+      }
+      if (end < total) {
+        await yieldControl();
+      }
+    }
+
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    $('.chosen-select').trigger('chosen:updated');
+    initializeTooltips(stack);
+    return updatePayload();
+  }
+
+  function setRelatedWorks(entries, options = {}) {
+    const normalizedEntries = normalizeEntries(entries);
+    if (options.bulk === true) {
+      return setRelatedWorksBulk(normalizedEntries, options);
+    }
+
+    stack.children('[data-related-work-entry]').remove();
+    const reservedEntryKeys = new Set();
+    normalizedEntries.forEach(function (entry, index) {
+      addRelatedWork(entry, {
+        focus: false,
+        update: false,
+        isFirstEntry: index === 0,
+        reservedEntryKeys
+      });
     });
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');

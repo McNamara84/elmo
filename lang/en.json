@@ -367,7 +367,8 @@
             "errorToast": "Error loading file",
             "invalidFileType": "Please upload an XML or JSON-LD file.",
             "errorProcessing": "Error processing metadata file",
-            "errorReading": "Error reading file"
+            "errorReading": "Error reading file",
+            "relatedWorksProgress": "Related works {processed}/{total}"
         },
         "gfcUpload": {
             "uploadButton": "Fill in metadata fields from model file",

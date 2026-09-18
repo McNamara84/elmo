@@ -5,6 +5,110 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
   ? require('./resourceTypeUtils')
   : window.resourceTypeUtils;
 
+const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
+let relatedWorksXsltDocumentPromise = null;
+
+function createRelatedWorksImportError(message, cause) {
+  const error = new Error(message);
+  if (cause) {
+    error.cause = cause;
+  }
+  return error;
+}
+
+function resetRelatedWorksXsltCache() {
+  relatedWorksXsltDocumentPromise = null;
+}
+
+async function loadRelatedWorksXsltDocument() {
+  if (relatedWorksXsltDocumentPromise) {
+    return relatedWorksXsltDocumentPromise;
+  }
+
+  relatedWorksXsltDocumentPromise = (async function () {
+    if (typeof fetch !== 'function') {
+      throw new Error('Fetch API is not available.');
+    }
+
+    const response = await fetch(RELATED_WORK_XSLT_URL, { credentials: 'same-origin' });
+    if (!response.ok) {
+      throw new Error(`Stylesheet request failed with status ${response.status}.`);
+    }
+
+    const source = await response.text();
+    const stylesheet = new DOMParser().parseFromString(source, 'application/xml');
+    if (stylesheet.getElementsByTagName('parsererror').length > 0) {
+      throw new Error('Stylesheet is not valid XML.');
+    }
+
+    return stylesheet;
+  })().catch(function (error) {
+    relatedWorksXsltDocumentPromise = null;
+    throw createRelatedWorksImportError('Could not load the Related Works import stylesheet.', error);
+  });
+
+  return relatedWorksXsltDocumentPromise;
+}
+
+async function transformRelatedWorksDocument(xmlDoc, options = {}) {
+  const Processor = typeof XSLTProcessor !== 'undefined'
+    ? XSLTProcessor
+    : (typeof window !== 'undefined' ? window.XSLTProcessor : null);
+  if (typeof Processor !== 'function') {
+    throw createRelatedWorksImportError('This browser does not support the Related Works XSLT import.');
+  }
+
+  try {
+    const stylesheet = await loadRelatedWorksXsltDocument();
+    const processor = new Processor();
+    processor.importStylesheet(stylesheet);
+    processor.setParameter(
+      null,
+      'excludeIsCollectedBy',
+      options.excludeIsCollectedBy === true ? 'true' : 'false'
+    );
+    const transformedDocument = processor.transformToDocument(xmlDoc);
+    if (!transformedDocument
+      || transformedDocument.getElementsByTagName('parsererror').length > 0
+      || !transformedDocument.documentElement) {
+      throw new Error('The stylesheet returned an invalid XML document.');
+    }
+    return transformedDocument;
+  } catch (error) {
+    if (error && error.message === 'This browser does not support the Related Works XSLT import.') {
+      throw error;
+    }
+    throw createRelatedWorksImportError('Could not transform Related Works from the uploaded XML file.', error);
+  }
+}
+
+function findDirectChildByLocalName(node, localName) {
+  return Array.from(node ? node.childNodes : []).find(function (child) {
+    return child.nodeType === 1 && child.localName === localName;
+  }) || null;
+}
+
+function parseRelatedWorksMap(transformedDocument) {
+  if (!transformedDocument || !transformedDocument.documentElement) {
+    throw createRelatedWorksImportError('The Related Works transformation returned no document.');
+  }
+
+  return Array.from(transformedDocument.getElementsByTagName('RelatedWork')).map(function (workNode) {
+    const identifierNode = findDirectChildByLocalName(workNode, 'Identifier');
+    const relationNode = findDirectChildByLocalName(workNode, 'Relation');
+    const relationNameNode = findDirectChildByLocalName(relationNode, 'name');
+    const identifierTypeNode = findDirectChildByLocalName(workNode, 'IdentifierType');
+    const identifierTypeNameNode = findDirectChildByLocalName(identifierTypeNode, 'name');
+
+    return {
+      identifier: String(identifierNode ? identifierNode.textContent : '').trim(),
+      relation: String(relationNameNode ? relationNameNode.textContent : '').trim(),
+      relationId: '',
+      identifierType: String(identifierTypeNameNode ? identifierTypeNameNode.textContent : '').trim()
+    };
+  });
+}
+
 /**
  * Processes the resource type from an XML document and selects the corresponding option.
  *
@@ -1513,56 +1617,64 @@ function processKeywords(xmlDoc, resolver) {
 }
 
 /**
- * Process related identifiers from XML and populate the formgroup Related Works
- * When showUsedInstruments is active, entries with relationType="IsCollectedBy" are
- * filtered out and handled by processUsedInstruments() instead.
+ * Transforms Related Identifiers into the internal RelatedWorks map and rebuilds
+ * the card stack in batches. When showUsedInstruments is active,
+ * relationType="IsCollectedBy" is filtered by the XSLT and remains owned by
+ * processUsedInstruments().
  * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
+ * @param {Function} resolver - Kept for backwards-compatible callers
+ * @param {Object} [options] - Import and rendering options
+ * @param {Function} [options.onProgress] - Receives {processed, total}
+ * @param {number} [options.batchSize=50] - Number of cards per render batch
+ * @param {Function} [options.transformRelatedWorksDocument] - Test seam for the XSLT transform
+ * @returns {Promise<Array<Record<string, string>>>} Imported entries in XML order
  */
-function processRelatedWorks(xmlDoc, resolver) {
-  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+async function processRelatedWorks(xmlDoc, resolver, options = {}) {
+  const relatedWorkStack = window.relatedWorkStack
+    && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+    ? window.relatedWorkStack
+    : null;
+  const relatedWorkEnabled = relatedWorkStack || document.querySelector(
+    '[data-related-work-formgroup], [data-related-work-stack], input[name="relatedWorksPayload"]'
+  );
+  if (!relatedWorkEnabled) {
+    return [];
+  }
+  if (!relatedWorkStack) {
+    throw createRelatedWorksImportError('Related Works card stack is not initialized.');
+  }
 
-  // Collect entries, optionally filtering out instruments
+  if (window.elmo && window.elmo.dropdownsReady) {
+    await window.elmo.dropdownsReady;
+  }
+
   const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
-  let entries = [];
+  const transform = typeof options.transformRelatedWorksDocument === 'function'
+    ? options.transformRelatedWorksDocument
+    : transformRelatedWorksDocument;
+  const transformedDocument = await transform(xmlDoc, {
+    excludeIsCollectedBy: Boolean(showUsedInstruments)
+  });
+  const entries = parseRelatedWorksMap(transformedDocument);
 
-  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
-    const identifierNode = identifierNodes.snapshotItem(i);
-    const relationType = identifierNode.getAttribute("relationType");
-    const identifierType = identifierNode.getAttribute("relatedIdentifierType");
-    const identifierValue = identifierNode.textContent;
-
-    // Skip IsCollectedBy entries when Used Instruments feature is active
-    if (showUsedInstruments && relationType === "IsCollectedBy") {
-      continue;
+  try {
+    await Promise.resolve(relatedWorkStack.setRelatedWorks(entries, {
+      bulk: true,
+      batchSize: options.batchSize,
+      onProgress: options.onProgress,
+      yieldControl: options.yieldControl
+    }));
+  } catch (error) {
+    try {
+      await Promise.resolve(relatedWorkStack.setRelatedWorks([]));
+    } catch (clearError) {
+      // Preserve the original import failure while making a best effort to
+      // return the Related Works form group to its empty state.
     }
-
-    entries.push({ relationType, identifierType, identifierValue });
+    throw createRelatedWorksImportError('Could not render Related Works from the uploaded XML file.', error);
   }
 
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-
-    // Find last row
-    const $lastRow = $('input[name="rIdentifier[]"]').last().closest(".row");
-
-    // Set values
-    $lastRow.find('input[name="rIdentifier[]"]').val(entry.identifierValue);
-    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.identifierType);
-    // Match relation by visible text instead of value
-    $lastRow
-      .find('select[name="relation[]"]:first option')
-      .filter(function () {
-        return $(this).text() === entry.relationType; // Match by visible text
-      })
-      .prop("selected", true);
-
-    // clone row for the next entry, if there is one
-    if (i < entries.length - 1) {
-      // Add Related Work
-      $("#button-relatedwork-add").click();
-    }
-  }
+  return entries;
 }
 
 /**
@@ -1580,7 +1692,13 @@ function processUsedInstruments(xmlDoc, resolver) {
     return;
   }
 
-  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const identifierNodes = xmlDoc.evaluate(
+    ".//ns:relatedIdentifiers/ns:relatedIdentifier | .//relatedIdentifiers/relatedIdentifier",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   const pidList = [];
 
@@ -1661,8 +1779,11 @@ function processFunders(xmlDoc, resolver) {
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
+ * @param {Object} [options] - Import integration options
+ * @param {Function} [options.onRelatedWorksProgress] - Receives Related Works batch progress
+ * @param {number} [options.relatedWorksBatchSize=50] - Related Works render batch size
  */
-async function loadXmlToForm(xmlDoc) {
+async function loadXmlToForm(xmlDoc, options = {}) {
   clearInputFields();
   const resourceNode = xmlDoc.evaluate(
     "//ns:resource | /resource | //resource",
@@ -1786,7 +1907,10 @@ async function loadXmlToForm(xmlDoc) {
   // Process Keywords
   processKeywords(xmlDoc, resolver);
   // Process Related Works
-  processRelatedWorks(xmlDoc, resolver);
+  await processRelatedWorks(xmlDoc, resolver, {
+    onProgress: options.onRelatedWorksProgress,
+    batchSize: options.relatedWorksBatchSize
+  });
   // Process Used Instruments (IsCollectedBy entries)
   processUsedInstruments(xmlDoc, resolver);
   // Process Funders
@@ -1830,10 +1954,15 @@ if (typeof module !== 'undefined' && module.exports) {
         getGeoLocationData,
         fillSpatialFields,
         fillTemporalFields,
+        loadRelatedWorksXsltDocument,
+        transformRelatedWorksDocument,
+        parseRelatedWorksMap,
+        resetRelatedWorksXsltCache,
         processUsedInstruments,
         processDescriptions,
         processRelatedWorks,
         processFunders,
-        processSpatialTemporalCoverages
+        processSpatialTemporalCoverages,
+        loadXmlToForm
     };
 }

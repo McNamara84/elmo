@@ -368,7 +368,8 @@
             "errorToast": "Fehler beim Laden der Datei",
             "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
-            "errorReading": "Fehler beim Lesen der Datei"
+            "errorReading": "Fehler beim Lesen der Datei",
+            "relatedWorksProgress": "Verwandte Werke {processed}/{total}"
         },
         "gfcUpload": {
             "uploadButton": "Metadatenfelder aus Modelldatei ausfüllen",

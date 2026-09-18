@@ -382,6 +382,7 @@ function populateRelatedWorkSelect(select, items, createOption, relationSelect =
  * @param {Document|HTMLElement|jQuery|null} [root=null] - Scope containing Related Work selects.
  * @param {Object} [options] - Application options.
  * @param {boolean} [options.notify=true] - Dispatch the dropdown update event.
+ * @param {boolean} [options.refreshChosen=true] - Refresh Chosen widgets after population.
  */
 function applyRelatedWorkDropdowns(root = null, options = {}) {
   if (Array.isArray(relatedWorkDropdownCache.relations)) {
@@ -409,7 +410,9 @@ function applyRelatedWorkDropdowns(root = null, options = {}) {
     });
   }
 
-  $('.chosen-select').trigger('chosen:updated');
+  if (options.refreshChosen !== false) {
+    $('.chosen-select').trigger('chosen:updated');
+  }
   if (options.notify !== false) {
     document.dispatchEvent(new CustomEvent('relatedWorkDropdowns:updated'));
   }

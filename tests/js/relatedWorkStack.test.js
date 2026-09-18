@@ -198,6 +198,41 @@ describe('relatedwork.js card stack', () => {
     document.removeEventListener('relatedWorksPayload:updated', listener);
   });
 
+  test('builds more than 100 imported cards in batches with one final refresh', async () => {
+    const entries = Array.from({ length: 105 }, (_, index) => ({
+      entryKey: `imported-${index}`,
+      identifier: `10.1234/related-${index}`,
+      relation: 'IsCitedBy',
+      relationId: '1',
+      identifierType: 'DOI'
+    }));
+    const onProgress = jest.fn();
+    const yieldControl = jest.fn().mockResolvedValue();
+    $.fn.sortable.mockClear();
+    window.elmo.updateIdentifierValidationPattern.mockClear();
+
+    const result = await window.relatedWorkStack.setRelatedWorks(entries, {
+      bulk: true,
+      batchSize: 50,
+      onProgress,
+      yieldControl
+    });
+
+    expect($('[data-related-work-entry]')).toHaveLength(105);
+    expect(result).toHaveLength(105);
+    expect(result.map((entry) => entry.identifier)).toEqual(entries.map((entry) => entry.identifier));
+    expect(onProgress.mock.calls.map((call) => call[0])).toEqual([
+      { processed: 0, total: 105 },
+      { processed: 50, total: 105 },
+      { processed: 100, total: 105 },
+      { processed: 105, total: 105 }
+    ]);
+    expect(yieldControl).toHaveBeenCalledTimes(2);
+    expect($.fn.sortable).toHaveBeenCalledTimes(1);
+    expect($.fn.sortable).toHaveBeenCalledWith('refresh');
+    expect(window.elmo.updateIdentifierValidationPattern).not.toHaveBeenCalled();
+  });
+
   test('moves cards with keyboard-accessible buttons and updates focus and order', () => {
     window.relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },
