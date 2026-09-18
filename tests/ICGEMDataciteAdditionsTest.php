@@ -1163,9 +1163,9 @@ final class ICGEMDataciteAdditionsTest extends TestCase
     /**
      * Snapshot fixtures still expect the historical ICGEM-format label.
      *
-     * @var array{file_format: string}
+     * @var array{icgem_file_format: string}
      */
-    private const SNAPSHOT_POST = ['file_format' => 'ICGEM-format'];
+    private const SNAPSHOT_POST = ['icgem_file_format' => 'ICGEM-format'];
 
     /**
      * @param array<string, mixed> $postData
@@ -1345,7 +1345,7 @@ XML);
     public function testAddsFileFormatFromPostData(): void
     {
         $xml = $this->minimalEnvelope("<subjects/><contributors/>");
-        $result = $this->applyAdditions($xml, ['file_format' => 'icgem1.0']);
+        $result = $this->applyAdditions($xml, ['icgem_file_format' => 'icgem1.0']);
 
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem1.0"]'));
         $this->assertSame(0, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
@@ -1370,7 +1370,7 @@ XML);
   </formats>
 XML);
 
-        $result = $this->applyAdditions($xml, ['file_format' => 'icgem2.0']);
+        $result = $this->applyAdditions($xml, ['icgem_file_format' => 'icgem2.0']);
 
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem2.0"]'));
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"]'));
@@ -1386,7 +1386,7 @@ XML);
   </formats>
 XML);
 
-        $result = $this->applyAdditions($xml, ['file_format' => 'icgem1.0']);
+        $result = $this->applyAdditions($xml, ['icgem_file_format' => 'icgem1.0']);
 
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="binary"]'));
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem1.0"]'));

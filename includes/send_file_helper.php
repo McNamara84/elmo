@@ -433,7 +433,7 @@ function generateICGEMFile(int $resourceId, array $postData, array $settings = [
  * @param string $xmlContent The generated XML string.
  * @param bool $showGGMsProperties Whether to include GEM-specific additions.
  * @param bool $elmogemSendsDataServicesMail Whether GEM sends Data Services mail.
- * @param array<string, mixed> $postData Form fields from the submission, including 'file_format'.
+ * @param array<string, mixed> $postData Form fields from the submission, including 'icgem_file_format'.
  *
  * @throws RuntimeException When the DataCite resource element is not found or XML processing fails.
  */
@@ -586,8 +586,8 @@ function applyElmoGemAdditionsToDataciteXml(
         $contributors->appendChild($contributor);
     }
 
-    // --- 3. Add format from the ELMO-GEM file_format field ---
-    $fileFormat = trim((string) ($postData['file_format'] ?? ''));
+    // --- 3. Add format from the ELMO-GEM icgem_file_format field ---
+    $fileFormat = trim((string) ($postData['icgem_file_format'] ?? ''));
     if ($fileFormat !== '') {
         $formats = $getOrCreateChild('formats');
         $alreadyHasFormat = $findChild(

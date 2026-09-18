@@ -64,13 +64,13 @@ XML;
             self::DATA_SERVICES_XML,
             $showGGMsProperties,
             $elmogemSendsDataServicesMail,
-            ['file_format' => 'icgem1.0']
+            ['icgem_file_format' => 'icgem1.0']
         );
         $icgemResult = applyElmoGemAdditionsToDataciteXml(
             self::ICGEM_XML,
             $showGGMsProperties,
             $elmogemSendsDataServicesMail,
-            ['file_format' => 'icgem1.0']
+            ['icgem_file_format' => 'icgem1.0']
         );
 
         if ($expectDataServicesAddition) {

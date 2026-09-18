@@ -26,7 +26,7 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
  *   submit  : validateGGMData() enforces model_name (non-empty, no spaces),
  *             model_type and mathematical_representation (non-empty strings);
  *             FK resolution for model_type / mathematical_representation /
- *             file_format must all succeed.
+ *             icgem_file_format must all succeed.
  *   save    : Only checks resourceId > 0; null FKs are stored as NULL.
  *
  * save_ggms_properties.php
@@ -172,7 +172,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => '',
             'model_type'                => '',
             'mathematical_representation' => '',
-            'file_format'               => '',
+            'icgem_file_format'               => '',
             'celestial_body'            => '',
             'product_type'              => '',
         ];
@@ -207,7 +207,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'PARTIAL_MODEL',
             'model_type'                => '',
             'mathematical_representation' => '',
-            'file_format'               => '',
+            'icgem_file_format'               => '',
         ];
 
         $result = saveGGMsDefinition($this->connection, $postData, $this->resourceId);
@@ -243,7 +243,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'FULL_MODEL',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
             'celestial_body'            => 'Earth',
         ];
 
@@ -280,7 +280,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => '',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -299,7 +299,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'MODEL WITH SPACES',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -318,7 +318,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'VALID_MODEL',
             'model_type'                => 'Static',
             'mathematical_representation' => '',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -337,7 +337,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'VALID_MODEL',
             'model_type'                => 'NonexistentType',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
