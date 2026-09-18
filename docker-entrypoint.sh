@@ -76,13 +76,12 @@ mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
 EOSQL
 echo "Database and user configured at ${db_host}:${db_port}."
 
-# Always run install.php after DB is reachable.
+# Always run the CLI installer after DB is reachable.
 INSTALL_ACTION="${INSTALL_ACTION:-basic}"
-echo "Running database setup via install.php (${INSTALL_ACTION})..."
-php /var/www/html/install.php "${INSTALL_ACTION}"
+echo "Running database setup via scripts/install.php (${INSTALL_ACTION})..."
+php /var/www/html/scripts/install.php "${INSTALL_ACTION}"
 echo "Database setup finished."
-
-# Clean up install files (optional)
-rm -f /var/www/html/install.{php,html} || true
+# Do sync to DB so that ERNIE ids are correctly mapped. 
+php /var/www/html/includes/sync_on_start.php
 
 exec "$@"

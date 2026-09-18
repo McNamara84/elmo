@@ -134,6 +134,13 @@ async function createLanguageMapping() {
   }
 }
 
+const EMPTY_TITLE_TYPE_MAPPING = {
+  "": "",
+  MainTitle: "",
+  AlternativeTitle: "",
+  TranslatedTitle: "",
+};
+
 /**
  * Creates a title type mapping from API data
  * @returns {Promise<Object>} A promise that resolves to a mapping of title types
@@ -157,12 +164,7 @@ async function createTitleTypeMapping() {
     return mapping;
   } catch (error) {
     console.error("Error creating title type mapping:", error);
-    return {
-      "": "1",
-      MainTitle: "1",
-      AlternativeTitle: "2",
-      TranslatedTitle: "3",
-    };
+    return { ...EMPTY_TITLE_TYPE_MAPPING };
   }
 }
 
@@ -176,8 +178,8 @@ function mapTitleType(titleType, mapping = {}) {
   const key = (titleType || "").replace(/\s+/g, "");
   const map = Object.keys(mapping).length
     ? mapping
-    : { "": "1", MainTitle: "1", AlternativeTitle: "2", TranslatedTitle: "3" };
-  return map[key] || map[""] || "1";
+    : EMPTY_TITLE_TYPE_MAPPING;
+  return map[key] ?? map[""] ?? "";
 }
 
 /**
@@ -228,6 +230,40 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
   const node = xmlDoc.evaluate(xpath, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
   return node ? node.textContent.trim() : "";
+}
+
+/**
+ * Reads an ORCID nameIdentifier without relying on XPath attribute predicates.
+ *
+ * Some supported DOM implementations do not evaluate predicates on namespaced
+ * elements consistently. Inspecting the small nameIdentifier collection keeps
+ * JSON-LD/XML reloads deterministic in browsers and tests.
+ *
+ * @param {Document} xmlDoc - The XML document
+ * @param {Node} parentNode - Creator or contributor containing identifiers
+ * @param {Function} resolver - The namespace resolver function
+ * @returns {string} Normalized ORCID without the resolver URL prefix
+ */
+function getOrcidFromNode(xmlDoc, parentNode, resolver) {
+  const identifiers = xmlDoc.evaluate(
+    "ns:nameIdentifier",
+    parentNode,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
+
+  for (let index = 0; index < identifiers.snapshotLength; index++) {
+    const identifier = identifiers.snapshotItem(index);
+    const scheme = (identifier.getAttribute("nameIdentifierScheme") || "").toUpperCase();
+    const schemeUri = identifier.getAttribute("schemeURI") || "";
+
+    if (scheme === "ORCID" || /^https?:\/\/orcid\.org\/?$/i.test(schemeUri)) {
+      return identifier.textContent.trim().replace(/^https?:\/\/orcid\.org\//i, "");
+    }
+  }
+
+  return "";
 }
 
 function getAuthorStackController() {
@@ -334,7 +370,7 @@ function collectDataCiteContactPersons(xmlDoc) {
     const familyname = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenname = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (familyname && givenname) {
+    if (familyname || givenname) {
       contactPersons.push({ familyname, givenname, email: "", website: "" });
     }
   }
@@ -359,7 +395,7 @@ function processCreators(xmlDoc, resolver) {
       const creatorNode = creatorNodes.snapshotItem(i);
       const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
       const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
-      const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+      const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
       const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
       const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
       const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
@@ -402,7 +438,7 @@ function processCreators(xmlDoc, resolver) {
     const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
     const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
     // Clean ORCID by removing URL prefix if present
-    const orcid = getNodeText(creatorNode, 'ns:nameIdentifier[@nameIdentifierScheme="ORCID"]', xmlDoc, resolver).replace("https://orcid.org/", "");
+    const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
     const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
 
     // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
@@ -693,7 +729,7 @@ function processContactPersonsFromDataCite(xmlDoc) {
     const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
     const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
 
-    if (!familyName || !givenName) continue;
+    if (!familyName && !givenName) continue;
 
     const normalizedFamily = familyName.trim().toLowerCase();
     const normalizedGiven = givenName.trim().toLowerCase();
@@ -769,7 +805,8 @@ function setLabDataInRow(row, labId) {
 
   try {
     // Set the select value to the lab name
-    selectName.val(lab.name);
+    selectName.val(lab.display_name);
+
 
     // Trigger change event to ensure any attached handlers run
     selectName.trigger("change");
@@ -784,8 +821,9 @@ function setLabDataInRow(row, labId) {
     const hiddenRorId = row.find('input[name="laboratoryRorIds[]"]');
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
+
     if (hiddenRorId.length) hiddenRorId.val(lab.affiliation_ror || "");
-    if (hiddenLabId.length) hiddenLabId.val(lab.identifier);
+    if (hiddenLabId.length) hiddenLabId.val(lab.identifier || "");
   } catch (error) {
     console.error("Error in setLabDataInRow:", error);
     console.error("Error stack:", error.stack);
@@ -920,7 +958,7 @@ function processIndividualContributor(contributor, xmlDoc, resolver, personMap, 
   const contributorName = getNodeText(contributor, "ns:contributorName", xmlDoc, resolver);
   const givenName = getNodeText(contributor, "ns:givenName", xmlDoc, resolver);
   const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
-  const orcid = getNodeText(contributor, 'ns:nameIdentifier[@schemeURI="https://orcid.org/"]', xmlDoc, resolver);
+  const orcid = getOrcidFromNode(xmlDoc, contributor, resolver);
 
   // Get affiliations as aligned pairs of { name, rorId }
   const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -1369,35 +1407,40 @@ function processDates(xmlDoc, resolver) {
 }
 
 /**
- * Process Subjects from XML and populate the Keyword fields
+ * Populate keyword Tagify fields from XML subjects.
+ * processKeywords collects thesaurus keys referenced in the XML, 
+ * waits for each via waitForThesaurusVocabulary (whitelist applied, jsTree ready), then imports. On timeout/error, import is aborted so Tagify does not silently drop tags.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
-function processKeywords(xmlDoc, resolver) {
+async function processKeywords(xmlDoc, resolver) {
   // Collect all subject nodes from the XML
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
-  // Map each keyword group to its Tagify instance (if available)
-  const tagifyMap = {
-    free: document.querySelector("#input-freekeyword")?._tagify || null,
-    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
-    gcmdScience: document.querySelector("#input-sciencekeyword")?._tagify || null,
-    gcmdPlatforms: document.querySelector("#input-platforms")?._tagify || null,
-    gcmdInstruments: document.querySelector("#input-instruments")?._tagify || null,
-    chronostrat: document.querySelector("#input-chronostratigraphy")?._tagify || null,
-    gemet: document.querySelector("#input-gemet")?._tagify || null,
-  };
+  // Keys for GCMD / GEMET / chronostrat match THESAURUS_CONFIG in thesauri.js.
+  // This file is a classic script, so it cannot import that object; the input
+  // ids below are the same values as THESAURUS_CONFIG[key].inputId.
+  function getTagifyMap() {
+    return {
+      free: document.querySelector("#input-freekeyword")?._tagify || null,
+      msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+      science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
+      platforms: document.querySelector("#input-platforms")?._tagify || null,
+      instruments: document.querySelector("#input-instruments")?._tagify || null,
+      chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+      gemet: document.querySelector("#input-gemet")?._tagify || null,
+    };
+  }
+
+  let tagifyMap = getTagifyMap();
 
   // Keep only initialized Tagify fields
-  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  let allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
     console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
     return;
   }
-
-  // Clear existing tags before importing new ones
-  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
   function buildTagData(subjectNode) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
@@ -1429,19 +1472,19 @@ function processKeywords(xmlDoc, resolver) {
   // Resolve which form group a subject belongs to
   function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      return "gcmdScience";
+      return "science_keywords";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      return "gcmdPlatforms";
+      return "platforms";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      return "gcmdInstruments";
+      return "instruments";
     }
 
     if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
-      return "chronostrat";
+      return "chronostratigraphy";
     }
 
     if (
@@ -1458,6 +1501,31 @@ function processKeywords(xmlDoc, resolver) {
     return "free";
   }
 
+  const thesaurusKeys = new Set();
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const { subjectScheme, schemeURI } = buildTagData(subjectNode);
+    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
+    if (targetGroup !== "free" && targetGroup !== "msl") {
+      thesaurusKeys.add(targetGroup);
+    }
+  }
+  if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
+    const keys = [...thesaurusKeys];
+    // all existing thesauri inputs will wait for the corresponding fields to be ready
+    const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
+    const notReady = keys.filter((key, index) => results[index] !== 'loaded');
+    if (notReady.length > 0) {
+      throw new Error('Thesaurus vocabularies not ready for import: ' + notReady.join(', '));
+    }
+
+    tagifyMap = getTagifyMap();
+    allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  }
+
+  // We don't clear existing tags before importing new ones
+
+
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
@@ -1465,13 +1533,22 @@ function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
-    // Ignore keywords if the target form group is disabled
+    // Ignore keywords if the target field is not initialized
+    // Different versions may have different thesaurus selections
     if (!targetTagify) {
       continue;
     }
 
     targetTagify.addTags([tagData]);
   }
+
+  allTagifyInstances.forEach((tagify) => {
+    if (typeof tagify.update === "function") {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === "function") {
+      tagify._updateHiddenField();
+    }
+  });
 }
 
 /**
@@ -1646,7 +1723,10 @@ async function loadXmlToForm(xmlDoc) {
   // Warte auf das Laden der Labordaten, falls noch nicht geschehen
   if (!labData || labData.length === 0) {
     try {
-      labData = await $.getJSON("json/msl-labs.json");
+      const originatingLaboratories = await $.getJSON(
+        "/api/v2/vocabs/msl-laboratories"
+      );
+      labData = originatingLaboratories.data;
     } catch (error) {
       console.error("Error loading laboratory data:", error);
       labData = [];
@@ -1742,8 +1822,14 @@ async function loadXmlToForm(xmlDoc) {
   }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
-  // Process Keywords
-  processKeywords(xmlDoc, resolver);
+  // Thesaurus Tagify inputs are created after an async availability fetch.
+  // Wait until that input scaffolding exists; processKeywords() then waits for
+  // only the thesaurus vocabularies referenced by the uploaded subjects.
+  if (window.thesauriReady) {
+    await window.thesauriReady;
+  }
+  // Process Keywords (async: waits for the referenced thesaurus vocabularies)
+  await processKeywords(xmlDoc, resolver);
   // Process Related Works
   processRelatedWorks(xmlDoc, resolver);
   // Process Used Instruments (IsCollectedBy entries)
@@ -1754,7 +1840,7 @@ async function loadXmlToForm(xmlDoc) {
   processDates(xmlDoc, resolver);
   // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
   if (isIcgem) {
-    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+    await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
 }
 
@@ -1768,6 +1854,7 @@ if (typeof module !== 'undefined' && module.exports) {
         mapTitleType,
         processTitles,
         getNodeText,
+        getOrcidFromNode,
         processCreators,
         processContactPersons,
         processContactPersonsFromDataCite,

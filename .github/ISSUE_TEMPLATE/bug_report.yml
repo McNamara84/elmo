@@ -1,12 +1,17 @@
 name: Bug Report
 description: Report a bug or unexpected behavior in one of the ELMOs
 title: "[BUG] "
-labels: ["bug"]
+labels: ["bug", "DoR not met"]
+projects: ["McNamara84/10"]
 body:
   - type: markdown
     attributes:
       value: |
         Thanks for taking the time to report a bug! Please fill out the sections below.
+
+        ## Use ELMO terms
+
+        Please use the exact terms shown in the affected ELMO. Do not use abbreviations. For example, a digital dataset is named **Resource**, and a physical sample is named **IGSN**.
 
   - type: textarea
     id: description
@@ -22,11 +27,9 @@ body:
     attributes:
       label: Steps to Reproduce
       description: Step-by-step instructions to reproduce the behavior.
-      placeholder: |
-        1. Go to '...'
-        2. Click on '...'
-        3. Scroll down to '...'
-        4. See error
+      value: |
+        1. Open the affected ELMO
+        2. Navigate to page ... with route /...
     validations:
       required: true
 
@@ -66,13 +69,27 @@ body:
       required: false
 
   - type: input
-    id: ernie-version
+    id: elmo-version
     attributes:
-      label: ELMO Version
-      description: Which version of ELMO are you using?
-      placeholder: e.g. ELMO-MSL v2.0.6
+      label: ELMO Version / Branch
+      description: Which ELMO version or branch are you using?
+      placeholder: e.g. ELMO-MSL v2.0.6, main
     validations:
       required: false
+
+  - type: checkboxes
+    id: definition-of-ready
+    attributes:
+      label: Definition of Ready
+      description: Check every item that is already true for this bug report.
+      options:
+        - label: The affected ELMO page, route, or workflow is named.
+        - label: If the bug is reported from stakeholders, the bug was reproduced by at least one team member.
+        - label: The affected Resource or Sample is named/linked when relevant.
+        - label: The user role, browser, ELMO version or branch, and environment are added when relevant.
+        - label: The current behavior and expected behavior are clear.
+        - label: The steps to reproduce are testable.
+        - label: Screenshots, logs, or error messages are attached when they could be helpful.
 
   - type: textarea
     id: additional-context
@@ -81,3 +98,8 @@ body:
       description: Any other context about the problem.
     validations:
       required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Ready for work?** This issue is created with the `DoR not met` label by default. Remove it only when the Definition of Ready is met.

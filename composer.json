@@ -64,6 +64,7 @@
     "minimum-stability": "stable",
     "prefer-stable": true,
     "scripts": {
+        "check:file-names": "php scripts/check_file_names.php",
         "test": [
             "Composer\\Config::disableProcessTimeout",
             "phpunit"

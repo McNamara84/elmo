@@ -30,6 +30,13 @@ const MOCK_GCMD_PLATFORMS = {
   ],
 };
 
+const MODEL_TYPES_MOCK = [
+  { id: 1, name: 'Static', description: 'Static model' },
+  { id: 2, name: 'Temporal', description: 'Temporal model' },
+  { id: 3, name: 'Topographic', description: 'Topographic model' },
+  { id: 4, name: 'Simulated', description: 'Simulated model' },
+];
+
 test.describe('GGMs Data Sources – satellite platform Tagify', () => {
   test.beforeEach(async ({ page }) => {
     await page.route(GCMD_PLATFORMS_ROUTE, async route => {
@@ -37,6 +44,13 @@ test.describe('GGMs Data Sources – satellite platform Tagify', () => {
         status: 200,
         contentType: 'application/json',
         body: JSON.stringify(MOCK_GCMD_PLATFORMS),
+      });
+    });
+    await page.route('**/api/v2/vocabs/modeltypes', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MODEL_TYPES_MOCK),
       });
     });
 
@@ -82,5 +96,48 @@ test.describe('GGMs Data Sources – satellite platform Tagify', () => {
       .first();
 
     await expect(matchingSuggestion).toBeVisible();
+  });
+});
+
+test.describe('GGMs Data Sources – Elevation/Terrain type visibility', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/modeltypes', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MODEL_TYPES_MOCK),
+      });
+    });
+
+    await navigateToHome(page);
+    await expect(page.locator('#group-ggmspropertiesessential')).toBeVisible();
+  });
+
+  test('Elevation/Terrain datasource type is only available for Topographic models', async ({ page }) => {
+    const modelType = page.getByLabel('Model Type *');
+    const typeSelect = page.locator('#input-datasource-type');
+    const terrainOption = typeSelect.locator('option[value="T"]');
+
+    await modelType.selectOption('Simulated');
+    await expect(terrainOption).toHaveCount(0);
+
+    await modelType.selectOption('Static');
+    await expect(terrainOption).toHaveCount(0);
+
+    await modelType.selectOption('Temporal');
+    await expect(terrainOption).toHaveCount(0);
+
+    await modelType.selectOption('Topographic');
+    await expect(terrainOption).toHaveCount(1);
+    await expect(terrainOption).toHaveText('Elevation/Terrain');
+
+    // Newly added rows must also expose Elevation/Terrain only while Topographic.
+    await page.locator('#button-datasource-add').click();
+    const clonedTypeSelect = page.locator('#input-datasource-type-1');
+    await expect(clonedTypeSelect.locator('option[value="T"]')).toHaveCount(1);
+
+    await modelType.selectOption('Simulated');
+    await expect(typeSelect.locator('option[value="T"]')).toHaveCount(0);
+    await expect(clonedTypeSelect.locator('option[value="T"]')).toHaveCount(0);
   });
 });

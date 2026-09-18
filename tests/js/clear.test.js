@@ -430,7 +430,7 @@ describe('clear.js - clearInputFields', () => {
             '<button id="button-resourceinformation-addtitle" disabled></button>'
         );
 
-        // Listen for the custom event and re-enable the button (simulates resourceinformation-title.js)
+        // Listen for the custom event and re-enable the button (simulates resourceInformationTitle.js)
         $(document).on('elmo:clearTitles', function () {
             $('#button-resourceinformation-addtitle').prop('disabled', false);
         });

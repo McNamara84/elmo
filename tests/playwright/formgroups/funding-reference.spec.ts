@@ -69,6 +69,8 @@ async function buildHarnessPage(): Promise<string> {
     <script src="node_modules/jquery/dist/jquery.min.js"></script>
     <script src="node_modules/jquery-ui/dist/jquery-ui.min.js"></script>
     <script src="js/checkMandatoryFields.js"></script>
+    <script src="js/dropdownUtils.js"></script>
+    <script src="js/dropdownAjax.js"></script>
     <script src="js/select.js"></script>
     <script type="module" src="js/eventhandlers/functions.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/fundingreference.js"></script>

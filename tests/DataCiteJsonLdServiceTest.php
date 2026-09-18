@@ -97,8 +97,65 @@ XML;
         $this->assertSame('2026', $decoded['publicationYear']['value']);
     }
 
-      public function testUsesContextUrlFromEnvironmentWhenConfigured(): void
-      {
+    public function testPreservesRepeatedCreatorsAffiliationsAndContactContributors(): void
+    {
+        $xml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4">
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Doe, Jane</creatorName>
+      <givenName>Jane</givenName>
+      <familyName>Doe</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-2345-6789</nameIdentifier>
+      <affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR">GFZ</affiliation>
+      <affiliation affiliationIdentifier="https://ror.org/012m9bp23" affiliationIdentifierScheme="ROR">University of Potsdam</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Organizational">Payload Institute</creatorName>
+    </creator>
+  </creators>
+  <contributors>
+    <contributor contributorType="ContactPerson">
+      <contributorName nameType="Personal">Doe, Jane</contributorName>
+      <givenName>Jane</givenName>
+      <familyName>Doe</familyName>
+    </contributor>
+  </contributors>
+</resource>
+XML;
+
+        $result = $this->service->convertXmlStringToArray($xml);
+        $creators = $result['creators']['creator'];
+
+        self::assertCount(2, $creators);
+        self::assertSame('Personal', $creators[0]['creatorName']['attrs']['nameType']);
+        self::assertSame('0000-0001-2345-6789', $creators[0]['nameIdentifier']['value']);
+        self::assertSame('ORCID', $creators[0]['nameIdentifier']['attrs']['nameIdentifierScheme']);
+        self::assertCount(2, $creators[0]['affiliation']);
+        self::assertSame('https://ror.org/012m9bp23', $creators[0]['affiliation'][1]['attrs']['affiliationIdentifier']);
+        self::assertSame('Organizational', $creators[1]['creatorName']['attrs']['nameType']);
+        self::assertSame('ContactPerson', $result['contributors']['contributor']['attrs']['contributorType']);
+    }
+
+    public function testRejectsInvalidXml(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Invalid DataCite XML document.');
+
+        $this->service->convertXmlStringToArray('<resource>');
+    }
+
+    public function testRejectsUnexpectedRootElement(): void
+    {
+        $this->expectException(\InvalidArgumentException::class);
+        $this->expectExceptionMessage('Expected a DataCite resource root element.');
+
+        $this->service->convertXmlStringToArray('<metadata/>');
+    }
+
+    public function testUsesContextUrlFromEnvironmentWhenConfigured(): void
+    {
         putenv('DATACITE_JSONLD_CONTEXT_URL=https://example.org/datacite/context.jsonld');
 
         $xml = <<<'XML'
@@ -111,5 +168,5 @@ XML;
         $result = $this->service->convertXmlStringToArray($xml);
 
         $this->assertSame('https://example.org/datacite/context.jsonld', $result['@context']);
-      }
+    }
 }

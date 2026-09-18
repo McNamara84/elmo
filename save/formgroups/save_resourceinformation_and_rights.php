@@ -290,16 +290,15 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
     for ($i = 0; $i < count($titles); $i++) {
         $title_text = isset($titles[$i]) ? trim($titles[$i]) : '';
         $title_type_str = isset($titleTypes[$i]) ? trim($titleTypes[$i]) : '';
+        error_log("Processing title index $i: text='$title_text', type='$title_type_str'");
 
-        // Skip entirely empty entries (both text and type are empty)
-        if (empty($title_text) && empty($title_type_str)) {
-            continue;
-        }
 
         // Skip if text is empty (text is required)
         if (empty($title_text)) {
             continue;
         }
+        // Convert title_type string to integer if present
+        $title_type = intval($title_type_str);
 
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
@@ -308,24 +307,18 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
                 error_log("Cannot assign default title type: no Title_Type rows exist in database");
                 return false;
             }
-            $title_type_str = (string) $defaultId;
-        }
-
-        // Convert title_type string to integer if present
-        $title_type_int = intval($title_type_str);
-
-        // (only for submit action): Validate the title type exists in the database
-        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
-            error_log("Invalid title type ID provided: $title_type_int. Skipping this title.");
+            $title_type = $defaultId;
+        } elseif ($action === 'submit' && !isTitleTypeValid($connection, $title_type)) {
+            error_log("Invalid title type ID provided: $title_type. Skipping this title.");
             continue;
         }
 
         // Create unique key for deduplication
-        $key = $title_text . '|' . $title_type_int;
+        $key = $title_text . '|' . $title_type;
         if (!isset($uniqueTitles[$key])) {
             $uniqueTitles[$key] = [
                 'text' => $title_text,
-                'type' => $title_type_int
+                'type' => $title_type
             ];
         }
     }
