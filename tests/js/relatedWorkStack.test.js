@@ -27,6 +27,7 @@ describe('relatedwork.js card stack', () => {
                 <option value=""></option>
                 <option value="1">IsCitedBy</option>
                 <option value="2">References</option>
+                <option value="3" data-relation-name="IsReferencedBy">Is Referenced By</option>
               </select>
               <label for="input-relatedwork-relation">Relation</label>
             </div>
@@ -61,6 +62,10 @@ describe('relatedwork.js card stack', () => {
     window.replaceHelpButtonInClonedRows = jest.fn();
     window.translateClonedRow = jest.fn();
     window.bootstrap = { Tooltip: jest.fn() };
+    window.elmo = {
+      applyRelatedWorkDropdowns: jest.fn(),
+      updateIdentifierValidationPattern: jest.fn()
+    };
 
     loadRelatedWorkScript();
   });
@@ -110,12 +115,14 @@ describe('relatedwork.js card stack', () => {
     );
     expect(document.activeElement).toBe(cards.eq(1).find('select[name="relation[]"]')[0]);
     expect(payload()).toEqual([]);
+    expect(window.elmo.applyRelatedWorkDropdowns).toHaveBeenCalledTimes(2);
+    expect(window.elmo.updateIdentifierValidationPattern).toHaveBeenCalledTimes(2);
   });
 
   test('serializes a card into the ordered structured payload', () => {
     $('#button-relatedwork-add').trigger('click');
     const card = $('[data-related-work-entry]').first();
-    setField(card, 'relation[]', '1');
+    setField(card, 'relation[]', '3');
     setField(card, 'rIdentifier[]', '10.5880/example', 'input');
     setField(card, 'rIdentifierType[]', 'DOI');
 
@@ -123,12 +130,12 @@ describe('relatedwork.js card stack', () => {
       entryKey: 'related-work-0',
       order: 0,
       identifier: '10.5880/example',
-      relation: 'IsCitedBy',
-      relationId: '1',
+      relation: 'IsReferencedBy',
+      relationId: '3',
       identifierType: 'DOI'
     }]);
     expect(card.find('[data-related-work-summary-identifier]').text()).toBe('10.5880/example');
-    expect(card.find('[data-related-work-summary-relation]').text()).toBe('IsCitedBy');
+    expect(card.find('[data-related-work-summary-relation]').text()).toBe('Is Referenced By');
     expect(card.find('[data-related-work-summary-identifier-type]').text()).toBe('DOI');
     expect($('[data-related-work-summary-count]').text()).toBe('1 entry');
   });

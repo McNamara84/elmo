@@ -251,11 +251,20 @@ $(document).ready(function () {
     return value === '' ? '' : String(select.find('option:selected').text() || '').trim();
   }
 
+  function selectedRelationName(select) {
+    const value = String(select.val() || '').trim();
+    if (value === '') {
+      return '';
+    }
+    const selectedOption = select.find('option:selected').first();
+    return String(selectedOption.attr('data-relation-name') || selectedOption.text() || '').trim();
+  }
+
   function readEntry(row, order) {
     const relationSelect = row.find('select[name="relation[]"]').first();
     const identifier = String(row.find('input[name="rIdentifier[]"]').first().val() || '').trim();
     const relationId = String(relationSelect.val() || '').trim();
-    const relation = selectedText(relationSelect);
+    const relation = selectedRelationName(relationSelect);
     const identifierType = String(row.find('select[name="rIdentifierType[]"]').first().val() || '').trim();
 
     if (identifier === '' && relationId === '' && relation === '' && identifierType === '') {
@@ -350,6 +359,21 @@ $(document).ready(function () {
     updateActionLabels(row);
   }
 
+  function expandEntry(target, options = {}) {
+    const row = resolveRow(target);
+    if (!row.length) {
+      return false;
+    }
+    setExpanded(row, true);
+    if (options.focus) {
+      const firstIncompleteField = row.find('select[name="relation[]"], input[name="rIdentifier[]"], select[name="rIdentifierType[]"]').filter(function () {
+        return String($(this).val() || '').trim() === '';
+      }).first();
+      firstIncompleteField.trigger('focus');
+    }
+    return true;
+  }
+
   function ensureSelectValue(select, value, label = value) {
     const normalizedValue = String(value || '').trim();
     const normalizedLabel = String(label || '').trim();
@@ -364,7 +388,8 @@ $(document).ready(function () {
     }
     if (normalizedLabel !== '') {
       const matchingOption = select.find('option').filter(function () {
-        return String($(this).text()).trim() === normalizedLabel;
+        return String($(this).attr('data-relation-name') || '').trim() === normalizedLabel
+          || String($(this).text()).trim() === normalizedLabel;
       }).first();
       if (matchingOption.length) {
         select.val(matchingOption.val());
@@ -404,8 +429,14 @@ $(document).ready(function () {
     );
     translateClonedRow(row);
     ensureCardScaffold(row);
+    if (window.elmo && typeof window.elmo.applyRelatedWorkDropdowns === 'function') {
+      window.elmo.applyRelatedWorkDropdowns(row[0], { notify: false });
+    }
     populateRow(row, entry);
     stack.append(row);
+    if (window.elmo && typeof window.elmo.updateIdentifierValidationPattern === 'function') {
+      window.elmo.updateIdentifierValidationPattern(row.find('select[name="rIdentifierType[]"]')[0]);
+    }
     initializeTooltips(row);
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');
@@ -550,12 +581,15 @@ $(document).ready(function () {
     updatePayload();
   });
 
+  document.addEventListener('relatedWorkDropdowns:updated', updatePayload);
+
   window.relatedWorkStack = {
     addRelatedWork,
     setRelatedWorks,
     collectPayload,
     updatePayload,
-    moveEntry
+    moveEntry,
+    expandEntry
   };
 
   if (initialEntries.length) {

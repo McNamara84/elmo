@@ -20,6 +20,11 @@ const dropdownAjax =
       };
 
 let fundersDataPromise = null;
+const relatedWorkDropdownCache = {
+  relations: null,
+  identifierTypes: null,
+};
+const identifierPatternCache = new Map();
 
 /**
  * Loads the local Crossref Funder Registry once and reuses the result.
@@ -329,31 +334,96 @@ function populateLicenseDropdownWithData(licenses) {
   $select.prop('disabled', false).trigger("change");
 }
 
+function relatedWorkSelects(root, name, legacyId) {
+  const selector = `select[name="${name}"]`;
+  const scope = root ? $(root) : $(document);
+  let selects = scope.is(selector) ? scope.filter(selector) : scope.find(selector);
+
+  if (!root) {
+    selects = selects.add(legacyId);
+  }
+  return selects;
+}
+
+function populateRelatedWorkSelect(select, items, createOption, relationSelect = false) {
+  const currentValue = String(select.val() || '');
+  const selectedOption = select.find('option:selected').first();
+  const currentRelationName = String(selectedOption.attr('data-relation-name') || '').trim();
+  const currentText = String(selectedOption.text() || '').trim();
+
+  select.empty();
+  dropdownAjax.addPlaceholder(select);
+  items.forEach(item => select.append(createOption(item)));
+
+  let restoredOption = select.find('option').filter(function () {
+    return String($(this).val()) === currentValue && currentValue !== '';
+  }).first();
+
+  if (!restoredOption.length && relationSelect) {
+    const relationName = currentRelationName || currentText;
+    restoredOption = select.find('option').filter(function () {
+      return String($(this).attr('data-relation-name') || '').trim() === relationName && relationName !== '';
+    }).first();
+  }
+
+  if (!restoredOption.length && currentText !== '') {
+    restoredOption = select.find('option').filter(function () {
+      return String($(this).text() || '').trim() === currentText;
+    }).first();
+  }
+
+  select.val(restoredOption.length ? restoredOption.val() : '');
+  select.prop('disabled', false);
+}
+
+/**
+ * Applies the cached Related Work vocabularies to all matching selects below root.
+ * Existing selections are restored by ID first and by canonical name second.
+ * @param {Document|HTMLElement|jQuery|null} [root=null] - Scope containing Related Work selects.
+ * @param {Object} [options] - Application options.
+ * @param {boolean} [options.notify=true] - Dispatch the dropdown update event.
+ */
+function applyRelatedWorkDropdowns(root = null, options = {}) {
+  if (Array.isArray(relatedWorkDropdownCache.relations)) {
+    relatedWorkSelects(root, 'relation[]', '#input-relatedwork-relation').each(function () {
+      populateRelatedWorkSelect($(this), relatedWorkDropdownCache.relations, relation => {
+        const canonicalName = String(relation.name || '').trim();
+        const visibleLabel = relation.label || relation.displayName || relation.display_name || canonicalName;
+        return $('<option>', {
+          value: relation.id,
+          text: visibleLabel,
+          title: relation.description,
+          'data-relation-name': canonicalName,
+        });
+      }, true);
+    });
+  }
+
+  if (Array.isArray(relatedWorkDropdownCache.identifierTypes)) {
+    relatedWorkSelects(root, 'rIdentifierType[]', '#input-relatedwork-identifiertype').each(function () {
+      populateRelatedWorkSelect($(this), relatedWorkDropdownCache.identifierTypes, type => $('<option>', {
+        value: type.name,
+        text: type.name,
+        title: type.description,
+      }));
+    });
+  }
+
+  $('.chosen-select').trigger('chosen:updated');
+  if (options.notify !== false) {
+    document.dispatchEvent(new CustomEvent('relatedWorkDropdowns:updated'));
+  }
+}
+
 /**
  * Populates relations dropdown with pre-fetched data
  * @param {Object} response - Response object containing relations array
  */
 function populateRelationsDropdownWithData(response) {
-  const $select = $("#input-relatedwork-relation");
-  if (!$select.length) return;
-
-  $select.empty();
-  dropdownAjax.addPlaceholder($select);
-
-  if (response && response.relations && response.relations.length > 0) {
-    response.relations
-      .sort((a, b) => a.name.localeCompare(b.name))
-      .forEach(relation => {
-        $select.append(
-          $("<option>", {
-            value: relation.id,
-            text: relation.name,
-            title: relation.description
-          })
-        );
-      });
-  }
-  $select.prop('disabled', false);
+  relatedWorkDropdownCache.relations = response && Array.isArray(response.relations)
+    ? [...response.relations].sort((a, b) => String(a.name || '').localeCompare(String(b.name || '')))
+    : [];
+  applyRelatedWorkDropdowns();
 }
 
 /**
@@ -361,29 +431,16 @@ function populateRelationsDropdownWithData(response) {
  * @param {Object} response - Response object containing identifierTypes array
  */
 function populateIdentifierTypesDropdownWithData(response) {
-  const $select = $("#input-relatedwork-identifiertype");
-  if (!$select.length) return;
-
-  $select.empty();
-  dropdownAjax.addPlaceholder($select);
-
-  if (response && response.identifierTypes) {
-    response.identifierTypes.forEach(type => {
-      $select.append(
-        $("<option>", {
-          value: type.name,
-          text: type.name,
-          title: type.description
-        })
-      );
-    });
-  }
-  $select.prop('disabled', false);
-  $(".chosen-select").trigger("chosen:updated");
+  relatedWorkDropdownCache.identifierTypes = response && Array.isArray(response.identifierTypes)
+    ? [...response.identifierTypes]
+    : [];
+  applyRelatedWorkDropdowns();
 }
 
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
+window.elmo = window.elmo || {};
+window.elmo.applyRelatedWorkDropdowns = applyRelatedWorkDropdowns;
 
 function startInitialDropdownPopulation() {
   window.elmo = window.elmo || {};
@@ -579,39 +636,6 @@ $(document).ready(function () {
 
   // Note: Relations dropdown is now populated by initializeAllDropdownsParallel()
 
-  /**
-   * Updates the validation pattern of the identifier input field based on the selected identifier type.
-   * @param {HTMLElement} selectElement - The changed select element.
-   */
-  function updateValidationPattern(selectElement) {
-    var selectedType = $(selectElement).find("option:selected").text();
-    var inputIdentifier = $(selectElement).closest(".row").find('input[name^="rIdentifier"]');
-
-    $.ajax({
-      url: "api/v2/validation/patterns/" + encodeURIComponent(selectedType),
-      method: "GET",
-      dataType: "json",
-      success: function (response) {
-        if (response && response.pattern) {
-          var pattern = response.pattern;
-
-          // Remove quotes at the start and end, if present
-          pattern = pattern.replace(/^"|"$/g, "");
-
-          // Remove modifiers at the end, if present
-          pattern = pattern.replace(/\/[a-z]*$/, "");
-
-          // Set the pattern attribute of the input field
-          inputIdentifier.attr("pattern", pattern);
-        } else {
-          inputIdentifier.removeAttr("pattern");
-        }
-      },
-      error: function (xhr, status, error) {
-        inputIdentifier.removeAttr("pattern");
-      },
-    });
-  }
 });
 
 
@@ -670,62 +694,179 @@ function getIdentifierPriority(name) {
     : 5;
 }
 
+function identifierFieldScope(element) {
+  const field = $(element);
+  const isRelatedWorkField = field.is('[name="rIdentifier[]"], [name="rIdentifierType[]"]');
+  if (isRelatedWorkField) {
+    const card = field.closest('[data-related-work-entry]');
+    if (card.length) {
+      return card;
+    }
+  }
+  return field.closest('.row');
+}
+
+function identifierTypeSelectForInput(inputElement) {
+  const input = $(inputElement);
+  const selector = input.is('[name="rIdentifier[]"]')
+    ? 'select[name="rIdentifierType[]"]'
+    : 'select[name="dIdentifierType[]"]';
+  return identifierFieldScope(inputElement).find(selector).first();
+}
+
+function identifierInputForTypeSelect(selectElement) {
+  const select = $(selectElement);
+  const selector = select.is('[name="rIdentifierType[]"]')
+    ? 'input[name="rIdentifier[]"]'
+    : 'input[name="dIdentifier[]"]';
+  return identifierFieldScope(selectElement).find(selector).first();
+}
+
+function normalizeIdentifierPattern(pattern) {
+  let normalized = String(pattern || '').trim().replace(/^"|"$/g, '');
+  const delimitedPattern = normalized.match(/^\/(.*)\/[a-z]*$/i);
+  if (delimitedPattern) {
+    normalized = delimitedPattern[1];
+  } else {
+    normalized = normalized.replace(/\/[a-z]+$/i, '');
+  }
+  return normalized;
+}
+
+function updateValidationPattern(selectElement) {
+  const select = $(selectElement);
+  const selectedType = String(select.val() || '').trim();
+  const inputIdentifier = identifierInputForTypeSelect(selectElement);
+  if (!inputIdentifier.length) {
+    return;
+  }
+
+  const applyPattern = function (pattern) {
+    if (String(select.val() || '').trim() !== selectedType) {
+      return;
+    }
+    if (pattern) {
+      inputIdentifier.attr('pattern', pattern);
+    } else {
+      inputIdentifier.removeAttr('pattern');
+    }
+  };
+
+  if (selectedType === '') {
+    inputIdentifier.removeAttr('pattern');
+    return;
+  }
+
+  if (identifierPatternCache.has(selectedType)) {
+    applyPattern(identifierPatternCache.get(selectedType));
+    return;
+  }
+
+  $.ajax({
+    url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType),
+    method: 'GET',
+    dataType: 'json',
+    success: function (response) {
+      const pattern = response && response.pattern
+        ? normalizeIdentifierPattern(response.pattern)
+        : '';
+      identifierPatternCache.set(selectedType, pattern);
+      applyPattern(pattern);
+    },
+    error: function () {
+      identifierPatternCache.set(selectedType, '');
+      applyPattern('');
+    },
+  });
+}
+
+window.elmo = window.elmo || {};
+window.elmo.updateIdentifierValidationPattern = updateValidationPattern;
+
+function setDetectedIdentifierType(selectElement, type) {
+  if (!selectElement.length) {
+    return;
+  }
+  const typeName = type ? String(type.name || '') : '';
+  if (typeName !== '' && !selectElement.find('option').filter(function () {
+    return String($(this).val()) === typeName;
+  }).length) {
+    selectElement.append($('<option>', {
+      value: typeName,
+      text: typeName,
+      title: type.description,
+    }));
+  }
+  selectElement.val(typeName).trigger('change');
+}
+
+function detectIdentifierType(identifier, identifierTypes) {
+  const matchingTypes = identifierTypes.filter(type => {
+    try {
+      let pattern = normalizeIdentifierPattern(type.pattern);
+      if (pattern === '') {
+        return false;
+      }
+      pattern = pattern.replace(/\\{2}/g, '\\');
+      return new RegExp(pattern, 'i').test(identifier);
+    } catch (error) {
+      console.warn(`Invalid pattern for ${type.name}:`, error);
+      return false;
+    }
+  });
+
+  matchingTypes.sort((a, b) => {
+    const priorityDifference = getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
+    if (priorityDifference !== 0) {
+      return priorityDifference;
+    }
+    return String(b.pattern || '').length - String(a.pattern || '').length;
+  });
+  return matchingTypes[0] || null;
+}
+
 function updateIdentifierType(inputElement) {
-  var identifier = $(inputElement).val();
-  // Apply the function to the identifier type select elements of related work and data sources
-  var selectElement = $(inputElement).closest(".row").find('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]');
+  const input = $(inputElement);
+  const identifier = String(input.val() || '');
+  const selectElement = identifierTypeSelectForInput(inputElement);
+
+  const applyTypes = function (types) {
+    if (String(input.val() || '') !== identifier) {
+      return;
+    }
+    setDetectedIdentifierType(selectElement, detectIdentifierType(identifier, types));
+  };
+  const clearType = function () {
+    if (String(input.val() || '') === identifier) {
+      setDetectedIdentifierType(selectElement, null);
+    }
+  };
 
   if (identifier) {
+    if (Array.isArray(relatedWorkDropdownCache.identifierTypes)) {
+      applyTypes(relatedWorkDropdownCache.identifierTypes);
+      return;
+    }
     $.ajax({
       url: "api/v2/validation/identifiertypes/active",
       method: "GET",
       dataType: "json",
       success: function (response) {
-        if (response && response.identifierTypes) {
-          // Collect all identifier types that match the identifier
-          const matchingTypes = response.identifierTypes.filter((type) => {
-            try {
-              // Clean up the pattern
-              let pattern = type.pattern;
-              // Remove leading and trailing slashes and modifiers
-              pattern = pattern.replace(/^\/|\/[igm]*$/g, "");
-              // Remove redundant escapes
-              pattern = pattern.replace(/\\{2}/g, "\\");
-
-              const regex = new RegExp(pattern, "i");
-              return regex.test(identifier);
-            } catch (e) {
-              console.warn(`Invalid pattern for ${type.name}:`, e);
-              return false;
-            }
-          });
-
-          if (matchingTypes.length > 0) {
-            // Choose the best match by custom priority, then pattern length
-            matchingTypes.sort((a, b) => {
-              const prioDiff =
-                getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
-              if (prioDiff !== 0) return prioDiff;
-              return b.pattern.length - a.pattern.length;
-            });
-            const bestMatch = matchingTypes[0];
-            selectElement.val(bestMatch.name);
-            selectElement.trigger("change");
-          } else {
-            selectElement.val(""); // Reset to empty if no pattern matches
-          }
+        if (response && Array.isArray(response.identifierTypes)) {
+          relatedWorkDropdownCache.identifierTypes = [...response.identifierTypes];
+          applyTypes(response.identifierTypes);
         } else {
-          selectElement.val(""); // Reset to empty if no types are available
+          clearType();
           console.warn("No identifier types found in the response");
         }
       },
-      error: function (xhr, status, error) {
-        console.error("Error retrieving identifier types:", status, error);
-        selectElement.val(""); // Reset to empty in case of error
+      error: function (xhr, status) {
+        console.error("Error retrieving identifier types:", status);
+        clearType();
       },
     });
   } else {
-    selectElement.val(""); // Reset to empty if no identifier is entered
+    setDetectedIdentifierType(selectElement, null);
   }
 }
 
@@ -761,29 +902,9 @@ $(document).on("blur", 'input[name="rIdentifier[]"]', function () {
   updateIdentifierType(this);
 });
 
-// Event listener for newly added fields
-$(document).on("click", ".addRelatedWork", function () {
-  // Update the IDs and names of elements in the new row
-  updateIdsAndNames();
+$(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
+  updateValidationPattern(this);
 });
-
-/**
- * Function to update the IDs and names of elements within the related work group.
- */
-function updateIdsAndNames() {
-  $("#group-relatedwork .row").each(function (index) {
-    $(this)
-      .find('select[name^="relation"]')
-      .attr("id", "input-relatedwork-relation" + index);
-    $(this)
-      .find('input[name^="rIdentifier"]')
-      .attr("id", "input-relatedwork-identifier" + index);
-    $(this)
-      .find('select[name^="rIdentifierType"]')
-      .attr("id", "input-relatedwork-identifiertype" + index);
-  });
-}
-// Note: Identifier types dropdown is now populated by initializeAllDropdownsParallel()
 
 function updateDataSourceIdsAndNames() {
   $("#group-datasources .row").each(function (index) {
@@ -842,10 +963,12 @@ if (typeof module !== 'undefined' && module.exports) {
     addPlaceholder: dropdownAjax.addPlaceholder,
     updateDropdownPlaceholders: dropdownUtils.updateDropdownPlaceholders,
     filterDataByGEM: dropdownUtils.filterDataByGEM,
+    applyRelatedWorkDropdowns,
     getIdentifierPriority,
+    detectIdentifierType,
     updateIdentifierType,
+    updateValidationPattern,
     debounce,
-    updateIdsAndNames,
     updateDataSourceIdsAndNames,
     loadFundersData
   };

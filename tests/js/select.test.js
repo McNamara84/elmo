@@ -178,6 +178,50 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
+  test('finds the identifier type select across nested rows within one Related Work card', () => {
+    $('#group-relatedwork').html(`
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]" value="10.1234/card"></div>
+        <div class="row">
+          <select name="rIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+          </select>
+        </div>
+      </div>
+    `);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({ identifierTypes: [{ name: 'DOI', pattern: '^10\\..+' }] });
+      return { fail: jest.fn() };
+    });
+
+    window.updateIdentifierType($('input[name="rIdentifier[]"]')[0]);
+
+    expect($('select[name="rIdentifierType[]"]').val()).toBe('DOI');
+  });
+
+  test('applies an identifier pattern only inside the matching Related Work card', () => {
+    $('#group-relatedwork').html(`
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]"></div>
+        <div class="row"><select name="rIdentifierType[]"><option value="DOI" selected>DOI</option></select></div>
+      </div>
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]"></div>
+        <div class="row"><select name="rIdentifierType[]"><option value="URL" selected>URL</option></select></div>
+      </div>
+    `);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({ pattern: '/^https?:\\/\\/.+$/i' });
+      return { fail: jest.fn() };
+    });
+
+    window.updateValidationPattern($('select[name="rIdentifierType[]"]').eq(1)[0]);
+
+    expect($('input[name="rIdentifier[]"]').eq(0).attr('pattern')).toBeUndefined();
+    expect($('input[name="rIdentifier[]"]').eq(1).attr('pattern')).toBe('^https?:\\/\\/.+$');
+  });
+
   test('debounce delays function call', () => {
     jest.useFakeTimers();
     const fn = jest.fn();
@@ -186,12 +230,6 @@ describe('select.js', () => {
     expect(fn).not.toHaveBeenCalled();
     jest.advanceTimersByTime(100);
     expect(fn).toHaveBeenCalled();
-  });
-
-  test('updateIdsAndNames assigns sequential ids', () => {
-    window.updateIdsAndNames();
-    const ids = $('#group-relatedwork select[name^="relation"]').map((i,el)=>$(el).attr('id')).get();
-    expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
   });
 
   test('updateIdentifierType detects type for data source fields', async () => {
