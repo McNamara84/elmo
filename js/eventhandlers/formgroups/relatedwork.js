@@ -4,6 +4,16 @@
  * @module relatedwork
  */
 
+/**
+ * @typedef {Object} RelatedWorkEntry
+ * @property {string} [entryKey] Stable client-side card key.
+ * @property {number} [order] Zero-based card order.
+ * @property {string} [identifier] Related resource identifier.
+ * @property {string} [relation] Canonical DataCite relation token.
+ * @property {string} [relationId] Relation vocabulary identifier.
+ * @property {string} [identifierType] DataCite identifier type.
+ */
+
 import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 const RELATED_WORK_FIELD_NAMES = new Set([
@@ -290,6 +300,7 @@ $(document).ready(function () {
     };
   }
 
+  /** @returns {RelatedWorkEntry[]} Non-empty cards in their current visual order. */
   function collectPayload() {
     const payload = [];
     stack.children('[data-related-work-entry]').each(function () {
@@ -346,6 +357,12 @@ $(document).ready(function () {
     });
   }
 
+  /**
+   * Synchronizes summaries, ordering controls, and the hidden structured payload.
+   * @param {Object} [options] - Synchronization options.
+   * @param {boolean} [options.notify=true] - Dispatch the payload update event.
+   * @returns {RelatedWorkEntry[]} Fresh payload in visual order.
+   */
   function updatePayload(options = {}) {
     stack.children('[data-related-work-entry]').each(function () {
       renderEntrySummary($(this));
@@ -370,6 +387,13 @@ $(document).ready(function () {
     updateActionLabels(row);
   }
 
+  /**
+   * Expands a card and optionally focuses its first incomplete field.
+   * @param {number|string|Element|jQuery} target - Card index, key, or descendant.
+   * @param {Object} [options] - Expansion options.
+   * @param {boolean} [options.focus=false] - Focus the first incomplete field.
+   * @returns {boolean} Whether a matching card was expanded.
+   */
   function expandEntry(target, options = {}) {
     const row = resolveRow(target);
     if (!row.length) {
@@ -437,6 +461,12 @@ $(document).ready(function () {
     renderEntrySummary(row);
   }
 
+  /**
+   * Creates one Related Work card from an optional payload entry.
+   * @param {RelatedWorkEntry|null} [entry=null] - Initial card values.
+   * @param {Object} [options] - Rendering and focus options used by bulk imports.
+   * @returns {jQuery} Created card.
+   */
   function addRelatedWork(entry = null, options = {}) {
     const row = template.clone(false);
     const index = entryIndex++;
@@ -513,6 +543,12 @@ $(document).ready(function () {
     });
   }
 
+  /**
+   * Rebuilds the stack in batches so large XML imports can yield to the browser.
+   * @param {RelatedWorkEntry[]} entries - Entries in source-document order.
+   * @param {Object} [options] - Batch size, progress, and scheduling hooks.
+   * @returns {Promise<RelatedWorkEntry[]>} Synchronized payload.
+   */
   async function setRelatedWorksBulk(entries, options = {}) {
     stack.children('[data-related-work-entry]').remove();
     const batchSize = Number.isInteger(options.batchSize) && options.batchSize > 0
@@ -562,6 +598,12 @@ $(document).ready(function () {
     return updatePayload();
   }
 
+  /**
+   * Replaces all cards, optionally delegating to the batched renderer.
+   * @param {RelatedWorkEntry[]|string} entries - Entries or their JSON representation.
+   * @param {Object} [options] - Rendering options.
+   * @returns {RelatedWorkEntry[]|Promise<RelatedWorkEntry[]>} Synchronized payload.
+   */
   function setRelatedWorks(entries, options = {}) {
     const normalizedEntries = normalizeEntries(entries);
     if (options.bulk === true) {
@@ -596,6 +638,12 @@ $(document).ready(function () {
     return $(target).closest('[data-related-work-entry]');
   }
 
+  /**
+   * Moves one card and immediately persists the new visual order.
+   * @param {number|string|Element|jQuery} target - Card index, key, or descendant.
+   * @param {'up'|'down'|number} direction - Requested movement direction.
+   * @returns {boolean} Whether the card was moved.
+   */
   function moveEntry(target, direction) {
     const row = resolveRow(target);
     const numericDirection = direction === 'up' ? -1 : direction === 'down' ? 1 : Number(direction);

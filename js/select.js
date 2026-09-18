@@ -694,6 +694,10 @@ const IDENTIFIER_TYPE_AUTO_UPDATE_KEY = 'elmoIdentifierTypeAutoUpdate';
 const IDENTIFIER_TYPE_MANUAL_SELECTION_KEY = 'elmoIdentifierTypeManualSelection';
 const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifier';
 
+// A native/Chosen change after identifier input is a user decision. Bind that
+// decision to the current identifier so a pending debounced detector cannot
+// erase it. Typing a new identifier clears the marker and enables detection again.
+
 function getIdentifierPriority(name) {
   return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
     ? IDENTIFIER_TYPE_PRIORITY[name]
@@ -854,6 +858,10 @@ function detectIdentifierType(identifier, identifierTypes) {
   return matchingTypes[0] || null;
 }
 
+/**
+ * Detects an identifier type without overwriting a later manual selection.
+ * @param {HTMLElement} inputElement - Related Work or Data Source identifier input.
+ */
 function updateIdentifierType(inputElement) {
   const input = $(inputElement);
   const identifier = String(input.val() || '');

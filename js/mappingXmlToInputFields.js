@@ -8,6 +8,12 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
 const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
 let relatedWorksXsltDocumentPromise = null;
 
+/**
+ * Creates an import error while retaining the original failure as its cause.
+ * @param {string} message - User-facing processing context.
+ * @param {unknown} [cause] - Original error.
+ * @returns {Error} Error enriched with the original cause when available.
+ */
 function createRelatedWorksImportError(message, cause) {
   const error = new Error(message);
   if (cause) {
@@ -16,10 +22,15 @@ function createRelatedWorksImportError(message, cause) {
   return error;
 }
 
+/** Clears the cached Related Works stylesheet, primarily for isolated tests. */
 function resetRelatedWorksXsltCache() {
   relatedWorksXsltDocumentPromise = null;
 }
 
+/**
+ * Loads and caches the browser-side Related Works import stylesheet.
+ * @returns {Promise<Document>} Parsed XSLT document.
+ */
 async function loadRelatedWorksXsltDocument() {
   if (relatedWorksXsltDocumentPromise) {
     return relatedWorksXsltDocumentPromise;
@@ -50,6 +61,13 @@ async function loadRelatedWorksXsltDocument() {
   return relatedWorksXsltDocumentPromise;
 }
 
+/**
+ * Transforms DataCite Related Identifiers into ELMO's internal RelatedWorks map.
+ * @param {Document} xmlDoc - Uploaded metadata document.
+ * @param {Object} [options] - Transformation options.
+ * @param {boolean} [options.excludeIsCollectedBy=false] - Leave Used Instruments to their form group.
+ * @returns {Promise<Document>} Transformed RelatedWorks document.
+ */
 async function transformRelatedWorksDocument(xmlDoc, options = {}) {
   const Processor = typeof XSLTProcessor !== 'undefined'
     ? XSLTProcessor
@@ -82,12 +100,23 @@ async function transformRelatedWorksDocument(xmlDoc, options = {}) {
   }
 }
 
+/**
+ * Finds a direct element child by local name without assuming a namespace.
+ * @param {Node|null} node - Parent node.
+ * @param {string} localName - Child local name.
+ * @returns {Element|null} Matching direct child.
+ */
 function findDirectChildByLocalName(node, localName) {
   return Array.from(node ? node.childNodes : []).find(function (child) {
     return child.nodeType === 1 && child.localName === localName;
   }) || null;
 }
 
+/**
+ * Converts a transformed RelatedWorks document into card payload entries.
+ * @param {Document} transformedDocument - Result of the import XSLT.
+ * @returns {Array<{identifier: string, relation: string, relationId: string, identifierType: string}>}
+ */
 function parseRelatedWorksMap(transformedDocument) {
   if (!transformedDocument || !transformedDocument.documentElement) {
     throw createRelatedWorksImportError('The Related Works transformation returned no document.');
