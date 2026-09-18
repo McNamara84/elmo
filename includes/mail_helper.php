@@ -367,6 +367,8 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
     foreach ($contacts as $contact) {
         $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
         $email = trim((string) ($contact['email'] ?? ''));
+        $mail = createElmoMailer();
+        global $smtpSender;
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             error_log("Researcher confirmation: Invalid email for {$fullName}.");
@@ -378,6 +380,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
             continue;
         }
 
+        // Email simulation path
         if ($simulateEmail) {
             error_log("Simulating researcher confirmation email to {$fullName} <{$email}>.");
             $processedCount++;
@@ -385,8 +388,6 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
         }
 
         try {
-            $mail = createElmoMailer();
-            global $smtpSender;
             $mail->setFrom($smtpSender, 'ELMO System');
             $mail->addAddress($email, $fullName);
             $mail->Subject = 'Confirmation of your data submission to ELMO';

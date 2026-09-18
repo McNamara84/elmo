@@ -86,12 +86,8 @@ try {
             $generated['researcherConfirmationData'],
             $settings
         );
-        foreach ($researcherSendResult['failed'] as $failedContact) {
-            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
-                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
-                . $failedContact['error'];
-            error_log($warningMessage);
-            $researcherWarnings[] = $warningMessage;
+        if (!empty($generated['researcherConfirmationData']) && !empty($researcherSendResult['sent'])) {
+            throw new Exception('completely.');
         }
     } catch (Throwable $e) {
         $warningMessage = 'WARNING: The data is sent to curators, but researcher confirmation emails failed: '
@@ -99,7 +95,15 @@ try {
         error_log($warningMessage);
         $researcherWarnings[] = $warningMessage;
     }
-    
+    if (!empty($researcherSendResult['failed'])) {
+        foreach ($researcherSendResult['failed'] as $failedContact) {
+            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
+                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
+                . $failedContact['error'];
+            error_log($warningMessage);
+        }
+    }
+
     // step 5: prepare the success message for the frontend
     $successMessage = empty($researcherWarnings)
         ? 'Backend reports: XML submission and confirmation emails sent successfully.'
