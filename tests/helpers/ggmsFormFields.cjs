@@ -2,10 +2,11 @@ const fs = require('fs');
 const path = require('path');
 
 /**
- * Shared helpers for GGM HTML ↔ Playwright coverage metatests.
+ * Shared helpers for GGM HTML field ids and Playwright selector hygiene.
  *
- * HTML formgroups are the source of truth for field ids. Playwright specs that
- * claim GGM coverage must reference every id, and must not reference stale ids.
+ * HTML formgroups are the source of truth for field ids. Roundtrip coverage is
+ * measured at runtime in the ICGEM Step 4 ingest survivors (filled ids after
+ * re-upload)
  */
 
 const REPO_ROOT = path.resolve(__dirname, '../..');
@@ -18,11 +19,11 @@ const GGM_FORMGROUP_FILES = [
 ];
 
 /**
- * Playwright files that together must cover every GGM HTML field id.
+ * Playwright files scanned for stale GGM `#id` selectors.
  *
- * The roundtrip suite alone is expected to cover all of them via its reference
- * XML fixtures; the clear spec is listed because it asserts the reset state of
- * the same fields and so must not drift either.
+ * Roundtrip ingest coverage is recorded at Step 4, not from these strings.
+ * The clear spec is listed because it asserts the reset state of the same
+ * fields and so must not drift either.
  */
 const GGM_COVERAGE_SPEC_FILES = [
   'tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts',
@@ -101,6 +102,17 @@ function getGgmsCoverageSelectorIds(repoRoot = REPO_ROOT) {
   return { byFile, all: [...all].sort() };
 }
 
+/**
+ * HTML field ids that never received a value in the ingested set.
+ * @param {string[]} htmlIds
+ * @param {Iterable<string>} ingestedIds
+ * @returns {string[]}
+ */
+function diffMissingHtmlIds(htmlIds, ingestedIds) {
+  const ingested = ingestedIds instanceof Set ? ingestedIds : new Set(ingestedIds);
+  return htmlIds.filter((id) => !ingested.has(id));
+}
+// only for use in playwright tests or other node--driven systems.
 module.exports = {
   REPO_ROOT,
   GGM_FORMGROUP_FILES,
@@ -109,4 +121,5 @@ module.exports = {
   extractCssIdsFromSource,
   getGgmsHtmlFieldIds,
   getGgmsCoverageSelectorIds,
+  diffMissingHtmlIds,
 };

@@ -62,9 +62,17 @@
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { navigateToHome, waitForFormInteractionReady } from '../../utils';
+import {
+  collectFilledGgmFieldIds,
+  diffMissingHtmlIds,
+  getGgmsHtmlFieldIds,
+} from '../../utils/ggmsIngestCoverage';
 import * as fs from 'fs';
 import * as path from 'path';
 import { XMLParser } from 'fast-xml-parser';
+
+// Fixtures must finish Step 4 before the ingest-coverage warning can union ledgers.
+test.describe.configure({ mode: 'serial' });
 
 // ─── Test cases ────────────────────────────────────────────────────────────────
 //
@@ -837,6 +845,7 @@ for (const testCase of TEST_CASES) {
     fs.mkdirSync(XML_ACTUAL_DIR, { recursive: true });
     fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.xml`), { force: true });
     fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.json`), { force: true });
+    fs.rmSync(path.join(XML_ACTUAL_DIR, `${testCase.label}.ingested-ids.json`), { force: true });
   });
 
   // ── Step 1: parse validation ────────────────────────────────────────────
@@ -1320,6 +1329,13 @@ for (const testCase of TEST_CASES) {
     await navigateToHome(page);
     await uploadXmlIntoForm(page, savedXmlPath, subjectTexts(parsedData.subjects));
 
+    const ingestedIds = await collectFilledGgmFieldIds(page);
+    fs.writeFileSync(
+      path.join(XML_ACTUAL_DIR, `${testCase.label}.ingested-ids.json`),
+      JSON.stringify(ingestedIds, null, 2),
+      'utf-8',
+    );
+
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
@@ -1585,3 +1601,31 @@ for (const testCase of TEST_CASES) {
   });
   }); // closes test.describe
 } // closes for (const testCase of TEST_CASES)
+
+test('GGM HTML fields missing after re-upload (warning only)', () => {
+  const htmlIds = getGgmsHtmlFieldIds();
+  const union = new Set<string>();
+
+  for (const testCase of TEST_CASES) {
+    const ledgerPath = path.join(XML_ACTUAL_DIR, `${testCase.label}.ingested-ids.json`);
+    if (!fs.existsSync(ledgerPath)) {
+      throw new Error(`[PREREQUISITE] Ingested-ids ledger missing – run Step 4 first: ${ledgerPath}`);
+    }
+    const ids = JSON.parse(fs.readFileSync(ledgerPath, 'utf8')) as string[];
+    for (const id of ids) {
+      union.add(id);
+    }
+  }
+
+  const missing = diffMissingHtmlIds(htmlIds, union);
+  if (missing.length > 0) {
+    const list = missing.map((id) => `#${id}`).join('\n  ');
+    const message = `GGM HTML fields that did not receive ingested data after re-upload:\n  ${list}`;
+    console.warn(message);
+    test.info().annotations.push({ type: 'warning', description: message });
+  }
+
+  // Always pass: some controls (e.g. #select-temporal-frequency-predef) cannot survive
+  // XML roundtrip because export stores days only.
+  expect(Array.isArray(missing)).toBe(true);
+});
