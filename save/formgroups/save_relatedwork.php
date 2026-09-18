@@ -1,5 +1,208 @@
 <?php
 require_once __DIR__ . '/../validation.php';
+
+/**
+ * Decodes the structured Related Works payload.
+ *
+ * A missing field returns null so callers can use the legacy array fields.
+ * An explicitly empty JSON array remains an empty array and is authoritative.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return list<mixed>|null Decoded payload, or null when the field is absent.
+ *
+ * @throws InvalidArgumentException When the supplied payload is not a JSON/list array.
+ */
+function decodeRelatedWorksPayload(array $postData): ?array
+{
+    if (!array_key_exists('relatedWorksPayload', $postData)) {
+        return null;
+    }
+
+    $rawPayload = $postData['relatedWorksPayload'];
+
+    if (is_array($rawPayload)) {
+        if (!array_is_list($rawPayload)) {
+            throw new InvalidArgumentException('Related Works payload must be a list.');
+        }
+
+        return $rawPayload;
+    }
+
+    if (!is_string($rawPayload)) {
+        throw new InvalidArgumentException('Related Works payload must be a JSON array.');
+    }
+
+    try {
+        $decoded = json_decode($rawPayload, true, 512, JSON_THROW_ON_ERROR);
+    } catch (JsonException $exception) {
+        throw new InvalidArgumentException('Related Works payload contains invalid JSON.', 0, $exception);
+    }
+
+    if (!is_array($decoded) || !array_is_list($decoded)) {
+        throw new InvalidArgumentException('Related Works payload must decode to a list.');
+    }
+
+    return $decoded;
+}
+
+/**
+ * Normalizes a scalar form value to a trimmed string.
+ *
+ * @param mixed $value Submitted value.
+ */
+function normalizeRelatedWorkValue($value): string
+{
+    return is_scalar($value) ? trim((string) $value) : '';
+}
+
+/**
+ * Normalizes entries from the structured Related Works payload.
+ *
+ * Empty cards are discarded. The order supplied by the list is authoritative;
+ * client-provided order values are deliberately ignored and recalculated.
+ *
+ * @param list<mixed> $payload Decoded payload.
+ * @return list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}>
+ *
+ * @throws InvalidArgumentException When an entry is not an object/associative array.
+ */
+function normalizeRelatedWorksFromPayload(array $payload): array
+{
+    $entries = [];
+
+    foreach ($payload as $index => $rawEntry) {
+        if (!is_array($rawEntry)) {
+            throw new InvalidArgumentException("Related Works payload entry {$index} must be an object.");
+        }
+
+        $entry = [
+            'entryKey' => normalizeRelatedWorkValue($rawEntry['entryKey'] ?? ''),
+            'order' => count($entries),
+            'identifier' => normalizeRelatedWorkValue($rawEntry['identifier'] ?? ''),
+            'relation' => normalizeRelatedWorkValue($rawEntry['relation'] ?? ''),
+            'relationId' => normalizeRelatedWorkValue($rawEntry['relationId'] ?? ''),
+            'identifierType' => normalizeRelatedWorkValue($rawEntry['identifierType'] ?? ''),
+        ];
+
+        if (
+            $entry['identifier'] === ''
+            && $entry['relation'] === ''
+            && $entry['relationId'] === ''
+            && $entry['identifierType'] === ''
+        ) {
+            continue;
+        }
+
+        $entry['order'] = count($entries);
+        $entries[] = $entry;
+    }
+
+    return $entries;
+}
+
+/**
+ * Converts the existing parallel form arrays into the structured entry shape.
+ *
+ * @param array<string, mixed> $postData Submitted legacy form data.
+ * @return list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}>
+ */
+function normalizeLegacyRelatedWorks(array $postData): array
+{
+    $identifiers = isset($postData['rIdentifier']) && is_array($postData['rIdentifier'])
+        ? $postData['rIdentifier']
+        : [];
+    $relations = isset($postData['relation']) && is_array($postData['relation'])
+        ? $postData['relation']
+        : [];
+    $identifierTypes = isset($postData['rIdentifierType']) && is_array($postData['rIdentifierType'])
+        ? $postData['rIdentifierType']
+        : [];
+    $entryCount = max(count($identifiers), count($relations), count($identifierTypes));
+    $entries = [];
+
+    for ($index = 0; $index < $entryCount; $index++) {
+        $relation = normalizeRelatedWorkValue($relations[$index] ?? '');
+        $entry = [
+            'entryKey' => "related-work-legacy-{$index}",
+            'order' => count($entries),
+            'identifier' => normalizeRelatedWorkValue($identifiers[$index] ?? ''),
+            'relation' => $relation,
+            'relationId' => is_numeric($relation) ? $relation : '',
+            'identifierType' => normalizeRelatedWorkValue($identifierTypes[$index] ?? ''),
+        ];
+
+        if (
+            $entry['identifier'] === ''
+            && $entry['relation'] === ''
+            && $entry['identifierType'] === ''
+        ) {
+            continue;
+        }
+
+        $entry['order'] = count($entries);
+        $entries[] = $entry;
+    }
+
+    return $entries;
+}
+
+/**
+ * Resolves the authoritative Related Works input.
+ *
+ * When relatedWorksPayload is present, including an explicit empty array, it
+ * takes precedence over legacy fields. Legacy arrays are used only when the
+ * structured payload field is absent.
+ *
+ * @param array<string, mixed> $postData Submitted form data.
+ * @return list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}>
+ */
+function normalizeRelatedWorksPayload(array $postData): array
+{
+    $payload = decodeRelatedWorksPayload($postData);
+
+    if ($payload !== null) {
+        return normalizeRelatedWorksFromPayload($payload);
+    }
+
+    return normalizeLegacyRelatedWorks($postData);
+}
+
+/**
+ * Returns the relation reference preferred for persistence and validation.
+ *
+ * @param array{relation?: mixed, relationId?: mixed} $entry Normalized entry.
+ */
+function getRelatedWorkRelationReference(array $entry): string
+{
+    $relationId = normalizeRelatedWorkValue($entry['relationId'] ?? '');
+
+    return $relationId !== ''
+        ? $relationId
+        : normalizeRelatedWorkValue($entry['relation'] ?? '');
+}
+
+/**
+ * Resolves a relation ID, preferring the submitted ID and falling back to its
+ * canonical name when both are available.
+ *
+ * @param mysqli $connection Active database connection.
+ * @param array{relation?: mixed, relationId?: mixed} $entry Normalized entry.
+ */
+function resolveRelatedWorkRelationId(mysqli $connection, array $entry): ?int
+{
+    $relationId = normalizeRelatedWorkValue($entry['relationId'] ?? '');
+    $relationName = normalizeRelatedWorkValue($entry['relation'] ?? '');
+
+    if ($relationId !== '') {
+        $resolvedId = getRelationId($connection, $relationId);
+        if ($resolvedId !== null) {
+            return $resolvedId;
+        }
+    }
+
+    return $relationName !== '' ? getRelationId($connection, $relationName) : null;
+}
+
 /**
  * Saves the related work information into the database.
  *
@@ -17,49 +220,26 @@ require_once __DIR__ . '/../validation.php';
  */
 function saveRelatedWork($connection, $postData, $resource_id)
 {
-    // Check if the required arrays exist
-    if (
-        !isset($postData['rIdentifier'], $postData['relation'], $postData['rIdentifierType']) ||
-        !is_array($postData['rIdentifier']) || !is_array($postData['relation']) ||
-        !is_array($postData['rIdentifierType'])
-    ) {
-        return true; // No data provided is valid
-    }
-
     $action = $postData['action'] ?? 'save_and_download';
-
+    $entries = normalizeRelatedWorksPayload($postData);
     $allSuccessful = true;
-    $len = count($postData['rIdentifier']);
 
-    for ($i = 0; $i < $len; $i++) {
-        $entry = [
-            'identifier' => $postData['rIdentifier'][$i] ?? '',
-            'relation' => $postData['relation'][$i] ?? '',
-            'identifierType' => $postData['rIdentifierType'][$i] ?? ''
+    foreach ($entries as $entry) {
+        $relationReference = getRelatedWorkRelationReference($entry);
+        $validationEntry = [
+            'identifier' => $entry['identifier'],
+            'relation' => $relationReference,
+            'identifierType' => $entry['identifierType'],
         ];
 
-        // Skip if no data provided for this entry
-        if (
-            $entry['identifier'] === '' &&
-            $entry['relation'] === '' &&
-            $entry['identifierType'] === ''
-        ) {
-            continue;
-        }
-
-        // Skip if required fields are missing
-        if ($entry['identifier'] === '' || $entry['relation'] === '') {
-            continue;
-        }
-
         if ($action === 'submit') {
-            if (!validateRelatedWorkDependencies($entry)) {
-                error_log('Related Work entry validation failed: ' . json_encode($entry));
+            if (!validateRelatedWorkDependencies($validationEntry)) {
+                error_log('Related Work entry validation failed: ' . json_encode($validationEntry));
                 $allSuccessful = false;
                 continue;
             }
 
-            $relation_id = getRelationId($connection, $entry['relation']);
+            $relation_id = resolveRelatedWorkRelationId($connection, $entry);
             $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
 
             if ($relation_id === null || $identifier_type_id === null) {
@@ -69,13 +249,15 @@ function saveRelatedWork($connection, $postData, $resource_id)
             }
 
         } else {
-            if ($entry['relation'] === '' || $entry['relation'] === null) {
-                $relation_id = null;
-            } else {
-                $relation_id = getRelationId($connection, $entry['relation']);
+            // Preserve the existing draft/save behavior: incomplete entries are
+            // ignored unless identifier and relation are both available.
+            if ($entry['identifier'] === '' || $relationReference === '') {
+                continue;
             }
 
-            if ($entry['identifierType'] === '' || $entry['identifierType'] === null) {
+            $relation_id = resolveRelatedWorkRelationId($connection, $entry);
+
+            if ($entry['identifierType'] === '') {
                 $identifier_type_id = null;
             } else {
                 $identifier_type_id = getIdentifierTypeId($connection, $entry['identifierType']);
