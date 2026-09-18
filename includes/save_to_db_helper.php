@@ -12,6 +12,7 @@ require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 require_once __DIR__ . '/author_payload_xml.php';
+require_once __DIR__ . '/related_work_payload_xml.php';
 
 global $showGGMsProperties, $showMslMode;
 
@@ -127,11 +128,10 @@ function saveALL(array $postData): int {
 /**
  * Generates an XML or JSON-LD download payload for a saved resource.
  *
- * For regular ELMO exports, an Authors section supplied in the current form
- * data replaces the database-derived Authors and ContactPersons sections before
+ * For regular ELMO exports, structured Authors and Related Works payloads from
+ * the current form replace their database-derived Resource XML sections before
  * any XSLT transformation. This keeps XML and JSON-LD downloads aligned with
- * the current Authors form state. ICGEM XML generation retains its specialized
- * controller path.
+ * the current form state. ICGEM XML generation retains its specialized path.
  *
  * @param int $resourceId Database identifier of the resource used as the export base.
  * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>, variant?: 'gfz'|'icgem'|string} $options
@@ -164,7 +164,7 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         $controller = new DatasetController();
         $sourceXml = is_array($postData)
-            ? buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData)
+            ? buildResourceXmlWithCurrentFormPayloads($connection, $controller, $resourceId, $postData)
             : null;
         $payload = (string) $controller->transformResourceToJsonLd($resourceId, $sourceXml);
 
@@ -195,7 +195,12 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
 
         $sourceXml = null;
         if (is_array($postData)) {
-            $sourceXml = buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData);
+            $sourceXml = buildResourceXmlWithCurrentFormPayloads(
+                $connection,
+                $controller,
+                $resourceId,
+                $postData
+            );
         }
 
         $payload = (string) $controller->envelopeXmlAsString($connection, $resourceId, $sourceXml);
@@ -212,4 +217,43 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         'extension' => 'xml',
         'generator' => $generator,
     ];
+}
+
+/**
+ * Builds Resource XML with all explicitly supplied structured form payloads.
+ *
+ * The database representation is generated at most once. A missing payload
+ * leaves that section database-backed; an explicitly empty Related Works
+ * payload remains authoritative and removes the section.
+ *
+ * @param mysqli $connection Active database connection.
+ * @param object $controller Controller exposing getResourceAsXml().
+ * @param int $resourceId Database identifier of the resource.
+ * @param array<string, mixed> $postData Current form data.
+ * @return string|null Updated Resource XML, or null when no payload needs applying.
+ */
+function buildResourceXmlWithCurrentFormPayloads(
+    mysqli $connection,
+    object $controller,
+    int $resourceId,
+    array $postData
+): ?string {
+    $applyAuthors = hasNonemptyAuthorsPayload($postData);
+    $applyRelatedWorks = hasRelatedWorksPayload($postData);
+
+    if (!$applyAuthors && !$applyRelatedWorks) {
+        return null;
+    }
+
+    $resourceXml = $controller->getResourceAsXml($connection, $resourceId);
+
+    if ($applyAuthors) {
+        $resourceXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+    }
+
+    if ($applyRelatedWorks) {
+        $resourceXml = applyRelatedWorksPayloadToResourceXmlString($resourceXml, $postData);
+    }
+
+    return $resourceXml;
 }

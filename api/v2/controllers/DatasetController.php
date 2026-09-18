@@ -1245,7 +1245,7 @@ class DatasetController
      *
      * When a source XML string is supplied, the transformation uses that
      * document directly instead of rebuilding it from the database. This is
-     * used by local save workflows to preserve the current Authors payload.
+     * used by local save workflows to preserve current structured form payloads.
      *
      * @param int $id The database identifier of the resource.
      * @param string|null $sourceXmlString Optional internal Resource XML to transform.

@@ -71,7 +71,7 @@ XML;
         $this->assertSame('10.1234/test', $payload['relatedIdentifiers']['relatedIdentifier']['value']);
     }
 
-    public function testTransformResourceToJsonLdForwardsPreparedAuthorsSourceXml(): void
+    public function testTransformResourceToJsonLdForwardsPreparedStructuredPayloadSourceXml(): void
     {
         $sourceXml = <<<'XML'
 <?xml version="1.0" encoding="UTF-8"?>
@@ -79,6 +79,13 @@ XML;
   <Authors>
     <Author><familyname>Payload</familyname><givenname>Person</givenname></Author>
   </Authors>
+  <RelatedWorks>
+    <RelatedWork>
+      <Identifier>10.1234/payload-related-work</Identifier>
+      <Relation><name>IsReferencedBy</name></Relation>
+      <IdentifierType><name>DOI</name></IdentifierType>
+    </RelatedWork>
+  </RelatedWorks>
 </Resource>
 XML;
         $dataCiteXml = <<<'XML'
@@ -91,6 +98,9 @@ XML;
       <familyName>Payload</familyName>
     </creator>
   </creators>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsReferencedBy">10.1234/payload-related-work</relatedIdentifier>
+  </relatedIdentifiers>
 </resource>
 XML;
 
@@ -112,5 +122,9 @@ XML;
         );
 
         self::assertSame('Payload', $payload['creators']['creator']['familyName']['value']);
+        self::assertSame(
+            '10.1234/payload-related-work',
+            $payload['relatedIdentifiers']['relatedIdentifier']['value']
+        );
     }
 }
