@@ -94,6 +94,45 @@ describe('authorStack.js', () => {
     return JSON.parse(document.querySelector('input[name="authorsPayload"]').value);
   }
 
+  const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
+
+  function useRealHelpCloneHelper() {
+    window.replaceHelpButtonInClonedRows = require('../../js/eventhandlers/functions.js').replaceHelpButtonInClonedRows;
+    localStorage.setItem('helpStatus', 'help-on');
+  }
+
+  function authorEntries() {
+    return $('[data-author-entry-row]');
+  }
+
+  function setContactPerson(row, enabled) {
+    const checkbox = row.find('input[name="contacts[]"]');
+    if (checkbox.prop('checked') === enabled) {
+      return;
+    }
+    row.find('[data-author-contact-toggle]').trigger('click');
+  }
+
+  function expectPersonFieldHelpHidden(row, hidden) {
+    setContactPerson(row, true);
+    personHelpSectionIds.forEach((sectionId) => {
+      expect(row.find(`i[data-help-section-id="${sectionId}"]`).length).toBe(1);
+      expect(row.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(hidden);
+    });
+    // Contact person counts as content and locks the type switcher.
+    setContactPerson(row, false);
+  }
+
+  function expectAffiliationHelpHidden(row, hidden) {
+    expect(row.find('[data-author-affiliation-help]').length).toBe(1);
+    expect(row.find('[data-author-affiliation-help]').hasClass('d-none')).toBe(hidden);
+  }
+
+  function switchRowType(row, type) {
+    setContactPerson(row, false);
+    row.find(`[data-author-type-option="${type}"]`).trigger('click');
+  }
+
   test('initializes the combined sortable stack and empty summary', () => {
     expect($.fn.sortable).toHaveBeenCalledWith(expect.objectContaining({
       items: '> [data-author-entry-row]',
@@ -426,32 +465,90 @@ describe('authorStack.js', () => {
   });
 
   test('keeps a single person help icon per section and shows it on the new first author', () => {
-    const funcs = require('../../js/eventhandlers/functions.js');
-    window.replaceHelpButtonInClonedRows = funcs.replaceHelpButtonInClonedRows;
-    localStorage.setItem('helpStatus', 'help-on');
+    useRealHelpCloneHelper();
 
     $('#button-author-add').trigger('click');
     $('#button-author-add').trigger('click');
 
-    const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
-    const rows = $('[data-author-entry-row]');
+    const rows = authorEntries();
     expect(rows.length).toBe(2);
-
-    personHelpSectionIds.forEach((sectionId) => {
-      expect(rows.eq(0).find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
-      expect(rows.eq(0).find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(false);
-      expect(rows.eq(1).find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
-      expect(rows.eq(1).find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(true);
-    });
+    expectPersonFieldHelpHidden(rows.eq(0), false);
+    expectPersonFieldHelpHidden(rows.eq(1), true);
 
     rows.eq(0).find('.removeButton').trigger('click');
 
-    const remaining = $('[data-author-entry-row]');
+    const remaining = authorEntries();
     expect(remaining.length).toBe(1);
-    personHelpSectionIds.forEach((sectionId) => {
-      expect(remaining.find(`[data-help-section-id="${sectionId}"]`).length).toBe(1);
-      expect(remaining.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(false);
-    });
+    expectPersonFieldHelpHidden(remaining, false);
+  });
+
+  test('shows the first help icon of each kind, not every icon on the first row', () => {
+    useRealHelpCloneHelper();
+
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+    expect(authorEntries().length).toBe(2);
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(0), 'institution');
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-off' } }));
+    expectAffiliationHelpHidden(authorEntries().eq(0), true);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    localStorage.setItem('helpStatus', 'help-on');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-on' } }));
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(0), 'person');
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(1), 'institution');
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    authorEntries().eq(1).find('[data-author-move-up]').trigger('click');
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expect(authorEntries().eq(1).attr('data-author-entry-type')).toBe('person');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(1), 'institution');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    authorEntries().eq(0).find('.removeButton').trigger('click');
+    expect(authorEntries().length).toBe(1);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+  });
+
+  test('shows person help on the first person when an institution is added first', () => {
+    useRealHelpCloneHelper();
+
+    $('#button-authorinstitution-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expect(authorEntries().eq(1).attr('data-author-entry-type')).toBe('person');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
   });
 
   test('moves focus to the next card or add button after removing a card', () => {
