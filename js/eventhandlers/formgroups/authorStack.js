@@ -203,38 +203,46 @@ $(document).ready(function () {
     });
   }
 
+  function isFirstHelpIconOfKind(icon) {
+    const sectionId = icon.attr('data-help-section-id');
+    if (!sectionId) {
+      return false;
+    }
+
+    const firstOfKind = stack
+      .find(`.help-icon-author-affiliation[data-help-section-id="${escapeSelector(sectionId)}"]`)
+      .first();
+    return firstOfKind.get(0) === icon.get(0);
+  }
+
+  function setHelpIconVisibility(icon, shouldBeVisible) {
+    const wrapper = icon.closest('span.input-group-text');
+
+    icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    if (!wrapper.length) {
+      return;
+    }
+
+    wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    if (shouldBeVisible) {
+      wrapper
+        .removeClass('help-placeholder')
+        .removeAttr('data-help-section-id')
+        .css({ visibility: '', width: '', height: '' });
+      return;
+    }
+
+    wrapper.css('visibility', 'hidden');
+  }
+
   function applyAuthorHelpStatus() {
     syncAffiliationHelpButtons();
     syncPersonHelpButtons();
 
-    const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
-    const helpOn = helpStatus === 'help-on';
-    const rows = stack.children('[data-author-entry-row]');
-
-    rows.each(function (index) {
-      const row = $(this);
-      const isFirst = index === 0;
-      const rowIcons = row.find('.help-icon-author-affiliation');
-
-      rowIcons.each(function () {
-        const icon = $(this);
-        const wrapper = icon.closest('span.input-group-text');
-        const shouldBeVisible = helpOn && isFirst;
-
-        icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
-        if (wrapper.length) {
-          wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
-          // Restore visibility for help buttons that should be shown (e.g., after reordering)
-          if (shouldBeVisible) {
-            wrapper
-              .removeClass('help-placeholder')
-              .removeAttr('data-help-section-id')
-              .css({ visibility: '', width: '', height: '' });
-          } else {
-            wrapper.css('visibility', 'hidden');
-          }
-        }
-      });
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+    stack.find('.help-icon-author-affiliation').each(function () {
+      const icon = $(this);
+      setHelpIconVisibility(icon, helpOn && isFirstHelpIconOfKind(icon));
     });
   }
 
@@ -489,6 +497,7 @@ $(document).ready(function () {
     row.find('.addAuthor, .addauthorinstitution').remove();
     ensureCardScaffold(row, type);
     // Keep person help icons as real buttons on every clone. applyAuthorHelpStatus()
+    // shows the first icon of each kind, including after type switch/delete/reorder.
     replaceHelpButtonInClonedRows(row, "input-right-with-round-corners", personHelpSectionIds);
 
     translateClonedRow(row);
