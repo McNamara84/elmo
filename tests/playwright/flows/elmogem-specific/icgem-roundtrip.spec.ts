@@ -256,6 +256,26 @@ function getNode(obj: Record<string, unknown>, localName: string): unknown {
 }
 
 /**
+ * DataCite subjects from a resource node: GCMD / other thesaurus keywords and
+ * free keywords (no schemeURI). Same shape for the reference XML and the
+ * downloaded save payload.
+ */
+function parseSubjects(resource: Record<string, unknown>): Subject[] {
+  const subjectsNode = getNode(resource, 'subjects') as Record<string, unknown> | undefined;
+  if (!subjectsNode) return [];
+  return toArray(getNode(subjectsNode, 'subject')).map((s: unknown) => {
+    const sr = s as Record<string, unknown>;
+    return {
+      text: extractText(s),
+      scheme: String(sr['subjectScheme'] ?? ''),
+      schemeURI: String(sr['schemeURI'] ?? ''),
+      valueURI: String(sr['valueURI'] ?? ''),
+      lang: String(sr['xml:lang'] ?? ''),
+    };
+  });
+}
+
+/**
  * Normalises free-text values before comparison.
  *
  * Multi-line textarea values are submitted with CRLF line endings, so carriage
@@ -397,20 +417,7 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const onlineResourceList = contactEl ? toArray(getNode(contactEl, 'onlineResource')) : [];
   const contactPersonWebsite = extractText(onlineResourceList[0]);
 
-  // Subjects / GCMD thesaurus keywords
-  const subjectsNode = getNode(resource, 'subjects') as Record<string, unknown> | undefined;
-  const subjects: Subject[] = subjectsNode
-    ? toArray(getNode(subjectsNode, 'subject')).map((s: unknown) => {
-        const sr = s as Record<string, unknown>;
-        return {
-          text: extractText(s),
-          scheme: String(sr['subjectScheme'] ?? ''),
-          schemeURI: String(sr['schemeURI'] ?? ''),
-          valueURI: String(sr['valueURI'] ?? ''),
-          lang: String(sr['xml:lang'] ?? ''),
-        };
-      })
-    : [];
+  const subjects = parseSubjects(resource);
 
   // ── ICGEM-specific fields ──
 
@@ -564,6 +571,52 @@ function subjectTexts(subjects: Subject[]): string[] {
   return [...new Set(subjects.map((s) => normalizeText(s.text)))].sort();
 }
 
+/**
+ * Labels expected in downloaded XML: dace:subjects plus data-source satellites.
+ * save_ggms_datasources.php also writes those platforms into Thesaurus_Keywords.
+ */
+function expectedDownloadSubjectTexts(parsed: IcgemParsedData): string[] {
+  const satelliteSubjects: Subject[] = parsed.dataSources
+    .filter((ds): ds is DataSource & { satelliteValueName: string } => Boolean(ds.satelliteValueName))
+    .map((ds) => ({
+      text: ds.satelliteValueName,
+      scheme: ds.satelliteSchemeName ?? '',
+      schemeURI: ds.satelliteSchemeUri ?? '',
+      valueURI: ds.satelliteValueUri ?? '',
+      lang: '',
+    }));
+  return subjectTexts([...parsed.subjects, ...satelliteSubjects]);
+}
+
+/**
+ * Tagify input for a DataCite subject, matching processKeywords() in
+ * js/mappingXmlToInputFields.js (schemeURI → form group, else free keywords).
+ */
+function keywordInputSelector(schemeURI: string): string {
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords') {
+    return '#input-sciencekeyword';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms') {
+    return '#input-platforms';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments') {
+    return '#input-instruments';
+  }
+  if (schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020') {
+    return '#input-chronostratigraphy';
+  }
+  if (
+    schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus'
+    || schemeURI === 'http://www.eionet.europa.eu/gemet/concept/'
+  ) {
+    return '#input-gemet';
+  }
+  if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
+    return '#input-mslkeyword';
+  }
+  return '#input-freekeyword';
+}
+
 /** True once any Tagify instance on the page holds a tag with this label. */
 function findTagifyTag(page: Page, label: string): Promise<boolean> {
   return page.evaluate((text: string) => {
@@ -572,6 +625,15 @@ function findTagifyTag(page: Page, label: string): Promise<boolean> {
       (input) => input._tagify?.value?.some((tag) => tag.value.trim() === text),
     );
   }, label);
+}
+
+/** True once the given Tagify input holds a tag with this label. */
+function findTagifyTagIn(page: Page, selector: string, label: string): Promise<boolean> {
+  return page.evaluate(({ field, text }: { field: string; text: string }) => {
+    type TagifyInput = HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } };
+    const input = document.querySelector(field) as TagifyInput | null;
+    return Boolean(input?._tagify?.value?.some((tag) => tag.value.trim() === text));
+  }, { field: selector, text: label });
 }
 
 // ─── Upload helper ─────────────────────────────────────────────────────────────
@@ -1111,34 +1173,32 @@ for (const testCase of TEST_CASES) {
       assertField(savedDesc, expectedContent, `description(${section})`);
     }
 
-    // Subjects – do not compare parsed vs downloaded XML. Upload is verified
-    // on the form: every parsed keyword must be in a thesaurus Tagify field
-    // (after thesauriReady / whitelist upgrade) or in free keywords.
-    const expectedSubjectTexts = subjectTexts(parsedData.subjects);
-    const keywordFieldSelectors = [
-      '#input-sciencekeyword',
-      '#input-platforms',
-      '#input-instruments',
-      '#input-chronostratigraphy',
-      '#input-gemet',
-      '#input-mslkeyword',
-      '#input-freekeyword',
-    ];
-    await expect
-      .poll(async () => {
-        const pageKeywordTexts = await page.evaluate((selectors: string[]) => {
-          const values: string[] = [];
-          for (const selector of selectors) {
-            const input = document.querySelector(selector) as { _tagify?: { value?: Array<{ value: string }> } } | null;
-            for (const tag of input?._tagify?.value ?? []) {
-              if (tag?.value) values.push(tag.value.trim());
-            }
-          }
-          return values;
-        }, keywordFieldSelectors);
-        return expectedSubjectTexts.filter((subject) => pageKeywordTexts.includes(subject));
-      }, { message: '[FIELD: subjects]', timeout: 20_000 })
-      .toEqual(expectedSubjectTexts);
+    // Subjects – form routing by schemeURI, then downloaded XML as a set.
+    // Thesaurus keywords and free keywords must land in the Tagify field
+    // processKeywords() selects. Downloaded XML also includes data-source
+    // satellites (save_ggms_datasources.php writes those into Thesaurus_Keywords),
+    // so compare unique labels rather than list equality.
+    for (const subject of parsedData.subjects) {
+      const selector = keywordInputSelector(subject.schemeURI);
+      await expect
+        .poll(() => findTagifyTagIn(page, selector, normalizeText(subject.text)), {
+          message: `subject "${subject.text}" imported into ${selector}`,
+          timeout: 20_000,
+        })
+        .toBe(true);
+    }
+
+    const savedSubjects = parseSubjects(resource!);
+    expect(subjectTexts(savedSubjects), '[FIELD: subjects]').toEqual(expectedDownloadSubjectTexts(parsedData));
+    for (const expected of parsedData.subjects) {
+      const saved = savedSubjects.find(
+        (s) => normalizeText(s.text) === normalizeText(expected.text) && s.schemeURI === expected.schemeURI,
+      );
+      expect(saved, `[FIELD: subjects "${expected.text}"]`).toBeTruthy();
+      expect(saved!.scheme, `[FIELD: subjects "${expected.text}" scheme]`).toBe(expected.scheme);
+      expect(saved!.valueURI, `[FIELD: subjects "${expected.text}" valueURI]`).toBe(expected.valueURI);
+      expect(saved!.lang, `[FIELD: subjects "${expected.text}" lang]`).toBe(expected.lang);
+    }
 
     console.log('✓ 1.2 + 2.1 – form fill and save XML verification passed');
   });
@@ -1257,14 +1317,8 @@ for (const testCase of TEST_CASES) {
     }
 
     // Upload the SAVED XML produced by Step 2, not the reference XML.
-    // Thesaurus subjects (schemeURI set) are not required: CI save often
-    // drops GCMD Tagify chips, so GRACE-FO etc. are absent from this file.
     await navigateToHome(page);
-    await uploadXmlIntoForm(
-      page,
-      savedXmlPath,
-      subjectTexts(parsedData.subjects.filter((s) => !s.schemeURI)),
-    );
+    await uploadXmlIntoForm(page, savedXmlPath, subjectTexts(parsedData.subjects));
 
     // ── Standard DataCite fields ───────────────────────────────────────────
     await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
@@ -1514,12 +1568,14 @@ for (const testCase of TEST_CASES) {
       ).toHaveValue(content);
     }
 
-    // ── Free keywords only ────────────────────────────────────────────────
-    // Thesaurus subjects are skipped: they do not reliably survive save in CI.
-    for (const subject of subjectTexts(parsedData.subjects.filter((s) => !s.schemeURI))) {
+    // ── GCMD Subjects (thesaurus + free keywords) ─────────────────────────
+    // Every subject must land in the Tagify field processKeywords() selects by
+    // schemeURI (GCMD pickers) or in free keywords when schemeURI is empty.
+    for (const subject of parsedData.subjects) {
+      const selector = keywordInputSelector(subject.schemeURI);
       await expect
-        .poll(() => findTagifyTag(page, subject), {
-          message: `subject "${subject}" restored into a keyword field`,
+        .poll(() => findTagifyTagIn(page, selector, normalizeText(subject.text)), {
+          message: `subject "${subject.text}" restored into ${selector}`,
           timeout: 10_000,
         })
         .toBe(true);
