@@ -54,6 +54,7 @@ export default defineConfig({
       testMatch: [
         'formgroups/elmomsl-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
+        'smoke/**/*.spec.ts',
       ],
     },
   ],
