@@ -5,6 +5,13 @@ test.describe('ERNIE API Connectivity', () => {
     // This test confirms that ERNIE_URL is reachable directly from CI environment
     
     const ernieUrl = process.env.ERNIE_URL;
+    if (!ernieUrl) {
+      throw new Error('ERNIE_URL is not defined in the environment');
+    }
+    const ernieApiKey = process.env.ERNIE_API_KEY;
+    if (!ernieApiKey) {
+      throw new Error('ERNIE_API_KEY is not defined in the environment');
+    }
     const docUrl = `${ernieUrl.replace(/\/$/, '')}/api/v1/doc`;
     console.log(`Testing ERNIE connectivity at: ${docUrl}`);
 
