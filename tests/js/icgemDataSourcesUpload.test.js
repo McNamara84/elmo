@@ -17,15 +17,25 @@ describe('populateIcgemDataSources satellite platforms', () => {
         <div class="row" data-source-row>
           <select name="datasource_type[]">
             <option value="S">Satellite</option>
+            <option value="G">Ground data</option>
+            <option value="A">Altimetry</option>
             <option value="M">Model</option>
+            <option value="T">Elevation/Terrain</option>
           </select>
+          <select name="datasource_details[]"></select>
           <textarea name="datasource_description[]"></textarea>
           <input name="satellite_platform[]" />
+          <input name="dIdentifier[]" />
+          <select name="dIdentifierType[]"></select>
+          <input name="dName[]" />
           <button type="button" class="addDataSource"></button>
         </div>
       </div>
     `;
-    document.querySelector('input[name="satellite_platform[]"]')._tagify = tagify;
+    const platformInput = document.querySelector('input[name="satellite_platform[]"]');
+    if (tagify && platformInput) {
+      platformInput._tagify = tagify;
+    }
   }
 
   beforeEach(() => {
@@ -40,6 +50,7 @@ describe('populateIcgemDataSources satellite platforms', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     delete window.waitForThesaurusVocabulary;
+    delete window.setupIdentifierTypesDropdown;
     jest.clearAllMocks();
     delete global.$;
     delete global.jQuery;
@@ -112,5 +123,35 @@ describe('populateIcgemDataSources satellite platforms', () => {
     });
 
     expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalled();
+  });
+
+  test('waits for identifier type options before setting Model identifierType', async () => {
+    buildDatasourceDom();
+    let resolveTypes;
+    window.setupIdentifierTypesDropdown = jest.fn(($select) => new Promise((resolve) => {
+      resolveTypes = () => {
+        $select.append('<option value="DOI">DOI</option>');
+        resolve();
+      };
+    }));
+
+    const done = icgemModule.populateIcgemDataSources({
+      dataSources: [{
+        inputDataSourceType: 'Model',
+        identifier: '10.5880/icgem.2018.003',
+        identifierType: 'DOI',
+        name: 'GOCO06s'
+      }]
+    });
+
+    expect($('select[name="dIdentifierType[]"]').val()).not.toBe('DOI');
+    expect(window.setupIdentifierTypesDropdown).toHaveBeenCalled();
+
+    resolveTypes();
+    await done;
+
+    expect($('select[name="dIdentifierType[]"]').val()).toBe('DOI');
+    expect($('input[name="dIdentifier[]"]').val()).toBe('10.5880/icgem.2018.003');
+    expect($('input[name="dName[]"]').val()).toBe('GOCO06s');
   });
 });
