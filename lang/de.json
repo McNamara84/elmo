@@ -253,7 +253,18 @@
         "relation": "Beziehung",
         "identifierType": "Identifikatortyp",
         "identifier": "Identifikator",
-        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein."
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "addEntry": "Verwandtes Werk hinzufügen",
+        "dragHandle": "Reihenfolge per Drag & Drop ändern",
+        "removeEntry": "Eintrag für verwandtes Werk entfernen",
+        "editEntry": "Eintrag für verwandtes Werk bearbeiten",
+        "collapseEntry": "Eintrag für verwandtes Werk einklappen",
+        "moveEntryUp": "Verwandtes Werk nach oben verschieben",
+        "moveEntryDown": "Verwandtes Werk nach unten verschieben",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Unvollständiges verwandtes Werk"
     },
     "funding": {
         "title": "Förderungen",

@@ -253,7 +253,18 @@
         "relation": "Relation",
         "identifierType": "Type d'identifiant",
         "identifier": "Identifiant",
-        "identifierInvalid": "Veuillez saisir un identifiant valide."
+        "identifierInvalid": "Veuillez saisir un identifiant valide.",
+        "addEntry": "Ajouter un travail connexe",
+        "dragHandle": "Modifier l'ordre par glisser-déposer",
+        "removeEntry": "Supprimer l'entrée de travail connexe",
+        "editEntry": "Modifier l'entrée de travail connexe",
+        "collapseEntry": "Replier l'entrée de travail connexe",
+        "moveEntryUp": "Déplacer le travail connexe vers le haut",
+        "moveEntryDown": "Déplacer le travail connexe vers le bas",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Travail connexe incomplet"
     },
     "funding": {
         "title": "Références de financement",

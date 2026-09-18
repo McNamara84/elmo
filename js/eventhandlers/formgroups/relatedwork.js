@@ -1,10 +1,10 @@
 /**
- * @description Handles dynamic addition and removal of related work entries in the form.
- * 
+ * @description Handles the Related Work card stack and its structured payload.
+ *
  * @module relatedwork
  */
 
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
 
 const RELATED_WORK_FIELD_NAMES = new Set([
   'relation[]',
@@ -12,76 +12,555 @@ const RELATED_WORK_FIELD_NAMES = new Set([
   'rIdentifierType[]'
 ]);
 
-function escapeSelector(value) {
-  if (typeof value !== 'string') {
-    return '';
-  }
-
-  if (typeof window.CSS !== 'undefined' && typeof window.CSS.escape === 'function') {
-    return window.CSS.escape(value);
-  }
-
-  return value.replace(/([\0-\x1F\x7F"'\\#.:;,!?+*~=<>^$\[\](){}|\/\s-])/g, '\\$1');
-}
-
 $(document).ready(function () {
-  const relatedworkGroup = $("#group-relatedwork");
+  let stack = $('[data-related-work-stack]').first();
+  if (!stack.length) {
+    stack = $('#group-relatedwork').first().attr('data-related-work-stack', '');
+  }
 
-  function addRelatedWorkRow() {
-    const firstRelatedWorkLine = relatedworkGroup.children().first();
-    if (!firstRelatedWorkLine.length) {
+  if (!stack.length) {
+    return;
+  }
+
+  let shell = stack.closest('[data-related-work-stack-shell]');
+  if (!shell.length) {
+    shell = stack.parent();
+  }
+  const eventRoot = shell.length ? shell : stack;
+  let payloadInput = $('input[name="relatedWorksPayload"]').first();
+  if (!payloadInput.length) {
+    payloadInput = $('<input type="hidden" name="relatedWorksPayload" value="[]">');
+    stack.before(payloadInput);
+  }
+  let summaryCount = $('[data-related-work-summary-count]').first();
+  if (!summaryCount.length) {
+    summaryCount = $('<span class="visually-hidden" data-related-work-summary-count></span>');
+    stack.before(summaryCount);
+  }
+
+  const initialRows = stack.children('[data-related-work-entry], [related-work-row], .row');
+  const template = initialRows.first().clone(false);
+  if (!template.length) {
+    return;
+  }
+
+  let addActions = shell.find('[data-related-work-add-actions]').first();
+  if (!addActions.length) {
+    addActions = $('<div class="d-flex flex-wrap gap-2 mt-2" data-related-work-add-actions></div>');
+    stack.after(addActions);
+  }
+
+  let addButton = initialRows.first().find('#button-relatedwork-add, [data-related-work-add]').first().detach();
+  if (!addButton.length) {
+    addButton = shell.find('#button-relatedwork-add, [data-related-work-add]').first().detach();
+  }
+  if (addButton.length) {
+    addButton
+      .attr({
+        id: 'button-relatedwork-add',
+        'data-related-work-add': '',
+        'data-translate-title': 'relatedWork.addEntry',
+        title: translate('relatedWork.addEntry', 'Add related work'),
+        'aria-label': translate('relatedWork.addEntry', 'Add related work')
+      })
+      .removeClass('add-button addRelatedWork')
+      .addClass('text-nowrap px-3');
+    addButton.html(
+      '<i class="bi bi-plus-lg" aria-hidden="true"></i>' +
+      '<span data-translate="relatedWork.addEntry">' + translate('relatedWork.addEntry', 'Add related work') + '</span>'
+    );
+    addActions.empty().append(addButton);
+  }
+
+  const initialEntries = initialRows.map(function () {
+    return readEntry($(this), 0);
+  }).get().filter(Boolean);
+  initialRows.remove();
+
+  let entryIndex = 0;
+
+  function translate(key, fallback, variables = {}) {
+    const translated = window.elmo && typeof window.elmo.translate === 'function'
+      ? window.elmo.translate(key)
+      : null;
+    const templateText = typeof translated === 'string' && translated !== '' ? translated : fallback;
+
+    return Object.keys(variables).reduce(function (result, variableName) {
+      return result.replace(new RegExp(`\\{${variableName}\\}`, 'g'), String(variables[variableName]));
+    }, templateText);
+  }
+
+  function normalizeBaseId(id) {
+    return id ? id.replace(/-\d+$/, '') : id;
+  }
+
+  function updateIds(row, index) {
+    const idMap = new Map();
+    row.find('[id]').each(function () {
+      const element = $(this);
+      const oldId = element.attr('id');
+      const newId = `${normalizeBaseId(oldId)}-${index}`;
+      idMap.set(oldId, newId);
+      element.attr('id', newId);
+    });
+    row.find('label[for]').each(function () {
+      const label = $(this);
+      const oldFor = label.attr('for');
+      label.attr('for', idMap.get(oldFor) || `${normalizeBaseId(oldFor)}-${index}`);
+    });
+  }
+
+  function resetRow(row) {
+    row.find('input, select, textarea').each(function () {
+      const field = $(this);
+      if (field.is(':checkbox, :radio')) {
+        field.prop('checked', false);
+      } else {
+        field.val('');
+      }
+      field.removeClass('is-invalid is-valid').removeAttr('required aria-invalid disabled');
+    });
+  }
+
+  function createActionButton(attributeName, iconClass, label) {
+    return $(
+      `<button type="button" class="btn btn-outline-secondary btn-sm" ${attributeName} aria-label="${label}">
+        <i class="bi ${iconClass}" aria-hidden="true"></i>
+      </button>`
+    );
+  }
+
+  function createCardRemoveButton() {
+    const button = createRemoveButton();
+    return button
+      .attr({
+        'data-related-work-remove': '',
+        'aria-label': translate('relatedWork.removeEntry', 'Remove related work entry')
+      })
+      .addClass('btn-sm')
+      .removeAttr('style')
+      .html('<i class="bi bi-x-lg" aria-hidden="true"></i>');
+  }
+
+  function createSummary() {
+    return $(
+      `<div class="d-flex flex-wrap align-items-center gap-2 p-2" data-related-work-summary>
+        <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-body-tertiary border text-body-secondary" style="width: 2rem; height: 2rem;">
+          <i class="bi bi-link-45deg" aria-hidden="true"></i>
+        </span>
+        <strong class="me-1" data-related-work-summary-identifier></strong>
+        <span class="badge text-bg-light border" data-related-work-summary-relation></span>
+        <span class="badge text-bg-light border" data-related-work-summary-identifier-type></span>
+      </div>`
+    );
+  }
+
+  function getEntryKey(row) {
+    let key = row.attr('data-related-work-entry-key');
+    if (!key) {
+      key = `related-work-${entryIndex++}`;
+      row.attr('data-related-work-entry-key', key);
+    }
+    return key;
+  }
+
+  function getEditPanelId(row) {
+    return `${getEntryKey(row)}-edit`.replace(/[^A-Za-z0-9_-]/g, '-');
+  }
+
+  function createUniqueEntryKey(preferredKey, fallbackIndex) {
+    let candidate = preferredKey ? String(preferredKey) : `related-work-${fallbackIndex}`;
+    const keyExists = function (key) {
+      return stack.children('[data-related-work-entry]').filter(function () {
+        return $(this).attr('data-related-work-entry-key') === key;
+      }).length > 0;
+    };
+
+    while (keyExists(candidate)) {
+      candidate = `related-work-${entryIndex++}`;
+    }
+    return candidate;
+  }
+
+  function ensureCardScaffold(row) {
+    row.attr({
+      'data-related-work-entry': '',
+      'related-work-row': '',
+      role: 'group'
+    });
+    row.removeClass('row g-1 p-2').addClass('d-flex align-items-stretch border rounded bg-body overflow-hidden');
+
+    const editPanelId = getEditPanelId(row);
+    const summaryIdentifierId = `${editPanelId}-summary-identifier`;
+    let dragButton = row.find('.drag-handle').first().detach();
+    row.find('#button-relatedwork-add, [data-related-work-add]').remove();
+    row.children().filter(function () {
+      const child = $(this);
+      return child.text().trim() === '' && child.find('input, select, textarea, button, label').length === 0;
+    }).remove();
+
+    if (!dragButton.length) {
+      dragButton = $('<button type="button" class="drag-handle"><i class="bi bi-grip-vertical" aria-hidden="true"></i></button>');
+    }
+    dragButton.attr({
+      'data-related-work-drag': '',
+      'data-bs-toggle': 'tooltip',
+      'data-bs-placement': 'top',
+      'data-translate-title': 'relatedWork.dragHandle',
+      title: translate('relatedWork.dragHandle', 'Drag & drop to change order'),
+      'aria-label': translate('relatedWork.dragHandle', 'Drag & drop to change order')
+    });
+
+    const fields = row.children().detach();
+    const dragZone = $('<div class="d-flex align-items-center justify-content-center px-2 border-end bg-body-tertiary" data-related-work-drag-zone></div>')
+      .append(dragButton);
+    const editPanel = $('<div class="collapse show border-top" data-related-work-edit-panel></div>')
+      .attr({ id: editPanelId, 'aria-labelledby': summaryIdentifierId, 'aria-hidden': 'false' })
+      .append($('<div class="row g-1 p-2" data-related-work-fields></div>').append(fields));
+    const content = $('<div class="flex-grow-1 min-width-0" data-related-work-card-content></div>')
+      .append(createSummary(), editPanel);
+    const actions = $('<div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary" data-related-work-actions></div>');
+    actions.append(
+      createActionButton('data-related-work-toggle-edit', 'bi-chevron-up', translate('relatedWork.collapseEntry', 'Collapse related work entry')).attr({
+        'aria-controls': editPanelId,
+        'aria-expanded': 'true'
+      }),
+      createActionButton('data-related-work-move-up', 'bi-chevron-up', translate('relatedWork.moveEntryUp', 'Move related work up')),
+      createActionButton('data-related-work-move-down', 'bi-chevron-down', translate('relatedWork.moveEntryDown', 'Move related work down')),
+      createCardRemoveButton()
+    );
+
+    row.empty().append(dragZone, content, actions);
+    row.attr('aria-labelledby', summaryIdentifierId);
+    row.find('[data-related-work-summary-identifier]').attr('id', summaryIdentifierId);
+    return row;
+  }
+
+  function initializeTooltips(row) {
+    if (!window.bootstrap || typeof window.bootstrap.Tooltip !== 'function') {
+      return;
+    }
+    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+    row.find('[data-bs-toggle="tooltip"]').each(function () {
+      new window.bootstrap.Tooltip(this, { container: tooltipContainer });
+    });
+  }
+
+  function selectedText(select) {
+    const value = String(select.val() || '').trim();
+    return value === '' ? '' : String(select.find('option:selected').text() || '').trim();
+  }
+
+  function readEntry(row, order) {
+    const relationSelect = row.find('select[name="relation[]"]').first();
+    const identifier = String(row.find('input[name="rIdentifier[]"]').first().val() || '').trim();
+    const relationId = String(relationSelect.val() || '').trim();
+    const relation = selectedText(relationSelect);
+    const identifierType = String(row.find('select[name="rIdentifierType[]"]').first().val() || '').trim();
+
+    if (identifier === '' && relationId === '' && relation === '' && identifierType === '') {
       return null;
     }
 
-    const newRelatedWorkRow = firstRelatedWorkLine.clone();
-
-    newRelatedWorkRow.find("input, select")
-      .val("")
-      .removeClass("is-invalid is-valid")
-      .removeAttr("required");
-
-    replaceHelpButtonInClonedRows(newRelatedWorkRow);
-
-    newRelatedWorkRow.find("#button-relatedwork-add").replaceWith(createRemoveButton());
-
-    relatedworkGroup.append(newRelatedWorkRow);
-
-    newRelatedWorkRow.on("click", ".removeButton", function () {
-      $(this).closest(".row").remove();
-    });
-
-    return newRelatedWorkRow;
+    return {
+      entryKey: row.attr('data-related-work-entry-key') || `related-work-${order}`,
+      order,
+      identifier,
+      relation,
+      relationId,
+      identifierType
+    };
   }
 
-  $("#button-relatedwork-add").click(function () {
-    addRelatedWorkRow();
-  });
-
-  document.addEventListener('autosave:ensure-array-field', (event) => {
-    const { detail, target } = event || {};
-    const { name, requiredCount } = detail || {};
-
-    if (!name || !RELATED_WORK_FIELD_NAMES.has(name) || !requiredCount || requiredCount <= 1) {
-      return;
-    }
-
-    if (!relatedworkGroup.length) {
-      return;
-    }
-
-    if (target && !relatedworkGroup[0].contains(target)) {
-      return;
-    }
-
-    const selector = `[name="${escapeSelector(name)}"]`;
-    let currentCount = relatedworkGroup.find(selector).length;
-
-    while (currentCount < requiredCount) {
-      const newRow = addRelatedWorkRow();
-      if (!newRow) {
-        break;
+  function collectPayload() {
+    const payload = [];
+    stack.children('[data-related-work-entry]').each(function () {
+      const entry = readEntry($(this), payload.length);
+      if (entry) {
+        payload.push(entry);
       }
-      currentCount = relatedworkGroup.find(selector).length;
+    });
+    return payload;
+  }
+
+  function countSummary(count) {
+    const label = count === 1
+      ? translate('relatedWork.entrySingular', 'entry')
+      : translate('relatedWork.entryPlural', 'entries');
+    return translate('relatedWork.entriesSummary', '{count} {label}', { count, label });
+  }
+
+  function renderEntrySummary(row) {
+    const relationSelect = row.find('select[name="relation[]"]').first();
+    const identifier = String(row.find('input[name="rIdentifier[]"]').first().val() || '').trim();
+    const relation = selectedText(relationSelect);
+    const identifierType = String(row.find('select[name="rIdentifierType[]"]').first().val() || '').trim();
+    const fallback = translate('relatedWork.incompleteEntry', 'Incomplete related work');
+
+    row.find('[data-related-work-summary-identifier]').text(identifier || fallback);
+    row.find('[data-related-work-summary-relation]').text(relation).toggleClass('d-none', relation === '');
+    row.find('[data-related-work-summary-identifier-type]').text(identifierType).toggleClass('d-none', identifierType === '');
+  }
+
+  function updateActionLabels(row) {
+    const isExpanded = row.find('[data-related-work-edit-panel]').hasClass('show');
+    row.find('[data-related-work-toggle-edit]').attr('aria-label', isExpanded
+      ? translate('relatedWork.collapseEntry', 'Collapse related work entry')
+      : translate('relatedWork.editEntry', 'Edit related work entry'));
+    row.find('[data-related-work-remove]').attr('aria-label', translate('relatedWork.removeEntry', 'Remove related work entry'));
+    row.find('[data-related-work-move-up]').attr('aria-label', translate('relatedWork.moveEntryUp', 'Move related work up'));
+    row.find('[data-related-work-move-down]').attr('aria-label', translate('relatedWork.moveEntryDown', 'Move related work down'));
+    row.find('[data-related-work-drag]').attr({
+      title: translate('relatedWork.dragHandle', 'Drag & drop to change order'),
+      'aria-label': translate('relatedWork.dragHandle', 'Drag & drop to change order')
+    });
+  }
+
+  function updateReorderControls() {
+    const rows = stack.children('[data-related-work-entry]');
+    rows.each(function (index) {
+      const row = $(this);
+      const isFirst = index === 0;
+      const isLast = index === rows.length - 1;
+      row.find('[data-related-work-move-up]').prop('disabled', isFirst).attr('aria-disabled', isFirst ? 'true' : 'false');
+      row.find('[data-related-work-move-down]').prop('disabled', isLast).attr('aria-disabled', isLast ? 'true' : 'false');
+      updateActionLabels(row);
+    });
+  }
+
+  function updatePayload() {
+    stack.children('[data-related-work-entry]').each(function () {
+      renderEntrySummary($(this));
+    });
+    updateReorderControls();
+    const payload = collectPayload();
+    payloadInput.val(JSON.stringify(payload));
+    summaryCount.text(countSummary(payload.length)).attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
+    document.dispatchEvent(new CustomEvent('relatedWorksPayload:updated', { detail: { payload } }));
+    return payload;
+  }
+
+  function setExpanded(row, isExpanded) {
+    const panel = row.find('[data-related-work-edit-panel]').first();
+    const toggle = row.find('[data-related-work-toggle-edit]').first();
+    panel.toggleClass('show', isExpanded).attr('aria-hidden', isExpanded ? 'false' : 'true');
+    row.attr('data-related-work-expanded', isExpanded ? 'true' : 'false');
+    toggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
+    toggle.find('i').toggleClass('bi-pencil', !isExpanded).toggleClass('bi-chevron-up', isExpanded);
+    updateActionLabels(row);
+  }
+
+  function ensureSelectValue(select, value, label = value) {
+    const normalizedValue = String(value || '').trim();
+    const normalizedLabel = String(label || '').trim();
+    if (normalizedValue !== '') {
+      const valueOption = select.find('option').filter(function () {
+        return String($(this).val()) === normalizedValue;
+      }).first();
+      if (valueOption.length) {
+        select.val(normalizedValue);
+        return;
+      }
     }
+    if (normalizedLabel !== '') {
+      const matchingOption = select.find('option').filter(function () {
+        return String($(this).text()).trim() === normalizedLabel;
+      }).first();
+      if (matchingOption.length) {
+        select.val(matchingOption.val());
+        return;
+      }
+    }
+    if (normalizedValue !== '' || normalizedLabel !== '') {
+      const optionValue = normalizedValue || normalizedLabel;
+      select.append($('<option></option>').val(optionValue).text(normalizedLabel || optionValue));
+      select.val(optionValue);
+    }
+  }
+
+  function populateRow(row, entry) {
+    if (!entry) {
+      return;
+    }
+    row.find('input[name="rIdentifier[]"]').val(entry.identifier || '');
+    ensureSelectValue(row.find('select[name="relation[]"]'), entry.relationId || entry.relation || '', entry.relation || '');
+    ensureSelectValue(row.find('select[name="rIdentifierType[]"]'), entry.identifierType || '');
+    renderEntrySummary(row);
+  }
+
+  function addRelatedWork(entry = null, options = {}) {
+    const row = template.clone(false);
+    const index = entryIndex++;
+    row.attr('data-related-work-entry-key', createUniqueEntryKey(entry && entry.entryKey, index));
+    updateIds(row, index);
+    resetRow(row);
+    row.find('#button-relatedwork-add, [data-related-work-add]').remove();
+    replaceHelpButtonInClonedRows(
+      row,
+      'input-right-with-round-corners',
+      stack.children('[data-related-work-entry]').length === 0
+        ? ['help-relatedwork-relation', 'help-relatedwork-identifier', 'help-relatedwork-identifiertype']
+        : []
+    );
+    translateClonedRow(row);
+    ensureCardScaffold(row);
+    populateRow(row, entry);
+    stack.append(row);
+    initializeTooltips(row);
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    if (options.update !== false) {
+      updatePayload();
+    }
+    if (options.focus !== false) {
+      row.find('[data-related-work-edit-panel] select, [data-related-work-edit-panel] input').first().trigger('focus');
+    }
+    return row;
+  }
+
+  function normalizeEntries(entries) {
+    if (typeof entries === 'string') {
+      try {
+        entries = JSON.parse(entries);
+      } catch (error) {
+        entries = [];
+      }
+    }
+    return Array.isArray(entries) ? entries : [];
+  }
+
+  function setRelatedWorks(entries) {
+    stack.children('[data-related-work-entry]').remove();
+    normalizeEntries(entries).forEach(function (entry) {
+      addRelatedWork(entry, { focus: false, update: false });
+    });
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    return updatePayload();
+  }
+
+  function resolveRow(target) {
+    if (typeof target === 'number') {
+      return stack.children('[data-related-work-entry]').eq(target);
+    }
+    if (typeof target === 'string') {
+      return stack.children('[data-related-work-entry]').filter(function () {
+        return $(this).attr('data-related-work-entry-key') === target;
+      }).first();
+    }
+    return $(target).closest('[data-related-work-entry]');
+  }
+
+  function moveEntry(target, direction) {
+    const row = resolveRow(target);
+    const numericDirection = direction === 'up' ? -1 : direction === 'down' ? 1 : Number(direction);
+    const sibling = numericDirection < 0
+      ? row.prev('[data-related-work-entry]')
+      : row.next('[data-related-work-entry]');
+    if (!row.length || !sibling.length) {
+      return false;
+    }
+    if (numericDirection < 0) {
+      sibling.before(row);
+    } else {
+      sibling.after(row);
+    }
+    if (typeof stack.sortable === 'function') {
+      stack.sortable('refresh');
+    }
+    updatePayload();
+    const preferred = row.find(numericDirection < 0 ? '[data-related-work-move-up]' : '[data-related-work-move-down]');
+    const fallback = row.find(numericDirection < 0 ? '[data-related-work-move-down]' : '[data-related-work-move-up]');
+    (preferred.prop('disabled') ? fallback : preferred).trigger('focus');
+    return true;
+  }
+
+  function ensureRowsForField(requiredCount) {
+    let currentCount = stack.children('[data-related-work-entry]').length;
+    while (currentCount < requiredCount) {
+      addRelatedWork(null, { focus: false, update: false });
+      currentCount = stack.children('[data-related-work-entry]').length;
+    }
+    updatePayload();
+  }
+
+  if (typeof stack.sortable === 'function') {
+    stack.sortable({
+      items: '> [data-related-work-entry]',
+      handle: '.drag-handle',
+      cancel: 'input, textarea, select, option, button:not(.drag-handle)',
+      axis: 'y',
+      tolerance: 'pointer',
+      containment: 'parent',
+      update: updatePayload
+    });
+  }
+
+  eventRoot.on('click', '#button-relatedwork-add, [data-related-work-add]', function () {
+    addRelatedWork();
   });
-})
+
+  stack.on('click', '[data-related-work-toggle-edit]', function () {
+    const row = $(this).closest('[data-related-work-entry]');
+    setExpanded(row, !row.find('[data-related-work-edit-panel]').hasClass('show'));
+  });
+
+  stack.on('click', '[data-related-work-move-up]', function () {
+    moveEntry(this, -1);
+  });
+
+  stack.on('click', '[data-related-work-move-down]', function () {
+    moveEntry(this, 1);
+  });
+
+  stack.on('click', '[data-related-work-remove], .removeButton', function () {
+    const row = $(this).closest('[data-related-work-entry]');
+    const nextFocus = row.next('[data-related-work-entry]').find('[data-related-work-toggle-edit]').first();
+    const previousFocus = row.prev('[data-related-work-entry]').find('[data-related-work-toggle-edit]').first();
+    row.remove();
+    updatePayload();
+    const focusTarget = nextFocus.length
+      ? nextFocus
+      : previousFocus.length
+        ? previousFocus
+        : addActions.find('#button-relatedwork-add, [data-related-work-add]').first();
+    focusTarget.trigger('focus');
+  });
+
+  stack.on('input change', 'input, select, textarea', updatePayload);
+
+  document.addEventListener('autosave:ensure-array-field', function (event) {
+    const detail = event.detail || {};
+    if (!detail.name || !RELATED_WORK_FIELD_NAMES.has(detail.name) || !detail.requiredCount || detail.requiredCount <= 1) {
+      return;
+    }
+    ensureRowsForField(detail.requiredCount);
+  });
+
+  document.addEventListener('translationsLoaded', function () {
+    const addLabel = translate('relatedWork.addEntry', 'Add related work');
+    addActions.find('#button-relatedwork-add, [data-related-work-add]').attr({ title: addLabel, 'aria-label': addLabel });
+    addActions.find('[data-translate="relatedWork.addEntry"]').text(addLabel);
+    stack.children('[data-related-work-entry]').each(function () {
+      renderEntrySummary($(this));
+      updateActionLabels($(this));
+    });
+    updatePayload();
+  });
+
+  window.relatedWorkStack = {
+    addRelatedWork,
+    setRelatedWorks,
+    collectPayload,
+    updatePayload,
+    moveEntry
+  };
+
+  if (initialEntries.length) {
+    setRelatedWorks(initialEntries);
+  } else {
+    updatePayload();
+  }
+});

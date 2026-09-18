@@ -252,7 +252,18 @@
         "relation": "Relation",
         "identifierType": "Identifier type",
         "identifier": "Identifier",
-        "identifierInvalid": "Please enter a valid identifier."
+        "identifierInvalid": "Please enter a valid identifier.",
+        "addEntry": "Add related work",
+        "dragHandle": "Drag & drop to change order",
+        "removeEntry": "Remove related work entry",
+        "editEntry": "Edit related work entry",
+        "collapseEntry": "Collapse related work entry",
+        "moveEntryUp": "Move related work up",
+        "moveEntryDown": "Move related work down",
+        "entrySingular": "entry",
+        "entryPlural": "entries",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Incomplete related work"
     },
     "funding": {
         "title": "Funding Reference",
