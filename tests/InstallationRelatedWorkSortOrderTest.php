@@ -17,7 +17,7 @@ final class InstallationRelatedWorkSortOrderTest extends DatabaseTestCase
         $column = $result->fetch_assoc();
 
         self::assertNotNull($column);
-        self::assertSame('int(11)', strtolower($column['Type']));
+        self::assertMatchesRegularExpression('/^int(?:\(11\))?$/', strtolower($column['Type']));
         self::assertSame('NO', $column['Null']);
         self::assertSame('0', $column['Default']);
     }

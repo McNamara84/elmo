@@ -310,7 +310,7 @@ async function addFreeKeyword(page: Page, keyword: string) {
 
 /**
  * Adds a related work entry with relation, identifier, and identifier type.
- * Creates a new row if index > 0, then fills in the related work details.
+ * Creates rows until the requested zero-based index exists, then fills in the related work details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the related work entry (0-based)
  * @param {Object} data - The related work data object
@@ -324,15 +324,16 @@ async function addRelatedWork(
   index: number,
   data: { identifier: string; type: string; relation: string }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  const relatedWorkRows = page.locator('[related-work-row]');
+  while (await relatedWorkRows.count() <= index) {
+    const newRowIndex = await relatedWorkRows.count();
+    // Related Work starts empty, so create every row up to the requested index.
     await page.locator('#button-relatedwork-add').click();
-    // Wait for the new related work row to be visible
-    await page.locator('[related-work-row]').nth(index).waitFor({ state: 'visible' });
+    await relatedWorkRows.nth(newRowIndex).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific related work row
-  const relatedWorkRow = page.locator('[related-work-row]').nth(index);
+  const relatedWorkRow = relatedWorkRows.nth(index);
 
   // Select relation
   await relatedWorkRow
