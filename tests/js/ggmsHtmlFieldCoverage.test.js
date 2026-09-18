@@ -1,27 +1,25 @@
 /**
- * Metatest: GGM HTML form fields ↔ Playwright coverage stay in sync.
+ * Metatest: GGM HTML form field ids stay discoverable and Playwright specs
+ * do not keep stale GGM `#id` selectors.
+ *
+ * Roundtrip coverage is not measured here. The ICGEM Step 4 ingest ledger
+ * records which HTML ids actually received values after re-upload.
  *
  * Fails when:
- *  - a new input/select/textarea id is added to GGMs*.html but is not referenced
- *    by the ICGEM roundtrip suite or the clear spec
- *  - a GGM field selector remains in those specs after the HTML id was removed
- *
- * The ICGEM roundtrip suite is the primary contract: every GGM field should be
- * driven by a reference XML fixture rather than by a bespoke fill-and-assert spec.
+ *  - GGM formgroup HTML cannot be scanned for input/select/textarea ids
+ *  - a GGM field selector remains in the roundtrip or clear spec after the
+ *    HTML id was removed
  */
 
 const {
   GGM_FORMGROUP_FILES,
-  GGM_COVERAGE_SPEC_FILES,
   getGgmsHtmlFieldIds,
   getGgmsCoverageSelectorIds,
 } = require('../helpers/ggmsFormFields.cjs');
 
-const ROUNDTRIP_SPEC = 'tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts';
-
 describe('GGM HTML ↔ Playwright field coverage metatest', () => {
   const htmlIds = getGgmsHtmlFieldIds();
-  const { byFile, all: coverageIds } = getGgmsCoverageSelectorIds();
+  const { byFile } = getGgmsCoverageSelectorIds();
 
   test('discovers field ids from all four GGM formgroups', () => {
     expect(GGM_FORMGROUP_FILES.length).toBe(4);
@@ -34,13 +32,9 @@ describe('GGM HTML ↔ Playwright field coverage metatest', () => {
       'input-abstract',             // Descriptions
     ]));
   });
-
-  test('every HTML GGM field id is referenced by the roundtrip or clear spec', () => {
-    const covered = new Set(coverageIds);
-    const missing = htmlIds.filter((id) => !covered.has(id));
-    expect(missing).toEqual([]);
-  });
-
+  // checks that the input selectors used in the icgem-roundtrip.spec.ts
+  // and elmogem-clear.spec.ts are in sync with the HTML formgroups.
+  // Fails when: an id changes without a change in the test spec
   test('coverage specs do not reference stale GGM HTML field ids', () => {
     const htmlSet = new Set(htmlIds);
     const stale = [];
@@ -62,15 +56,5 @@ describe('GGM HTML ↔ Playwright field coverage metatest', () => {
     expect(stale).toEqual([]);
   });
 
-  test('the ICGEM roundtrip suite drives every GGM field', () => {
-    // Selectors built by concatenation (e.g. `#select-topo-density${suffix}`)
-    // only surface their common prefix, so accept a prefix match as coverage.
-    const roundtripIds = byFile[ROUNDTRIP_SPEC];
-    expect(Array.isArray(roundtripIds)).toBe(true);
 
-    const missing = htmlIds.filter((id) => !roundtripIds.some(
-      (referenced) => referenced === id || id.startsWith(`${referenced}-`),
-    ));
-    expect(missing).toEqual([]);
-  });
 });
