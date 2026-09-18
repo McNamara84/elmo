@@ -167,6 +167,37 @@ describe('relatedwork.js card stack', () => {
     ]);
   });
 
+  test('maps canonical DOI relations to legacy spaced options without losing the canonical payload value', () => {
+    const option = $('#input-relatedwork-relation option[value="3"]');
+    option.attr('data-relation-name', 'Is Referenced By');
+
+    window.relatedWorkStack.setRelatedWorks([{
+      identifier: '10.5880/related',
+      relation: 'IsReferencedBy',
+      relationId: '',
+      identifierType: 'DOI'
+    }]);
+
+    expect($('select[name="relation[]"]').val()).toBe('3');
+    expect(payload()[0]).toEqual(expect.objectContaining({
+      relation: 'IsReferencedBy',
+      relationId: '3'
+    }));
+  });
+
+  test('can refresh the payload silently for Save and Submit', () => {
+    const listener = jest.fn();
+    document.addEventListener('relatedWorksPayload:updated', listener);
+
+    window.relatedWorkStack.updatePayload({ notify: false });
+    expect(listener).not.toHaveBeenCalled();
+
+    window.relatedWorkStack.updatePayload();
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    document.removeEventListener('relatedWorksPayload:updated', listener);
+  });
+
   test('moves cards with keyboard-accessible buttons and updates focus and order', () => {
     window.relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },

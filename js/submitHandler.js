@@ -1,5 +1,6 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -411,12 +412,11 @@ class SubmitHandler {
     }
 
     /**
-     * Submits the validated form using the same freshly generated Authors
-     * payload used by contact validation and file saving.
+     * Submits the validated form using freshly generated Authors and enabled
+     * Related Works payloads from their live stacks.
      *
      * Payload synchronization failures abort submission, display the standard
-     * submit error, and prevent stale legacy author fields from reaching the
-     * backend.
+     * submit error, and prevent stale legacy fields from reaching the backend.
      *
      * @returns {Promise<void>} Promise resolved after handing data to the AJAX submission.
      */
@@ -426,10 +426,17 @@ class SubmitHandler {
         }
 
         let authorsPayload;
+        let relatedWorksPayload = null;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+            const hasRelatedWorks = this.$form[0].querySelector(
+                'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
+            );
+            if (hasRelatedWorks) {
+                relatedWorksPayload = synchronizeRelatedWorksPayload(this.$form[0]);
+            }
         } catch (error) {
-            console.error('Could not synchronize Authors payload for submission:', error);
+            console.error('Could not synchronize structured form payloads for submission:', error);
             this.showNotification(
                 'danger',
                 translations.alerts.errorHeading,
@@ -440,6 +447,9 @@ class SubmitHandler {
 
         const submitData = new FormData(this.$form[0]);
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
+        if (Array.isArray(relatedWorksPayload)) {
+            submitData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
+        }
 
         // Ensure the form-level CSRF token is present.
         const csrfToken = await fetchAndStoreCsrfToken('form');

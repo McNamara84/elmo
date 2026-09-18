@@ -337,7 +337,7 @@ $(document).ready(function () {
     });
   }
 
-  function updatePayload() {
+  function updatePayload(options = {}) {
     stack.children('[data-related-work-entry]').each(function () {
       renderEntrySummary($(this));
     });
@@ -345,7 +345,9 @@ $(document).ready(function () {
     const payload = collectPayload();
     payloadInput.val(JSON.stringify(payload));
     summaryCount.text(countSummary(payload.length)).attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
-    document.dispatchEvent(new CustomEvent('relatedWorksPayload:updated', { detail: { payload } }));
+    if (options.notify !== false) {
+      document.dispatchEvent(new CustomEvent('relatedWorksPayload:updated', { detail: { payload } }));
+    }
     return payload;
   }
 
@@ -377,6 +379,10 @@ $(document).ready(function () {
   function ensureSelectValue(select, value, label = value) {
     const normalizedValue = String(value || '').trim();
     const normalizedLabel = String(label || '').trim();
+    const isRelationSelect = select.is('select[name="relation[]"]');
+    const relationLookupKey = function (candidate) {
+      return String(candidate || '').replace(/\s+/g, '').toLowerCase();
+    };
     if (normalizedValue !== '') {
       const valueOption = select.find('option').filter(function () {
         return String($(this).val()) === normalizedValue;
@@ -388,10 +394,19 @@ $(document).ready(function () {
     }
     if (normalizedLabel !== '') {
       const matchingOption = select.find('option').filter(function () {
-        return String($(this).attr('data-relation-name') || '').trim() === normalizedLabel
-          || String($(this).text()).trim() === normalizedLabel;
+        const relationName = String($(this).attr('data-relation-name') || '').trim();
+        const visibleText = String($(this).text()).trim();
+        return relationName === normalizedLabel
+          || visibleText === normalizedLabel
+          || (isRelationSelect && (
+            relationLookupKey(relationName) === relationLookupKey(normalizedLabel)
+            || relationLookupKey(visibleText) === relationLookupKey(normalizedLabel)
+          ));
       }).first();
       if (matchingOption.length) {
+        if (isRelationSelect) {
+          matchingOption.attr('data-relation-name', normalizedLabel);
+        }
         select.val(matchingOption.val());
         return;
       }
