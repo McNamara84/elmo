@@ -60,7 +60,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
                     <option value="Earth" selected>Earth</option>
                     <option value="Moon of the Earth">Moon of the Earth</option>
                 </select>
-                <select id="input-file-format" name="file_format">
+                <select id="input-file-format" name="icgem_file_format">
                     <option value="">Choose...</option>
                     <option value="icgem2.0">icgem2.0</option>
                 </select>
