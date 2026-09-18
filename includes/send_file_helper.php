@@ -365,7 +365,7 @@ function generateFile(int $resourceId, array $postData, array $settings = []): a
         }
 
         if ($settings['showGGMsProperties']) {
-            $xmlContent = applyElmoGemAdditionsToDataciteXml($xmlContent, true, true);
+            $xmlContent = applyElmoGemAdditionsToDataciteXml($xmlContent, true, true, $postData);
         }
 
         if (trim((string) $xmlContent) === '') {
@@ -406,7 +406,7 @@ function generateICGEMFile(int $resourceId, array $postData, array $settings = [
             'postData' => $postData,
             'variant' => 'icgem',
         ]);
-        $xmlContent = applyElmoGemAdditionsToDataciteXml($payloadData['payload'], true, false);
+        $xmlContent = applyElmoGemAdditionsToDataciteXml($payloadData['payload'], true, false, $postData);
 
         if (trim((string) $xmlContent) === '') {
             throw new RuntimeException('Generated ICGEM XML payload is empty.');
@@ -429,11 +429,19 @@ function generateICGEMFile(int $resourceId, array $postData, array $settings = [
  * - non-GEM: return input unchanged
  * - GEM Data Services envelope (default xmlns, empty prefix): only when $elmogemSendsDataServicesMail
  * - GEM ICGEM envelope (dace: prefix): always when $showGGMsProperties
+ *
+ * @param string $xmlContent The generated XML string.
+ * @param bool $showGGMsProperties Whether to include GEM-specific additions.
+ * @param bool $elmogemSendsDataServicesMail Whether GEM sends Data Services mail.
+ * @param array<string, mixed> $postData Form fields from the submission, including 'file_format'.
+ *
+ * @throws RuntimeException When the DataCite resource element is not found or XML processing fails.
  */
 function applyElmoGemAdditionsToDataciteXml(
     string $xmlContent,
     bool $showGGMsProperties,
     bool $elmogemSendsDataServicesMail,
+    array $postData = [],
 ): string {
     if (!$showGGMsProperties) {
         return $xmlContent;
@@ -578,15 +586,18 @@ function applyElmoGemAdditionsToDataciteXml(
         $contributors->appendChild($contributor);
     }
 
-    // --- 3. Add format (create <formats> if the resource does not already have one) ---
-    $formats = $getOrCreateChild('formats');
-    $alreadyHasFormat = $findChild(
-        $formats,
-        'format',
-        fn (DOMElement $el): bool => trim($el->textContent) === 'ICGEM-format'
-    );
-    if (!$alreadyHasFormat instanceof DOMElement) {
-        $formats->appendChild($createEl('format', 'ICGEM-format'));
+    // --- 3. Add format from the ELMO-GEM file_format field ---
+    $fileFormat = trim((string) ($postData['file_format'] ?? ''));
+    if ($fileFormat !== '') {
+        $formats = $getOrCreateChild('formats');
+        $alreadyHasFormat = $findChild(
+            $formats,
+            'format',
+            static fn (DOMElement $el): bool => trim($el->textContent) === $fileFormat
+        );
+        if (!$alreadyHasFormat instanceof DOMElement) {
+            $formats->appendChild($createEl('format', $fileFormat));
+        }
     }
 
     // --- 4. Fill existing subjects (skip a keyword already present by valueURI) ---
