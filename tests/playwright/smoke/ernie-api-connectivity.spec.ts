@@ -5,13 +5,6 @@ test.describe('ERNIE API Connectivity', () => {
     // This test confirms that ERNIE_URL is reachable directly from CI environment
     
     const ernieUrl = process.env.ERNIE_URL;
-    if (!ernieUrl) {
-      test.skip();
-      console.log('ℹ️  ERNIE_URL not set, skipping direct ERNIE test');
-      return;
-    }
-
-    // Try to reach ERNIE's health/doc endpoint
     const docUrl = `${ernieUrl.replace(/\/$/, '')}/api/v1/doc`;
     console.log(`Testing ERNIE connectivity at: ${docUrl}`);
 
@@ -32,10 +25,7 @@ test.describe('ERNIE API Connectivity', () => {
     // 2. ELMO can successfully call ERNIE API
     // 3. The response is valid
     
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:8000';
-    const response = await page.request.get(
-      `${baseUrl}/api/v1/description-types/elmo`
-    );
+    const response = await page.request.get('/api/v2/vocabs/descriptiontypes');
 
     // Should return 200 OK
     expect(response.status()).toBe(200);
@@ -49,9 +39,14 @@ test.describe('ERNIE API Connectivity', () => {
   });
 
   test('ERNIE API returns expected description types structure', async ({ page }) => {
-    const baseUrl = process.env.API_BASE_URL || 'http://localhost:8000';
+    const ernieUrl = process.env.ERNIE_URL;
     const response = await page.request.get(
-      `${baseUrl}/api/v1/description-types/elmo`
+      `${ernieUrl.replace(/\/$/, '')}/api/v1/description-types/elmo`,
+      {
+        headers: {
+          'X-API-Key': process.env.ERNIE_API_KEY || ''
+        }
+      }
     );
 
     expect(response.status()).toBe(200);

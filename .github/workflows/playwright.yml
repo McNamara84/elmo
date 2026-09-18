@@ -13,6 +13,9 @@ permissions:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
+    env:
+      ERNIE_URL: ${{ secrets.ERNIE_URL }}
+      ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -195,7 +198,14 @@ jobs:
         ERNIE_URL: ${{ secrets.ERNIE_URL }}
         ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
+        if [ -z "${ERNIE_URL}" ]; then
+          echo "::warning::ERNIE_URL secret is empty; ELMO will use hardcoded vocab fallbacks"
+        else
+          echo "ERNIE_URL is set for PHP servers"
+        fi
+
         # ELMO Standard (Port 8000)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
@@ -206,6 +216,7 @@ jobs:
         echo $! > server-elmo.pid
 
         # ELMO-GEM (Port 8001)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=true SHOW_USED_INSTRUMENTS=false \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
@@ -216,6 +227,7 @@ jobs:
         echo $! > server-gem.pid
 
         # ELMO-IGSN (Port 8002)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_THESAURI=false SHOW_FREE_KEYWORDS=false \
@@ -226,6 +238,7 @@ jobs:
         echo $! > server-igsn.pid
 
         # ELMO-MSL (Port 8003)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=true \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=false \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
