@@ -22,15 +22,23 @@ function hasRelatedWorksPayload(array $postData): bool
  * empty payload removes the existing container so the forward XSLTs cannot emit
  * an empty relatedIdentifiers element.
  *
+ * When Used Instruments are enabled, database-derived IsCollectedBy entries
+ * remain owned by that form group and are appended after the payload entries.
+ * Payload-supplied IsCollectedBy entries are ignored in that mode.
+ *
  * @param string $resourceXml Internal Resource XML.
  * @param array<string, mixed> $postData Current form data containing relatedWorksPayload.
+ * @param bool $usedInstrumentsEnabled Whether IsCollectedBy belongs to Used Instruments.
  * @return string Updated XML document.
  *
  * @throws InvalidArgumentException When the Related Works payload is malformed.
  * @throws RuntimeException When the supplied XML cannot be parsed or serialized.
  */
-function applyRelatedWorksPayloadToResourceXmlString(string $resourceXml, array $postData): string
-{
+function applyRelatedWorksPayloadToResourceXmlString(
+    string $resourceXml,
+    array $postData,
+    bool $usedInstrumentsEnabled = false
+): string {
     $relatedWorks = array_values(array_filter(
         normalizeRelatedWorksPayload($postData),
         static fn (array $entry): bool => $entry['identifier'] !== '' && $entry['relation'] !== ''
@@ -55,6 +63,19 @@ function applyRelatedWorksPayloadToResourceXmlString(string $resourceXml, array 
         }
     }
 
+    if ($usedInstrumentsEnabled) {
+        $relatedWorks = array_values(array_filter(
+            $relatedWorks,
+            static fn (array $entry): bool => $entry['relation'] !== 'IsCollectedBy'
+        ));
+        $relatedWorks = array_merge(
+            $relatedWorks,
+            extractUsedInstrumentRelatedWorks($existingContainers)
+        );
+    }
+
+    $relatedWorks = deduplicateRelatedWorksForXml($relatedWorks);
+
     $relatedWorksElement = buildRelatedWorksElement($dom, $relatedWorks);
     if ($relatedWorksElement->hasChildNodes()) {
         if ($existingContainers !== []) {
@@ -75,6 +96,143 @@ function applyRelatedWorksPayloadToResourceXmlString(string $resourceXml, array 
     }
 
     return $updatedXml;
+}
+
+/**
+ * Extracts database-derived Used Instruments in their existing XML order.
+ *
+ * @param list<DOMElement> $containers Existing non-namespaced RelatedWorks containers.
+ * @return list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}>
+ */
+function extractUsedInstrumentRelatedWorks(array $containers): array
+{
+    $instruments = [];
+
+    foreach ($containers as $container) {
+        foreach ($container->childNodes as $child) {
+            if (!$child instanceof DOMElement || $child->localName !== 'RelatedWork' || $child->namespaceURI !== null) {
+                continue;
+            }
+
+            $entry = relatedWorkEntryFromXmlElement($child, count($instruments));
+            if ($entry === null || $entry['relation'] !== 'IsCollectedBy') {
+                continue;
+            }
+
+            $instruments[] = $entry;
+        }
+    }
+
+    return $instruments;
+}
+
+/**
+ * Reads an internal RelatedWork element into the normalized payload shape.
+ *
+ * @return array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}|null
+ */
+function relatedWorkEntryFromXmlElement(DOMElement $element, int $order): ?array
+{
+    $identifier = relatedWorkDirectChildText($element, 'Identifier');
+    $relation = relatedWorkNestedName($element, 'Relation');
+
+    if ($identifier === '' || $relation === '') {
+        return null;
+    }
+
+    return [
+        'entryKey' => "used-instrument-{$order}",
+        'order' => $order,
+        'identifier' => $identifier,
+        'relation' => $relation,
+        'relationId' => '',
+        'identifierType' => relatedWorkNestedName($element, 'IdentifierType'),
+    ];
+}
+
+/**
+ * Returns trimmed text from a non-namespaced direct child.
+ */
+function relatedWorkDirectChildText(DOMElement $parent, string $name): string
+{
+    foreach ($parent->childNodes as $child) {
+        if ($child instanceof DOMElement && $child->localName === $name && $child->namespaceURI === null) {
+            return trim($child->textContent);
+        }
+    }
+
+    return '';
+}
+
+/**
+ * Returns the name child from an internal Relation or IdentifierType element.
+ */
+function relatedWorkNestedName(DOMElement $parent, string $containerName): string
+{
+    foreach ($parent->childNodes as $child) {
+        if (!$child instanceof DOMElement || $child->localName !== $containerName || $child->namespaceURI !== null) {
+            continue;
+        }
+
+        return relatedWorkDirectChildText($child, 'name');
+    }
+
+    return '';
+}
+
+/**
+ * Removes duplicate Related Works while retaining the first occurrence.
+ *
+ * Payload order therefore wins, followed by the database order of preserved
+ * instruments. DOI resolver variants are considered the same identifier;
+ * other identifier values are only trimmed because URL paths can be case-sensitive.
+ *
+ * @param list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}> $relatedWorks
+ * @return list<array{entryKey: string, order: int, identifier: string, relation: string, relationId: string, identifierType: string}>
+ */
+function deduplicateRelatedWorksForXml(array $relatedWorks): array
+{
+    $deduplicated = [];
+    $seen = [];
+
+    foreach ($relatedWorks as $relatedWork) {
+        $identifierType = trim($relatedWork['identifierType']);
+        $key = implode("\x1F", [
+            strtolower(trim($relatedWork['relation'])),
+            strtolower($identifierType),
+            normalizeRelatedWorkIdentifierForComparison($relatedWork['identifier'], $identifierType),
+        ]);
+
+        if (isset($seen[$key])) {
+            continue;
+        }
+
+        $seen[$key] = true;
+        $relatedWork['order'] = count($deduplicated);
+        $deduplicated[] = $relatedWork;
+    }
+
+    return $deduplicated;
+}
+
+/**
+ * Normalizes identifiers only as far as their type permits safe comparison.
+ */
+function normalizeRelatedWorkIdentifierForComparison(string $identifier, string $identifierType): string
+{
+    $identifier = trim($identifier);
+
+    if (strcasecmp(trim($identifierType), 'DOI') !== 0) {
+        return $identifier;
+    }
+
+    $normalized = preg_replace(
+        '~^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)~i',
+        '',
+        $identifier
+    );
+
+    return strtolower($normalized ?? $identifier);
 }
 
 /**

@@ -252,7 +252,11 @@ function buildResourceXmlWithCurrentFormPayloads(
     }
 
     if ($applyRelatedWorks) {
-        $resourceXml = applyRelatedWorksPayloadToResourceXmlString($resourceXml, $postData);
+        $resourceXml = applyRelatedWorksPayloadToResourceXmlString(
+            $resourceXml,
+            $postData,
+            (bool) ($GLOBALS['showUsedInstruments'] ?? false)
+        );
     }
 
     return $resourceXml;
