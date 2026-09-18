@@ -1160,27 +1160,42 @@ XML;
 
 final class ICGEMDataciteAdditionsTest extends TestCase
 {
+    /**
+     * Snapshot fixtures still expect the historical ICGEM-format label.
+     *
+     * @var array{file_format: string}
+     */
+    private const SNAPSHOT_POST = ['file_format' => 'ICGEM-format'];
+
+    /**
+     * @param array<string, mixed> $postData
+     */
+    private function applyAdditions(string $xml, array $postData = self::SNAPSHOT_POST): string
+    {
+        return applyElmoGemAdditionsToDataciteXml($xml, true, true, $postData);
+    }
+
     public function testNoNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlNoNamespace'], true, true);
+        $result = $this->applyAdditions($GLOBALS['testXmlNoNamespace']);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlNoNamespace'], $result);
     }
 
     public function testWithNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithNamespace'], true, true);
+        $result = $this->applyAdditions($GLOBALS['testXmlWithNamespace']);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithNamespace'], $result);
     }
 
     public function testWithDataWithNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataWithNamespace'], true, true);
+        $result = $this->applyAdditions($GLOBALS['testXmlWithDataWithNamespace']);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithDataWithNamespace'], $result);
     }
 
     public function testWithDataNoNamespace(): void
     {
-        $result = applyElmoGemAdditionsToDataciteXml($GLOBALS['testXmlWithDataNoNamespace'], true, true);
+        $result = $this->applyAdditions($GLOBALS['testXmlWithDataNoNamespace']);
         $this->assertXmlStringEqualsXmlString($GLOBALS['expectedXmlWithDataNoNamespace'], $result);
     }
 
@@ -1200,7 +1215,7 @@ final class ICGEMDataciteAdditionsTest extends TestCase
   </contributors>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
@@ -1219,7 +1234,7 @@ XML);
   </contributors>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
@@ -1238,7 +1253,7 @@ XML);
   </contributors>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
@@ -1257,7 +1272,7 @@ XML);
   </contributors>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('Producer', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($result, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
@@ -1274,7 +1289,7 @@ XML);
   <contributors/>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
@@ -1290,7 +1305,7 @@ XML);
   <contributors/>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
@@ -1306,7 +1321,7 @@ XML);
   <contributors/>
 XML);
 
-        $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
+        $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
@@ -1317,14 +1332,65 @@ XML);
     public function testAdditionsAreIdempotent(): void
     {
         $xml = $this->minimalEnvelope("<subjects/><contributors/>");
-        $once = applyElmoGemAdditionsToDataciteXml($xml, true, true);
-        $twice = applyElmoGemAdditionsToDataciteXml($once, true, true);
+        $once = $this->applyAdditions($xml);
+        $twice = $this->applyAdditions($once);
 
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
         $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
         $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
         $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
+    }
+
+    public function testAddsFileFormatFromPostData(): void
+    {
+        $xml = $this->minimalEnvelope("<subjects/><contributors/>");
+        $result = $this->applyAdditions($xml, ['file_format' => 'icgem1.0']);
+
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem1.0"]'));
+        $this->assertSame(0, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
+    }
+
+    public function testDoesNotAddFormatWhenFileFormatIsEmpty(): void
+    {
+        $xml = $this->minimalEnvelope("<subjects/><contributors/>");
+        $result = $this->applyAdditions($xml, []);
+
+        $this->assertSame(0, $this->countXpath($result, '//*[local-name()="formats"]'));
+        $this->assertSame(0, $this->countXpath($result, '//*[local-name()="format"]'));
+    }
+
+    public function testDoesNotDuplicateMatchingFileFormat(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors/>
+  <formats>
+    <format>icgem2.0</format>
+  </formats>
+XML);
+
+        $result = $this->applyAdditions($xml, ['file_format' => 'icgem2.0']);
+
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem2.0"]'));
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"]'));
+    }
+
+    public function testAddsFileFormatAlongsideADifferentExistingFormat(): void
+    {
+        $xml = $this->minimalEnvelope(<<<'XML'
+  <subjects/>
+  <contributors/>
+  <formats>
+    <format>binary</format>
+  </formats>
+XML);
+
+        $result = $this->applyAdditions($xml, ['file_format' => 'icgem1.0']);
+
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="binary"]'));
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="format"][normalize-space()="icgem1.0"]'));
+        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="format"]'));
     }
 
     private function subjectUriQuery(string $valueUri): string

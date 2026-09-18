@@ -125,7 +125,8 @@ final class SendFileHelperFileGenerationTest extends TestCase
             function applyElmoGemAdditionsToDataciteXml(
                 string $xmlContent,
                 bool $showGGMsProperties,
-                bool $elmogemSendsDataServicesMail
+                bool $elmogemSendsDataServicesMail,
+                array $postData = []
             ): string {
                 if (!$showGGMsProperties) {
                     return $xmlContent;

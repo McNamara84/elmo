@@ -63,22 +63,24 @@ XML;
         $dataServicesResult = applyElmoGemAdditionsToDataciteXml(
             self::DATA_SERVICES_XML,
             $showGGMsProperties,
-            $elmogemSendsDataServicesMail
+            $elmogemSendsDataServicesMail,
+            ['file_format' => 'icgem1.0']
         );
         $icgemResult = applyElmoGemAdditionsToDataciteXml(
             self::ICGEM_XML,
             $showGGMsProperties,
-            $elmogemSendsDataServicesMail
+            $elmogemSendsDataServicesMail,
+            ['file_format' => 'icgem1.0']
         );
 
         if ($expectDataServicesAddition) {
-            $this->assertStringContainsString('ICGEM-format', $dataServicesResult);
+            $this->assertStringContainsString('icgem1.0', $dataServicesResult);
         } else {
             $this->assertSame(self::DATA_SERVICES_XML, $dataServicesResult);
         }
 
         if ($expectIcgemAddition) {
-            $this->assertStringContainsString('ICGEM-format', $icgemResult);
+            $this->assertStringContainsString('icgem1.0', $icgemResult);
         } else {
             $this->assertSame(self::ICGEM_XML, $icgemResult);
         }
