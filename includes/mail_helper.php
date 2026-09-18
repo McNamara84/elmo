@@ -355,7 +355,6 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
     $simulateEmail = (bool) ($settings['simulateEmail'] ?? false);
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
-    $mail = createElmoMailer();
     global $smtpSender;
     
     if (empty($contacts)) {
@@ -363,56 +362,78 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
         return ['sent' => 0, 'failed' => []];
     }
 
-    $processedCount = 0;
-    $failed = [];
-
+    // First pass: validate all contacts
+    $validContacts = [];
+    $failedContacts = [];
+    
     foreach ($contacts as $contact) {
         $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
         $email = trim((string) ($contact['email'] ?? ''));
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             error_log("Researcher confirmation: Invalid email for {$fullName}.");
-            $failed[] = [
+            $failedContacts[] = [
                 'fullName' => $fullName,
                 'email' => $email === '' ? '(empty)' : $email,
                 'error' => 'invalid email address',
             ];
-            continue;
+        } else {
+            $validContacts[] = [
+                'fullName' => $fullName,
+                'email' => $email,
+            ];
         }
+    }
 
-        // Email simulation path
-        if ($simulateEmail) {
-            error_log("Simulating researcher confirmation email to {$fullName} <{$email}>.");
+    // If all are invalid, no researcher confirmation
+    if (empty($validContacts)) {
+        error_log('Researcher confirmation: No valid contacts found.');
+        return ['sent' => 0, 'failed' => $failedContacts];
+    }
+
+    $processedCount = 0;
+    
+    // Simulation path
+    if ($simulateEmail) {
+        foreach ($validContacts as $contact) {
+            error_log("Researcher confirmation email simulated for {$contact['email']}");
             $processedCount++;
-            continue;
         }
+        error_log('Researcher confirmation: Simulated ' . $processedCount . ' confirmation email(s).');
+        return ['sent' => $processedCount, 'failed' => $failedContacts];
+    }
 
+    // Normal flow: send emails
+    $mail = createElmoMailer();
+    
+    foreach ($validContacts as $contact) {
         try {
+            $mail->clearAllRecipients();
             $mail->setFrom($smtpSender, 'ELMO System');
-            $mail->addAddress($email, $fullName);
+            $mail->addAddress($contact['email'], $contact['fullName']);
             $mail->Subject = 'Confirmation of your data submission to ELMO';
             $mail->isHTML(true);
             $mail->Body = '
-                <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
+                <p>Dear ' . htmlspecialchars($contact['fullName'], ENT_QUOTES, 'UTF-8') . ',</p>
                 <p>Thank you for your data submission to ELMO.</p>
                 <p>Your data entry' . ($title !== '' ? ' titled "<strong>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</strong>"' : '') . ' has been received successfully.</p>
                 <p>The data curators will now review your submission. If further information is needed, they will contact you.</p>
                 <p>Best regards<br>ELMO</p>
             ';
-            $mail->AltBody = "Dear {$fullName},\n\nThank you for your data submission to ELMO.\nYour data entry" . ($title !== '' ? " titled \"{$title}\"" : '') . " has been received successfully.\nThe data curators will now review your submission.\n\nBest regards\nELMO";
+            $mail->AltBody = "Dear {$contact['fullName']},\n\nThank you for your data submission to ELMO.\nYour data entry" . ($title !== '' ? " titled \"{$title}\"" : '') . " has been received successfully.\nThe data curators will now review your submission.\n\nBest regards\nELMO";
             $mail->send();
             $processedCount++;
         } catch (Throwable $e) {
-            error_log("Researcher confirmation: Failed to send email to {$fullName} <{$email}>. " . $e->getMessage());
-            $failed[] = [
-                'fullName' => $fullName,
-                'email' => $email,
+            error_log("Researcher confirmation: Failed to send email to {$contact['fullName']} <{$contact['email']}>. " . $e->getMessage());
+            $failedContacts[] = [
+                'fullName' => $contact['fullName'],
+                'email' => $contact['email'],
                 'error' => $e->getMessage(),
             ];
         }
     }
 
-    error_log('Researcher confirmation: ' . ($simulateEmail ? 'Simulated' : 'Sent') . ' ' . $processedCount . ' confirmation email(s).');
+    error_log('Researcher confirmation: Sent ' . $processedCount . ' confirmation email(s).');
 
-    return ['sent' => $processedCount, 'failed' => $failed];
+    return ['sent' => $processedCount, 'failed' => $failedContacts];
 }
