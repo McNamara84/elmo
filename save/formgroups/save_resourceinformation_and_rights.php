@@ -27,7 +27,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
-    global $showLicense;
+    global $showLicense, $showGGMsProperties;
     
     try {        
         // Only require Rights field if license form group is shown
@@ -44,6 +44,13 @@ function saveResourceInformationAndRights($connection, $postData)
             if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
                 return false;
             }
+        }
+
+        if (($showGGMsProperties ?? false) && isset($postData['title']) && is_array($postData['title'])) {
+            $postData['title'] = applyGgmsModelNameToDatasetTitles(
+                $postData['title'],
+                (string) ($postData['model_name'] ?? '')
+            );
         }
 
         // Sanitize and prepare data
@@ -260,6 +267,34 @@ function getDefaultTitleTypeId($connection, $savedCount)
 {
     $ids = resolveDefaultTitleTypeIds($connection);
     return $savedCount === 0 ? $ids['main'] : $ids['alternative'];
+}
+
+/**
+ * Prefix the GEM model name onto the main dataset title when it is not already present.
+ *
+ * Empty titles stay empty. Matching is case-insensitive.
+ *
+ * @param array<int, mixed> $titles
+ * @return array<int, mixed>
+ */
+function applyGgmsModelNameToDatasetTitles(array $titles, string $modelName): array
+{
+    $modelName = trim($modelName);
+    if ($modelName === '' || $titles === []) {
+        return $titles;
+    }
+
+    $title = trim((string) ($titles[0] ?? ''));
+    if ($title === '') {
+        return $titles;
+    }
+
+    if (mb_stripos($title, $modelName, 0, 'UTF-8') !== false) {
+        return $titles;
+    }
+
+    $titles[0] = $modelName . ': ' . $title;
+    return $titles;
 }
 
 /**
