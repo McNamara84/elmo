@@ -33,7 +33,7 @@ final class ApplyGgmsModelNameToDatasetTitlesTest extends TestCase
             'skips when title contains model name case-insensitively' => [
                 ['Global gravity field eigen-6c4'],
                 'EIGEN-6C4',
-                ['eigen-6c4 Global gravity field'],
+                ['Global gravity field eigen-6c4'],
             ],
             'keeps an empty title empty' => [
                 [''],
