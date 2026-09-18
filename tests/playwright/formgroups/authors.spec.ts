@@ -22,14 +22,23 @@ const PERSON_HELP_SECTION_IDS = [
   'help-contactperson-website',
 ] as const;
 
+function authorRows(page: Page) {
+  return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
+}
+
 function authorCard(page: Page) {
-  return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`).first();
+  return authorRows(page).first();
+}
+
+async function switchRowType(row: Locator, type: 'person' | 'institution') {
+  await setContactPerson(row, false);
+  await row.locator(`[data-author-type-option="${type}"]`).click();
+  await expect(row).toHaveAttribute('data-author-entry-type', type);
+  return row;
 }
 
 async function switchAuthorType(page: Page, type: 'person' | 'institution') {
-  await authorCard(page).locator(`[data-author-type-option="${type}"]`).click();
-  await expect(authorCard(page)).toHaveAttribute('data-author-entry-type', type);
-  return authorCard(page);
+  return switchRowType(authorCard(page), type);
 }
 
 async function setContactPerson(row: Locator, enabled: boolean) {
@@ -59,7 +68,7 @@ async function expectAffiliationHelp(row: Locator, visible: boolean) {
   }
 }
 
-async function expectPersonHelpIcons(row: Locator, visible: boolean) {
+async function expectPersonFieldHelp(row: Locator, visible: boolean) {
   await setContactPerson(row, true);
   for (const helpSectionId of PERSON_HELP_SECTION_IDS) {
     const icon = row.locator(`[data-help-section-id="${helpSectionId}"]`);
@@ -70,9 +79,13 @@ async function expectPersonHelpIcons(row: Locator, visible: boolean) {
       await expect(icon).toBeHidden();
     }
   }
-  await expectAffiliationHelp(row, visible);
   // Contact person counts as content and locks the type switcher.
   await setContactPerson(row, false);
+}
+
+async function expectPersonHelpIcons(row: Locator, visible: boolean) {
+  await expectPersonFieldHelp(row, visible);
+  await expectAffiliationHelp(row, visible);
 }
 
 const mockOrcidRecord = {
@@ -436,12 +449,8 @@ test.describe('Author(s) form group', () => {
       // First author should have all person help icons visible
       await expectPersonHelpIcons(firstAuthor, true);
 
-      // Second author should NOT have person help icons visible (only first author shows them)
-      for (const helpSectionId of PERSON_HELP_SECTION_IDS) {
-        const icon = secondAuthor.locator(`[data-help-section-id="${helpSectionId}"]`);
-        await expect(icon).toHaveCount(1);
-        await expect(icon).toBeHidden();
-      }
+      // Later copies of the same help kind stay hidden
+      await expectPersonFieldHelp(secondAuthor, false);
       await expectAffiliationHelp(secondAuthor, false);
     });
 
@@ -458,6 +467,78 @@ test.describe('Author(s) form group', () => {
       // The former second author is now first and should show all help icons
       const nowFirstAuthor = authorRows.nth(0);
       await expectPersonHelpIcons(nowFirstAuthor, true);
+    });
+  });
+
+  test('shows the first help icon of each kind across mixed person and institution authors', async ({ page }) => {
+    await test.step('Two persons: only the first copy of each help kind is visible', async () => {
+      await page.locator('#button-author-add').click();
+      await page.locator('#button-author-add').click();
+      await expect(authorRows(page)).toHaveCount(2);
+      await enableHelp(page);
+
+      await expectPersonHelpIcons(authorRows(page).nth(0), true);
+      await expectPersonFieldHelp(authorRows(page).nth(1), false);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Switching the first person to institution reveals person help on the remaining person', async () => {
+      await switchRowType(authorRows(page).nth(0), 'institution');
+
+      await expectAffiliationHelp(authorRows(page).nth(0), true);
+      await expectPersonFieldHelp(authorRows(page).nth(1), true);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Help Off hides every kind; Help On restores first-of-kind visibility', async () => {
+      await disableHelp(page);
+      await expectAffiliationHelp(authorRows(page).nth(0), false);
+      await expectPersonFieldHelp(authorRows(page).nth(1), false);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+
+      await enableHelp(page);
+      await expectAffiliationHelp(authorRows(page).nth(0), true);
+      await expectPersonFieldHelp(authorRows(page).nth(1), true);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Switching the first row back to person returns all kinds to that person', async () => {
+      await switchRowType(authorRows(page).nth(0), 'person');
+
+      await expectPersonHelpIcons(authorRows(page).nth(0), true);
+      await expectPersonFieldHelp(authorRows(page).nth(1), false);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Person then institution keeps affiliation help on the first person', async () => {
+      await switchRowType(authorRows(page).nth(1), 'institution');
+
+      await expectPersonHelpIcons(authorRows(page).nth(0), true);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Moving the institution first moves affiliation help with it', async () => {
+      await authorRows(page).nth(1).locator('[data-author-move-up]').click();
+      await expect(authorRows(page).nth(0)).toHaveAttribute('data-author-entry-type', 'institution');
+      await expect(authorRows(page).nth(1)).toHaveAttribute('data-author-entry-type', 'person');
+
+      await expectAffiliationHelp(authorRows(page).nth(0), true);
+      await expectPersonFieldHelp(authorRows(page).nth(1), true);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Two institutions keep affiliation help on the first institution only', async () => {
+      await switchRowType(authorRows(page).nth(1), 'institution');
+
+      await expect(authorRows(page)).toHaveCount(2);
+      await expectAffiliationHelp(authorRows(page).nth(0), true);
+      await expectAffiliationHelp(authorRows(page).nth(1), false);
+    });
+
+    await test.step('Deleting the first institution gives affiliation help to the remaining one', async () => {
+      await authorRows(page).nth(0).locator('.removeButton').click();
+      await expect(authorRows(page)).toHaveCount(1);
+      await expectAffiliationHelp(authorRows(page).nth(0), true);
     });
   });
 
