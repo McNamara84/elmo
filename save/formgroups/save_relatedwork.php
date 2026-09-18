@@ -187,6 +187,7 @@ function getRelatedWorkRelationReference(array $entry): string
  *
  * @param mysqli $connection Active database connection.
  * @param array{relation?: mixed, relationId?: mixed} $entry Normalized entry.
+ * @return int|null Resolved relation ID, or null when neither reference exists.
  */
 function resolveRelatedWorkRelationId(mysqli $connection, array $entry): ?int
 {
@@ -211,7 +212,7 @@ function resolveRelatedWorkRelationId(mysqli $connection, array $entry): ?int
  * and creates the linkage to the resource.
  *
  * @param mysqli $connection  The database connection.
- * @param array  $postData    The POST data from the form.
+ * @param array<string, mixed> $postData The POST data from the form.
  * @param int    $resource_id The ID of the associated resource.
  *
  * @return bool Returns true if saving was successful, false otherwise.
@@ -368,9 +369,9 @@ function getIdentifierTypeId(mysqli $connection,string $identifier_type_name): ?
  * @param mysqli $connection         The database connection.
  * @param string $identifier         The identifier of the related work.
  * @param int    $relation_id        The relation ID.
- * @param int    $identifier_type_id The identifier type ID.
+ * @param int|null $identifier_type_id The identifier type ID, or null for draft entries.
  *
- * @return int|null The ID of the inserted related work entry or null on failure.
+ * @return int|false The ID of the inserted related work entry or false on failure.
  */
 function insertRelatedWork($connection, $identifier, $relation_id, $identifier_type_id)
 {
@@ -400,7 +401,7 @@ function insertRelatedWork($connection, $identifier, $relation_id, $identifier_t
  * @param int|null $sort_order    Explicit order, or null to append.
  *
  * @return bool True when the link was saved.
-*/
+ */
 function linkResourceToRelatedWork($connection, $resource_id, $related_work_id, ?int $sort_order = null): bool
 {
     if ($sort_order === null) {
@@ -435,6 +436,10 @@ function linkResourceToRelatedWork($connection, $resource_id, $related_work_id, 
  *
  * This keeps legacy callers such as Used Instruments and GGM data sources
  * ordered after links that were already saved for the resource.
+ *
+ * @param mysqli $connection Active database connection.
+ * @param int $resource_id Resource whose next Related Work position is requested.
+ * @return int|null Next zero-based sort position, or null on a database error.
  */
 function getNextRelatedWorkSortOrder(mysqli $connection, int $resource_id): ?int
 {

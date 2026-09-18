@@ -54,6 +54,9 @@ final class DataCiteRelationType
 
     /**
      * Resolves a canonical token or an explicitly known display label.
+     *
+     * @param string $value Canonical token or display label.
+     * @return string|null Canonical DataCite token, or null for an unknown value.
      */
     public static function canonicalize(string $value): ?string
     {
@@ -70,6 +73,9 @@ final class DataCiteRelationType
 
     /**
      * Returns the preferred display label without changing unknown values.
+     *
+     * @param string $value Canonical token, display label, or unknown value.
+     * @return string Human-readable label or the unchanged unknown value.
      */
     public static function label(string $value): string
     {
