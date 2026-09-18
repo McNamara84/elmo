@@ -351,6 +351,20 @@ test.describe('Related work form group', () => {
     await expect(identifierType).toHaveAttribute('required', 'required');
   });
 
+  test('keeps a manual identifier type after an unmatched pending auto-detection', async ({ page }) => {
+    await page.getByRole('button', { name: 'Add related work' }).click();
+    const card = page.locator('[data-related-work-entry]').first();
+    const identifier = card.locator('input[name="rIdentifier[]"]');
+    const identifierType = card.locator('select[name="rIdentifierType[]"]');
+
+    await identifier.fill('identifier-without-a-detection-pattern');
+    await identifierType.selectOption('DOI');
+    await page.waitForTimeout(350);
+
+    await expect(identifierType).toHaveValue('DOI');
+    await expect(page.locator('input[name="relatedWorksPayload"]')).toHaveValue(/"identifierType":"DOI"/);
+  });
+
   test('imports a generated 101-entry DataCite document in exact order', async ({ page }) => {
     await importRelatedWorksXml(page, buildRelatedWorksXml(101));
 

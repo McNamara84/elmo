@@ -690,6 +690,9 @@ const IDENTIFIER_TYPE_PRIORITY = {
   DOI: 10,
   URL: 0,
 };
+const IDENTIFIER_TYPE_AUTO_UPDATE_KEY = 'elmoIdentifierTypeAutoUpdate';
+const IDENTIFIER_TYPE_MANUAL_SELECTION_KEY = 'elmoIdentifierTypeManualSelection';
+const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifier';
 
 function getIdentifierPriority(name) {
   return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
@@ -723,6 +726,24 @@ function identifierInputForTypeSelect(selectElement) {
     ? 'input[name="rIdentifier[]"]'
     : 'input[name="dIdentifier[]"]';
   return identifierFieldScope(selectElement).find(selector).first();
+}
+
+function clearManualIdentifierTypeSelection(selectElement) {
+  selectElement
+    .removeData(IDENTIFIER_TYPE_MANUAL_SELECTION_KEY)
+    .removeData(IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY);
+}
+
+function markManualIdentifierTypeSelection(selectElement) {
+  const identifierInput = identifierInputForTypeSelect(selectElement);
+  selectElement
+    .data(IDENTIFIER_TYPE_MANUAL_SELECTION_KEY, true)
+    .data(IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY, String(identifierInput.val() || ''));
+}
+
+function hasManualIdentifierTypeSelection(selectElement, identifier) {
+  return selectElement.data(IDENTIFIER_TYPE_MANUAL_SELECTION_KEY) === true
+    && selectElement.data(IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY) === identifier;
 }
 
 function normalizeIdentifierPattern(pattern) {
@@ -800,7 +821,12 @@ function setDetectedIdentifierType(selectElement, type) {
       title: type.description,
     }));
   }
-  selectElement.val(typeName).trigger('change');
+  selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY, true);
+  try {
+    selectElement.val(typeName).trigger('change');
+  } finally {
+    selectElement.removeData(IDENTIFIER_TYPE_AUTO_UPDATE_KEY);
+  }
 }
 
 function detectIdentifierType(identifier, identifierTypes) {
@@ -834,13 +860,19 @@ function updateIdentifierType(inputElement) {
   const selectElement = identifierTypeSelectForInput(inputElement);
 
   const applyTypes = function (types) {
-    if (String(input.val() || '') !== identifier) {
+    if (
+      String(input.val() || '') !== identifier
+      || hasManualIdentifierTypeSelection(selectElement, identifier)
+    ) {
       return;
     }
     setDetectedIdentifierType(selectElement, detectIdentifierType(identifier, types));
   };
   const clearType = function () {
-    if (String(input.val() || '') === identifier) {
+    if (
+      String(input.val() || '') === identifier
+      && !hasManualIdentifierTypeSelection(selectElement, identifier)
+    ) {
       setDetectedIdentifierType(selectElement, null);
     }
   };
@@ -869,7 +901,7 @@ function updateIdentifierType(inputElement) {
       },
     });
   } else {
-    setDetectedIdentifierType(selectElement, null);
+    clearType();
   }
 }
 
@@ -891,14 +923,15 @@ function debounce(func, wait) {
   };
 }
 
+const updateRelatedWorkIdentifierTypeDebounced = debounce(function () {
+  updateIdentifierType(this);
+}, 300);
+
 // Event listener for input in the identifier input field with debounce
-$(document).on(
-  "input",
-  'input[name="rIdentifier[]"]',
-  debounce(function () {
-    updateIdentifierType(this);
-  }, 300)
-);
+$(document).on("input", 'input[name="rIdentifier[]"]', function () {
+  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
+  updateRelatedWorkIdentifierTypeDebounced.call(this);
+});
 
 // Event listener for leaving the identifier input field
 $(document).on("blur", 'input[name="rIdentifier[]"]', function () {
@@ -906,6 +939,10 @@ $(document).on("blur", 'input[name="rIdentifier[]"]', function () {
 });
 
 $(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
+  const selectElement = $(this);
+  if (selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY) !== true) {
+    markManualIdentifierTypeSelection(selectElement);
+  }
   updateValidationPattern(this);
 });
 
@@ -929,15 +966,16 @@ function updateDataSourceIdsAndNames() {
   });
 }
 
+const updateDataSourceIdentifierTypeDebounced = debounce(function () {
+  updateDataSourceIdsAndNames();
+  updateIdentifierType(this);
+}, 300);
+
 // Event listener for input in the data source identifier input field with debounce
-$(document).on(
-  "input",
-  'input[name="dIdentifier[]"]',
-  debounce(function () {
-    updateDataSourceIdsAndNames();
-    updateIdentifierType(this);
-  }, 300)
-);
+$(document).on("input", 'input[name="dIdentifier[]"]', function () {
+  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
+  updateDataSourceIdentifierTypeDebounced.call(this);
+});
 
 // Event listener for leaving the data source identifier input field
 $(document).on("blur", 'input[name="dIdentifier[]"]', function () {
