@@ -395,6 +395,7 @@ function createDatabaseStructure($connection): array
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Related_Work_related_work_id` INT NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
     PRIMARY KEY (`Resource_has_Related_Work_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
@@ -1191,14 +1192,14 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 5, "Spatial_Temporal_Coverage_spatial_temporal_coverage_id" => 4]
         ],
         "Resource_has_Related_Work" => [
-            ["Resource_resource_id" => 3, "Related_Work_related_work_id" => 1],
-            ["Resource_resource_id" => 2, "Related_Work_related_work_id" => 3],
-            ["Resource_resource_id" => 1, "Related_Work_related_work_id" => 2],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 4],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 5],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 6],
-            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 7],
-            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 8]
+            ["Resource_resource_id" => 3, "Related_Work_related_work_id" => 1, "sort_order" => 0],
+            ["Resource_resource_id" => 2, "Related_Work_related_work_id" => 3, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Related_Work_related_work_id" => 2, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 4, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 5, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 6, "sort_order" => 2],
+            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 7, "sort_order" => 0],
+            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 8, "sort_order" => 1]
         ],
         "Resource_has_Funding_Reference" => [
             ["Resource_resource_id" => 3, "Funding_Reference_funding_reference_id" => 1],

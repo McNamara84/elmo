@@ -273,7 +273,16 @@ function saveRelatedWork($connection, $postData, $resource_id)
         );
 
         if ($related_work_id) {
-            linkResourceToRelatedWork($connection, $resource_id, $related_work_id);
+            $linked = linkResourceToRelatedWork(
+                $connection,
+                $resource_id,
+                $related_work_id,
+                (int) $entry['order']
+            );
+
+            if (!$linked && $action === 'submit') {
+                $allSuccessful = false;
+            }
         } else {
             error_log('Failed to link resource to Related Work for entry: ' . json_encode($entry));
             if ($action === 'submit') {
@@ -387,17 +396,67 @@ function insertRelatedWork($connection, $identifier, $relation_id, $identifier_t
  *
  * @param mysqli $connection      The database connection.
  * @param int    $resource_id     The ID of the resource.
+ * @param int    $related_work_id The ID of the related work.
+ * @param int|null $sort_order    Explicit order, or null to append.
+ *
+ * @return bool True when the link was saved.
 */
-function linkResourceToRelatedWork($connection, $resource_id, $related_work_id)
+function linkResourceToRelatedWork($connection, $resource_id, $related_work_id, ?int $sort_order = null): bool
 {
-    $stmt = $connection->prepare("INSERT INTO Resource_has_Related_Work (`Resource_resource_id`, `Related_Work_related_work_id`) VALUES (?, ?)");
+    if ($sort_order === null) {
+        $sort_order = getNextRelatedWorkSortOrder($connection, (int) $resource_id);
+        if ($sort_order === null) {
+            return false;
+        }
+    }
+
+    $sort_order = max(0, $sort_order);
+    $stmt = $connection->prepare(
+        "INSERT INTO Resource_has_Related_Work "
+        . "(`Resource_resource_id`, `Related_Work_related_work_id`, `sort_order`) "
+        . "VALUES (?, ?, ?)"
+    );
     if (!$stmt) {
         error_log("Error preparing statement for linkResourceToRelatedWork: " . $connection->error);
-        return;
+        return false;
     }
-    $stmt->bind_param("ii", $resource_id, $related_work_id);
+    $stmt->bind_param("iii", $resource_id, $related_work_id, $sort_order);
     if (!$stmt->execute()) {
         error_log("Error executing statement for linkResourceToRelatedWork: " . $stmt->error);
+        $stmt->close();
+        return false;
     }
     $stmt->close();
+    return true;
+}
+
+/**
+ * Returns the next append position for a resource's Related Works.
+ *
+ * This keeps legacy callers such as Used Instruments and GGM data sources
+ * ordered after links that were already saved for the resource.
+ */
+function getNextRelatedWorkSortOrder(mysqli $connection, int $resource_id): ?int
+{
+    $stmt = $connection->prepare(
+        'SELECT COALESCE(MAX(`sort_order`), -1) + 1 AS `next_sort_order` '
+        . 'FROM `Resource_has_Related_Work` WHERE `Resource_resource_id` = ?'
+    );
+
+    if (!$stmt) {
+        error_log('Error preparing statement for getNextRelatedWorkSortOrder: ' . $connection->error);
+        return null;
+    }
+
+    $stmt->bind_param('i', $resource_id);
+    if (!$stmt->execute()) {
+        error_log('Error executing statement for getNextRelatedWorkSortOrder: ' . $stmt->error);
+        $stmt->close();
+        return null;
+    }
+
+    $row = $stmt->get_result()->fetch_assoc();
+    $stmt->close();
+
+    return isset($row['next_sort_order']) ? (int) $row['next_sort_order'] : 0;
 }
