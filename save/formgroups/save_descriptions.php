@@ -55,6 +55,12 @@ function saveDescriptions($connection, $postData, $resource_id)
         } elseif (!empty($abstract_text)) {
             insertDescription($connection, 'Abstract', $abstract_text, $resource_id);
         }
+
+        // "Other" is part of the ICGEM description enumeration but is not appended
+        // to the Abstract, so it is stored on its own after the combined Abstract.
+        if (isset($postData['descriptionOther']) && trim($postData['descriptionOther']) !== '') {
+            insertDescription($connection, 'Other', trim($postData['descriptionOther']), $resource_id);
+        }
     } else {
         // Non-ELMOGEM mode: save abstract and dynamic description types
 

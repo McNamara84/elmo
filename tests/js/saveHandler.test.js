@@ -224,6 +224,34 @@ describe('saveHandler.js', () => {
     delete global.fetch;
   });
 
+  test('saveAndDownload posts Tagify platforms from chip state when the original input is empty', async () => {
+    const platformsInput = document.createElement('input');
+    platformsInput.name = 'platforms';
+    document.getElementById('form-mde').appendChild(platformsInput);
+    const graceFo = {
+      value: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO',
+      id: 'https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632',
+    };
+    platformsInput._tagify = {
+      value: [graceFo],
+      update: jest.fn(),
+    };
+
+    global.fetch = createSaveHandlerFetchMock({
+      blob: new Blob(['<xml/>'], { type: 'application/xml' })
+    });
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(saveCall[1].body.get('platforms')).toContain('GRACE-FO');
+
+    delete global.fetch;
+  });
+
   test('provides ES module exports', async () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();

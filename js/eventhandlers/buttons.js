@@ -10,7 +10,7 @@ import './formgroups/feedback.js';
 import './formgroups/authorStack.js';
 import './formgroups/contributor-person.js';
 import './formgroups/contributor-organisation.js';
-import './formgroups/resourceinformation-title.js';
+import './formgroups/resourceInformationTitle.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';

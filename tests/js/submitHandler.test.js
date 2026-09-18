@@ -873,6 +873,37 @@ describe('submitHandler.js', () => {
       submitSpy.mockRestore();
     });
 
+    test('handleModalSubmit posts Tagify platforms from chip state', async () => {
+      const platformsInput = document.createElement('input');
+      platformsInput.name = 'platforms';
+      document.getElementById('test-form').appendChild(platformsInput);
+      const graceFo = {
+        value: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO',
+        id: 'https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632',
+      };
+      platformsInput._tagify = {
+        value: [graceFo],
+        update: jest.fn(),
+      };
+
+      global.fetch = jest.fn((url) => {
+        if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
+          return Promise.resolve({
+            json: async () => ({ token: 'submit-csrf-token' }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(submitSpy.mock.calls[0][0].get('platforms')).toContain('GRACE-FO');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
     test('handleModalSubmit replaces a stale field value with the freshly fetched token', async () => {
       document.getElementById('input-csrf-token').value = 'stale-submit-token';
 

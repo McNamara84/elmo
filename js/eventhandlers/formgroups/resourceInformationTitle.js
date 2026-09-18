@@ -38,7 +38,11 @@ $(document).ready(function () {
     newTitleRow.find("input").val("");
 
     // Rebind help button functionality for cloned rows
-    replaceHelpButtonInClonedRows(newTitleRow);
+    replaceHelpButtonInClonedRows(
+      newTitleRow,
+      "input-right-with-round-corners",
+      ["help-resourceinformation-titletype"]
+    );
 
     // Adjust Title Input field width
     newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")

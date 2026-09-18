@@ -13,6 +13,9 @@ permissions:
 jobs:
   playwright-tests:
     runs-on: ubuntu-latest
+    env:
+      ERNIE_URL: ${{ secrets.ERNIE_URL }}
+      ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
     strategy:
       fail-fast: false
       matrix:
@@ -150,7 +153,7 @@ jobs:
         $showMslDefaultFreeKeywords = false;
         $showGGMsProperties = false;
         $showUsedInstruments = false;
-        $showGcmdThesauri = true;
+        $showThesauri = true;
         $showFreeKeywords = true;
         $showSpatialTemporalCoverage = true;
         $showRelatedWork = true;
@@ -164,7 +167,7 @@ jobs:
             'SHOW_MSL_MODE' => 'showMslMode',
             'SHOW_GGMS_PROPERTIES' => 'showGGMsProperties',
             'SHOW_USED_INSTRUMENTS' => 'showUsedInstruments',
-            'SHOW_GCMD_THESAURI' => 'showGcmdThesauri',
+            'SHOW_THESAURI' => 'showThesauri',
             'SHOW_FREE_KEYWORDS' => 'showFreeKeywords',
             'SHOW_SPATIAL_TEMPORAL_COVERAGE' => 'showSpatialTemporalCoverage',
             'SHOW_RELATED_WORK' => 'showRelatedWork',
@@ -195,10 +198,17 @@ jobs:
         ERNIE_URL: ${{ secrets.ERNIE_URL }}
         ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
+        if [ -z "${ERNIE_URL}" ]; then
+          echo "::warning::ERNIE_URL secret is empty; ELMO will use hardcoded vocab fallbacks"
+        else
+          echo "ERNIE_URL is set for PHP servers"
+        fi
+
         # ELMO Standard (Port 8000)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
-        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \
         PHP_CLI_SERVER_WORKERS=4 php \
@@ -206,32 +216,35 @@ jobs:
         echo $! > server-elmo.pid
 
         # ELMO-GEM (Port 8001)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=true SHOW_USED_INSTRUMENTS=false \
-        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \
-        PHP_CLI_SERVER_WORKERS=2 php \
+        PHP_CLI_SERVER_WORKERS=4 php \
         -S localhost:8001 ci-router.php > server-gem.log 2>&1 &
         echo $! > server-gem.pid
 
         # ELMO-IGSN (Port 8002)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
-        SHOW_GCMD_THESAURI=false SHOW_FREE_KEYWORDS=false \
+        SHOW_THESAURI=false SHOW_FREE_KEYWORDS=false \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=false \
         SIMULATE_EMAIL=true \
-        PHP_CLI_SERVER_WORKERS=2 php \
+        PHP_CLI_SERVER_WORKERS=4 php \
         -S localhost:8002 ci-router.php > server-igsn.log 2>&1 &
         echo $! > server-igsn.pid
 
         # ELMO-MSL (Port 8003)
+        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=true \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=false \
-        SHOW_GCMD_THESAURI=true SHOW_FREE_KEYWORDS=true \
+        SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \
-        PHP_CLI_SERVER_WORKERS=2 php \
+        PHP_CLI_SERVER_WORKERS=4 php \
         -S localhost:8003 ci-router.php > server-msl.log 2>&1 &
         echo $! > server-msl.pid
 
@@ -294,9 +307,11 @@ jobs:
 
     - name: Run Playwright tests
       id: run_playwright_tests
-      run: npx playwright test --config=playwright.config.ci.ts --workers=2 --project=${{ matrix.projects }}
+      run: npx playwright test --config=playwright.config.ci.ts --workers=4 --project=${{ matrix.projects }}
       env:
         CI: true
+        ERNIE_URL: ${{ secrets.ERNIE_URL }}
+        ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
 
     - name: Publish ELMO performance metrics
       id: publish_performance_metrics
