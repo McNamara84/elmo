@@ -526,6 +526,7 @@ function applyElmoGemAdditionsToDataciteXml(
             'familyName' => 'Ince',
             'orcid' => '0000-0002-3393-1392',
             'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+            'affiliationIdentifier' => 'https://ror.org/04z8jg394',
         ],
         [
             'contributorType' => 'DataManager',
@@ -534,6 +535,7 @@ function applyElmoGemAdditionsToDataciteXml(
             'familyName' => 'Reißland',
             'orcid' => '0000-0001-6293-5336',
             'affiliation' => 'GFZ Helmholtz Centre for Geosciences, Potsdam, Germany',
+            'affiliationIdentifier' => 'https://ror.org/04z8jg394',
         ],
     ];
 
@@ -567,7 +569,11 @@ function applyElmoGemAdditionsToDataciteXml(
         $nameIdentifier->setAttribute('schemeURI', 'https://orcid.org/');
         $contributor->appendChild($nameIdentifier);
 
-        $contributor->appendChild($createEl('affiliation', $c['affiliation']));
+        $affiliation = $createEl('affiliation', $c['affiliation']);
+        $affiliation->setAttribute('affiliationIdentifier', $c['affiliationIdentifier']);
+        $affiliation->setAttribute('affiliationIdentifierScheme', 'ROR');
+        $affiliation->setAttribute('schemeURI', 'https://ror.org/');
+        $contributor->appendChild($affiliation);
 
         $contributors->appendChild($contributor);
     }
@@ -586,11 +592,11 @@ function applyElmoGemAdditionsToDataciteXml(
     // --- 4. Fill existing subjects (skip a keyword already present by valueURI) ---
     $subjectsData = [
         [
-            'text' => 'GEOID CHARACTERISTICS',
+            'text' => 'EARTH SCIENCE > SOLID EARTH > GEODETICS > GEOID CHARACTERISTICS',
             'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614',
         ],
         [
-            'text' => 'GRAVITY/GRAVITATIONAL FIELD',
+            'text' => 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITATIONAL FIELD',
             'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa',
         ],
     ];
@@ -609,7 +615,7 @@ function applyElmoGemAdditionsToDataciteXml(
         $subject = $createEl('subject', $s['text']);
         // xml:lang uses the reserved 'xml' namespace, not the DataCite one
         $subject->setAttributeNS('http://www.w3.org/XML/1998/namespace', 'xml:lang', 'en');
-        $subject->setAttribute('subjectScheme', 'Science Keywords');
+        $subject->setAttribute('subjectScheme', 'NASA/GCMD Earth Science Keywords');
         $subject->setAttribute('schemeURI', 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords');
         $subject->setAttribute('valueURI', $s['valueURI']);
         $subjects->appendChild($subject);

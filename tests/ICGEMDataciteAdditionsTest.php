@@ -199,8 +199,8 @@ $GLOBALS['expectedXmlNoNamespace'] = <<<XML
   <publicationYear/>
   <resourceType resourceTypeGeneral=""/>
   <subjects>
-    <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
-    <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
   </subjects>
   <contributors>
     <contributor contributorType="DataCurator">
@@ -208,14 +208,14 @@ $GLOBALS['expectedXmlNoNamespace'] = <<<XML
         <givenName>E. Sinem</givenName>
         <familyName>Ince</familyName>
         <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</nameIdentifier>
-        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+        <affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
     </contributor>
     <contributor contributorType="DataManager">
         <contributorName nameType="Personal">Reißland, Sven</contributorName>
         <givenName>Sven</givenName>
         <familyName>Reißland</familyName>
         <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</nameIdentifier>
-        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+        <affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
     </contributor>
   </contributors>
   <dates>
@@ -758,8 +758,8 @@ $GLOBALS['expectedXmlWithNamespace'] = <<<'XML'
     <dace:publicationYear/>
     <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
     <dace:subjects>
-      <dace:subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</dace:subject>
-      <dace:subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
     </dace:subjects>
     <dace:contributors>
       <dace:contributor contributorType="DataCurator">
@@ -767,14 +767,14 @@ $GLOBALS['expectedXmlWithNamespace'] = <<<'XML'
         <dace:givenName>E. Sinem</dace:givenName>
         <dace:familyName>Ince</dace:familyName>
         <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</dace:nameIdentifier>
-        <dace:affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+        <dace:affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
       </dace:contributor>
       <dace:contributor contributorType="DataManager">
         <dace:contributorName nameType="Personal">Reißland, Sven</dace:contributorName>
         <dace:givenName>Sven</dace:givenName>
         <dace:familyName>Reißland</dace:familyName>
         <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</dace:nameIdentifier>
-        <dace:affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+        <dace:affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
       </dace:contributor>
     </dace:contributors>
     <dace:dates>
@@ -818,8 +818,8 @@ $GLOBALS['expectedXmlWithDataWithNamespace'] = <<<'XML'
       <dace:subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/11a96ea3-6231-48d7-8ebd-9212e1e0fa2f" xml:lang="en">Instruments &gt; In Situ/Laboratory Instruments &gt; Magnetic/Motion Sensors &gt; Gravimeters &gt; SUPERCONDUCTING GRAVIMETER</dace:subject>
       <dace:subject>icgem</dace:subject>
       <dace:subject>example</dace:subject>
-      <dace:subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</dace:subject>
-      <dace:subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
     </dace:subjects>
     <dace:contributors>
       <dace:contributor contributorType="Producer">
@@ -846,14 +846,14 @@ $GLOBALS['expectedXmlWithDataWithNamespace'] = <<<'XML'
         <dace:givenName>E. Sinem</dace:givenName>
         <dace:familyName>Ince</dace:familyName>
         <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</dace:nameIdentifier>
-        <dace:affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+        <dace:affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
       </dace:contributor>
       <dace:contributor contributorType="DataManager">
         <dace:contributorName nameType="Personal">Reißland, Sven</dace:contributorName>
         <dace:givenName>Sven</dace:givenName>
         <dace:familyName>Reißland</dace:familyName>
         <dace:nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</dace:nameIdentifier>
-        <dace:affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
+        <dace:affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</dace:affiliation>
       </dace:contributor>
     </dace:contributors>
     <dace:dates>
@@ -898,8 +898,8 @@ $GLOBALS['expectedXmlWithDataNoNamespace'] = <<<'XML'
       <subject subjectScheme="International Chronostratigraphic Chart" schemeURI="http://resource.geosciml.org/vocabulary/timescale/gts2020" valueURI="http://resource.geosciml.org/classifier/ics/ischart/Present" xml:lang="en">The Present</subject>
       <subject>free keyword</subject>
       <subject>test1234</subject>
-      <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
-      <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
+      <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
+      <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
     </subjects>
     <contributors>
       <contributor contributorType="DataCurator">
@@ -907,14 +907,14 @@ $GLOBALS['expectedXmlWithDataNoNamespace'] = <<<'XML'
         <givenName>E. Sinem</givenName>
         <familyName>Ince</familyName>
         <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</nameIdentifier>
-        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+        <affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
       </contributor>
       <contributor contributorType="DataManager">
         <contributorName nameType="Personal">Reißland, Sven</contributorName>
         <givenName>Sven</givenName>
         <familyName>Reißland</familyName>
         <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</nameIdentifier>
-        <affiliation>GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
+        <affiliation affiliationIdentifier="https://ror.org/04z8jg394" affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/">GFZ Helmholtz Centre for Geosciences, Potsdam, Germany</affiliation>
       </contributor>
     </contributors>
     <dates>
@@ -1268,7 +1268,7 @@ XML);
     {
         $xml = $this->minimalEnvelope(<<<'XML'
   <subjects>
-    <subject xml:lang="en" subjectScheme="Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">GEOID CHARACTERISTICS</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
     <subject valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
   </subjects>
   <contributors/>
@@ -1308,9 +1308,10 @@ XML);
 
         $result = applyElmoGemAdditionsToDataciteXml($xml, true, true);
 
-        $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
+        $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(3, $this->countXpath($result, '//*[local-name()="subject"]'));
     }
 
     public function testAdditionsAreIdempotent(): void
