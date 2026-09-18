@@ -5,7 +5,7 @@ import { navigateToHome, openLanguageMenu } from '../../utils';
 import { getTranslations, getCurrentLanguage } from '../../utils/translations';
 
 const GFC_EXAMPLES_DIR = path.join(__dirname, 'gfc-files-examples');
-const OUTPUT_DATA_REFERENCE_DIR = path.join(__dirname, '../../flows/outputDataReference');
+const OUTPUT_DATA_REFERENCE_DIR = path.join(__dirname, '../outputDataReference');
 
 const WGS72_GFC = path.join(GFC_EXAMPLES_DIR, 'WGS72.gfc');
 const EHFM_GFC = path.join(GFC_EXAMPLES_DIR, 'EHFM_Earth_7200.gfc');
