@@ -79,29 +79,25 @@ try {
         $generated['researcherConfirmationData'] = $generatedICGEM['researcherConfirmationData'];
     }
     
-    // step 4: researcher confirmations 
+    // step 4: researcher confirmations
     $researcherWarnings = [];
     try {
         $researcherSendResult = sendResearcherConfirmationEmails(
-            $generated['researcherConfirmationData'],
+            $generated['researcherConfirmationData'] ?? [],
             $settings
         );
-        if (!empty($generated['researcherConfirmationData']) && !empty($researcherSendResult['sent'])) {
-            throw new Exception('completely.');
+        foreach ($researcherSendResult['failed'] as $failedContact) {
+            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
+                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
+                . $failedContact['error'];
+            error_log($warningMessage);
+            $researcherWarnings[] = $warningMessage;
         }
     } catch (Throwable $e) {
         $warningMessage = 'WARNING: The data is sent to curators, but researcher confirmation emails failed: '
             . $e->getMessage();
         error_log($warningMessage);
         $researcherWarnings[] = $warningMessage;
-    }
-    if (!empty($researcherSendResult['failed'])) {
-        foreach ($researcherSendResult['failed'] as $failedContact) {
-            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
-                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
-                . $failedContact['error'];
-            error_log($warningMessage);
-        }
     }
 
     // step 5: prepare the success message for the frontend

@@ -3,8 +3,10 @@
 /**
  * Shared SMTP delivery helper for ELMO.
  *
- * Submit mails are sent with sendElmoMail($generated, $text, $to, $settings).
- * Data Services text is generateEmailText(); ICGEM text is generateICGEMText().
+ * All outgoing mails go through sendElmoMail($generated, $text, $to, $settings),
+ * which validates recipients and either sends or logs (SIMULATE_EMAIL).
+ * Data Services text is generateEmailText(); ICGEM text is generateICGEMText();
+ * researcher confirmations use generateResearcherConfirmationText().
  */
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -131,18 +133,20 @@ function createElmoMailer(): PHPMailer
 }
 
 /**
- * Send one submit mail: XML payload plus optional extra attachments.
+ * Send one ELMO mail: optional XML payload plus extra attachments.
  *
- * Skips when there is no HTML body (this track is unused). Throws when a body
- * is present but the XML payload is missing, or when SMTP delivery fails.
+ * Skips when there is no HTML body (this track is unused). Recipients are
+ * validated before simulation or SMTP. XML payload is required only when a
+ * filename is set.
  *
  * @param array<string, mixed> $generated
  * @param array{subject?: string, html?: string, text?: string, fromName?: string} $text
+ * @param string|array<mixed> $to
  * @param array<string, mixed> $settings
  *
- * @throws RuntimeException When the payload is empty or delivery fails.
+ * @throws RuntimeException When the payload is missing for an XML attachment, or delivery fails.
  */
-function sendElmoMail(array $generated, array $text, string $to, array $settings): void
+function sendElmoMail(array $generated, array $text, string|array $to, array $settings): void
 {
     global $smtpSender;
 
@@ -156,10 +160,6 @@ function sendElmoMail(array $generated, array $text, string $to, array $settings
     $simulate = (bool) ($settings['simulateEmail'] ?? false);
 
     try {
-        if ($payload === null || trim((string) $payload) === '') {
-            throw new RuntimeException('Generated XML payload is empty.');
-        }
-
         $subject = trim((string) ($text['subject'] ?? ''));
         if ($subject === '') {
             throw new InvalidArgumentException('Mail message requires a subject.');
@@ -170,6 +170,9 @@ function sendElmoMail(array $generated, array $text, string $to, array $settings
 
         $attachments = $generated['attachments'] ?? [];
         if ($filename !== '') {
+            if ($payload === null || trim((string) $payload) === '') {
+                throw new RuntimeException('Generated XML payload is empty.');
+            }
             $attachments[] = [
                 'filename' => $filename,
                 'content' => (string) $payload,
@@ -178,7 +181,9 @@ function sendElmoMail(array $generated, array $text, string $to, array $settings
 
         if ($simulate) {
             error_log("Mail SIMULATED: '{$subject}' to {$addressList} if you see this in production, check the SIMULATE_EMAIL setting variable.");
-            error_log("sendElmoMail: Payload (SIMULATION):\n" . $payload);
+            if ($payload !== null && trim((string) $payload) !== '') {
+                error_log("sendElmoMail: Payload (SIMULATION):\n" . $payload);
+            }
             return;
         }
 
@@ -342,98 +347,101 @@ function generateICGEMText(array $generated, array $settings = []): array
 }
 
 /**
- * Send confirmation emails to all researcher contacts.
+ * Build the researcher confirmation mail text.
  *
- * Failures are collected as warnings; they do not fail the submit.
+ * @param array{fullName?: string, email?: string} $contact
+ * @return array{subject: string, html: string, text: string, fromName: string}
+ */
+function generateResearcherConfirmationText(array $contact, string $title = ''): array
+{
+    $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
+    if ($fullName === '') {
+        $fullName = 'researcher';
+    }
+
+    $title = trim($title);
+    $titleHtml = $title !== ''
+        ? ' titled "<strong>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</strong>"'
+        : '';
+    $titleText = $title !== '' ? " titled \"{$title}\"" : '';
+
+    return [
+        'subject' => 'Confirmation of your data submission to ELMO',
+        'html' => '
+                <p>Dear ' . htmlspecialchars($fullName, ENT_QUOTES, 'UTF-8') . ',</p>
+                <p>Thank you for your data submission to ELMO.</p>
+                <p>Your data entry' . $titleHtml . ' has been received successfully.</p>
+                <p>The data curators will now review your submission. If further information is needed, they will contact you.</p>
+                <p>Best regards<br>ELMO</p>
+            ',
+        'text' => "Dear {$fullName},\n\nThank you for your data submission to ELMO.\nYour data entry{$titleText} has been received successfully.\nThe data curators will now review your submission.\n\nBest regards\nELMO",
+        'fromName' => 'ELMO System',
+    ];
+}
+
+/**
+ * Send confirmation emails to all researcher contacts via sendElmoMail().
  *
- * @param array{title?: string, contacts?: array<int, array{fullName?: string, email?: string}>} $researcherConfirmationData
+ * Per-address validation and simulation/SMTP logging live in sendElmoMail().
+ * Failures are collected; they do not fail the submit.
+ *
+ * @param array{
+ *     title?: string,
+ *     contacts?: array<int, array{fullName?: string, email?: string}>,
+ *     invalidContacts?: array<int, array{fullName?: string, email?: string}>
+ * } $researcherConfirmationData
  * @param array<string, mixed> $settings
  * @return array{sent: int, failed: array<int, array{fullName: string, email: string, error: string}>}
  */
 function sendResearcherConfirmationEmails(array $researcherConfirmationData, array $settings = []): array
 {
-    $simulateEmail = (bool) ($settings['simulateEmail'] ?? false);
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
-    global $smtpSender;
-    
-    if (empty($contacts)) {
+    $invalidContacts = $researcherConfirmationData['invalidContacts'] ?? [];
+
+    $queue = [];
+    foreach (array_merge(
+        is_array($contacts) ? $contacts : [],
+        is_array($invalidContacts) ? $invalidContacts : []
+    ) as $contact) {
+        $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
+        $queue[] = [
+            'fullName' => $fullName === '' ? 'researcher' : $fullName,
+            'email' => trim((string) ($contact['email'] ?? '')),
+        ];
+    }
+
+    if ($queue === []) {
         error_log('Researcher confirmation: No contacts found.');
         return ['sent' => 0, 'failed' => []];
     }
 
-    // First pass: validate all contacts
-    $validContacts = [];
-    $failedContacts = [];
-    
-    foreach ($contacts as $contact) {
-        $fullName = trim((string) ($contact['fullName'] ?? 'researcher'));
-        $email = trim((string) ($contact['email'] ?? ''));
+    $generated = [
+        'payload' => null,
+        'filename' => null,
+        'attachments' => [],
+    ];
 
-        if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-            error_log("Researcher confirmation: Invalid email for {$fullName}.");
-            $failedContacts[] = [
-                'fullName' => $fullName,
-                'email' => $email === '' ? '(empty)' : $email,
-                'error' => 'invalid email address',
-            ];
-        } else {
-            $validContacts[] = [
-                'fullName' => $fullName,
-                'email' => $email,
-            ];
-        }
-    }
+    $sent = 0;
+    $failed = [];
 
-    // If all are invalid, no researcher confirmation
-    if (empty($validContacts)) {
-        error_log('Researcher confirmation: No valid contacts found.');
-        return ['sent' => 0, 'failed' => $failedContacts];
-    }
-
-    $processedCount = 0;
-    
-    // Simulation path
-    if ($simulateEmail) {
-        foreach ($validContacts as $contact) {
-            error_log("Researcher confirmation email simulated for {$contact['email']}");
-            $processedCount++;
-        }
-        error_log('Researcher confirmation: Simulated ' . $processedCount . ' confirmation email(s).');
-        return ['sent' => $processedCount, 'failed' => $failedContacts];
-    }
-
-    // Normal flow: send emails
-    $mail = createElmoMailer();
-    
-    foreach ($validContacts as $contact) {
+    foreach ($queue as $contact) {
         try {
-            $mail->clearAllRecipients();
-            $mail->setFrom($smtpSender, 'ELMO System');
-            $mail->addAddress($contact['email'], $contact['fullName']);
-            $mail->Subject = 'Confirmation of your data submission to ELMO';
-            $mail->isHTML(true);
-            $mail->Body = '
-                <p>Dear ' . htmlspecialchars($contact['fullName'], ENT_QUOTES, 'UTF-8') . ',</p>
-                <p>Thank you for your data submission to ELMO.</p>
-                <p>Your data entry' . ($title !== '' ? ' titled "<strong>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</strong>"' : '') . ' has been received successfully.</p>
-                <p>The data curators will now review your submission. If further information is needed, they will contact you.</p>
-                <p>Best regards<br>ELMO</p>
-            ';
-            $mail->AltBody = "Dear {$contact['fullName']},\n\nThank you for your data submission to ELMO.\nYour data entry" . ($title !== '' ? " titled \"{$title}\"" : '') . " has been received successfully.\nThe data curators will now review your submission.\n\nBest regards\nELMO";
-            $mail->send();
-            $processedCount++;
+            sendElmoMail(
+                $generated,
+                generateResearcherConfirmationText($contact, $title),
+                ['address' => $contact['email'], 'name' => $contact['fullName']],
+                $settings
+            );
+            $sent++;
         } catch (Throwable $e) {
-            error_log("Researcher confirmation: Failed to send email to {$contact['fullName']} <{$contact['email']}>. " . $e->getMessage());
-            $failedContacts[] = [
+            $failed[] = [
                 'fullName' => $contact['fullName'],
-                'email' => $contact['email'],
+                'email' => $contact['email'] === '' ? '(empty)' : $contact['email'],
                 'error' => $e->getMessage(),
             ];
         }
     }
 
-    error_log('Researcher confirmation: Sent ' . $processedCount . ' confirmation email(s).');
-
-    return ['sent' => $processedCount, 'failed' => $failedContacts];
+    return ['sent' => $sent, 'failed' => $failed];
 }
