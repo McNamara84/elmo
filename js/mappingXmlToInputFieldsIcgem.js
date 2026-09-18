@@ -430,9 +430,24 @@ async function populateIcgemDataSources(data) {
       if (ds.compensationDepth) $row.find('input[name="compensation_depth[]"]').val(ds.compensationDepth);
     } else if (ds.inputDataSourceType === 'Model') {
       if (ds.modelDetail) $row.find('select[name="datasource_details[]"]').val(ds.modelDetail);
-      if (ds.identifier) $row.find('input[name="dIdentifier[]"]').val(ds.identifier).trigger('input');
+      // Do not .trigger('input') when XML already has identifierType: that
+      // debounce-fires updateIdentifierType() and can overwrite the select
+      // after options arrive.
+      if (ds.identifier) {
+        const $idInput = $row.find('input[name="dIdentifier[]"]');
+        if (ds.identifierType) {
+          $idInput.val(ds.identifier);
+        } else {
+          $idInput.val(ds.identifier).trigger('input');
+        }
+      }
       if (ds.identifierType) {
         const $idTypeSelect = $row.find('select[name="dIdentifierType[]"]');
+        // Type change already asked setupIdentifierTypesDropdown to fetch; await
+        // that (or start it) so DOI/etc. options exist before .val().
+        if (typeof window.setupIdentifierTypesDropdown === 'function') {
+          await window.setupIdentifierTypesDropdown($idTypeSelect);
+        }
         if (!selectOptionByText($idTypeSelect, ds.identifierType)) {
           $idTypeSelect.val(ds.identifierType);
         }
