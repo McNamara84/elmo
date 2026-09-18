@@ -15,6 +15,7 @@ const GGM_FORMGROUP_FILES = [
   'formgroups/GGMsDefinition.html',
   'formgroups/ggms-properties.html',
   'formgroups/GGMsModelTypes.html',
+  'formgroups/ggms-data-sources.html',
   'formgroups/GGMsDescriptions.html',
 ];
 
@@ -50,7 +51,7 @@ function extractFieldIdsFromHtml(html) {
 }
 
 /**
- * Collect all GGM form field ids from the four HTML formgroups.
+ * Collect all GGM form field ids from the GGM HTML formgroups.
  * @param {string} [repoRoot=REPO_ROOT]
  * @returns {string[]}
  */

@@ -21,14 +21,15 @@ describe('GGM HTML ↔ Playwright field coverage metatest', () => {
   const htmlIds = getGgmsHtmlFieldIds();
   const { byFile } = getGgmsCoverageSelectorIds();
 
-  test('discovers field ids from all four GGM formgroups', () => {
-    expect(GGM_FORMGROUP_FILES.length).toBe(4);
+  test('discovers field ids from all GGM formgroups', () => {
+    expect(GGM_FORMGROUP_FILES.length).toBe(5);
     expect(htmlIds.length).toBeGreaterThan(20);
     // Spot-check one id from each formgroup
     expect(htmlIds).toEqual(expect.arrayContaining([
       'input-model-type',           // Definition
       'input-tide-system',          // Properties
       'input-temporal-start',       // Model Types
+      'input-datasource-type',      // Data Sources
       'input-abstract',             // Descriptions
     ]));
   });
@@ -44,7 +45,7 @@ describe('GGM HTML ↔ Playwright field coverage metatest', () => {
         // Only flag selectors that look like GGM form controls but are absent from HTML.
         // Non-GGM ids used in roundtrip (DOI, authors, …) are ignored.
         const looksLikeGgmControl =
-          /^(input|select|checkbox)-(model|mathematical|file-format|celestial|tide|degree|errors|error-handling|radius|semimajor|second-variable|earth-gravity|static|temporal|time-variable|custom-frequency|release|topo|abstract|general-model|input-data|processing-procedures|specific-features|other)/.test(id)
+          /^(input|select|checkbox)-(model|mathematical|file-format|celestial|tide|degree|errors|error-handling|radius|semimajor|second-variable|earth-gravity|static|temporal|time-variable|custom-frequency|release|topo|abstract|general-model|input-data|processing-procedures|specific-features|other|datasource)/.test(id)
           || htmlSet.has(id);
 
         if (looksLikeGgmControl && !htmlSet.has(id)) {
