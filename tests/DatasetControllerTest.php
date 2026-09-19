@@ -724,6 +724,46 @@ XML;
         $this->assertEquals('DOI', $relatedWorks[0]['IdentifierType']['name']);
     }
 
+    public function testGetRelatedWorksUsesPersistedOrder(): void
+    {
+        $relationId = $this->getRelationId('IsCitedBy');
+        $identifierTypeId = $this->getIdentifierTypeId('DOI');
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Related_Work (Identifier, relation_fk, identifier_type_fk) VALUES (?, ?, ?)'
+        );
+        $identifiers = ['10.1234/order-second', '10.1234/order-first'];
+        $relatedWorkIds = [];
+        foreach ($identifiers as $identifier) {
+            $stmt->bind_param('sii', $identifier, $relationId, $identifierTypeId);
+            $stmt->execute();
+            $relatedWorkIds[] = (int) $this->connection->insert_id;
+        }
+        $stmt->close();
+
+        $this->connection->query(
+            "UPDATE Resource_has_Related_Work SET sort_order = 30 "
+            . "WHERE Resource_resource_id = {$this->resourceId}"
+        );
+        $link = $this->connection->prepare(
+            'INSERT INTO Resource_has_Related_Work '
+            . '(Resource_resource_id, Related_Work_related_work_id, sort_order) VALUES (?, ?, ?)'
+        );
+        $sortOrders = [20, 10];
+        foreach ($relatedWorkIds as $index => $relatedWorkId) {
+            $sortOrder = $sortOrders[$index];
+            $link->bind_param('iii', $this->resourceId, $relatedWorkId, $sortOrder);
+            $link->execute();
+        }
+        $link->close();
+
+        $relatedWorks = $this->controller->getRelatedWorks($this->connection, $this->resourceId);
+
+        $this->assertSame(
+            ['10.1234/order-first', '10.1234/order-second', '10.1234/test'],
+            array_column($relatedWorks, 'Identifier')
+        );
+    }
+
     public function testGetFundingReferencesReturnsCorrectData(): void
     {
         $funding = $this->controller->getFundingReferences($this->connection, $this->resourceId);

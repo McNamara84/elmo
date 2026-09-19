@@ -253,7 +253,18 @@
         "relation": "Relation",
         "identifierType": "Type d'identifiant",
         "identifier": "Identifiant",
-        "identifierInvalid": "Veuillez saisir un identifiant valide."
+        "identifierInvalid": "Veuillez saisir un identifiant valide.",
+        "addEntry": "Ajouter un travail connexe",
+        "dragHandle": "Modifier l'ordre par glisser-déposer",
+        "removeEntry": "Supprimer l'entrée de travail connexe",
+        "editEntry": "Modifier l'entrée de travail connexe",
+        "collapseEntry": "Replier l'entrée de travail connexe",
+        "moveEntryUp": "Déplacer le travail connexe vers le haut",
+        "moveEntryDown": "Déplacer le travail connexe vers le bas",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Travail connexe incomplet"
     },
     "funding": {
         "title": "Références de financement",
@@ -354,7 +365,8 @@
             "errorToast": "Erreur lors du chargement du fichier",
             "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
             "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
-            "errorReading": "Erreur lors de la lecture du fichier"
+            "errorReading": "Erreur lors de la lecture du fichier",
+            "relatedWorksProgress": "Travaux connexes {processed}/{total}"
         },
         "gfcUpload": {
             "uploadButton": "Remplir les champs de métadonnées depuis le fichier modèle",

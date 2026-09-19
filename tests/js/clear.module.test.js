@@ -178,6 +178,7 @@ describe('clear module coverage', () => {
         delete window.$;
         delete window.jQuery;
         delete window.mainTitleTypeId;
+        delete window.relatedWorkStack;
     });
 
     describe('module exports', () => {
@@ -273,6 +274,15 @@ describe('clear module coverage', () => {
             clearModule.clearInputFields();
 
             expect($('#group-relatedwork .row[related-work-row]').length).toBe(1);
+        });
+
+        test('clears Related Works through the stack API when it is available', () => {
+            window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+            clearModule.clearInputFields();
+
+            expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([]);
+            expect($('#group-relatedwork .row[related-work-row]').length).toBe(2);
         });
 
         test('removes extra funding reference rows', () => {

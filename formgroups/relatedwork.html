@@ -1,62 +1,81 @@
-<div class="card mb-2">
-  <div class="card-header"><b data-translate="relatedWork.title">Related work</b> <i class="bi bi-question-circle-fill"
-      data-help-section-id="help-relatedwork-fg"></i></div>
+<div class="card mb-2" id="formgroup-relatedwork" data-related-work-formgroup>
+  <div class="card-header">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <b data-translate="relatedWork.title">Related work</b>
+      <span class="text-body-secondary" aria-hidden="true">&middot;</span>
+      <span class="fw-semibold text-body-secondary" id="related-work-summary-count"
+        data-related-work-summary-count aria-live="polite" aria-atomic="true">0 entries</span>
+      <i class="bi bi-question-circle-fill" data-help-section-id="help-relatedwork-fg"></i>
+    </div>
+  </div>
   <div class="card-body">
-    <div id="group-relatedwork">
-      <div class="row" related-work-row>
-        <!-- Input field Relation -->
-        <div class="col-12 col-sm-12 col-md-4 col-lg-3 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit"
-                aria-label="Default select example" id="input-relatedwork-relation" name="relation[]" ></select>
-              <label for="input-relatedwork-relation" data-translate="relatedWork.relation">Relation</label>
-              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-            </div>
-            <div class="input-group-append">
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-relatedwork-relation"></i></span>
-            </div>
-          </div>
-        </div>
-        <!-- Input field Identifier -->
-        <div class="col-12 col-sm-12 col-md-4 col-lg-5 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners js-required-on-submit"
-                id="input-relatedwork-identifier" name="rIdentifier[]"  />
-              <label for="input-relatedwork-identifier" data-translate="relatedWork.identifier">Identifier</label>
-              <div class="invalid-feedback" data-translate="relatedWork.identifierInvalid">Please enter a valid identifier.</div>
-            </div>
-            <div class="input-group-append">
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-relatedwork-identifier"></i></span>
+    <input type="hidden" id="related-works-payload" name="relatedWorksPayload" value="[]">
+    <div id="group-relatedwork" data-related-work-stack-shell>
+      <div id="group-relatedwork-stack" class="d-grid gap-2" data-related-work-stack>
+        <div class="row g-1 border rounded p-2 bg-body" related-work-row data-related-work-entry
+          data-related-work-entry-key="related-work-0">
+          <div class="col-12 col-md-4 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit"
+                  aria-label="Relation" id="input-relatedwork-relation" name="relation[]"></select>
+                <label for="input-relatedwork-relation" data-translate="relatedWork.relation">Relation</label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-relatedwork-relation"></i></span>
+              </div>
             </div>
           </div>
-        </div>
-        <!-- Input field Identifier Type -->
-        <div class="col-10 col-sm-10 col-md-3 col-lg-3 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit"
-                aria-label="Default select example" id="input-relatedwork-identifiertype" name="rIdentifierType[]" >
-              </select>
-              <label for="input-relatedwork-identifiertype" data-translate="relatedWork.identifierType">Identifier type</label>
-              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-            </div>
-            <div class="input-group-append">
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-relatedwork-identifiertype"></i></span>
+          <div class="col-12 col-md-4 col-lg-5 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <input type="text"
+                  class="form-control input-with-help input-right-no-round-corners js-required-on-submit"
+                  id="input-relatedwork-identifier" name="rIdentifier[]">
+                <label for="input-relatedwork-identifier" data-translate="relatedWork.identifier">Identifier</label>
+                <div class="invalid-feedback" data-translate="relatedWork.identifierInvalid">Please enter a valid
+                  identifier.</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-relatedwork-identifier"></i></span>
+              </div>
             </div>
           </div>
-        </div>
-        <!-- Clone Related Work row button-->
-        <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
-          <button type="button" class="btn btn-primary addRelatedWork add-button" id="button-relatedwork-add" data-translate="general.add">
-            +
-          </button>
+          <div class="col-10 col-md-3 col-lg-3 p-1">
+            <div class="input-group has-validation">
+              <div class="form-floating">
+                <select class="form-select input-with-help input-right-no-round-corners js-required-on-submit"
+                  aria-label="Identifier type" id="input-relatedwork-identifiertype"
+                  name="rIdentifierType[]"></select>
+                <label for="input-relatedwork-identifiertype" data-translate="relatedWork.identifierType">Identifier
+                  type</label>
+                <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
+              </div>
+              <div class="input-group-append">
+                <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                    data-help-section-id="help-relatedwork-identifiertype"></i></span>
+              </div>
+            </div>
+          </div>
+          <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center">
+            <button type="button" class="drag-handle align-items-center me-2" data-bs-toggle="tooltip"
+              data-bs-placement="top" data-translate-title="relatedWork.dragHandle"
+              title="Drag & drop to change order" aria-label="Drag & drop to change order">
+              <i class="bi bi-grip-vertical" aria-hidden="true"></i>
+            </button>
+            <button type="button" class="btn btn-primary text-nowrap d-inline-flex align-items-center gap-1"
+              id="button-relatedwork-add" data-related-work-add data-translate-title="relatedWork.addEntry"
+              title="Add related work" aria-label="Add related work">
+              <i class="bi bi-plus-lg" aria-hidden="true"></i>
+              <span data-translate="relatedWork.addEntry">Add related work</span>
+            </button>
+          </div>
         </div>
       </div>
+      <div class="d-flex flex-wrap gap-2 mt-2" data-related-work-add-actions></div>
     </div>
   </div>
 </div>

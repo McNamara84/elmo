@@ -111,6 +111,7 @@ describe('submitHandler.js', () => {
     delete global.validateAuthorNameFields;
     delete global.validateAuthorAffiliationEditors;
     delete window.authorStack;
+    delete window.relatedWorkStack;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -782,6 +783,31 @@ describe('submitHandler.js', () => {
     delete global.fetch;
   });
 
+  test('handleModalSubmit aborts before CSRF and AJAX when Related Works synchronization fails', async () => {
+    document.getElementById('test-form').insertAdjacentHTML(
+      'beforeend',
+      `
+        <input type="hidden" name="authorsPayload" value="[]">
+        <div id="group-relatedwork">
+          <input type="hidden" name="relatedWorksPayload" value="[]">
+        </div>
+      `
+    );
+    window.relatedWorkStack = { updatePayload: jest.fn().mockReturnValue(null) };
+    global.fetch = jest.fn();
+    const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+    const notificationSpy = jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleModalSubmit();
+
+    expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+    expect(notificationSpy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+
+    delete global.fetch;
+  });
+
   test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
     document.getElementById('group-author').innerHTML = `
       <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
@@ -923,6 +949,38 @@ describe('submitHandler.js', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe('fresh-submit-token');
       expect(document.getElementById('input-csrf-token').value).toBe('fresh-submit-token');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
+    test('handleModalSubmit refreshes and sends the Related Works payload', async () => {
+      const freshPayload = [
+        {
+          relation: 'IsDocumentedBy',
+          relationId: '8',
+          identifier: '10.1234/documentation',
+          identifierType: 'DOI',
+          order: 0
+        }
+      ];
+      document.getElementById('test-form').insertAdjacentHTML(
+        'beforeend',
+        '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+      );
+      window.relatedWorkStack = {
+        updatePayload: jest.fn().mockReturnValue(freshPayload)
+      };
+      global.fetch = jest.fn().mockResolvedValue({
+        json: async () => ({ token: 'related-work-submit-token' })
+      });
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      const submittedData = submitSpy.mock.calls[0][0];
+      expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+      expect(submittedData.get('relatedWorksPayload')).toBe(JSON.stringify(freshPayload));
 
       delete global.fetch;
       submitSpy.mockRestore();

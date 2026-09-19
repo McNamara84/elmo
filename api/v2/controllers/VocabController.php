@@ -11,6 +11,7 @@ ini_set('max_execution_time', 300);
 if (!defined('UNIT_TESTING')) {
     require_once __DIR__ . '/../../../settings.php';
 }
+require_once __DIR__ . '/../services/DataCiteRelationType.php';
 
 /**
  * Class VocabController
@@ -119,9 +120,13 @@ class VocabController
                 );
 
                 if (!empty($ernieTypes)) {
+                    $ernieTypes = $this->normalizeRelationTypesFromErnie($ernieTypes);
+                }
+
+                if (!empty($ernieTypes)) {
                     $relations = $this->mapErnieToLocalIds(
                         'Relation', $ernieTypes, 'relation_id', 'ernie_id',
-                        ['name' => 'name', 'description' => 'description']
+                        ['name' => 'name', 'label' => 'label', 'description' => 'description']
                     );
                     header('Content-Type: application/json');
                     echo json_encode(['relations' => $relations]);
@@ -166,6 +171,7 @@ class VocabController
                 $relations[] = [
                     'id' => $row['relation_id'],
                     'name' => $row['name'],
+                    'label' => DataCiteRelationType::label($row['name']),
                     'description' => $row['description']
                 ];
             }
@@ -1419,6 +1425,7 @@ class VocabController
      */
     public function syncRelationTypesFromErnie(array $ernieTypes): void
     {
+        $ernieTypes = $this->normalizeRelationTypesFromErnie($ernieTypes);
         $syncItems = array_map(fn($t) => [
             'ernie_id' => $t['id'],
             'name' => $t['name'],
@@ -1429,6 +1436,43 @@ class VocabController
             'name_col' => 'name',
             'description_col' => 'description'
         ]);
+    }
+
+    /**
+     * Separates ERNIE display labels from canonical DataCite relation tokens.
+     *
+     * Unknown values are rejected instead of being guessed by removing spaces.
+     * This protects Relation.name, which is consumed directly by XML exports.
+     *
+     * @param array<int, array<string, mixed>> $ernieTypes Raw relation types from ERNIE.
+     * @return list<array<string, mixed>> Valid relation types with canonical name and display label.
+     */
+    private function normalizeRelationTypesFromErnie(array $ernieTypes): array
+    {
+        $normalized = [];
+
+        foreach ($ernieTypes as $relationType) {
+            $label = is_scalar($relationType['name'] ?? null)
+                ? trim((string) $relationType['name'])
+                : '';
+            $canonicalName = DataCiteRelationType::canonicalize($label);
+
+            if ($canonicalName === null) {
+                $rawErnieId = $relationType['id'] ?? null;
+                $ernieId = is_scalar($rawErnieId) ? (string) $rawErnieId : 'unknown';
+                error_log(
+                    "ERNIE relation type rejected: id={$ernieId}, unknown DataCite value="
+                    . json_encode($label, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)
+                );
+                continue;
+            }
+
+            $relationType['name'] = $canonicalName;
+            $relationType['label'] = DataCiteRelationType::label($canonicalName);
+            $normalized[] = $relationType;
+        }
+
+        return $normalized;
     }
 
     /**
