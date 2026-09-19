@@ -7,6 +7,7 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -214,6 +215,7 @@ class SaveHandler {
             const relatedWorksPayload = hasRelatedWorks
                 ? synchronizeRelatedWorksPayload(formEl)
                 : null;
+            synchronizeTagifyInputs(formEl);
             const formData = new FormData(formEl);
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
             if (Array.isArray(relatedWorksPayload)) {

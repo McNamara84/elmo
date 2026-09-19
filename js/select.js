@@ -648,6 +648,10 @@ $(document).ready(function () {
  */
 function setupIdentifierTypesDropdown(id) {
   var select = $(id);
+  const pending = select.data('identifierTypesReady');
+  if (pending) {
+    return pending;
+  }
 
   // Add the "Choose..." placeholder option
   select.empty().append(
@@ -658,26 +662,33 @@ function setupIdentifierTypesDropdown(id) {
     })
   );
 
-  // Fetch identifier types from the server
-  $.getJSON("./api/v2/validation/identifiertypes/active", function (response) {
-    if (response && response.identifierTypes) {
-      response.identifierTypes.forEach(function (type) {
-        select.append(
-          $("<option>", {
-            value: type.name,
-            text: type.name,
-            title: type.description, // Uses the description as a tooltip
-          })
-        );
-      });
-      // Update chosen-style dropdowns if necessary
-      $(".chosen-select").trigger("chosen:updated");
-    } else {
-      console.warn("No identifier types available");
-    }
-  }).fail(function (jqXHR, textStatus, errorThrown) {
-    console.error("Error loading identifier types:", textStatus, errorThrown);
+  const ready = new Promise((resolve, reject) => {
+    $.getJSON("./api/v2/validation/identifiertypes/active", function (response) {
+      if (response && response.identifierTypes) {
+        response.identifierTypes.forEach(function (type) {
+          select.append(
+            $("<option>", {
+              value: type.name,
+              text: type.name,
+              title: type.description, // Uses the description as a tooltip
+            })
+          );
+        });
+        // Update chosen-style dropdowns if necessary
+        $(".chosen-select").trigger("chosen:updated");
+        resolve();
+      } else {
+        console.warn("No identifier types available");
+        resolve();
+      }
+    }).fail(function (jqXHR, textStatus, errorThrown) {
+      console.error("Error loading identifier types:", textStatus, errorThrown);
+      reject(new Error("Error loading identifier types: " + textStatus));
+    });
   });
+
+  select.data('identifierTypesReady', ready);
+  return ready;
 }
 
 

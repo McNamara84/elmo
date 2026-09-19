@@ -403,6 +403,11 @@ label.mandatory-field::after {
     pointer-events: none;
 }
 
+.tooltip-inner {
+    background-color: #002864;
+    color: #F0EFEA;
+}
+
 .text-feedback {
     color: var(--bs-text-feedback-color, #000000);
 }

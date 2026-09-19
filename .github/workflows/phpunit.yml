@@ -130,7 +130,7 @@ jobs:
           $showMslLogo = false;
           $showContributorPersons = true;
           $showContributorInstitutions = true;
-          $showGcmdThesauri = true;
+          $showThesauri = true;
           $showFreeKeywords = true;
           $showSpatialTemporalCoverage = true;
           $showRelatedWork = true;

@@ -570,7 +570,7 @@ class VocabController
      * @param int $forInstitutions The forInstitutions value (0=person, 1=institution, 2=both)
      * @return void
      */
-    private function syncRolesToDb(array $ernieRoles, int $forInstitutions): void
+    public function syncRolesToDb(array $ernieRoles, int $forInstitutions): void
     {
         global $connection;
         $connection->begin_transaction();
@@ -1379,7 +1379,7 @@ class VocabController
      * @param array<int, array<string, mixed>> $ernieTypes Resource types from ERNIE
      * @return void
      */
-    private function syncResourceTypesFromErnie(array $ernieTypes): void
+    public function syncResourceTypesFromErnie(array $ernieTypes): void
     {
         $syncItems = array_map(fn($t) => [
             'ernie_id' => $t['id'],
@@ -1402,7 +1402,7 @@ class VocabController
      * @param array<int, array<string, mixed>> $ernieTypes Title types from ERNIE
      * @return void
      */
-    private function syncTitleTypesFromErnie(array $ernieTypes): void
+    public function syncTitleTypesFromErnie(array $ernieTypes): void
     {
         $syncItems = array_map(fn($t) => [
             'ernie_id' => $t['id'],
@@ -1423,7 +1423,7 @@ class VocabController
      * @param array<int, array<string, mixed>> $ernieTypes Relation types from ERNIE
      * @return void
      */
-    private function syncRelationTypesFromErnie(array $ernieTypes): void
+    public function syncRelationTypesFromErnie(array $ernieTypes): void
     {
         $ernieTypes = $this->normalizeRelationTypesFromErnie($ernieTypes);
         $syncItems = array_map(fn($t) => [
@@ -1704,7 +1704,7 @@ class VocabController
      * @param array<array{id: int, name: string, code: string}> $ernieLanguages Languages from ERNIE
      * @return void
      */
-    private function syncLanguagesToDb(array $ernieLanguages): void
+    public function syncLanguagesToDb(array $ernieLanguages): void
     {
         global $connection;
         $connection->begin_transaction();

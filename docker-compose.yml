@@ -72,6 +72,8 @@ services:
       - web
     environment:
       BASE_URL: http://hostmachine:8080/
+      ERNIE_URL: ${ERNIE_URL}
+      ERNIE_API_KEY: ${ERNIE_API_KEY}
     volumes:
       - .:/work
       - ./playwright-report:/work/playwright-report
