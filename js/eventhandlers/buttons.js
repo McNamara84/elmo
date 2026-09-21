@@ -91,6 +91,8 @@ $(document).ready(function () {
    * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
+    // Keep this notification in the user-facing flow: XML and DOI imports also call
+    // clearInputFields(), but must not restore MSL defaults before loading their data.
     const clearFormAfterConfirmation = function () {
       clearInputFields();
       document.dispatchEvent(new Event('elmo:formClearedByUser'));
