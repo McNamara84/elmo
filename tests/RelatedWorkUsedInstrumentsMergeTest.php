@@ -42,7 +42,7 @@ final class RelatedWorkUsedInstrumentsMergeTest extends TestCase
         );
 
         self::assertSame([
-            ['https://doi.org/10.1234/DUPLICATE', 'IsReferencedBy', 'DOI'],
+            ['10.1234/DUPLICATE', 'IsReferencedBy', 'DOI'],
             ['https://payload.example/work', 'References', 'URL'],
             ['21.11157/alpha', 'IsCollectedBy', 'Handle'],
             ['10.5555/instrument', 'IsCollectedBy', 'DOI'],
