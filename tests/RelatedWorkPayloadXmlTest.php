@@ -158,7 +158,7 @@ final class RelatedWorkPayloadXmlTest extends TestCase
             [
                 'relatedWorksPayload' => json_encode([
                     [
-                        'identifier' => '10.1234/first',
+                        'identifier' => 'https://doi.org/10.1234/first',
                         'relation' => 'IsReferencedBy',
                         'relationId' => '17',
                         'identifierType' => 'DOI',

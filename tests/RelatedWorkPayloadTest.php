@@ -106,6 +106,33 @@ final class RelatedWorkPayloadTest extends TestCase
         self::assertSame(0, $entries[0]['order']);
     }
 
+    public function testDoiResolverPrefixesAreRemovedFromStructuredAndLegacyInput(): void
+    {
+        $structuredEntries = normalizeRelatedWorksPayload([
+            'relatedWorksPayload' => json_encode([
+                [
+                    'identifier' => 'https://doi.org/10.5880/icgem.2026.003',
+                    'relation' => 'References',
+                    'identifierType' => 'DOI',
+                ],
+                [
+                    'identifier' => 'https://example.org/10.5880/not-a-doi',
+                    'relation' => 'References',
+                    'identifierType' => 'URL',
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+        $legacyEntries = normalizeRelatedWorksPayload([
+            'rIdentifier' => ['doi: 10.5880/ICGEM.2019.004'],
+            'relation' => ['References'],
+            'rIdentifierType' => ['DOI'],
+        ]);
+
+        self::assertSame('10.5880/icgem.2026.003', $structuredEntries[0]['identifier']);
+        self::assertSame('https://example.org/10.5880/not-a-doi', $structuredEntries[1]['identifier']);
+        self::assertSame('10.5880/ICGEM.2019.004', $legacyEntries[0]['identifier']);
+    }
+
     public function testExplicitEmptyPayloadOverridesStaleLegacyFields(): void
     {
         $entries = normalizeRelatedWorksPayload([

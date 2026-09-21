@@ -220,19 +220,11 @@ function deduplicateRelatedWorksForXml(array $relatedWorks): array
  */
 function normalizeRelatedWorkIdentifierForComparison(string $identifier, string $identifierType): string
 {
-    $identifier = trim($identifier);
+    $normalized = normalizeRelatedWorkIdentifier($identifier, $identifierType);
 
-    if (strcasecmp(trim($identifierType), 'DOI') !== 0) {
-        return $identifier;
-    }
-
-    $normalized = preg_replace(
-        '~^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)~i',
-        '',
-        $identifier
-    );
-
-    return strtolower($normalized ?? $identifier);
+    return strcasecmp(trim($identifierType), 'DOI') === 0
+        ? strtolower($normalized)
+        : $normalized;
 }
 
 /**

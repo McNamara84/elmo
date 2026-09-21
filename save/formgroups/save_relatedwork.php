@@ -56,6 +56,31 @@ function normalizeRelatedWorkValue($value): string
 }
 
 /**
+ * Returns the canonical identifier value for its declared identifier type.
+ *
+ * DOI validation accepts resolver URLs and the doi: prefix for convenient
+ * input, while DataCite examples represent DOI related identifiers as bare
+ * DOI names. Other identifier types are only trimmed because their prefixes
+ * can be significant.
+ */
+function normalizeRelatedWorkIdentifier(string $identifier, string $identifierType): string
+{
+    $identifier = trim($identifier);
+
+    if (strcasecmp(trim($identifierType), 'DOI') !== 0) {
+        return $identifier;
+    }
+
+    $normalized = preg_replace(
+        '~^(?:https?://(?:dx\.)?doi\.org/|doi:\s*)~i',
+        '',
+        $identifier
+    );
+
+    return trim($normalized ?? $identifier);
+}
+
+/**
  * Normalizes entries from the structured Related Works payload.
  *
  * Empty cards are discarded. The order supplied by the list is authoritative;
@@ -83,6 +108,10 @@ function normalizeRelatedWorksFromPayload(array $payload): array
             'relationId' => normalizeRelatedWorkValue($rawEntry['relationId'] ?? ''),
             'identifierType' => normalizeRelatedWorkValue($rawEntry['identifierType'] ?? ''),
         ];
+        $entry['identifier'] = normalizeRelatedWorkIdentifier(
+            $entry['identifier'],
+            $entry['identifierType']
+        );
 
         if (
             $entry['identifier'] === ''
@@ -130,6 +159,10 @@ function normalizeLegacyRelatedWorks(array $postData): array
             'relationId' => is_numeric($relation) ? $relation : '',
             'identifierType' => normalizeRelatedWorkValue($identifierTypes[$index] ?? ''),
         ];
+        $entry['identifier'] = normalizeRelatedWorkIdentifier(
+            $entry['identifier'],
+            $entry['identifierType']
+        );
 
         if (
             $entry['identifier'] === ''
