@@ -203,16 +203,52 @@ $(document).ready(function () {
     });
   }
 
-  function isFirstHelpIconOfKind(icon) {
-    const sectionId = icon.attr('data-help-section-id');
-    if (!sectionId) {
+  function helpIconField(icon) {
+    const groupField = icon.closest('.input-group')
+      .find('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])')
+      .first();
+    if (groupField.length) {
+      return groupField;
+    }
+
+    const precedingField = icon.closest('span').prevAll('input:not([type="hidden"]):not([type="checkbox"])').first();
+    if (precedingField.length) {
+      return precedingField;
+    }
+
+    return icon.closest('[data-author-affiliation-editor]').find('[data-author-affiliation-input]').first();
+  }
+
+  function isFieldShown(field) {
+    if (!field.length || field.attr('type') === 'hidden') {
       return false;
     }
 
-    const firstOfKind = stack
-      .find(`.help-icon-author-affiliation[data-help-section-id="${escapeSelector(sectionId)}"]`)
-      .first();
-    return firstOfKind.get(0) === icon.get(0);
+    let node = field.get(0);
+    while (node && node !== stack.get(0)) {
+      const $node = $(node);
+      if ($node.css('display') === 'none' || $node.hasClass('d-none')) {
+        return false;
+      }
+      node = node.parentElement;
+    }
+    return Boolean(node);
+  }
+
+  function isFirstHelpIconOfKind(icon) {
+    const field = helpIconField(icon);
+    if (!isFieldShown(field)) {
+      return false;
+    }
+
+    const name = field.attr('name');
+    const peers = name
+      ? stack.find(`input[name="${escapeSelector(name)}"]`)
+      : stack.find('[data-author-affiliation-input]');
+    const firstShown = peers.filter(function () {
+      return isFieldShown($(this));
+    }).first();
+    return firstShown.get(0) === field.get(0);
   }
 
   function setHelpIconVisibility(icon, shouldBeVisible) {
@@ -224,6 +260,7 @@ $(document).ready(function () {
     }
 
     wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    wrapper.css('display', shouldBeVisible ? '' : 'none');
     if (shouldBeVisible) {
       wrapper
         .removeClass('help-placeholder')
@@ -731,6 +768,7 @@ $(document).ready(function () {
       } else {
         contactFields.hide().find('input').val('');
       }
+      applyAuthorHelpStatus();
     }
 
     checkbox.off('change.authorStack click.authorStack');
