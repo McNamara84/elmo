@@ -21,6 +21,11 @@ const RELATED_WORK_FIELD_NAMES = new Set([
   'rIdentifier[]',
   'rIdentifierType[]'
 ]);
+const RELATED_WORK_HELP_SECTION_IDS = new Set([
+  'help-relatedwork-relation',
+  'help-relatedwork-identifier',
+  'help-relatedwork-identifiertype'
+]);
 
 $(document).ready(function () {
   let stack = $('[data-related-work-stack]').first();
@@ -388,6 +393,36 @@ $(document).ready(function () {
     });
   }
 
+  function updateHelpButtonVisibility() {
+    stack.children('[data-related-work-entry]').each(function (index) {
+      const row = $(this);
+      const showHelp = index === 0;
+
+      row.find('span.input-group-text').each(function () {
+        const helpButton = $(this);
+        const helpIcon = helpButton.find('i[data-help-section-id]').first();
+        const helpSectionId = String(helpIcon.attr('data-help-section-id') || '');
+        if (!RELATED_WORK_HELP_SECTION_IDS.has(helpSectionId)) {
+          return;
+        }
+
+        helpButton
+          .toggleClass('help-placeholder', !showHelp)
+          .attr('data-help-section-id', helpSectionId)
+          .css({
+            visibility: showHelp ? '' : 'hidden',
+            width: showHelp ? '' : '42px',
+            height: showHelp ? '' : '38px'
+          });
+        helpButton
+          .closest('.input-group')
+          .find('.input-with-help')
+          .toggleClass('input-right-no-round-corners', showHelp)
+          .toggleClass('input-right-with-round-corners', !showHelp);
+      });
+    });
+  }
+
   /**
    * Synchronizes summaries, ordering controls, and the hidden structured payload.
    * @param {Object} [options] - Synchronization options.
@@ -398,6 +433,7 @@ $(document).ready(function () {
     stack.children('[data-related-work-entry]').each(function () {
       renderEntrySummary($(this));
     });
+    updateHelpButtonVisibility();
     updateCardActions();
     const payload = collectPayload();
     payloadInput.val(JSON.stringify(payload));

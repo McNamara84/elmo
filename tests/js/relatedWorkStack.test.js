@@ -30,10 +30,15 @@ describe('relatedwork.js card stack', () => {
                 <option value="3" data-relation-name="IsReferencedBy">Is Referenced By</option>
               </select>
               <label for="input-relatedwork-relation">Relation</label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-relatedwork-relation"></i></span>
             </div>
             <div>
-              <input id="input-relatedwork-identifier" name="rIdentifier[]">
+              <input class="input-with-help input-right-no-round-corners"
+                id="input-relatedwork-identifier" name="rIdentifier[]">
               <label for="input-relatedwork-identifier">Identifier</label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-relatedwork-identifier"></i></span>
             </div>
             <div>
               <select id="input-relatedwork-identifiertype" name="rIdentifierType[]">
@@ -42,6 +47,8 @@ describe('relatedwork.js card stack', () => {
                 <option value="URL">URL</option>
               </select>
               <label for="input-relatedwork-identifiertype">Identifier type</label>
+              <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-relatedwork-identifiertype"></i></span>
             </div>
             <button type="button" class="drag-handle"></button>
             <button type="button" id="button-relatedwork-add" data-related-work-add>+</button>
@@ -334,6 +341,26 @@ describe('relatedwork.js card stack', () => {
     expect(payload().map((entry) => entry.order)).toEqual([0, 1]);
     expect($('[data-related-work-summary-identifier]').map((_, element) => $(element).text()).get())
       .toEqual(['second', 'first']);
+  });
+
+  test('keeps help buttons on the current first card after reorder and removal', () => {
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },
+      { entryKey: 'second', identifier: 'second', relationId: '2', relation: 'References', identifierType: 'URL' }
+    ]);
+
+    let cards = $('[data-related-work-entry]');
+    expect(cards.eq(0).find('span.input-group-text.help-placeholder')).toHaveLength(0);
+    expect(cards.eq(1).find('span.input-group-text.help-placeholder')).toHaveLength(3);
+
+    cards.eq(1).find('[data-related-work-drag]').trigger($.Event('keydown', { key: 'ArrowUp' }));
+    cards = $('[data-related-work-entry]');
+    expect(cards.eq(0).attr('data-related-work-entry-key')).toBe('second');
+    expect(cards.eq(0).find('span.input-group-text.help-placeholder')).toHaveLength(0);
+    expect(cards.eq(1).find('span.input-group-text.help-placeholder')).toHaveLength(3);
+
+    cards.eq(0).find('[data-related-work-remove]').trigger('click');
+    expect($('[data-related-work-entry]').first().find('span.input-group-text.help-placeholder')).toHaveLength(0);
   });
 
   test('collapses, reopens, and removes cards without changing their data', () => {

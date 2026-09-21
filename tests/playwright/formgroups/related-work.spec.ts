@@ -323,6 +323,26 @@ test.describe('Related work form group', () => {
     await expect(page.locator('[data-related-work-summary-identifier]')).toHaveText(['second', 'third', 'first']);
   });
 
+  test('keeps help buttons on the first card after reorder and removal', async ({ page }) => {
+    await page.evaluate(() => (window as any).relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relation: 'Cites', relationId: 'cites', identifierType: 'DOI' },
+      { entryKey: 'second', identifier: 'second', relation: 'IsDerivedFrom', relationId: 'isDerivedFrom', identifierType: 'URL' }
+    ]));
+
+    const cards = page.locator('[data-related-work-entry]');
+    await expect(cards.nth(0).locator('span.input-group-text.help-placeholder')).toHaveCount(0);
+    await expect(cards.nth(1).locator('span.input-group-text.help-placeholder')).toHaveCount(3);
+
+    await cards.nth(1).locator('[data-related-work-drag]').press('ArrowUp');
+    await expect(cards.nth(0)).toHaveAttribute('data-related-work-entry-key', 'second');
+    await expect(cards.nth(0).locator('span.input-group-text.help-placeholder')).toHaveCount(0);
+    await expect(cards.nth(1).locator('span.input-group-text.help-placeholder')).toHaveCount(3);
+
+    await cards.nth(0).locator('[data-related-work-remove]').click();
+    await expect(cards.nth(0)).toHaveAttribute('data-related-work-entry-key', 'first');
+    await expect(cards.nth(0).locator('span.input-group-text.help-placeholder')).toHaveCount(0);
+  });
+
   test('auto-detects identifier types, applies patterns, and reveals partial cards on submit validation', async ({ page }) => {
     await page.getByRole('button', { name: 'Add related work' }).click();
     const card = page.locator('[data-related-work-entry]').first();
