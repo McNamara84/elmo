@@ -34,6 +34,16 @@ test.describe('ELMO-MSL default free keywords', () => {
       CUSTOM_KEYWORD,
     ]);
 
+    const unexpectedBrowserMessages: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'warning' || message.type() === 'error') {
+        unexpectedBrowserMessages.push(`${message.type()}: ${message.text()}`);
+      }
+    });
+    page.on('pageerror', (error) => {
+      unexpectedBrowserMessages.push(`pageerror: ${error.message}`);
+    });
+
     await page.locator('#button-form-reset').click();
     await expect(page.locator('#modal-confirm')).toBeVisible();
     await page.locator('#button-confirm-action').click();
@@ -41,5 +51,6 @@ test.describe('ELMO-MSL default free keywords', () => {
 
     await expect.poll(() => getFreeKeywordValues(page)).toEqual(MSL_DEFAULT_FREE_KEYWORDS);
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('');
+    expect(unexpectedBrowserMessages).toEqual([]);
   });
 });
