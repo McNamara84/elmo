@@ -91,12 +91,17 @@ $(document).ready(function () {
    * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
+    const clearFormAfterConfirmation = function () {
+      clearInputFields();
+      document.dispatchEvent(new Event('elmo:formClearedByUser'));
+    };
+
     window.showConfirmationModal(
       'confirmations.clear.title',
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      clearInputFields
+      clearFormAfterConfirmation
     );
   });
 

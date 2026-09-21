@@ -63,6 +63,10 @@ describe('buttons.js', () => {
     jest.clearAllTimers();
   });
 
+  function getClearConfirmationCallback() {
+    return window.showConfirmationModal.mock.calls[0][4];
+  }
+
   test('shows help icons by default', () => {
     loadScript();
     expect($('.input-group-text').first().css('display')).not.toBe('none');
@@ -121,7 +125,7 @@ describe('buttons.js', () => {
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      window.clearInputFields
+      expect.any(Function)
     );
   });
 
@@ -129,6 +133,23 @@ describe('buttons.js', () => {
     loadScript();
     $('#button-form-reset').trigger('click');
     expect(window.clearInputFields).not.toHaveBeenCalled();
+  });
+
+  test('confirmed reset clears the form before announcing a user clear', () => {
+    const callOrder = [];
+    window.clearInputFields.mockImplementation(() => callOrder.push('clear'));
+    document.addEventListener(
+      'elmo:formClearedByUser',
+      () => callOrder.push('event'),
+      { once: true }
+    );
+
+    loadScript();
+    $('#button-form-reset').trigger('click');
+    getClearConfirmationCallback()();
+
+    expect(window.clearInputFields).toHaveBeenCalledTimes(1);
+    expect(callOrder).toEqual(['clear', 'event']);
   });
 
   test('load button shows upload modal', () => {
