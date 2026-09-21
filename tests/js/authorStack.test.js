@@ -94,8 +94,6 @@ describe('authorStack.js', () => {
     return JSON.parse(document.querySelector('input[name="authorsPayload"]').value);
   }
 
-  const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
-
   function useRealHelpCloneHelper() {
     window.replaceHelpButtonInClonedRows = require('../../js/eventhandlers/functions.js').replaceHelpButtonInClonedRows;
     localStorage.setItem('helpStatus', 'help-on');
@@ -113,14 +111,24 @@ describe('authorStack.js', () => {
     row.find('[data-author-contact-toggle]').trigger('click');
   }
 
-  function expectPersonFieldHelpHidden(row, hidden) {
+  function expectIconHidden(row, sectionId, hidden) {
+    expect(row.find(`i[data-help-section-id="${sectionId}"]`).length).toBe(1);
+    expect(row.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(hidden);
+  }
+
+  function expectPersonHelpHidden(row, hidden) {
+    const visibility = typeof hidden === 'boolean'
+      ? { orcid: hidden, contact: hidden }
+      : hidden;
     setContactPerson(row, true);
-    personHelpSectionIds.forEach((sectionId) => {
-      expect(row.find(`i[data-help-section-id="${sectionId}"]`).length).toBe(1);
-      expect(row.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(hidden);
-    });
-    // Contact person counts as content and locks the type switcher.
+    expectIconHidden(row, 'help-author-orcid', visibility.orcid);
+    expectIconHidden(row, 'help-contactperson-email', visibility.contact);
+    expectIconHidden(row, 'help-contactperson-website', visibility.contact);
     setContactPerson(row, false);
+  }
+
+  function expectPersonFieldHelpHidden(row, hidden) {
+    expectPersonHelpHidden(row, hidden);
   }
 
   function expectAffiliationHelpHidden(row, hidden) {
@@ -464,6 +472,20 @@ describe('authorStack.js', () => {
     expect(document.activeElement).toBe(newCard.find('input[name="familynames[]"]').get(0));
   });
 
+  test('clears cloned display:none on first-of-kind help icons when help is on', () => {
+    useRealHelpCloneHelper();
+    $('#button-author-add').trigger('click');
+
+    const wrapper = authorEntries().first()
+      .find('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])');
+    wrapper.css('display', 'none');
+
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-on' } }));
+
+    expect(wrapper.css('display')).not.toBe('none');
+    expect(authorEntries().first().find('i[data-help-section-id="help-author-orcid"]').hasClass('d-none')).toBe(false);
+  });
+
   test('keeps a single person help icon per section and shows it on the new first author', () => {
     useRealHelpCloneHelper();
 
@@ -473,7 +495,7 @@ describe('authorStack.js', () => {
     const rows = authorEntries();
     expect(rows.length).toBe(2);
     expectPersonFieldHelpHidden(rows.eq(0), false);
-    expectPersonFieldHelpHidden(rows.eq(1), true);
+    expectPersonHelpHidden(rows.eq(1), { orcid: true, contact: false });
 
     rows.eq(0).find('.removeButton').trigger('click');
 
@@ -490,7 +512,7 @@ describe('authorStack.js', () => {
     expect(authorEntries().length).toBe(2);
     expectPersonFieldHelpHidden(authorEntries().eq(0), false);
     expectAffiliationHelpHidden(authorEntries().eq(0), false);
-    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectPersonHelpHidden(authorEntries().eq(1), { orcid: true, contact: false });
     expectAffiliationHelpHidden(authorEntries().eq(1), true);
 
     switchRowType(authorEntries().eq(0), 'institution');
@@ -514,7 +536,7 @@ describe('authorStack.js', () => {
     switchRowType(authorEntries().eq(0), 'person');
     expectPersonFieldHelpHidden(authorEntries().eq(0), false);
     expectAffiliationHelpHidden(authorEntries().eq(0), false);
-    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectPersonHelpHidden(authorEntries().eq(1), { orcid: true, contact: false });
     expectAffiliationHelpHidden(authorEntries().eq(1), true);
 
     switchRowType(authorEntries().eq(1), 'institution');
@@ -549,6 +571,21 @@ describe('authorStack.js', () => {
     expectAffiliationHelpHidden(authorEntries().eq(0), false);
     expectPersonFieldHelpHidden(authorEntries().eq(1), false);
     expectAffiliationHelpHidden(authorEntries().eq(1), true);
+  });
+
+  test('shows contact help on the first person whose contact fields are shown', () => {
+    useRealHelpCloneHelper();
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    setContactPerson(authorEntries().eq(1), true);
+
+    expectIconHidden(authorEntries().eq(0), 'help-author-orcid', false);
+    expectIconHidden(authorEntries().eq(0), 'help-contactperson-email', true);
+    expectIconHidden(authorEntries().eq(0), 'help-contactperson-website', true);
+    expectIconHidden(authorEntries().eq(1), 'help-author-orcid', true);
+    expectIconHidden(authorEntries().eq(1), 'help-contactperson-email', false);
+    expectIconHidden(authorEntries().eq(1), 'help-contactperson-website', false);
   });
 
   test('moves focus to the next card or add button after removing a card', () => {
