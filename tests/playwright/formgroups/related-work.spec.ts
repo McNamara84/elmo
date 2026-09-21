@@ -290,7 +290,7 @@ test.describe('Related work form group', () => {
     await expect(cards.nth(0).locator('select[name="relation[]"]')).toBeFocused();
   });
 
-  test('reorders cards with move buttons and the drag handle for issue 1009', async ({ page }) => {
+  test('reorders cards from the drag handle for issue 1009', async ({ page }) => {
     await page.evaluate(() => (window as any).relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relation: 'Cites', relationId: 'cites', identifierType: 'DOI' },
       { entryKey: 'second', identifier: 'second', relation: 'IsDerivedFrom', relationId: 'isDerivedFrom', identifierType: 'URL' },
@@ -298,7 +298,8 @@ test.describe('Related work form group', () => {
     ]));
 
     const cards = page.locator('[data-related-work-entry]');
-    await cards.nth(0).locator('[data-related-work-move-down]').click();
+    await expect(page.locator('[data-related-work-move-up], [data-related-work-move-down]')).toHaveCount(0);
+    await cards.nth(1).locator('[data-related-work-drag]').press('ArrowUp');
     expect(await payloadOrder(page)).toEqual(['second', 'first', 'third']);
     await expect(page.locator('[data-related-work-summary-identifier]')).toHaveText(['second', 'first', 'third']);
 

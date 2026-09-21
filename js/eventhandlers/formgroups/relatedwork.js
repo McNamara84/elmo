@@ -132,12 +132,18 @@ $(document).ready(function () {
     });
   }
 
-  function createActionButton(attributeName, iconClass, label) {
+  function createActionButton(attributeName, iconClass, label, translationKey) {
     return $(
-      `<button type="button" class="btn btn-outline-secondary btn-sm" ${attributeName} aria-label="${label}">
+      `<button type="button" class="btn btn-outline-secondary btn-sm" ${attributeName}>
         <i class="bi ${iconClass}" aria-hidden="true"></i>
       </button>`
-    );
+    ).attr({
+      'data-bs-toggle': 'tooltip',
+      'data-bs-placement': 'top',
+      'data-translate-title': translationKey,
+      title: label,
+      'aria-label': label
+    });
   }
 
   function createCardRemoveButton() {
@@ -145,6 +151,10 @@ $(document).ready(function () {
     return button
       .attr({
         'data-related-work-remove': '',
+        'data-bs-toggle': 'tooltip',
+        'data-bs-placement': 'top',
+        'data-translate-title': 'relatedWork.removeEntry',
+        title: translate('relatedWork.removeEntry', 'Remove related work entry'),
         'aria-label': translate('relatedWork.removeEntry', 'Remove related work entry')
       })
       .addClass('btn-sm')
@@ -226,8 +236,8 @@ $(document).ready(function () {
       'data-bs-toggle': 'tooltip',
       'data-bs-placement': 'top',
       'data-translate-title': 'relatedWork.dragHandle',
-      title: translate('relatedWork.dragHandle', 'Drag & drop to change order'),
-      'aria-label': translate('relatedWork.dragHandle', 'Drag & drop to change order')
+      title: translate('relatedWork.dragHandle', 'Drag & drop or use arrow keys to change order'),
+      'aria-label': translate('relatedWork.dragHandle', 'Drag & drop or use arrow keys to change order')
     });
 
     const fields = row.children().detach();
@@ -240,12 +250,15 @@ $(document).ready(function () {
       .append(createSummary(), editPanel);
     const actions = $('<div class="d-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary" data-related-work-actions></div>');
     actions.append(
-      createActionButton('data-related-work-toggle-edit', 'bi-chevron-up', translate('relatedWork.collapseEntry', 'Collapse related work entry')).attr({
+      createActionButton(
+        'data-related-work-toggle-edit',
+        'bi-chevron-left',
+        translate('relatedWork.collapseEntry', 'Collapse related work entry'),
+        'relatedWork.collapseEntry'
+      ).attr({
         'aria-controls': editPanelId,
         'aria-expanded': 'true'
       }),
-      createActionButton('data-related-work-move-up', 'bi-chevron-up', translate('relatedWork.moveEntryUp', 'Move related work up')),
-      createActionButton('data-related-work-move-down', 'bi-chevron-down', translate('relatedWork.moveEntryDown', 'Move related work down')),
       createCardRemoveButton()
     );
 
@@ -277,6 +290,29 @@ $(document).ready(function () {
     }
     const selectedOption = select.find('option:selected').first();
     return String(selectedOption.attr('data-relation-name') || selectedOption.text() || '').trim();
+  }
+
+  function updateTooltipLabel(button, label) {
+    button.attr('aria-label', label);
+    const currentLabel = button.attr('data-bs-original-title') || button.attr('title') || '';
+    if (currentLabel === label) {
+      return;
+    }
+
+    const element = button[0];
+    const Tooltip = window.bootstrap && window.bootstrap.Tooltip;
+    const tooltip = element && Tooltip && typeof Tooltip.getInstance === 'function'
+      ? Tooltip.getInstance(element)
+      : null;
+    if (tooltip && typeof tooltip.dispose === 'function') {
+      tooltip.dispose();
+    }
+
+    button.attr({ title: label, 'data-bs-original-title': label });
+    if (tooltip && typeof Tooltip === 'function') {
+      const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+      new Tooltip(element, { container: tooltipContainer });
+    }
   }
 
   function readEntry(row, order) {
@@ -333,27 +369,22 @@ $(document).ready(function () {
 
   function updateActionLabels(row) {
     const isExpanded = row.find('[data-related-work-edit-panel]').hasClass('show');
-    row.find('[data-related-work-toggle-edit]').attr('aria-label', isExpanded
+    updateTooltipLabel(row.find('[data-related-work-toggle-edit]'), isExpanded
       ? translate('relatedWork.collapseEntry', 'Collapse related work entry')
       : translate('relatedWork.editEntry', 'Edit related work entry'));
-    row.find('[data-related-work-remove]').attr('aria-label', translate('relatedWork.removeEntry', 'Remove related work entry'));
-    row.find('[data-related-work-move-up]').attr('aria-label', translate('relatedWork.moveEntryUp', 'Move related work up'));
-    row.find('[data-related-work-move-down]').attr('aria-label', translate('relatedWork.moveEntryDown', 'Move related work down'));
-    row.find('[data-related-work-drag]').attr({
-      title: translate('relatedWork.dragHandle', 'Drag & drop to change order'),
-      'aria-label': translate('relatedWork.dragHandle', 'Drag & drop to change order')
-    });
+    updateTooltipLabel(
+      row.find('[data-related-work-remove]'),
+      translate('relatedWork.removeEntry', 'Remove related work entry')
+    );
+    updateTooltipLabel(
+      row.find('[data-related-work-drag]'),
+      translate('relatedWork.dragHandle', 'Drag & drop or use arrow keys to change order')
+    );
   }
 
-  function updateReorderControls() {
-    const rows = stack.children('[data-related-work-entry]');
-    rows.each(function (index) {
-      const row = $(this);
-      const isFirst = index === 0;
-      const isLast = index === rows.length - 1;
-      row.find('[data-related-work-move-up]').prop('disabled', isFirst).attr('aria-disabled', isFirst ? 'true' : 'false');
-      row.find('[data-related-work-move-down]').prop('disabled', isLast).attr('aria-disabled', isLast ? 'true' : 'false');
-      updateActionLabels(row);
+  function updateCardActions() {
+    stack.children('[data-related-work-entry]').each(function () {
+      updateActionLabels($(this));
     });
   }
 
@@ -367,7 +398,7 @@ $(document).ready(function () {
     stack.children('[data-related-work-entry]').each(function () {
       renderEntrySummary($(this));
     });
-    updateReorderControls();
+    updateCardActions();
     const payload = collectPayload();
     payloadInput.val(JSON.stringify(payload));
     summaryCount.text(countSummary(payload.length)).attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
@@ -383,7 +414,7 @@ $(document).ready(function () {
     panel.toggleClass('show', isExpanded).attr('aria-hidden', isExpanded ? 'false' : 'true');
     row.attr('data-related-work-expanded', isExpanded ? 'true' : 'false');
     toggle.attr('aria-expanded', isExpanded ? 'true' : 'false');
-    toggle.find('i').toggleClass('bi-pencil', !isExpanded).toggleClass('bi-chevron-up', isExpanded);
+    toggle.find('i').toggleClass('bi-pencil', !isExpanded).toggleClass('bi-chevron-left', isExpanded);
     updateActionLabels(row);
   }
 
@@ -662,9 +693,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
-    const preferred = row.find(numericDirection < 0 ? '[data-related-work-move-up]' : '[data-related-work-move-down]');
-    const fallback = row.find(numericDirection < 0 ? '[data-related-work-move-down]' : '[data-related-work-move-up]');
-    (preferred.prop('disabled') ? fallback : preferred).trigger('focus');
+    row.find('[data-related-work-drag]').trigger('focus');
     return true;
   }
 
@@ -698,12 +727,12 @@ $(document).ready(function () {
     setExpanded(row, !row.find('[data-related-work-edit-panel]').hasClass('show'));
   });
 
-  stack.on('click', '[data-related-work-move-up]', function () {
-    moveEntry(this, -1);
-  });
-
-  stack.on('click', '[data-related-work-move-down]', function () {
-    moveEntry(this, 1);
+  stack.on('keydown', '[data-related-work-drag]', function (event) {
+    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+      return;
+    }
+    event.preventDefault();
+    moveEntry(this, event.key === 'ArrowUp' ? -1 : 1);
   });
 
   stack.on('click', '[data-related-work-remove], .removeButton', function () {

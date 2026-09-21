@@ -117,6 +117,10 @@ describe('relatedwork.js card stack', () => {
     expect(payload()).toEqual([]);
     expect(window.elmo.applyRelatedWorkDropdowns).toHaveBeenCalledTimes(2);
     expect(window.elmo.updateIdentifierValidationPattern).toHaveBeenCalledTimes(2);
+    expect(cards.find('[data-related-work-move-up], [data-related-work-move-down]')).toHaveLength(0);
+    expect(cards.eq(0).find('[data-related-work-toggle-edit] i').hasClass('bi-chevron-left')).toBe(true);
+    expect(cards.eq(0).find('[data-related-work-toggle-edit]').attr('data-bs-toggle')).toBe('tooltip');
+    expect(cards.eq(0).find('[data-related-work-remove]').attr('data-bs-toggle')).toBe('tooltip');
   });
 
   test('serializes a card into the ordered structured payload', () => {
@@ -300,20 +304,20 @@ describe('relatedwork.js card stack', () => {
     expect(document.activeElement).toBe($('[data-related-work-entry] select[name="relation[]"]')[0]);
   });
 
-  test('moves cards with keyboard-accessible buttons and updates focus and order', () => {
+  test('moves cards with arrow keys on the drag handle and updates focus and order', () => {
     window.relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },
       { entryKey: 'second', identifier: 'second', relationId: '2', relation: 'References', identifierType: 'URL' }
     ]);
 
-    $('[data-related-work-entry]').eq(1).find('[data-related-work-move-up]').trigger('click');
+    const secondHandle = $('[data-related-work-entry]').eq(1).find('[data-related-work-drag]');
+    secondHandle.trigger($.Event('keydown', { key: 'ArrowUp' }));
 
     expect(payload().map((entry) => entry.entryKey)).toEqual(['second', 'first']);
     expect($('[data-related-work-summary-identifier]').map((_, element) => $(element).text()).get())
       .toEqual(['second', 'first']);
     const movedCard = $('[data-related-work-entry]').first();
-    expect(movedCard.find('[data-related-work-move-up]').prop('disabled')).toBe(true);
-    expect(movedCard.find('[data-related-work-move-down]')[0]).toBe(document.activeElement);
+    expect(movedCard.find('[data-related-work-drag]')[0]).toBe(document.activeElement);
   });
 
   test('uses the sortable update callback as the drag-and-drop order source', () => {
@@ -343,10 +347,12 @@ describe('relatedwork.js card stack', () => {
     firstToggle.trigger('click');
     expect(firstCard.find('[data-related-work-edit-panel]').hasClass('show')).toBe(false);
     expect(firstToggle.attr('aria-expanded')).toBe('false');
+    expect(firstToggle.find('i').hasClass('bi-pencil')).toBe(true);
     expect(payload().map((entry) => entry.entryKey)).toEqual(['first', 'second']);
 
     firstToggle.trigger('click');
     expect(firstCard.find('[data-related-work-edit-panel]').hasClass('show')).toBe(true);
+    expect(firstToggle.find('i').hasClass('bi-chevron-left')).toBe(true);
 
     firstCard.find('[data-related-work-remove]').trigger('click');
     expect(payload().map((entry) => entry.entryKey)).toEqual(['second']);
@@ -365,8 +371,6 @@ describe('relatedwork.js card stack', () => {
         'relatedWork.removeEntry': 'Eintrag entfernen',
         'relatedWork.editEntry': 'Eintrag bearbeiten',
         'relatedWork.collapseEntry': 'Eintrag einklappen',
-        'relatedWork.moveEntryUp': 'Nach oben',
-        'relatedWork.moveEntryDown': 'Nach unten',
         'relatedWork.entrySingular': 'Eintrag',
         'relatedWork.entryPlural': 'Einträge',
         'relatedWork.entriesSummary': '{count} {label}',
@@ -381,7 +385,9 @@ describe('relatedwork.js card stack', () => {
     expect($('[data-related-work-summary-count]').text()).toBe('0 Einträge');
     expect(card.find('[data-related-work-summary-identifier]').text()).toBe('Unvollständiges verwandtes Werk');
     expect(card.find('[data-related-work-toggle-edit]').attr('aria-label')).toBe('Eintrag einklappen');
+    expect(card.find('[data-related-work-toggle-edit]').attr('title')).toBe('Eintrag einklappen');
     expect(card.find('[data-related-work-remove]').attr('aria-label')).toBe('Eintrag entfernen');
+    expect(card.find('[data-related-work-remove]').attr('title')).toBe('Eintrag entfernen');
     expect(card.find('[data-related-work-drag]').attr('aria-label')).toBe('Reihenfolge ändern');
     expect($('#button-relatedwork-add').attr('aria-label')).toBe('Verwandtes Werk hinzufügen');
   });
