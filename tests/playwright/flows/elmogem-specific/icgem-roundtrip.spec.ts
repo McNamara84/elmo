@@ -56,8 +56,9 @@
  *
  * ── NOTE on normalisation ─────────────────────────────────────────────────────
  *   Reference XML files MUST be produced by ELMOGEM (save/download), not
- *   hand-authored.  Step 3 compares the downloaded XML values verbatim against
- *   the parsed reference values, so any casing difference will cause a false failure.
+ *   hand-authored.  Step 2 compares the downloaded XML values against the
+ *   parsed reference values. The dataset title is an exception: save prefixes
+ *   modelName when it is not already in the title (`modelName: title`).
  */
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
@@ -303,6 +304,22 @@ function normalizeText(value: string): string {
 function toDensityOptionValue(xmlValue: string): string {
   const lower = xmlValue.toLowerCase().trim();
   return lower === 'density model' ? 'density-model' : lower;
+}
+
+/**
+ * Title written on GEM save: prefix modelName when the title is non-empty and
+ * does not already contain it. Mirrors applyGgmsModelNameToDatasetTitles().
+ */
+function expectedSavedTitle(title: string, modelName: string): string {
+  const trimmedTitle = title.trim();
+  const trimmedModel = modelName.trim();
+  if (trimmedTitle === '' || trimmedModel === '') {
+    return title;
+  }
+  if (trimmedTitle.toLowerCase().includes(trimmedModel.toLowerCase())) {
+    return title;
+  }
+  return `${trimmedModel}: ${trimmedTitle}`;
 }
 
 // ─── XML parsing ──────────────────────────────────────────────────────────────
@@ -990,7 +1007,7 @@ for (const testCase of TEST_CASES) {
 
     // ── DataCite fields ──
     const titlesNode = getNode(resource!, 'titles') as Record<string, unknown>;
-    assertField(getNode(titlesNode, 'title'), parsedData.title, 'title');
+    assertField(getNode(titlesNode, 'title'), expectedSavedTitle(parsedData.title, parsedData.modelName), 'title');
 
     assertField(
       getNode(resource!, 'publicationYear'),
@@ -1337,7 +1354,9 @@ for (const testCase of TEST_CASES) {
     );
 
     // ── Standard DataCite fields ───────────────────────────────────────────
-    await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(parsedData.title);
+    await expect(page.locator('#input-resourceinformation-title'), 'title').toHaveValue(
+      expectedSavedTitle(parsedData.title, parsedData.modelName),
+    );
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
     await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(parsedData.version);
     // The abstract is restored from grav:descriptions (ICGEM uploads skip the
