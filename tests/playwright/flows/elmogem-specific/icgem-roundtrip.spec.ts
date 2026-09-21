@@ -147,6 +147,35 @@ interface DataSource {
   name?: string;
 }
 
+/**
+ * Mirrors the import normalization in mappingXmlToInputFieldsIcgem.js.
+ * Each nested array represents one data-source row expected in the form.
+ */
+function groupDataSourcesForForm(dataSources: DataSource[]): DataSource[][] {
+  const groups: DataSource[][] = [];
+
+  for (const dataSource of dataSources) {
+    const isPopulatedSatellite = dataSource.type === 'Satellite'
+      && Boolean(dataSource.satelliteValueName);
+    const previousGroup = groups[groups.length - 1];
+    const previous = previousGroup?.[0];
+    const description = dataSource.description.trim();
+    const previousDescription = previous?.description.trim() ?? '';
+    const canJoinPrevious = isPopulatedSatellite
+      && previous?.type === 'Satellite'
+      && Boolean(previous.satelliteValueName)
+      && previousDescription === description;
+
+    if (canJoinPrevious) {
+      previousGroup.push(dataSource);
+    } else {
+      groups.push([dataSource]);
+    }
+  }
+
+  return groups;
+}
+
 interface DensityInformation {
   /** 'Whole' | 'Crust' | 'Mantle' */
   domain: string;
@@ -1523,23 +1552,29 @@ for (const testCase of TEST_CASES) {
     }
 
     // ── Data sources ──────────────────────────────────────────────────────
+    const expectedDataSourceRows = groupDataSourcesForForm(parsedData.dataSources);
     const dsRows = page.locator('#group-datasources .row[data-source-row]');
-    await expect(dsRows, 'dataSources row count').toHaveCount(parsedData.dataSources.length, { timeout: 10_000 });
+    await expect(dsRows, 'dataSources row count').toHaveCount(expectedDataSourceRows.length, { timeout: 10_000 });
 
-    for (let i = 0; i < parsedData.dataSources.length; i++) {
+    for (let i = 0; i < expectedDataSourceRows.length; i++) {
       const dsRow = dsRows.nth(i);
-      const ref = parsedData.dataSources[i];
+      const expectedGroup = expectedDataSourceRows[i];
+      const ref = expectedGroup[0];
 
       await expect(
         dsRow.locator('textarea[name="datasource_description[]"]'),
         `dataSources[${i}].description`,
       ).toHaveValue(ref.description);
 
-      if (ref.satelliteValueName) {
+      const expectedSatelliteNames = expectedGroup
+        .map(dataSource => dataSource.satelliteValueName)
+        .filter((name): name is string => Boolean(name));
+      if (expectedSatelliteNames.length > 0) {
         const tagContents = await dsRow.locator('.tagify__tag').allTextContents();
-        expect(tagContents.join('\n'), `dataSources[${i}].satelliteValueName`).toContain(
-          ref.satelliteValueName,
-        );
+        expect(tagContents, `dataSources[${i}].satellite tag count`).toHaveLength(expectedSatelliteNames.length);
+        for (const expectedName of expectedSatelliteNames) {
+          expect(tagContents.join('\n'), `dataSources[${i}].satelliteValueName`).toContain(expectedName);
+        }
       }
 
       if (ref.details) {
