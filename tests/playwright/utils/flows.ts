@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { SELECTORS } from './constants';
 import exampleData from './inputDataEndToEnd.json';
 
@@ -121,6 +121,15 @@ export async function completeExtendedMultipleEntries(page: Page) {
 }
 
 // ============ Helper Functions ============
+
+/**
+ * Places a control away from the fixed footer before interacting with it.
+ * Playwright's automatic minimal scroll can leave controls underneath the
+ * footer in Firefox, even though they technically intersect the viewport.
+ */
+async function scrollToViewportCenter(locator: Locator) {
+  await locator.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+}
 
 /**
  * Waits for a Bootstrap accordion collapse transition to complete.
@@ -467,6 +476,15 @@ export { exampleData };
 export async function fillGEM(page: Page) {
   const DS_ROW = '#group-datasources .row[data-source-row]';
 
+  // ggmsDatasources registers the delegated add-row handler before enhancing
+  // the first satellite input with Tagify. Use that enhancement as the ready
+  // signal so a fast browser cannot click before the handler exists.
+  await page.waitForFunction(
+    () => Boolean((document.querySelector('input[name="satellite_platform[]"]') as
+      (HTMLInputElement & { _tagify?: unknown }) | null)?._tagify),
+    { timeout: 10_000 },
+  );
+
   // Wait for dynamically-loaded selects to be populated from the API
   await page.waitForFunction(
     () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
@@ -515,7 +533,9 @@ export async function fillGEM(page: Page) {
   // ── Model Type: Static ────────────────────────────────────────────────────
   await page.locator('#input-model-type').selectOption('Static');
   await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
-  await page.locator('#checkbox-time-variable').check();
+  const timeVariableCheckbox = page.locator('#checkbox-time-variable');
+  await scrollToViewportCenter(timeVariableCheckbox);
+  await timeVariableCheckbox.check();
   await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
   await page.locator('#input-static-description').fill('Static time-variable description');
 
@@ -545,7 +565,9 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-topo-density-details-mantle').fill('PREM mantle');
 
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
-  await page.locator('#button-datasource-add').click();
+  const addDataSourceButton = page.locator('#button-datasource-add');
+  await scrollToViewportCenter(addDataSourceButton);
+  await addDataSourceButton.click();
   await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
