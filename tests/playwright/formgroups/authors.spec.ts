@@ -9,15 +9,26 @@ async function expectAuthorAffiliations(row, expectedNames: string[]) {
   }
 }
 
-async function addFirstAuthor(page) {
+function authorRows(page: Page) {
+  return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
+}
+
+async function addAuthor(page: Page) {
+  const rows = authorRows(page);
+  const previousCount = await rows.count();
   await page.locator('#button-author-add').click();
-  const authorRow = page.locator(`${SELECTORS.formGroups.authors} [data-creator-row]`).first();
+  await expect(rows).toHaveCount(previousCount + 1);
+  const authorRow = rows.nth(previousCount);
   await expect(authorRow).toBeVisible();
   return authorRow;
 }
 
-function authorRows(page: Page) {
-  return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
+async function addFirstAuthor(page: Page) {
+  return addAuthor(page);
+}
+
+async function removeAuthor(row: Locator) {
+  await row.locator('.removeButton').click();
 }
 
 function authorCard(page: Page) {
@@ -396,6 +407,38 @@ test.describe('Author(s) form group', () => {
 
     const authorRow = await addFirstAuthor(page);
     await expectPersonHelpIcons(authorRow, true);
+  });
+
+  test('toggling help does not break help icon visibility', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('helpStatus', 'help-off');
+    });
+    await navigateToHome(page);
+
+    const firstAuthor = await addAuthor(page);
+    await expectPersonHelpIcons(firstAuthor, false);
+
+    await enableHelp(page);
+    await expectPersonHelpIcons(firstAuthor, true);
+
+    const secondAuthor = await addAuthor(page);
+    await expectPersonHelpIcons(firstAuthor, true);
+    await expectPersonFieldHelp(secondAuthor, { orcid: false, contact: true });
+    await expectAffiliationHelp(secondAuthor, false);
+
+    await disableHelp(page);
+    await expectPersonHelpIcons(firstAuthor, false);
+    await expectPersonFieldHelp(secondAuthor, false);
+    await expectAffiliationHelp(secondAuthor, false);
+
+    await enableHelp(page);
+    await expectPersonHelpIcons(firstAuthor, true);
+    await expectPersonFieldHelp(secondAuthor, { orcid: false, contact: true });
+    await expectAffiliationHelp(secondAuthor, false);
+
+    await removeAuthor(firstAuthor);
+    await expect(authorRows(page)).toHaveCount(1);
+    await expectPersonHelpIcons(authorRows(page).nth(0), true);
   });
 
   test('shows contact help on the second person when only that person is a contact', async ({ page }) => {
