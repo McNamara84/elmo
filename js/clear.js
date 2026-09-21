@@ -138,7 +138,7 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
-    // === GGMs Definition fields (GGMsDefinition.html) ===
+    // === GGMs Definition fields (ggms-definition.html) ===
     // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
     // the delegated handler in ggmsModelTypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.

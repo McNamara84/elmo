@@ -12,7 +12,7 @@ const path = require('path');
 const REPO_ROOT = path.resolve(__dirname, '../..');
 
 const GGM_FORMGROUP_FILES = [
-  'formgroups/GGMsDefinition.html',
+  'formgroups/ggms-definition.html',
   'formgroups/ggms-properties.html',
   'formgroups/GGMsModelTypes.html',
   'formgroups/ggms-data-sources.html',

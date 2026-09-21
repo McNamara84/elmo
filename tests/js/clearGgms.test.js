@@ -43,7 +43,7 @@ describe('clear.js – GGMs / ICGEM specific behaviour', () => {
                 name="descriptionOther">Other text</textarea>
         </div>
 
-        <!-- ── GGMs Definition (GGMsDefinition.html) ── -->
+        <!-- ── GGMs Definition (ggms-definition.html) ── -->
         <div id="group-ggmspropertiesessential">
             <div class="row">
                 <select id="input-model-type" name="model_type">
