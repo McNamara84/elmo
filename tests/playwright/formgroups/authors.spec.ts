@@ -16,12 +16,6 @@ async function addFirstAuthor(page) {
   return authorRow;
 }
 
-const PERSON_HELP_SECTION_IDS = [
-  'help-author-orcid',
-  'help-contactperson-email',
-  'help-contactperson-website',
-] as const;
-
 function authorRows(page: Page) {
   return page.locator(`${SELECTORS.formGroups.authors} [data-author-entry-row]`);
 }
@@ -68,17 +62,28 @@ async function expectAffiliationHelp(row: Locator, visible: boolean) {
   }
 }
 
-async function expectPersonFieldHelp(row: Locator, visible: boolean) {
-  await setContactPerson(row, true);
-  for (const helpSectionId of PERSON_HELP_SECTION_IDS) {
-    const icon = row.locator(`[data-help-section-id="${helpSectionId}"]`);
-    await expect(icon).toHaveCount(1);
-    if (visible) {
-      await expect(icon).toBeVisible();
-    } else {
-      await expect(icon).toBeHidden();
-    }
+async function expectHelpSection(row: Locator, helpSectionId: string, visible: boolean) {
+  const icon = row.locator(`[data-help-section-id="${helpSectionId}"]`);
+  await expect(icon).toHaveCount(1);
+  if (visible) {
+    await expect(icon).toBeVisible();
+  } else {
+    await expect(icon).toBeHidden();
   }
+}
+
+async function expectPersonFieldHelp(
+  row: Locator,
+  visible: boolean | { orcid: boolean; contact: boolean }
+) {
+  const visibility = typeof visible === 'boolean'
+    ? { orcid: visible, contact: visible }
+    : visible;
+
+  await setContactPerson(row, true);
+  await expectHelpSection(row, 'help-author-orcid', visibility.orcid);
+  await expectHelpSection(row, 'help-contactperson-email', visibility.contact);
+  await expectHelpSection(row, 'help-contactperson-website', visibility.contact);
   // Contact person counts as content and locks the type switcher.
   await setContactPerson(row, false);
 }
@@ -382,6 +387,33 @@ test.describe('Author(s) form group', () => {
     expect(isValid).toBe(false);
   });
 
+  test('shows person help icons when a person is added after Help On', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('helpStatus', 'help-off');
+    });
+    await navigateToHome(page);
+    await enableHelp(page);
+
+    const authorRow = await addFirstAuthor(page);
+    await expectPersonHelpIcons(authorRow, true);
+  });
+
+  test('shows contact help on the second person when only that person is a contact', async ({ page }) => {
+    await page.locator('#button-author-add').click();
+    await page.locator('#button-author-add').click();
+    await enableHelp(page);
+
+    const firstAuthor = authorRows(page).nth(0);
+    const secondAuthor = authorRows(page).nth(1);
+    await setContactPerson(secondAuthor, true);
+
+    await expectHelpSection(firstAuthor, 'help-author-orcid', true);
+    await expectHelpSection(firstAuthor, 'help-contactperson-email', false);
+    await expectHelpSection(secondAuthor, 'help-author-orcid', false);
+    await expectHelpSection(secondAuthor, 'help-contactperson-email', true);
+    await expectHelpSection(secondAuthor, 'help-contactperson-website', true);
+  });
+
   test('keeps author help icons in sync when toggling help and switching person/institution', async ({ page }) => {
     await addFirstAuthor(page);
 
@@ -449,8 +481,8 @@ test.describe('Author(s) form group', () => {
       // First author should have all person help icons visible
       await expectPersonHelpIcons(firstAuthor, true);
 
-      // Later copies of the same help kind stay hidden
-      await expectPersonFieldHelp(secondAuthor, false);
+      // ORCID stays on the first person; contact help follows the first shown contact fields
+      await expectPersonFieldHelp(secondAuthor, { orcid: false, contact: true });
       await expectAffiliationHelp(secondAuthor, false);
     });
 
@@ -478,7 +510,7 @@ test.describe('Author(s) form group', () => {
       await enableHelp(page);
 
       await expectPersonHelpIcons(authorRows(page).nth(0), true);
-      await expectPersonFieldHelp(authorRows(page).nth(1), false);
+      await expectPersonFieldHelp(authorRows(page).nth(1), { orcid: false, contact: true });
       await expectAffiliationHelp(authorRows(page).nth(1), false);
     });
 
@@ -506,7 +538,7 @@ test.describe('Author(s) form group', () => {
       await switchRowType(authorRows(page).nth(0), 'person');
 
       await expectPersonHelpIcons(authorRows(page).nth(0), true);
-      await expectPersonFieldHelp(authorRows(page).nth(1), false);
+      await expectPersonFieldHelp(authorRows(page).nth(1), { orcid: false, contact: true });
       await expectAffiliationHelp(authorRows(page).nth(1), false);
     });
 
