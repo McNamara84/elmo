@@ -200,7 +200,7 @@ $GLOBALS['expectedXmlNoNamespace'] = <<<XML
   <resourceType resourceTypeGeneral=""/>
   <subjects>
     <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
-    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
   </subjects>
   <contributors>
     <contributor contributorType="DataCurator">
@@ -759,7 +759,7 @@ $GLOBALS['expectedXmlWithNamespace'] = <<<'XML'
     <dace:resourceType resourceTypeGeneral="Dataset">Dataset</dace:resourceType>
     <dace:subjects>
       <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</dace:subject>
-      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
     </dace:subjects>
     <dace:contributors>
       <dace:contributor contributorType="DataCurator">
@@ -819,7 +819,7 @@ $GLOBALS['expectedXmlWithDataWithNamespace'] = <<<'XML'
       <dace:subject>icgem</dace:subject>
       <dace:subject>example</dace:subject>
       <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</dace:subject>
-      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
+      <dace:subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</dace:subject>
     </dace:subjects>
     <dace:contributors>
       <dace:contributor contributorType="Producer">
@@ -899,7 +899,7 @@ $GLOBALS['expectedXmlWithDataNoNamespace'] = <<<'XML'
       <subject>free keyword</subject>
       <subject>test1234</subject>
       <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
-      <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
+      <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6">EARTH SCIENCE &gt; SOLID EARTH &gt; GRAVITY/GRAVITATIONAL FIELD &gt; GRAVITATIONAL FIELD</subject>
     </subjects>
     <contributors>
       <contributor contributorType="DataCurator">
@@ -1284,7 +1284,7 @@ XML);
         $xml = $this->minimalEnvelope(<<<'XML'
   <subjects>
     <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614">EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS &gt; GEOID CHARACTERISTICS</subject>
-    <subject valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa">GRAVITY/GRAVITATIONAL FIELD</subject>
+    <subject valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6">GRAVITY/GRAVITATIONAL FIELD</subject>
   </subjects>
   <contributors/>
 XML);
@@ -1292,7 +1292,7 @@ XML);
         $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
-        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6')));
         $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
     }
 
@@ -1308,7 +1308,7 @@ XML);
         $result = $this->applyAdditions($xml);
 
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
-        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6')));
         $this->assertSame(2, $this->countXpath($result, '//*[local-name()="subject"]'));
     }
 
@@ -1325,7 +1325,7 @@ XML);
 
         $this->assertSame(1, $this->countXpath($result, '//*[local-name()="subject"][normalize-space()="GEOID CHARACTERISTICS"]'));
         $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
-        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(1, $this->countXpath($result, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6')));
         $this->assertSame(3, $this->countXpath($result, '//*[local-name()="subject"]'));
     }
 
@@ -1338,7 +1338,7 @@ XML);
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataCurator', 'E. Sinem', 'Ince')));
         $this->assertSame(1, $this->countXpath($twice, $this->contributorQuery('DataManager', 'Sven', 'Reißland')));
         $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/6bbbf7b0-434b-4dbc-9fe8-e5e31fe99614')));
-        $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa')));
+        $this->assertSame(1, $this->countXpath($twice, $this->subjectUriQuery('https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6')));
         $this->assertSame(1, $this->countXpath($twice, '//*[local-name()="format"][normalize-space()="ICGEM-format"]'));
     }
 
