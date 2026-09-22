@@ -116,6 +116,15 @@ test('groups consecutive satellite keywords with empty descriptions into one row
     return Boolean((window as any).icgemModule?.loadIcgemXmlToForm && input?._tagify);
   }, undefined, { timeout: 60_000 });
 
+  const importConsoleMessages: string[] = [];
+  const importPageErrors: string[] = [];
+  page.on('console', message => {
+    if (message.type() === 'warning' || message.type() === 'error') {
+      importConsoleMessages.push(`${message.type()}: ${message.text()}`);
+    }
+  });
+  page.on('pageerror', error => importPageErrors.push(error.message));
+
   await loadIcgemDataIntoForm(page, ICGEM_XML);
 
   const rows = page.locator('#group-datasources .row[data-source-row]');
@@ -140,4 +149,12 @@ test('groups consecutive satellite keywords with empty descriptions into one row
     expect.objectContaining({ value: PLATFORM.goce.path, id: PLATFORM.goce.id }),
     expect.objectContaining({ value: PLATFORM.lageos.path, id: PLATFORM.lageos.id }),
   ]);
+  expect(
+    importConsoleMessages,
+    `Unexpected browser console messages during ICGEM import:\n${importConsoleMessages.join('\n')}`,
+  ).toEqual([]);
+  expect(
+    importPageErrors,
+    `Unexpected JavaScript errors during ICGEM import:\n${importPageErrors.join('\n')}`,
+  ).toEqual([]);
 });
