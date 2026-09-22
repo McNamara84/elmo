@@ -343,6 +343,23 @@ describe('relatedwork.js card stack', () => {
       .toEqual(['second', 'first']);
   });
 
+  test('hides the drag handle tooltip before pointer and sortable dragging', () => {
+    const hide = jest.fn();
+    window.bootstrap.Tooltip.getInstance = jest.fn(() => ({ hide }));
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' }
+    ]);
+    const handle = $('[data-related-work-drag]').first();
+    const sortableOptions = $.fn.sortable.mock.calls.find((call) => typeof call[0] === 'object')[0];
+
+    handle.trigger('pointerdown');
+    sortableOptions.start(null, { item: handle.closest('[data-related-work-entry]') });
+
+    expect(window.bootstrap.Tooltip.getInstance).toHaveBeenCalledTimes(2);
+    expect(window.bootstrap.Tooltip.getInstance).toHaveBeenCalledWith(handle[0]);
+    expect(hide).toHaveBeenCalledTimes(2);
+  });
+
   test('keeps help buttons on the current first card after reorder and removal', () => {
     window.relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },

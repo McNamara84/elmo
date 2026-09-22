@@ -283,6 +283,21 @@ $(document).ready(function () {
     });
   }
 
+  function hideTooltip(element) {
+    if (
+      !element
+      || !window.bootstrap
+      || typeof window.bootstrap.Tooltip !== 'function'
+      || typeof window.bootstrap.Tooltip.getInstance !== 'function'
+    ) {
+      return;
+    }
+    const tooltip = window.bootstrap.Tooltip.getInstance(element);
+    if (tooltip && typeof tooltip.hide === 'function') {
+      tooltip.hide();
+    }
+  }
+
   function selectedText(select) {
     const value = String(select.val() || '').trim();
     return value === '' ? '' : String(select.find('option:selected').text() || '').trim();
@@ -750,6 +765,9 @@ $(document).ready(function () {
       axis: 'y',
       tolerance: 'pointer',
       containment: 'parent',
+      start: function (event, ui) {
+        hideTooltip(ui.item.find('[data-related-work-drag]')[0]);
+      },
       update: updatePayload
     });
   }
@@ -761,6 +779,10 @@ $(document).ready(function () {
   stack.on('click', '[data-related-work-toggle-edit]', function () {
     const row = $(this).closest('[data-related-work-entry]');
     setExpanded(row, !row.find('[data-related-work-edit-panel]').hasClass('show'));
+  });
+
+  stack.on('pointerdown', '[data-related-work-drag]', function () {
+    hideTooltip(this);
   });
 
   stack.on('keydown', '[data-related-work-drag]', function (event) {

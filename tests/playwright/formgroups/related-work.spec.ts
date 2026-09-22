@@ -309,12 +309,17 @@ test.describe('Related work form group', () => {
       { entryKey: 'third', identifier: 'third', relation: 'IsPreviousVersionOf', relationId: 'isPreviousVersionOf', identifierType: 'Handle' }
     ]));
 
-    const sourceBox = await cards.nth(0).locator('[data-related-work-drag]').boundingBox();
+    const sourceHandle = cards.nth(0).locator('[data-related-work-drag]');
+    await sourceHandle.hover();
+    await expect(page.locator('.tooltip.show')).toBeVisible();
+
+    const sourceBox = await sourceHandle.boundingBox();
     const targetBox = await cards.nth(2).boundingBox();
     expect(sourceBox).not.toBeNull();
     expect(targetBox).not.toBeNull();
     await page.mouse.move(sourceBox!.x + sourceBox!.width / 2, sourceBox!.y + sourceBox!.height / 2);
     await page.mouse.down();
+    await expect(page.locator('.tooltip.show')).toHaveCount(0);
     await page.mouse.move(sourceBox!.x + sourceBox!.width / 2, sourceBox!.y + sourceBox!.height, { steps: 4 });
     await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + targetBox!.height - 4, { steps: 12 });
     await page.mouse.up();
