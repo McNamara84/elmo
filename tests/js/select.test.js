@@ -155,6 +155,26 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
+  test('updateIdentifierType recognizes DOI resolver URLs when the vocabulary pattern only accepts bare DOIs', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'^https?:\\/\\/.+$'},
+        {name:'DOI', pattern:'^10\\.\\d{4,9}\\/.+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('https://doi.org/10.1080/10509585.2015.1092083');
+
+    await window.updateIdentifierType(input[0]);
+
+    expect(select.val()).toBe('DOI');
+    expect(input.attr('pattern')).toBe(
+      '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$'
+    );
+    expect(input[0].checkValidity()).toBe(true);
+  });
+
   test('updateIdentifierType ajax error resets select', async () => {
     $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');

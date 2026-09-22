@@ -701,6 +701,8 @@ const IDENTIFIER_TYPE_PRIORITY = {
   DOI: 10,
   URL: 0,
 };
+const DOI_IDENTIFIER_PATTERN = '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$';
+const DOI_IDENTIFIER_REGEX = new RegExp(DOI_IDENTIFIER_PATTERN, 'i');
 const IDENTIFIER_TYPE_AUTO_UPDATE_KEY = 'elmoIdentifierTypeAutoUpdate';
 const IDENTIFIER_TYPE_MANUAL_SELECTION_KEY = 'elmoIdentifierTypeManualSelection';
 const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifier';
@@ -796,6 +798,15 @@ function updateValidationPattern(selectElement) {
     return;
   }
 
+  // DOI resolver URLs are valid input and are reduced to bare DOI names on save.
+  // Keep browser validation aligned even when the vocabulary pattern only
+  // describes the canonical bare DOI representation.
+  if (selectedType.toUpperCase() === 'DOI') {
+    identifierPatternCache.set(selectedType, DOI_IDENTIFIER_PATTERN);
+    applyPattern(DOI_IDENTIFIER_PATTERN);
+    return;
+  }
+
   if (identifierPatternCache.has(selectedType)) {
     applyPattern(identifierPatternCache.get(selectedType));
     return;
@@ -845,6 +856,11 @@ function setDetectedIdentifierType(selectElement, type) {
 }
 
 function detectIdentifierType(identifier, identifierTypes) {
+  const doiType = identifierTypes.find(type => String(type.name || '').toUpperCase() === 'DOI');
+  if (doiType && DOI_IDENTIFIER_REGEX.test(String(identifier || '').trim())) {
+    return doiType;
+  }
+
   const matchingTypes = identifierTypes.filter(type => {
     try {
       let pattern = normalizeIdentifierPattern(type.pattern);

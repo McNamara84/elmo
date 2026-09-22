@@ -352,7 +352,15 @@ test.describe('Related work form group', () => {
     await identifier.fill('10.5555/zenodo.1234567');
     await identifier.blur();
     await expect(identifierType).toHaveValue('DOI');
-    await expect(identifier).toHaveAttribute('pattern', '^10\\.\\d{4,9}\\/.+$');
+    await expect(identifier).toHaveAttribute(
+      'pattern',
+      '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$'
+    );
+
+    await identifier.fill('https://doi.org/10.1080/10509585.2015.1092083');
+    await identifier.blur();
+    await expect(identifierType).toHaveValue('DOI');
+    expect(await identifier.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
 
     await identifier.fill('');
     await identifierType.selectOption('');
