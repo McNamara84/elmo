@@ -29,6 +29,14 @@ function getAuthorStackController() {
     : null;
 }
 
+function getRelatedWorkStackController() {
+  return typeof window !== 'undefined'
+    && window.relatedWorkStack
+    && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+    ? window.relatedWorkStack
+    : null;
+}
+
 function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
@@ -711,23 +719,31 @@ function prefillRelatedWorks(relatedIdentifiers) {
     return true;
   });
 
-  entries.forEach((entry, i) => {
-    const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
+  const relatedWorkStack = getRelatedWorkStackController();
+  if (relatedWorkStack) {
+    relatedWorkStack.setRelatedWorks(entries.map(entry => ({
+      identifier: entry.relatedIdentifier || '',
+      identifierType: entry.relatedIdentifierType || '',
+      relation: entry.relationType || '',
+      relationId: ''
+    })));
+  } else {
+    entries.forEach((entry, i) => {
+      const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
 
-    $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
-    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
+      $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
+      $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
 
-    // Match relation by visible text; DataCite uses CamelCase (e.g. "IsDocumentedBy")
-    // while ELMO uses spaced form (e.g. "Is Documented By").
-    const normalizedRelation = normalizeRelationType(entry.relationType);
-    $lastRow.find('select[name="relation[]"]:first option').filter(function () {
-      return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
-    }).prop('selected', true);
+      const normalizedRelation = normalizeRelationType(entry.relationType);
+      $lastRow.find('select[name="relation[]"]:first option').filter(function () {
+        return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
+      }).prop('selected', true);
 
-    if (i < entries.length - 1) {
-      $('#button-relatedwork-add').click();
-    }
-  });
+      if (i < entries.length - 1) {
+        $('#button-relatedwork-add').click();
+      }
+    });
+  }
 
   // Handle Used Instruments
   if (showUsedInstruments) {
@@ -905,6 +921,9 @@ async function applyDoiPrefill(attributes, lookupService) {
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
+  }
+  if (window.elmo && window.elmo.dropdownsReady) {
+    await window.elmo.dropdownsReady;
   }
 
   // Synchronous prefills

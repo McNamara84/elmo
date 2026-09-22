@@ -284,36 +284,42 @@ function validateSpatialTemporalCoverageRequirements() {
  * Validates the Related Work section of the form(only when clicking submit).
  * Ensures all fields ("Relation", "Identifier", and "Identifier Type") are required if any of them are filled.
  */
-function validateRelatedWorkRequirements() {
-    $('#group-relatedwork').children('.row').each(function () {
-        var row = $(this);
-        // Defines the relevant fields for the related work section
-        var fields = {
-            relation: row.find('[id^="input-relatedwork-relation"]'),
-            identifier: row.find('[id^="input-relatedwork-identifier"]'),
-            type: row.find('[id^="input-relatedwork-identifiertype"]'),
+function validateRelatedWorkRequirements(options = {}) {
+    const revealIncomplete = options === true || options.revealIncomplete === true;
+    let entries = $('#group-relatedwork [data-related-work-entry]');
+    if (!entries.length) {
+        entries = $('#group-relatedwork').children('.row');
+    }
+
+    entries.each(function () {
+        const row = $(this);
+        const fields = {
+            relation: row.find('select[name="relation[]"], [id^="input-relatedwork-relation"]').first(),
+            identifier: row.find('input[name="rIdentifier[]"], [id^="input-relatedwork-identifier"]').first(),
+            type: row.find('select[name="rIdentifierType[]"], [id^="input-relatedwork-identifiertype"]').first(),
         };
+        const fieldList = Object.values(fields).filter(field => field.length);
+        const hasValue = field => String(field.val() || '').trim() !== '';
+        const isAnyFieldFilled = fieldList.some(hasValue);
+        const isIncomplete = isAnyFieldFilled && fieldList.some(field => !hasValue(field));
 
-        // Checks if any field in the row is filled
-        var isAnyFieldFilled = Object.values(fields).some(function (field) {
-            return field.val() && field.val().trim() !== '';
-        });
-
-        // Sets or removes the 'required' attribute based on the fill status
         if (isAnyFieldFilled) {
-            // Diese drei Felder sollen beim Submit required sein
-            fields.relation.addClass('js-required-on-submit');
-            fields.identifier.addClass('js-required-on-submit');
-            fields.type.addClass('js-required-on-submit');
+            fieldList.forEach(field => field.addClass('js-required-on-submit'));
         } else {
-            // Zeile leer: nicht submit-pflichtig, altes required aufräumen
-            fields.relation.removeClass('js-required-on-submit').removeAttr('required');
-            fields.identifier.removeClass('js-required-on-submit').removeAttr('required');
-            fields.type.removeClass('js-required-on-submit').removeAttr('required');
+            fieldList.forEach(field => field.removeClass('js-required-on-submit').removeAttr('required'));
+        }
+
+        row.attr('data-related-work-validation-incomplete', isIncomplete ? 'true' : 'false');
+        if (revealIncomplete && isIncomplete) {
+            if (window.relatedWorkStack && typeof window.relatedWorkStack.expandEntry === 'function') {
+                window.relatedWorkStack.expandEntry(row[0], { focus: false });
+            } else {
+                row.find('[data-related-work-edit-panel]').addClass('show').attr('aria-hidden', 'false');
+                row.find('[data-related-work-toggle-edit]').attr('aria-expanded', 'true');
+            }
         }
     });
-
-};
+}
 
 
 /**
@@ -1033,6 +1039,7 @@ $(document).on('change',
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         validateSpatialTemporalCoverageRequirements,
+        validateRelatedWorkRequirements,
         validateAllMandatoryFields,
         validateTopographicModelTypeRequirements
     };

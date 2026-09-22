@@ -30,6 +30,43 @@ http://www.altova.com/mapforce
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	<!-- Explicit compatibility mapping for known human-readable legacy relation labels. -->
+	<xsl:template name="datacite-relation-type">
+		<xsl:param name="value"/>
+		<xsl:choose>
+			<xsl:when test="$value = 'Is Cited By'">IsCitedBy</xsl:when>
+			<xsl:when test="$value = 'Is Supplement To'">IsSupplementTo</xsl:when>
+			<xsl:when test="$value = 'Is Supplemented By'">IsSupplementedBy</xsl:when>
+			<xsl:when test="$value = 'Is Continued By'">IsContinuedBy</xsl:when>
+			<xsl:when test="$value = 'Is New Version Of'">IsNewVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Previous Version Of'">IsPreviousVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Part Of'">IsPartOf</xsl:when>
+			<xsl:when test="$value = 'Has Part'">HasPart</xsl:when>
+			<xsl:when test="$value = 'Is Published In'">IsPublishedIn</xsl:when>
+			<xsl:when test="$value = 'Is Referenced By'">IsReferencedBy</xsl:when>
+			<xsl:when test="$value = 'Is Documented By'">IsDocumentedBy</xsl:when>
+			<xsl:when test="$value = 'Is Compiled By'">IsCompiledBy</xsl:when>
+			<xsl:when test="$value = 'Is Variant Form Of'">IsVariantFormOf</xsl:when>
+			<xsl:when test="$value = 'Is Original Form Of'">IsOriginalFormOf</xsl:when>
+			<xsl:when test="$value = 'Is Identical To'">IsIdenticalTo</xsl:when>
+			<xsl:when test="$value = 'Has Metadata'">HasMetadata</xsl:when>
+			<xsl:when test="$value = 'Is Metadata For'">IsMetadataFor</xsl:when>
+			<xsl:when test="$value = 'Is Reviewed By'">IsReviewedBy</xsl:when>
+			<xsl:when test="$value = 'Is Derived From'">IsDerivedFrom</xsl:when>
+			<xsl:when test="$value = 'Is Source Of'">IsSourceOf</xsl:when>
+			<xsl:when test="$value = 'Is Described By'">IsDescribedBy</xsl:when>
+			<xsl:when test="$value = 'Has Version'">HasVersion</xsl:when>
+			<xsl:when test="$value = 'Is Version Of'">IsVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Required By'">IsRequiredBy</xsl:when>
+			<xsl:when test="$value = 'Is Obsoleted By'">IsObsoletedBy</xsl:when>
+			<xsl:when test="$value = 'Is Collected By'">IsCollectedBy</xsl:when>
+			<xsl:when test="$value = 'Has Translation'">HasTranslation</xsl:when>
+			<xsl:when test="$value = 'Is Translation Of'">IsTranslationOf</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$value"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
@@ -520,7 +557,9 @@ http://www.altova.com/mapforce
 									<xsl:value-of select="*[local-name()='IdentifierType' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
 								</xsl:attribute>
 								<xsl:attribute name="relationType" namespace="">
-									<xsl:value-of select="*[local-name()='Relation' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
+									<xsl:call-template name="datacite-relation-type">
+										<xsl:with-param name="value" select="*[local-name()='Relation' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
+									</xsl:call-template>
 								</xsl:attribute>
 								<xsl:value-of select="*[local-name()='Identifier' and namespace-uri()='']"/>
 							</relatedIdentifier>

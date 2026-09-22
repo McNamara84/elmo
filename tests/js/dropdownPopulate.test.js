@@ -93,8 +93,8 @@ function buildPageDom() {
     <select id="input-resourceinformation-language"></select>
     <select id="input-resourceinformation-titletype"></select>
     <select id="input-rights-license"></select>
-    <select id="input-relatedwork-relation"></select>
-    <select id="input-relatedwork-identifiertype"></select>
+    <select id="input-relatedwork-relation" name="relation[]"></select>
+    <select id="input-relatedwork-identifiertype" name="rIdentifierType[]"></select>
   `;
 }
 
@@ -256,6 +256,59 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect($identifierType.prop('disabled')).toBe(false);
     expect(options[0]).toBe('Choose...');
     expect(options.slice(1)).toEqual(['ARK', 'arXiv', 'bibcode']);
+  });
+
+  test('reuses cached Related Work vocabularies for a card added later', () => {
+    const fetchCount = global.fetch.mock.calls.length;
+    const card = $(`
+      <div data-related-work-entry>
+        <select name="relation[]"></select>
+        <select name="rIdentifierType[]"></select>
+      </div>
+    `).appendTo(document.body);
+
+    selectModule.applyRelatedWorkDropdowns(card[0]);
+
+    expect(card.find('select[name="relation[]"] option').map((_, option) => $(option).text()).get()).toEqual([
+      'Choose...', 'Cites', 'Collects', 'Compiles', 'Continues', 'Describes'
+    ]);
+    expect(card.find('select[name="rIdentifierType[]"] option').map((_, option) => $(option).text()).get()).toEqual([
+      'Choose...', 'ARK', 'arXiv', 'bibcode'
+    ]);
+    expect(global.fetch).toHaveBeenCalledTimes(fetchCount);
+  });
+
+  test('stores a canonical relation name separately from its visible label', () => {
+    selectModule.populateRelationsDropdownWithData({
+      relations: [{ id: 42, name: 'IsReferencedBy', label: 'Is Referenced By', description: '' }]
+    });
+
+    const option = $('#input-relatedwork-relation option[value="42"]');
+    expect(option.text()).toBe('Is Referenced By');
+    expect(option.attr('data-relation-name')).toBe('IsReferencedBy');
+  });
+
+  test('uses the cached identifier type patterns for Card auto-detection', () => {
+    selectModule.populateIdentifierTypesDropdownWithData({
+      identifierTypes: [{ name: 'DOI', pattern: '^10\\..+', description: 'Digital Object Identifier' }]
+    });
+    const card = $(`
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]" value="10.5880/example"></div>
+        <div class="row"><select name="rIdentifierType[]"></select></div>
+      </div>
+    `).appendTo(document.body);
+    selectModule.applyRelatedWorkDropdowns(card[0]);
+    const detectionRequestCount = $.ajax.mock.calls.filter(([options]) =>
+      options && String(options.url || '').includes('identifiertypes/active')
+    ).length;
+
+    selectModule.updateIdentifierType(card.find('input')[0]);
+
+    expect(card.find('select').val()).toBe('DOI');
+    expect($.ajax.mock.calls.filter(([options]) =>
+      options && String(options.url || '').includes('identifiertypes/active')
+    )).toHaveLength(detectionRequestCount);
   });
 
   test('does not load funder data during dropdown setup', () => {

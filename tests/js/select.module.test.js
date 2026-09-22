@@ -140,12 +140,13 @@ describe('select module coverage', () => {
             expect(typeof selectModule.updateIdentifierType).toBe('function');
         });
 
-        test('exports debounce function', () => {
-            expect(typeof selectModule.debounce).toBe('function');
+        test('exports Related Work dropdown and pattern integration functions', () => {
+            expect(typeof selectModule.applyRelatedWorkDropdowns).toBe('function');
+            expect(typeof selectModule.updateValidationPattern).toBe('function');
         });
 
-        test('exports updateIdsAndNames function', () => {
-            expect(typeof selectModule.updateIdsAndNames).toBe('function');
+        test('exports debounce function', () => {
+            expect(typeof selectModule.debounce).toBe('function');
         });
 
         test('exports updateDataSourceIdsAndNames function', () => {
@@ -231,21 +232,6 @@ describe('select module coverage', () => {
             const urlPriority = selectModule.getIdentifierPriority('URL');
             // URL has priority 0, DOI has priority 10
             expect(urlPriority).toBeLessThan(doiPriority);
-        });
-    });
-
-    describe('updateIdsAndNames', () => {
-        test('can be called without errors', () => {
-            expect(() => {
-                selectModule.updateIdsAndNames();
-            }).not.toThrow();
-        });
-
-        test('updates IDs in related work rows', () => {
-            selectModule.updateIdsAndNames();
-            
-            const row = document.querySelector('#group-relatedwork .row');
-            expect(row).toBeTruthy();
         });
     });
 

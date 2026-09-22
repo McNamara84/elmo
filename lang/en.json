@@ -252,7 +252,16 @@
         "relation": "Relation",
         "identifierType": "Identifier type",
         "identifier": "Identifier",
-        "identifierInvalid": "Please enter a valid identifier."
+        "identifierInvalid": "Please enter a valid identifier.",
+        "addEntry": "Add related work",
+        "dragHandle": "Drag & drop or use arrow keys to change order",
+        "removeEntry": "Remove related work entry",
+        "editEntry": "Edit related work entry",
+        "collapseEntry": "Collapse related work entry",
+        "entrySingular": "entry",
+        "entryPlural": "entries",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Incomplete related work"
     },
     "funding": {
         "title": "Funding Reference",
@@ -356,7 +365,8 @@
             "errorToast": "Error loading file",
             "invalidFileType": "Please upload an XML or JSON-LD file.",
             "errorProcessing": "Error processing metadata file",
-            "errorReading": "Error reading file"
+            "errorReading": "Error reading file",
+            "relatedWorksProgress": "Related works {processed}/{total}"
         },
         "gfcUpload": {
             "uploadButton": "Fill in metadata fields from model file",

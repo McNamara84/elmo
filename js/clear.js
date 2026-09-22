@@ -120,8 +120,13 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
   
     // Reset Related Works
-    $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
-    $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
+    if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {
+        window.relatedWorkStack.setRelatedWorks([]);
+    } else {
+        // Legacy fallback for pages without the card stack controller.
+        $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+        $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');
+    }
 
     // Reset Used Instruments (Tagify)
     var instrumentsInput = document.getElementById('input-usedinstruments');
