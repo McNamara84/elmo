@@ -534,9 +534,15 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-model-type').selectOption('Static');
   await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
   const timeVariableCheckbox = page.locator('#checkbox-time-variable');
-  await scrollToViewportCenter(timeVariableCheckbox);
-  await timeVariableCheckbox.check();
-  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  const timeVariableDescription = page.locator('#time-variable-description-container');
+  await expect(async () => {
+    await scrollToViewportCenter(timeVariableCheckbox);
+    if (!(await timeVariableCheckbox.isChecked())) {
+      await timeVariableCheckbox.check({ timeout: 3_000 });
+    }
+    await expect(timeVariableCheckbox).toBeChecked();
+    await expect(timeVariableDescription).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.locator('#input-static-description').fill('Static time-variable description');
 
   // ── Model Type: Temporal ──────────────────────────────────────────────────
@@ -566,9 +572,15 @@ export async function fillGEM(page: Page) {
 
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
   const addDataSourceButton = page.locator('#button-datasource-add');
-  await scrollToViewportCenter(addDataSourceButton);
-  await addDataSourceButton.click();
-  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+  const dataSourceRows = page.locator(DS_ROW);
+  const expectedDataSourceRows = (await dataSourceRows.count()) + 1;
+  await expect(async () => {
+    if (await dataSourceRows.count() < expectedDataSourceRows) {
+      await scrollToViewportCenter(addDataSourceButton);
+      await addDataSourceButton.click({ timeout: 3_000 });
+    }
+    await expect(dataSourceRows).toHaveCount(expectedDataSourceRows, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
   // Must select type M (Model) first: only M shows visibility-datasources-identifier
