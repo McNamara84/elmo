@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test.describe('ERNIE API Connectivity', () => {
   test('ERNIE API is alive (direct connectivity test)', async ({ page }) => {
     // This test confirms that ERNIE_URL is reachable directly from CI environment
-    
+
     const ernieUrl = process.env.ERNIE_URL;
     if (!ernieUrl) {
       throw new Error('ERNIE_URL is not defined in the environment');
@@ -31,7 +31,7 @@ test.describe('ERNIE API Connectivity', () => {
     // 1. ELMO backend has ERNIE_URL and ERNIE_API_KEY configured
     // 2. ELMO can successfully call ERNIE API
     // 3. The response is valid
-    
+
     const response = await page.request.get('/api/v2/vocabs/descriptiontypes');
 
     // Should return 200 OK
@@ -59,7 +59,7 @@ test.describe('ERNIE API Connectivity', () => {
     expect(response.status()).toBe(200);
 
     const data = await response.json();
-    
+
     // Should be an array with items
     expect(Array.isArray(data)).toBe(true);
     expect(data.length).toBeGreaterThan(0);

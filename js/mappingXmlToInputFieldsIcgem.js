@@ -623,8 +623,8 @@ function populateIcgemContactPersons(xmlDoc) {
     });
   });
 
-  // Email lives in grav:contact because DataCite has no email field. 
-  // Who the contact *is* comes only from a DataCite ContactPerson contributor; 
+  // Email lives in grav:contact because DataCite has no email field.
+  // Who the contact *is* comes only from a DataCite ContactPerson contributor;
   if (contactPersons.length === 0) {
     console.warn("couldn't determine the contact person from metadata");
     return;

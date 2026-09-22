@@ -50,6 +50,9 @@ describe('doiPrefill.js', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     delete window.authorStack;
+    delete window.relatedWorkStack;
+    delete window.usedInstrumentsModule;
+    delete window.ELMO_FEATURES;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -712,6 +715,83 @@ describe('doiPrefill.js', () => {
       mod.prefillRelatedWorks([]);
       expect($('input[name="rIdentifier[]"]').val()).toBe('');
     });
+
+    test('passes all Related Works to the stack in one call', () => {
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://example.org/documentation',
+          relatedIdentifierType: 'URL',
+          relationType: 'IsDocumentedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+        {
+          identifier: 'https://example.org/documentation',
+          identifierType: 'URL',
+          relation: 'IsDocumentedBy',
+          relationId: '',
+        },
+      ]);
+    });
+
+    test('keeps IsCollectedBy out of the Related Work stack when Used Instruments are enabled', () => {
+      jest.useFakeTimers();
+      window.ELMO_FEATURES = { showUsedInstruments: true };
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+      window.usedInstrumentsModule = {
+        loadInstrumentsFromAPI: jest.fn(),
+        addInstrumentsByData: jest.fn(),
+      };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://hdl.handle.net/1234/instrument',
+          relatedIdentifierType: 'Handle',
+          relationType: 'IsCollectedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+      ]);
+      expect(window.usedInstrumentsModule.loadInstrumentsFromAPI).toHaveBeenCalledTimes(1);
+
+      jest.runAllTimers();
+      expect(window.usedInstrumentsModule.addInstrumentsByData).toHaveBeenCalledWith([
+        {
+          pid: 'https://hdl.handle.net/1234/instrument',
+          pidType: 'Handle',
+          name: 'https://hdl.handle.net/1234/instrument',
+          instrumentTypes: [],
+        },
+      ]);
+      jest.useRealTimers();
+    });
   });
 
   /* ── prefillRights ──────────────────────────────────────────── */
@@ -864,6 +944,39 @@ describe('doiPrefill.js', () => {
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');
       expect($('input[name="dateCreated"]').val()).toBe('2024-01-15');
+    });
+
+    test('waits for Related Work dropdowns before populating the stack', async () => {
+      let resolveDropdowns;
+      window.elmo.dropdownsReady = new Promise((resolve) => {
+        resolveDropdowns = resolve;
+      });
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      const applying = mod.applyDoiPrefill({
+        creators: [],
+        contributors: [],
+        descriptions: [],
+        dates: [],
+        geoLocations: [],
+        subjects: [],
+        relatedIdentifiers: [{
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        }],
+        fundingReferences: [],
+        titles: [],
+        rightsList: [],
+      });
+
+      await Promise.resolve();
+      expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+
+      resolveDropdowns();
+      await applying;
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
     });
   });
 });

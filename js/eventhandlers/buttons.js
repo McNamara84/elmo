@@ -177,7 +177,7 @@ $(document).ready(function () {
 
       // Apply specific rules
       validateFundingReferenceRequirements();
-      validateRelatedWorkRequirements();
+      validateRelatedWorkRequirements({ revealIncomplete: true });
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();

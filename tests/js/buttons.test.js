@@ -215,6 +215,7 @@ describe('buttons.js', () => {
     // Validators must run on Submit
     expect(window.validateFundingReferenceRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateRelatedWorkRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateRelatedWorkRequirements).toHaveBeenCalledWith({ revealIncomplete: true });
     expect(window.validateSpatialTemporalCoverageRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorOrganisationRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorPersonRequirements).toHaveBeenCalledTimes(1);

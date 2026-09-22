@@ -34,7 +34,7 @@ final class GGMsRegistrationMailTest extends TestCase
             'dataUrl' => 'https://example.com/data',
             'contactEmails' => ['author@example.com'],
             'submittedAt' => '30.07.2026 12:00:00',
-            'dataServicesEmailSent' => $dataServicesEmailSent,
+            'elmogemSendsDataServicesMail' => $dataServicesEmailSent,
             'icgemAddress' => 'icgem@gfz.de',
         ];
     }

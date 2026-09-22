@@ -48,6 +48,7 @@ describe('autosaveService', () => {
     delete global.bootstrap;
     delete window.elmo;
     delete window.authorStack;
+    delete window.relatedWorkStack;
   });
 
   test('throttles autosave cadence before persisting', async () => {
@@ -86,6 +87,32 @@ describe('autosaveService', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await jest.advanceTimersByTimeAsync(500);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('schedules autosave when the Related Works stack publishes a payload update', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 100,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+    service.start();
+    await Promise.resolve();
+    fetchMock.mockClear();
+
+    document.dispatchEvent(new CustomEvent('relatedWorksPayload:updated', {
+      detail: { payload: [] }
+    }));
+    await jest.advanceTimersByTimeAsync(100);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts');
   });
 
   test('updateStatus applies semantic classes and localized messages', () => {
@@ -386,6 +413,125 @@ describe('autosaveService', () => {
     expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
     expect(form.querySelector('input[name="familynames[]"]').value).toBe('');
     expect(form.querySelector('input[name="contacts[]"]').checked).toBe(false);
+  });
+
+  test('applyDraftValues restores relatedWorksPayload through the stack before legacy arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input name="title" value="">
+      <input type="hidden" name="relatedWorksPayload" value="[]">
+      <select name="relation[]"><option value="legacy">Legacy</option></select>
+      <input name="rIdentifier[]" value="">
+      <select name="rIdentifierType[]"><option value="DOI">DOI</option></select>
+    `;
+    const payload = JSON.stringify([
+      {
+        relation: 'IsReferencedBy',
+        relationId: '7',
+        identifier: '10.1234/current',
+        identifierType: 'DOI',
+        order: 0
+      }
+    ]);
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      title: 'Recovered dataset',
+      relatedWorksPayload: payload,
+      'relation[]': ['legacy'],
+      'rIdentifier[]': ['10.9999/stale'],
+      'rIdentifierType[]': ['DOI']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith(payload);
+    expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
+    expect(form.querySelector('input[name="rIdentifier[]"]').value).toBe('');
+  });
+
+  test('an explicitly empty relatedWorksPayload does not restore stale legacy rows', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input type="hidden" name="relatedWorksPayload" value="[]">
+      <input name="rIdentifier[]" value="">
+    `;
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      relatedWorksPayload: '[]',
+      'rIdentifier[]': ['10.9999/stale']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith('[]');
+    expect(form.querySelector('input[name="rIdentifier[]"]').value).toBe('');
+  });
+
+  test('falls back to legacy Related Work arrays when a draft has no structured payload', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input name="rIdentifier[]" value="">
+      <input name="rIdentifier[]" value="">
+    `;
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      'rIdentifier[]': ['10.1234/one', '10.1234/two']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+    expect(Array.from(form.querySelectorAll('input[name="rIdentifier[]"]')).map((input) => input.value))
+      .toEqual(['10.1234/one', '10.1234/two']);
+  });
+
+  test('waits for dropdown initialization before applying a pending Related Works restore', async () => {
+    let resolveDropdowns;
+    window.elmo = {
+      dropdownsReady: new Promise((resolve) => {
+        resolveDropdowns = resolve;
+      })
+    };
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+    service.pendingRestoreRecord = {
+      id: 'related-work-draft',
+      updatedAt: '2024-01-03T08:05:00Z',
+      payload: {
+        values: {
+          relatedWorksPayload: '[{"identifier":"10.1234/related"}]'
+        }
+      }
+    };
+
+    const restoration = service.applyPendingRestore();
+    await Promise.resolve();
+    expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+
+    resolveDropdowns();
+    await restoration;
+
+    expect(window.relatedWorkStack.setRelatedWorks)
+      .toHaveBeenCalledWith('[{"identifier":"10.1234/related"}]');
   });
 
   test('restores draft when user accepts prompt', async () => {

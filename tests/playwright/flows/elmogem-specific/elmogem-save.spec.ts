@@ -159,7 +159,6 @@ test.describe('ELMO-GEM save', () => {
     await page.getByTitle('Free Keyword').fill('metagem');
     await page.getByRole('textbox', { name: 'Funder' }).click();
     await page.getByRole('textbox', { name: 'Funder' }).fill('funder1');
-    await page.locator('#input-relatedwork-identifiertype').selectOption('DOI');
     await page.getByRole('textbox', { name: 'First Name', exact: true }).click();
     await page.getByRole('textbox', { name: 'First Name', exact: true }).fill('sasha');
     await page.locator('#group-contributororganisation').getByTitle('Role(s)').click();

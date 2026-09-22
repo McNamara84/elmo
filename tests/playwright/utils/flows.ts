@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { SELECTORS } from './constants';
 import exampleData from './inputDataEndToEnd.json';
 
@@ -121,6 +121,15 @@ export async function completeExtendedMultipleEntries(page: Page) {
 }
 
 // ============ Helper Functions ============
+
+/**
+ * Places a control away from the fixed footer before interacting with it.
+ * Playwright's automatic minimal scroll can leave controls underneath the
+ * footer in Firefox, even though they technically intersect the viewport.
+ */
+async function scrollToViewportCenter(locator: Locator) {
+  await locator.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+}
 
 /**
  * Waits for a Bootstrap accordion collapse transition to complete.
@@ -310,7 +319,7 @@ async function addFreeKeyword(page: Page, keyword: string) {
 
 /**
  * Adds a related work entry with relation, identifier, and identifier type.
- * Creates a new row if index > 0, then fills in the related work details.
+ * Creates rows until the requested zero-based index exists, then fills in the related work details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the related work entry (0-based)
  * @param {Object} data - The related work data object
@@ -324,15 +333,16 @@ async function addRelatedWork(
   index: number,
   data: { identifier: string; type: string; relation: string }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  const relatedWorkRows = page.locator('[related-work-row]');
+  while (await relatedWorkRows.count() <= index) {
+    const newRowIndex = await relatedWorkRows.count();
+    // Related Work starts empty, so create every row up to the requested index.
     await page.locator('#button-relatedwork-add').click();
-    // Wait for the new related work row to be visible
-    await page.locator('[related-work-row]').nth(index).waitFor({ state: 'visible' });
+    await relatedWorkRows.nth(newRowIndex).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific related work row
-  const relatedWorkRow = page.locator('[related-work-row]').nth(index);
+  const relatedWorkRow = relatedWorkRows.nth(index);
 
   // Select relation
   await relatedWorkRow
@@ -466,6 +476,15 @@ export { exampleData };
 export async function fillGEM(page: Page) {
   const DS_ROW = '#group-datasources .row[data-source-row]';
 
+  // ggmsDatasources registers the delegated add-row handler before enhancing
+  // the first satellite input with Tagify. Use that enhancement as the ready
+  // signal so a fast browser cannot click before the handler exists.
+  await page.waitForFunction(
+    () => Boolean((document.querySelector('input[name="satellite_platform[]"]') as
+      (HTMLInputElement & { _tagify?: unknown }) | null)?._tagify),
+    { timeout: 10_000 },
+  );
+
   // Wait for dynamically-loaded selects to be populated from the API
   await page.waitForFunction(
     () => ((document.querySelector('#input-model-type') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
@@ -514,8 +533,16 @@ export async function fillGEM(page: Page) {
   // ── Model Type: Static ────────────────────────────────────────────────────
   await page.locator('#input-model-type').selectOption('Static');
   await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
-  await page.locator('#checkbox-time-variable').check();
-  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  const timeVariableCheckbox = page.locator('#checkbox-time-variable');
+  const timeVariableDescription = page.locator('#time-variable-description-container');
+  await expect(async () => {
+    await scrollToViewportCenter(timeVariableCheckbox);
+    if (!(await timeVariableCheckbox.isChecked())) {
+      await timeVariableCheckbox.check({ timeout: 3_000 });
+    }
+    await expect(timeVariableCheckbox).toBeChecked();
+    await expect(timeVariableDescription).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.locator('#input-static-description').fill('Static time-variable description');
 
   // ── Model Type: Temporal ──────────────────────────────────────────────────
@@ -544,8 +571,16 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-topo-density-details-mantle').fill('PREM mantle');
 
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
-  await page.locator('#button-datasource-add').click();
-  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+  const addDataSourceButton = page.locator('#button-datasource-add');
+  const dataSourceRows = page.locator(DS_ROW);
+  const expectedDataSourceRows = (await dataSourceRows.count()) + 1;
+  await expect(async () => {
+    if (await dataSourceRows.count() < expectedDataSourceRows) {
+      await scrollToViewportCenter(addDataSourceButton);
+      await addDataSourceButton.click({ timeout: 3_000 });
+    }
+    await expect(dataSourceRows).toHaveCount(expectedDataSourceRows, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
   // Must select type M (Model) first: only M shows visibility-datasources-identifier

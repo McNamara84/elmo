@@ -2269,8 +2269,12 @@ components:
         name:
           type: string
           maxLength: 45
-          description: Name of the relation
+          description: Canonical DataCite relation type token used in metadata exports
           example: "IsCitedBy"
+        label:
+          type: string
+          description: Human-readable relation type label for user interfaces
+          example: "Is Cited By"
         description:
           type: string
           maxLength: 1000
@@ -2279,6 +2283,7 @@ components:
       required:
         - id
         - name
+        - label
         - description
     MSLLabsUpdateResponse:
       type: object

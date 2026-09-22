@@ -120,8 +120,13 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
   
     // Reset Related Works
-    $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
-    $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
+    if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {
+        window.relatedWorkStack.setRelatedWorks([]);
+    } else {
+        // Legacy fallback for pages without the card stack controller.
+        $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+        $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');
+    }
 
     // Reset Used Instruments (Tagify)
     var instrumentsInput = document.getElementById('input-usedinstruments');
@@ -138,7 +143,7 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
-    // === GGMs Definition fields (GGMsDefinition.html) ===
+    // === GGMs Definition fields (ggms-definition.html) ===
     // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
     // the delegated handler in ggmsModelTypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
