@@ -608,7 +608,7 @@ function applyElmoGemAdditionsToDataciteXml(
         ],
         [
             'text' => 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD > GRAVITATIONAL FIELD',
-            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa',
+            'valueURI' => 'https://gcmd.earthdata.nasa.gov/kms/concept/56b4cbe5-e5f7-4e61-8c48-bbb858b505e6',
         ],
     ];
 
