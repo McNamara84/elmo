@@ -311,7 +311,10 @@ test.describe('Related work form group', () => {
 
     const sourceHandle = cards.nth(0).locator('[data-related-work-drag]');
     await sourceHandle.hover();
-    await expect(page.locator('.tooltip.show')).toBeVisible();
+    const tooltipId = await sourceHandle.getAttribute('aria-describedby');
+    expect(tooltipId).not.toBeNull();
+    const sourceTooltip = page.locator('#' + tooltipId);
+    await expect(sourceTooltip).toBeVisible();
 
     const sourceBox = await sourceHandle.boundingBox();
     const targetBox = await cards.nth(2).boundingBox();
@@ -319,7 +322,7 @@ test.describe('Related work form group', () => {
     expect(targetBox).not.toBeNull();
     await page.mouse.move(sourceBox!.x + sourceBox!.width / 2, sourceBox!.y + sourceBox!.height / 2);
     await page.mouse.down();
-    await expect(page.locator('.tooltip.show')).toHaveCount(0);
+    await expect(sourceTooltip).toBeHidden();
     await page.mouse.move(sourceBox!.x + sourceBox!.width / 2, sourceBox!.y + sourceBox!.height, { steps: 4 });
     await page.mouse.move(targetBox!.x + targetBox!.width / 2, targetBox!.y + targetBox!.height - 4, { steps: 12 });
     await page.mouse.up();

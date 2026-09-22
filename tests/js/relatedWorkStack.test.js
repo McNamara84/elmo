@@ -360,6 +360,21 @@ describe('relatedwork.js card stack', () => {
     expect(hide).toHaveBeenCalledTimes(2);
   });
 
+  test('disposes tooltips before replacing or removing cards', () => {
+    const dispose = jest.fn();
+    window.bootstrap.Tooltip.getInstance = jest.fn(() => ({ dispose }));
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' }
+    ]);
+
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'second', identifier: 'second', relationId: '2', relation: 'References', identifierType: 'URL' }
+    ]);
+    $('[data-related-work-remove]').trigger('click');
+
+    expect(dispose).toHaveBeenCalledTimes(6);
+  });
+
   test('keeps help buttons on the current first card after reorder and removal', () => {
     window.relatedWorkStack.setRelatedWorks([
       { entryKey: 'first', identifier: 'first', relationId: '1', relation: 'IsCitedBy', identifierType: 'DOI' },

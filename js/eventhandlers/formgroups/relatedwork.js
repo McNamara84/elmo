@@ -298,6 +298,22 @@ $(document).ready(function () {
     }
   }
 
+  function disposeTooltips(row) {
+    if (
+      !window.bootstrap
+      || typeof window.bootstrap.Tooltip !== 'function'
+      || typeof window.bootstrap.Tooltip.getInstance !== 'function'
+    ) {
+      return;
+    }
+    row.find('[data-bs-toggle="tooltip"]').each(function () {
+      const tooltip = window.bootstrap.Tooltip.getInstance(this);
+      if (tooltip && typeof tooltip.dispose === 'function') {
+        tooltip.dispose();
+      }
+    });
+  }
+
   function selectedText(select) {
     const value = String(select.val() || '').trim();
     return value === '' ? '' : String(select.find('option:selected').text() || '').trim();
@@ -632,6 +648,7 @@ $(document).ready(function () {
    * @returns {Promise<RelatedWorkEntry[]>} Synchronized payload.
    */
   async function setRelatedWorksBulk(entries, options = {}) {
+    disposeTooltips(stack);
     stack.children('[data-related-work-entry]').remove();
     const batchSize = Number.isInteger(options.batchSize) && options.batchSize > 0
       ? options.batchSize
@@ -692,6 +709,7 @@ $(document).ready(function () {
       return setRelatedWorksBulk(normalizedEntries, options);
     }
 
+    disposeTooltips(stack);
     stack.children('[data-related-work-entry]').remove();
     const reservedEntryKeys = new Set();
     normalizedEntries.forEach(function (entry, index) {
@@ -797,6 +815,7 @@ $(document).ready(function () {
     const row = $(this).closest('[data-related-work-entry]');
     const nextFocus = row.next('[data-related-work-entry]').find('[data-related-work-toggle-edit]').first();
     const previousFocus = row.prev('[data-related-work-entry]').find('[data-related-work-toggle-edit]').first();
+    disposeTooltips(row);
     row.remove();
     updatePayload();
     const focusTarget = nextFocus.length
