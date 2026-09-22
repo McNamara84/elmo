@@ -429,8 +429,9 @@ function applySatellitePlatformTags(platformInput, tags) {
 
 /**
  * Populates the GGMsDataSources form rows.
- * Each data source entry becomes one form row; the datasource type 'change' event
- * is triggered so row visibility updates correctly.
+ * Consecutive satellite entries with the same description share one form row.
+ * All other entries become separate rows. The datasource type 'change' event is
+ * triggered so row visibility updates correctly.
  *
  * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
  * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
