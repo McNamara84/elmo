@@ -113,7 +113,7 @@ final class GGMsEmailWorkflowScenarioTest extends TestCase
                     'dataUrl' => self::DATA_URL,
                     'contactEmails' => [self::CONTACT_EMAIL],
                     'submittedAt' => '30.07.2026 12:00:00',
-                    'dataServicesEmailSent' => $dataServicesEmailSent,
+                    'elmogemSendsDataServicesMail' => $dataServicesEmailSent,
                     'icgemAddress' => self::ICGEM_SUBMIT_ADDRESS,
                     'senderAddress' => 'elmo@example.com',
                 ],

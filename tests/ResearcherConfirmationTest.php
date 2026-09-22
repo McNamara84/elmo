@@ -10,9 +10,11 @@ use PHPUnit\Framework\TestCase;
 if (!defined('PHPUNIT_RUNNING')) {
     define('PHPUNIT_RUNNING', true);
 }
-require_once __DIR__ . '/../endpoints/send_xml_file.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
+require_once __DIR__ . '/../includes/mail_helper.php';
 
 #[CoversFunction('collectResearcherConfirmationDataFromXml')]
+#[CoversFunction('generateResearcherConfirmationText')]
 #[CoversFunction('sendResearcherConfirmationEmails')]
 final class ResearcherConfirmationTest extends TestCase
 {
@@ -119,7 +121,7 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(1, $result['sent']);
         $this->assertSame([], $result['failed']);
@@ -140,10 +142,57 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(0, $result['sent']);
         $this->assertCount(1, $result['failed']);
-        $this->assertSame('invalid email address', $result['failed'][0]['error']);
+        $this->assertSame('John Doe', $result['failed'][0]['fullName']);
+        $this->assertSame('invalid-email', $result['failed'][0]['email']);
+        $this->assertStringContainsString('Invalid recipient address', $result['failed'][0]['error']);
+    }
+
+    /**
+     * Tests that extraction-time invalid contacts are reported as send failures.
+     */
+    public function testSendResearcherConfirmationEmailsReportsInvalidContacts(): void
+    {
+        $data = [
+            'title' => 'My Dataset',
+            'contacts' => [
+                [
+                    'fullName' => 'John Doe',
+                    'email' => 'john@example.com',
+                ],
+            ],
+            'invalidContacts' => [
+                [
+                    'fullName' => 'Jane Doe',
+                    'email' => 'not-an-email',
+                ],
+            ],
+        ];
+
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
+
+        $this->assertSame(1, $result['sent']);
+        $this->assertCount(1, $result['failed']);
+        $this->assertSame('Jane Doe', $result['failed'][0]['fullName']);
+        $this->assertStringContainsString('Invalid recipient address', $result['failed'][0]['error']);
+    }
+
+    /**
+     * Tests that the confirmation body includes the dataset title.
+     */
+    public function testGenerateResearcherConfirmationTextIncludesTitle(): void
+    {
+        $text = generateResearcherConfirmationText(
+            ['fullName' => 'Josiah Carberry', 'email' => 'author@example.com'],
+            'EIGEN-6C4'
+        );
+
+        $this->assertSame('Confirmation of your data submission to ELMO', $text['subject']);
+        $this->assertStringContainsString('Josiah Carberry', $text['html']);
+        $this->assertStringContainsString('EIGEN-6C4', $text['html']);
+        $this->assertStringContainsString('titled "EIGEN-6C4"', $text['text']);
     }
 }
