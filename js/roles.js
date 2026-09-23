@@ -1,6 +1,7 @@
 // Global storage for roles data
 var personRoles = [];
 var organizationRoles = [];
+var fetchedRoleTypes = new Set();
 
 /**
  * Refreshes all role Tagify instances when translations are changed.
@@ -60,7 +61,9 @@ function setupRolesDropdown(roletypes, inputSelector) {
     rolesToUse = [...rolesToUse, ...personRoles, ...organizationRoles];
   }
 
-  if (rolesToUse.length > 0) {
+  const allTypesFetched = roletypes.every(type => fetchedRoleTypes.has(type));
+  const hasPreloadedRoles = fetchedRoleTypes.size === 0 && rolesToUse.length > 0;
+  if (rolesToUse.length > 0 && (allTypesFetched || hasPreloadedRoles)) {
     initializeTagifyWithRoles(inputSelector, rolesToUse);
     return;
   }
@@ -78,6 +81,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
   Promise.all(rolePromises)
     .then(results => {
       results.forEach((roles, index) => {
+        fetchedRoleTypes.add(roletypes[index]);
         if (roletypes[index] === "person" || roletypes[index] === "both") {
           personRoles = [...new Set([...personRoles, ...roles])];
         }

@@ -113,6 +113,22 @@ describe('roles.js', () => {
     spy.mockRestore();
   });
 
+  test('fetches person-only roles after institution and shared roles were cached', async () => {
+    fetch.mockImplementation((url) => {
+      const type = new URL(url, 'http://localhost').searchParams.get('type');
+      const names = type === 'person' ? ['Researcher'] : type === 'institution' ? ['Distributor'] : ['Data Collector'];
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(names.map(name => ({ name }))) });
+    });
+
+    window.setupRolesDropdown(['institution', 'both'], '#input-contributor-organisationrole');
+    await flushPromises();
+    window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
+    await flushPromises();
+
+    expect(fetch).toHaveBeenCalledWith('./api/v2/vocabs/roles?type=person');
+    expect(document.getElementById('input-contributor-personrole')._tagify.settings.whitelist).toContain('Researcher');
+  });
+
   test('refreshRoleTagifyInstances updates placeholders for all rows', () => {
     const personInput = document.getElementById('input-contributor-personrole');
     const orgInput = document.getElementById('input-contributor-organisationrole');
