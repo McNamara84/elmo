@@ -1,4 +1,4 @@
-import { test, expect, type Page, type Route } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { navigateToHome, runAxeAudit, SELECTORS } from '../utils';
 
 function parseRgbString(color: string): [number, number, number] {
@@ -35,11 +35,6 @@ function computeContrastRatio(foreground: string, background: string) {
 }
 
 const FEEDBACK_ENDPOINT = '**/endpoints/send_feedback_mail.php';
-const DEFAULT_NETWORK_DELAY_MS = 150;
-
-function delay(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 async function navigateToFeedbackModal(page: Page) {
   await navigateToHome(page);
@@ -52,6 +47,9 @@ async function navigateToFeedbackModal(page: Page) {
   const feedbackModal = page.locator(SELECTORS.modals.feedback);
   await expect(feedbackModal).toBeVisible();
   await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
+  await page.mouse.move(0, 0);
+  await feedbackModal.locator('textarea[name^="feedbackQuestion"]').first().focus();
+  await expect(page.locator('.tooltip')).toHaveCount(0);
 
   return { feedbackButton, feedbackModal };
 }
@@ -68,27 +66,23 @@ async function fillFeedbackForm(page: Page) {
 
 async function mockFeedbackEndpoint(
   page: Page,
-  status: number,
-  handler?: (route: Route) => Promise<void>,
-  options?: { delayMs?: number }
+  status: number
 ) {
-  const delayMs = options?.delayMs ?? DEFAULT_NETWORK_DELAY_MS;
+  let releaseResponse: () => void = () => {};
+  const responseGate = new Promise<void>((resolve) => {
+    releaseResponse = resolve;
+  });
+
   await page.route(FEEDBACK_ENDPOINT, async (route) => {
-    if (delayMs > 0) {
-      await delay(delayMs);
-    }
-
-    if (handler) {
-      await handler(route);
-      return;
-    }
-
+    await responseGate;
     await route.fulfill({
       status,
       contentType: 'text/plain',
       body: status === 200 ? 'OK' : 'Internal Server Error',
     });
   });
+
+  return releaseResponse;
 }
 
 test.describe('Feedback modal interactions', () => {
@@ -113,18 +107,21 @@ test.describe('Feedback modal interactions', () => {
       return (window as any).translations?.modals?.feedback?.success ?? 'Thanks for your feedback!';
     });
 
-    await mockFeedbackEndpoint(page, 200);
+    const releaseResponse = await mockFeedbackEndpoint(page, 200);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_feedback_mail.php')
     );
 
-    await expect(sendButton).toBeEnabled();
-    await sendButton.click();
-
-    await expect(sendButton).toBeDisabled();
-    await expect(sendButton).toContainText(sendingLabel);
-    await expect(sendButton.locator('.spinner-border')).toBeVisible();
+    try {
+      await expect(sendButton).toBeEnabled();
+      await sendButton.click();
+      await expect(sendButton).toBeDisabled();
+      await expect(sendButton).toContainText(sendingLabel);
+      await expect(sendButton.locator('.spinner-border')).toBeVisible();
+    } finally {
+      releaseResponse();
+    }
 
     const response = await responsePromise;
     expect(response.status()).toBe(200);
@@ -212,20 +209,18 @@ test.describe('Feedback modal interactions', () => {
       return (window as any).translations?.modals?.feedback?.sendButton ?? 'Send Feedback';
     });
 
-    await mockFeedbackEndpoint(page, 500, async (route) => {
-      await route.fulfill({
-        status: 500,
-        contentType: 'text/plain',
-        body: 'Internal Server Error',
-      });
-    });
+    const releaseResponse = await mockFeedbackEndpoint(page, 500);
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_feedback_mail.php')
     );
 
-    await sendButton.click();
-    await expect(sendButton).toBeDisabled();
+    try {
+      await sendButton.click();
+      await expect(sendButton).toBeDisabled();
+    } finally {
+      releaseResponse();
+    }
 
     const response = await responsePromise;
     expect(response.status()).toBe(500);
