@@ -226,7 +226,7 @@ async function addContributorPerson(
 
   const roleInput = contributorRow.locator('input[name="cbPersonRoles[]"]');
   await expect.poll(() => roleInput.evaluate(
-    (input: any, role: string) => input._tagify?.whitelist?.includes(role) ?? false,
+    (input: any, role: string) => input._tagify?.settings?.whitelist?.some((item: any) => String(item?.value ?? item) === role) ?? false,
     data.role,
   ), { timeout: 15_000 }).toBe(true);
   await roleInput.evaluate((input: any, role: string) => input._tagify.addTags([role]), data.role);
@@ -277,7 +277,7 @@ async function addContributorInstitution(
 
   const roleInput = institutionRow.locator('input[name="cbOrganisationRoles[]"]');
   await expect.poll(() => roleInput.evaluate(
-    (input: any, role: string) => input._tagify?.whitelist?.includes(role) ?? false,
+    (input: any, role: string) => input._tagify?.settings?.whitelist?.some((item: any) => String(item?.value ?? item) === role) ?? false,
     data.role,
   ), { timeout: 15_000 }).toBe(true);
   await roleInput.evaluate((input: any, role: string) => input._tagify.addTags([role]), data.role);
