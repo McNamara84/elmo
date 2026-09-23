@@ -10,6 +10,24 @@ describe('populateIcgemDataSources satellite platforms', () => {
   let icgemModule;
 
   const graceFo = 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO';
+  const grace = 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE';
+
+  function satellite(value, description, overrides = {}) {
+    const dataSource = {
+      inputDataSourceType: 'Satellite',
+      satelliteValueName: value,
+      satelliteValueUri: `https://example.test/platforms/${encodeURIComponent(value || 'empty')}`,
+      satelliteSchemeName: 'NASA/GCMD Earth Platforms Keywords',
+      satelliteSchemeUri: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms',
+      ...overrides
+    };
+
+    if (description !== undefined) {
+      dataSource.description = description;
+    }
+
+    return dataSource;
+  }
 
   function buildDatasourceDom(tagify) {
     document.body.innerHTML = `
@@ -56,6 +74,144 @@ describe('populateIcgemDataSources satellite platforms', () => {
     delete global.jQuery;
     delete window.$;
     delete window.jQuery;
+  });
+
+  test('groups consecutive satellite entries with empty or missing descriptions', () => {
+    const grouped = icgemModule.groupIcgemDataSourcesForForm([
+      satellite(grace, ''),
+      satellite(graceFo, undefined)
+    ]);
+
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].satellitePlatforms).toEqual([
+      {
+        value: grace,
+        id: `https://example.test/platforms/${encodeURIComponent(grace)}`,
+        scheme: 'NASA/GCMD Earth Platforms Keywords',
+        schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms'
+      },
+      {
+        value: graceFo,
+        id: `https://example.test/platforms/${encodeURIComponent(graceFo)}`,
+        scheme: 'NASA/GCMD Earth Platforms Keywords',
+        schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms'
+      }
+    ]);
+  });
+
+  test('groups equal non-empty descriptions after trimming and preserves tag order', () => {
+    const grouped = icgemModule.groupIcgemDataSourcesForForm([
+      satellite(grace, '  shared source  '),
+      satellite(graceFo, 'shared source')
+    ]);
+
+    expect(grouped).toHaveLength(1);
+    expect(grouped[0].description).toBe('  shared source  ');
+    expect(grouped[0].satellitePlatforms.map(tag => tag.value)).toEqual([grace, graceFo]);
+  });
+
+  test('keeps consecutive satellite entries with different descriptions separate', () => {
+    const grouped = icgemModule.groupIcgemDataSourcesForForm([
+      satellite(grace, 'source one'),
+      satellite(graceFo, 'source two')
+    ]);
+
+    expect(grouped).toHaveLength(2);
+    expect(grouped[0].satellitePlatforms).toHaveLength(1);
+    expect(grouped[1].satellitePlatforms).toHaveLength(1);
+  });
+
+  test('does not group equal satellite descriptions across another data source type', () => {
+    const grouped = icgemModule.groupIcgemDataSourcesForForm([
+      satellite(grace, 'shared source'),
+      {
+        inputDataSourceType: 'Ground data',
+        description: 'ground source',
+        groundDetail: 'Terrestrial'
+      },
+      satellite(graceFo, 'shared source')
+    ]);
+
+    expect(grouped).toHaveLength(3);
+    expect(grouped.map(dataSource => dataSource.inputDataSourceType)).toEqual([
+      'Satellite',
+      'Ground data',
+      'Satellite'
+    ]);
+  });
+
+  test('keeps an unpopulated satellite row separate from neighbouring populated rows', () => {
+    const grouped = icgemModule.groupIcgemDataSourcesForForm([
+      satellite(grace, ''),
+      satellite('', ''),
+      satellite(graceFo, '')
+    ]);
+
+    expect(grouped).toHaveLength(3);
+    expect(grouped[0].satellitePlatforms.map(tag => tag.value)).toEqual([grace]);
+    expect(grouped[1].satellitePlatforms).toBeUndefined();
+    expect(grouped[2].satellitePlatforms.map(tag => tag.value)).toEqual([graceFo]);
+  });
+
+  test('adds grouped satellite keywords to one form row in a single Tagify update', async () => {
+    const tagify = {
+      addTags: jest.fn(),
+      update: jest.fn()
+    };
+    buildDatasourceDom(tagify);
+    window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+    await icgemModule.populateIcgemDataSources({
+      dataSources: [
+        satellite(grace, ''),
+        satellite(graceFo, '')
+      ]
+    });
+
+    expect($('[data-source-row]')).toHaveLength(1);
+    expect(tagify.addTags).toHaveBeenCalledTimes(1);
+    expect(tagify.addTags).toHaveBeenCalledWith([
+      expect.objectContaining({ value: grace }),
+      expect.objectContaining({ value: graceFo })
+    ]);
+    expect(tagify.update).toHaveBeenCalledTimes(1);
+  });
+
+  test('uses Tagify hidden-field fallback after adding grouped keywords', async () => {
+    const tagify = {
+      addTags: jest.fn(),
+      _updateHiddenField: jest.fn()
+    };
+    buildDatasourceDom(tagify);
+    window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+    await icgemModule.populateIcgemDataSources({
+      dataSources: [
+        satellite(grace, 'shared source'),
+        satellite(graceFo, 'shared source')
+      ]
+    });
+
+    expect(tagify.addTags).toHaveBeenCalledWith([
+      expect.objectContaining({ value: grace }),
+      expect.objectContaining({ value: graceFo })
+    ]);
+    expect(tagify._updateHiddenField).toHaveBeenCalledTimes(1);
+  });
+
+  test('writes all grouped tags to the raw input when Tagify is unavailable', async () => {
+    buildDatasourceDom();
+    window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+    await icgemModule.populateIcgemDataSources({
+      dataSources: [
+        satellite(grace, ''),
+        satellite(graceFo, '')
+      ]
+    });
+
+    const rawValue = $('input[name="satellite_platform[]"]').val();
+    expect(JSON.parse(rawValue).map(tag => tag.value)).toEqual([grace, graceFo]);
   });
 
   test('waits for platforms vocabulary before adding satellite tags', async () => {

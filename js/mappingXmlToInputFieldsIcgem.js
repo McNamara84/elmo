@@ -352,14 +352,69 @@ function populateIcgemModelTypes(data) {
 }
 
 /**
- * Writes a satellite platform tag into a datasource Tagify (or the raw input)
+ * Groups consecutive satellite XML entries with the same description for the form.
+ *
+ * ICGEM stores one satellite keyword per inputDataSource, while the form allows
+ * several keywords in one row. The repeated description is the only grouping
+ * hint available after a roundtrip. Entries without a keyword remain separate so
+ * an incomplete saved row is not hidden by a neighbouring populated row.
+ *
+ * @param {Array<Object>} dataSources
+ * @returns {Array<Object>}
+ */
+function groupIcgemDataSourcesForForm(dataSources) {
+  const grouped = [];
+
+  for (const dataSource of dataSources) {
+    const isPopulatedSatellite = dataSource.inputDataSourceType === 'Satellite'
+      && Boolean(dataSource.satelliteValueName);
+
+    if (!isPopulatedSatellite) {
+      grouped.push({ ...dataSource });
+      continue;
+    }
+
+    const description = typeof dataSource.description === 'string'
+      ? dataSource.description.trim()
+      : '';
+    const tag = {
+      value: dataSource.satelliteValueName,
+      id: dataSource.satelliteValueUri || '',
+      scheme: dataSource.satelliteSchemeName || '',
+      schemeURI: dataSource.satelliteSchemeUri || ''
+    };
+    const previous = grouped[grouped.length - 1];
+    const previousDescription = previous && typeof previous.description === 'string'
+      ? previous.description.trim()
+      : '';
+    const canJoinPrevious = previous
+      && previous.inputDataSourceType === 'Satellite'
+      && Array.isArray(previous.satellitePlatforms)
+      && previousDescription === description;
+
+    if (canJoinPrevious) {
+      previous.satellitePlatforms.push(tag);
+      continue;
+    }
+
+    grouped.push({
+      ...dataSource,
+      satellitePlatforms: [tag]
+    });
+  }
+
+  return grouped;
+}
+
+/**
+ * Writes satellite platform tags into a datasource Tagify (or the raw input)
  * and flushes the hidden value so save POSTs the JSON, not only the UI chips.
  * @param {HTMLInputElement|undefined} platformInput
- * @param {Object} tag
+ * @param {Array<Object>} tags
  */
-function applySatellitePlatformTag(platformInput, tag) {
+function applySatellitePlatformTags(platformInput, tags) {
   if (platformInput && platformInput._tagify) {
-    platformInput._tagify.addTags([tag]);
+    platformInput._tagify.addTags(tags);
     if (typeof platformInput._tagify.update === 'function') {
       platformInput._tagify.update();
     } else if (typeof platformInput._tagify._updateHiddenField === 'function') {
@@ -368,14 +423,15 @@ function applySatellitePlatformTag(platformInput, tag) {
     return;
   }
   if (platformInput) {
-    $(platformInput).val(JSON.stringify([tag]));
+    $(platformInput).val(JSON.stringify(tags));
   }
 }
 
 /**
  * Populates the GGMsDataSources form rows.
- * Each data source entry becomes one form row; the datasource type 'change' event
- * is triggered so row visibility updates correctly.
+ * Consecutive satellite entries with the same description share one form row.
+ * All other entries become separate rows. The datasource type 'change' event is
+ * triggered so row visibility updates correctly.
  *
  * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
  * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
@@ -386,8 +442,10 @@ async function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
 
-  const needsSatelliteVocab = dataSources.some(
-    (ds) => ds.inputDataSourceType === 'Satellite' && ds.satelliteValueName
+  const formDataSources = groupIcgemDataSourcesForForm(dataSources);
+
+  const needsSatelliteVocab = formDataSources.some(
+    (ds) => Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0
   );
   if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
     const result = await window.waitForThesaurusVocabulary('platforms');
@@ -396,8 +454,8 @@ async function populateIcgemDataSources(data) {
     }
   }
 
-  for (let i = 0; i < dataSources.length; i++) {
-    const ds = dataSources[i];
+  for (let i = 0; i < formDataSources.length; i++) {
+    const ds = formDataSources[i];
 
     if (i > 0) {
       $('.addDataSource').last().trigger('click');
@@ -411,13 +469,11 @@ async function populateIcgemDataSources(data) {
     if (ds.description) $row.find('textarea[name="datasource_description[]"]').val(ds.description);
 
     if (ds.inputDataSourceType === 'Satellite') {
-      if (ds.satelliteValueName) {
-        applySatellitePlatformTag($row.find('input[name="satellite_platform[]"]')[0], {
-          value: ds.satelliteValueName,
-          id: ds.satelliteValueUri || '',
-          scheme: ds.satelliteSchemeName || '',
-          schemeURI: ds.satelliteSchemeUri || ''
-        });
+      if (Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0) {
+        applySatellitePlatformTags(
+          $row.find('input[name="satellite_platform[]"]')[0],
+          ds.satellitePlatforms
+        );
       }
     } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
@@ -787,6 +843,7 @@ if (typeof module !== 'undefined' && module.exports) {
     leafChildren,
     selectOptionByText,
     reverseDensityType,
+    groupIcgemDataSourcesForForm,
     populateIcgemDefinition,
     populateIcgemProperties,
     populateIcgemModelTypes,

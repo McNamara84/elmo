@@ -80,21 +80,21 @@
       </grav:temporalModelProperties>
     </grav:harmonicCoefficientsModel>
     <grav:inputDataSource type="Satellite">
-      <grav:description>s1</grav:description>
+      <grav:description/>
       <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; GRACE</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/2e7aa2e6-9d25-4c6e-aef3-6e86d3773bac</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
     </grav:inputDataSource>
     <grav:inputDataSource type="Satellite">
-      <grav:description>s2</grav:description>
+      <grav:description/>
       <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Earth Explorers &gt; GOCE</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/b4fc57c3-7f36-40dc-8067-8b1f4dff4e3d</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
       <grav:satelliteSchemeUri>https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms</grav:satelliteSchemeUri>
     </grav:inputDataSource>
     <grav:inputDataSource type="Satellite">
-      <grav:description>s2</grav:description>
+      <grav:description/>
       <grav:satelliteValueName>Platforms &gt; Space-based Platforms &gt; Earth Observation Satellites &gt; Laser Geodetic Satellite (LAGEOS) &gt; LAGEOS-1</grav:satelliteValueName>
       <grav:satelliteValueUri>https://gcmd.earthdata.nasa.gov/kms/concept/8124c4a5-fb77-455c-9ecd-3cf325fc12a9</grav:satelliteValueUri>
       <grav:satelliteSchemeName>NASA/GCMD Earth Platforms Keywords</grav:satelliteSchemeName>
