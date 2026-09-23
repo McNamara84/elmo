@@ -97,9 +97,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
   });
 
   test('second contributor person affiliation is loaded from XML', async ({ page }) => {
-    // The contributor persons card contains [contributor-person-row] attribute
-    const personContainer = page.locator('[contributor-person-row]').first().locator('..');
-    test.skip(!(await personContainer.isVisible()), 'Contributor Persons form group is not enabled');
+    test.skip(!(await page.locator('[data-contributor-add-type="person"]').isVisible()), 'Contributor Persons form group is not enabled');
 
     await uploadXml(page, XML_TWO_CONTRIBUTOR_PERSONS, 'two-contributors.xml');
 
@@ -137,8 +135,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
 
   test('second contributor organisation affiliation is loaded from XML', async ({ page }) => {
     // Skip if contributor institutions form group is not visible
-    const contributorOrgCard = page.locator('#group-contributororganisation');
-    test.skip(!(await contributorOrgCard.isVisible()), 'Contributor Institutions form group is not enabled');
+    test.skip(!(await page.locator('[data-contributor-add-type="institution"]').isVisible()), 'Contributor Institutions form group is not enabled');
 
     await uploadXml(page, XML_TWO_CONTRIBUTOR_ORGS, 'two-contributor-orgs.xml');
 
@@ -149,7 +146,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     );
 
     // Verify first organisation
-    const orgRows = page.locator('#group-contributororganisation [contributors-row]');
+    const orgRows = page.locator('[data-contributor-card][data-contributor-type="institution"] [contributors-row]');
     const firstOrg = orgRows.nth(0);
     await expect(firstOrg.locator('input[name="cbOrganisationName[]"]')).toHaveValue(
       'GFZ German Research Centre for Geosciences',

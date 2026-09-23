@@ -224,13 +224,16 @@ async function addContributorPerson(
   // Fill first name
   await contributorRow.locator('input[name="cbPersonFirstname[]"]').fill(data.firstName);
 
-  // Fill role using tagify
-  // The title for this field is Role(s) 
-  const roleTagifyInput = contributorRow.locator('.tagify__input[title="Role(s)"]');
-  await roleTagifyInput.click();
-  await expect(roleTagifyInput).toBeFocused();
-  await roleTagifyInput.type(data.role);
-  await page.keyboard.press('Enter');
+  const roleInput = contributorRow.locator('input[name="cbPersonRoles[]"]');
+  await expect.poll(() => roleInput.evaluate(
+    (input: any, role: string) => input._tagify?.whitelist?.includes(role) ?? false,
+    data.role,
+  ), { timeout: 15_000 }).toBe(true);
+  await roleInput.evaluate((input: any, role: string) => input._tagify.addTags([role]), data.role);
+  await expect.poll(() => roleInput.evaluate(
+    (input: any, role: string) => input._tagify?.value?.some((tag: any) => tag.value === role) ?? false,
+    data.role,
+  )).toBe(true);
 
   // Fill affiliation using tagify
   // While for this field the title for this field is Affiliation. Without (s) 
@@ -272,11 +275,16 @@ async function addContributorInstitution(
   // Fill organization name
   await institutionRow.locator('input[name="cbOrganisationName[]"]').fill(data.organizationName);
 
-  // Fill the role into tha tagify field 
-  const roleTagifyInput = institutionRow.locator('.tagify__input[title="Role(s)"]');
-  await roleTagifyInput.click();
-  await roleTagifyInput.type(data.role);
-  await page.keyboard.press('Enter');
+  const roleInput = institutionRow.locator('input[name="cbOrganisationRoles[]"]');
+  await expect.poll(() => roleInput.evaluate(
+    (input: any, role: string) => input._tagify?.whitelist?.includes(role) ?? false,
+    data.role,
+  ), { timeout: 15_000 }).toBe(true);
+  await roleInput.evaluate((input: any, role: string) => input._tagify.addTags([role]), data.role);
+  await expect.poll(() => roleInput.evaluate(
+    (input: any, role: string) => input._tagify?.value?.some((tag: any) => tag.value === role) ?? false,
+    data.role,
+  )).toBe(true);
 
   // Fill the affiliation into the tagify field 
   const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
