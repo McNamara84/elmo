@@ -208,7 +208,7 @@ $(document).ready(function () {
       document.getElementById('orcid-search-context-group').value = 'author';
       document.getElementById('orcid-search-context-row-index').value = index;
     } else if (contributorRow.length) {
-      const index = contributorRow.index();
+      const index = $('#group-contributorperson [contributor-person-row]').index(contributorRow);
       document.getElementById('orcid-search-context-group').value = 'contributor';
       document.getElementById('orcid-search-context-row-index').value = index;
     }

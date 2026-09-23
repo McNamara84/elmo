@@ -90,11 +90,8 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/ggms-properties.html';
     include $baseDir . 'formgroups/ggms-data-sources.html';
 }
-if ($showContributorPersons) {
-    include $baseDir . 'formgroups/contributorPersons.html';
-}
-if ($showContributorInstitutions) {
-    include $baseDir . 'formgroups/contributorInstitutions.html';
+if ($showContributorPersons || $showContributorInstitutions) {
+    include $baseDir . 'formgroups/contributors.html';
 }
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';

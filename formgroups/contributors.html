@@ -1,0 +1,35 @@
+<div class="card mb-2" id="formgroup-contributors" data-contributor-formgroup>
+  <div class="card-header d-flex flex-wrap justify-content-between align-items-center gap-2">
+    <div class="d-flex flex-wrap align-items-center gap-2">
+      <b data-translate="contributors.title">Contributors</b>
+      <span class="text-body-secondary" aria-hidden="true">&middot;</span>
+      <span class="fw-semibold text-body-secondary" data-contributor-summary-count aria-live="polite">0 entries</span>
+      <i class="bi bi-question-circle-fill" data-help-section-id="help-contributorpersons-fg"></i>
+    </div>
+    <span class="badge text-bg-warning" data-contributor-contact-summary aria-live="polite">at least 1 contact required</span>
+  </div>
+  <div class="card-body" id="group-contributorperson" data-contributor-shell>
+    <input type="hidden" id="contributors-payload" name="contributorsPayload" value="[]">
+    <div id="group-contributor-stack" class="d-grid gap-2" data-contributor-stack></div>
+    <div class="d-flex flex-wrap gap-2" data-contributor-add-actions>
+      <?php if ($showContributorPersons ?? true): ?>
+      <button type="button" class="btn btn-primary" id="button-contributor-addperson" data-contributor-add-type="person">
+        <i class="bi bi-person-plus" aria-hidden="true"></i>
+        <span data-translate="contributors.addPerson">Add Person</span>
+      </button>
+      <?php endif; ?>
+      <?php if ($showContributorInstitutions ?? true): ?>
+      <button type="button" class="btn btn-outline-secondary" id="button-contributor-addorganisation" data-contributor-add-type="institution">
+        <i class="bi bi-building-add" aria-hidden="true"></i>
+        <span data-translate="contributors.addInstitution">Add Institution</span>
+      </button>
+      <?php endif; ?>
+    </div>
+  </div>
+  <?php if ($showContributorPersons ?? true): ?>
+  <template id="contributor-person-template"><?php include __DIR__ . '/contributorPersons.html'; ?></template>
+  <?php endif; ?>
+  <?php if ($showContributorInstitutions ?? true): ?>
+  <template id="contributor-institution-template"><?php include __DIR__ . '/contributorInstitutions.html'; ?></template>
+  <?php endif; ?>
+</div>
