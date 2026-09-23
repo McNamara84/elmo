@@ -538,7 +538,7 @@ class SubmitHandler {
                     this.showNotification('success',
                         translations.alerts.successHeading,
                         translations.alerts.successMessage);
-                    
+
                     /* COMMENTED OUT in hotfix/hide-data-upload
                     // Append primary data upload hint if URL is configured
                     const uploadUrl = window.ELMO_FEATURES?.dataUploadUrl;
