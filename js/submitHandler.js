@@ -1,5 +1,6 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { hasCompleteContact } from './contactRequirement.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
@@ -187,17 +188,8 @@ if (groupStc) {
  * @param {Record<string, unknown>|null} author - Authors payload entry.
  * @returns {boolean} True for a selected person contact with family name and email.
  */
-function isCompletePayloadContact(author) {
-    if (!author || author.type !== 'person' || author.isContact !== true) {
-        return false;
-    }
-
-    return String(author.familyname || '').trim() !== '' &&
-        String(author.email || '').trim() !== '';
-}
-
 /**
- * Validates that the synchronized Authors payload contains a complete contact.
+ * Validates that the synchronized Authors and Contributors payloads contain a complete contact.
  *
  * Direct calls rebuild the payload through the shared Authors synchronization
  * service. The optional payload is used by the `authorsPayload:updated` event,
@@ -220,19 +212,27 @@ function validateContactPerson(synchronizedPayload = null) {
         }
     }
 
-    var isValid = Array.isArray(authorsPayload) &&
-        authorsPayload.some(function (author) {
-            return isCompletePayloadContact(author);
-        });
+    let contributorsPayload = [];
+    try {
+        const input = document.querySelector('input[name="contributorsPayload"]');
+        if (input) {
+            contributorsPayload = window.contributorStack?.collectPayload?.() ?? JSON.parse(input.value);
+            if (!Array.isArray(contributorsPayload)) throw new Error('Malformed Contributors payload');
+        }
+    } catch (error) {
+        console.error('Could not read Contributors payload for contact validation:', error);
+        contributorsPayload = null;
+    }
+    const isValid = Array.isArray(authorsPayload) && Array.isArray(contributorsPayload) &&
+        hasCompleteContact(authorsPayload, contributorsPayload,
+            window.ELMO_FEATURES?.showContactInstitution === true);
 
     $('#contact-person-error').remove();
-    // 
+    $('input[name="contacts[]"]').prop('required', false);
     if (!isValid) {
-        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        const target = $('#formgroup-contributors').length ? $('#formgroup-contributors') : $('#group-author');
+        target.append('<div id="contact-person-error" class="text-danger mt-2" role="alert" data-translate="contactPersons.contactPersonError"></div>');
         applyTranslations();
-        $('input[name="contacts[]"]').prop('required', true);
-    } else {
-        $('input[name="contacts[]"]').prop('required', false);
     }
     return isValid;
 }
@@ -293,6 +293,11 @@ class SubmitHandler {
         document.addEventListener('authorsPayload:updated', (event) => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson(event.detail?.payload);
+            }
+        });
+        document.addEventListener('contributorsPayload:updated', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
             }
         });
 

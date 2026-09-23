@@ -729,7 +729,7 @@ describe('submitHandler.js', () => {
 
     expect(validateContactPerson()).toBe(false);
     expect($('#contact-person-error').length).toBe(1);
-    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 
   test('validateContactPerson uses the freshly generated payload instead of a stale hidden value', () => {
@@ -761,7 +761,7 @@ describe('submitHandler.js', () => {
     expect(validateContactPerson()).toBe(false);
     expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
     expect($('#contact-person-error').length).toBe(1);
-    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 
   test('handleModalSubmit aborts before CSRF and AJAX when payload synchronization fails', async () => {
@@ -825,6 +825,31 @@ describe('submitHandler.js', () => {
     expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
     expect($('#contact-person-error').length).toBe(0);
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
+  });
+
+  test('accepts a complete contributor person without an author contact', () => {
+    document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
+    document.getElementById('test-form').insertAdjacentHTML('beforeend',
+      `<div id="formgroup-contributors"><input name="contributorsPayload" value='[{"type":"person","familyname":"Doe","email":"doe@example.org","roles":["Contact Person"]}]'></div>`);
+    expect(validateContactPerson()).toBe(true);
+    expect($('#contact-person-error').length).toBe(0);
+  });
+
+  test.each([false, true])('institution contact flag %s controls submit contact', enabled => {
+    window.ELMO_FEATURES = { showContactInstitution: enabled };
+    document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
+    document.getElementById('test-form').insertAdjacentHTML('beforeend',
+      `<div id="formgroup-contributors"><input name="contributorsPayload" value='[{"type":"institution","institutionname":"Institute","email":"info@example.org","roles":["Contact Person"]}]'></div>`);
+    expect(validateContactPerson()).toBe(enabled);
+    expect($('#contact-person-error').length).toBe(enabled ? 0 : 1);
+    delete window.ELMO_FEATURES;
+  });
+
+  test('rejects contributor contacts with invalid email', () => {
+    document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
+    document.getElementById('test-form').insertAdjacentHTML('beforeend',
+      `<div id="formgroup-contributors"><input name="contributorsPayload" value='[{"type":"person","familyname":"Doe","email":"not-an-email","roles":["Contact Person"]}]'></div>`);
+    expect(validateContactPerson()).toBe(false);
   });
 
   describe('on-demand CSRF token', () => {

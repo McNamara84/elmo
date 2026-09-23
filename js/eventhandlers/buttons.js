@@ -6,6 +6,7 @@
  */
 
 // ─── Import form group modules ────────────────────────────────────────────────
+import '../contactRequirement.js';
 import './formgroups/feedback.js';
 import './formgroups/authorStack.js';
 import './formgroups/contributorStack.js';
