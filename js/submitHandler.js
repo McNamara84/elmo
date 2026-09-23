@@ -1,5 +1,6 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
 import { hasCompleteContact } from './contactRequirement.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
@@ -432,9 +433,11 @@ class SubmitHandler {
         }
 
         let authorsPayload;
+        let contributorsPayload = null;
         let relatedWorksPayload = null;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+            contributorsPayload = synchronizeContributorsPayload(this.$form[0]);
             const hasRelatedWorks = this.$form[0].querySelector(
                 'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
             );
@@ -454,6 +457,9 @@ class SubmitHandler {
         synchronizeTagifyInputs(this.$form[0]);
         const submitData = new FormData(this.$form[0]);
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
+        if (Array.isArray(contributorsPayload)) {
+            submitData.set('contributorsPayload', JSON.stringify(contributorsPayload));
+        }
         if (Array.isArray(relatedWorksPayload)) {
             submitData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
         }

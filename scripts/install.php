@@ -493,6 +493,11 @@ function createDatabaseStructure($connection): array
     `Resource_has_Contributor_Person_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Contributor_Person_contributor_person_id` INT NOT NULL,
+    `sort_order` INT NULL,
+    `roles_json` LONGTEXT NULL,
+    `affiliations_json` LONGTEXT NULL,
+    `contact_email` VARCHAR(255) NULL,
+    `contact_website` VARCHAR(2048) NULL,
     PRIMARY KEY (`Resource_has_Contributor_Person_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
@@ -523,6 +528,11 @@ function createDatabaseStructure($connection): array
     `Resource_has_Contributor_Institution_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Contributor_Institution_contributor_institution_id` INT NOT NULL,
+    `sort_order` INT NULL,
+    `roles_json` LONGTEXT NULL,
+    `affiliations_json` LONGTEXT NULL,
+    `contact_email` VARCHAR(255) NULL,
+    `contact_website` VARCHAR(2048) NULL,
     PRIMARY KEY (`Resource_has_Contributor_Institution_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
