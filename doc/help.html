@@ -469,6 +469,18 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>            
             <?php endif; ?>
+            <?php if (($showContributorPersons ?? true) || ($showContributorInstitutions ?? true)): ?>
+            <div id="help-contributors" class="section-content">
+                <div id="help-contributors-fg">
+                    <h3>Contributors</h3>
+                    <p>Use Add Person or Add Institution to add contributors in the order they should appear in the metadata. You can reorder, edit or remove each card. The section starts empty and is optional.</p>
+                    <p>Choose the Contact Person role for a contributor person to make them a contact. A contact needs a name and valid email address before submission. The contact requirement is shared with Authors.</p>
+                    <?php if ($showContactInstitution ?? false): ?>
+                    <p>Contributor institutions may also have the Contact Person role when this feature is enabled.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
             <!-- formgroup contributor persons -->
             <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
@@ -476,8 +488,7 @@ include_once "../settings.php";
                     <h3>Contributor Persons</h3>
                     <p>
                         A contributor person is a person responsible for collecting, managing, distributing, or
-                        otherwise contributing to the development of the resource. To add more than one contributor, use
-                        the "add" button on the right.
+                        otherwise contributing to the development of the resource. Use Add Person in the Contributors section.
                     </p>
                     <p>
                         With <code>Contributing Person(s)</code> you have the possibility to acknowledge additional
@@ -612,8 +623,7 @@ include_once "../settings.php";
                     <h3>Contributor Institutions</h3>
                     <p>
                         A contributor institution is an organisation responsible for collecting, managing, distributing,
-                        or otherwise contributing to the development of the resource. To add more than one contributor,
-                        use the "add" button on the right.
+                        or otherwise contributing to the development of the resource. Use Add Institution in the Contributors section.
                     </p>
                     <p>
                         With <code>Contributing Institution(s)</code> you have the possibility to acknowledge additional

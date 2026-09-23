@@ -65,7 +65,25 @@ function applyContributorsPayloadToResourceXmlString(string $resourceXml, array 
         $contacts->appendChild($contact);
     }
     replaceDirectChild($dom, $root, 'ContactInstitutions', $institutionContacts);
+    placeResourceChild($root, $contributors, ['Descriptions', 'ThesaurusKeywords', 'FreeKeywords', 'RelatedWorks']);
+    if ($contacts) {
+        placeResourceChild($root, $contacts, ['ContactInstitutions', 'OriginatingLaboratories', 'Contributors', 'Descriptions']);
+    }
+    placeResourceChild($root, $institutionContacts, ['OriginatingLaboratories', 'Contributors', 'Descriptions']);
     return $dom->saveXML();
+}
+
+/** Keep optional Resource sections in the order declared by the Freestyle schema. */
+function placeResourceChild(DOMElement $root, DOMElement $child, array $beforeNames): void
+{
+    if ($child->parentNode === $root) $root->removeChild($child);
+    foreach (iterator_to_array($root->childNodes) as $sibling) {
+        if ($sibling instanceof DOMElement && in_array($sibling->localName, $beforeNames, true)) {
+            $root->insertBefore($child, $sibling);
+            return;
+        }
+    }
+    $root->appendChild($child);
 }
 
 function buildContributorXmlElement(DOMDocument $dom, array $entry, string $nodeName): DOMElement

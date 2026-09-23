@@ -44,4 +44,22 @@ final class ContributorPayloadTest extends TestCase
         self::assertStringNotContainsString('Old', $xml);
         self::assertStringContainsString('<Contributors/>', $xml);
     }
+
+    public function testNewSectionsFollowFreestyleResourceOrder(): void
+    {
+        $xml = applyContributorsPayloadToResourceXmlString(
+            '<Resource><Authors/><Descriptions/></Resource>',
+            ['contributorsPayload' => json_encode([[
+                'type' => 'person', 'familyname' => 'Doe', 'roles' => ['Contact Person'],
+                'email' => 'doe@example.org',
+            ]])]
+        );
+        $dom = new DOMDocument();
+        self::assertTrue($dom->loadXML($xml));
+        $names = [];
+        foreach ($dom->documentElement->childNodes as $child) {
+            if ($child instanceof DOMElement) $names[] = $child->localName;
+        }
+        self::assertSame(['Authors', 'ContactPersons', 'ContactInstitutions', 'Contributors', 'Descriptions'], $names);
+    }
 }

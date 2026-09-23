@@ -31,4 +31,11 @@ final class ContactRequirementTest extends TestCase
         self::assertFalse(validateSubmittedContact(['authorsPayload' => '[]', 'contributorsPayload' => json_encode([$entry])], false));
         self::assertFalse(validateSubmittedContact(['authorsPayload' => '[]', 'contributorsPayload' => '{'], false));
     }
+
+    public function testLegacyAuthorPostStillSatisfiesContactRequirement(): void
+    {
+        self::assertTrue(validateSubmittedContact([
+            'familynames' => ['Doe'], 'cpEmail' => ['doe@example.org'],
+        ], false));
+    }
 }

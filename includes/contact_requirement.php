@@ -48,6 +48,14 @@ function validateSubmittedContact(array $post, bool $allowInstitution): bool
             return true;
         }
     }
+    if (!array_key_exists('authorsPayload', $post) && is_array($post['familynames'] ?? null)) {
+        foreach (($post['familynames'] ?? []) as $index => $familyname) {
+            if (trim((string) $familyname) !== '' &&
+                filter_var(trim((string) ($post['cpEmail'][$index] ?? '')), FILTER_VALIDATE_EMAIL)) {
+                return true;
+            }
+        }
+    }
     foreach ($contributors as $entry) {
         if (!is_array($entry) || !hasContributorContactRole($entry, $allowInstitution)) {
             continue;
