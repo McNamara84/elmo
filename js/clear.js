@@ -1,4 +1,4 @@
-import { setCCBYasDefault } from './select.js';
+import { setCCBYasDefault, setBrowserTimezone } from './select.js';
 
 /**
  * Clears and resets input fields and Tagify instances.
@@ -22,6 +22,7 @@ function clearInputFields() {
     $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
+    setCCBYasDefault();
   
     if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
         window.authorStack.setAuthors([]);
@@ -120,6 +121,7 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]').not(':first').remove();
     // Clear the input fields of the first row
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
+    setBrowserTimezone();
   
     // Reset Related Works
     if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {

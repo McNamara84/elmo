@@ -153,7 +153,17 @@ async function initializeAllDropdownsParallel() {
 
   document.dispatchEvent(new CustomEvent('dropdownsReady'));
 }
-
+export function setBrowserTimezone() {
+  const $dropdown = $('#input-stc-timezone');
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (browserTimezone) {
+    const allOptions = Array.from($dropdown.find('option'));
+    const exactMatch = allOptions.find(option => option.text.includes(`(${browserTimezone})`));
+    if (exactMatch) {
+      $(exactMatch).prop('selected', true);
+    }
+  }
+}
 /**
  * Populates timezone dropdown with pre-fetched data
  * @param {Array} timezones - Array of timezone objects
@@ -178,14 +188,8 @@ function populateTimezoneDropdownWithData(timezones) {
   });
 
   // Set browser timezone
-  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (browserTimezone) {
-    const allOptions = Array.from($dropdown.find('option'));
-    const exactMatch = allOptions.find(option => option.text.includes(`(${browserTimezone})`));
-    if (exactMatch) {
-      $(exactMatch).prop('selected', true);
-    }
-  }
+  setBrowserTimezone()
+
 }
 
 /**
