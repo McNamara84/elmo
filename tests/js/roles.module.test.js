@@ -192,7 +192,7 @@ describe('roles module coverage', () => {
             const callArgs = Tagify.mock.calls[Tagify.mock.calls.length - 1];
             const options = callArgs[1];
             
-            expect(options.whitelist.length).toBe(4); // 2 person + 2 organization
+            expect(options.whitelist.length).toBe(5); // 2 person + 2 organization + contact
         });
 
         test('applies accessibility attributes', () => {

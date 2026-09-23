@@ -74,6 +74,7 @@ services:
       SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "true"
       SHOW_USED_INSTRUMENTS: "false"
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"

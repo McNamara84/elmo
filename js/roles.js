@@ -107,12 +107,19 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   const input = document.querySelector(inputSelector);
   if (!input) return;
 
+  const isPerson = input.name === 'cbPersonRoles[]';
+  const isInstitution = input.name === 'cbOrganisationRoles[]';
   const roleNames = roles.map(role =>
     typeof role === 'string' ? role : role.name
-  );
+  ).filter(name => !isInstitution || window.ELMO_FEATURES?.showContactInstitution === true || name !== 'Contact Person');
+  if (isPerson || (isInstitution && window.ELMO_FEATURES?.showContactInstitution === true)) {
+    roleNames.push('Contact Person');
+  }
+  // ERNIE and the local role table may already contain the synthetic contact role.
+  const allowedRoles = [...new Set(roleNames.filter(Boolean))];
 
   const tagifyOptions = {
-    whitelist: roleNames,
+    whitelist: allowedRoles,
     enforceWhitelist: true,
     maxTags: 16,
     dropdown: {
