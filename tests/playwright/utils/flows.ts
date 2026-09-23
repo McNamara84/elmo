@@ -319,7 +319,7 @@ async function addFreeKeyword(page: Page, keyword: string) {
 
 /**
  * Adds a related work entry with relation, identifier, and identifier type.
- * Creates a new row if index > 0, then fills in the related work details.
+ * Creates rows until the requested zero-based index exists, then fills in the related work details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the related work entry (0-based)
  * @param {Object} data - The related work data object
@@ -333,15 +333,16 @@ async function addRelatedWork(
   index: number,
   data: { identifier: string; type: string; relation: string }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  const relatedWorkRows = page.locator('[related-work-row]');
+  while (await relatedWorkRows.count() <= index) {
+    const newRowIndex = await relatedWorkRows.count();
+    // Related Work starts empty, so create every row up to the requested index.
     await page.locator('#button-relatedwork-add').click();
-    // Wait for the new related work row to be visible
-    await page.locator('[related-work-row]').nth(index).waitFor({ state: 'visible' });
+    await relatedWorkRows.nth(newRowIndex).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific related work row
-  const relatedWorkRow = page.locator('[related-work-row]').nth(index);
+  const relatedWorkRow = relatedWorkRows.nth(index);
 
   // Select relation
   await relatedWorkRow
@@ -533,9 +534,15 @@ export async function fillGEM(page: Page) {
   await page.locator('#input-model-type').selectOption('Static');
   await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
   const timeVariableCheckbox = page.locator('#checkbox-time-variable');
-  await scrollToViewportCenter(timeVariableCheckbox);
-  await timeVariableCheckbox.check();
-  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  const timeVariableDescription = page.locator('#time-variable-description-container');
+  await expect(async () => {
+    await scrollToViewportCenter(timeVariableCheckbox);
+    if (!(await timeVariableCheckbox.isChecked())) {
+      await timeVariableCheckbox.check({ timeout: 3_000 });
+    }
+    await expect(timeVariableCheckbox).toBeChecked();
+    await expect(timeVariableDescription).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.locator('#input-static-description').fill('Static time-variable description');
 
   // ── Model Type: Temporal ──────────────────────────────────────────────────
@@ -565,9 +572,15 @@ export async function fillGEM(page: Page) {
 
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
   const addDataSourceButton = page.locator('#button-datasource-add');
-  await scrollToViewportCenter(addDataSourceButton);
-  await addDataSourceButton.click();
-  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+  const dataSourceRows = page.locator(DS_ROW);
+  const expectedDataSourceRows = (await dataSourceRows.count()) + 1;
+  await expect(async () => {
+    if (await dataSourceRows.count() < expectedDataSourceRows) {
+      await scrollToViewportCenter(addDataSourceButton);
+      await addDataSourceButton.click({ timeout: 3_000 });
+    }
+    await expect(dataSourceRows).toHaveCount(expectedDataSourceRows, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
   // Must select type M (Model) first: only M shows visibility-datasources-identifier

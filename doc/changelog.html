@@ -24,6 +24,10 @@
                                 straight away when a DOI was already provided.</li>
                             <li>ELMO-GEM no longer offers the data description template upload in the submit dialog.</li>
                             <li>Reformulated button labels in the clear form confirmation dialog. "Clear" instead of "Reset"</li>
+                            <li>Related Work now starts empty and uses accessible cards that can be added, collapsed,
+                                removed, and reordered with buttons or drag and drop.</li>
+                            <li>Related Work XML imports and exports now use XSLT-backed mappings, preserve entry order,
+                                and show progress when importing large lists.</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>
@@ -33,6 +37,13 @@
                             <li>Fixed inconsistent visibility of help buttons in form group headings.</li>
                             <li>ELMO-GEM now restores consecutive satellite keywords with the same description into
                                 one data source row when importing ICGEM metadata.</li>
+                            <li>ELMO-MSL restores the required free keywords <code>EPOS</code> and
+                                <code>multi-scale laboratories</code> after clearing the form while still removing
+                                user-entered keywords.</li>
+                            <li>DataCite relation types are exported as canonical schema values without spaces while
+                                retaining readable labels in the editor.</li>
+                            <li>Manual Related Work identifier-type selections are no longer overwritten by a delayed
+                                automatic detection result.</li>
                         </ul>
                     </li>
                     <li><strong>Documentation:</strong>

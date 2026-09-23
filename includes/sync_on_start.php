@@ -7,7 +7,7 @@ require_once __DIR__ . '/../api/v2/services/ErnieService.php';
 try {
     $controller = new VocabController();
     $service = new ErnieService();
-    
+
     $controller->syncRolesToDb($service->getContributorPersonRolesWithCache(), 0);
     $controller->syncRolesToDb($service->getContributorInstitutionRolesWithCache(), 1);
     $controller->syncResourceTypesFromErnie($service->getResourceTypesWithCache());

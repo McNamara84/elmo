@@ -91,12 +91,19 @@ $(document).ready(function () {
    * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
+    // Keep this notification in the user-facing flow: XML and DOI imports also call
+    // clearInputFields(), but must not restore MSL defaults before loading their data.
+    const clearFormAfterConfirmation = function () {
+      clearInputFields();
+      document.dispatchEvent(new Event('elmo:formClearedByUser'));
+    };
+
     window.showConfirmationModal(
       'confirmations.clear.title',
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      clearInputFields
+      clearFormAfterConfirmation
     );
   });
 
@@ -170,7 +177,7 @@ $(document).ready(function () {
 
       // Apply specific rules
       validateFundingReferenceRequirements();
-      validateRelatedWorkRequirements();
+      validateRelatedWorkRequirements({ revealIncomplete: true });
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();

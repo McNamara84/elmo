@@ -12,6 +12,7 @@ require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 require_once __DIR__ . '/author_payload_xml.php';
+require_once __DIR__ . '/related_work_payload_xml.php';
 
 global $showGGMsProperties, $showMslMode;
 
@@ -43,13 +44,13 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
         $result = $callback(...$args);
 
         if ($result === false) {
-            error_log("[💿SAVE]: Save operation failed: " . $functionName . " returned false");
+            error_log("[SAVE]: Save operation failed: " . $functionName . " returned false");
             throw new Exception("Save operation failed: " . $functionName . " returned false");
         }
 
         return $result;
     } catch (Exception $e) {
-        error_log("[💿SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
+        error_log("[SAVE]: Exception in " . $functionName . ": " . $e->getMessage());
         throw $e; // Re-throw so outer catch can handle it
     }
 }
@@ -71,9 +72,8 @@ function saveALL(array $postData): int {
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
-        error_log("[💿SAVE]:Starting save process in save_data.php");
         $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
-        error_log("[💿SAVE]:the id generated is " . $resource_id);
+        error_log("[SAVE]:the id generated is " . $resource_id);
         executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
         executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
         if ($showMslMode ?? false) {
@@ -113,33 +113,36 @@ function saveALL(array $postData): int {
 
         // Validate transaction commit
         if (!$connection->commit()) {
-            throw new Exception("Transaction commit failed - database returned false");
+            throw new Exception("[SAVE]: Transaction commit failed - database returned false");
         }
 
-        error_log("[💿SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
+        error_log("[SAVE]: Transaction committed successfully for resource ID: " . $resource_id);
         return $resource_id;
     } catch (Exception $e) {
         $connection->rollback();
-        throw $e;
+        throw new Exception("[SAVE]: Transaction rolled back due to an error: " . $e->getMessage());
     }
 }
 
 /**
  * Generates an XML or JSON-LD download payload for a saved resource.
  *
- * For regular ELMO exports, an Authors section supplied in the current form
- * data replaces the database-derived Authors and ContactPersons sections before
+ * For regular ELMO exports, structured Authors and Related Works payloads from
+ * the current form replace their database-derived Resource XML sections before
  * any XSLT transformation. This keeps XML and JSON-LD downloads aligned with
- * the current Authors form state. ICGEM XML generation retains its specialized
- * controller path.
+ * the current form state. ICGEM XML generation retains its specialized path.
+ *
+ * The returned generator value is one of:
+ * - dataset-xml: DatasetController DataCite envelope (GFZ Data Services)
+ * - icgem-xml: ICGEMController grav:envelope
+ * - dataset-jsonld: DatasetController compact JSON-LD
  *
  * @param int $resourceId Database identifier of the resource used as the export base.
- * @param array{format?: 'xml'|'jsonld'|string, postData?: array<string, mixed>, variant?: 'gfz'|'icgem'|string} $options
- *        Export format, optional current form data, and an optional XML variant
- *        override. Without an override the variant follows $showGGMsProperties.
- *        ELMO GEM submissions need both variants from a single submit, so they
- *        request them explicitly instead of toggling the global.
- * @return array{payload: string, contentType: string, extension: string, generator: string}
+ * @param array{format?: string, postData?: array<string, mixed>, variant?: string} $options Export options:
+ *   - format (string): 'xml' or 'jsonld', defaults to 'xml'
+ *   - postData (array): Optional current form data for author payload override
+ *   - variant (string): 'gfz' or 'icgem' XML variant; if null, variant follows $showGGMsProperties
+ * @return array{payload: string, contentType: string, extension: string, generator: 'dataset-xml'|'icgem-xml'|'dataset-jsonld'}
  *
  * @throws InvalidArgumentException When the requested format or variant is unsupported.
  * @throws RuntimeException When payload generation produces an empty document.
@@ -164,7 +167,7 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         $controller = new DatasetController();
         $sourceXml = is_array($postData)
-            ? buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData)
+            ? buildResourceXmlWithCurrentFormPayloads($connection, $controller, $resourceId, $postData)
             : null;
         $payload = (string) $controller->transformResourceToJsonLd($resourceId, $sourceXml);
 
@@ -195,7 +198,12 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
 
         $sourceXml = null;
         if (is_array($postData)) {
-            $sourceXml = buildResourceXmlWithAuthorPayload($connection, $controller, $resourceId, $postData);
+            $sourceXml = buildResourceXmlWithCurrentFormPayloads(
+                $connection,
+                $controller,
+                $resourceId,
+                $postData
+            );
         }
 
         $payload = (string) $controller->envelopeXmlAsString($connection, $resourceId, $sourceXml);
@@ -212,4 +220,47 @@ function generateDatasetPayloadByResourceId(int $resourceId, array $options = []
         'extension' => 'xml',
         'generator' => $generator,
     ];
+}
+
+/**
+ * Builds Resource XML with all explicitly supplied structured form payloads.
+ *
+ * The database representation is generated at most once. A missing payload
+ * leaves that section database-backed; an explicitly empty Related Works
+ * payload remains authoritative and removes the section.
+ *
+ * @param mysqli $connection Active database connection.
+ * @param object $controller Controller exposing getResourceAsXml().
+ * @param int $resourceId Database identifier of the resource.
+ * @param array<string, mixed> $postData Current form data.
+ * @return string|null Updated Resource XML, or null when no payload needs applying.
+ */
+function buildResourceXmlWithCurrentFormPayloads(
+    mysqli $connection,
+    object $controller,
+    int $resourceId,
+    array $postData
+): ?string {
+    $applyAuthors = hasNonemptyAuthorsPayload($postData);
+    $applyRelatedWorks = hasRelatedWorksPayload($postData);
+
+    if (!$applyAuthors && !$applyRelatedWorks) {
+        return null;
+    }
+
+    $resourceXml = $controller->getResourceAsXml($connection, $resourceId);
+
+    if ($applyAuthors) {
+        $resourceXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+    }
+
+    if ($applyRelatedWorks) {
+        $resourceXml = applyRelatedWorksPayloadToResourceXmlString(
+            $resourceXml,
+            $postData,
+            (bool) ($GLOBALS['showUsedInstruments'] ?? false)
+        );
+    }
+
+    return $resourceXml;
 }

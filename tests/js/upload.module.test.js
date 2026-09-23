@@ -88,6 +88,7 @@ describe('upload module coverage', () => {
         delete window.$;
         delete window.jQuery;
         delete window.mapXmlToFormFields;
+        delete window.elmo;
         delete global.FileReader;
         delete window.bootstrap;
     });
@@ -143,6 +144,10 @@ describe('upload module coverage', () => {
 
         test('exports clearStatusHideTimer function', () => {
             expect(typeof uploadModule.clearStatusHideTimer).toBe('function');
+        });
+
+        test('exports showRelatedWorksImportProgress function', () => {
+            expect(typeof uploadModule.showRelatedWorksImportProgress).toBe('function');
         });
     });
 
@@ -291,6 +296,30 @@ describe('upload module coverage', () => {
             expect($('#xml-upload-status').text()).toBe('New message');
 
             jest.useRealTimers();
+        });
+    });
+
+    describe('showRelatedWorksImportProgress', () => {
+        test('stays hidden at or below the large-import threshold', () => {
+            uploadModule.showRelatedWorksImportProgress({ processed: 100, total: 100 });
+
+            expect($('#xml-upload-status').hasClass('d-none')).toBe(true);
+        });
+
+        test('shows translated batch progress for large imports', () => {
+            window.elmo = {
+                translate: jest.fn((key) => key === 'modals.upload.relatedWorksProgress'
+                    ? 'Verwandte Werke {processed}/{total}'
+                    : '')
+            };
+
+            uploadModule.showRelatedWorksImportProgress({ processed: 100, total: 437 });
+
+            const statusElement = $('#xml-upload-status');
+            expect(statusElement.hasClass('alert-info')).toBe(true);
+            expect(statusElement.hasClass('d-none')).toBe(false);
+            expect(statusElement.text()).toBe('Verwandte Werke 100/437');
+            expect(statusElement.attr('aria-live')).toBe('polite');
         });
     });
 
@@ -521,6 +550,25 @@ describe('upload module coverage', () => {
             });
             
             expect(window.loadXmlToForm).toHaveBeenCalled();
+        });
+
+        test('keeps the spinner active while the XML mapper reports Related Works progress', async () => {
+            window.loadXmlToForm = jest.fn().mockImplementation(async (xmlDoc, options) => {
+                expect(xmlDoc.documentElement.localName).toBe('root');
+                expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(false);
+                options.onRelatedWorksProgress({ processed: 50, total: 150 });
+                expect($('#xml-upload-status').text()).toBe('Related works 50/150');
+            });
+            const validXml = '<?xml version="1.0"?><root></root>';
+            const mockFile = new Blob([validXml], { type: 'text/xml' });
+
+            uploadModule.handleXmlFile(mockFile);
+            await mockFileReader.onload({ target: { result: validXml } });
+
+            expect(window.loadXmlToForm).toHaveBeenCalledTimes(1);
+            expect(window.loadXmlToForm.mock.calls[0][1].onRelatedWorksProgress)
+                .toBe(uploadModule.showRelatedWorksImportProgress);
+            expect($('#upload-spinner-overlay').hasClass('d-none')).toBe(true);
         });
 
         test('hides modal on successful XML load', async () => {

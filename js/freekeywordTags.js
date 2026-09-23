@@ -23,6 +23,15 @@ document.addEventListener('DOMContentLoaded', function () {
     var freeKeywordstagify;
 
     /**
+     * Free keywords that are required for ELMO-MSL records.
+     * @type {Array<string>}
+     */
+    var MSL_DEFAULT_FREE_KEYWORDS = [
+        'EPOS',
+        'multi-scale laboratories'
+    ];
+
+    /**
      * Currently loaded whitelist for keywords
      * @type {Array}
      */
@@ -81,6 +90,35 @@ document.addEventListener('DOMContentLoaded', function () {
             window.applyTagifyAccessibilityAttributes(freeKeywordstagify, input, {
                 placeholder: placeholderValue
             });
+        }
+    }
+
+    /**
+     * Adds any missing ELMO-MSL default free keywords.
+     *
+     * The feature flag is the frontend source of truth for the active variant.
+     * Existing values are compared case-insensitively to avoid duplicate tags.
+     *
+     * @returns {void}
+     */
+    function ensureMslDefaultFreeKeywords() {
+        if (!window.ELMO_FEATURES ||
+            window.ELMO_FEATURES.showMslDefaultFreeKeywords !== true ||
+            !input._tagify) {
+            return;
+        }
+
+        var existingValues = (input._tagify.value || []).map(function (tag) {
+            return String(tag.value || '').toLowerCase();
+        });
+        var missingKeywords = MSL_DEFAULT_FREE_KEYWORDS.filter(function (keyword) {
+            return existingValues.indexOf(keyword.toLowerCase()) === -1;
+        });
+
+        if (missingKeywords.length > 0) {
+            input._tagify.addTags(missingKeywords.map(function (keyword) {
+                return { value: keyword };
+            }));
         }
     }
 
@@ -452,18 +490,12 @@ document.addEventListener('DOMContentLoaded', function () {
     // 1) Initialize Tagify with current translations
     initTagify();
 
-    // 2) Register event listener for translation changes
-    if (window.ELMO_FEATURES &&
-        window.ELMO_FEATURES.showMslDefaultFreeKeywords === true &&
-        window.elmo && window.elmo.isNewRecord === true &&
-        input._tagify) {
-
-        input._tagify.addTags([
-            { value: 'EPOS' },
-            { value: 'multi-scale laboratories' }
-        ]);
+    // 2) Add MSL defaults to new records and restore them after a user-confirmed clear.
+    if (window.elmo && window.elmo.isNewRecord === true) {
+        ensureMslDefaultFreeKeywords();
     }
 
+    document.addEventListener('elmo:formClearedByUser', ensureMslDefaultFreeKeywords);
     document.addEventListener('translationsLoaded', refreshTagifyInstance);
 
     // 3) Load curated keywords from the API

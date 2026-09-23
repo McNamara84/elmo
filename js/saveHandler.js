@@ -6,6 +6,7 @@
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
@@ -169,11 +170,11 @@ class SaveHandler {
     /**
      * Saves the current form state and triggers the generated file download.
      *
-     * Before `FormData` is created, the structured Authors payload is rebuilt
-     * from the live Authors stack. A missing payload field, an uninitialized
-     * stack, or an invalid generated payload aborts the request and is reported
-     * through the standard error notification; incomplete/stale Authors data is
-     * never sent through legacy form fields as a silent fallback.
+     * Before `FormData` is created, the structured Authors and enabled Related
+     * Works payloads are rebuilt from their live stacks. A missing payload field,
+     * an uninitialized stack, or an invalid generated payload aborts the request
+     * and is reported through the standard error notification; stale structured
+     * data is never sent through legacy form fields as a silent fallback.
      *
      * @param {string} filename - Chosen filename.
      * @param {string} [format=this.currentFormat] - Download format.
@@ -208,9 +209,18 @@ class SaveHandler {
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
             const authorsPayload = synchronizeAuthorsPayload(formEl);
+            const hasRelatedWorks = formEl.querySelector(
+                'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
+            );
+            const relatedWorksPayload = hasRelatedWorks
+                ? synchronizeRelatedWorksPayload(formEl)
+                : null;
             synchronizeTagifyInputs(formEl);
             const formData = new FormData(formEl);
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
+            if (Array.isArray(relatedWorksPayload)) {
+                formData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
+            }
             formData.append('filename', filename);
 
             const csrfToken = await fetchAndStoreCsrfToken('form');

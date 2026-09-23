@@ -16,7 +16,7 @@ function setupICGEMFileFormats() {
      * if the error occurs, the message is added to the select element
     */
     const selectId = "#input-file-format";
-    var selectElement = $(selectId).closest(".row").find('select[name="file_format"]');
+    var selectElement = $(selectId).closest(".row").find('select[name="icgem_file_format"]');
     const endpoint = "/vocabs/icgemformats";
     
     // Use a single AJAX call

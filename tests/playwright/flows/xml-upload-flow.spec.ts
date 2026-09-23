@@ -75,6 +75,11 @@ const MSL_KEYWORDS_HTML = loadTemplate('formgroups/mslKeywords.html');
 const FREE_KEYWORDS_HTML = loadTemplate('formgroups/freeKeywords.html');
 const DATES_HTML = loadTemplate('formgroups/dates.html');
 const RELATED_WORK_HTML = loadTemplate('formgroups/relatedwork.html');
+const RELATED_WORK_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt');
+const RELATED_WORK_CONTROLLER = loadTemplate('js/eventhandlers/formgroups/relatedwork.js').replace(
+  /^import .*$/m,
+  'const { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } = window;'
+);
 const FUNDING_REFERENCE_HTML = loadTemplate('formgroups/fundingreference.html');
 const MODALS_HTML = loadTemplate('modals.html');
 
@@ -454,6 +459,13 @@ test.describe('XML Upload Mapping Flow', () => {
       window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         const url = typeof input === 'string' ? input : input.toString();
         (window as any).__fetchCalls.push({ url, resolved: url });
+
+        if (url.includes('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt')) {
+          return Promise.resolve(new Response(data.relatedWorksXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' }
+          }));
+        }
         
         // Check if we have mock data for this URL
         for (const [pattern, responseData] of mockDataMap.entries()) {
@@ -500,7 +512,11 @@ test.describe('XML Upload Mapping Flow', () => {
           headers: { 'Content-Type': 'application/json' }
         }));
       };
-    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
+    }, {
+      mockData: MOCK_API_DATA,
+      mockThesauri: MOCK_THESAURI_TREE,
+      relatedWorksXslt: RELATED_WORK_XSLT
+    });
 
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
     await injectStylesheet(page, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css');
@@ -630,10 +646,20 @@ test.describe('XML Upload Mapping Flow', () => {
     }
 
     await page.evaluate(() => {
+      const $ = (window as any).jQuery;
+      (window as any).createRemoveButton = () => $('<button type="button" class="btn btn-danger removeButton"></button>');
+      (window as any).replaceHelpButtonInClonedRows = () => {};
+      (window as any).translateClonedRow = () => {};
+    });
+    await page.addScriptTag({ content: RELATED_WORK_CONTROLLER });
+
+    await page.evaluate(() => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
     });
+
+    await page.waitForFunction(() => Boolean((window as any).relatedWorkStack));
 
     await page.evaluate(() => {
       // Initialize Tagify for keyword input fields that need it for the test

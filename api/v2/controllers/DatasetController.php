@@ -4,6 +4,11 @@ if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
 }
 require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 
+// Skip class definition if already defined (e.g., mock in tests)
+if (class_exists('DatasetController', false)) {
+    return;
+}
+
 class DatasetController
 {
     protected mysqli $connection;
@@ -516,6 +521,7 @@ class DatasetController
         LEFT JOIN Relation r ON rw.relation_fk = r.relation_id
         LEFT JOIN Identifier_Type it ON rw.identifier_type_fk = it.identifier_type_id
         WHERE rhrw.Resource_resource_id = ?
+        ORDER BY rhrw.sort_order ASC, rhrw.Resource_has_Related_Work_id ASC
     ");
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();
@@ -1244,7 +1250,7 @@ class DatasetController
      *
      * When a source XML string is supplied, the transformation uses that
      * document directly instead of rebuilding it from the database. This is
-     * used by local save workflows to preserve the current Authors payload.
+     * used by local save workflows to preserve current structured form payloads.
      *
      * @param int $id The database identifier of the resource.
      * @param string|null $sourceXmlString Optional internal Resource XML to transform.
@@ -1260,82 +1266,6 @@ class DatasetController
         $service = new DataCiteJsonLdService();
 
         return $service->convertXmlStringToJsonLd($dataciteXml);
-    }
-
-    /**
-     * Adds or updates the DataCite Submitted date in an already generated XML envelope.
-     *
-     * Normal exports intentionally do not call this method. It is used by the real
-     * submit flow after XML generation so saved drafts and API downloads are not
-     * marked as submitted.
-     *
-     * @param string $xml Raw DataCite XML or all-format envelope XML.
-     * @param string|null $submissionDate Date to write as YYYY-MM-DD; defaults to today.
-     * @return string XML with exactly one DataCite Submitted date per DataCite resource.
-     */
-    public function markDataCiteEnvelopeAsSubmitted(string $xml, ?string $submissionDate = null): string
-    {
-        $submissionDate = $submissionDate ?: date('Y-m-d');
-
-        $dom = new DOMDocument();
-        $dom->formatOutput = true;
-        if (!$dom->loadXML($xml)) {
-            return $xml;
-        }
-
-        $ns = 'http://datacite.org/schema/kernel-4';
-        $xpath = new DOMXPath($dom);
-        $xpath->registerNamespace('dc', $ns);
-
-        $resources = $xpath->query('//dc:resource');
-        foreach ($resources as $resource) {
-            if (!$resource instanceof DOMElement) {
-                continue;
-            }
-
-            $dates = $xpath->query('dc:dates', $resource)->item(0);
-            if (!$dates instanceof DOMElement) {
-                $dates = $dom->createElementNS($ns, 'dates');
-                $insertBefore = $this->findDataCiteDatesInsertBefore($xpath, $resource);
-                if ($insertBefore !== null) {
-                    $resource->insertBefore($dates, $insertBefore);
-                } else {
-                    $resource->appendChild($dates);
-                }
-            }
-
-            $submittedDate = null;
-            $duplicates = [];
-            $submittedDates = $xpath->query('dc:date[@dateType="Submitted"]', $dates);
-            foreach ($submittedDates as $dateNode) {
-                if (!$dateNode instanceof DOMElement) {
-                    continue;
-                }
-                if ($submittedDate === null) {
-                    $submittedDate = $dateNode;
-                    continue;
-                }
-                $duplicates[] = $dateNode;
-            }
-
-            foreach ($duplicates as $duplicate) {
-                $duplicate->parentNode->removeChild($duplicate);
-            }
-
-            if (!$submittedDate instanceof DOMElement) {
-                $submittedDate = $dom->createElementNS($ns, 'date');
-                $submittedDate->setAttribute('dateType', 'Submitted');
-                $dates->appendChild($submittedDate);
-            }
-
-            while ($submittedDate->firstChild) {
-                $submittedDate->removeChild($submittedDate->firstChild);
-            }
-            $submittedDate->setAttribute('dateType', 'Submitted');
-            $submittedDate->appendChild($dom->createTextNode($submissionDate));
-        }
-
-        return $dom->saveXML();
     }
 
     /**
