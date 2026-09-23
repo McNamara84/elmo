@@ -1,3 +1,4 @@
+import "/clear.js"
 /**
  * Map DataCite JSON attributes to ELMO form fields.
  *

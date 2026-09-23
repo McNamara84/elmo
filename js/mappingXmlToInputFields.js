@@ -5,6 +5,8 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
   ? require('./resourceTypeUtils')
   : window.resourceTypeUtils;
 
+import "/clear.js"
+
 const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
 let relatedWorksXsltDocumentPromise = null;
 

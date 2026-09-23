@@ -3,7 +3,7 @@ import { setCCBYasDefault, setBrowserTimezone } from './select.js';
 /**
  * Clears and resets input fields and Tagify instances.
  */
-function clearInputFields() {
+export default function clearInputFields() {
 
     // Reset input fields in Resource Information
     $('#input-resourceinformation-doi').val('');
