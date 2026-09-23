@@ -43,6 +43,8 @@ function loadMappingModule(contextOverrides = {}) {
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;
+  context.window.loadClearInputFields = context.window.loadClearInputFields
+    || (() => Promise.resolve(() => {}));
   vm.runInContext(code, context);
   return context;
 }

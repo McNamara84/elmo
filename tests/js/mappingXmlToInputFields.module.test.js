@@ -25,6 +25,7 @@ describe('mappingXmlToInputFields module coverage', () => {
         global.jQuery = $;
         window.$ = $;
         window.jQuery = $;
+        window.loadClearInputFields = () => Promise.resolve(() => {});
 
         // Set up DOM with necessary form elements
         document.body.innerHTML = `
