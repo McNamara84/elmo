@@ -1,3 +1,5 @@
+import { setCCBYasDefault } from './select.js';
+
 /**
  * Clears and resets input fields and Tagify instances.
  */
@@ -264,7 +266,7 @@ const GGMS_SELECTORS = {
     },
 };
 
-// Export for testing
+// Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { clearInputFields, GGMS_SELECTORS };
 }

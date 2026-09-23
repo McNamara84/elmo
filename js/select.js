@@ -302,7 +302,7 @@ function populateTitleTypeDropdownWithData(types) {
   $select.prop('disabled', false);
 }
 
-function setCCBYasDefault() {
+export function setCCBYasDefault() {
   const $select = $("#input-rights-license");
   const $option = $select.find('option').filter(function () {
     // find a CC-BY-4.0 option in the dropdown
@@ -1057,6 +1057,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateValidationPattern,
     debounce,
     updateDataSourceIdsAndNames,
-    loadFundersData
+    loadFundersData,
+    setCCBYasDefault
   };
 }
