@@ -448,7 +448,7 @@ function getCurrentAuthorsPayload(authorStack) {
   }
 }
 
-function applyContactsToAuthorStack(contactPersons) {
+function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
   const authorStack = getAuthorStackController();
   if (!authorStack || !contactPersons.length) {
     return false;
@@ -463,6 +463,7 @@ function applyContactsToAuthorStack(contactPersons) {
     ));
 
     if (!author) {
+      if (matchedOnly) return;
       author = {
         type: "person",
         familyname: contact.familyname,
@@ -751,7 +752,7 @@ function processContactPersons(xmlDoc) {
       contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
     }
 
-    applyContactsToAuthorStack(contactPersons);
+    applyContactsToAuthorStack(contactPersons, Boolean(window.contributorStack));
     return;
   }
 
@@ -841,7 +842,7 @@ function processContactPersonsFromDataCite(xmlDoc) {
   }
 
   if (getAuthorStackController()) {
-    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc));
+    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc), Boolean(window.contributorStack));
     return;
   }
 
@@ -1050,6 +1051,10 @@ function getOrCreatePersonRow(index) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processContributors(xmlDoc, resolver) {
+  if (window.contributorStack?.setContributors) {
+    processContributorsIntoStack(xmlDoc, resolver);
+    return;
+  }
   const contributorsNode = xmlDoc.evaluate(".//ns:contributors", xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
   if (!contributorsNode) return;
@@ -1075,6 +1080,83 @@ function processContributors(xmlDoc, resolver) {
 
   // Populate form with processed data
   populateFormWithContributors(personMap, orgMap);
+}
+
+/** Preserve DataCite document order and merge repeated roles into one card. */
+function processContributorsIntoStack(xmlDoc, resolver) {
+  const entries = [];
+  const byKey = new Map();
+  const authors = getCurrentAuthorsPayload(getAuthorStackController());
+  const isAuthor = (familyname, givenname) => authors.some(author =>
+    author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname));
+  const append = (key, entry) => {
+    if (byKey.has(key)) return byKey.get(key);
+    entries.push(entry);
+    byKey.set(key, entry);
+    return entry;
+  };
+  const nodes = Array.from(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'contributor'));
+  for (const node of nodes) {
+    const dcChildren = name => Array.from(node.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', name));
+    const dcText = name => dcChildren(name)[0]?.textContent?.trim() || '';
+    if (dcChildren('nameIdentifier').some(item => item.getAttribute('nameIdentifierScheme') === 'labid')) continue;
+    const rawRole = node.getAttribute('contributorType') || 'Other';
+    const role = normalizeRole(rawRole);
+    const nameType = dcChildren('contributorName')[0]?.getAttribute('nameType') || '';
+    const display = dcText('contributorName');
+    let familyname = dcText('familyName');
+    let givenname = dcText('givenName');
+    if (nameType === 'Personal' && !familyname && display.includes(',')) {
+      [familyname, givenname] = display.split(',').map(part => part.trim());
+    }
+    const person = nameType === 'Personal' || Boolean(familyname || givenname);
+    if (rawRole === 'ContactPerson' && person && isAuthor(familyname, givenname)) continue;
+    const orcid = getOrcidFromNode(xmlDoc, node, resolver);
+    const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${display.trim().toLowerCase()}`;
+    const affiliations = [];
+    const affiliationNodes = dcChildren('affiliation');
+    for (const affiliation of affiliationNodes) {
+      const label = (affiliation.textContent || '').trim();
+      const rorId = normalizeRorId(affiliation.getAttribute('affiliationIdentifier'));
+      if (label) affiliations.push({ label, rorId });
+    }
+    const entry = append(key, person
+      ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations, email: '', website: '' }
+      : { type: 'institution', institutionname: display, roles: [], affiliations, email: '', website: '' });
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    affiliations.forEach(affiliation => {
+      if (!entry.affiliations.some(existing => existing.label === affiliation.label)) entry.affiliations.push(affiliation);
+    });
+  }
+
+  // ISO carries email and website, which DataCite cannot encode.
+  const contacts = Array.from(xmlDoc.getElementsByTagNameNS('*', 'pointOfContact'))
+    .flatMap(element => Array.from(element.getElementsByTagNameNS('*', 'CI_ResponsibleParty')));
+  for (const node of contacts) {
+    const textOf = name => node.getElementsByTagNameNS('*', name)[0]?.textContent?.trim() || '';
+    const fullName = textOf('individualName');
+    const institutionname = textOf('organisationName');
+    const email = textOf('electronicMailAddress');
+    const website = textOf('URL');
+    const [familyname, givenname = ''] = fullName ? fullName.split(',').map(part => part.trim()) : ['', ''];
+    if (familyname) {
+      if (isAuthor(familyname, givenname)) continue;
+      const key = `person:${normalizeNameKey(familyname, givenname)}`;
+      const entry = append(key, { type: 'person', familyname, givenname, roles: [], affiliations: [], email: '', website: '' });
+      if (!entry.roles.includes('Contact Person')) entry.roles.push('Contact Person');
+      entry.email = email || entry.email;
+      entry.website = website || entry.website;
+    } else if (institutionname) {
+      const key = `institution:${institutionname.trim().toLowerCase()}`;
+      const entry = append(key, { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' });
+      if (window.ELMO_FEATURES?.showContactInstitution === true && !entry.roles.includes('Contact Person')) {
+        entry.roles.push('Contact Person');
+      }
+      entry.email = email || entry.email;
+      entry.website = website || entry.website;
+    }
+  }
+  window.contributorStack.setContributors(entries);
 }
 
 /**

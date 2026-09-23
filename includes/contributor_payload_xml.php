@@ -61,7 +61,7 @@ function applyContributorsPayloadToResourceXmlString(string $resourceXml, array 
         foreach (['familyname', 'givenname', 'orcid', 'email', 'website'] as $key) {
             appendOptionalTextChild($dom, $contact, $key, $entry[$key]);
         }
-        appendContributorAffiliations($dom, $contact, $entry['affiliations']);
+        if ($entry['affiliations']) appendContributorAffiliations($dom, $contact, $entry['affiliations']);
         $contacts->appendChild($contact);
     }
     replaceDirectChild($dom, $root, 'ContactInstitutions', $institutionContacts);

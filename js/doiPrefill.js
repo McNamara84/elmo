@@ -428,6 +428,39 @@ function prefillCreators(creators) {
 function prefillContributors(contributors) {
   if (!Array.isArray(contributors) || contributors.length === 0) return;
 
+  if (window.contributorStack?.setContributors) {
+    const entries = [];
+    const byKey = new Map();
+    const authors = getCurrentAuthorsPayload(getAuthorStackController());
+    contributors.forEach(c => {
+      const role = normalizeRole(c.contributorType || 'Other');
+      const givenname = c.givenName || '';
+      const familyname = c.familyName || '';
+      const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
+      if (role === 'Contact Person' && person && authors.some(author =>
+        author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname))) return;
+      const orcid = (c.nameIdentifiers || []).find(item => item.nameIdentifierScheme === 'ORCID')?.nameIdentifier?.replace(/^https?:\/\/orcid\.org\//, '') || '';
+      const institutionname = c.name || '';
+      const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${institutionname.trim().toLowerCase()}`;
+      const affiliations = (c.affiliation || []).map(item => ({
+        label: typeof item === 'string' ? item : (item.name || ''),
+        rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
+      })).filter(item => item.label);
+      let entry = byKey.get(key);
+      if (!entry) {
+        entry = person
+          ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
+          : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
+        byKey.set(key, entry);
+        entries.push(entry);
+      }
+      if (!entry.roles.includes(role)) entry.roles.push(role);
+      affiliations.forEach(item => { if (!entry.affiliations.some(existing => existing.label === item.label)) entry.affiliations.push(item); });
+    });
+    window.contributorStack.setContributors(entries);
+    return;
+  }
+
   const personMap = new Map();
   const orgMap = new Map();
 
