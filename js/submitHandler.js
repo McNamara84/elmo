@@ -202,7 +202,20 @@ if (groupStc) {
  *        Payload supplied by an Authors update event, or null to synchronize now.
  * @returns {boolean} True when the payload contains a complete person contact.
  */
+let validatingContactPerson = false;
 function validateContactPerson(synchronizedPayload = null) {
+    if (validatingContactPerson) {
+        return false;
+    }
+    validatingContactPerson = true;
+    try {
+        return validateContactPersonPayload(synchronizedPayload);
+    } finally {
+        validatingContactPerson = false;
+    }
+}
+
+function validateContactPersonPayload(synchronizedPayload = null) {
     var authorsPayload = Array.isArray(synchronizedPayload) ? synchronizedPayload : null;
 
     if (!Array.isArray(authorsPayload)) {

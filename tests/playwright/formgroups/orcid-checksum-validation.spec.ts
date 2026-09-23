@@ -135,9 +135,11 @@ test.describe('ORCID Checksum Validation', () => {
   });
 
   test('contributor person ORCID field also validates checksum', async ({ page }) => {
-    const orcidInput = page.locator('#input-contributor-orcid');
+    await page.locator('[data-contributor-add-type="person"]').click();
+    const card = page.locator('[data-contributor-card][data-contributor-type="person"]').first();
+    const orcidInput = card.locator('input[name="cbORCID[]"]');
     await orcidInput.fill('0000-0002-1825-0098');
-    await page.locator('#input-contributor-lastname').click();
+    await card.locator('input[name="cbPersonLastname[]"]').click();
 
     await expect(orcidInput).toHaveClass(/is-invalid/);
   });

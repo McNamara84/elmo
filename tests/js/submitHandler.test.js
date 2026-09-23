@@ -827,6 +827,17 @@ describe('submitHandler.js', () => {
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 
+  test('contact validation stays finite when a translation refresh revalidates contacts', () => {
+    document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
+    document.getElementById('test-form').insertAdjacentHTML('beforeend',
+      '<div id="formgroup-contributors"><input name="contributorsPayload" value="[]"></div>');
+    global.applyTranslations.mockImplementation(() => validateContactPerson());
+
+    expect(validateContactPerson()).toBe(false);
+    expect(global.applyTranslations).toHaveBeenCalledTimes(1);
+    expect($('#contact-person-error')).toHaveLength(1);
+  });
+
   test('accepts a complete contributor person without an author contact', () => {
     document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
     document.getElementById('test-form').insertAdjacentHTML('beforeend',

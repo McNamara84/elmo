@@ -38,10 +38,7 @@ $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, 
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
 /** @var bool $showContactInstitution */
-$envShowContactInstitution = getenv('SHOW_CONTACT_INSTITUTION');
-$showContactInstitution = $envShowContactInstitution === false
-    ? resolveFeatureToggle($showContactInstitution ?? null, false)
-    : filter_var($envShowContactInstitution, FILTER_VALIDATE_BOOLEAN);
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION'), FILTER_VALIDATE_BOOLEAN);
 /** @var bool $showThesauri */
 $showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */

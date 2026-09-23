@@ -31,21 +31,13 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
     // Resource Information
     await page.fill('#input-resourceinformation-title', `E2E Test Dataset ${Date.now()}`);
     
-    // Wait for Resource Type dropdown to be populated
-    await page.waitForFunction(() => {
-      const resourceType = document.querySelector('#input-resourceinformation-resourcetype') as HTMLSelectElement;
-      return resourceType && resourceType.options.length > 1;
-    }, { timeout: 10_000 });
+    await expect(page.locator('#input-resourceinformation-resourcetype option[value="5"]')).toHaveCount(1);
     
     // Use explicit option values for stability (matches approach in utils/flows.ts)
     // Value '5' = Dataset, Value '1' = English
     await page.selectOption('#input-resourceinformation-resourcetype', '5');
     
-    // Wait for Language dropdown to be populated
-    await page.waitForFunction(() => {
-      const language = document.querySelector('#input-resourceinformation-language') as HTMLSelectElement;
-      return language && language.options.length > 1;
-    }, { timeout: 10_000 });
+    await expect(page.locator('#input-resourceinformation-language option[value="1"]')).toHaveCount(1);
     
     await page.selectOption('#input-resourceinformation-language', '1');
     await page.fill('#input-resourceinformation-publicationyear', '2026');
@@ -61,6 +53,21 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
 
     // Date Created
     await page.fill('#input-date-created', '2026-01-24');
+  }
+
+  async function addContributorPerson(page: Page) {
+    await page.locator('[data-contributor-add-type="person"]').click();
+    const card = page.locator('[data-contributor-card][data-contributor-type="person"]').first();
+    await expect(card).toBeVisible();
+    await card.locator('input[name="cbPersonLastname[]"]').fill('ContributorLastName');
+    await card.locator('input[name="cbPersonFirstname[]"]').fill('ContributorFirstName');
+
+    const roleInput = card.locator('input[name="cbPersonRoles[]"]');
+    await expect.poll(() => roleInput.evaluate((input: any) => input._tagify?.whitelist?.length ?? 0))
+      .toBeGreaterThan(0);
+    await roleInput.evaluate((input: any) => input._tagify.addTags([input._tagify.whitelist[0]]));
+    await expect.poll(() => roleInput.evaluate((input: any) => input._tagify?.value?.length ?? 0))
+      .toBeGreaterThan(0);
   }
 
   /**
@@ -128,37 +135,7 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
   test('saves dataset with Contributor Person data in request body', async ({ page }) => {
     await fillMandatoryFields(page);
 
-    // Contributor section must be available in CI test fixture
-    const contributorSection = page.locator('#input-contributor-lastname');
-    await expect(contributorSection).toBeVisible({ timeout: 10_000 });
-
-    // Add Contributor Person
-    await page.fill('#input-contributor-lastname', 'ContributorLastName');
-    await page.fill('#input-contributor-firstname', 'ContributorFirstName');
-
-    // Wait for role Tagify to be initialized
-    const roleInput = page.locator('#input-contributor-personrole');
-    const roleInputExists = await roleInput.count() > 0;
-    
-    if (roleInputExists) {
-      // Wait for Tagify initialization with longer timeout for CI and fail if unavailable
-      await page.waitForFunction(() => {
-        const input: any = document.querySelector('#input-contributor-personrole');
-        return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
-      }, { timeout: 20_000 });
-
-      // Add the first available role from whitelist
-      await page.evaluate(() => {
-        const input: any = document.querySelector('#input-contributor-personrole');
-        if (input?._tagify?.whitelist?.length > 0) {
-          const firstRole = input._tagify.whitelist[0];
-          input._tagify.addTags([firstRole]);
-        }
-      });
-      
-      await expect.poll(() => roleInput.evaluate((input: any) => input._tagify?.value?.length ?? 0))
-        .toBeGreaterThan(0);
-    }
+    await addContributorPerson(page);
 
     // Trigger save with mocked endpoint
     const { requestBody } = await triggerSaveWithMock(page);
@@ -198,31 +175,11 @@ test.describe('Save with optional formgroups - Contributor Persons and Coverage'
   test('saves dataset with both Contributor Person AND Coverage in request body', async ({ page }) => {
     await fillMandatoryFields(page);
 
-    // Both sections must be available in CI test fixture
-    const contributorSection = page.locator('#input-contributor-lastname');
+    // Coverage section must be available in CI test fixture
     const coverageSection = page.locator('#input-stc-latmin_1');
-    await expect(contributorSection).toBeVisible({ timeout: 10_000 });
     await expect(coverageSection).toBeVisible({ timeout: 10_000 });
 
-    // Add Contributor Person
-    await page.fill('#input-contributor-lastname', 'ContributorLastName');
-    await page.fill('#input-contributor-firstname', 'ContributorFirstName');
-
-    // Add role if Tagify is available
-    await page.waitForFunction(() => {
-      const input: any = document.querySelector('#input-contributor-personrole');
-      return !!input?._tagify && Array.isArray(input._tagify.whitelist) && input._tagify.whitelist.length >= 1;
-    }, { timeout: 20_000 });
-
-    await page.evaluate(() => {
-      const input: any = document.querySelector('#input-contributor-personrole');
-      if (input?._tagify?.whitelist?.length > 0) {
-        input._tagify.addTags([input._tagify.whitelist[0]]);
-      }
-    });
-    await expect.poll(() => page.locator('#input-contributor-personrole').evaluate(
-      (input: any) => input._tagify?.value?.length ?? 0,
-    )).toBeGreaterThan(0);
+    await addContributorPerson(page);
 
     // Add Spatial/Temporal Coverage
     await page.fill('#input-stc-latmin_1', '52.5');
