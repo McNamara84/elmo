@@ -302,6 +302,19 @@ function populateTitleTypeDropdownWithData(types) {
   $select.prop('disabled', false);
 }
 
+function setCCBYasDefault() {
+  const $select = $("#input-rights-license");
+  const $option = $select.find('option').filter(function () {
+    // find a CC-BY-4.0 option in the dropdown
+    return String($(this).val()) === "CC-BY-4.0";
+  }).first();
+  if ($option.length) {
+    // select the CC-BY-4.0 option
+    $option.prop("selected", true);
+  }
+}
+
+
 /**
  * Populates license dropdown with pre-fetched data
  * @param {Array} licenses - Array of license objects
@@ -318,9 +331,7 @@ function populateLicenseDropdownWithData(licenses) {
         value: val.rights_id,
         text: val.text + " (" + val.rightsIdentifier + ")"
       });
-      if (val.rightsIdentifier === "CC-BY-4.0") {
-        $option.prop("selected", true);
-      }
+      setCCBYasDefault();
       $select.append($option);
     });
   } else {
