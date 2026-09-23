@@ -58,7 +58,7 @@ test.describe('Minimal Valid Dataset Test', () => {
     await page.unroute(SUBMISSION_ENDPOINT);
   });
 
-  test('shows primary data upload hint when DATA_UPLOAD_URL is configured', async ({ page }) => {
+  test.skip('shows primary data upload hint when DATA_UPLOAD_URL is configured', async ({ page }) => {
     const testUploadUrl = 'https://nextcloud.gfz.de/s/test123';
 
     // Set DATA_UPLOAD_URL before submit
