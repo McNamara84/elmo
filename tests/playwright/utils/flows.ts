@@ -184,7 +184,7 @@ async function addAuthorInstitution(
 
 /**
  * Adds a contributor person entry with ORCID, name, role, and affiliation.
- * Creates a new row if index > 0, then fills in the contributor details.
+ * Creates a contributor card, then fills in its details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the contributor person entry (0-based)
  * @param {Object} data - The contributor person data object
@@ -206,24 +206,23 @@ async function addContributorPerson(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
-    await page.locator('#button-contributor-addperson').click();
-    // Wait for the new contributor person row to be visible
-    await page.locator('[contributor-person-row]').nth(index).waitFor({ state: 'visible' });
+  const personCards = page.locator('[data-contributor-card][data-contributor-type="person"]');
+  while (await personCards.count() <= index) {
+    const nextIndex = await personCards.count();
+    await page.locator('[data-contributor-add-type="person"]').click();
+    await personCards.nth(nextIndex).waitFor({ state: 'visible' });
   }
 
-  // Get the specific contributor person row
-  const contributorRow = page.locator('[contributor-person-row]').nth(index);
+  const contributorRow = personCards.nth(index);
 
   // Fill ORCID
-  await contributorRow.locator('[id^="input-contributor-orcid"]').fill(data.orcid);
+  await contributorRow.locator('input[name="cbORCID[]"]').fill(data.orcid);
 
   // Fill last name
-  await contributorRow.locator('[id^="input-contributor-lastname"]').fill(data.lastName);
+  await contributorRow.locator('input[name="cbPersonLastname[]"]').fill(data.lastName);
 
   // Fill first name
-  await contributorRow.locator('[id^="input-contributor-firstname"]').fill(data.firstName);
+  await contributorRow.locator('input[name="cbPersonFirstname[]"]').fill(data.firstName);
 
   // Fill role using tagify
   // The title for this field is Role(s) 
@@ -243,7 +242,7 @@ async function addContributorPerson(
 
 /**
  * Adds a contributor institution entry with organization name, role, and affiliation.
- * Creates a new row if index > 0, then fills in the contributor institution details.
+ * Creates a contributor card, then fills in its institution details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the contributor institution entry (0-based)
  * @param {Object} data - The contributor institution data object
@@ -261,18 +260,17 @@ async function addContributorInstitution(
     affiliation: string;
   }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
-    await page.locator('#button-contributor-addorganisation').click();
-    // Wait for the new contributor institution row to be visible
-    await page.locator('[contributors-row]').nth(index).waitFor({ state: 'visible' });
+  const institutionCards = page.locator('[data-contributor-card][data-contributor-type="institution"]');
+  while (await institutionCards.count() <= index) {
+    const nextIndex = await institutionCards.count();
+    await page.locator('[data-contributor-add-type="institution"]').click();
+    await institutionCards.nth(nextIndex).waitFor({ state: 'visible' });
   }
 
-  // Get the specific contributor institution row
-  const institutionRow = page.locator('[contributors-row]').nth(index);
+  const institutionRow = institutionCards.nth(index);
 
   // Fill organization name
-  await institutionRow.locator('[id^="input-contributor-name"]').fill(data.organizationName);
+  await institutionRow.locator('input[name="cbOrganisationName[]"]').fill(data.organizationName);
 
   // Fill the role into tha tagify field 
   const roleTagifyInput = institutionRow.locator('.tagify__input[title="Role(s)"]');
