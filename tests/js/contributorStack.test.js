@@ -83,6 +83,7 @@ describe('combined contributor stack', () => {
       { type: 'person', familyname: 'Last', roles: [] }
     ]);
     expect(payload().map(entry => entry.type)).toEqual(['person', 'institution', 'person']);
+    expect(cards()[0].querySelector('[data-contributor-remove]').classList.contains('btn-danger')).toBe(true);
     cards()[2].querySelector('[data-contributor-move-up]').click();
     expect(payload().map(entry => entry.type)).toEqual(['person', 'person', 'institution']);
     expect(payload().map(entry => entry.order)).toEqual([0, 1, 2]);

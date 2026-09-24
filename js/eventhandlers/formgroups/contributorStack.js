@@ -209,6 +209,7 @@ $(document).ready(function () {
     const up = makeButton('data-contributor-move-up', 'bi-chevron-up', t('contributors.moveEntryUp', 'Move contributor up'));
     const down = makeButton('data-contributor-move-down', 'bi-chevron-down', t('contributors.moveEntryDown', 'Move contributor down'));
     const remove = makeButton('data-contributor-remove', 'bi-x-lg', t('contributors.removeEntry', 'Remove contributor entry'));
+    remove.classList.replace('btn-outline-secondary', 'btn-danger');
     actions.append(toggle, up, down, remove);
     card.append(dragZone, middle, actions);
     card.setAttribute('aria-labelledby', summaryId);
