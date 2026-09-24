@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.db
-    pull_policy: build
     network_mode: host
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
@@ -34,7 +33,6 @@ services:
       context: .
       dockerfile: Dockerfile.web
       target: prod
-    pull_policy: build
     network_mode: host
     environment:
       DB_HOST: 127.0.0.1
@@ -80,8 +78,6 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "true"
       INSTANCE_TITLE: "ELMO for ICGEM (open beta testing)"
-    depends_on:
-      - db
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pgrep apache2 > /dev/null || exit 1"]
