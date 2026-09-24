@@ -1,6 +1,7 @@
 // Global storage for roles data
 var personRoles = [];
 var organizationRoles = [];
+var sharedRoles = [];
 var fetchedRoleTypes = new Set();
 
 /**
@@ -58,7 +59,7 @@ function setupRolesDropdown(roletypes, inputSelector) {
     rolesToUse = [...rolesToUse, ...organizationRoles];
   }
   if (roletypes.includes("both")) {
-    rolesToUse = [...rolesToUse, ...personRoles, ...organizationRoles];
+    rolesToUse = [...rolesToUse, ...sharedRoles];
   }
 
   const allTypesFetched = roletypes.every(type => fetchedRoleTypes.has(type));
@@ -82,16 +83,18 @@ function setupRolesDropdown(roletypes, inputSelector) {
     .then(results => {
       results.forEach((roles, index) => {
         fetchedRoleTypes.add(roletypes[index]);
-        if (roletypes[index] === "person" || roletypes[index] === "both") {
+        if (roletypes[index] === "person") {
           personRoles = [...new Set([...personRoles, ...roles])];
         }
-        if (roletypes[index] === "institution" || roletypes[index] === "both") {
+        if (roletypes[index] === "institution") {
           organizationRoles = [...new Set([...organizationRoles, ...roles])];
+        }
+        if (roletypes[index] === "both") {
+          sharedRoles = [...new Set([...sharedRoles, ...roles])];
         }
       });
 
-      const allRoles = results.flat();
-      initializeTagifyWithRoles(inputSelector, allRoles);
+      initializeTagifyWithRoles(inputSelector, [...new Set(results.flat())]);
     })
     .catch(error => {
       console.error(`Error fetching roles for ${inputSelector}:`, error);

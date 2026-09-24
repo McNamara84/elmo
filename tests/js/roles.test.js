@@ -126,7 +126,16 @@ describe('roles.js', () => {
     await flushPromises();
 
     expect(fetch).toHaveBeenCalledWith('./api/v2/vocabs/roles?type=person');
-    expect(document.getElementById('input-contributor-personrole')._tagify.settings.whitelist).toContain('Researcher');
+    const personWhitelist = document.getElementById('input-contributor-personrole')._tagify.settings.whitelist;
+    expect(personWhitelist).toContain('Researcher');
+    expect(personWhitelist).toContain('Data Collector');
+    expect(personWhitelist).not.toContain('Distributor');
+    expect(document.getElementById('input-contributor-organisationrole')._tagify.settings.whitelist)
+      .not.toContain('Researcher');
+
+    window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
+    expect(document.getElementById('input-contributor-personrole')._tagify.settings.whitelist)
+      .not.toContain('Distributor');
   });
 
   test('refreshRoleTagifyInstances updates placeholders for all rows', () => {

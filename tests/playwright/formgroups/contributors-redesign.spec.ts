@@ -86,3 +86,20 @@ test('dragging the handle changes contributor order and saved payload', async ({
   expect(await page.evaluate(() => (window as any).contributorStack.collectPayload().map((entry: any) => entry.familyname)))
     .toEqual(['Second', 'First']);
 });
+
+test('person role picker excludes institution-only roles', async ({ page }) => {
+  await page.route('**/api/v2/vocabs/roles?type=*', route => {
+    const type = new URL(route.request().url()).searchParams.get('type');
+    const names = type === 'person' ? ['Researcher'] : type === 'institution' ? ['Distributor'] : ['Data Collector'];
+    return route.fulfill({ json: names.map(name => ({ name })) });
+  });
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.locator('[data-contributor-add-type="institution"]').click();
+  await page.locator('[data-contributor-add-type="person"]').click();
+  const roles = page.locator('[data-contributor-card][data-contributor-type="person"] [name="cbPersonRoles[]"]');
+  await expect.poll(() => roles.evaluate((input: any) => input._tagify?.settings.whitelist)).toEqual(
+    expect.arrayContaining(['Researcher', 'Data Collector', 'Contact Person'])
+  );
+  expect(await roles.evaluate((input: any) => input._tagify.settings.whitelist)).not.toContain('Distributor');
+});
