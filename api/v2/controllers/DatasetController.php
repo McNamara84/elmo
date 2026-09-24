@@ -927,6 +927,8 @@ class DatasetController
             $contributorsXml = $xml->addChild('Contributors');
         }
         if ($contributorsXml !== null) {
+            // Preserve the mixed card order for round trips; the separate Persons and
+            // Institutions blocks below remain for readers of the legacy XML layout.
             foreach ($contributors['entries'] as $position => $entry) {
                 $itemXml = $contributorsXml->addChild('Contributor');
                 $itemXml->addAttribute('type', $entry['type']);
