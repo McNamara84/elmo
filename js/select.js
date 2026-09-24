@@ -459,6 +459,7 @@ function populateIdentifierTypesDropdownWithData(response) {
 
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
+window.setupIdentifierTypesDropdown = setupIdentifierTypesDropdown;
 window.elmo = window.elmo || {};
 window.elmo.applyRelatedWorkDropdowns = applyRelatedWorkDropdowns;
 
