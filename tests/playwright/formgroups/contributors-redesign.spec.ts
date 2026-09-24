@@ -103,3 +103,31 @@ test('person role picker excludes institution-only roles', async ({ page }) => {
   );
   expect(await roles.evaluate((input: any) => input._tagify.settings.whitelist)).not.toContain('Distributor');
 });
+
+test('contact fields and editable affiliations follow the requested rows', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.locator('[data-contributor-add-type="person"]').click();
+  await page.locator('[data-contributor-add-type="institution"]').click();
+  const person = page.locator('[data-contributor-card][data-contributor-type="person"]');
+  const institution = page.locator('[data-contributor-card][data-contributor-type="institution"]');
+
+  await page.evaluate(() => {
+    const input = document.querySelector('[data-contributor-type="person"] [name="cbPersonRoles[]"]') as HTMLInputElement & { _tagify?: any };
+    if (input._tagify) input._tagify.addTags([{ value: 'Contact Person' }]);
+    else input.value = '[{"value":"Contact Person"}]';
+    input.dispatchEvent(new Event('change', { bubbles: true }));
+  });
+  await expect(person.locator('[data-contributor-contact-fields]')).toBeVisible();
+  expect(await person.locator('[data-contributor-edit-panel] > .row').evaluateAll(rows =>
+    rows.map(row => Array.from(row.querySelectorAll('input')).map(input => input.name).filter(Boolean))
+  )).toEqual([
+    expect.arrayContaining(['cbORCID[]', 'cbPersonLastname[]', 'cbPersonFirstname[]', 'cbPersonRoles[]']),
+    ['cbContactWebsite[]', 'cbContactEmail[]'],
+    ['cbAffiliation[]', 'cbpRorIds[]']
+  ]);
+  await expect(person.locator('[data-contributor-affiliation-row] > .col-12')).toHaveCount(1);
+  await expect(institution.locator('[data-contributor-affiliation-row] > .col-12')).toHaveCount(1);
+  await expect(person.locator('[name="cbAffiliation[]"]')).toHaveAttribute('name', 'cbAffiliation[]');
+  await expect(institution.locator('[name="OrganisationAffiliation[]"]')).toHaveAttribute('name', 'OrganisationAffiliation[]');
+});

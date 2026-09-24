@@ -135,12 +135,12 @@ $(document).ready(function () {
     fields.className = 'row g-2 mt-1 d-none';
     fields.dataset.contributorContactFields = '';
     fields.innerHTML = `<div class="col-12 col-md-6"><div class="form-floating">
+      <input type="url" class="form-control" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
+      <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
+    </div></div><div class="col-12 col-md-6"><div class="form-floating">
       <input type="email" class="form-control" id="contributor-contact-email-${id}" name="cbContactEmail[]">
       <label for="contributor-contact-email-${id}" data-translate="contactPersons.email">Email address</label>
       <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">Please provide a valid email address.</div>
-    </div></div><div class="col-12 col-md-6"><div class="form-floating">
-      <input type="url" class="form-control" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
-      <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
     </div></div>`;
     panel.append(fields);
   }
@@ -197,8 +197,27 @@ $(document).ready(function () {
     fields.querySelectorAll('[id]').forEach(element => { element.id = `${element.id}-${id}`; });
     fields.querySelectorAll('label[for]').forEach(label => { label.htmlFor = `${label.htmlFor}-${id}`; });
     fields.classList.add('g-1');
+    const affiliationName = type === 'person' ? 'cbAffiliation[]' : 'OrganisationAffiliation[]';
+    const affiliationColumn = fields.querySelector(`[name="${affiliationName}"]`)
+      ?.closest('[class^="col-"], [class*=" col-"]');
+    if (affiliationColumn) affiliationColumn.className = 'col-12 p-1';
+    fields.querySelectorAll(':scope > [class^="col-"], :scope > [class*=" col-"]').forEach(column => {
+      if (column === affiliationColumn) return;
+      column.className = type === 'person'
+        ? 'col-12 col-md-6 col-lg-3 p-1'
+        : column.querySelector('[name="cbOrganisationName[]"]')
+          ? 'col-12 col-lg-8 p-1'
+          : 'col-12 col-lg-4 p-1';
+    });
     panel.append(fields);
     addContactFields(panel, id);
+    if (affiliationColumn) {
+      const affiliationRow = document.createElement('div');
+      affiliationRow.className = 'row g-1 mt-1';
+      affiliationRow.dataset.contributorAffiliationRow = '';
+      affiliationRow.append(affiliationColumn);
+      panel.append(affiliationRow);
+    }
     middle.append(summary, panel);
 
     const actions = document.createElement('div');
