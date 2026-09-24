@@ -184,7 +184,7 @@ $(document).ready(function () {
       types.forEach(key => {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'btn btn-outline-secondary';
+        button.className = 'btn btn-outline-dark';
         button.dataset.contributorTypeOption = key;
         button.textContent = t(key === 'person' ? 'contributors.person' : 'contributors.institution', key === 'person' ? 'Person' : 'Institution');
         switcher.append(button);
