@@ -115,4 +115,20 @@ describe('combined contributor stack', () => {
     expect(payload()[0].email).toBe('a@example.org');
     expect(cards()[0].querySelector('[data-contributor-contact-fields]').classList.contains('d-none')).toBe(false);
   });
+
+  test('collapses to a compact summary with an edit action', () => {
+    controller.addPerson();
+    const card = cards()[0];
+    const toggle = card.querySelector('[data-contributor-toggle-edit]');
+    expect(card.querySelector('[data-contributor-edit-panel]').classList.contains('show')).toBe(true);
+    expect(card.querySelector('[data-contributor-remove]').parentElement.classList.contains('flex-sm-row')).toBe(true);
+    toggle.click();
+    expect(card.dataset.contributorExpanded).toBe('false');
+    expect(card.querySelector('[data-contributor-edit-panel]').classList.contains('show')).toBe(false);
+    expect(toggle.getAttribute('aria-label')).toBe('Edit contributor entry');
+    expect(toggle.querySelector('i').classList.contains('bi-pencil')).toBe(true);
+    toggle.click();
+    expect(card.dataset.contributorExpanded).toBe('true');
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
 });

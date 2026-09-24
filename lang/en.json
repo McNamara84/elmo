@@ -167,6 +167,7 @@
         "typeSwitcherLabel": "Contributor type",
         "dragHandle": "Drag to change order",
         "collapseEntry": "Collapse contributor entry",
+        "editEntry": "Edit contributor entry",
         "moveEntryUp": "Move contributor up",
         "moveEntryDown": "Move contributor down",
         "removeEntry": "Remove contributor entry"

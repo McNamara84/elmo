@@ -131,3 +131,20 @@ test('contact fields and editable affiliations follow the requested rows', async
   await expect(person.locator('[name="cbAffiliation[]"]')).toHaveAttribute('name', 'cbAffiliation[]');
   await expect(institution.locator('[name="OrganisationAffiliation[]"]')).toHaveAttribute('name', 'OrganisationAffiliation[]');
 });
+
+test('collapsed contributor keeps only a compact summary and actions', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.evaluate(() => (window as any).contributorStack.setContributors([
+    { type: 'person', familyname: 'Doe', roles: [] }
+  ]));
+  const card = page.locator('[data-contributor-card]').first();
+  const expandedHeight = (await card.boundingBox())?.height || 0;
+  await card.locator('[data-contributor-toggle-edit]').click();
+  await expect(card).toHaveAttribute('data-contributor-expanded', 'false');
+  await expect(card.locator('[data-contributor-edit-panel]')).toBeHidden();
+  const collapsedHeight = (await card.boundingBox())?.height || 0;
+  expect(collapsedHeight).toBeLessThan(85);
+  expect(collapsedHeight).toBeLessThan(expandedHeight / 2);
+  await expect(card.locator('[data-contributor-toggle-edit]')).toHaveAttribute('aria-label', /Edit/);
+});

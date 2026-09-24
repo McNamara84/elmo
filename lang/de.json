@@ -168,6 +168,7 @@
         "typeSwitcherLabel": "Beitragendentyp",
         "dragHandle": "Reihenfolge per Drag & Drop ändern",
         "collapseEntry": "Beitrag einklappen",
+        "editEntry": "Beitrag bearbeiten",
         "moveEntryUp": "Beitrag nach oben verschieben",
         "moveEntryDown": "Beitrag nach unten verschieben",
         "removeEntry": "Beitrag entfernen"

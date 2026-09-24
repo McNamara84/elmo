@@ -221,7 +221,7 @@ $(document).ready(function () {
     middle.append(summary, panel);
 
     const actions = document.createElement('div');
-    actions.className = 'd-flex flex-column align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary';
+    actions.className = 'd-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary';
     const toggle = makeButton('data-contributor-toggle-edit', 'bi-chevron-up', t('contributors.collapseEntry', 'Collapse contributor entry'));
     toggle.setAttribute('aria-controls', panelId);
     toggle.setAttribute('aria-expanded', 'true');
@@ -232,7 +232,23 @@ $(document).ready(function () {
     actions.append(toggle, up, down, remove);
     card.append(dragZone, middle, actions);
     card.setAttribute('aria-labelledby', summaryId);
+    card.dataset.contributorExpanded = 'true';
     return card;
+  }
+
+  function setExpanded(card, open) {
+    const panel = card.querySelector('[data-contributor-edit-panel]');
+    const toggle = card.querySelector('[data-contributor-toggle-edit]');
+    panel.classList.toggle('show', open);
+    panel.setAttribute('aria-hidden', String(!open));
+    card.dataset.contributorExpanded = String(open);
+    toggle.setAttribute('aria-expanded', String(open));
+    const label = t(open ? 'contributors.collapseEntry' : 'contributors.editEntry',
+      open ? 'Collapse contributor entry' : 'Edit contributor entry');
+    toggle.setAttribute('aria-label', label);
+    toggle.title = label;
+    toggle.querySelector('i').classList.toggle('bi-chevron-up', open);
+    toggle.querySelector('i').classList.toggle('bi-pencil', !open);
   }
 
   function initializeWidgets(card) {
@@ -313,10 +329,7 @@ $(document).ready(function () {
       shell.querySelector('[data-contributor-add-type]')?.focus();
     } else if (button.matches('[data-contributor-toggle-edit]')) {
       const panel = card.querySelector('[data-contributor-edit-panel]');
-      const open = !panel.classList.contains('show');
-      panel.classList.toggle('show', open);
-      panel.setAttribute('aria-hidden', String(!open));
-      button.setAttribute('aria-expanded', String(open));
+      setExpanded(card, !panel.classList.contains('show'));
     } else if (button.matches('[data-contributor-move-up], [data-contributor-move-down]')) {
       const sibling = button.matches('[data-contributor-move-up]') ? card.previousElementSibling : card.nextElementSibling;
       if (sibling) {
