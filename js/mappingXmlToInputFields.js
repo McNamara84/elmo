@@ -1952,8 +1952,8 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     console.error("No DataCite resource element found");
     return;
   }
-  // Warte auf das Laden der Labordaten, falls noch nicht geschehen
-  if (!labData || labData.length === 0) {
+  // Load MSL laboratories only when the laboratory form group is present.
+  if (document.querySelector('#group-originatinglaboratory') && (!labData || labData.length === 0)) {
     try {
       const originatingLaboratories = await $.getJSON(
         "/api/v2/vocabs/msl-laboratories"
