@@ -25,6 +25,7 @@ test('Contributors starts empty and shares contact status with Authors', async (
   await expect(authorBadge).toHaveClass(/text-bg-success/);
   await expect(contributorBadge).toHaveText(await authorBadge.textContent() || '');
   await expect(cards.first().locator('[data-contributor-contact-fields]')).toBeVisible();
+  await expect(page.locator('#contact-person-error')).toHaveCount(0);
 
   await page.locator('[data-contributor-add-type="institution"]').click();
   await cards.nth(1).locator('[name="cbOrganisationName[]"]').fill('Institute');
@@ -33,6 +34,7 @@ test('Contributors starts empty and shares contact status with Authors', async (
   await cards.nth(1).locator('[data-contributor-remove]').click();
   await expect(authorBadge).toHaveClass(/text-bg-warning/);
   await expect(contributorBadge).toHaveText(await authorBadge.textContent() || '');
+  await expect(page.locator('#contact-person-error')).toHaveCount(0);
 });
 
 test('disabled institution contact role does not become active on restore', async ({ page }) => {

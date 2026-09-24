@@ -827,6 +827,17 @@ describe('submitHandler.js', () => {
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
 
+  test('changing contact selection shows the contact error only after a submit attempt', () => {
+    $('#test-form').append('<input type="checkbox" name="contacts[]">');
+    $('#group-author').html('<input type="hidden" name="authorsPayload" value="[]">');
+    $('input[name="contacts[]"]').prop('checked', true).trigger('change');
+    expect($('#contact-person-error')).toHaveLength(0);
+
+    $('#test-form').addClass('was-validated');
+    $('input[name="contacts[]"]').trigger('change');
+    expect($('#contact-person-error')).toHaveLength(1);
+  });
+
   test('contact validation stays finite when a translation refresh revalidates contacts', () => {
     document.getElementById('group-author').innerHTML = '<input type="hidden" name="authorsPayload" value="[]">';
     document.getElementById('test-form').insertAdjacentHTML('beforeend',

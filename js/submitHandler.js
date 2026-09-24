@@ -298,7 +298,11 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
-        this.$form.on('change', 'input[name="contacts[]"]', () => validateContactPerson());
+        this.$form.on('change', 'input[name="contacts[]"]', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
         this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson();
