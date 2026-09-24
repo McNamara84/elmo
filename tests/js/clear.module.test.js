@@ -315,5 +315,33 @@ describe('clear module coverage', () => {
             // val() returns null for empty select, not empty string
             expect($('#input-rights-license').val()).toBeFalsy();
         });
+
+        test('restores a license and a timezone value after clear', () => {
+            const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            $('#input-rights-license').html(`
+                <option value="9" selected>MIT License (MIT)</option>
+                <option value="1">Creative Commons Attribution 4.0 International (CC-BY-4.0)</option>
+            `);
+
+            const $timezone = $('#group-stc .row[tsc-row]:first select[name="tscTimezone[]"]');
+            $timezone.attr('id', 'input-stc-timezone').html(`
+                <option value="+00:00" selected>UTC+00:00 (Etc/UTC)</option>
+                <option value="+02:00">UTC+02:00 (${browserTimezone})</option>
+            `);
+
+            clearModule.clearInputFields();
+
+            const license = document.getElementById('input-rights-license');
+            const timezone = document.getElementById('input-stc-timezone');
+
+            expect(license.options.length).toBeGreaterThan(0);
+            expect(license.value).toBeTruthy();
+            expect(license.selectedOptions[0].text).toContain('(CC-BY-4.0)');
+
+            expect(timezone.options.length).toBeGreaterThan(0);
+            expect(timezone.value).toBeTruthy();
+            expect(timezone.selectedOptions[0].text).toContain(`(${browserTimezone})`);
+        });
     });
 });
