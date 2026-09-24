@@ -321,7 +321,16 @@ $(document).ready(function () {
     updatePayload();
   });
   if (typeof $(stack).sortable === 'function') {
-    $(stack).sortable({ items: '> [data-contributor-card]', handle: '.drag-handle', axis: 'y', update: updatePayload });
+    $(stack).sortable({
+      items: '> [data-contributor-card]',
+      handle: '.drag-handle',
+      // jQuery UI cancels all buttons by default, including our drag handle.
+      cancel: 'input, textarea, select, option, button:not(.drag-handle)',
+      axis: 'y',
+      tolerance: 'pointer',
+      containment: 'parent',
+      update: updatePayload
+    });
   }
   window.contributorStack = {
     addPerson: () => add('person'),

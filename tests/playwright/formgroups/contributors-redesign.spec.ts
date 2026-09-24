@@ -69,3 +69,20 @@ test('enabled institution contact role updates both headers', async ({ page }) =
   await expect(page.locator('[data-author-contact-summary]')).toHaveClass(/text-bg-success/);
   await expect(page.locator('[data-contributor-contact-summary]')).toHaveClass(/text-bg-success/);
 });
+
+test('dragging the handle changes contributor order and saved payload', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  const cards = page.locator('[data-contributor-card]');
+  await page.evaluate(() => (window as any).contributorStack.setContributors([
+    { type: 'person', familyname: 'First', roles: [] },
+    { type: 'person', familyname: 'Second', roles: [] }
+  ]));
+  await expect(cards).toHaveCount(2);
+  await cards.first().locator('[data-contributor-toggle-edit]').click();
+  await cards.nth(1).locator('[data-contributor-toggle-edit]').click();
+  await cards.nth(1).locator('[data-contributor-drag]').dragTo(cards.first().locator('[data-contributor-drag]'));
+  await expect(cards.first().locator('[data-contributor-name]')).toHaveText('Second');
+  expect(await page.evaluate(() => (window as any).contributorStack.collectPayload().map((entry: any) => entry.familyname)))
+    .toEqual(['Second', 'First']);
+});
