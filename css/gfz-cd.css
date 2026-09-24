@@ -401,11 +401,13 @@ label.mandatory-field::after {
 
 .tooltip {
     pointer-events: none;
+    --bs-tooltip-bg: #002864;
+    --bs-tooltip-color: #ffffff;
 }
 
 .tooltip-inner {
-    background-color: #002864;
-    color: #F0EFEA;
+    background-color: var(--bs-tooltip-bg, #002864);
+    color: var(--bs-tooltip-color, #ffffff);
 }
 
 .text-feedback {
