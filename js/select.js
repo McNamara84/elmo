@@ -1065,6 +1065,7 @@ if (typeof module !== 'undefined' && module.exports) {
     debounce,
     updateDataSourceIdsAndNames,
     loadFundersData,
-    setCCBYasDefault
+    setCCBYasDefault,
+    setBrowserTimezone,
   };
 }
