@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -445,6 +445,8 @@ test.describe('XML Upload Mapping Flow', () => {
       };
     }, { translations: TEST_TRANSLATIONS });
 
+    await registerStaticAssetRoutes(page);
+
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
@@ -642,7 +644,7 @@ test.describe('XML Upload Mapping Flow', () => {
     ];
 
     for (const script of appScripts) {
-      await injectScript(page, script);
+      await injectProductionScript(page, script);
     }
 
     await page.evaluate(() => {
@@ -657,6 +659,13 @@ test.describe('XML Upload Mapping Flow', () => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
+    await page.evaluate(async () => {
+      const dropdownsReady = (window as any).elmo?.dropdownsReady;
+      if (dropdownsReady && typeof dropdownsReady.then === 'function') {
+        await dropdownsReady;
+      }
     });
 
     await page.waitForFunction(() => Boolean((window as any).relatedWorkStack));

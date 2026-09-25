@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 // ─── Mock instruments returned by the PID4INST/ERNIE API ────────────────────
 const MOCK_INSTRUMENTS_API = [
@@ -274,10 +274,12 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       };
     }, { translations: TEST_TRANSLATIONS });
 
+    await registerStaticAssetRoutes(page);
+
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
-    // Mock fetch() for about:blank pages (page.route doesn't work there)
+    // Mock fetch() for about:blank pages (API routes still use page.route where registered)
     await page.evaluate((data) => {
       const mockDataMap = new Map(Object.entries(data.mockData));
       (window as any).__unmockedFetchUrls = [] as string[];
@@ -394,7 +396,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     ];
 
     for (const script of appScripts) {
-      await injectScript(page, script);
+      await injectProductionScript(page, script);
     }
 
     // Fire initialization events
@@ -402,6 +404,13 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
+    await page.evaluate(async () => {
+      const dropdownsReady = (window as any).elmo?.dropdownsReady;
+      if (dropdownsReady && typeof dropdownsReady.then === 'function') {
+        await dropdownsReady;
+      }
     });
 
     // Wait for Used Instruments module to be available

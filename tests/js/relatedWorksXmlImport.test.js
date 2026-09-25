@@ -18,6 +18,7 @@ describe('Related Works XML import', () => {
     `;
     window.elmo = {};
     window.ELMO_FEATURES = {};
+    window.loadClearInputFields = () => Promise.resolve(() => {});
     mapping = requireFresh('../../js/mappingXmlToInputFields.js');
     mapping.resetRelatedWorksXsltCache();
   });

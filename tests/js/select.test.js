@@ -61,8 +61,10 @@ describe('select.js', () => {
     window.eval(dropdownUtilsScript);
     const dropdownAjaxScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownAjax.js'), 'utf8');
     window.eval(dropdownAjaxScript);
-    const script = fs.readFileSync(path.resolve(__dirname, '../../js/select.js'), 'utf8');
-    window.eval(script);
+
+    jest.resetModules();
+    const selectModule = require('../../js/select.js');
+    Object.assign(window, selectModule);
   });
 
   afterEach(() => {

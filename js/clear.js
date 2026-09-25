@@ -1,7 +1,9 @@
+import { setCCBYasDefault, setBrowserTimezone } from './select.js';
+
 /**
  * Clears and resets input fields and Tagify instances.
  */
-function clearInputFields() {
+export default function clearInputFields() {
 
     // Reset input fields in Resource Information
     $('#input-resourceinformation-doi').val('');
@@ -20,6 +22,7 @@ function clearInputFields() {
     $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
+    setCCBYasDefault();
   
     if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
         window.authorStack.setAuthors([]);
@@ -119,6 +122,7 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]').not(':first').remove();
     // Clear the input fields of the first row
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
+    setBrowserTimezone();
   
     // Reset Related Works
     if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {
@@ -265,7 +269,7 @@ const GGMS_SELECTORS = {
     },
 };
 
-// Export for testing
+// Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { clearInputFields, GGMS_SELECTORS };
 }

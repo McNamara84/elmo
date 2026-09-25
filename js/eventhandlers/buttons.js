@@ -19,7 +19,7 @@ import './formgroups/ggmsDefinition.js';
 import './formgroups/ggmsDatasources.js';
 import './formgroups/ggmsProperties.js';
 import './confirmationModal.js';
-
+import clearInputFields from '../clear.js';
 
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
 

@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
-import { REPO_ROOT, SELECTORS } from '../utils';
-import { injectScript } from '../utils/assets';
+import { APP_BASE_URL, REPO_ROOT, SELECTORS } from '../utils';
+import { injectClearFormDependencies, injectScript, registerStaticAssetRoutes } from '../utils/assets';
 
 type TagifyInputElement = HTMLInputElement & {
   _tagify?: {
@@ -23,6 +23,7 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <base href="${APP_BASE_URL}" />
     <title>Metadata form reset fixture</title>
   </head>
   <body>
@@ -302,8 +303,10 @@ const FIXTURE_SETUP_SCRIPT = `(() => {
   var resetButton = document.getElementById('button-form-reset');
   if (resetButton) {
     resetButton.addEventListener('click', function () {
-      if (typeof window.clearInputFields === 'function') {
-        window.clearInputFields();
+      if (typeof window.loadClearInputFields === 'function') {
+        window.loadClearInputFields().then(function (clearInputFields) {
+          clearInputFields();
+        });
       }
     });
   }
@@ -311,10 +314,50 @@ const FIXTURE_SETUP_SCRIPT = `(() => {
 
 test.describe('Metadata form reset', () => {
   test.beforeEach(async ({ page }) => {
+    await registerStaticAssetRoutes(page);
     await page.goto('about:blank');
     await page.setContent(TEST_FORM_HTML);
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
-    await injectScript(page, 'js/clear.js');
+    await page.evaluate(() => {
+      window.elmo = window.elmo || {};
+      const originalFetch = window.fetch?.bind(window);
+      window.fetch = (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('json/timezones.json')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { label: 'UTC+00:00 (Africa/Abidjan)' },
+            { label: 'UTC+01:00 (Europe/Berlin)' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/resourcetypes')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 5, resource_type_general: 'Dataset', description: 'Dataset' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/languages')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 1, name: 'English', code: 'en' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/titletypes')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 1, name: 'Main Title' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/licenses')) {
+          return Promise.resolve(new Response(JSON.stringify([])));
+        }
+        if (originalFetch) {
+          return originalFetch(input);
+        }
+        return Promise.resolve(new Response('[]'));
+      };
+    });
+    await injectClearFormDependencies(page);
+    await page.waitForFunction(() => {
+      const resourceType = document.querySelector<HTMLSelectElement>('#input-resourceinformation-resourcetype');
+      return Boolean(resourceType && !resourceType.disabled && resourceType.options.length > 0);
+    });
     await page.addScriptTag({ content: FIXTURE_SETUP_SCRIPT });
   });
 

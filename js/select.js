@@ -153,7 +153,17 @@ async function initializeAllDropdownsParallel() {
 
   document.dispatchEvent(new CustomEvent('dropdownsReady'));
 }
-
+export function setBrowserTimezone() {
+  const $dropdown = $('#input-stc-timezone');
+  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  if (browserTimezone) {
+    const allOptions = Array.from($dropdown.find('option'));
+    const exactMatch = allOptions.find(option => option.text.includes(`(${browserTimezone})`));
+    if (exactMatch) {
+      $(exactMatch).prop('selected', true);
+    }
+  }
+}
 /**
  * Populates timezone dropdown with pre-fetched data
  * @param {Array} timezones - Array of timezone objects
@@ -178,14 +188,8 @@ function populateTimezoneDropdownWithData(timezones) {
   });
 
   // Set browser timezone
-  const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  if (browserTimezone) {
-    const allOptions = Array.from($dropdown.find('option'));
-    const exactMatch = allOptions.find(option => option.text.includes(`(${browserTimezone})`));
-    if (exactMatch) {
-      $(exactMatch).prop('selected', true);
-    }
-  }
+  setBrowserTimezone()
+
 }
 
 /**
@@ -302,6 +306,22 @@ function populateTitleTypeDropdownWithData(types) {
   $select.prop('disabled', false);
 }
 
+export function setCCBYasDefault() {
+  const $select = $("#input-rights-license");
+  if (!$select.length) return;
+
+  const $option = $select.find('option').filter(function () {
+    return String($(this).text()).includes('(CC-BY-4.0)');
+  }).first();
+  if ($option.length) {
+    $select.val($option.val());
+  } else {
+    // select the first option if CC-BY-4.0 is not found
+    $select.find('option').first().prop('selected', true);
+  }
+}
+
+
 /**
  * Populates license dropdown with pre-fetched data
  * @param {Array} licenses - Array of license objects
@@ -318,8 +338,8 @@ function populateLicenseDropdownWithData(licenses) {
         value: val.rights_id,
         text: val.text + " (" + val.rightsIdentifier + ")"
       });
-      if (val.rightsIdentifier === "CC-BY-4.0") {
-        $option.prop("selected", true);
+      if (val.rightsIdentifier === 'CC-BY-4.0') {
+        $option.prop('selected', true);
       }
       $select.append($option);
     });
@@ -442,6 +462,7 @@ function populateIdentifierTypesDropdownWithData(response) {
 
 // Make parallel initialization function available globally
 window.initializeAllDropdownsParallel = initializeAllDropdownsParallel;
+window.setupIdentifierTypesDropdown = setupIdentifierTypesDropdown;
 window.elmo = window.elmo || {};
 window.elmo.applyRelatedWorkDropdowns = applyRelatedWorkDropdowns;
 
@@ -1046,6 +1067,8 @@ if (typeof module !== 'undefined' && module.exports) {
     updateValidationPattern,
     debounce,
     updateDataSourceIdsAndNames,
-    loadFundersData
+    loadFundersData,
+    setCCBYasDefault,
+    setBrowserTimezone,
   };
 }

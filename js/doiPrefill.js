@@ -946,10 +946,8 @@ async function prefillContactPersons(creators, lookupService) {
  * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
  */
 async function applyDoiPrefill(attributes, lookupService) {
-  // Clear form first
-  if (typeof clearInputFields === 'function') {
-    clearInputFields();
-  }
+  const clearInputFields = await window.loadClearInputFields();
+  clearInputFields();
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
