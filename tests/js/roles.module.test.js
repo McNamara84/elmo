@@ -186,13 +186,16 @@ describe('roles module coverage', () => {
             expect(options.whitelist).toContain('Data Curator');
         });
 
-        test('uses correct whitelist for both role types', () => {
+        test('uses only shared roles when requested', async () => {
+            global.fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => [{ name: 'Data Collector' }] });
             rolesModule.setupRolesDropdown(['both'], '#input-contributor-personrole');
+            await new Promise(resolve => setTimeout(resolve, 0));
             
             const callArgs = Tagify.mock.calls[Tagify.mock.calls.length - 1];
             const options = callArgs[1];
             
-            expect(options.whitelist.length).toBe(4); // 2 person + 2 organization
+            expect(options.whitelist).toEqual(['Data Collector', 'Contact Person']);
+            delete global.fetch;
         });
 
         test('applies accessibility attributes', () => {

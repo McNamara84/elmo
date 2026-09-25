@@ -60,6 +60,10 @@ test.describe('Console errors regression', () => {
       }
     });
 
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
+
     await navigateToHome(page);
 
     // Wait for async initialization via concrete conditions, not fixed sleeps

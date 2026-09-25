@@ -12,12 +12,14 @@ test.describe('Issue #1142 roleless contributor export', () => {
     await page.locator('footer.fixed-bottom').evaluate((footer) => footer.classList.remove('fixed-bottom'));
     await completeMinimalDatasetForm(page);
 
-    const personRow = page.locator('[contributor-person-row]').first();
+    await page.locator('[data-contributor-add-type="person"]').click();
+    const personRow = page.locator('[data-contributor-card][data-contributor-type="person"]').first();
     await personRow.locator('input[name="cbPersonLastname[]"]').fill('Roleless');
     await personRow.locator('input[name="cbPersonFirstname[]"]').fill('Person');
     await addAffiliation(personRow, 'Person University');
 
-    const institutionRow = page.locator('[contributors-row]').first();
+    await page.locator('[data-contributor-add-type="institution"]').click();
+    const institutionRow = page.locator('[data-contributor-card][data-contributor-type="institution"]').first();
     await institutionRow.locator('input[name="cbOrganisationName[]"]').fill('Roleless Institute');
     await addAffiliation(institutionRow, 'Institute Network');
 

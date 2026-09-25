@@ -204,8 +204,11 @@ jobs:
           echo "ERNIE_URL is set for PHP servers"
         fi
 
+        # The large standard suite runs four browser workers. Use the local
+        # vocabulary fallback so a slow ERNIE request cannot occupy every PHP worker.
+        # The MSL smoke tests below still check the live ERNIE connection.
         # ELMO Standard (Port 8000)
-        ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
+        ERNIE_URL="" ERNIE_API_KEY="" \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \

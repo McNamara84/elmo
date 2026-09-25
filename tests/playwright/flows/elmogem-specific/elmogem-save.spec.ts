@@ -159,10 +159,12 @@ test.describe('ELMO-GEM save', () => {
     await page.getByTitle('Free Keyword').fill('metagem');
     await page.getByRole('textbox', { name: 'Funder' }).click();
     await page.getByRole('textbox', { name: 'Funder' }).fill('funder1');
-    await page.getByRole('textbox', { name: 'First Name', exact: true }).click();
-    await page.getByRole('textbox', { name: 'First Name', exact: true }).fill('sasha');
-    await page.locator('#group-contributororganisation').getByTitle('Role(s)').click();
-    await page.getByRole('option', { name: 'Rights Holder' }).first().click();
+    await page.locator('#button-author-add').click();
+    await page.locator('#group-author input[name="givennames[]"]').first().fill('sasha');
+    await page.locator('[data-contributor-add-type="institution"]').click();
+    const roleInput = page.locator('[data-contributor-card][data-contributor-type="institution"] input[name="cbOrganisationRoles[]"]');
+    await expect.poll(() => roleInput.evaluate((input: any) => Boolean(input._tagify))).toBe(true);
+    await roleInput.evaluate((input: any) => input._tagify.addTags(['Rights Holder']));
     await page.getByRole('button', { name: 'Save as XML' }).click();
     
     await page.getByRole('textbox', { name: 'Filename' }).fill('test_data_sparse');

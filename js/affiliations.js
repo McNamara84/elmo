@@ -49,8 +49,8 @@ function refreshTagifyInstances() {
   ];
 
   allPairs.forEach(pair => {
-    const inputElement = document.getElementById(pair.input);
-    if (!inputElement || !inputElement._tagify) return;
+    document.querySelectorAll(`input[id^="${pair.input}"]`).forEach(inputElement => {
+    if (!inputElement._tagify) return;
 
     // Save current values
     const currentValues = [...inputElement._tagify.value]; // Create a copy
@@ -73,6 +73,7 @@ function refreshTagifyInstances() {
     // Restore previously selected values
     inputElement._tagify.removeAllTags();
     inputElement._tagify.addTags(currentValues);
+    });
   });
 }
 

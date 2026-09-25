@@ -57,12 +57,28 @@ describe('roles.js', () => {
     window.initializeTagifyWithRoles('#input-contributor-personrole', [{ name: 'Author' }, 'Editor']);
 
     expect(input._tagify).toBeInstanceOf(MockTagify);
-    expect(input._tagify.settings.whitelist).toEqual(['Author', 'Editor']);
+    expect(input._tagify.settings.whitelist).toEqual(['Author', 'Editor', 'Contact Person']);
     expect(input._tagify.settings.placeholder).toBe('Role');
     expect(input._tagify.on).toHaveBeenCalledWith('invalid', expect.any(Function));
     expect(window.applyTagifyAccessibilityAttributes).toHaveBeenCalledWith(expect.any(MockTagify), input, {
       placeholder: 'Role'
     });
+  });
+
+  test('offers the contact role to persons without an ERNIE result', () => {
+    const input = document.getElementById('input-contributor-personrole');
+    window.initializeTagifyWithRoles('#input-contributor-personrole', []);
+    expect(input._tagify.settings.whitelist).toEqual(['Contact Person']);
+  });
+
+  test('gates institution contacts with the feature flag', () => {
+    const input = document.getElementById('input-contributor-organisationrole');
+    window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
+    expect(input._tagify.settings.whitelist).toEqual(['Research Group']);
+
+    window.ELMO_FEATURES.showContactInstitution = true;
+    window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
+    expect(input._tagify.settings.whitelist).toEqual(['Research Group', 'Contact Person']);
   });
 
   test('setupRolesDropdown uses cached roles and destroys existing Tagify', () => {
@@ -95,6 +111,31 @@ describe('roles.js', () => {
     expect(window.organizationRoles).toEqual(['B']);
     expect(spy).toHaveBeenCalledWith('#input-contributor-personrole', ['A', 'B']);
     spy.mockRestore();
+  });
+
+  test('fetches person-only roles after institution and shared roles were cached', async () => {
+    fetch.mockImplementation((url) => {
+      const type = new URL(url, 'http://localhost').searchParams.get('type');
+      const names = type === 'person' ? ['Researcher'] : type === 'institution' ? ['Distributor'] : ['Data Collector'];
+      return Promise.resolve({ ok: true, json: () => Promise.resolve(names.map(name => ({ name }))) });
+    });
+
+    window.setupRolesDropdown(['institution', 'both'], '#input-contributor-organisationrole');
+    await flushPromises();
+    window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
+    await flushPromises();
+
+    expect(fetch).toHaveBeenCalledWith('./api/v2/vocabs/roles?type=person');
+    const personWhitelist = document.getElementById('input-contributor-personrole')._tagify.settings.whitelist;
+    expect(personWhitelist).toContain('Researcher');
+    expect(personWhitelist).toContain('Data Collector');
+    expect(personWhitelist).not.toContain('Distributor');
+    expect(document.getElementById('input-contributor-organisationrole')._tagify.settings.whitelist)
+      .not.toContain('Researcher');
+
+    window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
+    expect(document.getElementById('input-contributor-personrole')._tagify.settings.whitelist)
+      .not.toContain('Distributor');
   });
 
   test('refreshRoleTagifyInstances updates placeholders for all rows', () => {

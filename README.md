@@ -46,7 +46,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
 - Local save and reload of standardized metadata as XML or JSON-LD.
-- Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
+- Authors and Contributors use ordered cards for persons and institutions. A contact in either group satisfies the shared contact requirement.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
@@ -181,8 +181,9 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
   - `$icgemSubmitAddress`: Email address that receives the ICGEM metadata file of every ELMO GEM submission, configured via the environment variable `ICGEM_SUBMIT_ADDRESS` (default `icgem@gfz.de`).
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
-  - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
-  - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
+  - `$showContributorPersons`: Controls whether the Contributors group offers the Add Person button (true/false).
+  - `$showContributorInstitutions`: Controls whether the Contributors group offers the Add Institution button (true/false). The group is hidden when both contributor types are disabled.
+  - `SHOW_CONTACT_INSTITUTION`: Allows contributor institutions to use the Contact Person role when set to `true` (default: `false`). An institution contact needs a name and valid email address to satisfy the shared contact requirement.
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
   - `$showThesauri`: Specifies whether the form group Thesauri Keywords should be displayed (true/false). Individual thesauri are controlled by ERNIE.
@@ -476,7 +477,7 @@ Occurrence is: 0-n
 
 
 #### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). A person author can be marked as a contact with the card toggle. A contributor person can be marked with the Contact Person role; contributor institutions can use that role when `SHOW_CONTACT_INSTITUTION=true`. Authors and Contributors show the same contact status. A complete contact needs a name and valid email address; a website is optional. The fields below describe person-author contacts.
 
 - Last Name
 
@@ -549,6 +550,8 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 
 
 ### Contributors
+
+The Contributors group starts empty. Use **Add Person** or **Add Institution** to create a card, then edit, remove, or reorder cards of either type in one list. Their order is preserved when saving and loading XML. A contributor person with the Contact Person role also satisfies the contact requirement shown in both Authors and Contributors. Contributor institutions can do so only when `SHOW_CONTACT_INSTITUTION=true`.
 
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.

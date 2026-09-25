@@ -70,13 +70,14 @@ export default function clearInputFields() {
     $('#group-originatinglaboratory .row[data-laboratory-row]:first select').prop('selectedIndex', 0);
     $('#group-originatinglaboratory .row[data-laboratory-row]:first input[type="hidden"]').val('');
   
-    // Clear Contributor Person 
-    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
-  
-    // Clear Contributor Institution
-    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+    if (window.contributorStack && typeof window.contributorStack.setContributors === 'function') {
+        window.contributorStack.setContributors([]);
+    } else {
+        $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+        $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+        $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+        $('#group-contributororganisation .row[contributors-row]:first input').val('');
+    }
   
     // Clear descriptions – covers abstract and all ICGEM description textareas
     // (textarea.textarea-description is the shared class on all GGMs description fields)

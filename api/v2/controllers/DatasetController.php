@@ -380,9 +380,9 @@ class DatasetController
      */
     function getContributors($connection, $resource_id): array
     {
-        $contributors = ['persons' => [], 'institutions' => []];
+        $contributors = ['persons' => [], 'institutions' => [], 'entries' => []];
         $stmt = $connection->prepare("
-        SELECT cp.*, rhcp.Resource_has_Contributor_Person_id
+        SELECT cp.*, rhcp.*
         FROM Contributor_Person cp
         JOIN Resource_has_Contributor_Person rhcp ON cp.contributor_person_id = rhcp.Contributor_Person_contributor_person_id
         WHERE rhcp.Resource_resource_id = ?
@@ -396,13 +396,22 @@ class DatasetController
                 'familyname' => $row['familyname'] ?? null,
                 'givenname' => $row['givenname'] ?? null,
                 'orcid' => $row['orcid'] ?? null,
-                'Affiliations' => $this->getContributorPersonAffiliations($connection, $row['contributor_person_id']),
-                'Roles' => $this->getContributorPersonRoles($connection, $row['contributor_person_id'])
+                'Affiliations' => isset($row['affiliations_json']) && is_array(json_decode($row['affiliations_json'], true))
+                    ? array_map(static fn($a) => ['name' => $a['label'] ?? '', 'rorId' => $a['rorId'] ?? ''], json_decode($row['affiliations_json'], true))
+                    : $this->getContributorPersonAffiliations($connection, $row['contributor_person_id']),
+                'Roles' => isset($row['roles_json']) && is_array(json_decode($row['roles_json'], true))
+                    ? array_map(static fn($r) => ['name' => $r], json_decode($row['roles_json'], true))
+                    : $this->getContributorPersonRoles($connection, $row['contributor_person_id']),
+                'email' => $row['contact_email'] ?? '',
+                'website' => $row['contact_website'] ?? '',
+                'sort_order' => $row['sort_order'] ?? null,
+                'type' => 'person',
             ];
             $contributors['persons'][] = $person;
+            $contributors['entries'][] = $person;
         }
         $stmt = $connection->prepare("
-        SELECT ci.*, rhci.Resource_has_Contributor_Institution_id
+        SELECT ci.*, rhci.*
         FROM Contributor_Institution ci
         JOIN Resource_has_Contributor_Institution rhci ON ci.contributor_institution_id = rhci.Contributor_Institution_contributor_institution_id
         WHERE rhci.Resource_resource_id = ?
@@ -414,11 +423,25 @@ class DatasetController
         while ($row = $result->fetch_assoc()) {
             $institution = [
                 'name' => $row['name'] ?? null,
-                'Affiliations' => $this->getContributorInstitutionAffiliations($connection, $row['contributor_institution_id']),
-                'Roles' => $this->getContributorInstitutionRoles($connection, $row['contributor_institution_id'])
+                'Affiliations' => isset($row['affiliations_json']) && is_array(json_decode($row['affiliations_json'], true))
+                    ? array_map(static fn($a) => ['name' => $a['label'] ?? '', 'rorId' => $a['rorId'] ?? ''], json_decode($row['affiliations_json'], true))
+                    : $this->getContributorInstitutionAffiliations($connection, $row['contributor_institution_id']),
+                'Roles' => isset($row['roles_json']) && is_array(json_decode($row['roles_json'], true))
+                    ? array_map(static fn($r) => ['name' => $r], json_decode($row['roles_json'], true))
+                    : $this->getContributorInstitutionRoles($connection, $row['contributor_institution_id']),
+                'email' => $row['contact_email'] ?? '',
+                'website' => $row['contact_website'] ?? '',
+                'sort_order' => $row['sort_order'] ?? null,
+                'type' => 'institution',
             ];
             $contributors['institutions'][] = $institution;
+            $contributors['entries'][] = $institution;
         }
+        usort($contributors['entries'], static function ($a, $b) {
+            $left = $a['sort_order'] === null ? PHP_INT_MAX : (int) $a['sort_order'];
+            $right = $b['sort_order'] === null ? PHP_INT_MAX : (int) $b['sort_order'];
+            return $left <=> $right;
+        });
         return $contributors;
     }
 
@@ -782,6 +805,25 @@ class DatasetController
         // Contact Persons
         // Get contact persons
         $contactPersons = $this->getContactPersons($connection, $id);
+        $contributors = $this->getContributors($connection, $id);
+        $contactInstitutions = [];
+        foreach ($contributors['entries'] as $contributor) {
+            $roleNames = array_column($contributor['Roles'], 'name');
+            if (!in_array('Contact Person', $roleNames, true)) continue;
+            if ($contributor['type'] === 'institution') {
+                $contactInstitutions[] = $contributor;
+                continue;
+            }
+            $duplicate = false;
+            foreach ($contactPersons as $existing) {
+                if (strcasecmp((string) ($existing['familyname'] ?? ''), (string) ($contributor['familyname'] ?? '')) === 0 &&
+                    strcasecmp((string) ($existing['email'] ?? ''), (string) ($contributor['email'] ?? '')) === 0) {
+                    $duplicate = true;
+                    break;
+                }
+            }
+            if (!$duplicate) $contactPersons[] = $contributor;
+        }
 
         // Check if there is any valid contact person data
         $validContactPersons = false;
@@ -847,6 +889,15 @@ class DatasetController
                 }
             }
         }
+        if ($contactInstitutions) {
+            $contactsXml = $xml->addChild('ContactInstitutions');
+            foreach ($contactInstitutions as $institution) {
+                $contactXml = $contactsXml->addChild('ContactInstitution');
+                $contactXml->addChild('name', htmlspecialchars($institution['name'] ?? ''));
+                if ($institution['email']) $contactXml->addChild('email', htmlspecialchars($institution['email']));
+                if ($institution['website']) $contactXml->addChild('website', htmlspecialchars($institution['website']));
+            }
+        }
         // Originating Laboratory
         $originatingLaboratories = $this->getOriginatingLaboratories($connection, $id);
         if ($originatingLaboratories) {
@@ -871,10 +922,40 @@ class DatasetController
             }
         }
         // Contributors
-        $contributors = $this->getContributors($connection, $id);
         $contributorsXml = null;
         if (!empty($contributors['persons']) || !empty($contributors['institutions'])) {
             $contributorsXml = $xml->addChild('Contributors');
+        }
+        if ($contributorsXml !== null) {
+            // Preserve the mixed card order for round trips; the separate Persons and
+            // Institutions blocks below remain for readers of the legacy XML layout.
+            foreach ($contributors['entries'] as $position => $entry) {
+                $itemXml = $contributorsXml->addChild('Contributor');
+                $itemXml->addAttribute('type', $entry['type']);
+                $itemXml->addAttribute('order', (string) $position);
+                if ($entry['type'] === 'person') {
+                    $itemXml->addChild('familyname', htmlspecialchars($entry['familyname'] ?? ''));
+                    $itemXml->addChild('givenname', htmlspecialchars($entry['givenname'] ?? ''));
+                    if ($entry['orcid']) $itemXml->addChild('orcid', htmlspecialchars($entry['orcid']));
+                } else {
+                    $itemXml->addChild('institutionname', htmlspecialchars($entry['name'] ?? ''));
+                }
+                $affiliationsXml = $itemXml->addChild('Affiliations');
+                foreach ($entry['Affiliations'] as $affiliation) {
+                    $affiliationXml = $affiliationsXml->addChild('Affiliation');
+                    $affiliationXml->addChild('name', htmlspecialchars($affiliation['name'] ?? ''));
+                    if ($affiliation['rorId'] ?? '') $affiliationXml->addChild('rorId', htmlspecialchars($affiliation['rorId']));
+                }
+                $rolesXml = $itemXml->addChild('Roles');
+                foreach ($this->getContributorRolesForExport($entry['Roles']) as $role) {
+                    $roleXml = $rolesXml->addChild('Role');
+                    $roleXml->addChild('name', htmlspecialchars($role['name'] ?? ''));
+                }
+                if (in_array('Contact Person', array_column($entry['Roles'], 'name'), true)) {
+                    if ($entry['email']) $itemXml->addChild('email', htmlspecialchars($entry['email']));
+                    if ($entry['website']) $itemXml->addChild('website', htmlspecialchars($entry['website']));
+                }
+            }
         }
         // Contributor Persons
         if (!empty($contributors['persons']) && $contributorsXml !== null) {

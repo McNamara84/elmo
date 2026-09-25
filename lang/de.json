@@ -150,12 +150,28 @@
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
-        "contactPersonError": "Bitte wählen Sie mindestens eine Kontaktperson aus.",
+        "contactPersonError": "Bitte fügen Sie bei Autoren oder Beitragenden einen Kontakt mit Namen und gültiger E-Mail-Adresse hinzu.",
         "email": "E-Mail-Adresse",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse im Format xxx.xxx@xxx.xxx ein.",
         "toggleCheckbox": "Kontakt-<br>person?",
         "website": "Webseite",
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
+    },
+    "contributors": {
+        "title": "Beitragende",
+        "person": "Person",
+        "institution": "Institution",
+        "addPerson": "Person hinzufügen",
+        "addInstitution": "Institution hinzufügen",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "typeSwitcherLabel": "Beitragendentyp",
+        "dragHandle": "Reihenfolge per Drag & Drop ändern",
+        "collapseEntry": "Beitrag einklappen",
+        "editEntry": "Beitrag bearbeiten",
+        "moveEntryUp": "Beitrag nach oben verschieben",
+        "moveEntryDown": "Beitrag nach unten verschieben",
+        "removeEntry": "Beitrag entfernen"
     },
     "contributorPersons": {
         "title": "Beitragende: Personen"

@@ -37,6 +37,8 @@ $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, tr
 $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, true);
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
+/** @var bool $showContactInstitution */
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION'), FILTER_VALIDATE_BOOLEAN);
 /** @var bool $showThesauri */
 $showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */
@@ -85,11 +87,8 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/ggms-properties.html';
     include $baseDir . 'formgroups/ggms-data-sources.html';
 }
-if ($showContributorPersons) {
-    include $baseDir . 'formgroups/contributorPersons.html';
-}
-if ($showContributorInstitutions) {
-    include $baseDir . 'formgroups/contributorInstitutions.html';
+if ($showContributorPersons || $showContributorInstitutions) {
+    include $baseDir . 'formgroups/contributors.html';
 }
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';

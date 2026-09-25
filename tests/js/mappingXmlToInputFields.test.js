@@ -51,6 +51,45 @@ function createJQuery() {
 }
 
 describe("mappingXmlToInputFields helpers", () => {
+  test('loads mixed DataCite contributors in document order and merges roles', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.authorStack = { setAuthors: jest.fn(), collectPayload: () => [{ type: 'person', familyname: 'Creator', givenname: 'Alice' }] };
+    const ctx = loadMappingModule();
+    const resolver = prefix => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+    const xml = new DOMParser().parseFromString(`<resource xmlns="http://datacite.org/schema/kernel-4"><contributors>
+      <contributor contributorType="HostingInstitution"><contributorName nameType="Organizational">Institute</contributorName></contributor>
+      <contributor contributorType="ContactPerson"><contributorName nameType="Personal">Doe, Jane</contributorName><givenName>Jane</givenName><familyName>Doe</familyName></contributor>
+      <contributor contributorType="DataCollector"><contributorName nameType="Personal">Doe, Jane</contributorName><givenName>Jane</givenName><familyName>Doe</familyName></contributor>
+      <contributor contributorType="ContactPerson"><contributorName nameType="Personal">Creator, Alice</contributorName><givenName>Alice</givenName><familyName>Creator</familyName></contributor>
+    </contributors></resource>`, 'application/xml');
+    ctx.processContributors(xml, resolver);
+    const entries = setContributors.mock.calls[0][0];
+    expect(entries.map(entry => entry.type)).toEqual(['institution', 'person']);
+    expect(entries[1].roles).toEqual(['Contact Person', 'Data Collector']);
+    delete window.contributorStack;
+    delete window.authorStack;
+  });
+
+  test('loads unmatched ISO institution contact with email and website', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.ELMO_FEATURES = { showContactInstitution: true };
+    const ctx = loadMappingModule();
+    const xml = new DOMParser().parseFromString(`<root xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco"><gmd:pointOfContact><gmd:CI_ResponsibleParty>
+      <gmd:organisationName><gco:CharacterString>Institute</gco:CharacterString></gmd:organisationName>
+      <gmd:contactInfo><gmd:CI_Contact><gmd:address><gmd:CI_Address><gmd:electronicMailAddress><gco:CharacterString>info@example.org</gco:CharacterString></gmd:electronicMailAddress></gmd:CI_Address></gmd:address>
+      <gmd:onlineResource><gmd:CI_OnlineResource><gmd:linkage><gmd:URL>https://example.org</gmd:URL></gmd:linkage></gmd:CI_OnlineResource></gmd:onlineResource></gmd:CI_Contact></gmd:contactInfo>
+    </gmd:CI_ResponsibleParty></gmd:pointOfContact></root>`, 'application/xml');
+    ctx.processContributors(xml, () => null);
+    expect(setContributors.mock.calls[0][0]).toEqual([expect.objectContaining({
+      type: 'institution', institutionname: 'Institute', roles: ['Contact Person'],
+      email: 'info@example.org', website: 'https://example.org'
+    })]);
+    delete window.contributorStack;
+    delete window.ELMO_FEATURES;
+  });
+
   test("processResourceType selects option matching resourceTypeGeneral", () => {
     document.body.innerHTML = `
       <select id="input-resourceinformation-resourcetype">

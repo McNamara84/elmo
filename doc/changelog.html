@@ -6,7 +6,7 @@
             <button class="accordion-button" type="button" data-bs-toggle="collapse"
                 data-bs-target="#collapse-changelog-version18" aria-expanded="true"
                 aria-controls="collapse-changelog-version18">
-                Version 2.2.0 - 2026/07/30
+                Version 2.2.0 - 2026/10/19
             </button>
         </h2>
         <div id="collapse-changelog-version18" class="accordion-collapse collapse show"
@@ -28,6 +28,13 @@
                                 removed, and reordered with buttons or drag and drop.</li>
                             <li>Related Work XML imports and exports now use XSLT-backed mappings, preserve entry order,
                                 and show progress when importing large lists.</li>
+                            <li>The Contributors form group now starts empty and combines person and institution entries
+                                in one ordered card list.</li>
+                            <li>Authors and Contributors share one contact requirement. Contributor persons can use the
+                                Contact Person role; contributor institutions can use it when
+                                <code>SHOW_CONTACT_INSTITUTION=true</code>.</li>
+                            <li>Contributor order, roles, affiliations and contact details are preserved when saving
+                                and loading XML.</li>
                         </ul>
                     </li>
                     <li><strong>Fixes:</strong>

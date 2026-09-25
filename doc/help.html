@@ -84,13 +84,13 @@ include_once "../settings.php";
                         <?php if ($showContributorPersons ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
-                                Persons</a>
+                                person fields</a>
                         </li>
                         <?php endif; ?>
                         <?php if ($showContributorInstitutions ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorinstitutions"
-                                data-bs-dismiss="offcanvas">Contributor Institutions</a>
+                                data-bs-dismiss="offcanvas">Contributor institution fields</a>
                         </li>
                         <?php endif; ?>
                         <li class="nav-item">
@@ -377,9 +377,10 @@ include_once "../settings.php";
                         once author data has been entered, the selected type is locked to protect the existing fields.</p>
                     <p>The order of person and institution authors can be changed together using drag & drop or the
                         move up and move down buttons. This order is used for saving and XML export.</p>
-                    <p><strong>Please mark at least one person author as contact person.</strong> The status badge in
-                        the Authors header shows whether a contact person is still required. Contact details are only
-                        available for person authors.</p>
+                    <p><strong>Please provide at least one contact in Authors or Contributors.</strong> A person author
+                        can be marked as a contact with the card button. Contributor persons can use the Contact Person
+                        role, and contributor institutions can use it when enabled. Both group headers show the same
+                        contact status. Author contact fields appear only on person author cards.</p>
                 </div>
                 <div id="help-author-orcid">
                     <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../assets/logos/orcid-logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='../assets/logos/orcid-logo.png';"></a></h4>
@@ -428,10 +429,10 @@ include_once "../settings.php";
                     <p>Person with knowledge of how to access, troubleshoot, or otherwise field issues related
                         to
                         the resource. May also be "Point of Contact" in an organisation that controls access to the
-                        resource. Please select at least one person author as contact person.</p>
-                    <p>After filling in the list of authors, the Contact Person can be selected by clicking the button
-                        in the person author card. The email address of the author who is labelled as the contact
-                        person must also be provided. The specification of a website is optional.</p>
+                        resource. Please select at least one contact in Authors or Contributors.</p>
+                    <p>Mark a person author with the contact button, or choose the Contact Person role on a contributor
+                        card. Contributor institutions can have this role when the feature is enabled. A contact needs
+                        a name and valid email address before submission. A website is optional.</p>
                     <h5>Email</h5>
                     <p>Please provide a valid email address (e.g. name@institution.org). This address
                         may be used by others to contact the responsible person for questions about the dataset.</p>
@@ -469,19 +470,30 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>            
             <?php endif; ?>
+            <?php if (($showContributorPersons ?? true) || ($showContributorInstitutions ?? true)): ?>
+            <div id="help-contributors" class="section-content">
+                <div id="help-contributors-fg">
+                    <h3>Contributors</h3>
+                    <p>Use Add Person or Add Institution to add contributors in the order they should appear in the metadata. You can reorder, edit or remove each card. The section starts empty and is optional.</p>
+                    <p>Choose the Contact Person role for a contributor person to make them a contact. A contact needs a name and valid email address before submission. The contact requirement is shared with Authors.</p>
+                    <?php if ($showContactInstitution ?? false): ?>
+                    <p>Contributor institutions may also have the Contact Person role when this feature is enabled.</p>
+                    <?php endif; ?>
+                </div>
+            </div>
+            <?php endif; ?>
             <!-- formgroup contributor persons -->
             <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
-                    <h3>Contributor Persons</h3>
+                    <h3>Contributor person fields</h3>
                     <p>
                         A contributor person is a person responsible for collecting, managing, distributing, or
-                        otherwise contributing to the development of the resource. To add more than one contributor, use
-                        the "add" button on the right.
+                        otherwise contributing to the development of the resource. Use Add Person in the Contributors section.
                     </p>
                     <p>
-                        With <code>Contributing Person(s)</code> you have the possibility to acknowledge additional
-                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        Contributors let you acknowledge additional persons or institutions related to the dataset
+                        whom you would normally not mention as authors.
                         These are not named in the citation but are always related to the dataset and findable just as
                         all the other metadata fields.
                     </p>
@@ -609,15 +621,14 @@ include_once "../settings.php";
             <?php if ($showContributorInstitutions ?? true): ?>  
             <div id="help-contributorinstitutions" class="section-content">
                 <div id="help-contributorinstitutions-fg">
-                    <h3>Contributor Institutions</h3>
+                    <h3>Contributor institution fields</h3>
                     <p>
                         A contributor institution is an organisation responsible for collecting, managing, distributing,
-                        or otherwise contributing to the development of the resource. To add more than one contributor,
-                        use the "add" button on the right.
+                        or otherwise contributing to the development of the resource. Use Add Institution in the Contributors section.
                     </p>
                     <p>
-                        With <code>Contributing Institution(s)</code> you have the possibility to acknowledge additional
-                        persons or institutions related to the dataset which you would normally not mention as authors.
+                        Contributors let you acknowledge additional persons or institutions related to the dataset
+                        whom you would normally not mention as authors.
                         These are not named in the citation but are always related to the dataset and findable just as
                         all the other metadata fields.
                     </p>
