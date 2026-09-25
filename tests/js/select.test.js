@@ -57,8 +57,14 @@ describe('select.js', () => {
     $.getJSON = jest.fn((url, cb) => { cb({identifierTypes: []}); return { fail: jest.fn() }; });
     $.ajax = jest.fn((opts) => { if(opts.success) opts.success({}); return { fail: jest.fn() }; });
 
-    const script = fs.readFileSync(path.resolve(__dirname, '../../js/select.js'), 'utf8');
-    window.eval(script);
+    const dropdownUtilsScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownUtils.js'), 'utf8');
+    window.eval(dropdownUtilsScript);
+    const dropdownAjaxScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownAjax.js'), 'utf8');
+    window.eval(dropdownAjaxScript);
+
+    jest.resetModules();
+    const selectModule = require('../../js/select.js');
+    Object.assign(window, selectModule);
   });
 
   afterEach(() => {
@@ -151,6 +157,26 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
+  test('updateIdentifierType recognizes DOI resolver URLs when the vocabulary pattern only accepts bare DOIs', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'^https?:\\/\\/.+$'},
+        {name:'DOI', pattern:'^10\\.\\d{4,9}\\/.+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('https://doi.org/10.1080/10509585.2015.1092083');
+
+    await window.updateIdentifierType(input[0]);
+
+    expect(select.val()).toBe('DOI');
+    expect(input.attr('pattern')).toBe(
+      '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$'
+    );
+    expect(input[0].checkValidity()).toBe(true);
+  });
+
   test('updateIdentifierType ajax error resets select', async () => {
     $.ajax.mockImplementationOnce(opts => { if(opts.error) opts.error(); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');
@@ -174,6 +200,50 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
+  test('finds the identifier type select across nested rows within one Related Work card', () => {
+    $('#group-relatedwork').html(`
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]" value="10.1234/card"></div>
+        <div class="row">
+          <select name="rIdentifierType[]">
+            <option value=""></option>
+            <option value="DOI">DOI</option>
+          </select>
+        </div>
+      </div>
+    `);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({ identifierTypes: [{ name: 'DOI', pattern: '^10\\..+' }] });
+      return { fail: jest.fn() };
+    });
+
+    window.updateIdentifierType($('input[name="rIdentifier[]"]')[0]);
+
+    expect($('select[name="rIdentifierType[]"]').val()).toBe('DOI');
+  });
+
+  test('applies an identifier pattern only inside the matching Related Work card', () => {
+    $('#group-relatedwork').html(`
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]"></div>
+        <div class="row"><select name="rIdentifierType[]"><option value="DOI" selected>DOI</option></select></div>
+      </div>
+      <div data-related-work-entry>
+        <div class="row"><input name="rIdentifier[]"></div>
+        <div class="row"><select name="rIdentifierType[]"><option value="URL" selected>URL</option></select></div>
+      </div>
+    `);
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({ pattern: '/^https?:\\/\\/.+$/i' });
+      return { fail: jest.fn() };
+    });
+
+    window.updateValidationPattern($('select[name="rIdentifierType[]"]').eq(1)[0]);
+
+    expect($('input[name="rIdentifier[]"]').eq(0).attr('pattern')).toBeUndefined();
+    expect($('input[name="rIdentifier[]"]').eq(1).attr('pattern')).toBe('^https?:\\/\\/.+$');
+  });
+
   test('debounce delays function call', () => {
     jest.useFakeTimers();
     const fn = jest.fn();
@@ -182,12 +252,6 @@ describe('select.js', () => {
     expect(fn).not.toHaveBeenCalled();
     jest.advanceTimersByTime(100);
     expect(fn).toHaveBeenCalled();
-  });
-
-  test('updateIdsAndNames assigns sequential ids', () => {
-    window.updateIdsAndNames();
-    const ids = $('#group-relatedwork select[name^="relation"]').map((i,el)=>$(el).attr('id')).get();
-    expect(ids).toEqual(['input-relatedwork-relation0','input-relatedwork-relation1']);
   });
 
   test('updateIdentifierType detects type for data source fields', async () => {
@@ -209,30 +273,30 @@ describe('select.js', () => {
     expect($('#group-datasources select[name="dIdentifierType[]"]').attr('id')).toBe('input-datasource-identifiertype0');
   });
 
-  test('initializeTimezoneDropdown fetches and selects timezone', async () => {
+  test('setupTimezoneDropdownAjax fetches and selects timezone', async () => {
     const tzData = [{label:'UTC+00:00 (Europe/Berlin)'}];
     global.fetch = jest.fn(() => Promise.resolve({json: () => Promise.resolve(tzData)}));
     const originalIntl = Intl.DateTimeFormat;
     Intl.DateTimeFormat = jest.fn(() => ({resolvedOptions: ()=>({timeZone:'Europe/Berlin'})}));
     const select = $('<select id="tz"></select>').appendTo(document.body);
-    await window.initializeTimezoneDropdown('#tz', '/fake.json');
+    await window.setupTimezoneDropdownAjax('#tz', '/fake.json');
     expect(fetch).toHaveBeenCalledWith('/fake.json');
     expect(select.val()).toBe('+00:00');
     Intl.DateTimeFormat = originalIntl;
   });
 
-  test('initializeTimezoneDropdown uses existing options without fetch', async () => {
+  test('setupTimezoneDropdownAjax uses existing options without fetch', async () => {
     global.fetch = jest.fn();
     const originalIntl = Intl.DateTimeFormat;
     Intl.DateTimeFormat = jest.fn(() => ({resolvedOptions: ()=>({timeZone:'Europe/Berlin'})}));
     const select = $('<select id="tz2"><option value="+00:00">UTC+00:00 (Europe/Berlin)</option></select>').appendTo(document.body);
-    await window.initializeTimezoneDropdown('#tz2', '/fake.json');
+    await window.setupTimezoneDropdownAjax('#tz2', '/fake.json');
     expect(fetch).not.toHaveBeenCalled();
     expect(select.val()).toBe('+00:00');
     Intl.DateTimeFormat = originalIntl;
   });
 
-  test('setupLanguageDropdown populates options from API and pre-selects English', async () => {
+  test('setupLanguageDropdownAjax populates options from API and pre-selects English', async () => {
     const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
     $.ajax.mockImplementation(opts => {
       opts.success([
@@ -244,14 +308,14 @@ describe('select.js', () => {
     });
 
     await flushPromises();
-    window.setupLanguageDropdown();
+    window.setupLanguageDropdownAjax();
     const options = select.find('option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Choose...','English','German']);
     expect(select.val()).toBe('1');
     expect(select.prop('disabled')).toBe(false);
   });
 
-  test('setupTitleTypeDropdown selects main title and exposes globals', async () => {
+  test('setupTitleTypeDropdownAjax selects main title and exposes globals', async () => {
     const select = $('<select id="input-resourceinformation-titletype"></select>').appendTo(document.body);
     $.ajax.mockImplementationOnce(opts => {
       opts.success([
@@ -262,7 +326,7 @@ describe('select.js', () => {
       return { fail: jest.fn() };
     });
 
-    window.setupTitleTypeDropdown();
+    window.setupTitleTypeDropdownAjax();
 
     const options = select.find('option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Choose...','Main Title','Alternative Title']);
@@ -271,12 +335,12 @@ describe('select.js', () => {
     expect(window.titleTypeOptionsHtml).toContain('Alternative Title');
   });
 
-  test('setupLanguageDropdown shows error on ajax failure', async () => {
+  test('setupLanguageDropdownAjax shows error on ajax failure', async () => {
     const select = $('<select id="input-resourceinformation-language"></select>').appendTo(document.body);
     $.ajax.mockImplementation(opts => { if(opts.error) opts.error(); if(opts.complete) opts.complete(); return { fail: jest.fn() }; });
 
     await flushPromises();
-    window.setupLanguageDropdown();
+    window.setupLanguageDropdownAjax();
     const options = select.find('option').map((i,el)=>$(el).text()).get();
     expect(options).toEqual(['Error loading data']);
     expect(select.prop('disabled')).toBe(false);

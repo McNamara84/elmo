@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.db
-    pull_policy: build
     network_mode: host
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
@@ -21,11 +20,11 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
     security_opt:
       - no-new-privileges:true
 
@@ -34,7 +33,6 @@ services:
       context: .
       dockerfile: Dockerfile.web
       target: prod
-    pull_policy: build
     network_mode: host
     environment:
       DB_HOST: 127.0.0.1
@@ -54,6 +52,8 @@ services:
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
       XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      # ICGEM registration mail; Data Services still uses XML_SUBMIT_ADDRESS
+      ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS}
       SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
@@ -84,6 +84,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - xml_data:/var/www/html/xml
       - storage_data:/var/www/html/storage

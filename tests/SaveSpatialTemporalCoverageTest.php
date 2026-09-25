@@ -10,7 +10,7 @@ require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.
 
 /**
  * Test class for Spatial Temporal Coverage saving functionality.
- * 
+ *
  * This class contains test cases for validating the correct storage of spatial
  * and temporal coverage data in the database, including coordinate information,
  * dates, times, and timezone data.
@@ -19,7 +19,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 {
     /**
      * Tests saving a complete STC record with all fields filled.
-     * 
+     *
      * Verifies that a fully populated spatial temporal coverage record
      * is correctly saved to the database with all its attributes.
      *
@@ -78,8 +78,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
         // Verify resource linkage
         $stmt = $this->connection->prepare(
-            "SELECT * FROM Resource_has_Spatial_Temporal_Coverage 
-             WHERE Resource_resource_id = ? 
+            "SELECT * FROM Resource_has_Spatial_Temporal_Coverage
+             WHERE Resource_resource_id = ?
              AND Spatial_Temporal_Coverage_spatial_temporal_coverage_id = ?"
         );
         $stmt->bind_param("ii", $resource_id, $retrievedStc["spatial_temporal_coverage_id"]);
@@ -143,7 +143,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving STC record without maximum coordinates.
-     * 
+     *
      * Verifies that a record can be saved with only minimum coordinates,
      * leaving maximum coordinates as null.
      *
@@ -196,7 +196,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests validation of invalid coordinate combinations.
-     * 
+     *
      * Verifies that saving fails when required coordinate fields are missing.
      *
      * @return void
@@ -279,8 +279,8 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
         // Spatial coverage is independent from temporal coverage in DataCite 4.7.
         $stmt = $this->connection->prepare("
-            SELECT COUNT(*) as count 
-            FROM Resource_has_Spatial_Temporal_Coverage 
+            SELECT COUNT(*) as count
+            FROM Resource_has_Spatial_Temporal_Coverage
             WHERE Resource_resource_id = ?
         ");
         $stmt->bind_param("i", $resource_id);
@@ -292,7 +292,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving without time values.
-     * 
+     *
      * Verifies that records can be saved with date-only temporal coverage,
      * with time fields as null.
      *
@@ -386,7 +386,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
     }
     /**
      * Tests saving with mixed time values.
-     * 
+     *
      * Verifies that records can be saved with some time fields populated
      * and others null.
      *
@@ -491,11 +491,11 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving STC with empty dateEnd and description (Bug #2 regression test).
-     * 
+     *
      * This test covers the fix for HTTP 500 error that occurred when:
      * 1. dateEnd was an empty string (should be converted to NULL)
      * 2. description was an empty string (should be converted to NULL)
-     * 
+     *
      * Previously, empty strings caused MySQL errors because the date columns
      * don't accept empty strings, only NULL or valid dates.
      *
@@ -539,7 +539,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         // Verify the record was saved - query via link table to ensure we get the correct STC
         $stmt = $this->connection->prepare(
             "SELECT stc.* FROM Spatial_Temporal_Coverage stc
-             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc
                 ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
              WHERE rhstc.Resource_resource_id = ?"
         );
@@ -655,7 +655,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving STC with only coordinates and start date (minimal valid input).
-     * 
+     *
      * This covers the scenario where a user only fills in the required coordinate
      * fields and a start date, leaving all other optional fields empty.
      *
@@ -696,7 +696,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving STC when optional keys are completely absent from postData.
-     * 
+     *
      * This covers the scenario where the frontend doesn't include optional fields
      * at all (keys are missing, not just empty). The backend should handle this
      * gracefully without errors.
@@ -722,7 +722,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
             "tscLatitudeMin"  => ["45.0"],
             "tscLongitudeMin" => ["10.0"],
             "tscDateStart"    => ["2026-01-01"]
-            // tscLatitudeMax, tscLongitudeMax, tscDescription, tscDateEnd, 
+            // tscLatitudeMax, tscLongitudeMax, tscDescription, tscDateEnd,
             // tscTimeStart, tscTimeEnd, tscTimezone are all absent
         ];
 
@@ -733,7 +733,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         // Verify the record was saved
         $stmt = $this->connection->prepare(
             "SELECT stc.* FROM Spatial_Temporal_Coverage stc
-             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc
                 ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
              WHERE rhstc.Resource_resource_id = ?"
         );
@@ -751,7 +751,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests that coordinate value 0 (equator/prime meridian) is saved correctly.
-     * 
+     *
      * This test ensures that the empty-string-to-NULL conversion doesn't
      * incorrectly treat '0' as empty (which empty() would do in PHP).
      *
@@ -792,7 +792,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         // Verify 0 values were saved as 0, not NULL
         $stmt = $this->connection->prepare(
             "SELECT stc.* FROM Spatial_Temporal_Coverage stc
-             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc 
+             INNER JOIN Resource_has_Spatial_Temporal_Coverage rhstc
                 ON stc.spatial_temporal_coverage_id = rhstc.Spatial_Temporal_Coverage_spatial_temporal_coverage_id
              WHERE rhstc.Resource_resource_id = ?"
         );
@@ -806,10 +806,10 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
         $this->assertEquals(0, (float)$retrievedStc["longitudeMin"], 'Zero longitudeMin should be saved as 0, not NULL');
         $this->assertEquals(0, (float)$retrievedStc["longitudeMax"], 'Zero longitudeMax should be saved as 0, not NULL');
     }
-    
+
     /**
      * Tests that saving fails when longitudeMax is set but the bounding box is incomplete.
-     * 
+     *
      * This covers the scenario where one of the maximum coordinate values is provided
      * without all four bounding box coordinates being present. The backend should
      * reject incomplete bounding box definitions.
@@ -890,7 +890,7 @@ final class SaveSpatialTemporalCoverageTest extends DatabaseTestCase
 
     /**
      * Tests saving STC with description only and no coordinates.
-     * 
+     *
      * This covers the scenario where a user provides only a textual spatial
      * description without any coordinate values. The backend should allow saving
      * this entry and store all coordinate fields as NULL.

@@ -253,7 +253,16 @@
         "relation": "Beziehung",
         "identifierType": "Identifikatortyp",
         "identifier": "Identifikator",
-        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein."
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "addEntry": "Verwandtes Werk hinzufügen",
+        "dragHandle": "Per Drag & Drop oder mit den Pfeiltasten neu anordnen",
+        "removeEntry": "Eintrag für verwandtes Werk entfernen",
+        "editEntry": "Eintrag für verwandtes Werk bearbeiten",
+        "collapseEntry": "Eintrag für verwandtes Werk einklappen",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Unvollständiges verwandtes Werk"
     },
     "funding": {
         "title": "Förderungen",
@@ -273,6 +282,7 @@
         "identifierType": "Identifikatortyp",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
+        "modelNameInvalid": "Geben Sie hier den Namen des Modells ein",
         "compensationDepth": "Ausgleichstiefe (in Metern)"
     },
     "technical": {
@@ -356,7 +366,18 @@
             "errorToast": "Fehler beim Laden der Datei",
             "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
-            "errorReading": "Fehler beim Lesen der Datei"
+            "errorReading": "Fehler beim Lesen der Datei",
+            "relatedWorksProgress": "Verwandte Werke {processed}/{total}"
+        },
+        "gfcUpload": {
+            "uploadButton": "Metadatenfelder aus Modelldatei ausfüllen",
+            "modalTitle": "Modelldatei hochladen",
+            "dropZone": "GFC-Datei hierher ziehen und ablegen",
+            "selectFile": "oder klicken, um eine Datei auszuwählen",
+            "pasteHeaderLabel": "Oder Kopfzeilentext einfügen:",
+            "pasteHeaderPlaceholder": "GFC-Kopfzeilen hier einfügen…",
+            "fillMetadata": "Metadatenfelder aus Modelldatei ausfüllen",
+            "errorNoInput": "Bitte laden Sie eine .gfc-Datei hoch oder fügen Sie den Kopfzeilentext in das Freitextfeld ein."
         },
         "icgemWrongApp": {
             "title": "ICGEM-Metadatendatei erkannt",
@@ -380,7 +401,7 @@
             "urgency": "Dringlichkeit",
             "url": "URL zu den Daten",
             "dataDescription": "Datenbeschreibung (bitte <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>Vorlage zur Datenbeschreibung</a> benutzen)",
-            "privacypolice": "Ich habe die <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>Datenschutzbestimmungen</a> gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
+            "privacypolice": "Ich habe die <a href='doc/privacy-policy.html' target='_blank' class='link-primary'>Datenschutzbestimmungen</a> gelesen und bin mit der Verarbeitung meiner Daten einverstanden.",
             "urgencyNotice": "Bitte wähle die Dringlichkeit aus",
             "high": "hoch",
             "normal": "normal",

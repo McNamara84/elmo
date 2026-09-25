@@ -77,11 +77,16 @@ test.describe('Console errors regression', () => {
 
     // Assert no unexpected console.error messages
     const realConsoleErrors = consoleErrors.filter(
-      (e) =>
-        !e.includes('favicon.ico') &&
-        !e.includes('API key not found') &&
-        !e.includes('503') &&
-        !e.includes('thesauri availability'),
+      (e) => {
+        if (/thesaur/i.test(e)) {
+          return true;
+        }
+        return (
+          !e.includes('favicon.ico') &&
+          !e.includes('API key not found') &&
+          !e.includes('503')
+        );
+      },
     );
     expect(realConsoleErrors).toEqual([]);
   });

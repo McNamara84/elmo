@@ -29,6 +29,14 @@ function getAuthorStackController() {
     : null;
 }
 
+function getRelatedWorkStackController() {
+  return typeof window !== 'undefined'
+    && window.relatedWorkStack
+    && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+    ? window.relatedWorkStack
+    : null;
+}
+
 function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
@@ -182,7 +190,7 @@ async function getTitleTypeMapping() {
       _titleTypeMappingCache['MainTitle'] = main.id.toString();
     }
   } catch {
-    _titleTypeMappingCache = { '': '1', MainTitle: '1', AlternativeTitle: '2', TranslatedTitle: '3' };
+    _titleTypeMappingCache = { '': '', MainTitle: '', AlternativeTitle: '', TranslatedTitle: '' };
   }
   return _titleTypeMappingCache;
 }
@@ -224,7 +232,7 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
 
 function mapTitleTypeFromJson(titleType, mapping) {
   const key = (titleType || '').replace(/\s+/g, '');
-  return mapping[key] || mapping[''] || '1';
+  return mapping[key] ?? mapping[''] ?? '';
 }
 
 /* ================================================================== */
@@ -711,23 +719,31 @@ function prefillRelatedWorks(relatedIdentifiers) {
     return true;
   });
 
-  entries.forEach((entry, i) => {
-    const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
+  const relatedWorkStack = getRelatedWorkStackController();
+  if (relatedWorkStack) {
+    relatedWorkStack.setRelatedWorks(entries.map(entry => ({
+      identifier: entry.relatedIdentifier || '',
+      identifierType: entry.relatedIdentifierType || '',
+      relation: entry.relationType || '',
+      relationId: ''
+    })));
+  } else {
+    entries.forEach((entry, i) => {
+      const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
 
-    $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
-    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
+      $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
+      $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
 
-    // Match relation by visible text; DataCite uses CamelCase (e.g. "IsDocumentedBy")
-    // while ELMO uses spaced form (e.g. "Is Documented By").
-    const normalizedRelation = normalizeRelationType(entry.relationType);
-    $lastRow.find('select[name="relation[]"]:first option').filter(function () {
-      return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
-    }).prop('selected', true);
+      const normalizedRelation = normalizeRelationType(entry.relationType);
+      $lastRow.find('select[name="relation[]"]:first option').filter(function () {
+        return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
+      }).prop('selected', true);
 
-    if (i < entries.length - 1) {
-      $('#button-relatedwork-add').click();
-    }
-  });
+      if (i < entries.length - 1) {
+        $('#button-relatedwork-add').click();
+      }
+    });
+  }
 
   // Handle Used Instruments
   if (showUsedInstruments) {
@@ -897,14 +913,15 @@ async function prefillContactPersons(creators, lookupService) {
  * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
  */
 async function applyDoiPrefill(attributes, lookupService) {
-  // Clear form first
-  if (typeof clearInputFields === 'function') {
-    clearInputFields();
-  }
+  const clearInputFields = await window.loadClearInputFields();
+  clearInputFields();
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
+  }
+  if (window.elmo && window.elmo.dropdownsReady) {
+    await window.elmo.dropdownsReady;
   }
 
   // Synchronous prefills

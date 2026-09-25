@@ -1,7 +1,9 @@
+import { setCCBYasDefault, setBrowserTimezone } from './select.js';
+
 /**
  * Clears and resets input fields and Tagify instances.
  */
-function clearInputFields() {
+export default function clearInputFields() {
 
     // Reset input fields in Resource Information
     $('#input-resourceinformation-doi').val('');
@@ -20,6 +22,7 @@ function clearInputFields() {
     $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
+    setCCBYasDefault();
   
     if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
         window.authorStack.setAuthors([]);
@@ -118,10 +121,16 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]').not(':first').remove();
     // Clear the input fields of the first row
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
+    setBrowserTimezone();
   
     // Reset Related Works
-    $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
-    $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
+    if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {
+        window.relatedWorkStack.setRelatedWorks([]);
+    } else {
+        // Legacy fallback for pages without the card stack controller.
+        $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+        $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');
+    }
 
     // Reset Used Instruments (Tagify)
     var instrumentsInput = document.getElementById('input-usedinstruments');
@@ -138,12 +147,12 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
-    // === GGMs Definition fields (GGMsDefinition.html) ===
+    // === GGMs Definition fields (ggms-definition.html) ===
     // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
-    // the delegated handler in ggms-modeltypes.js, which hides the model-specific-card
+    // the delegated handler in ggmsModelTypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
     $('#input-model-type').prop('selectedIndex', 0).val('').trigger('change');
-    // .trigger('change') calls updateReferenceSystemVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateReferenceSystemVisibility() in ggmsProperties.js,
     // which resets the model properties FG back to the default spherical layout.
     $('#input-mathematical-representation').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-celestial-body').prop('selectedIndex', 0).val('Earth');
@@ -151,10 +160,10 @@ function clearInputFields() {
     $('#input-model-name').val('');
     $('#input-product-type').prop('selectedIndex', 0).val('Gravity Field');
 
-    // === GGMs Characteristics fields (GGMsProperties.html) ===
+    // === GGMs Characteristics fields (ggms-properties.html) ===
     $('#input-tide-system').prop('selectedIndex', 0).val('');
     $('#input-degree').val('');
-    // .trigger('change') calls updateErrorHandlingVisibility() in ggms-properties.js,
+    // .trigger('change') calls updateErrorHandlingVisibility() in ggmsProperties.js,
     // which hides the error-handling approach field when errors is reset to empty.
     $('#input-errors').prop('selectedIndex', 0).val('').trigger('change');
     $('#input-error-handling-approach').val('');
@@ -167,7 +176,7 @@ function clearInputFields() {
     // === GGMs Data Sources ===
     $('#group-datasources .row[data-source-row]').not(':first').remove();
     const $firstDsRow = $('#group-datasources .row[data-source-row]:first');
-    // .trigger('change') fires the delegated handler in ggms-datasources.js (updateRowState),
+    // .trigger('change') fires the delegated handler in ggmsDatasources.js (updateRowState),
     // which restores satellite-field visibility and hides identifier cols for type S.
     $firstDsRow.find('select[name="datasource_type[]"]').val('S').trigger('change');
     $firstDsRow.find('select[name="datasource_details[]"]').prop('selectedIndex', 0);
@@ -178,7 +187,7 @@ function clearInputFields() {
 
     // === GGMs Model Types (GGMsModelTypes.html) ===
     // Static
-    // ggms-modeltypes.js registers this via native addEventListener, so we must
+    // ggmsModelTypes.js registers this via native addEventListener, so we must
     // use dispatchEvent (not .trigger()) to reach it. dispatchEvent also fires
     // any jQuery handlers listening on the same element.
     const cbTimeVar = document.getElementById('checkbox-time-variable');
@@ -188,7 +197,7 @@ function clearInputFields() {
     $('#input-temporal-start').val('');
     $('#input-temporal-end').val('');
     $('#select-temporal-frequency-predef').prop('selectedIndex', 0).val('');
-    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // .trigger('change') fires the jQuery handler in ggmsModelTypes.js which
     // hides #custom-frequency-container and re-enables #select-temporal-frequency-predef.
     $('#checkbox-custom-frequency').prop('checked', false).trigger('change');
     $('#input-temporal-frequency').val('');
@@ -200,7 +209,7 @@ function clearInputFields() {
     $('#select-topo-approximation').prop('selectedIndex', 0).val('');
     $('#select-topo-density').prop('selectedIndex', 0).val('');
     $('#input-topo-density-details').val('');
-    // .trigger('change') fires the jQuery handler in ggms-modeltypes.js which
+    // .trigger('change') fires the jQuery handler in ggmsModelTypes.js which
     // shows #single-density-container and hides #separate-density-container.
     $('#checkbox-separate-density').prop('checked', false).trigger('change');
     $('#select-topo-density-crust').prop('selectedIndex', 0).val('');
@@ -259,7 +268,7 @@ const GGMS_SELECTORS = {
     },
 };
 
-// Export for testing
+// Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { clearInputFields, GGMS_SELECTORS };
 }

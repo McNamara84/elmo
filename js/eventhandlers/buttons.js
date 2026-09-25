@@ -10,16 +10,16 @@ import './formgroups/feedback.js';
 import './formgroups/authorStack.js';
 import './formgroups/contributor-person.js';
 import './formgroups/contributor-organisation.js';
-import './formgroups/resourceinformation-title.js';
+import './formgroups/resourceInformationTitle.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';
-import './formgroups/ggms-modeltypes.js';
-import './formgroups/ggms-definition.js';
-import './formgroups/ggms-properties.js';
-import './formgroups/ggms-datasources.js';
+import './formgroups/ggmsModelTypes.js';
+import './formgroups/ggmsDefinition.js';
+import './formgroups/ggmsDatasources.js';
+import './formgroups/ggmsProperties.js';
 import './confirmationModal.js';
-
+import clearInputFields from '../clear.js';
 
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
 
@@ -91,12 +91,19 @@ $(document).ready(function () {
    * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
+    // Keep this notification in the user-facing flow: XML and DOI imports also call
+    // clearInputFields(), but must not restore MSL defaults before loading their data.
+    const clearFormAfterConfirmation = function () {
+      clearInputFields();
+      document.dispatchEvent(new Event('elmo:formClearedByUser'));
+    };
+
     window.showConfirmationModal(
       'confirmations.clear.title',
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      clearInputFields
+      clearFormAfterConfirmation
     );
   });
 
@@ -137,11 +144,25 @@ $(document).ready(function () {
   if (form) {
     const $form = $(form);
 
+    // Only real form controls — Tagify copies js-required-on-submit onto <tags>, which must not get required.
+    const submitOnlyFieldSelector = 'input.js-required-on-submit, select.js-required-on-submit, textarea.js-required-on-submit';
+
     // Reset submit-only required fields
     function resetSubmitOnlyFields() {
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
+      });
+    }
+
+    /** Applies required only to enabled js-required-on-submit fields (skips hidden/disabled rows). */
+    function applySubmitRequiredFields() {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
+        if (el.disabled) {
+          el.removeAttribute('required');
+          return;
+        }
+        el.setAttribute('required', 'required');
       });
     }
 
@@ -156,15 +177,13 @@ $(document).ready(function () {
 
       // Apply specific rules
       validateFundingReferenceRequirements();
-      validateRelatedWorkRequirements();
+      validateRelatedWorkRequirements({ revealIncomplete: true });
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();
   
 
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
-        el.setAttribute('required', 'required');
-      });
+      applySubmitRequiredFields();
 
       // Validation is handled by submitHandler.handleSubmit() in validation.js.
       // The form has novalidate, so no native browser validation occurs.

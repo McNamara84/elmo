@@ -222,22 +222,30 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
     await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue('Seismic Monitoring Network Expansion');
 
     // ── Step 12: Related Work ──────────────────────────────────────────
-    await expect(page.locator('#input-relatedwork-identifier').first()).toHaveValue('10.5555/example-supplement');
+    await expect(
+      page.locator('[data-related-work-entry] input[name="rIdentifier[]"]').first(),
+    ).toHaveValue('10.5555/example-supplement');
 
     // ── Step 13: License ───────────────────────────────────────────────
     const licenseText = await page.locator('#input-rights-license option:checked').textContent();
     expect(licenseText?.toLowerCase()).toContain('cc');
 
     // ── Step 14: No console errors ─────────────────────────────────────
-    // Filter known CI-environment messages (no ERNIE API key / external services)
+    // Filter known CI-environment messages (maps, favicon, other 503s).
+    // Thesaurus/ERNIE failures are real errors: vocab is reachable from CI.
     const realErrors = consoleErrors.filter(
-      (e) =>
-        !e.includes('favicon.ico') &&
-        !e.includes('google.maps') &&
-        !e.includes('installHook') &&
-        !e.includes('API key not found') &&
-        !e.includes('503') &&
-        !e.includes('thesauri availability'),
+      (e) => {
+        if (/thesaur/i.test(e)) {
+          return true;
+        }
+        return (
+          !e.includes('favicon.ico') &&
+          !e.includes('google.maps') &&
+          !e.includes('installHook') &&
+          !e.includes('API key not found') &&
+          !e.includes('503')
+        );
+      },
     );
     expect(realErrors, `Unexpected console errors: ${realErrors.join('\n')}`).toEqual([]);
 

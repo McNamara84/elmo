@@ -5,6 +5,9 @@
  */
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -165,9 +168,17 @@ class SaveHandler {
     }
 
     /**
-     * Save data and trigger download
-     * @param {string} filename - Chosen filename
-     * @param {string} [format=this.currentFormat] - Download format
+     * Saves the current form state and triggers the generated file download.
+     *
+     * Before `FormData` is created, the structured Authors and enabled Related
+     * Works payloads are rebuilt from their live stacks. A missing payload field,
+     * an uninitialized stack, or an invalid generated payload aborts the request
+     * and is reported through the standard error notification; stale structured
+     * data is never sent through legacy form fields as a silent fallback.
+     *
+     * @param {string} filename - Chosen filename.
+     * @param {string} [format=this.currentFormat] - Download format.
+     * @returns {Promise<void>} Promise resolved after download or error handling completes.
      */
     async saveAndDownload(filename, format = this.currentFormat) {
         const formatConfig = this.getFormatConfig(format);
@@ -197,14 +208,18 @@ class SaveHandler {
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
-            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
-                window.authorStack.updatePayload();
-            }
-
-            const formData = new FormData(this.$form[0]);
-            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
-            if (authorsPayloadInput) {
-                formData.set('authorsPayload', authorsPayloadInput.value);
+            const authorsPayload = synchronizeAuthorsPayload(formEl);
+            const hasRelatedWorks = formEl.querySelector(
+                'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
+            );
+            const relatedWorksPayload = hasRelatedWorks
+                ? synchronizeRelatedWorksPayload(formEl)
+                : null;
+            synchronizeTagifyInputs(formEl);
+            const formData = new FormData(formEl);
+            formData.set('authorsPayload', JSON.stringify(authorsPayload));
+            if (Array.isArray(relatedWorksPayload)) {
+                formData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
             }
             formData.append('filename', filename);
 

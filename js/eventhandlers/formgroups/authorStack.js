@@ -5,6 +5,7 @@
  */
 
 import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
+import { updateHelpStatus } from '../../help.js';
 
 $(document).ready(function () {
   const stack = $('[data-author-stack]').first();
@@ -31,6 +32,7 @@ $(document).ready(function () {
   const affiliationSearchDebounceMs = 250;
   const affiliationSearchTimers = new WeakMap();
   let affiliationSearchRequestId = 0;
+  const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
 
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -146,7 +148,9 @@ $(document).ready(function () {
     const editor = $('<div class="col-12 mt-2" data-author-affiliation-editor></div>');
     const panel = $('<div class="border rounded bg-body-tertiary p-3"></div>');
     const header = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2"></div>');
+    const titleGroup = $('<div class="d-flex align-items-center gap-1"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
+    const helpButton = createAffiliationHelpButton();
     const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-author-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
@@ -158,10 +162,125 @@ $(document).ready(function () {
       .append('<span data-author-affiliation-add-label></span>');
     const results = $('<div class="list-group mt-2 d-none" data-author-affiliation-results></div>');
 
-    header.append(title, count);
+    titleGroup.append(title, helpButton);
+    header.append(titleGroup, count);
     controls.append(input, searchButton, addButton);
     panel.append(header, list, controls, results);
     return editor.append(panel);
+  }
+
+  function createAffiliationHelpButton() {
+    return $('<i class="bi bi-question-circle-fill help-icon-author-affiliation" ' +
+      'data-help-section-id="help-contributorinstitutions-affiliation" ' +
+      'data-author-affiliation-help></i>');
+  }
+
+  function syncAffiliationHelpButtons() {
+    const editors = stack.find('[data-author-affiliation-editor]');
+    editors.each(function () {
+      const editor = $(this);
+      const help = editor.find('[data-author-affiliation-help]');
+      if (!help.length) {
+        editor.find('[data-author-affiliation-title]').first().after(createAffiliationHelpButton());
+      }
+      editor.find('[data-author-affiliation-help]').addClass('help-icon-author-affiliation');
+    });
+  }
+
+  function syncPersonHelpButtons() {
+    const personRows = stack.find('[data-creator-row]');
+
+    personRows.each(function () {
+      const row = $(this);
+      personHelpSectionIds.forEach(function (sectionId) {
+        // Target the icon only. Cloned-row placeholders copy data-help-section-id
+        // onto the wrapper span, and that duplicate must not be treated as a help icon.
+        const help = row.find(`i[data-help-section-id="${sectionId}"]`);
+        if (help.length) {
+          help.addClass('help-icon-author-affiliation');
+        }
+      });
+    });
+  }
+
+  function helpIconField(icon) {
+    const groupField = icon.closest('.input-group')
+      .find('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])')
+      .first();
+    if (groupField.length) {
+      return groupField;
+    }
+
+    const precedingField = icon.closest('span').prevAll('input:not([type="hidden"]):not([type="checkbox"])').first();
+    if (precedingField.length) {
+      return precedingField;
+    }
+
+    return icon.closest('[data-author-affiliation-editor]').find('[data-author-affiliation-input]').first();
+  }
+
+  function isFieldShown(field) {
+    if (!field.length || field.attr('type') === 'hidden') {
+      return false;
+    }
+
+    let node = field.get(0);
+    while (node && node !== stack.get(0)) {
+      const $node = $(node);
+      if ($node.css('display') === 'none' || $node.hasClass('d-none')) {
+        return false;
+      }
+      node = node.parentElement;
+    }
+    return Boolean(node);
+  }
+
+  function isFirstHelpIconOfKind(icon) {
+    const field = helpIconField(icon);
+    if (!isFieldShown(field)) {
+      return false;
+    }
+
+    const name = field.attr('name');
+    const peers = name
+      ? stack.find(`input[name="${escapeSelector(name)}"]`)
+      : stack.find('[data-author-affiliation-input]');
+    const firstShown = peers.filter(function () {
+      return isFieldShown($(this));
+    }).first();
+    return firstShown.get(0) === field.get(0);
+  }
+
+  function setHelpIconVisibility(icon, shouldBeVisible) {
+    const wrapper = icon.closest('span.input-group-text');
+
+    icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    if (!wrapper.length) {
+      return;
+    }
+
+    wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    wrapper.css('display', shouldBeVisible ? '' : 'none');
+    if (shouldBeVisible) {
+      wrapper
+        .removeClass('help-placeholder')
+        .removeAttr('data-help-section-id')
+        .css({ visibility: '', width: '', height: '' });
+      return;
+    }
+
+    wrapper.css('visibility', 'hidden');
+  }
+
+  function applyAuthorHelpStatus() {
+    syncAffiliationHelpButtons();
+    syncPersonHelpButtons();
+
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+    stack.find('.help-icon-author-affiliation').each(function () {
+      const icon = $(this);
+      setHelpIconVisibility(icon, helpOn && isFirstHelpIconOfKind(icon));
+    });
   }
 
   function getAffiliationFieldConfig(row) {
@@ -414,7 +533,10 @@ $(document).ready(function () {
     resetRow(row);
     row.find('.addAuthor, .addauthorinstitution').remove();
     ensureCardScaffold(row, type);
-    replaceHelpButtonInClonedRows(row);
+    // Keep person help icons as real buttons on every clone. applyAuthorHelpStatus()
+    // shows the first icon of each kind, including after type switch/delete/reorder.
+    replaceHelpButtonInClonedRows(row, "input-right-with-round-corners", personHelpSectionIds);
+
     translateClonedRow(row);
     setupContactFields(row);
     return row;
@@ -438,6 +560,7 @@ $(document).ready(function () {
     initializeAffiliationAutocomplete(row);
     initializeTooltips(row);
     updatePayload();
+    applyAuthorHelpStatus();
     if (options.focus !== false) {
       focusFirstEditableField(row);
     }
@@ -598,6 +721,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
 
+    applyAuthorHelpStatus();
     return updatePayload();
   }
 
@@ -644,6 +768,7 @@ $(document).ready(function () {
       } else {
         contactFields.hide().find('input').val('');
       }
+      applyAuthorHelpStatus();
     }
 
     checkbox.off('change.authorStack click.authorStack');
@@ -970,7 +1095,6 @@ $(document).ready(function () {
       ? readInstitution(row, 0) !== null
       : readPerson(row, 0) !== null;
   }
-
   function updateTypeSwitcher(row) {
     const switcher = row.find('[data-author-type-switcher]').first();
     if (!switcher.length) {
@@ -1035,6 +1159,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     focusFirstEditableField(replacement);
     return replacement;
   }
@@ -1252,6 +1377,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     const preferredButton = row.find(direction < 0 ? '[data-author-move-up]' : '[data-author-move-down]');
     const fallbackButton = row.find(direction < 0 ? '[data-author-move-down]' : '[data-author-move-up]');
     const focusButton = preferredButton.prop('disabled') ? fallbackButton : preferredButton;
@@ -1310,7 +1436,10 @@ $(document).ready(function () {
       axis: 'y',
       tolerance: 'pointer',
       containment: 'parent',
-      update: updatePayload
+      update: function () {
+        updatePayload();
+        applyAuthorHelpStatus();
+      }
     });
   }
 
@@ -1435,6 +1564,7 @@ $(document).ready(function () {
     row.remove();
     authorUiState.delete(entryKey);
     updatePayload();
+    applyAuthorHelpStatus();
     focusAfterRemove(nextFocusTarget);
   });
 
@@ -1469,6 +1599,11 @@ $(document).ready(function () {
     });
     updateReorderControls();
     updateSummary(collectPayload());
+    applyAuthorHelpStatus();
+  });
+
+  document.addEventListener('helpStatus:changed', function () {
+    applyAuthorHelpStatus();
   });
 
   window.validateAuthorAffiliationEditors = validateAuthorAffiliationEditors;

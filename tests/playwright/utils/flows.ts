@@ -1,4 +1,4 @@
-import { expect, type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import { SELECTORS } from './constants';
 import exampleData from './inputDataEndToEnd.json';
 
@@ -121,6 +121,15 @@ export async function completeExtendedMultipleEntries(page: Page) {
 }
 
 // ============ Helper Functions ============
+
+/**
+ * Places a control away from the fixed footer before interacting with it.
+ * Playwright's automatic minimal scroll can leave controls underneath the
+ * footer in Firefox, even though they technically intersect the viewport.
+ */
+async function scrollToViewportCenter(locator: Locator) {
+  await locator.evaluate(element => element.scrollIntoView({ block: 'center', inline: 'nearest' }));
+}
 
 /**
  * Waits for a Bootstrap accordion collapse transition to complete.
@@ -310,7 +319,7 @@ async function addFreeKeyword(page: Page, keyword: string) {
 
 /**
  * Adds a related work entry with relation, identifier, and identifier type.
- * Creates a new row if index > 0, then fills in the related work details.
+ * Creates rows until the requested zero-based index exists, then fills in the related work details.
  * @param {Page} page - The Playwright page object to interact with
  * @param {number} index - The row index for the related work entry (0-based)
  * @param {Object} data - The related work data object
@@ -324,15 +333,16 @@ async function addRelatedWork(
   index: number,
   data: { identifier: string; type: string; relation: string }
 ) {
-  if (index > 0) {
-    // Click the add button to create a new row
+  const relatedWorkRows = page.locator('[related-work-row]');
+  while (await relatedWorkRows.count() <= index) {
+    const newRowIndex = await relatedWorkRows.count();
+    // Related Work starts empty, so create every row up to the requested index.
     await page.locator('#button-relatedwork-add').click();
-    // Wait for the new related work row to be visible
-    await page.locator('[related-work-row]').nth(index).waitFor({ state: 'visible' });
+    await relatedWorkRows.nth(newRowIndex).waitFor({ state: 'visible', timeout: 5000 });
   }
 
   // Get the specific related work row
-  const relatedWorkRow = page.locator('[related-work-row]').nth(index);
+  const relatedWorkRow = relatedWorkRows.nth(index);
 
   // Select relation
   await relatedWorkRow
@@ -454,13 +464,26 @@ export { exampleData };
 
 /**
  * Fills all GGMs/ICGEM-specific fields with representative test values.
- * Covers: Definition, Characteristics, all three Model Type sections,
- * Data Sources (2 rows), and the Abstract description.
  *
- * Intended for both the clear-reset test and any future GGMs flow tests.
+ * Unlike the roundtrip fixtures, which each describe one coherent model, this
+ * walks through every mutually exclusive branch — all three model types, both
+ * math representations, whole-body *and* separate crust/mantle density — so
+ * that inactive branches are left holding stale values. That is the state
+ * clearInputFields() has to survive, and no single reference XML can express it.
+ *
+ * Field coverage itself is owned by tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts.
  */
 export async function fillGEM(page: Page) {
   const DS_ROW = '#group-datasources .row[data-source-row]';
+
+  // ggmsDatasources registers the delegated add-row handler before enhancing
+  // the first satellite input with Tagify. Use that enhancement as the ready
+  // signal so a fast browser cannot click before the handler exists.
+  await page.waitForFunction(
+    () => Boolean((document.querySelector('input[name="satellite_platform[]"]') as
+      (HTMLInputElement & { _tagify?: unknown }) | null)?._tagify),
+    { timeout: 10_000 },
+  );
 
   // Wait for dynamically-loaded selects to be populated from the API
   await page.waitForFunction(
@@ -484,18 +507,42 @@ export async function fillGEM(page: Page) {
   );
   await page.locator('#input-file-format').selectOption({ index: 1 });
 
-  // ── Characteristics ───────────────────────────────────────────────────────
+  // ── Characteristics (spherical first) ─────────────────────────────────────
   await page.locator('#input-tide-system').selectOption('Zero-tide');
   await page.locator('#input-degree').fill('300');
   await page.locator('#input-errors').selectOption('calibrated');
   await page.locator('#input-error-handling-approach').fill('Calibration approach text');
   await page.locator('#input-earth-gravity-constant').fill('3.986004415e14');
 
+  // Radius is visible for Spherical harmonics (index 1 with standard mocks / API order)
+  const radiusVisible = await page.locator('#input-radius').isVisible().catch(() => false);
+  if (radiusVisible) {
+    await page.locator('#input-radius').fill('6378.1363');
+  }
+
+  // Exercise ellipsoidal reference-system fields, then restore spherical
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Ellipsoidal harmonics' });
+  await page.locator('#input-mathematical-representation').dispatchEvent('change');
+  await expect(page.locator('.visibility-ellipsoidal').first()).toBeVisible({ timeout: 5_000 });
+  await page.locator('#input-semimajor-axis').fill('6378.137');
+  await page.locator('#input-second-variable').selectOption('flattening');
+  await page.locator('#input-second-variable-value').fill('0.00335281');
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Spherical harmonics' });
+  await page.locator('#input-mathematical-representation').dispatchEvent('change');
+
   // ── Model Type: Static ────────────────────────────────────────────────────
   await page.locator('#input-model-type').selectOption('Static');
   await expect(page.locator('.visibility-modeltype-static')).toBeVisible();
-  await page.locator('#checkbox-time-variable').check();
-  await expect(page.locator('#time-variable-description-container')).toBeVisible({ timeout: 5_000 });
+  const timeVariableCheckbox = page.locator('#checkbox-time-variable');
+  const timeVariableDescription = page.locator('#time-variable-description-container');
+  await expect(async () => {
+    await scrollToViewportCenter(timeVariableCheckbox);
+    if (!(await timeVariableCheckbox.isChecked())) {
+      await timeVariableCheckbox.check({ timeout: 3_000 });
+    }
+    await expect(timeVariableCheckbox).toBeChecked();
+    await expect(timeVariableDescription).toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
   await page.locator('#input-static-description').fill('Static time-variable description');
 
   // ── Model Type: Temporal ──────────────────────────────────────────────────
@@ -516,9 +563,24 @@ export async function fillGEM(page: Page) {
   await page.locator('#select-topo-density').selectOption('constant');
   await page.locator('#input-topo-density-details').fill('2670 kg/m3');
 
+  await page.locator('#checkbox-separate-density').check();
+  await expect(page.locator('#separate-density-container')).toBeVisible({ timeout: 5_000 });
+  await page.locator('#select-topo-density-crust').selectOption('constant');
+  await page.locator('#input-topo-density-details-crust').fill('2700 crust');
+  await page.locator('#select-topo-density-mantle').selectOption('density-model');
+  await page.locator('#input-topo-density-details-mantle').fill('PREM mantle');
+
   // ── Data Sources – add a second row as type Model so dName[] is visible ───
-  await page.locator('#button-datasource-add').click();
-  await expect(page.locator(DS_ROW)).toHaveCount(2, { timeout: 5_000 });
+  const addDataSourceButton = page.locator('#button-datasource-add');
+  const dataSourceRows = page.locator(DS_ROW);
+  const expectedDataSourceRows = (await dataSourceRows.count()) + 1;
+  await expect(async () => {
+    if (await dataSourceRows.count() < expectedDataSourceRows) {
+      await scrollToViewportCenter(addDataSourceButton);
+      await addDataSourceButton.click({ timeout: 3_000 });
+    }
+    await expect(dataSourceRows).toHaveCount(expectedDataSourceRows, { timeout: 2_000 });
+  }).toPass({ timeout: 15_000 });
 
   const secondRow = page.locator(DS_ROW).nth(1);
   // Must select type M (Model) first: only M shows visibility-datasources-identifier
@@ -526,8 +588,35 @@ export async function fillGEM(page: Page) {
   await secondRow.locator('textarea[name="datasource_description[]"]').fill('Second source description');
   await secondRow.locator('input[name="dName[]"]').fill('GRACE-FO');
 
-  // ── Descriptions ──────────────────────────────────────────────────────────
-  await page.locator('#input-abstract').fill('Test abstract for clear test');
+  // ── Descriptions (all GGM description panels) ─────────────────────────────
+  // The panels share a `data-bs-parent`, so only one is open at a time; opening
+  // the next collapses the previous one but keeps the value already typed.
+  const descriptionPanels: Array<[string, string]> = [
+    ['abstract', 'Test abstract for clear test'],
+    ['general-model-description', 'General model description'],
+    ['input-data', 'Input data description'],
+    ['processing-procedures', 'Processing procedures'],
+    ['specific-features', 'Specific features'],
+    ['other', 'Other description'],
+  ];
+
+  for (const [slug, value] of descriptionPanels) {
+    const textarea = page.locator(`#input-${slug}`);
+
+    // Bootstrap drops toggle clicks that arrive while the previous panel is
+    // still animating closed, so wait for the accordion to settle and retry.
+    if (!(await textarea.isVisible().catch(() => false))) {
+      await expect(async () => {
+        if (await textarea.isVisible()) return;
+        await page.locator('#accordion-description .collapsing').first()
+          .waitFor({ state: 'detached', timeout: 5_000 });
+        await page.locator(`button[data-bs-target="#collapse-${slug}"]`).click();
+        await expect(textarea).toBeVisible({ timeout: 2_000 });
+      }).toPass({ timeout: 20_000 });
+    }
+
+    await textarea.fill(value);
+  }
 }
 
 /**

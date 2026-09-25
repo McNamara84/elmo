@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 
 final class IssueRegressionDatasetExportTest extends DatabaseTestCase
 {
@@ -130,16 +131,7 @@ XML);
 
     public function testDataCiteEnvelopeCanBeMarkedSubmittedForSubmitFlowForIssue929(): void
     {
-        $this->assertTrue(
-            method_exists($this->controller, 'markDataCiteEnvelopeAsSubmitted'),
-            'DatasetController should expose a submit-flow helper that adds dateType="Submitted" after normal export generation.'
-        );
-
-        if (!method_exists($this->controller, 'markDataCiteEnvelopeAsSubmitted')) {
-            return;
-        }
-
-        $submittedXml = $this->controller->markDataCiteEnvelopeAsSubmitted(
+        $submittedXml = \markDataCiteEnvelopeAsSubmitted(
             $this->dataCiteEnvelopeXml(),
             '2026-06-25'
         );

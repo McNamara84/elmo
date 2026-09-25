@@ -1,6 +1,6 @@
 # Contributing to ELMO
 
-Thank you for your interest in contributing to ELMO! We welcome contributions of all kinds.
+Thank you for your interest in contributing to ELMO! We welcome contributions of all kinds. Before adding or renaming files, read the [project structure](../docs/project-structure.md) and [file-name conventions](../docs/file-naming-conventions.md).
 
 ## Branching Strategy
 

@@ -94,6 +94,13 @@ describe('submitHandler.js', () => {
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        const payloadInput = document.querySelector('input[name="authorsPayload"]');
+        return payloadInput ? JSON.parse(payloadInput.value) : [];
+      })
+    };
+
     loadScript();
   });
 
@@ -103,6 +110,8 @@ describe('submitHandler.js', () => {
     delete global.validateTitleField;
     delete global.validateAuthorNameFields;
     delete global.validateAuthorAffiliationEditors;
+    delete window.authorStack;
+    delete window.relatedWorkStack;
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
@@ -249,7 +258,7 @@ describe('submitHandler.js', () => {
 
   test('submitViaAjax sends FormData and handles success', (done) => {
     jest.spyOn($, 'ajax').mockImplementation((config) => {
-      expect(config.url).toBe('send_xml_file.php');
+      expect(config.url).toBe('endpoints/send_xml_file.php');
       expect(config.type).toBe('POST');
       expect(config.processData).toBe(false);
       expect(config.contentType).toBe(false);
@@ -635,8 +644,6 @@ describe('submitHandler.js', () => {
     });
   });
 
-  // ── handleSubmit validation-failed modal integration test ──────────
-
   test('handleSubmit shows validation-failed modal instead of notification on invalid form', () => {
     // Add a required field that is empty so :invalid selector finds it
     const reqInput = document.createElement('input');
@@ -725,6 +732,82 @@ describe('submitHandler.js', () => {
     expect($('input[name="contacts[]"]').prop('required')).toBe(true);
   });
 
+  test('validateContactPerson uses the freshly generated payload instead of a stale hidden value', () => {
+    const freshPayload = [
+      {
+        type: 'person',
+        familyname: 'Doe',
+        givenname: 'Jane',
+        email: 'jane@example.org',
+        isContact: true
+      }
+    ];
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value="[]">
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1">
+    `;
+    window.authorStack.updatePayload.mockReturnValue(freshPayload);
+
+    expect(validateContactPerson()).toBe(true);
+    expect(window.authorStack.updatePayload).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(document.querySelector('input[name="authorsPayload"]').value)).toEqual(freshPayload);
+  });
+
+  test('validateContactPerson does not accept a legacy checkbox when payload synchronization fails', () => {
+    document.getElementById('group-author').innerHTML = `
+      <input type="checkbox" name="contacts[]" id="checkbox-author-contactperson-1" checked>
+    `;
+
+    expect(validateContactPerson()).toBe(false);
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
+    expect($('#contact-person-error').length).toBe(1);
+    expect($('input[name="contacts[]"]').prop('required')).toBe(true);
+  });
+
+  test('handleModalSubmit aborts before CSRF and AJAX when payload synchronization fails', async () => {
+    document.getElementById('test-form').insertAdjacentHTML(
+      'beforeend',
+      '<input type="hidden" name="authorsPayload" value="[]">'
+    );
+    window.authorStack.updatePayload.mockReturnValue(null);
+    global.fetch = jest.fn();
+    const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+    const notificationSpy = jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleModalSubmit();
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+    expect(notificationSpy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+
+    delete global.fetch;
+  });
+
+  test('handleModalSubmit aborts before CSRF and AJAX when Related Works synchronization fails', async () => {
+    document.getElementById('test-form').insertAdjacentHTML(
+      'beforeend',
+      `
+        <input type="hidden" name="authorsPayload" value="[]">
+        <div id="group-relatedwork">
+          <input type="hidden" name="relatedWorksPayload" value="[]">
+        </div>
+      `
+    );
+    window.relatedWorkStack = { updatePayload: jest.fn().mockReturnValue(null) };
+    global.fetch = jest.fn();
+    const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+    const notificationSpy = jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.handleModalSubmit();
+
+    expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(submitSpy).not.toHaveBeenCalled();
+    expect(notificationSpy).toHaveBeenCalledWith('danger', 'Error', 'Submit Error');
+
+    delete global.fetch;
+  });
+
   test('authorsPayload updates clear the contact-person error once the selected contact is complete', () => {
     document.getElementById('group-author').innerHTML = `
       <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","givenname":"Jane","email":"","isContact":true}]'>
@@ -734,9 +817,12 @@ describe('submitHandler.js', () => {
     expect(validateContactPerson()).toBe(false);
     expect($('#contact-person-error').length).toBe(1);
 
-    document.querySelector('input[name="authorsPayload"]').value = '[{"type":"person","familyname":"Doe","givenname":"Jane","email":"jane@example.org","isContact":true}]';
-    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: [] } }));
+    const completePayload = [{ type: 'person', familyname: 'Doe', givenname: 'Jane', email: 'jane@example.org', isContact: true }];
+    document.querySelector('input[name="authorsPayload"]').value = JSON.stringify(completePayload);
+    window.authorStack.updatePayload.mockClear();
+    document.dispatchEvent(new CustomEvent('authorsPayload:updated', { detail: { payload: completePayload } }));
 
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
     expect($('#contact-person-error').length).toBe(0);
     expect($('input[name="contacts[]"]').prop('required')).toBe(false);
   });
@@ -766,6 +852,13 @@ describe('submitHandler.js', () => {
             <input type="hidden" id="input-submit-urgency" value="2">
             <input type="hidden" id="input-submit-dataurl" value="">
           `
+        );
+      }
+
+      if (!document.querySelector('#test-form input[name="authorsPayload"]')) {
+        document.getElementById('test-form').insertAdjacentHTML(
+          'beforeend',
+          '<input type="hidden" name="authorsPayload" value="[]">'
         );
       }
 
@@ -806,6 +899,37 @@ describe('submitHandler.js', () => {
       submitSpy.mockRestore();
     });
 
+    test('handleModalSubmit posts Tagify platforms from chip state', async () => {
+      const platformsInput = document.createElement('input');
+      platformsInput.name = 'platforms';
+      document.getElementById('test-form').appendChild(platformsInput);
+      const graceFo = {
+        value: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO',
+        id: 'https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632',
+      };
+      platformsInput._tagify = {
+        value: [graceFo],
+        update: jest.fn(),
+      };
+
+      global.fetch = jest.fn((url) => {
+        if (typeof url === 'string' && url.startsWith('api/csrf_token.php')) {
+          return Promise.resolve({
+            json: async () => ({ token: 'submit-csrf-token' }),
+          });
+        }
+        return Promise.reject(new Error(`Unexpected fetch: ${url}`));
+      });
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      expect(submitSpy.mock.calls[0][0].get('platforms')).toContain('GRACE-FO');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
     test('handleModalSubmit replaces a stale field value with the freshly fetched token', async () => {
       document.getElementById('input-csrf-token').value = 'stale-submit-token';
 
@@ -825,6 +949,38 @@ describe('submitHandler.js', () => {
       expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(submitSpy.mock.calls[0][0].get('csrf-token')).toBe('fresh-submit-token');
       expect(document.getElementById('input-csrf-token').value).toBe('fresh-submit-token');
+
+      delete global.fetch;
+      submitSpy.mockRestore();
+    });
+
+    test('handleModalSubmit refreshes and sends the Related Works payload', async () => {
+      const freshPayload = [
+        {
+          relation: 'IsDocumentedBy',
+          relationId: '8',
+          identifier: '10.1234/documentation',
+          identifierType: 'DOI',
+          order: 0
+        }
+      ];
+      document.getElementById('test-form').insertAdjacentHTML(
+        'beforeend',
+        '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+      );
+      window.relatedWorkStack = {
+        updatePayload: jest.fn().mockReturnValue(freshPayload)
+      };
+      global.fetch = jest.fn().mockResolvedValue({
+        json: async () => ({ token: 'related-work-submit-token' })
+      });
+      const submitSpy = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+
+      await handler.handleModalSubmit();
+
+      const submittedData = submitSpy.mock.calls[0][0];
+      expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+      expect(submittedData.get('relatedWorksPayload')).toBe(JSON.stringify(freshPayload));
 
       delete global.fetch;
       submitSpy.mockRestore();
