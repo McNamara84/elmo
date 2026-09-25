@@ -401,13 +401,18 @@ label.mandatory-field::after {
 
 .tooltip {
     pointer-events: none;
-    --bs-tooltip-bg: #002864;
-    --bs-tooltip-color: #ffffff;
+    --bs-tooltip-bg: #ffffff;
+    --bs-tooltip-color: #002864;
+    --bs-tooltip-opacity: 1;
+}
+
+.tooltip.show {
+    opacity: 1;
 }
 
 .tooltip-inner {
-    background-color: var(--bs-tooltip-bg, #002864);
-    color: var(--bs-tooltip-color, #ffffff);
+    background-color: #ffffff;
+    color: #002864;
 }
 
 .text-feedback {
