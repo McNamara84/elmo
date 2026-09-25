@@ -918,8 +918,8 @@ describe('doiPrefill.js', () => {
 
       attachTagify('#input-freekeyword');
 
-      // Mock clearInputFields
-      global.clearInputFields = jest.fn();
+      window.__clearInputFieldsSpy = jest.fn();
+      window.loadClearInputFields = jest.fn().mockResolvedValue(window.__clearInputFieldsSpy);
     });
 
     test('applies all attributes to form fields', async () => {
@@ -939,7 +939,8 @@ describe('doiPrefill.js', () => {
         rightsList: [],
       });
 
-      expect(global.clearInputFields).toHaveBeenCalled();
+      expect(window.loadClearInputFields).toHaveBeenCalled();
+      expect(window.__clearInputFieldsSpy).toHaveBeenCalled();
       expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');

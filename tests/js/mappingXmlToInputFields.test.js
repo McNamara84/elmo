@@ -15,6 +15,8 @@ function loadMappingModule(contextOverrides = {}) {
     XPathResult: global.XPathResult,
     ...contextOverrides,
   };
+  context.window.loadClearInputFields = context.window.loadClearInputFields
+    || (() => Promise.resolve(() => {}));
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;

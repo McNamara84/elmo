@@ -119,7 +119,8 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
     <script src="js/checkMandatoryFields.js"></script>
     <script src="js/dropdownUtils.js"></script>
     <script src="js/dropdownAjax.js"></script>
-    <script src="js/select.js"></script>
+    <script type="module" src="js/clearInputFieldsLoader.js"></script>
+    <script type="module" src="js/select.js"></script>
     <script src="js/resourceTypeUtils.js"></script>
     <script src="js/mappingXmlToInputFields.js"></script>
     <script src="js/upload.js"></script>

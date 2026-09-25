@@ -820,8 +820,8 @@ async function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDefinition(data);
   populateIcgemProperties(data);
   populateIcgemModelTypes(data);
-  await populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
+  await populateIcgemDataSources(data);
   populateIcgemContactPersons(xmlDoc);
 
 }

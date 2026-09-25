@@ -113,7 +113,19 @@ test.describe('Feedback modal interactions', () => {
       return (window as any).translations?.modals?.feedback?.success ?? 'Thanks for your feedback!';
     });
 
-    await mockFeedbackEndpoint(page, 200);
+    let releaseFeedbackResponse = () => {};
+    const feedbackResponseGate = new Promise<void>((resolve) => {
+      releaseFeedbackResponse = resolve;
+    });
+
+    await mockFeedbackEndpoint(page, 200, async (route) => {
+      await feedbackResponseGate;
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/plain',
+        body: 'OK',
+      });
+    }, { delayMs: 0 });
 
     const responsePromise = page.waitForResponse((response) =>
       response.url().includes('send_feedback_mail.php')
@@ -125,6 +137,7 @@ test.describe('Feedback modal interactions', () => {
     await expect(sendButton).toBeDisabled();
     await expect(sendButton).toContainText(sendingLabel);
     await expect(sendButton.locator('.spinner-border')).toBeVisible();
+    releaseFeedbackResponse();
 
     const response = await responsePromise;
     expect(response.status()).toBe(200);

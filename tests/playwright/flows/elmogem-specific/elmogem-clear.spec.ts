@@ -104,7 +104,10 @@ test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
 
     // ═══════════════════ CLEAR ═══════════════════════════════════════════════
 
-    await page.evaluate(() => (window as any).clearInputFields());
+    await page.evaluate(async () => {
+      const clearInputFields = await (window as any).loadClearInputFields();
+      clearInputFields();
+    });
 
     // ── Assert GGMs Definition is reset ───────────────────────────────────
 

@@ -1852,6 +1852,7 @@ function processFunders(xmlDoc, resolver) {
  * @param {number} [options.relatedWorksBatchSize=50] - Related Works render batch size
  */
 async function loadXmlToForm(xmlDoc, options = {}) {
+  const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
   const resourceNode = xmlDoc.evaluate(
     "//ns:resource | /resource | //resource",
@@ -1995,6 +1996,10 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   if (isIcgem) {
     await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.loadXmlToForm = loadXmlToForm;
 }
 
 // Export for testing (CommonJS)
