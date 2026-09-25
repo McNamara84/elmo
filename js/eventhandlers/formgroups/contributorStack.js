@@ -115,6 +115,7 @@ $(document).ready(function () {
     });
     const payload = collectPayload();
     payloadInput.value = JSON.stringify(payload);
+    applyContributorHelpStatus();
     shell.querySelector('[data-contributor-add-actions]').classList.toggle('mt-2', cards.length > 0);
     const count = document.querySelector('[data-contributor-summary-count]');
     if (count) count.textContent = `${payload.length} ${t(payload.length === 1 ? 'contributors.entrySingular' : 'contributors.entryPlural', payload.length === 1 ? 'entry' : 'entries')}`;
@@ -131,6 +132,39 @@ $(document).ready(function () {
     button.title = label;
     button.innerHTML = `<i class="bi ${icon}" aria-hidden="true"></i>`;
     return button;
+  }
+
+  function isHelpFieldShown(field) {
+    if (!field) return false;
+    // Tagify hides its source input, so visibility follows the input group.
+    let node = field.closest('.input-group') || field;
+    while (node && node !== stack) {
+      if (node.classList?.contains('d-none') ||
+          (node.classList?.contains('collapse') && !node.classList.contains('show')) ||
+          window.getComputedStyle(node).display === 'none') return false;
+      node = node.parentElement;
+    }
+    return node === stack;
+  }
+
+  function applyContributorHelpStatus() {
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+    const firstShownFields = new Set();
+    stack.querySelectorAll('i[data-help-section-id]').forEach(icon => {
+      const field = icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
+      const key = field?.name || icon.dataset.helpSectionId;
+      const fieldShown = isHelpFieldShown(field);
+      const show = helpOn && fieldShown && !firstShownFields.has(key);
+      if (fieldShown) firstShownFields.add(key);
+      icon.classList.toggle('d-none', !show);
+      icon.setAttribute('aria-hidden', String(!show));
+      const wrapper = icon.closest('.input-group-text');
+      if (wrapper) {
+        wrapper.classList.toggle('d-none', !show);
+        wrapper.setAttribute('aria-hidden', String(!show));
+        wrapper.style.display = show ? '' : 'none';
+      }
+    });
   }
 
   function addContactFields(panel, id) {
@@ -252,6 +286,7 @@ $(document).ready(function () {
     toggle.title = label;
     toggle.querySelector('i').classList.toggle('bi-chevron-up', open);
     toggle.querySelector('i').classList.toggle('bi-pencil', !open);
+    applyContributorHelpStatus();
   }
 
   function initializeWidgets(card) {
@@ -356,6 +391,7 @@ $(document).ready(function () {
     Array.from(stack.children).forEach(renderCard);
     updatePayload();
   });
+  document.addEventListener('helpStatus:changed', applyContributorHelpStatus);
   if (typeof $(stack).sortable === 'function') {
     $(stack).sortable({
       items: '> [data-contributor-card]',

@@ -71,6 +71,47 @@ test('contributor summaries show person and building icons instead of type badge
   await expect(cards.locator('[data-contributor-type]')).toHaveCount(0);
 });
 
+test('help icons follow the first visible contributor field of each kind', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('helpStatus', 'help-on'));
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.evaluate(() => (window as any).contributorStack.setContributors([
+    { type: 'person', familyname: 'First', roles: [] },
+    { type: 'institution', institutionname: 'First Institute', roles: [] },
+    { type: 'person', familyname: 'Second', roles: [] },
+    { type: 'institution', institutionname: 'Second Institute', roles: [] }
+  ]));
+  const cards = page.locator('[data-contributor-card]');
+  for (const helpId of ['help-contributorpersons-orcid', 'help-contributorpersons-role']) {
+    await expect(cards.nth(0).locator(`i[data-help-section-id="${helpId}"]`)).toBeVisible();
+    await expect(cards.nth(2).locator(`i[data-help-section-id="${helpId}"]`)).toBeHidden();
+  }
+  await expect(cards.nth(0).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeVisible();
+  await expect(cards.nth(2).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeHidden();
+  for (const helpId of ['help-contributorinstitutions-organisationname', 'help-contributorinstitutions-organisationrole']) {
+    await expect(cards.nth(1).locator(`i[data-help-section-id="${helpId}"]`)).toBeVisible();
+    await expect(cards.nth(3).locator(`i[data-help-section-id="${helpId}"]`)).toBeHidden();
+  }
+  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeVisible();
+  await expect(cards.nth(3).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeHidden();
+
+  await cards.nth(0).locator('[data-contributor-remove]').click();
+  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorpersons-orcid"]')).toBeVisible();
+  await cards.nth(0).locator('[data-contributor-toggle-edit]').click();
+  await expect(cards.nth(2).locator('i[data-help-section-id="help-contributorinstitutions-organisationname"]')).toBeVisible();
+
+  await page.evaluate(() => {
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+  });
+  await expect(cards.locator('i[data-help-section-id]:visible')).toHaveCount(0);
+  await page.evaluate(() => {
+    localStorage.setItem('helpStatus', 'help-on');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+  });
+  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorpersons-orcid"]')).toBeVisible();
+});
+
 test('enabled institution contact role updates both headers', async ({ page }) => {
   await page.goto('/');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));

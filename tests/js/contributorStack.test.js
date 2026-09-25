@@ -20,25 +20,24 @@ describe('combined contributor stack', () => {
           <div class="row" contributor-person-row>
             <input id="input-contributor-lastname" name="cbPersonLastname[]"><label for="input-contributor-lastname">Last</label>
             <input id="input-contributor-firstname" name="cbPersonFirstname[]">
-            <input id="input-contributor-orcid" name="cbORCID[]">
-            <input id="input-contributor-personrole" name="cbPersonRoles[]">
-            <input id="input-contributorpersons-affiliation" name="cbAffiliation[]">
-            <input id="input-contributor-personrorid" name="cbpRorIds[]">
+            <div class="col-12"><div class="input-group"><input id="input-contributor-orcid" name="cbORCID[]"><span class="input-group-text"><i data-help-section-id="help-contributorpersons-orcid"></i></span></div></div>
+            <div class="col-12"><div class="input-group"><input id="input-contributor-personrole" name="cbPersonRoles[]"><span class="input-group-text"><i data-help-section-id="help-contributorpersons-role"></i></span></div></div>
+            <div class="col-12"><div class="input-group"><input id="input-contributorpersons-affiliation" name="cbAffiliation[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-affiliation"></i></span><input id="input-contributor-personrorid" name="cbpRorIds[]" type="hidden"></div></div>
             <div class="col-2"><button class="addContributorPerson">+</button></div>
           </div>
         </template>
         <template id="contributor-institution-template">
           <div class="row" contributors-row>
-            <input id="input-contributor-name" name="cbOrganisationName[]">
-            <input id="input-contributor-organisationrole" name="cbOrganisationRoles[]">
-            <input id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]">
-            <input id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]">
+            <div class="col-12"><div class="input-group"><input id="input-contributor-name" name="cbOrganisationName[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-organisationname"></i></span></div></div>
+            <div class="col-12"><div class="input-group"><input id="input-contributor-organisationrole" name="cbOrganisationRoles[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-organisationrole"></i></span></div></div>
+            <div class="col-12"><div class="input-group"><input id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-affiliation"></i></span><input id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" type="hidden"></div></div>
             <div class="col-2"><button class="addContributor">+</button></div>
           </div>
         </template>
       </div>`;
     const $ = require('jquery');
     global.$ = global.jQuery = window.$ = window.jQuery = $;
+    localStorage.setItem('helpStatus', 'help-on');
     window.ELMO_FEATURES = { showContactInstitution: false };
     window.setupRolesDropdown = jest.fn();
     window.autocompleteAffiliations = jest.fn();
@@ -63,6 +62,8 @@ describe('combined contributor stack', () => {
     element.value = value;
     element.dispatchEvent(new Event('input', { bubbles: true }));
   };
+  const helpIcon = (card, name) => card.querySelector(`[name="${name}"]`).closest('.input-group').querySelector('i[data-help-section-id]');
+  const helpVisible = (card, name) => !helpIcon(card, name).classList.contains('d-none');
 
   test('starts empty and creates the first person only after Add Person', () => {
     expect(cards()).toHaveLength(0);
@@ -89,6 +90,49 @@ describe('combined contributor stack', () => {
     expect(institutionAvatar.getAttribute('aria-label')).toBe('Institution');
     expect(institutionAvatar.querySelector('i').classList.contains('bi-building')).toBe(true);
     expect(cards()[0].querySelector('[data-contributor-type]')).toBeNull();
+  });
+
+  test('shows help only for the first visible field of each contributor kind', () => {
+    controller.setContributors([
+      { type: 'person', familyname: 'First', roles: [] },
+      { type: 'institution', institutionname: 'First Institute', roles: [] },
+      { type: 'person', familyname: 'Second', roles: [] },
+      { type: 'institution', institutionname: 'Second Institute', roles: [] }
+    ]);
+    for (const name of ['cbORCID[]', 'cbPersonRoles[]', 'cbAffiliation[]']) {
+      expect(helpVisible(cards()[0], name)).toBe(true);
+      expect(helpVisible(cards()[2], name)).toBe(false);
+      expect(helpIcon(cards()[2], name).closest('.input-group-text').classList.contains('d-none')).toBe(true);
+    }
+    for (const name of ['cbOrganisationName[]', 'cbOrganisationRoles[]', 'OrganisationAffiliation[]']) {
+      expect(helpVisible(cards()[1], name)).toBe(true);
+      expect(helpVisible(cards()[3], name)).toBe(false);
+    }
+
+    cards()[0].querySelector('[data-contributor-remove]').click();
+    expect(helpVisible(cards()[1], 'cbORCID[]')).toBe(true);
+    cards()[0].querySelector('[data-contributor-toggle-edit]').click();
+    expect(helpVisible(cards()[2], 'cbOrganisationName[]')).toBe(true);
+
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+    expect(Array.from(document.querySelectorAll('[data-contributor-stack] i[data-help-section-id]'))
+      .every(icon => icon.classList.contains('d-none'))).toBe(true);
+    localStorage.setItem('helpStatus', 'help-on');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+    expect(helpVisible(cards()[1], 'cbORCID[]')).toBe(true);
+    expect(helpVisible(cards()[2], 'cbOrganisationName[]')).toBe(true);
+  });
+
+  test('moves the first institution help icon after type changes and reordering', () => {
+    controller.addPerson();
+    controller.addInstitution();
+    cards()[0].querySelector('[data-contributor-type-option="institution"]').click();
+    expect(helpVisible(cards()[0], 'cbOrganisationName[]')).toBe(true);
+    expect(helpVisible(cards()[1], 'cbOrganisationName[]')).toBe(false);
+    cards()[1].querySelector('[data-contributor-move-up]').click();
+    expect(helpVisible(cards()[0], 'cbOrganisationName[]')).toBe(true);
+    expect(helpVisible(cards()[1], 'cbOrganisationName[]')).toBe(false);
   });
 
   test('keeps mixed order and moves entries with keyboard controls', () => {
