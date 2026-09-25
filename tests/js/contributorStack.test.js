@@ -76,6 +76,21 @@ describe('combined contributor stack', () => {
     expect(payload()[0]).toMatchObject({ type: 'person', familyname: 'Doe', order: 0 });
   });
 
+  test('uses accessible high-contrast type icons in contributor summaries', () => {
+    controller.setContributors([
+      { type: 'person', familyname: 'Doe', roles: [] },
+      { type: 'institution', institutionname: 'Institute', roles: [] }
+    ]);
+    const personAvatar = cards()[0].querySelector('[data-contributor-avatar]');
+    const institutionAvatar = cards()[1].querySelector('[data-contributor-avatar]');
+    expect(personAvatar.classList.contains('bg-dark')).toBe(true);
+    expect(personAvatar.getAttribute('aria-label')).toBe('Person');
+    expect(personAvatar.querySelector('i').classList.contains('bi-person')).toBe(true);
+    expect(institutionAvatar.getAttribute('aria-label')).toBe('Institution');
+    expect(institutionAvatar.querySelector('i').classList.contains('bi-building')).toBe(true);
+    expect(cards()[0].querySelector('[data-contributor-type]')).toBeNull();
+  });
+
   test('keeps mixed order and moves entries with keyboard controls', () => {
     controller.setContributors([
       { type: 'person', familyname: 'First', roles: [] },

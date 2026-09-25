@@ -84,7 +84,10 @@ $(document).ready(function () {
     const name = person ? [entry.givenname, entry.familyname].filter(Boolean).join(' ') : entry.institutionname;
     const typeLabel = t(person ? 'contributors.person' : 'contributors.institution', person ? 'Person' : 'Institution');
     card.querySelector('[data-contributor-name]').textContent = name || typeLabel;
-    card.querySelector('[data-contributor-type]').textContent = typeLabel;
+    const avatar = card.querySelector('[data-contributor-avatar]');
+    avatar.setAttribute('aria-label', typeLabel);
+    avatar.title = typeLabel;
+    avatar.querySelector('i').className = `bi ${person ? 'bi-person' : 'bi-building'}`;
     const roleSummary = card.querySelector('[data-contributor-roles]');
     roleSummary.textContent = entry.roles.join(', ');
     const contact = entry.roles.includes('Contact Person') && (person || window.ELMO_FEATURES?.showContactInstitution === true);
@@ -168,7 +171,7 @@ $(document).ready(function () {
     const summary = document.createElement('div');
     summary.className = 'd-flex flex-wrap align-items-center gap-2 p-2';
     summary.id = summaryId;
-    summary.innerHTML = '<span class="badge text-bg-secondary" data-contributor-type></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span>';
+    summary.innerHTML = '<span class="d-inline-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-dark text-white" style="width: 2rem; height: 2rem;" role="img" data-contributor-avatar><i class="bi" aria-hidden="true"></i></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span>';
     const panel = document.createElement('div');
     panel.className = 'collapse show border-top p-2';
     panel.id = panelId;

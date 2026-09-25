@@ -53,6 +53,24 @@ test('disabled institution contact role does not become active on restore', asyn
   await expect(page.locator('[data-contributor-contact-summary]')).toHaveClass(/text-bg-warning/);
 });
 
+test('contributor summaries show person and building icons instead of type badges', async ({ page }) => {
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.evaluate(() => (window as any).contributorStack.setContributors([
+    { type: 'person', familyname: 'Doe', roles: [] },
+    { type: 'institution', institutionname: 'Institute', roles: [] }
+  ]));
+  const cards = page.locator('[data-contributor-card]');
+  const personAvatar = cards.nth(0).locator('[data-contributor-avatar]');
+  const institutionAvatar = cards.nth(1).locator('[data-contributor-avatar]');
+  await expect(personAvatar).toHaveAttribute('aria-label', /Person/);
+  await expect(personAvatar.locator('i')).toHaveClass(/bi-person/);
+  await expect(institutionAvatar).toHaveAttribute('aria-label', /Institution/);
+  await expect(institutionAvatar.locator('i')).toHaveClass(/bi-building/);
+  await expect(personAvatar).toHaveClass(/bg-dark/);
+  await expect(cards.locator('[data-contributor-type]')).toHaveCount(0);
+});
+
 test('enabled institution contact role updates both headers', async ({ page }) => {
   await page.goto('/');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
