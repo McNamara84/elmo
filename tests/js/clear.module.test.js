@@ -312,8 +312,8 @@ describe('clear module coverage', () => {
         test('clears rights license', () => {
             clearModule.clearInputFields();
 
-            // val() returns null for empty select, not empty string
-            expect($('#input-rights-license').val()).toBeFalsy();
+            // The default license should be set to "CC-BY" after clearing
+            expect($('#input-rights-license').val()).toEqual("1");
         });
 
         test('restores a license and a timezone value after clear', () => {
@@ -342,6 +342,20 @@ describe('clear module coverage', () => {
             expect(timezone.options.length).toBeGreaterThan(0);
             expect(timezone.value).toBeTruthy();
             expect(timezone.selectedOptions[0].text).toContain(`(${browserTimezone})`);
+        });
+        test ('falls back to the first license in the list if CC-BY-4.0 is not found', () => {
+            $('#input-rights-license').html(`
+                <option value="9" selected>MIT License (MIT)</option>
+                <option value="2">EUPL</option>
+                <option value="3">BSD</option>
+            `);
+
+            clearModule.clearInputFields();
+
+            const license = document.getElementById('input-rights-license');
+            expect(license.options.length).toBeGreaterThan(0);
+            expect(license.value).toBeTruthy();
+            expect(license.selectedOptions[0].text).toContain('(MIT)');
         });
     });
 });

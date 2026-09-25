@@ -315,6 +315,9 @@ export function setCCBYasDefault() {
   }).first();
   if ($option.length) {
     $select.val($option.val());
+  } else {
+    // select the first option if CC-BY-4.0 is not found
+    $select.find('option').first().prop('selected', true);
   }
 }
 
