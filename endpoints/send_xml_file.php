@@ -27,6 +27,7 @@ require_once $projectRoot . '/includes/feature_toggles.php';
 global $connection, $showGGMsProperties;
 global $xmlSubmitAddress, $icgemSubmitAddress;
 global $SIMULATE_EMAIL;
+global $sendResearcherConfirmationEmail, $icgemDatabaseUrl;
 
 $resource_id = null;
 
@@ -49,6 +50,8 @@ try {
         'simulateEmail' => resolveFeatureToggle($SIMULATE_EMAIL ?? null, false),
         'xmlSubmitAddress' => $xmlSubmitAddress,
         'icgemSubmitAddress' => $icgemSubmitAddress,
+        'sendResearcherConfirmationEmail' => $sendResearcherConfirmationEmail ?? true,
+        'icgemDatabaseUrl' => (string) ($icgemDatabaseUrl ?? ''),
         'urgencyWeeks' => isset($_POST['urgency']) ? intval($_POST['urgency']) : null,
         'dataUrl' => $dataUrl,
         'hasDataDescription' => isset($_FILES['dataDescription']) && $_FILES['dataDescription']['error'] === UPLOAD_ERR_OK,
@@ -80,18 +83,23 @@ try {
     }
     
     // step 4: researcher confirmations
+    // SEND_RESEARCHER_CONFIRMATION_EMAIL is applied inside sendResearcherConfirmationEmails()
+    // and only when showGGMsProperties is true.
     $researcherWarnings = [];
+    $researcherSendResult = ['sent' => 0, 'failed' => [], 'skipped' => false];
     try {
         $researcherSendResult = sendResearcherConfirmationEmails(
             $generated['researcherConfirmationData'] ?? [],
             $settings
         );
-        foreach ($researcherSendResult['failed'] as $failedContact) {
-            $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
-                . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
-                . $failedContact['error'];
-            error_log($warningMessage);
-            $researcherWarnings[] = $warningMessage;
+        if (empty($researcherSendResult['skipped'])) {
+            foreach ($researcherSendResult['failed'] as $failedContact) {
+                $warningMessage = 'WARNING: The data is sent to curators, but confirmation email to '
+                    . $failedContact['fullName'] . ' <' . $failedContact['email'] . '> failed: '
+                    . $failedContact['error'];
+                error_log($warningMessage);
+                $researcherWarnings[] = $warningMessage;
+            }
         }
     } catch (Throwable $e) {
         $warningMessage = 'WARNING: The data is sent to curators, but researcher confirmation emails failed: '
@@ -101,9 +109,15 @@ try {
     }
 
     // step 5: prepare the success message for the frontend
-    $successMessage = empty($researcherWarnings)
-        ? 'Backend reports: XML submission and confirmation emails sent successfully.'
-        : 'Backend reports: XML submission sent to curators successfully. Some researcher confirmation emails could not be sent.';
+    if (!empty($researcherSendResult['skipped'])) {
+        $successMessage = 'Backend reports: XML submission sent to curators successfully. '
+            . 'Researcher confirmation emails were not sent.';
+    } elseif (empty($researcherWarnings)) {
+        $successMessage = 'Backend reports: XML submission and confirmation emails sent successfully.';
+    } else {
+        $successMessage = 'Backend reports: XML submission sent to curators successfully. '
+            . 'Some researcher confirmation emails could not be sent.';
+    }
 
     ob_clean();
     header('Content-Type: application/json');

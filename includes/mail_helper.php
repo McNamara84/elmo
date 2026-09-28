@@ -7,6 +7,8 @@
  * which validates recipients and either sends or logs (SIMULATE_EMAIL).
  * Data Services text is generateEmailText(); ICGEM text is generateICGEMText();
  * researcher confirmations use generateResearcherConfirmationText().
+ * ELMO-GEM may skip those confirmations when SEND_RESEARCHER_CONFIRMATION_EMAIL
+ * is false. Other variants always send them.
  */
 
 use PHPMailer\PHPMailer\PHPMailer;
@@ -336,6 +338,7 @@ function generateICGEMText(array $generated, array $settings = []): array
         'submittedAt' => date('d.m.Y H:i:s'),
         'icgemAddress' => $settings['icgemSubmitAddress'] ?? '',
         'elmogemSendsDataServicesMail' => (bool) $settings['elmogemSendsDataServicesMail'],
+        'icgemDatabaseUrl' => (string) ($settings['icgemDatabaseUrl'] ?? ''),
     ], []);
 
     return [
@@ -380,10 +383,39 @@ function generateResearcherConfirmationText(array $contact, string $title = ''):
 }
 
 /**
+ * Whether contact persons should receive a confirmation email.
+ *
+ * SEND_RESEARCHER_CONFIRMATION_EMAIL is an ELMO-GEM switch. It is consulted
+ * only when showGGMsProperties is true. Every other variant always sends.
+ *
+ * @param array<string, mixed> $settings
+ */
+function shouldSendResearcherConfirmationEmails(array $settings): bool
+{
+    if (empty($settings['showGGMsProperties'])) {
+        return true;
+    }
+
+    if (!array_key_exists('sendResearcherConfirmationEmail', $settings)
+        || $settings['sendResearcherConfirmationEmail'] === null
+    ) {
+        return true;
+    }
+
+    $value = $settings['sendResearcherConfirmationEmail'];
+    if (is_bool($value)) {
+        return $value;
+    }
+
+    return (bool) filter_var($value, FILTER_VALIDATE_BOOLEAN);
+}
+
+/**
  * Send confirmation emails to all researcher contacts via sendElmoMail().
  *
  * Per-address validation and simulation/SMTP logging live in sendElmoMail().
  * Failures are collected; they do not fail the submit.
+ * On ELMO-GEM, SEND_RESEARCHER_CONFIRMATION_EMAIL=false returns without sending.
  *
  * @param array{
  *     title?: string,
@@ -391,10 +423,19 @@ function generateResearcherConfirmationText(array $contact, string $title = ''):
  *     invalidContacts?: array<int, array{fullName?: string, email?: string}>
  * } $researcherConfirmationData
  * @param array<string, mixed> $settings
- * @return array{sent: int, failed: array<int, array{fullName: string, email: string, error: string}>}
+ * @return array{
+ *     sent: int,
+ *     failed: array<int, array{fullName: string, email: string, error: string}>,
+ *     skipped: bool
+ * }
  */
 function sendResearcherConfirmationEmails(array $researcherConfirmationData, array $settings = []): array
 {
+    if (!shouldSendResearcherConfirmationEmails($settings)) {
+        error_log('Researcher confirmation: skipped because SEND_RESEARCHER_CONFIRMATION_EMAIL is false.');
+        return ['sent' => 0, 'failed' => [], 'skipped' => true];
+    }
+
     $title = trim((string) ($researcherConfirmationData['title'] ?? ''));
     $contacts = $researcherConfirmationData['contacts'] ?? [];
     $invalidContacts = $researcherConfirmationData['invalidContacts'] ?? [];
@@ -413,7 +454,7 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
 
     if ($queue === []) {
         error_log('Researcher confirmation: No contacts found.');
-        return ['sent' => 0, 'failed' => []];
+        return ['sent' => 0, 'failed' => [], 'skipped' => false];
     }
 
     $generated = [
@@ -443,5 +484,5 @@ function sendResearcherConfirmationEmails(array $researcherConfirmationData, arr
         }
     }
 
-    return ['sent' => $sent, 'failed' => $failed];
+    return ['sent' => $sent, 'failed' => $failed, 'skipped' => false];
 }
