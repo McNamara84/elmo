@@ -297,7 +297,7 @@ function generateEmailText(array $generated, array $settings = []): array
 
     if ($settings['showGGMsProperties']) {
         if (!function_exists('buildGGMsDataServicesNote')) {
-            require_once __DIR__ . '/ggms_registration_mail.php';
+            require_once __DIR__ . '/GGMsRegistrationEmail.php';
         }
         $gemNote = buildGGMsDataServicesNote($icgemSubmitAddress);
         $htmlBody .= $gemNote['html'];
@@ -322,7 +322,7 @@ function generateEmailText(array $generated, array $settings = []): array
 function generateICGEMText(array $generated, array $settings = []): array
 {
     if (!function_exists('buildGGMsIcgemMessage')) {
-        require_once __DIR__ . '/ggms_registration_mail.php';
+        require_once __DIR__ . '/GGMsRegistrationEmail.php';
     }
 
     $settings = resolveFileGenerationSettings(['doi' => $settings['doi'] ?? ''], $settings);

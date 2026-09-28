@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../includes/ggms_registration_mail.php';
+require_once __DIR__ . '/../includes/GGMsRegistrationEmail.php';
 
 /**
  * Prints the ELMO / ELMO GEM submit-mail decisions and composed bodies.

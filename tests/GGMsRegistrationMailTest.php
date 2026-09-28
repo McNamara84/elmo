@@ -7,7 +7,7 @@ namespace Tests;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../includes/ggms_registration_mail.php';
+require_once __DIR__ . '/../includes/GGMsRegistrationEmail.php';
 
 /**
  * Contract tests for the ELMO GEM ICGEM registration mail and contact extraction.
