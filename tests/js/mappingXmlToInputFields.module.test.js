@@ -546,11 +546,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             const geoNode = xmlDoc.documentElement;
             
             const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
-            // For point, lat/lon are duplicated to min and max
+            // A point fills only the min fields. Max stays empty.
             expect(result.latitudeMin).toBe('52.5');
-            expect(result.latitudeMax).toBe('52.5');
+            expect(result.latitudeMax).toBe('');
             expect(result.longitudeMin).toBe('13.4');
-            expect(result.longitudeMax).toBe('13.4');
+            expect(result.longitudeMax).toBe('');
         });
 
         test('extracts bounding box coordinates', () => {
@@ -594,6 +594,26 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect($row.find('input[name="tscLatitudeMax[]"]').val()).toBe('53');
             expect($row.find('input[name="tscLongitudeMin[]"]').val()).toBe('13');
             expect($row.find('input[name="tscLongitudeMax[]"]').val()).toBe('14');
+        });
+
+        test('leaves max empty when filling a point', () => {
+            const $row = $('[tsc-row-id="0"]');
+            $row.find('input[name="tscLatitudeMax[]"]').val('99');
+            $row.find('input[name="tscLongitudeMax[]"]').val('99');
+
+            mappingModule.fillSpatialFields($row, {
+                place: 'Point',
+                latitudeMin: '12',
+                latitudeMax: '',
+                longitudeMin: '12',
+                longitudeMax: ''
+            });
+
+            expect($row.find('input[name="tscLatitudeMin[]"]').val()).toBe('12');
+            expect($row.find('input[name="tscLatitudeMax[]"]').val()).toBe('');
+            expect($row.find('input[name="tscLongitudeMin[]"]').val()).toBe('12');
+            expect($row.find('input[name="tscLongitudeMax[]"]').val()).toBe('');
+            expect(window.updateMapOverlay).toHaveBeenCalledWith('0', '', '', '12', '12');
         });
 
         test('calls updateMapOverlay when available', () => {

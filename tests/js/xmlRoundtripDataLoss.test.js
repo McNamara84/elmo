@@ -1106,11 +1106,11 @@ describe("geoLocation import via XPath (regression for querySelector bug)", () =
     const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
 
     expect(data.place).toBe("Potsdam");
-    // Point coordinates should be set for both min and max
+    // A point fills only the min fields so it is not imported as a bounding box.
     expect(data.latitudeMin).toBe("52.3906");
-    expect(data.latitudeMax).toBe("52.3906");
+    expect(data.latitudeMax).toBe("");
     expect(data.longitudeMin).toBe("13.0645");
-    expect(data.longitudeMax).toBe("13.0645");
+    expect(data.longitudeMax).toBe("");
   });
 
   test("getGeoLocationData returns empty strings when no spatial data present", () => {
