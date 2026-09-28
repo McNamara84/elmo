@@ -630,15 +630,20 @@ function prefillGeoLocations(geoLocations) {
       }
     }
 
-    // Point (set latMin=latMax, lonMin=lonMax)
+    // Point: Latitude Min + Longitude Min only. Max stays empty.
     const point = geo.geoLocationPoint;
     if (point && !box) {
       const lat = point.pointLatitude ?? '';
       const lon = point.pointLongitude ?? '';
       $lastRow.find('input[name="tscLatitudeMin[]"]').val(lat);
-      $lastRow.find('input[name="tscLatitudeMax[]"]').val(lat);
+      $lastRow.find('input[name="tscLatitudeMax[]"]').val('');
       $lastRow.find('input[name="tscLongitudeMin[]"]').val(lon);
-      $lastRow.find('input[name="tscLongitudeMax[]"]').val(lon);
+      $lastRow.find('input[name="tscLongitudeMax[]"]').val('');
+
+      const rowId = $lastRow.attr('tsc-row-id');
+      if (typeof window.updateMapOverlay === 'function' || typeof updateMapOverlay === 'function') {
+        window.updateMapOverlay(rowId, '', '', lat, lon);
+      }
     }
 
     // Clone row for next entry
