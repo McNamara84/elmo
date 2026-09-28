@@ -180,6 +180,8 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$feedbackAddress`: Email Address to which the feedback is sent
   - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
   - `$icgemSubmitAddress`: Email address that receives the ICGEM metadata file of every ELMO GEM submission, configured via the environment variable `ICGEM_SUBMIT_ADDRESS` (default `icgem@gfz.de`).
+  - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
+  - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
   - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
   - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
