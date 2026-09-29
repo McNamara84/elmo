@@ -114,6 +114,30 @@ test('help icons follow the first visible contributor field of each kind', async
   await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorpersons-orcid"]')).toBeVisible();
 });
 
+test('contact email and website use the Authors help icons', async ({ page }) => {
+  await page.addInitScript(() => localStorage.setItem('helpStatus', 'help-on'));
+  await page.goto('/');
+  await page.waitForFunction(() => Boolean((window as any).contributorStack));
+  await page.evaluate(() => (window as any).contributorStack.setContributors([
+    { type: 'person', familyname: 'First', roles: ['Contact Person'] },
+    { type: 'person', familyname: 'Second', roles: ['Contact Person'] }
+  ]));
+  const cards = page.locator('[data-contributor-card]');
+  for (const helpId of ['help-contactperson-email', 'help-contactperson-website']) {
+    await expect(cards.nth(0).locator(`i[data-help-section-id="${helpId}"]`)).toBeVisible();
+    await expect(cards.nth(1).locator(`i[data-help-section-id="${helpId}"]`)).toBeHidden();
+  }
+  await cards.nth(0).locator('[data-contributor-remove]').click();
+  for (const helpId of ['help-contactperson-email', 'help-contactperson-website']) {
+    await expect(cards.nth(0).locator(`i[data-help-section-id="${helpId}"]`)).toBeVisible();
+  }
+  await page.evaluate(() => {
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+  });
+  await expect(cards.locator('i[data-help-section-id]:visible')).toHaveCount(0);
+});
+
 test('enabled institution contact role updates both headers', async ({ page }) => {
   await page.goto('/');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));

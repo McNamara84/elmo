@@ -187,6 +187,40 @@ describe('combined contributor stack', () => {
       .toEqual(['cbContactEmail[]', 'cbContactWebsite[]']);
   });
 
+  test('shows contact help on the first visible contact across both contributor types', () => {
+    window.ELMO_FEATURES.showContactInstitution = true;
+    controller.setContributors([
+      { type: 'person', familyname: 'First', roles: ['Contact Person'] },
+      { type: 'institution', institutionname: 'Institute', roles: ['Contact Person'] },
+      { type: 'person', familyname: 'Second', roles: ['Contact Person'] }
+    ]);
+    const contactNames = ['cbContactEmail[]', 'cbContactWebsite[]'];
+    for (const name of contactNames) {
+      expect(helpIcon(cards()[0], name).dataset.helpSectionId).toBe(`help-contactperson-${name === 'cbContactEmail[]' ? 'email' : 'website'}`);
+      expect(helpVisible(cards()[0], name)).toBe(true);
+      expect(helpVisible(cards()[1], name)).toBe(false);
+      expect(helpVisible(cards()[2], name)).toBe(false);
+      expect(cards()[0].querySelector(`[name="${name}"]`).classList.contains('input-right-no-round-corners')).toBe(true);
+      expect(cards()[1].querySelector(`[name="${name}"]`).classList.contains('input-right-with-round-corners')).toBe(true);
+    }
+    cards()[0].querySelector('[data-contributor-remove]').click();
+    for (const name of contactNames) {
+      expect(helpVisible(cards()[0], name)).toBe(true);
+      expect(helpVisible(cards()[1], name)).toBe(false);
+    }
+    cards()[0].querySelector('[data-contributor-toggle-edit]').click();
+    for (const name of contactNames) {
+      expect(helpVisible(cards()[0], name)).toBe(false);
+      expect(helpVisible(cards()[1], name)).toBe(true);
+    }
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+    for (const name of contactNames) {
+      expect(helpVisible(cards()[1], name)).toBe(false);
+      expect(cards()[1].querySelector(`[name="${name}"]`).classList.contains('input-right-with-round-corners')).toBe(true);
+    }
+  });
+
   test('collapses to a compact summary with an edit action', () => {
     controller.addPerson();
     const card = cards()[0];

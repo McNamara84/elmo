@@ -156,6 +156,10 @@ $(document).ready(function () {
       const fieldShown = isHelpFieldShown(field);
       const show = helpOn && fieldShown && !firstShownFields.has(key);
       if (fieldShown) firstShownFields.add(key);
+      if (field?.classList.contains('input-with-help')) {
+        field.classList.toggle('input-right-no-round-corners', show);
+        field.classList.toggle('input-right-with-round-corners', !show);
+      }
       icon.classList.toggle('d-none', !show);
       icon.setAttribute('aria-hidden', String(!show));
       const wrapper = icon.closest('.input-group-text');
@@ -171,14 +175,17 @@ $(document).ready(function () {
     const fields = document.createElement('div');
     fields.className = 'row g-2 mt-1 d-none';
     fields.dataset.contributorContactFields = '';
-    fields.innerHTML = `<div class="col-12 col-md-6"><div class="form-floating">
-      <input type="email" class="form-control" id="contributor-contact-email-${id}" name="cbContactEmail[]">
+    fields.innerHTML = `<div class="col-12 col-md-6"><div class="input-group has-validation"><div class="form-floating">
+      <input type="email" class="form-control input-with-help input-right-no-round-corners" id="contributor-contact-email-${id}" name="cbContactEmail[]">
       <label for="contributor-contact-email-${id}" data-translate="contactPersons.email">Email address</label>
       <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">Please provide a valid email address.</div>
-    </div></div><div class="col-12 col-md-6"><div class="form-floating">
-      <input type="url" class="form-control" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
+    </div><div class="input-group-append"><span class="input-group-text"><i class="bi bi-question-circle-fill"
+      data-help-section-id="help-contactperson-email"></i></span></div></div></div>
+    <div class="col-12 col-md-6"><div class="input-group has-validation"><div class="form-floating">
+      <input type="url" class="form-control input-with-help input-right-no-round-corners" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
       <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
-    </div></div>`;
+    </div><div class="input-group-append"><span class="input-group-text"><i class="bi bi-question-circle-fill"
+      data-help-section-id="help-contactperson-website"></i></span></div></div></div>`;
     panel.append(fields);
   }
 
