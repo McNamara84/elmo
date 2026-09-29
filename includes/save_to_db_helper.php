@@ -5,6 +5,7 @@ require_once __DIR__ . '/../save/formgroups/save_contactperson.php';
 require_once __DIR__ . '/../save/formgroups/save_freekeywords.php';
 require_once __DIR__ . '/../save/formgroups/save_contributorpersons.php';
 require_once __DIR__ . '/../save/formgroups/save_contributorinstitutions.php';
+require_once __DIR__ . '/../save/formgroups/save_contributors_payload.php';
 require_once __DIR__ . '/../save/formgroups/save_descriptions.php';
 require_once __DIR__ . '/../save/formgroups/save_thesauruskeywords.php';
 require_once __DIR__ . '/../save/formgroups/save_spatialtemporalcoverage.php';
@@ -12,6 +13,7 @@ require_once __DIR__ . '/../save/formgroups/save_relatedwork.php';
 require_once __DIR__ . '/../save/formgroups/save_usedinstruments.php';
 require_once __DIR__ . '/../save/formgroups/save_fundingreferences.php';
 require_once __DIR__ . '/author_payload_xml.php';
+require_once __DIR__ . '/contributor_payload_xml.php';
 require_once __DIR__ . '/related_work_payload_xml.php';
 
 global $showGGMsProperties, $showMslMode;
@@ -69,6 +71,7 @@ function saveALL(array $postData): int {
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
 
+    if (array_key_exists('contributorsPayload', $postData)) ensureContributorLinkSchema($connection);
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
@@ -79,11 +82,12 @@ function saveALL(array $postData): int {
         if ($showMslMode ?? false) {
             executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
         }
-        if ($showContributorPersons) {
-            executeSaveFunction('saveContributorPersons', $connection, $_POST, $resource_id);
-        }
-        if ($showContributorInstitutions) {
-            executeSaveFunction('saveContributorInstitutions', $connection, $_POST, $resource_id);
+        if (array_key_exists('contributorsPayload', $postData)) {
+            $allowContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: ($GLOBALS['showContactInstitution'] ?? false), FILTER_VALIDATE_BOOLEAN);
+            executeSaveFunction('saveContributorsPayload', $connection, $postData, $resource_id, $allowContactInstitution);
+        } else {
+            if ($showContributorPersons) executeSaveFunction('saveContributorPersons', $connection, $postData, $resource_id);
+            if ($showContributorInstitutions) executeSaveFunction('saveContributorInstitutions', $connection, $postData, $resource_id);
         }
         executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
         if ($showThesauri) {
@@ -242,9 +246,10 @@ function buildResourceXmlWithCurrentFormPayloads(
     array $postData
 ): ?string {
     $applyAuthors = hasNonemptyAuthorsPayload($postData);
+    $applyContributors = array_key_exists('contributorsPayload', $postData);
     $applyRelatedWorks = hasRelatedWorksPayload($postData);
 
-    if (!$applyAuthors && !$applyRelatedWorks) {
+    if (!$applyAuthors && !$applyContributors && !$applyRelatedWorks) {
         return null;
     }
 
@@ -252,6 +257,11 @@ function buildResourceXmlWithCurrentFormPayloads(
 
     if ($applyAuthors) {
         $resourceXml = applyAuthorsPayloadToResourceXmlString($resourceXml, $postData);
+    }
+
+    if ($applyContributors) {
+        $allowContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: ($GLOBALS['showContactInstitution'] ?? false), FILTER_VALIDATE_BOOLEAN);
+        $resourceXml = applyContributorsPayloadToResourceXmlString($resourceXml, $postData, $allowContactInstitution);
     }
 
     if ($applyRelatedWorks) {

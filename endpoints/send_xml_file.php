@@ -23,6 +23,7 @@ require_once $projectRoot . '/includes/send_file_helper.php';
 require_once $projectRoot . '/includes/mail_helper.php';
 require_once $projectRoot . '/includes/ggms_registration_mail.php';
 require_once $projectRoot . '/includes/feature_toggles.php';
+require_once $projectRoot . '/includes/contact_requirement.php';
 
 global $connection, $showGGMsProperties;
 global $xmlSubmitAddress, $icgemSubmitAddress;
@@ -33,6 +34,17 @@ $resource_id = null;
 try {
     // step 0: security
     validateRequestSecurity('submit', $_POST);
+    $contactInstitutionEnv = getenv('SHOW_CONTACT_INSTITUTION');
+    $allowContactInstitution = $contactInstitutionEnv === false
+        ? resolveFeatureToggle($showContactInstitution ?? null, false)
+        : filter_var($contactInstitutionEnv, FILTER_VALIDATE_BOOLEAN);
+    if (!validateSubmittedContact($_POST, $allowContactInstitution)) {
+        ob_clean();
+        http_response_code(422);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => 'At least one complete contact person is required.']);
+        return;
+    }
     // validate the data URL if provided
     $dataUrl = isset($_POST['dataUrl']) ? trim((string) filter_var($_POST['dataUrl'], FILTER_SANITIZE_URL)) : '';
     if ($dataUrl !== '') {

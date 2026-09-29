@@ -1245,6 +1245,11 @@ $(document).ready(function () {
     summaryCount.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
     contactSummary.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
 
+    if (typeof window.updateSharedContactStatus === 'function') {
+      window.updateSharedContactStatus();
+      return;
+    }
+
     if (contactCount > 0) {
       contactSummary
         .removeClass('text-bg-warning')

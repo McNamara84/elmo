@@ -282,6 +282,9 @@ http://www.altova.com/mapforce
 				<contributors>
 					<xsl:for-each select="*[local-name()='ContactPersons' and namespace-uri()='']/*[local-name()='ContactPerson' and namespace-uri()='']">
 						<xsl:variable name="var13_cur" select="."/>
+						<xsl:variable name="contactFamily" select="normalize-space(*[local-name()='familyname'])"/>
+						<xsl:variable name="contactEmail" select="normalize-space(*[local-name()='email'])"/>
+						<xsl:if test="not(/*/*[local-name()='Contributors']/*[local-name()='Contributor'][*[local-name()='Roles']/*[local-name()='Role']/*[local-name()='name']='Contact Person' and normalize-space(*[local-name()='familyname'])=$contactFamily and normalize-space(*[local-name()='email'])=$contactEmail])">
 						<contributor>
 							<xsl:attribute name="contributorType" namespace="">ContactPerson</xsl:attribute>
 							<contributorName>
@@ -326,7 +329,32 @@ http://www.altova.com/mapforce
 								</affiliation>
 							</xsl:for-each>
 						</contributor>
+						</xsl:if>
 					</xsl:for-each>
+					<xsl:for-each select="*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Contributor' and namespace-uri()='']">
+						<xsl:variable name="entry" select="."/>
+						<xsl:for-each select="*[local-name()='Roles']/*[local-name()='Role'] | *[local-name()='Roles'][not(*[local-name()='Role'])]">
+							<contributor>
+								<xsl:attribute name="contributorType"><xsl:choose><xsl:when test="local-name()='Role'"><xsl:value-of select="translate(*[local-name()='name'], ' ', '')"/></xsl:when><xsl:otherwise>Other</xsl:otherwise></xsl:choose></xsl:attribute>
+								<contributorName>
+									<xsl:attribute name="nameType"><xsl:choose><xsl:when test="$entry/@type='institution'">Organizational</xsl:when><xsl:otherwise>Personal</xsl:otherwise></xsl:choose></xsl:attribute>
+									<xsl:choose><xsl:when test="$entry/@type='institution'"><xsl:value-of select="$entry/*[local-name()='institutionname']"/></xsl:when><xsl:otherwise><xsl:call-template name="person-display-name"><xsl:with-param name="person" select="$entry"/></xsl:call-template></xsl:otherwise></xsl:choose>
+								</contributorName>
+								<xsl:if test="$entry/@type='person'">
+									<xsl:if test="normalize-space($entry/*[local-name()='givenname'])!=''"><givenName><xsl:value-of select="$entry/*[local-name()='givenname']"/></givenName></xsl:if>
+									<familyName><xsl:value-of select="$entry/*[local-name()='familyname']"/></familyName>
+									<xsl:if test="normalize-space($entry/*[local-name()='orcid'])!=''"><nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/"><xsl:value-of select="$entry/*[local-name()='orcid']"/></nameIdentifier></xsl:if>
+								</xsl:if>
+								<xsl:for-each select="$entry/*[local-name()='Affiliations']/*[local-name()='Affiliation']">
+									<affiliation>
+										<xsl:if test="normalize-space(*[local-name()='rorId'])!=''"><xsl:attribute name="affiliationIdentifierScheme">ROR</xsl:attribute><xsl:attribute name="schemeURI">https://ror.org</xsl:attribute><xsl:attribute name="affiliationIdentifier"><xsl:value-of select="concat('https://ror.org/', *[local-name()='rorId'])"/></xsl:attribute></xsl:if>
+										<xsl:value-of select="*[local-name()='name']"/>
+									</affiliation>
+								</xsl:for-each>
+							</contributor>
+						</xsl:for-each>
+					</xsl:for-each>
+					<xsl:if test="not(*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Contributor' and namespace-uri()=''])">
 					<xsl:for-each select="*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Persons' and namespace-uri()='']/*[local-name()='Person' and namespace-uri()='']">
 						<xsl:variable name="var17_cur" select="."/>
 						<xsl:for-each select="*[local-name()='Roles' and namespace-uri()='']/*[local-name()='Role' and namespace-uri()='']">
@@ -420,6 +448,7 @@ http://www.altova.com/mapforce
 							</contributor>
 						</xsl:for-each>
 					</xsl:for-each>
+					</xsl:if>
 					<xsl:for-each select="*[local-name()='OriginatingLaboratories' and namespace-uri()='']/*[local-name()='OriginatingLaboratory' and namespace-uri()='']">
 						<xsl:variable name="var25_cur" select="."/>
 						<contributor>

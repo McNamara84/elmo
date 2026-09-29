@@ -17,7 +17,20 @@ test.describe('Dataset Save with XML Verification', () => {
   test.beforeAll(() => {
   });
 
-  test.beforeEach(() => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/roles**', async (route) => {
+      const type = new URL(route.request().url()).searchParams.get('type');
+      const names = type === 'institution'
+        ? ['Translator', 'Sponsor', 'Hosting Institution']
+        : type === 'person'
+          ? ['Data Collector', 'Researcher', 'Editor']
+          : ['Data Collector', 'Translator'];
+      await route.fulfill({
+        contentType: 'application/json',
+        body: JSON.stringify(names.map((name) => ({ name }))),
+      });
+    });
+
     // Check prerequisites: verify all reference files exist
     const requiredReferenceFiles = ['minimal.json', 'extended.json', 'extended-multiple.json'];
     for (const file of requiredReferenceFiles) {

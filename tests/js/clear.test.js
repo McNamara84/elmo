@@ -368,6 +368,13 @@ describe('clear.js - clearInputFields', () => {
         expect(rows.length).toBe(1);
     });
 
+    test('clearInputFields empties the new contributor card stack', () => {
+        window.contributorStack = { setContributors: jest.fn() };
+        require('../../js/clear.js').clearInputFields();
+        expect(window.contributorStack.setContributors).toHaveBeenCalledWith([]);
+        delete window.contributorStack;
+    });
+
     test('clearInputFields clears description fields', () => {
         clearInputFields();
         

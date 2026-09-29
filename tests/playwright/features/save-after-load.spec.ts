@@ -24,6 +24,9 @@ function isUnexpectedConsoleError(text: string): boolean {
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
     await registerGoogleMapsNoopRoute(page);
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
     // Collect unexpected console errors for assertion at end of test
     const consoleErrors: string[] = [];
     page.on('console', msg => {
