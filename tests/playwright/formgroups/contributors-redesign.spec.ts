@@ -186,7 +186,7 @@ test('contact fields and editable affiliations follow the requested rows', async
     rows.map(row => Array.from(row.querySelectorAll('input')).map(input => input.name).filter(Boolean))
   )).toEqual([
     expect.arrayContaining(['cbORCID[]', 'cbPersonLastname[]', 'cbPersonFirstname[]', 'cbPersonRoles[]']),
-    ['cbContactWebsite[]', 'cbContactEmail[]'],
+    ['cbContactEmail[]', 'cbContactWebsite[]'],
     ['cbAffiliation[]', 'cbpRorIds[]']
   ]);
   await expect(person.locator('[data-contributor-affiliation-row] > .col-12')).toHaveCount(1);

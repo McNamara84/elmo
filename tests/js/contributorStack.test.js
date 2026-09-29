@@ -174,6 +174,8 @@ describe('combined contributor stack', () => {
     controller.setContributors([{ type: 'person', familyname: 'Contact', roles: ['Contact Person'] }]);
     expect(cards()[0].querySelector('[data-contributor-contact-fields]').classList.contains('d-none')).toBe(false);
     expect(cards()[0].querySelector('[name="cbContactEmail[]"]').required).toBe(true);
+    expect(Array.from(cards()[0].querySelectorAll('[data-contributor-contact-fields] input')).map(input => input.name))
+      .toEqual(['cbContactEmail[]', 'cbContactWebsite[]']);
     controller.setContributors([{ type: 'institution', institutionname: 'Institute', roles: ['Contact Person', 'Producer'] }]);
     expect(payload()[0].roles).toEqual(['Producer']);
     window.ELMO_FEATURES.showContactInstitution = true;
@@ -181,6 +183,8 @@ describe('combined contributor stack', () => {
     expect(payload()[0].roles).toEqual(['Contact Person']);
     expect(payload()[0].email).toBe('a@example.org');
     expect(cards()[0].querySelector('[data-contributor-contact-fields]').classList.contains('d-none')).toBe(false);
+    expect(Array.from(cards()[0].querySelectorAll('[data-contributor-contact-fields] input')).map(input => input.name))
+      .toEqual(['cbContactEmail[]', 'cbContactWebsite[]']);
   });
 
   test('collapses to a compact summary with an edit action', () => {

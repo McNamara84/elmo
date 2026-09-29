@@ -172,12 +172,12 @@ $(document).ready(function () {
     fields.className = 'row g-2 mt-1 d-none';
     fields.dataset.contributorContactFields = '';
     fields.innerHTML = `<div class="col-12 col-md-6"><div class="form-floating">
-      <input type="url" class="form-control" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
-      <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
-    </div></div><div class="col-12 col-md-6"><div class="form-floating">
       <input type="email" class="form-control" id="contributor-contact-email-${id}" name="cbContactEmail[]">
       <label for="contributor-contact-email-${id}" data-translate="contactPersons.email">Email address</label>
       <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">Please provide a valid email address.</div>
+    </div></div><div class="col-12 col-md-6"><div class="form-floating">
+      <input type="url" class="form-control" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
+      <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
     </div></div>`;
     panel.append(fields);
   }
