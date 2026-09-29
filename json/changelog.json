@@ -14,6 +14,15 @@
                   "type": "text",
                   "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
                 }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1188
+                }
               ]
             },
             {
@@ -21,6 +30,15 @@
                 {
                   "type": "text",
                   "value": "The ICGEM team always receives the ICGEM metadata file (IcgmController) together with the next step for the ICGEM database: wait for the DOI from Data Services, or upload straight away when a DOI was already provided."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1188
                 }
               ]
             },
@@ -30,6 +48,15 @@
                   "type": "text",
                   "value": "ELMO-GEM no longer offers the data description template upload in the submit dialog."
                 }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1188
+                }
               ]
             },
             {
@@ -37,6 +64,15 @@
                 {
                   "type": "text",
                   "value": "Reformulated button labels in the clear form confirmation dialog. \"Clear\" instead of \"Reset\""
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1222
                 }
               ]
             },
@@ -46,6 +82,15 @@
                   "type": "text",
                   "value": "Related Work now starts empty and uses accessible cards that can be added, collapsed, removed, and reordered with buttons or drag and drop."
                 }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1229
+                }
               ]
             },
             {
@@ -54,6 +99,15 @@
                   "type": "text",
                   "value": "Related Work XML imports and exports now use XSLT-backed mappings, preserve entry order, and show progress when importing large lists."
                 }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1229
+                }
               ]
             },
             {
@@ -61,6 +115,15 @@
                 {
                   "type": "text",
                   "value": "The Contributors form group now starts empty and combines person and institution entries in one ordered card list."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1235
                 }
               ]
             },
@@ -78,6 +141,15 @@
                   "type": "text",
                   "value": "."
                 }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1235
+                }
               ]
             },
             {
@@ -85,6 +157,15 @@
                 {
                   "type": "text",
                   "value": "Contributor order, roles, affiliations and contact details are preserved when saving and loading XML."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1235
                 }
               ]
             }
@@ -99,6 +180,9 @@
                   "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
+              ],
+              "editions": [
+                "all"
               ]
             },
             {
@@ -107,6 +191,15 @@
                   "type": "text",
                   "value": "Fixed inconsistent visibility of help buttons in form group headings."
                 }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1213
+                }
               ]
             },
             {
@@ -114,6 +207,15 @@
                 {
                   "type": "text",
                   "value": "ELMO-GEM now restores consecutive satellite keywords with the same description into one data source row when importing ICGEM metadata."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1234
                 }
               ]
             },
@@ -139,6 +241,15 @@
                   "type": "text",
                   "value": " after clearing the form while still removing user-entered keywords."
                 }
+              ],
+              "editions": [
+                "msl"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1233
+                }
               ]
             },
             {
@@ -146,6 +257,15 @@
                 {
                   "type": "text",
                   "value": "DataCite relation types are exported as canonical schema values without spaces while retaining readable labels in the editor."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1229
                 }
               ]
             },
@@ -155,6 +275,15 @@
                   "type": "text",
                   "value": "Manual Related Work identifier-type selections are no longer overwritten by a delayed automatic detection result."
                 }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1229
+                }
               ]
             },
             {
@@ -162,6 +291,15 @@
                 {
                   "type": "text",
                   "value": "Corrected the clear button interaction with license and timezone: now sets default instead of setting empty"
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1238
                 }
               ]
             }
@@ -175,6 +313,15 @@
                 {
                   "type": "text",
                   "value": "The ELMO Guide explains how an empty DOI field triggers the Data Services mail for a gravity field model."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1188
                 }
               ]
             }
