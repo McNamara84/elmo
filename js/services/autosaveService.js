@@ -126,6 +126,7 @@ class AutosaveService {
     this.form.addEventListener('input', this.handleInput, true);
     this.form.addEventListener('change', this.handleInput, true);
     document.addEventListener('relatedWorksPayload:updated', this.handleInput, { passive: true });
+    document.addEventListener('contributorsPayload:updated', this.handleInput, { passive: true });
 
     this.updateStatus('idle');
     this.refreshTranslations();
@@ -419,6 +420,9 @@ class AutosaveService {
     if (this.restoreAuthorsPayload(values)) {
       this.getAuthorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
     }
+    if (this.restoreContributorsPayload(values)) {
+      this.getContributorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    }
     if (this.restoreRelatedWorksPayload(values)) {
       this.getRelatedWorksPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
     }
@@ -516,6 +520,29 @@ class AutosaveService {
     ]);
   }
 
+  restoreContributorsPayload(values) {
+    if (!values || !Object.prototype.hasOwnProperty.call(values, 'contributorsPayload') ||
+        typeof window === 'undefined' || typeof window.contributorStack?.setContributors !== 'function') {
+      return false;
+    }
+    let entries = values.contributorsPayload;
+    if (typeof entries === 'string') {
+      try { entries = JSON.parse(entries); } catch (_error) { entries = []; }
+    }
+    window.contributorStack.setContributors(Array.isArray(entries) ? entries : []);
+    return true;
+  }
+
+  getContributorPayloadFieldNames() {
+    return new Set([
+      'contributorsPayload', 'cbPersonLastname[]', 'cbPersonFirstname[]', 'cbORCID[]',
+      'cbPersonRoles[]', 'cbAffiliation[]', 'cbpRorIds[]', 'cbOrganisationName[]',
+      'cbOrganisationRoles[]', 'OrganisationAffiliation[]', 'hiddenOrganisationRorId[]',
+      'cbContactEmail[]', 'cbContactWebsite[]', 'cbPersonAffiliations[]',
+      'cbPersonRorIds[]', 'cbOrganisationAffiliations[]', 'cbOrganisationRorIds[]'
+    ]);
+  }
+
   restoreRelatedWorksPayload(values) {
     if (!values || !Object.prototype.hasOwnProperty.call(values, 'relatedWorksPayload')) {
       return false;
@@ -550,12 +577,17 @@ class AutosaveService {
     }
 
     const values = {};
+    const contributorInput = this.form.querySelector('input[name="contributorsPayload"]');
+    const contributorPayload = contributorInput && window.contributorStack?.collectPayload?.();
+    if (Array.isArray(contributorPayload)) contributorInput.value = JSON.stringify(contributorPayload);
+    const contributorNames = Array.isArray(contributorPayload) ? this.getContributorPayloadFieldNames() : null;
     const elements = Array.from(this.form.elements);
 
     elements.forEach((element) => {
       if (!element.name || element.disabled) {
         return;
       }
+      if (contributorNames?.has(element.name) && element.name !== 'contributorsPayload') return;
 
       const type = (element.type || element.tagName).toLowerCase();
       if (['submit', 'button', 'reset', 'image'].includes(type)) {

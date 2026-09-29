@@ -55,6 +55,7 @@ $showMslLogo = false;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;
 // Show Free Keywords form group

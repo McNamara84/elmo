@@ -49,6 +49,7 @@ describe('autosaveService', () => {
     delete window.elmo;
     delete window.authorStack;
     delete window.relatedWorkStack;
+    delete window.contributorStack;
   });
 
   test('throttles autosave cadence before persisting', async () => {
@@ -413,6 +414,35 @@ describe('autosaveService', () => {
     expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
     expect(form.querySelector('input[name="familynames[]"]').value).toBe('');
     expect(form.querySelector('input[name="contacts[]"]').checked).toBe(false);
+  });
+
+  test('serializes the ordered contributor payload without legacy card arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `<input name="contributorsPayload" value="stale">
+      <input name="cbPersonLastname[]" value="Legacy">`);
+    const entries = [{ type: 'person', familyname: 'Doe', roles: ['Contact Person'] }];
+    window.contributorStack = { collectPayload: jest.fn(() => entries) };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    const values = service.serializeValues();
+    expect(JSON.parse(values.contributorsPayload)).toEqual(entries);
+    expect(values['cbPersonLastname[]']).toBeUndefined();
+  });
+
+  test('restores contributor cards before and instead of legacy arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `<input name="contributorsPayload" value="[]">
+      <input name="cbPersonLastname[]" value="">`);
+    window.contributorStack = { setContributors: jest.fn() };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    service.applyDraftValues({ contributorsPayload: JSON.stringify([
+      { type: 'institution', institutionname: 'Institute', roles: [] }
+    ]), 'cbPersonLastname[]': ['Legacy'] });
+    expect(window.contributorStack.setContributors).toHaveBeenCalledWith([
+      { type: 'institution', institutionname: 'Institute', roles: [] }
+    ]);
+    expect(form.querySelector('[name="cbPersonLastname[]"]').value).toBe('');
+    service.applyDraftValues({ contributorsPayload: '[]', 'cbPersonLastname[]': ['Legacy'] });
+    expect(window.contributorStack.setContributors).toHaveBeenLastCalledWith([]);
   });
 
   test('applyDraftValues restores relatedWorksPayload through the stack before legacy arrays', () => {

@@ -100,6 +100,9 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
 test.describe('JSON-LD roundtrip flow', () => {
   test('can save JSON-LD, load it again, and save it once more', async ({ page }) => {
     await registerGoogleMapsNoopRoute(page);
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
     const consoleErrors: string[] = [];
     page.on('console', msg => {
       if (msg.type() !== 'error') {

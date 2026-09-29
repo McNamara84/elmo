@@ -893,7 +893,10 @@ paths:
         - dataset
       security: []
       summary: View dataset as XML or JSON-LD
-      description: View a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
+      description: >-
+        View a dataset in the specified metadata scheme. `datacite` and `iso` return XML,
+        `jsonld` returns compact DataCite JSON-LD. XML exports preserve the mixed order
+        of person and institution contributors and include contributor contacts.
       operationId: exportDataset
       parameters:
         - name: id
@@ -941,7 +944,10 @@ paths:
         - dataset
       security: []
       summary: Download dataset as XML or JSON-LD
-      description: Download a dataset in the specified metadata scheme. `datacite` and `iso` return XML, `jsonld` returns compact DataCite JSON-LD.
+      description: >-
+        Download a dataset in the specified metadata scheme. `datacite` and `iso` return XML,
+        `jsonld` returns compact DataCite JSON-LD. XML exports preserve the mixed order
+        of person and institution contributors and include contributor contacts.
       operationId: exportDatasetDownload
       parameters:
         - name: id
@@ -990,7 +996,9 @@ paths:
         - dataset
       security: []
       summary: View all metadata formats
-      description: View dataset in all available metadata schemes combined in one XML document
+      description: >-
+        View a dataset in all available metadata schemes combined in one XML document.
+        DataCite and ISO sections preserve contributor order and include contributor contacts.
       operationId: exportAllFormats
       parameters:
         - name: id
@@ -1027,7 +1035,9 @@ paths:
         - dataset
       security: []
       summary: Download all metadata formats
-      description: Download dataset in all available metadata schemes as a single XML file
+      description: >-
+        Download a dataset in all available metadata schemes as a single XML file.
+        DataCite and ISO sections preserve contributor order and include contributor contacts.
       operationId: exportAllFormatsDownload
       parameters:
         - name: id

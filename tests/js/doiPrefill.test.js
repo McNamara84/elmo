@@ -32,6 +32,21 @@ function loadModule() {
 }
 
 describe('doiPrefill.js', () => {
+  test('prefills mixed contributor cards in DOI order', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.authorStack = { setAuthors: jest.fn(), collectPayload: () => [] };
+    mod.prefillContributors([
+      { contributorType: 'HostingInstitution', nameType: 'Organizational', name: 'Institute' },
+      { contributorType: 'ContactPerson', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+      { contributorType: 'DataCollector', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+    ]);
+    expect(setContributors.mock.calls[0][0].map(entry => entry.type)).toEqual(['institution', 'person']);
+    expect(setContributors.mock.calls[0][0][1].roles).toEqual(['Contact Person', 'Data Collector']);
+    delete window.contributorStack;
+    delete window.authorStack;
+  });
+
   beforeEach(() => {
     // Minimal jQuery / DOM setup
     const $ = require('jquery');

@@ -10,6 +10,7 @@
  *   $showMslVocabs        - Show MSL vocabulary keywords (default: false)
  *   $showContributorPersons   - Show Contributor Persons section (default: true)
  *   $showContributorInstitutions - Show Contributor Institutions section (default: true)
+ *   $showContactInstitution - Allow an institution to be a contact (default: false)
  *   $showCoverage         - Show Spatial/Temporal Coverage section (default: true)
  *   $showFeedbackLink     - Show feedback button in footer (default: false)
  *   $showUsedInstruments  - Show Used Instruments / PID4INST selection (default: false)

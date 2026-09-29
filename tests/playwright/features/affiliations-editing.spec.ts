@@ -284,8 +284,9 @@ test.describe('Affiliation tag label editing', () => {
 
       await completeMinimalDatasetForm(page);
 
+      await page.locator('[data-contributor-add-type="institution"]').click();
       const contributorInstitutionRow = page
-        .locator('#group-contributororganisation [contributors-row]')
+        .locator('[data-contributor-card][data-contributor-type="institution"]')
         .first();
 
       // Inject a tag with a known ROR id directly via the Tagify JS API

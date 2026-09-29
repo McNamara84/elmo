@@ -111,25 +111,17 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
   });
 
   test('contributor persons: tagify initialized in new rows after first row moved to end', async ({ page }) => {
-    const contribGroup = page.locator(SELECTORS.formGroups.contributorPersons);
-    const addButton = page.locator('#button-contributor-addperson');
+    const rows = page.locator('[data-contributor-card][data-contributor-type="person"]');
+    const addButton = page.locator('[data-contributor-add-type="person"]');
 
     // Add a second row, then reorder
     await addButton.click();
-    await expect(contribGroup.locator('[contributor-person-row]')).toHaveCount(2);
-
-    // Move first row to the end
-    await page.evaluate(() => {
-      const group = document.querySelector('#group-contributorperson');
-      const firstRow = group?.querySelector('[contributor-person-row]');
-      if (group && firstRow) {
-        group.appendChild(firstRow);
-      }
-    });
+    await addButton.click();
+    await expect(rows).toHaveCount(2);
+    await rows.first().locator('[data-contributor-move-down]').click();
 
     // Add a new row after reorder
     await addButton.click();
-    const rows = contribGroup.locator('[contributor-person-row]');
     await expect(rows).toHaveCount(3);
 
     // The newest row should have affiliation tagify (wait for async init)
@@ -147,25 +139,17 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
   });
 
   test('contributor organisations: tagify initialized in new rows after first row moved to end', async ({ page }) => {
-    const contribGroup = page.locator(SELECTORS.formGroups.contributorInstitutions);
-    const addButton = page.locator('#button-contributor-addorganisation');
+    const rows = page.locator('[data-contributor-card][data-contributor-type="institution"]');
+    const addButton = page.locator('[data-contributor-add-type="institution"]');
 
     // Add a second row, then reorder
     await addButton.click();
-    await expect(contribGroup.locator('[contributors-row]')).toHaveCount(2);
-
-    // Move first row to the end
-    await page.evaluate(() => {
-      const group = document.querySelector('#group-contributororganisation');
-      const firstRow = group?.querySelector('[contributors-row]');
-      if (group && firstRow) {
-        group.appendChild(firstRow);
-      }
-    });
+    await addButton.click();
+    await expect(rows).toHaveCount(2);
+    await rows.first().locator('[data-contributor-move-down]').click();
 
     // Add a new row after reorder
     await addButton.click();
-    const rows = contribGroup.locator('[contributors-row]');
     await expect(rows).toHaveCount(3);
 
     // The newest row should have affiliation tagify (wait for async init)

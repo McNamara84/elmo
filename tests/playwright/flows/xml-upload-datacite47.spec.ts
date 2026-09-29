@@ -99,6 +99,12 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
       }
     });
 
+    // This upload checks XML fields, not thesauri availability. The separate
+    // ERNIE smoke tests verify the live endpoint.
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
+
     await navigateToHome(page);
 
     // Wait for the page to be fully loaded: dropdowns populated, description types loaded
@@ -232,7 +238,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
 
     // ── Step 14: No console errors ─────────────────────────────────────
     // Filter known CI-environment messages (maps, favicon, other 503s).
-    // Thesaurus/ERNIE failures are real errors: vocab is reachable from CI.
+    // Thesaurus errors remain unexpected because availability is stubbed above.
     const realErrors = consoleErrors.filter(
       (e) => {
         if (/thesaur/i.test(e)) {
