@@ -54,10 +54,11 @@ describe('changelog migration', () => {
     ]);
   });
 
-  test('scopes every 2.2.0 entry and only uses verified PR references', () => {
+  test('scopes every 2.2.0 entry and only uses verified issue and PR references', () => {
     const latestEntries = changelog.releases[0].sections.flatMap(section => section.entries);
     expect(latestEntries).toHaveLength(17);
     const allowedEditions = new Set(['all', 'elmo', 'msl', 'gem', 'igsn']);
+    const verifiedIssues = new Set([401, 769, 812, 885, 1009, 1022, 1087, 1127, 1140, 1148, 1191]);
     const verifiedPullRequests = new Set([1188, 1213, 1222, 1229, 1233, 1234, 1235, 1238]);
 
     for (const entry of latestEntries) {
@@ -66,17 +67,28 @@ describe('changelog migration', () => {
       for (const edition of entry.editions) expect(allowedEditions.has(edition)).toBe(true);
       if (entry.editions.includes('all')) expect(entry.editions).toEqual(['all']);
       for (const reference of entry.references || []) {
-        expect(reference.type).toBe('pull');
-        expect(verifiedPullRequests.has(reference.number)).toBe(true);
+        expect(['issue', 'pull']).toContain(reference.type);
+        const verifiedNumbers = reference.type === 'issue' ? verifiedIssues : verifiedPullRequests;
+        expect(verifiedNumbers.has(reference.number)).toBe(true);
       }
     }
 
     expect(latestEntries[0].editions).toEqual(['gem']);
-    expect(latestEntries[0].references).toEqual([{ type: 'pull', number: 1188 }]);
+    expect(latestEntries[0].references).toEqual([
+      { type: 'issue', number: 1127 }, { type: 'pull', number: 1188 }
+    ]);
+    expect(latestEntries[4].references).toEqual([
+      { type: 'issue', number: 812 }, { type: 'issue', number: 1009 },
+      { type: 'pull', number: 1229 }
+    ]);
     expect(latestEntries[11].editions).toEqual(['gem']);
-    expect(latestEntries[11].references).toEqual([{ type: 'pull', number: 1234 }]);
+    expect(latestEntries[11].references).toEqual([
+      { type: 'issue', number: 1191 }, { type: 'pull', number: 1234 }
+    ]);
     expect(latestEntries[12].editions).toEqual(['msl']);
-    expect(latestEntries[12].references).toEqual([{ type: 'pull', number: 1233 }]);
+    expect(latestEntries[12].references).toEqual([
+      { type: 'issue', number: 1148 }, { type: 'pull', number: 1233 }
+    ]);
     expect(latestEntries[9].references).toBeUndefined();
 
     for (const release of changelog.releases.slice(1)) {
