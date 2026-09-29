@@ -228,4 +228,21 @@ test.describe('Changelog access and rendering', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     expect(await fontSize()).toEqual({ version: '20px', guide: '20px' });
   });
+
+  test('opens both dialogs without browser console warnings or errors', async ({ page }) => {
+    const problems: string[] = [];
+    page.on('console', message => {
+      if (['warning', 'error'].includes(message.type())) problems.push(`${message.type()}: ${message.text()}`);
+    });
+    page.on('pageerror', error => problems.push(`pageerror: ${error.message}`));
+
+    await page.reload();
+    await page.locator('#bd-help').click();
+    await page.locator('#button-about-show').click();
+    await expect(page.locator('#modal-about')).toBeVisible();
+    await page.locator('#modal-about .btn-close').click();
+    await page.locator('#button-changelog-show').click();
+    await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(19);
+    expect(problems).toEqual([]);
+  });
 });
