@@ -100,7 +100,7 @@ function renderEntries(entries) {
     for (const edition of entry.editions || []) {
       const [label, colorClass] = EDITION_BADGES[edition];
       const badge = document.createElement('span');
-      badge.className = `badge ${colorClass} me-1`;
+      badge.className = `badge changelog-edition-badge ${colorClass} me-1`;
       badge.textContent = label;
       item.append(badge);
     }

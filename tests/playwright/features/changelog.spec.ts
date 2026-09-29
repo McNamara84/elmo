@@ -142,6 +142,35 @@ test.describe('Changelog access and rendering', () => {
     expect(requests).toBe(2);
   });
 
+  test('aligns all five edition badges without clipping ELMO-IGSN', async ({ page }) => {
+    const data = JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8'));
+    const editions = ['all', 'elmo', 'msl', 'gem', 'igsn'];
+    data.releases[0].sections[0].entries.slice(0, 5).forEach((entry: { editions: string[] }, index: number) => {
+      entry.editions = [editions[index]];
+    });
+    await page.route(CHANGELOG_PATH, route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(data),
+    }));
+
+    await page.locator('#button-changelog-show').click();
+    const badges = page.locator('#modal-changelog .accordion-item').first()
+      .locator('.changelog-edition-badge');
+    await expect(badges).toHaveCount(17);
+    const metrics = await badges.evaluateAll(nodes => nodes.slice(0, 5).map(node => ({
+      label: node.textContent,
+      width: node.getBoundingClientRect().width,
+      fits: node.scrollWidth <= node.clientWidth,
+    })));
+    expect(metrics.map(metric => metric.label)).toEqual([
+      'All ELMOs', 'ELMO', 'ELMO-MSL', 'ELMO-GEM', 'ELMO-IGSN'
+    ]);
+    expect(metrics.every(metric => metric.fits)).toBe(true);
+    expect(Math.max(...metrics.map(metric => metric.width)) - Math.min(...metrics.map(metric => metric.width)))
+      .toBeLessThan(1);
+  });
+
   test('keeps the version accessible in the compact mobile footer', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 812 });
     const versionButton = page.locator('#button-changelog-show');
