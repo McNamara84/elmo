@@ -12,6 +12,7 @@ if (!headers_sent()) {
 $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
+$gfzCssVersion = substr(hash_file('sha256', __DIR__ . '/css/gfz-cd.css'), 0, 12);
 
 // Fallback for instance title if not defined in settings
 if (!isset($instanceTitle)) {
@@ -42,7 +43,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <!-- Local jsTree CSS -->
   <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/gfz-cd.css">
+  <link rel="stylesheet" href="css/gfz-cd.css?v=<?php echo $gfzCssVersion; ?>">
   <link rel="stylesheet" href="./css/tagify-adj.css">
   <link rel="stylesheet" href="./css/darkmode.css">
   <!-- Favicon -->
