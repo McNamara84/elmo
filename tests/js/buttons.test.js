@@ -33,9 +33,6 @@ describe('buttons.js', () => {
       <button id="button-form-save"></button>
       <button id="button-form-submit"></button>
       <div id="modal-uploadxml"></div>
-      <a id="button-changelog-show" href="#"></a>
-      <div id="panel-changelog-content"></div>
-      <div id="modal-changelog"></div>
       <div data-bs-toggle="tooltip" id="tooltip-target"></div>
     `;
     $ = require('jquery');
@@ -43,7 +40,6 @@ describe('buttons.js', () => {
     window.$ = $;
     window.jQuery = $;
     $.fn.modal = jest.fn();
-    $.fn.load = jest.fn(function (url, cb) { if (cb) cb(); return this; });
     $.fn.tooltip = jest.fn();
     window.clearInputFields = jest.fn();
     window.showConfirmationModal = jest.fn();
@@ -155,15 +151,6 @@ describe('buttons.js', () => {
   test('load button shows upload modal', () => {
     loadScript();
     $('#button-form-load').trigger('click');
-    expect($.fn.modal).toHaveBeenCalledWith('show');
-  });
-
-  test('changelog button loads content and shows modal', () => {
-    loadScript();
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-    document.getElementById('button-changelog-show').dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-    expect($.fn.load).toHaveBeenCalledWith('doc/changelog.html', expect.any(Function));
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
 

@@ -603,15 +603,56 @@ header .ms-auto.d-flex {
     font-size: 0.9rem;
 }
 
-.footer-info-nav a {
+.footer-info-nav a,
+.footer-info-nav button {
     color: #cbd6ff; 
     margin: 0 10px;
     text-decoration: none;
     transition: color 0.2s;
 }
 
-.footer-info-nav a:hover {
+.footer-info-nav button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+
+.footer-info-nav a:hover,
+.footer-info-nav button:hover,
+.footer-info-nav button:focus-visible {
     color: #ffffff;
+}
+
+.footer-info-nav button:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.changelog-edition-badge {
+    min-width: 8.5em;
+    text-align: center;
+    color: #ffffff;
+}
+
+.changelog-edition-badge--all,
+.changelog-edition-badge--elmo {
+    background-color: #002864;
+}
+
+.changelog-edition-badge--msl {
+    background-color: #3d9c52;
+    color: #000000;
+}
+
+.changelog-edition-badge--gem {
+    background-color: #0062a3;
+}
+
+.changelog-edition-badge--igsn {
+    background-color: #000000;
 }
 
 @media (max-width: 768px) {
@@ -621,7 +662,8 @@ header .ms-auto.d-flex {
         align-items: center;
     }
     
-    .footer-info-nav a {
+    .footer-info-nav a,
+    .footer-info-nav button {
         margin: 0 !important;
         padding: 0.25rem 0;
     }

@@ -12,6 +12,8 @@ if (!headers_sent()) {
 $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
+// The custom stylesheet has a long cache lifetime; change its URL when its content changes.
+$gfzCssVersion = substr(hash_file('sha256', __DIR__ . '/css/gfz-cd.css'), 0, 12);
 
 // Fallback for instance title if not defined in settings
 if (!isset($instanceTitle)) {
@@ -42,7 +44,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <!-- Local jsTree CSS -->
   <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/gfz-cd.css">
+  <link rel="stylesheet" href="css/gfz-cd.css?v=<?php echo $gfzCssVersion; ?>">
   <link rel="stylesheet" href="./css/tagify-adj.css">
   <link rel="stylesheet" href="./css/darkmode.css">
   <!-- Favicon -->
@@ -110,8 +112,8 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
               <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
                   data-translate="buttons.helpOff">
                   <i class="bi bi-question-circle"></i> <span data-translate="header.off">Off</span></a></li>
-              <li><a class="dropdown-item" id="button-changelog-show">
-                  <i class="bi bi-card-checklist"></i> <span data-translate="buttons.about">About</span></a></li>
+              <li><button type="button" class="dropdown-item" id="button-about-show" data-bs-toggle="modal" data-bs-target="#modal-about">
+                  <i class="bi bi-info-circle"></i> <span data-translate="buttons.about">About</span></button></li>
             </ul>
           </div>
 
