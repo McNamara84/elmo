@@ -70,6 +70,7 @@ test.describe('Changelog access and rendering', () => {
     await expect(about).toBeHidden();
 
     const versionButton = page.locator('#button-changelog-show');
+    await expect(versionButton).toContainText('Changelog');
     await expect(versionButton).toContainText('2.2.0');
     await versionButton.click();
     const changelog = page.locator('#modal-changelog');

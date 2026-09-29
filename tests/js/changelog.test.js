@@ -103,4 +103,28 @@ describe('changelog renderer', () => {
     errorSpy.mockRestore();
     delete global.fetch;
   });
+
+  test('shows an error and retries when fetched data cannot be rendered', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const invalid = { ...changelog, currentVersion: '0.0.0' };
+    const fetchMock = jest.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => invalid })
+      .mockResolvedValue({ ok: true, json: async () => changelog });
+    global.fetch = fetchMock;
+    initChangelog();
+    const modal = document.getElementById('modal-changelog');
+    const container = document.getElementById('panel-changelog-content');
+
+    modal.dispatchEvent(new Event('show.bs.modal'));
+    await flush();
+    expect(container.querySelector('[role="alert"]').textContent).toContain('could not be loaded');
+    expect(errorSpy).toHaveBeenCalledWith('Failed to load changelog:', expect.any(Error));
+
+    modal.dispatchEvent(new Event('show.bs.modal'));
+    await flush();
+    expect(container.querySelectorAll('.accordion-item')).toHaveLength(19);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    errorSpy.mockRestore();
+    delete global.fetch;
+  });
 });
