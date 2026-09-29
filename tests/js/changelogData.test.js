@@ -56,6 +56,9 @@ describe('changelog migration', () => {
 
   test('scopes every 2.2.0 entry and only uses verified issue and PR references', () => {
     const latestEntries = changelog.releases[0].sections.flatMap(section => section.entries);
+    const entryByText = prefix => latestEntries.find(entry =>
+      entry.parts.map(part => part.value).join('').startsWith(prefix)
+    );
     expect(latestEntries).toHaveLength(17);
     const allowedEditions = new Set(['all', 'elmo', 'msl', 'gem', 'igsn']);
     const verifiedIssues = new Set([401, 769, 812, 885, 1009, 1022, 1087, 1127, 1140, 1148, 1191]);
@@ -73,23 +76,23 @@ describe('changelog migration', () => {
       }
     }
 
-    expect(latestEntries[0].editions).toEqual(['gem']);
-    expect(latestEntries[0].references).toEqual([
+    expect(entryByText('ELMO-GEM now branches').editions).toEqual(['gem']);
+    expect(entryByText('ELMO-GEM now branches').references).toEqual([
       { type: 'issue', number: 1127 }, { type: 'pull', number: 1188 }
     ]);
-    expect(latestEntries[4].references).toEqual([
+    expect(entryByText('Related Work now starts empty').references).toEqual([
       { type: 'issue', number: 812 }, { type: 'issue', number: 1009 },
       { type: 'pull', number: 1229 }
     ]);
-    expect(latestEntries[11].editions).toEqual(['gem']);
-    expect(latestEntries[11].references).toEqual([
+    expect(entryByText('ELMO-GEM now restores').editions).toEqual(['gem']);
+    expect(entryByText('ELMO-GEM now restores').references).toEqual([
       { type: 'issue', number: 1191 }, { type: 'pull', number: 1234 }
     ]);
-    expect(latestEntries[12].editions).toEqual(['msl']);
-    expect(latestEntries[12].references).toEqual([
+    expect(entryByText('ELMO-MSL restores').editions).toEqual(['msl']);
+    expect(entryByText('ELMO-MSL restores').references).toEqual([
       { type: 'issue', number: 1148 }, { type: 'pull', number: 1233 }
     ]);
-    expect(latestEntries[9].references).toBeUndefined();
+    expect(entryByText('Submission errors').references).toBeUndefined();
 
     for (const release of changelog.releases.slice(1)) {
       for (const section of release.sections) {
@@ -99,6 +102,19 @@ describe('changelog migration', () => {
         }
       }
     }
+  });
+
+  test('groups 2.2.0 entries by edition within each section', () => {
+    const [features, fixes, documentation] = changelog.releases[0].sections;
+    const editions = section => section.entries.map(entry => entry.editions[0]);
+
+    expect(editions(features)).toEqual([
+      'all', 'all', 'all', 'all', 'all', 'all', 'gem', 'gem', 'gem'
+    ]);
+    expect(editions(fixes)).toEqual([
+      'all', 'all', 'all', 'all', 'all', 'msl', 'gem'
+    ]);
+    expect(editions(documentation)).toEqual(['gem']);
   });
 
   test('has labels and loading states in every supported language', () => {

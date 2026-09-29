@@ -12,65 +12,6 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 1127
-                },
-                {
-                  "type": "pull",
-                  "number": 1188
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "The ICGEM team always receives the ICGEM metadata file (IcgmController) together with the next step for the ICGEM database: wait for the DOI from Data Services, or upload straight away when a DOI was already provided."
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 1127
-                },
-                {
-                  "type": "pull",
-                  "number": 1188
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "ELMO-GEM no longer offers the data description template upload in the submit dialog."
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "pull",
-                  "number": 1188
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
                   "value": "Reformulated button labels in the clear form confirmation dialog. \"Clear\" instead of \"Reset\""
                 }
               ],
@@ -200,6 +141,65 @@
                   "number": 1235
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1127
+                },
+                {
+                  "type": "pull",
+                  "number": 1188
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The ICGEM team always receives the ICGEM metadata file (IcgmController) together with the next step for the ICGEM database: wait for the DOI from Data Services, or upload straight away when a DOI was already provided."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1127
+                },
+                {
+                  "type": "pull",
+                  "number": 1188
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM no longer offers the data description template upload in the submit dialog."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1188
+                }
+              ]
             }
           ]
         },
@@ -235,64 +235,6 @@
                 {
                   "type": "pull",
                   "number": 1213
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "ELMO-GEM now restores consecutive satellite keywords with the same description into one data source row when importing ICGEM metadata."
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 1191
-                },
-                {
-                  "type": "pull",
-                  "number": 1234
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "ELMO-MSL restores the required free keywords "
-                },
-                {
-                  "type": "code",
-                  "value": "EPOS"
-                },
-                {
-                  "type": "text",
-                  "value": " and "
-                },
-                {
-                  "type": "code",
-                  "value": "multi-scale laboratories"
-                },
-                {
-                  "type": "text",
-                  "value": " after clearing the form while still removing user-entered keywords."
-                }
-              ],
-              "editions": [
-                "msl"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 1148
-                },
-                {
-                  "type": "pull",
-                  "number": 1233
                 }
               ]
             },
@@ -348,6 +290,64 @@
                 {
                   "type": "pull",
                   "number": 1238
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-MSL restores the required free keywords "
+                },
+                {
+                  "type": "code",
+                  "value": "EPOS"
+                },
+                {
+                  "type": "text",
+                  "value": " and "
+                },
+                {
+                  "type": "code",
+                  "value": "multi-scale laboratories"
+                },
+                {
+                  "type": "text",
+                  "value": " after clearing the form while still removing user-entered keywords."
+                }
+              ],
+              "editions": [
+                "msl"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1148
+                },
+                {
+                  "type": "pull",
+                  "number": 1233
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM now restores consecutive satellite keywords with the same description into one data source row when importing ICGEM metadata."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1191
+                },
+                {
+                  "type": "pull",
+                  "number": 1234
                 }
               ]
             }
