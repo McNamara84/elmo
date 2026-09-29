@@ -110,4 +110,20 @@ test.describe('Changelog access and rendering', () => {
     await expect(page.locator('#modal-changelog')).toBeVisible();
     await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(19);
   });
+
+  test('shows the version at the same text size as the neighboring footer links', async ({ page }) => {
+    const version = page.locator('#button-changelog-show');
+    const guide = page.locator('#buttonHelp');
+    const fontSize = async () => page.evaluate(() => ({
+      version: getComputedStyle(document.querySelector('#button-changelog-show')!).fontSize,
+      guide: getComputedStyle(document.querySelector('#buttonHelp')!).fontSize,
+    }));
+
+    await expect(version).toBeVisible();
+    await expect(guide).toBeVisible();
+    expect(await fontSize()).toEqual({ version: '20px', guide: '20px' });
+
+    await page.setViewportSize({ width: 375, height: 812 });
+    expect(await fontSize()).toEqual({ version: '20px', guide: '20px' });
+  });
 });

@@ -615,7 +615,8 @@ header .ms-auto.d-flex {
     padding: 0;
     border: 0;
     background: none;
-    font: inherit;
+    font-family: inherit;
+    line-height: inherit;
     cursor: pointer;
 }
 
