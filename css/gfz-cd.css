@@ -634,6 +634,25 @@ header .ms-auto.d-flex {
 .changelog-edition-badge {
     min-width: 8.5em;
     text-align: center;
+    color: #ffffff;
+}
+
+.changelog-edition-badge--all,
+.changelog-edition-badge--elmo {
+    background-color: #002864;
+}
+
+.changelog-edition-badge--msl {
+    background-color: #3d9c52;
+    color: #000000;
+}
+
+.changelog-edition-badge--gem {
+    background-color: #0062a3;
+}
+
+.changelog-edition-badge--igsn {
+    background-color: #000000;
 }
 
 @media (max-width: 768px) {

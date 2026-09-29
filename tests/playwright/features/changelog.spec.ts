@@ -175,6 +175,8 @@ test.describe('Changelog access and rendering', () => {
       label: node.textContent,
       width: node.getBoundingClientRect().width,
       fits: node.scrollWidth <= node.clientWidth,
+      background: getComputedStyle(node).backgroundColor,
+      foreground: getComputedStyle(node).color,
     })));
     expect(metrics.map(metric => metric.label)).toEqual([
       'All ELMOs', 'ELMO', 'ELMO-MSL', 'ELMO-GEM', 'ELMO-IGSN'
@@ -182,6 +184,13 @@ test.describe('Changelog access and rendering', () => {
     expect(metrics.every(metric => metric.fits)).toBe(true);
     expect(Math.max(...metrics.map(metric => metric.width)) - Math.min(...metrics.map(metric => metric.width)))
       .toBeLessThan(1);
+    expect(metrics.map(({ background, foreground }) => [background, foreground])).toEqual([
+      ['rgb(0, 40, 100)', 'rgb(255, 255, 255)'],
+      ['rgb(0, 40, 100)', 'rgb(255, 255, 255)'],
+      ['rgb(61, 156, 82)', 'rgb(0, 0, 0)'],
+      ['rgb(0, 98, 163)', 'rgb(255, 255, 255)'],
+      ['rgb(0, 0, 0)', 'rgb(255, 255, 255)'],
+    ]);
   });
 
   test('keeps the version accessible in the compact mobile footer', async ({ page }) => {

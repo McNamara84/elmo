@@ -1,11 +1,11 @@
 /** Render the changelog JSON without interpreting entry text as HTML. */
 
 export const EDITION_BADGES = Object.freeze({
-  all: ['All ELMOs', 'text-bg-primary'],
-  elmo: ['ELMO', 'text-bg-secondary'],
-  msl: ['ELMO-MSL', 'text-bg-success'],
-  gem: ['ELMO-GEM', 'text-bg-info'],
-  igsn: ['ELMO-IGSN', 'text-bg-warning'],
+  all: ['All ELMOs', 'changelog-edition-badge--all'],
+  elmo: ['ELMO', 'changelog-edition-badge--elmo'],
+  msl: ['ELMO-MSL', 'changelog-edition-badge--msl'],
+  gem: ['ELMO-GEM', 'changelog-edition-badge--gem'],
+  igsn: ['ELMO-IGSN', 'changelog-edition-badge--igsn'],
 });
 
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:RC\d+)?$/;
