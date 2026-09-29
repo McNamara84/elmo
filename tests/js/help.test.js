@@ -31,6 +31,23 @@ describe('help.js', () => {
     jest.clearAllMocks();
     delete global.$;
     delete global.jQuery;
+    delete window.resourceTypeDescriptions;
+  });
+
+  test('resource type modal follows selectable options and separates terms from definitions', () => {
+    document.body.insertAdjacentHTML('beforeend', `<select id="input-resourceinformation-resourcetype">
+      <option value="" disabled>Choose</option>
+      <option value="1" title="ERNIE description">Dataset</option>
+      <option value="2">Software</option>
+      <option value="3" disabled>Unavailable</option>
+    </select>`);
+    window.resourceTypeDescriptions = require('../../js/resourceTypeDescriptions.js');
+    help.displayHelpSection('help-resourceinformation-resourcetype',
+      '<div id="help-resourceinformation-resourcetype"><div id="resource-type-help-list"></div></div>');
+    expect($('#resource-type-help-list dt').map((_, element) => element.textContent).get())
+      .toEqual(['Dataset', 'Software']);
+    expect($('#resource-type-help-list dd').first().text()).toBe('ERNIE description');
+    expect($('#resource-type-help-list dd').last().text()).toContain('computer program');
   });
 
   test('initializes to help-on by default', () => {

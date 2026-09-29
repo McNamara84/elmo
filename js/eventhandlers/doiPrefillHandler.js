@@ -14,7 +14,7 @@ $(document).ready(function () {
 
   function submissionStatus(key, fallback, severity = 'muted') {
     $('#submission-doi-status').attr('class', `form-text text-${severity}`)
-      .text(translate(key, fallback));
+      .text(translate(key, fallback).replace(/\{version\}/g, expectedVersion));
   }
 
   function toggleSpinner(show) {
