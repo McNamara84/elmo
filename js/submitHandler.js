@@ -416,7 +416,21 @@ class SubmitHandler {
             return;
         }
 
-        this.modals.submit.show();
+        const doiValidation = window.resourceInformation?.validateSubmissionDoi?.();
+        const showAfterDoiValidation = valid => {
+            if (valid) {
+                this.modals.submit.show();
+                return;
+            }
+            this.showNotification('danger', translations.alerts.errorHeading,
+                $('#submission-doi-status').text() || translations.alerts.submitError);
+            $('#input-resourceinformation-doi').trigger('focus');
+        };
+        if (doiValidation && typeof doiValidation.then === 'function') {
+            doiValidation.then(showAfterDoiValidation).catch(() => showAfterDoiValidation(false));
+        } else {
+            showAfterDoiValidation(doiValidation !== false);
+        }
     }
 
     /**

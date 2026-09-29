@@ -17,6 +17,17 @@
         <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-fg"></i>
       </div>
       <div class="card-body">
+        <div class="row mb-2 align-items-end">
+          <div class="col-12 col-md-5 p-1">
+            <label for="input-resourceinformation-source-doi" class="form-label" data-translate="resourceInfo.sourceDoi"></label>
+            <input type="text" class="form-control" id="input-resourceinformation-source-doi" autocomplete="off" />
+            <div id="source-doi-status" class="form-text" role="status" aria-live="polite"></div>
+          </div>
+          <div class="col-12 col-md-auto p-1">
+            <button type="button" class="btn btn-outline-primary" id="button-resourceinformation-prefill-doi"
+              data-translate="resourceInfo.prefillFromDoi"></button>
+          </div>
+        </div>
         <div class="row">
           <!-- Input field for DOI -->
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
@@ -24,17 +35,20 @@
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners input-greyed-out"
                   id="input-resourceinformation-doi" name="doi"
-                  pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9&lt;&gt;]+$"  />
+                  pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9&lt;&gt;]+$" readonly />
                 <label for="input-resourceinformation-doi" data-translate="resourceInfo.doi"></label>
                 <div class="invalid-feedback" data-translate="resourceInfo.doiInvalid"></div>
                 <div class="valid-feedback" data-translate="resourceInfo.doiValid"></div>
               </div>
               <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary" id="button-resourceinformation-edit-doi"
+                  aria-label="Edit DOI" title="Edit DOI"><i class="bi bi-pencil" aria-hidden="true"></i></button>
                 <span class="input-group-text">
                   <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-doi"></i>
                 </span>
               </div>
             </div>
+            <div id="submission-doi-status" class="form-text" role="status" aria-live="polite"></div>
           </div>
           <!-- Input field for Publication Year -->
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">

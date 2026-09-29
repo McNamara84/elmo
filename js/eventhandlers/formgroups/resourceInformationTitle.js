@@ -92,9 +92,22 @@ $(document).ready(function () {
     const englishOption = $('#input-resourceinformation-language option[title="en"]').first();
     setResourceInformation({ doi: '', year: '', resourceTypeId: '', version: '',
       languageId: englishOption.val() || '', titles: [{ text: '', typeId: window.mainTitleTypeId || '' }] });
+    $('#input-resourceinformation-source-doi').val('');
+    const $doi = $('#input-resourceinformation-doi');
+    $doi.prop('readOnly', true).addClass('input-greyed-out').removeAttr('data-imported-doi');
+    document.dispatchEvent(new CustomEvent('resourceInformationDoi:cleared'));
   }
 
-  window.resourceInformation = { collectPayload, setResourceInformation, clear, sync };
+  function enableDoiEditing(imported = false) {
+    const $doi = $('#input-resourceinformation-doi');
+    $doi.prop('readOnly', false).removeClass('input-greyed-out');
+    if (imported) $doi.attr('data-imported-doi', 'true');
+    else $doi.removeAttr('data-imported-doi');
+    $doi.trigger('change');
+  }
+
+  window.resourceInformation = { collectPayload, setResourceInformation, clear, sync, enableDoiEditing,
+    validateSubmissionDoi: window.resourceInformationDoiValidation };
 
   /**
    * Click event handler for the "Add Title" button.

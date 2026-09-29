@@ -2061,9 +2061,9 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   if (!window.resourceInformation?.setResourceInformation) {
     throw new Error('Resource Information form is not initialized.');
   }
-  window.resourceInformation.setResourceInformation(
-    parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping));
-  window.resourceInformation.enableDoiEditing?.(true);
+  const resourceInformation = parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping);
+  window.resourceInformation.setResourceInformation(resourceInformation);
+  if (resourceInformation.doi) window.resourceInformation.enableDoiEditing?.(true);
   // Processing Creators
   processCreators(xmlDoc, resolver);
   // Allow DOM to settle after creator row insertion (fixes Firefox timing issue #1046)

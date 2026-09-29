@@ -24,6 +24,8 @@ require_once $projectRoot . '/includes/mail_helper.php';
 require_once $projectRoot . '/includes/GGMsRegistrationEmail.php';
 require_once $projectRoot . '/includes/feature_toggles.php';
 require_once $projectRoot . '/includes/contact_requirement.php';
+require_once $projectRoot . '/includes/doi_submission_policy.php';
+require_once $projectRoot . '/api/v2/controllers/DoiController.php';
 
 global $connection, $showGGMsProperties;
 global $xmlSubmitAddress, $icgemSubmitAddress;
@@ -35,6 +37,21 @@ $resource_id = null;
 try {
     // step 0: security
     validateRequestSecurity('submit', $_POST);
+    try {
+        $doiController = new DoiController();
+        $_POST = validateSubmissionResourceInformation(
+            $_POST,
+            (bool) $showGGMsProperties,
+            static fn (string $doi): array => $doiController->lookupPublicDoi($doi),
+            (string) $xmlSubmitAddress
+        );
+    } catch (DomainException | InvalidArgumentException $error) {
+        ob_clean();
+        http_response_code(422);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $error->getMessage()]);
+        return;
+    }
     $contactInstitutionEnv = getenv('SHOW_CONTACT_INSTITUTION');
     $allowContactInstitution = $contactInstitutionEnv === false
         ? resolveFeatureToggle($showContactInstitution ?? null, false)
@@ -59,6 +76,7 @@ try {
     // generate settings object that will be re-used by the functions below
     $settings = resolveFileGenerationSettings($_POST, [
         'showGGMsProperties' => (bool) $showGGMsProperties,
+        'existingGfzDoi' => !empty($_POST['existingGfzDoi']),
         'simulateEmail' => resolveFeatureToggle($SIMULATE_EMAIL ?? null, false),
         'xmlSubmitAddress' => $xmlSubmitAddress,
         'icgemSubmitAddress' => $icgemSubmitAddress,
