@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/includes/changelog_version.php';
 $changelogVersion = elmoChangelogVersion(__DIR__ . '/json/changelog.json');
+// One hash versions both the entry module and the renderer it imports.
 $changelogInitVersion = substr(hash('sha256',
     file_get_contents(__DIR__ . '/js/changelogInit.js') .
     file_get_contents(__DIR__ . '/js/changelog.js')

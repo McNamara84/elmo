@@ -3,6 +3,9 @@
 /**
  * Read the version shown in the footer from the changelog's single data source.
  * Return null when the file is unavailable or inconsistent.
+ *
+ * @param string $path Absolute path to the changelog JSON file.
+ * @return string|null The current release version, or null if it cannot be trusted.
  */
 function elmoChangelogVersion(string $path): ?string
 {

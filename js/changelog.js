@@ -1,4 +1,9 @@
-/** Render the changelog JSON without interpreting entry text as HTML. */
+/**
+ * Render the changelog JSON without interpreting entry text as HTML.
+ * @typedef {{type: 'text'|'code', value: string}} ChangelogPart
+ * @typedef {{parts: ChangelogPart[], editions?: string[], references?: {type: 'issue'|'pull', number: number}[], children?: ChangelogEntry[]}} ChangelogEntry
+ * @typedef {{currentVersion: string, releases: {version: string, date: string, sections: {title: string, entries: ChangelogEntry[]}[], notes?: {type: 'paragraph', parts: ChangelogPart[]}[]}[]}} ChangelogData
+ */
 
 export const EDITION_BADGES = Object.freeze({
   all: ['All ELMOs', 'changelog-edition-badge--all'],
@@ -49,7 +54,11 @@ function validateEntry(entry) {
   }
 }
 
-/** Check data before creating any links or changing the displayed content. */
+/**
+ * Check data before creating any links or changing the displayed content.
+ * @param {ChangelogData} data
+ * @returns {ChangelogData}
+ */
 export function validateChangelog(data) {
   if (!data || typeof data !== 'object' || !VERSION_PATTERN.test(data.currentVersion) ||
       !Array.isArray(data.releases) || data.releases.length === 0 ||
@@ -121,7 +130,12 @@ function renderEntries(entries) {
   return list;
 }
 
-/** Build the Bootstrap accordion from the validated JSON data. */
+/**
+ * Build the Bootstrap accordion from the validated JSON data.
+ * @param {ChangelogData} rawData
+ * @param {HTMLElement} container
+ * @returns {void}
+ */
 export function renderChangelog(rawData, container) {
   const data = validateChangelog(rawData);
   const accordion = document.createElement('div');
@@ -185,7 +199,10 @@ function showStatus(container, key, fallback, role) {
   container.replaceChildren(message);
 }
 
-/** Fetch fresh data whenever the modal opens, including after a deployment. */
+/**
+ * Fetch fresh data whenever the modal opens, including after a deployment.
+ * @returns {void}
+ */
 export function initChangelog() {
   const modal = document.getElementById('modal-changelog');
   const container = document.getElementById('panel-changelog-content');

@@ -12,6 +12,7 @@ if (!headers_sent()) {
 $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
+// The custom stylesheet has a long cache lifetime; change its URL when its content changes.
 $gfzCssVersion = substr(hash_file('sha256', __DIR__ . '/css/gfz-cd.css'), 0, 12);
 
 // Fallback for instance title if not defined in settings
