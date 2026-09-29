@@ -1,3 +1,4 @@
-import { initChangelog } from './changelog.js';
+const version = new URL(import.meta.url).searchParams.get('v');
+const moduleUrl = version ? `./changelog.js?v=${encodeURIComponent(version)}` : './changelog.js';
 
-initChangelog();
+import(moduleUrl).then(({ initChangelog }) => initChangelog());

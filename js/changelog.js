@@ -185,24 +185,22 @@ function showStatus(container, key, fallback, role) {
   container.replaceChildren(message);
 }
 
-/** Fetch on first opening; retry after network or data errors. */
+/** Fetch fresh data whenever the modal opens, including after a deployment. */
 export function initChangelog() {
   const modal = document.getElementById('modal-changelog');
   const container = document.getElementById('panel-changelog-content');
   if (!modal || !container) return;
-  let loaded = false;
   let pending = null;
   modal.addEventListener('show.bs.modal', () => {
-    if (loaded || pending) return;
+    if (pending) return;
     showStatus(container, 'modals.changelog.loading', 'Loading changelog…', 'status');
-    pending = fetch('json/changelog.json')
+    pending = fetch('json/changelog.json', { cache: 'no-store' })
       .then(response => {
         if (!response.ok) throw new Error(`Changelog request failed: ${response.status}`);
         return response.json();
       })
       .then(data => {
         renderChangelog(data, container);
-        loaded = true;
       })
       .catch(error => {
         console.error('Failed to load changelog:', error);

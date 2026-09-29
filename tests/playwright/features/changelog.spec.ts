@@ -24,7 +24,8 @@ async function fixtureHtml(baseURL: string): Promise<string> {
     .slice(footer.indexOf('<footer '), footer.indexOf('</footer>') + '</footer>'.length)
     .replace(/<\?php echo htmlspecialchars\(\$changelogVersion[\s\S]*?\?>/u, '2.2.0')
     .replace(/<\?php[\s\S]*?\?>/gu, '');
-  const initScript = footer.match(/<script type="module" src="js\/changelog[^"]+\.js"><\/script>/u)?.[0];
+  const initScript = footer.match(/<script type="module" src="js\/changelogInit\.js[^"]*"><\/script>/u)?.[0]
+    .replace(/<\?php[\s\S]*?\?>/gu, 'fixture');
   if (!initScript) throw new Error('Changelog initialization script is missing from footer.html');
 
   return `<!doctype html><html lang="en"><head>
@@ -109,6 +110,35 @@ test.describe('Changelog access and rendering', () => {
     await changelog.locator('.btn-close').click();
     await page.locator('#button-changelog-show').click();
     await expect(changelog.locator('.accordion-item')).toHaveCount(19);
+    expect(requests).toBe(2);
+  });
+
+  test('refreshes cached changelog data when the modal is opened again', async ({ page }) => {
+    const current = JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8'));
+    const outdated = structuredClone(current);
+    for (const section of outdated.releases[0].sections) {
+      for (const entry of section.entries) {
+        entry.references = entry.references?.filter((reference: { type: string }) => reference.type !== 'issue');
+      }
+    }
+    let requests = 0;
+    await page.route(CHANGELOG_PATH, async route => {
+      requests++;
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        headers: { 'cache-control': 'public, max-age=86400' },
+        body: JSON.stringify(requests === 1 ? outdated : current),
+      });
+    });
+
+    await page.locator('#button-changelog-show').click();
+    const changelog = page.locator('#modal-changelog');
+    await expect(changelog.getByRole('link', { name: 'PR #1188' }).first()).toBeVisible();
+    await expect(changelog.getByRole('link', { name: 'Issue #1127' })).toHaveCount(0);
+    await changelog.locator('.btn-close').click();
+    await page.locator('#button-changelog-show').click();
+    await expect(changelog.getByRole('link', { name: 'Issue #1127' }).first()).toBeVisible();
     expect(requests).toBe(2);
   });
 

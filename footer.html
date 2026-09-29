@@ -1,6 +1,10 @@
 <?php
 require_once __DIR__ . '/includes/changelog_version.php';
 $changelogVersion = elmoChangelogVersion(__DIR__ . '/json/changelog.json');
+$changelogInitVersion = substr(hash('sha256',
+    file_get_contents(__DIR__ . '/js/changelogInit.js') .
+    file_get_contents(__DIR__ . '/js/changelog.js')
+), 0, 12);
 if ($changelogVersion === null) {
     error_log('ELMO changelog version could not be read from json/changelog.json');
 }
@@ -159,7 +163,7 @@ window.ELMO_FEATURES = {
 <script src="js/eventhandlers/doiPrefillHandler.js"></script>
 <!-- Bootstrap 5 -->
 <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-<script type="module" src="js/changelogInit.js"></script>
+<script type="module" src="js/changelogInit.js?v=<?php echo $changelogInitVersion; ?>"></script>
 <!-- Dropdown helpers used by select.js -->
 <script src="js/dropdownUtils.js"></script>
 <script src="js/dropdownAjax.js"></script>

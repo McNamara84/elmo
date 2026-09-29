@@ -81,7 +81,7 @@ describe('changelog renderer', () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const fetchMock = jest.fn()
       .mockResolvedValueOnce({ ok: false, status: 503 })
-      .mockResolvedValueOnce({ ok: true, json: async () => changelog });
+      .mockResolvedValue({ ok: true, json: async () => changelog });
     global.fetch = fetchMock;
     initChangelog();
     const modal = document.getElementById('modal-changelog');
@@ -95,7 +95,10 @@ describe('changelog renderer', () => {
     await flush();
     expect(container.querySelectorAll('.accordion-item')).toHaveLength(19);
     modal.dispatchEvent(new Event('show.bs.modal'));
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await flush();
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    expect(fetchMock).toHaveBeenNthCalledWith(1, 'json/changelog.json', { cache: 'no-store' });
+    expect(fetchMock).toHaveBeenNthCalledWith(3, 'json/changelog.json', { cache: 'no-store' });
     errorSpy.mockRestore();
     delete global.fetch;
   });
