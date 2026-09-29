@@ -9,6 +9,8 @@ $(document).ready(function () {
   var AdvancedMarkerElement = null;
   /** @type {?Function} PinElement constructor, set after library load */
   var PinElement = null;
+  /** @type {Promise<void>} Resolves when the map and drawing tools are ready */
+  var mapReady;
 
   /**
    * Standard rectangle style options used for all drawn rectangles.
@@ -37,26 +39,31 @@ $(document).ready(function () {
 
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
-      google.maps.event.trigger(map, "resize");
+      mapReady.then(
+        function () {
+          google.maps.event.trigger(map, "resize");
 
-      var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
-      var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
-      var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
-      var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
+          var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
+          var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
+          var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
+          var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
 
-      if (latMin && lngMin) {
-        // Ensure overlay exists for this row (may not if coords were set programmatically)
-        var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
-        if (!hasOverlay) {
-          updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
-        } else {
-          fitMapBoundsForRow(rowId);
-        }
-      } else {
-        // No coordinates yet – reset to whole-planet view
-        map.setCenter({ lat: 20, lng: 0 });
-        map.setZoom(2);
-      }
+          if (latMin && lngMin) {
+            // Ensure overlay exists for this row (may not if coords were set programmatically)
+            var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
+            if (!hasOverlay) {
+              updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
+            } else {
+              fitMapBoundsForRow(rowId);
+            }
+          } else {
+            // No coordinates yet – reset to whole-planet view
+            map.setCenter({ lat: 20, lng: 0 });
+            map.setZoom(2);
+          }
+        },
+        function () { /* map failed to load – already logged; skip */ }
+      );
     });
   });
 
@@ -370,7 +377,7 @@ $(document).ready(function () {
   async function initMap(mapId) {
     const mapElement = document.getElementById("panel-stc-map");
     if (!mapElement) {
-      return;
+      throw new Error("Map container #panel-stc-map not found");
     }
 
     // Import required libraries (no 'drawing' library needed)
@@ -390,7 +397,7 @@ $(document).ready(function () {
       mapOptions.mapId = mapId;
     }
     map = new Map(mapElement, mapOptions);
-    mapLoadedPromise = new Promise((resolve) => {
+
     // Keyboard zoom: + / = zooms in, - zooms out, active whenever the map modal is visible.
     document.addEventListener("keydown", function (e) {
       var modal = document.getElementById("modal-stc-map");
@@ -456,7 +463,6 @@ $(document).ready(function () {
       updateMarkerLabel(marker, displayNumber.toString());
       drawnOverlays.push({ rowId: rowId, overlay: marker });
     });
-    mapLoadedPromise.resolve();
   }
 
   // ───────────────────────────────────────────────────────────
@@ -529,7 +535,12 @@ $(document).ready(function () {
       var latMin = $row.find("[id^=input-stc-latmin]").val();
       var lngMin = $row.find("[id^=input-stc-longmin]").val();
 
-      updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
+      mapReady.then(
+        function () {
+          updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
+        },
+        function () { /* map failed to load – already logged; skip */ }
+      );
     }
   );
 
@@ -775,5 +786,11 @@ $(document).ready(function () {
   window.fitMapBounds = fitMapBounds;
   window.fitMapBoundsForRow = fitMapBoundsForRow;
   window.updateOverlayLabels = updateOverlayLabels;
-  window.updateMapOverlay = updateMapOverlay;
+  window.updateMapOverlay = function () {
+    var args = arguments;
+    return mapReady.then(
+      function () { updateMapOverlay.apply(null, args); },
+      function () { /* map failed to load – already logged; skip */ }
+    );
+  };
 });

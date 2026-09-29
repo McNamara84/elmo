@@ -173,13 +173,12 @@ describe('map.js', () => {
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
     eval(script);
-    // Wait for async initialization (fetch + importLibrary)
-    await new Promise(r => setTimeout(r, 50));
+    await window.updateMapOverlay('row1', '', '', '', '');
     global.mapInstance = gm.mapInstance;
   });
 
-  test('updateMapOverlay draws rectangle and fits bounds with buffer', () => {
-    window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35');
+  test('updateMapOverlay draws rectangle and fits bounds with buffer', async () => {
+    await window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35');
     const fitArgs = mapInstance.fitBounds.mock.calls[0][0];
     const ne = fitArgs.getNorthEast();
     const sw = fitArgs.getSouthWest();
@@ -189,25 +188,25 @@ describe('map.js', () => {
     expect(sw.lng()).toBeCloseTo(13.35 - (13.45 - 13.35) * 0.5);
   });
 
-  test('updateMapOverlay draws marker for point coordinates', () => {
-    window.updateMapOverlay('row1', '', '', '52.5', '13.4');
+  test('updateMapOverlay draws marker for point coordinates', async () => {
+    await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
     // Should have created an AdvancedMarkerElement
     expect(createdMarkers.length).toBeGreaterThan(0);
     const marker = createdMarkers[createdMarkers.length - 1];
     expect(marker.position).toBeDefined();
   });
 
-  test('deleteDrawnOverlaysForRow removes overlays and prevents fitBounds', () => {
-    window.updateMapOverlay('row1', '', '', '52.5', '13.4');
+  test('deleteDrawnOverlaysForRow removes overlays and prevents fitBounds', async () => {
+    await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
     mapInstance.fitBounds.mockClear();
     window.deleteDrawnOverlaysForRow('row1');
     window.fitMapBounds();
     expect(mapInstance.fitBounds).not.toHaveBeenCalled();
   });
 
-  test('updateOverlayLabels relabels overlays after row removal', () => {
-    window.updateMapOverlay('row1', '', '', '52.5', '13.4');
-    window.updateMapOverlay('row2', '48.90', '2.40', '48.85', '2.35');
+  test('updateOverlayLabels relabels overlays after row removal', async () => {
+    await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
+    await window.updateMapOverlay('row2', '48.90', '2.40', '48.85', '2.35');
 
     // Remove row1 from DOM
     document.querySelector('[tsc-row-id="row1"]').remove();
@@ -221,8 +220,8 @@ describe('map.js', () => {
     expect(mapInstance.fitBounds).toHaveBeenCalled();
   });
 
-  test('deleteDrawnOverlaysForRow handles Rectangle setMap correctly', () => {
-    window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35');
+  test('deleteDrawnOverlaysForRow handles Rectangle setMap correctly', async () => {
+    await window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35');
     const rectangle = createdRectangles[0];
     window.deleteDrawnOverlaysForRow('row1');
     expect(rectangle.setMap).toHaveBeenCalledWith(null);
@@ -260,6 +259,77 @@ describe('map.js', () => {
     expect(calls).toContain('maps');
     expect(calls).toContain('marker');
     expect(calls).toContain('places');
+  });
+
+  test('updateMapOverlay waits for map initialization before drawing', async () => {
+    jest.resetModules();
+    document.body.innerHTML = `
+      <div id="group-stc">
+        <div tsc-row tsc-row-id="row1">
+          <input id="input-stc-latmax-row1" />
+          <input id="input-stc-longmax-row1" />
+          <input id="input-stc-latmin-row1" />
+          <input id="input-stc-longmin-row1" />
+        </div>
+      </div>
+      <div id="modal-stc-map"></div>
+      <div id="panel-stc-map"></div>
+      <div id="map-drawing-toolbar" style="display:none;"></div>
+    `;
+
+    global.$ = createJQuery();
+    const gm = createGoogleMapsStub();
+    global.google = gm;
+    global.createdMarkers = [];
+    global.createdRectangles = [];
+
+    let resolveFetch;
+    global.fetch = jest.fn(() => new Promise((resolve) => {
+      resolveFetch = () => resolve({
+        ok: true,
+        json: () => Promise.resolve({ apiKey: 'dummy', mapId: 'test-map-id' })
+      });
+    }));
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
+    eval(script);
+
+    const overlayPromise = window.updateMapOverlay('row1', '', '', '52.5', '13.4');
+    expect(createdMarkers.length).toBe(0);
+
+    resolveFetch();
+    await overlayPromise;
+
+    expect(createdMarkers.length).toBeGreaterThan(0);
+  });
+
+  test('updateMapOverlay is a no-op when map initialization fails', async () => {
+    jest.resetModules();
+    document.body.innerHTML = `
+      <div id="group-stc">
+        <div tsc-row tsc-row-id="row1">
+          <input id="input-stc-latmin-row1" />
+          <input id="input-stc-longmin-row1" />
+        </div>
+      </div>
+      <div id="modal-stc-map"></div>
+    `;
+
+    global.$ = createJQuery();
+    global.google = createGoogleMapsStub();
+    global.createdMarkers = [];
+    global.createdRectangles = [];
+    global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ apiKey: 'dummy', mapId: 'test-map-id' })
+    }));
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
+    eval(script);
+
+    await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
+
+    expect(createdMarkers.length).toBe(0);
   });
 
   // ─────────────────────────────────────────────────────────────────────────
