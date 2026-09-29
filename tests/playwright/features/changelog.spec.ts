@@ -24,6 +24,8 @@ async function fixtureHtml(baseURL: string): Promise<string> {
     .slice(footer.indexOf('<footer '), footer.indexOf('</footer>') + '</footer>'.length)
     .replace(/<\?php echo htmlspecialchars\(\$changelogVersion[\s\S]*?\?>/u, '2.2.0')
     .replace(/<\?php[\s\S]*?\?>/gu, '');
+  const initScript = footer.match(/<script type="module" src="js\/changelog[^"]+\.js"><\/script>/u)?.[0];
+  if (!initScript) throw new Error('Changelog initialization script is missing from footer.html');
 
   return `<!doctype html><html lang="en"><head>
     <meta charset="utf-8"><base href="${baseURL}">
@@ -36,7 +38,7 @@ async function fixtureHtml(baseURL: string): Promise<string> {
     ${modalMarkup}
     ${footerMarkup}
     <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module" src="js/changelog-init.js"></script>
+    ${initScript}
   </body></html>`;
 }
 
