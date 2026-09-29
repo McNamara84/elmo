@@ -50,6 +50,23 @@ describe('autosaveService', () => {
     delete window.authorStack;
     delete window.relatedWorkStack;
     delete window.contributorStack;
+    delete window.resourceInformation;
+  });
+
+  test('serializes live Resource Information and restores its ordered titles', () => {
+    document.querySelector('form').insertAdjacentHTML('beforeend',
+      '<input name="resourceInformationPayload"><input name="doi"><input name="title[]">');
+    const payload = { doi: '10.5880/example', titles: [{ text: 'Main' }, { text: 'Second' }] };
+    window.resourceInformation = {
+      sync: jest.fn(() => { document.querySelector('[name="resourceInformationPayload"]').value = JSON.stringify(payload); }),
+      setResourceInformation: jest.fn()
+    };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    const values = service.serializeValues();
+    expect(JSON.parse(values.resourceInformationPayload)).toEqual(payload);
+    service.applyDraftValues({ resourceInformationPayload: values.resourceInformationPayload,
+      doi: 'stale', 'title[]': ['stale'] });
+    expect(window.resourceInformation.setResourceInformation).toHaveBeenCalledWith(payload);
   });
 
   test('throttles autosave cadence before persisting', async () => {

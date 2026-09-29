@@ -127,6 +127,7 @@ class AutosaveService {
     this.form.addEventListener('change', this.handleInput, true);
     document.addEventListener('relatedWorksPayload:updated', this.handleInput, { passive: true });
     document.addEventListener('contributorsPayload:updated', this.handleInput, { passive: true });
+    document.addEventListener('resourceInformationPayload:updated', this.handleInput, { passive: true });
 
     this.updateStatus('idle');
     this.refreshTranslations();
@@ -426,6 +427,9 @@ class AutosaveService {
     if (this.restoreRelatedWorksPayload(values)) {
       this.getRelatedWorksPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
     }
+    if (this.restoreResourceInformationPayload(values)) {
+      this.getResourceInformationPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    }
 
     this.prepareArrayFields(values, skippedPayloadNames);
 
@@ -571,12 +575,30 @@ class AutosaveService {
     ]);
   }
 
+  restoreResourceInformationPayload(values) {
+    if (!values || !Object.prototype.hasOwnProperty.call(values, 'resourceInformationPayload')) return false;
+    if (!window.resourceInformation?.setResourceInformation) return false;
+    try {
+      const payload = JSON.parse(values.resourceInformationPayload);
+      window.resourceInformation.setResourceInformation(payload);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  getResourceInformationPayloadFieldNames() {
+    return new Set(['resourceInformationPayload', 'doi', 'year', 'resourcetype', 'version',
+      'language', 'title[]', 'titleType[]']);
+  }
+
   serializeValues() {
     if (!this.form) {
       return {};
     }
 
     const values = {};
+    window.resourceInformation?.sync?.();
     const contributorInput = this.form.querySelector('input[name="contributorsPayload"]');
     const contributorPayload = contributorInput && window.contributorStack?.collectPayload?.();
     if (Array.isArray(contributorPayload)) contributorInput.value = JSON.stringify(contributorPayload);

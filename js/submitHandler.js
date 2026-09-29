@@ -3,6 +3,7 @@ import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
 import { hasCompleteContact } from './contactRequirement.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeResourceInformationPayload } from './services/resourceInformationPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 /**
@@ -454,6 +455,7 @@ class SubmitHandler {
         let relatedWorksPayload = null;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+            synchronizeResourceInformationPayload(this.$form[0]);
             contributorsPayload = synchronizeContributorsPayload(this.$form[0]);
             const hasRelatedWorks = this.$form[0].querySelector(
                 'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
