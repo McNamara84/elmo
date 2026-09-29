@@ -17,6 +17,25 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
         $this->controller = new \DatasetController();
     }
 
+    public function testResourceInformationVersionAndTitleOrderSurviveDataCiteExport(): void
+    {
+        $source = str_replace(
+            '<Titles><Title><text>Issue Regression Dataset</text><type>Main Title</type></Title></Titles>',
+            '<version>3.0</version><Titles>'
+            . '<Title><text>Main</text><type>Main Title</type></Title>'
+            . '<Title><text>Second</text><type>Alternative Title</type></Title>'
+            . '<Title><text>First</text><type>Translated Title</type></Title></Titles>',
+            $this->resourceXmlWithCoverage()
+        );
+        $xml = $this->controller->transformResourceXmlString($source, 'datacite');
+        $xpath = $this->dataCiteXPath($xml);
+        self::assertSame('3.0', $xpath->evaluate('string(//dc:version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($xpath->query('//dc:titles/dc:title'))
+        ));
+    }
+
     public function testDataCiteTransformPreservesAwardUriWithoutGrantNumberForIssue1147(): void
     {
         $sourceXml = $this->resourceXmlWithCoverage(fundingReferences: <<<'XML'
