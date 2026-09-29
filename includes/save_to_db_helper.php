@@ -71,16 +71,17 @@ function saveALL(array $postData): int {
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
 
+    $postData = normalizeResourceInformationPostData($postData);
     if (array_key_exists('contributorsPayload', $postData)) ensureContributorLinkSchema($connection);
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
-        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $_POST);
+        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $postData);
         error_log("[SAVE]:the id generated is " . $resource_id);
-        executeSaveFunction('saveAuthors', $connection, $_POST, $resource_id);
-        executeSaveFunction('saveContactPerson', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveAuthors', $connection, $postData, $resource_id);
+        executeSaveFunction('saveContactPerson', $connection, $postData, $resource_id);
         if ($showMslMode ?? false) {
-            executeSaveFunction('saveOriginatingLaboratories', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveOriginatingLaboratories', $connection, $postData, $resource_id);
         }
         if (array_key_exists('contributorsPayload', $postData)) {
             $allowContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: ($GLOBALS['showContactInstitution'] ?? false), FILTER_VALIDATE_BOOLEAN);
@@ -89,30 +90,30 @@ function saveALL(array $postData): int {
             if ($showContributorPersons) executeSaveFunction('saveContributorPersons', $connection, $postData, $resource_id);
             if ($showContributorInstitutions) executeSaveFunction('saveContributorInstitutions', $connection, $postData, $resource_id);
         }
-        executeSaveFunction('saveDescriptions', $connection, $_POST, $resource_id);
+        executeSaveFunction('saveDescriptions', $connection, $postData, $resource_id);
         if ($showThesauri) {
-            executeSaveFunction('saveKeywords', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveKeywords', $connection, $postData, $resource_id);
         }
         if ($showFreeKeywords) {
-            executeSaveFunction('saveFreeKeywords', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveFreeKeywords', $connection, $postData, $resource_id);
         }
         if ($showSpatialTemporalCoverage) {
-            executeSaveFunction('saveSpatialTemporalCoverage', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveSpatialTemporalCoverage', $connection, $postData, $resource_id);
         }
         if ($showRelatedWork) {
-            executeSaveFunction('saveRelatedWork', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveRelatedWork', $connection, $postData, $resource_id);
         }
         if ($showUsedInstruments) {
-            executeSaveFunction('saveUsedInstruments', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveUsedInstruments', $connection, $postData, $resource_id);
         }
         if ($showFundingReference) {
-            executeSaveFunction('saveFundingReferences', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveFundingReferences', $connection, $postData, $resource_id);
         }
         if ($showGGMsProperties ?? false) {
-            executeSaveFunction('saveGGMsDefinition', $connection, $_POST, $resource_id);
-            executeSaveFunction('saveGGMsProperties', $connection, $_POST, $resource_id);
-            executeSaveFunction('saveGGMsDataSources', $connection, $_POST, $resource_id);
-            executeSaveFunction('saveGGMsModeltypes', $connection, $_POST, $resource_id);
+            executeSaveFunction('saveGGMsDefinition', $connection, $postData, $resource_id);
+            executeSaveFunction('saveGGMsProperties', $connection, $postData, $resource_id);
+            executeSaveFunction('saveGGMsDataSources', $connection, $postData, $resource_id);
+            executeSaveFunction('saveGGMsModeltypes', $connection, $postData, $resource_id);
         }
 
         // Validate transaction commit
