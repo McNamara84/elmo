@@ -1,0 +1,2480 @@
+{
+  "currentVersion": "2.2.0",
+  "releases": [
+    {
+      "version": "2.2.0",
+      "date": "2026-10-19",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The ICGEM team always receives the ICGEM metadata file (IcgmController) together with the next step for the ICGEM database: wait for the DOI from Data Services, or upload straight away when a DOI was already provided."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM no longer offers the data description template upload in the submit dialog."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Reformulated button labels in the clear form confirmation dialog. \"Clear\" instead of \"Reset\""
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Related Work now starts empty and uses accessible cards that can be added, collapsed, removed, and reordered with buttons or drag and drop."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Related Work XML imports and exports now use XSLT-backed mappings, preserve entry order, and show progress when importing large lists."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The Contributors form group now starts empty and combines person and institution entries in one ordered card list."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Authors and Contributors share one contact requirement. Contributor persons can use the Contact Person role; contributor institutions can use it when "
+                },
+                {
+                  "type": "code",
+                  "value": "SHOW_CONTACT_INSTITUTION=true"
+                },
+                {
+                  "type": "text",
+                  "value": "."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Contributor order, roles, affiliations and contact details are preserved when saving and loading XML."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed inconsistent visibility of help buttons in form group headings."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM now restores consecutive satellite keywords with the same description into one data source row when importing ICGEM metadata."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-MSL restores the required free keywords "
+                },
+                {
+                  "type": "code",
+                  "value": "EPOS"
+                },
+                {
+                  "type": "text",
+                  "value": " and "
+                },
+                {
+                  "type": "code",
+                  "value": "multi-scale laboratories"
+                },
+                {
+                  "type": "text",
+                  "value": " after clearing the form while still removing user-entered keywords."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "DataCite relation types are exported as canonical schema values without spaces while retaining readable labels in the editor."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Manual Related Work identifier-type selections are no longer overwritten by a delayed automatic detection result."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Corrected the clear button interaction with license and timezone: now sets default instead of setting empty"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The ELMO Guide explains how an empty DOI field triggers the Data Services mail for a gravity field model."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.1.2",
+      "date": "2026-07-29",
+      "sections": [
+        {
+          "title": "Hotfix:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed DataCite 4.7 exports for Resource Types whose display labels contain spaces by writing canonical whitespace-free values to the "
+                },
+                {
+                  "type": "code",
+                  "value": "resourceTypeGeneral"
+                },
+                {
+                  "type": "text",
+                  "value": " attribute while preserving the human-readable labels."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Reduced loading time on cold start."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fix:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMOGEM: Satellite input is now required for submission."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMOGEM: Import gravity model parameters from .gfc files into Characteristics of the model (file upload or pasted header)"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Keyword trees: clicking a keyword that has more specific keywords below it now opens or closes that branch, so the hierarchy can be browsed without hitting the small arrow. Keywords without narrower entries are still chosen by clicking them, and every keyword stays selectable through its checkbox."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-MSL: The list of originating laboratories has been updated. Laboratories are now grouped by scientific domain and sorted alphabetically, making it easier to find and select the right laboratory."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.1.1",
+      "date": "2026-07-17",
+      "sections": [
+        {
+          "title": "Hotfix:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Validation within the spatial and temporal form group has been corrected, and from now on validation will only block the process when this is necessary and actually required."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Validation within the spatial and temporal form group has been corrected, and from now on validation will only block the process when this is necessary and actually required."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Title types \"Other\" and \"Subtitle\" are now correctly saved and exported"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": []
+        }
+      ]
+    },
+    {
+      "version": "2.1.0",
+      "date": "2026-07-14",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Redesigned the Authors form group by combining person and institution authors into one card-based Authors stack with ordering, contact marking, and affiliation handling"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Saving, submission and loading for JSON-LD metadata files on DataCite schema 4.7"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Saving, submission and loading for ICGEM metadata files on ICGEM schema 2.0"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Automatic prefill of fields if a valid DOI is provided"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Removed the Thesauri accordions and the connector lines in the keyword tree"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Confirmation emails for researchers after successful metadata submission"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Optimzed selection of rectangle in spatial coverages"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spacio-temporal coverage: the selection of rectangle is optimised"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Importing free keywords from CSV files via the “Add CSV” button"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Date Created is optional"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Date Submitted is added automatically only for actual submissions"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM spatial coverage can be submitted without temporal coverage while keeping the description required"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Date-only spatial temporal coverage values are preserved during save, download and upload roundtrips"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ICGEM metadata upload now imports Date Created and contact person details more reliably"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Thesaurus keyword upload works independently per thesaurus and imported keywords are synced to the modal selection"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed GEMET thesaurus selection."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.9",
+      "date": "2026-05-30",
+      "sections": [
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed inconsistent placeholder language when auto-detecting browser language"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed inconsistent validation of title"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed the satellite input field to display suggestions instantly"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Clarified save and upload labels for metadata file downloads and imports"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Enabled editing of affiliation labels while preserving ROR ID"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Various security fixes"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.8",
+      "date": "2026-04-13",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID name search for Author and Contributor person form groups"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID checksum validation using ISO 7064 Mod 11-2 algorithm"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Success notification for XML file uploads"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Automatic prefill of fields if a valid DOI is provided"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Upload of XML files not working correctly."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Tagify inputs (affiliations, roles) not initialized in cloned rows after drag-and-drop reorder"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Corrected the Funding Reference user guide example for the DFG funder name"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.7",
+      "date": "2026-03-31",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ICGEM version: simplified the Resource Information form group and set English as a default."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic title type management via ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic Language of Dataset options from ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic Roles options from ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "User guidance for missing mandatory fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added ELMO User Guide to the header."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Adjusted the header layout and packed the buttons in so-called toggler for smaller screen formats"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Renaming the save button to save as"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New form group Used Instruments for managing instrument information with PID4INST over ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic thesauri management via ERNIE API with support for 5 vocabularies (GCMD Science Keywords, Platforms, Instruments, ICS Chronostratigraphy, GEMET)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic description types from ERNIE API with support for SeriesInformation and TableOfContents"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic relation types for Related Work from ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic identifier types for Related Work from ERNIE API"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Adjusted rules for versioning and more clear documentation."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added default Keywords for EPOS MSL Edition"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Upgraded used DataCite metadata schema from v4.5 to v4.7"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Configurable Funder PID type: switchable between Crossref Funder ID and ROR"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fetching of old ORCID affiliations now correctly filters ended affiliations"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Alignment of add buttons across all form groups with consistent right padding"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Pre-selected English as the default language in the Resource Information form group"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Language of Dataset is no longer a mandatory field"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed EPOS MSL header logo so it is displayed only in the MSL edition as intended."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Hide map search label visually while keeping it accessible for screen readers in the spatial coverage modal"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spatial and Temporal Coverage: validation now rejects end times before start times when start and end date are equal"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Refined person name validation patterns to reject digits and special characters while allowing international names."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Mixed creator types in XML upload created an empty line"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Lazy loading for thesauri input fields not working"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Various small bugfixes and improvements"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic user guide"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.6",
+      "date": "2026-02-17",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Types dropdown now fetches values from ERNIE API for centralized vocabulary management"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Caching Resource Types with configurable TTL (default: 6 hours)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Simplified the license choice: the selection and help section changes dynamically based on the resource type."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ICGEM description types now properly captured: Methods, TechnicalInfo, and custom GGM types (Input Data, Processing Procedures, Specific Features of Resulting Gravity Field)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Debugged Titles and Title Types in the Resource Information from group"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Debugged Spatio-temporal coverage form group: backend and database scripts. Validation is entirely skipped on save."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Debugged Titles and Title Types in the Resource Information from group. Validation is entirely skipped on save."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved the logic for back-end validation"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Dynamic help for Resource Types in ELMO Guide"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.5",
+      "date": "2026-01-27",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Extended the existing footer with Legal Notice, Privacy Policy, and ELMO Guide links"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Provide CC-BY-4.0 as default license"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Better user feedback when submission of metadata to curation is successful"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Save button now stores drafts without triggering form validation, while Submit still enforces all required fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Simplified the choice of license"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added save and file export functionality for the ELMO-GEM version"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spatial and Temporal Coverage: Fixed HTTP 500 error when saving with empty end date or description fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spatial and Temporal Coverage: Time fields are now optional; entries with date-only are allowed"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Search of funder institutions works faster and does not freeze the whole page"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed feedback button, preventing overlap with other buttons"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Optimised the button layout for mobile devices"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Adjusted footer to work on all screen sizes"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed duplicate licenses appearing in License dropdown due to race condition during page load"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.4",
+      "date": "2025-12-15",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Search RORs other names in all affiliations input fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added new form group \"Author Institution\""
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added autosave functionality"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Divided Modal for MSL vocabularies into two areas: general and domain-specific"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added confirmation dialog before clearing form data to prevent accidental data loss"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spatial and Temporal Coverage: Time fields are now optional; entries with date-only are allowed"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Save and submit not starting on Safari browser"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "DOI validation in Resource Information form for more complex DOIs"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Help icons are now correctly removed in all new rows"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "`replaceHelpButtonInClonedRows` now works correctly"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Abstract field validation now works as expected"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Removed incorrect green checkmarks from empty fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed duplicate IDs and classes in HTML structure"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved security of SMTP and updated logging for email submissions"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Clear function now works in \"Originating Laboratory\""
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added valid `gml:id` attribute to `gml:TimePeriod` in ISO 19139 transformation (#273)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed Tagify dropdown text overlap on slim screens #686"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Extended the existing footer with Legal Notice, Privacy Policy, and ELMO Guide links"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed redundant Sortable initialization on row addition #705"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed footer buttons overlapping form content at page bottom, preventing interaction with add buttons"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed Funding Reference add button layout across all screen sizes"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated all links to the new domain (gfz.de) from gfz-potsdam.de"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated documentations with new URL to test server"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Chore:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Renamed checkXXX() functions to more descriptive names"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.3",
+      "date": "2025-09-02",
+      "sections": [
+        {
+          "title": "Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Autodetect new language files"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New API endpoint for CGI keywords"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New API endpoint for resource types"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New API endpoint for title types"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Search for help in guide"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New input field for award URI"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added optional "
+                },
+                {
+                  "type": "code",
+                  "value": "isShown"
+                },
+                {
+                  "type": "text",
+                  "value": " filter to "
+                },
+                {
+                  "type": "code",
+                  "value": "/validation/identifiertypes"
+                },
+                {
+                  "type": "text",
+                  "value": " API endpoint to control visibility of identifier types"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New form group Data Sources for ICGEM metadata scheme"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New form group Technical for ICGEM metadata scheme"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New form group Model-specific for ICGEM metadata scheme"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Coordinates from XML uploads will show up in map modal"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Initialization of Tagify input fields optimized"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Translation of messages in save and submit workflow"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Automatic detection and differentiation of DOIs and URLs fixed"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Thesaurus keywords: fix the search in the modals to work propperly and independently"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "MSL keywords are saved with the \"EPOS MSL vocabulary\" scheme"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Documentation:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Tech stack badges in ReadMe"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added ORCID and ROR logos to the ELMO Guide"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Chore:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Increased code coverage with more unit tests"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "First unit tests for JavaScript Code with Jest"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Increased development speed: Mounted docker volumes for the folders subjected to change"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Replaced CDN links with npm packages"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.2",
+      "date": "2025-07-07",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Created new formgroup for gravity field models: Characteristics of the model"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Created HTML to represent the new input fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "JavaScript to validate the new input fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New API endpoint to retrieve selection options for the new fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Update of database schema and addition of new exemplar data"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Backend: Updated the save in the database for the new input fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Frontend: Updated save and submit model workflows"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added the new fields to the XML export"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Enabled a new opportunity for the XML export: base export -- export in freestyle schema"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Covered the new code with unit tests"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated the user guide to include the new formgroup"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Enabled an installation option: populate database with test data and generate XML files from it"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated the documentation"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added search box in map modal for coverage data"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.1",
+      "date": "2025-05-09",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added easy installation with docker-compose file"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Event handlers are outsourced to separate JavaScript files for better maintainability."
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Early loading of Tagify for affiliations"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Embedded correct favicon of GFZ"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Error source Tagify removed from Originating Laboratories"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Strange menu design of ELMOs User Guide"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Language menu doesn't show active language setting"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Saving Contributor Person(s)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Submitting xml files"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "GCMD Platform and Instrument Keywords are saved with thesaurus information in ISO scheme"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated link to EPOS MSL vocabularies"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Tagify installed locally instead of via CDN to improve loading time"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Corrected re-initialization of Tagify fields after removing contact persons, preventing duplicate entries in role, affiliation, and free keyword fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Changed square corners of the timezone input field to rounded corners"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed loading issue for geographic coverage data"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Addressed accessibility issues: "
+                }
+              ],
+              "children": [
+                {
+                  "parts": [
+                    {
+                      "type": "text",
+                      "value": "Enhanced contrast for better readability"
+                    }
+                  ]
+                },
+                {
+                  "parts": [
+                    {
+                      "type": "text",
+                      "value": "Added labels to empty buttons"
+                    }
+                  ]
+                },
+                {
+                  "parts": [
+                    {
+                      "type": "text",
+                      "value": "Included missing form labels"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Tagify has been removed from the Originating Laboratories section."
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.0",
+      "date": "2025-03-04",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Install Script: New option to install database without test datasets"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "APIv2: Endpoints for updating vocabularies secured with ELMO API key"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Expansion of the licence database with new licences"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Optional input fields for MSL projects can be deactivated in settings"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Clear Button clears form"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Privacy Policy available"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Better information in placeholders of form group Descriptions"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Contributor Persons and Contributor Institutions divided in separated form groups"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "More info about input filed Embargo until"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Modal split to show selected words in our existing thesauri."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "GCMD thesauri expanded and reorganized:"
+                }
+              ],
+              "children": [
+                {
+                  "parts": [
+                    {
+                      "type": "text",
+                      "value": "Added: Platforms and Instruments"
+                    }
+                  ]
+                },
+                {
+                  "parts": [
+                    {
+                      "type": "text",
+                      "value": "All three (including Science Keywords) integrated into an accordion structure"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Originating Labs affiliations are now saved with ROR-ID"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Extended modularity for form groups"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Tooltip problems with buttons in the footer"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Timezones are loaded from xml files"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Various bug fixes through Tagify update to version 4.33.2"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Help buttons in cloned title rows"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Mapping to Datacite scheme for: Coverage without times, Funders without Crossref Funder ID and Contact Person"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved Mapping to ISO Scheme"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Charset encoding in for MSL labs"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Trigger saving with return command in save dialog"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Trigger submitting with return command in submit dialog"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Translation of labels for multiselect fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Backend validation problems"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.0RC2",
+      "date": "2025-02-03",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "APIv2: New API endpoint /update/ror for automatic refresh of ROR affiliation data"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "APIv2: New API endpoint /update/crossref for automatic refresh of CrossRef funders"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Spatial and temporal coverage: Automatic default value for timezone select field"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Invalid feedback and dependent mandatory fields for Spacial and Temporal Coverage"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Submit: Submission of data descriptions files and link to data is possible"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Updated Readme (technical documentation) + Help Guide (user guide)"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Removed \"Subtitle\" from dropdown menu \"Title Type\""
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Loading Contibutor Roles + ORCID from xml file"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Saving multiple Contributors without ORCIDs"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Adjusted column properties of the \"plus\" button"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fields in Spacial and Temporal Coverage are not mandatory anymore"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "2.0.0RC1",
+      "date": "2025-01-14",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Contact Person: Lastname, Familyname and Email Address are now mandatory fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Authors can be sorted by drag & drop"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Link to legal notice of GFZ Data Services"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Loading from an XML file for all fields in the form, except for the role fields in the contributors form group."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved responsiveness in the header by dynamically adjusting the title size and button text visibility for different screen sizes"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Removed role \"Contact Person\" for Contributor Person(s), because Contact Person(s) should be specified in the formgroup \"Contact Person(s)\""
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Several bugfixes due to update to Tagify 4.33.0"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Fixed saving datasets with identical DOI or without DOI"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "1.9.0",
+      "date": "2024-12-19",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Changelog added"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improvement of accessibility through correct use of labels"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "New API endpoint /vocabs/freekeywords added"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Proof of Concept for Uploading XML files"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Choose custom filename bevor saving as XML files"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Validation has been optimized in some form groups"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Only 2 entries were possible for Spatial and Temporal Coverage"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Additional lines for Contact Persons did not have a working affiliation field"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Contributor roles were saved incorrectly"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Affiliations and their RorIDs were saved incorrectly"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Originating Laboratories were not saved"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "FreestyleXML was generated with a lot of empty elements, different order and not including all information"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Cloned rows in formgroup Funders had no dropdown in field Funder"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Cloned rows in formgroup Contact Persons did not have a working dropdown list in affiliation field"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Years not included between 1901-2155 were saved as 0000"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Contact Persons and Contributors were not saved when fields were not filled"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Mapping to DataCite was corrected"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID fields are no longer required in the form."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Invalid messages are also displayed in the cloned rows."
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Mapping to ISO Scheme was improved"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "1.8.0",
+      "date": "2024-11-21",
+      "sections": [
+        {
+          "title": "New Features:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Submitting XML file directly to GFZ Data Services"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID preload for author and contributor fields"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Launch of APIv2 with OpenAPI 3.1 standardization"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Error message if JavaScript is inactive"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved readability in thesauri"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Improved information on mandatory fields"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Fixed Bugs:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Affiliation field for group Originating Laboratory will grow"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Corners of input fields rounded if help buttons have been removed"
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Several other bugs fixed"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "version": "1.7.0",
+      "date": "2024-10-30",
+      "sections": [],
+      "notes": [
+        {
+          "type": "paragraph",
+          "parts": [
+            {
+              "type": "text",
+              "value": "First alpha release of ELMO"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
