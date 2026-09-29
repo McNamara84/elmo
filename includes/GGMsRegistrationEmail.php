@@ -18,9 +18,35 @@
  *
  * The ICGEM mail is sent through sendElmoMail() with text from generateICGEMText().
  * The Data Services mail appends a short GEM note via buildGGMsDataServicesNote().
+ * ICGEM_UPLOAD_URL is the upload link in that ICGEM mail.
  */
 
-const GGMS_ICGEM_DATABASE_URL = 'https://icgem-test.gfz.de/database';
+/**
+ * Fallback upload URL when ICGEM_UPLOAD_URL is unset.
+ * The mail text uses resolveGgmsIcgemDatabaseUrl(), not this constant directly.
+ */
+const FALLBACK_ICGEM_UPLOAD_URL = 'https://icgem.gfz.de/upload';
+
+/**
+ * Upload interface linked from the ICGEM registration mail.
+ *
+ * A non-empty configured value wins. Otherwise the ICGEM_UPLOAD_URL environment
+ * variable is used. The test database URL is the last resort.
+ */
+function resolveGgmsIcgemDatabaseUrl(?string $configured = null): string
+{
+    $configured = trim((string) $configured);
+    if ($configured !== '') {
+        return $configured;
+    }
+
+    $fromEnv = getenv('ICGEM_UPLOAD_URL');
+    if (is_string($fromEnv) && trim($fromEnv) !== '') {
+        return trim($fromEnv);
+    }
+
+    return FALLBACK_ICGEM_UPLOAD_URL;
+}
 
 require_once __DIR__ . '/mail_helper.php';
 
@@ -198,7 +224,9 @@ function buildGGMsIcgemMessage(array $context, array $attachments): array
     $resourceId = (string) ($context['resourceId'] ?? '');
     $doi = (string) ($context['doi'] ?? '');
     $elmogemSendsDataServicesMail = (bool) ($context['elmogemSendsDataServicesMail'] ?? false);
-    $databaseUrl = GGMS_ICGEM_DATABASE_URL;
+    $databaseUrl = resolveGgmsIcgemDatabaseUrl(
+        array_key_exists('icgemDatabaseUrl', $context) ? (string) $context['icgemDatabaseUrl'] : null
+    );
 
     $fields = buildGGMsRegistrationFields($context);
     $fields['GFZ Data Services email sent'] = $elmogemSendsDataServicesMail ? 'true' : 'false';

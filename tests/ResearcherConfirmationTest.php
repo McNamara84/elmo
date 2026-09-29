@@ -16,6 +16,7 @@ require_once __DIR__ . '/../includes/mail_helper.php';
 #[CoversFunction('collectResearcherConfirmationDataFromXml')]
 #[CoversFunction('generateResearcherConfirmationText')]
 #[CoversFunction('sendResearcherConfirmationEmails')]
+#[CoversFunction('shouldSendResearcherConfirmationEmails')]
 final class ResearcherConfirmationTest extends TestCase
 {
     /**
@@ -194,5 +195,66 @@ final class ResearcherConfirmationTest extends TestCase
         $this->assertStringContainsString('Josiah Carberry', $text['html']);
         $this->assertStringContainsString('EIGEN-6C4', $text['html']);
         $this->assertStringContainsString('titled "EIGEN-6C4"', $text['text']);
+    }
+
+    /**
+     * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
+     */
+    private function oneContact(): array
+    {
+        return [
+            'title' => 'EIGEN-6C4',
+            'contacts' => [
+                [
+                    'fullName' => 'Josiah Carberry',
+                    'email' => 'author@example.com',
+                ],
+            ],
+        ];
+    }
+
+    public function testGemSkipsResearcherMailWhenTheSwitchIsOff(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => false,
+        ]);
+
+        $this->assertTrue($result['skipped']);
+        $this->assertSame(0, $result['sent']);
+        $this->assertSame([], $result['failed']);
+    }
+
+    public function testGemSendsResearcherMailWhenTheSwitchIsOn(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => true,
+        ]);
+
+        $this->assertFalse($result['skipped']);
+        $this->assertSame(1, $result['sent']);
+    }
+
+    public function testGemTreatsStringFalseAsOff(): void
+    {
+        $this->assertFalse(shouldSendResearcherConfirmationEmails([
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => 'false',
+        ]));
+    }
+
+    public function testNonGemStillSendsResearcherMailWhenTheSwitchIsOff(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => false,
+            'sendResearcherConfirmationEmail' => false,
+        ]);
+
+        $this->assertFalse($result['skipped']);
+        $this->assertSame(1, $result['sent']);
     }
 }

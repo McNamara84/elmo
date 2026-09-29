@@ -115,6 +115,17 @@ $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 // Target address for the ELMO GEM ICGEM registration mail.
 $icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
 
+// ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
+// true: send confirmation emails to contact persons. false: do not email them.
+$sendResearcherConfirmationEmail = filter_var(
+    getenv('SEND_RESEARCHER_CONFIRMATION_EMAIL') ?: 'true',
+    FILTER_VALIDATE_BOOLEAN
+);
+
+// ELMO-GEM only ($showGGMsProperties). Upload page linked from the ICGEM registration mail.
+// Empty means the mail falls back to the test database URL.
+$icgemDatabaseUrl = getenv('ICGEM_UPLOAD_URL') ?: '';
+
 function getSettings($setting)
 {
     global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;

@@ -110,7 +110,7 @@ test.describe('Changelog access and rendering', () => {
       ));
     expect(groups).toEqual([
       ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs',
-        'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM'],
+        'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM'],
       ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'ELMO-MSL', 'ELMO-GEM'],
       ['ELMO-GEM'],
     ]);
@@ -180,7 +180,7 @@ test.describe('Changelog access and rendering', () => {
     await page.locator('#button-changelog-show').click();
     const badges = page.locator('#modal-changelog .accordion-item').first()
       .locator('.changelog-edition-badge');
-    await expect(badges).toHaveCount(18);
+    await expect(badges).toHaveCount(20);
     const metrics = await badges.evaluateAll(nodes => nodes.slice(0, 5).map(node => ({
       label: node.textContent,
       width: node.getBoundingClientRect().width,

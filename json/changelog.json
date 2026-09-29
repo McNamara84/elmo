@@ -229,6 +229,64 @@
                   "number": 1188
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM's ICGEM registration email now links to the upload URL configured with "
+                },
+                {
+                  "type": "code",
+                  "value": "ICGEM_UPLOAD_URL"
+                },
+                {
+                  "type": "text",
+                  "value": "."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1203
+                },
+                {
+                  "type": "pull",
+                  "number": 1245
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM can skip researcher confirmation emails when "
+                },
+                {
+                  "type": "code",
+                  "value": "SEND_RESEARCHER_CONFIRMATION_EMAIL"
+                },
+                {
+                  "type": "text",
+                  "value": " is false."
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1196
+                },
+                {
+                  "type": "pull",
+                  "number": 1245
+                }
+              ]
             }
           ]
         },
