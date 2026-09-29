@@ -104,15 +104,21 @@ describe('combined contributor stack', () => {
       expect(helpVisible(cards()[2], name)).toBe(false);
       expect(helpIcon(cards()[2], name).closest('.input-group-text').classList.contains('d-none')).toBe(true);
     }
-    for (const name of ['cbOrganisationName[]', 'cbOrganisationRoles[]', 'OrganisationAffiliation[]']) {
+    for (const name of ['cbOrganisationName[]', 'cbOrganisationRoles[]']) {
       expect(helpVisible(cards()[1], name)).toBe(true);
       expect(helpVisible(cards()[3], name)).toBe(false);
     }
+    expect(helpVisible(cards()[1], 'OrganisationAffiliation[]')).toBe(false);
+    expect(helpVisible(cards()[3], 'OrganisationAffiliation[]')).toBe(false);
 
     cards()[0].querySelector('[data-contributor-remove]').click();
     expect(helpVisible(cards()[1], 'cbORCID[]')).toBe(true);
+    expect(helpVisible(cards()[0], 'OrganisationAffiliation[]')).toBe(true);
+    expect(helpVisible(cards()[1], 'cbAffiliation[]')).toBe(false);
     cards()[0].querySelector('[data-contributor-toggle-edit]').click();
     expect(helpVisible(cards()[2], 'cbOrganisationName[]')).toBe(true);
+    expect(helpVisible(cards()[1], 'cbAffiliation[]')).toBe(true);
+    expect(helpVisible(cards()[2], 'OrganisationAffiliation[]')).toBe(false);
 
     localStorage.setItem('helpStatus', 'help-off');
     document.dispatchEvent(new CustomEvent('helpStatus:changed'));
@@ -130,6 +136,8 @@ describe('combined contributor stack', () => {
     cards()[0].querySelector('[data-contributor-type-option="institution"]').click();
     expect(helpVisible(cards()[0], 'cbOrganisationName[]')).toBe(true);
     expect(helpVisible(cards()[1], 'cbOrganisationName[]')).toBe(false);
+    expect(helpVisible(cards()[0], 'OrganisationAffiliation[]')).toBe(true);
+    expect(helpVisible(cards()[1], 'OrganisationAffiliation[]')).toBe(false);
     cards()[1].querySelector('[data-contributor-move-up]').click();
     expect(helpVisible(cards()[0], 'cbOrganisationName[]')).toBe(true);
     expect(helpVisible(cards()[1], 'cbOrganisationName[]')).toBe(false);

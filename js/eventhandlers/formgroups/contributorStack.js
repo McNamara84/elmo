@@ -152,7 +152,7 @@ $(document).ready(function () {
     const firstShownFields = new Set();
     stack.querySelectorAll('i[data-help-section-id]').forEach(icon => {
       const field = icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
-      const key = field?.name || icon.dataset.helpSectionId;
+      const key = icon.dataset.helpSectionId || field?.name;
       const fieldShown = isHelpFieldShown(field);
       const show = helpOn && fieldShown && !firstShownFields.has(key);
       if (fieldShown) firstShownFields.add(key);

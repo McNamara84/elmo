@@ -92,13 +92,15 @@ test('help icons follow the first visible contributor field of each kind', async
     await expect(cards.nth(1).locator(`i[data-help-section-id="${helpId}"]`)).toBeVisible();
     await expect(cards.nth(3).locator(`i[data-help-section-id="${helpId}"]`)).toBeHidden();
   }
-  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeVisible();
+  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeHidden();
   await expect(cards.nth(3).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeHidden();
 
   await cards.nth(0).locator('[data-contributor-remove]').click();
   await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorpersons-orcid"]')).toBeVisible();
+  await expect(cards.nth(0).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeVisible();
   await cards.nth(0).locator('[data-contributor-toggle-edit]').click();
   await expect(cards.nth(2).locator('i[data-help-section-id="help-contributorinstitutions-organisationname"]')).toBeVisible();
+  await expect(cards.nth(1).locator('i[data-help-section-id="help-contributorinstitutions-affiliation"]')).toBeVisible();
 
   await page.evaluate(() => {
     localStorage.setItem('helpStatus', 'help-off');
