@@ -23,8 +23,27 @@ final class ChangelogVersionTest extends TestCase
             self::assertNull(elmoChangelogVersion($path));
             file_put_contents($path, '{invalid json');
             self::assertNull(elmoChangelogVersion($path));
+            file_put_contents($path, '"not an object"');
+            self::assertNull(elmoChangelogVersion($path));
         } finally {
             unlink($path);
         }
+    }
+
+    public function testFooterRendersVersionAndChangelogTarget(): void
+    {
+        $showFeedbackLink = false;
+        $maxTitles = 2;
+        ob_start();
+        try {
+            include __DIR__ . '/../footer.html';
+            $html = (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
+
+        self::assertStringContainsString('id="button-changelog-show"', $html);
+        self::assertStringContainsString('data-bs-target="#modal-changelog"', $html);
+        self::assertMatchesRegularExpression('/<span>2\.2\.0<\/span>/', $html);
     }
 }

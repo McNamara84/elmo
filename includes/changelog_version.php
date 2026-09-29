@@ -12,6 +12,9 @@ function elmoChangelogVersion(string $path): ?string
     }
 
     $data = json_decode($contents, true);
+    if (!is_array($data) || !isset($data['releases']) || !is_array($data['releases'])) {
+        return null;
+    }
     $version = $data['currentVersion'] ?? null;
     $latest = $data['releases'][0]['version'] ?? null;
     if (!is_string($version) || !preg_match('/^\d+\.\d+\.\d+(?:RC\d+)?$/', $version) || $latest !== $version) {

@@ -1,4 +1,7 @@
 const changelog = require('../../json/changelog.json');
+const english = require('../../lang/en.json');
+const german = require('../../lang/de.json');
+const french = require('../../lang/fr.json');
 
 function allEntries(entries) {
   return entries.flatMap(entry => [entry, ...allEntries(entry.children || [])]);
@@ -83,6 +86,17 @@ describe('changelog migration', () => {
           expect(entry.references).toBeUndefined();
         }
       }
+    }
+  });
+
+  test('has labels and loading states in every supported language', () => {
+    for (const locale of [english, german, french]) {
+      expect(locale.modals.about.heading).toEqual(expect.any(String));
+      expect(locale.modals.about.text).toEqual(expect.any(String));
+      expect(locale.modals.about.metadataEditorLink).toEqual(expect.any(String));
+      expect(locale.modals.changelog.title).toEqual(expect.any(String));
+      expect(locale.modals.changelog.loading).toEqual(expect.any(String));
+      expect(locale.modals.changelog.error).toEqual(expect.any(String));
     }
   });
 });
