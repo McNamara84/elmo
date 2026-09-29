@@ -390,7 +390,7 @@ $(document).ready(function () {
       mapOptions.mapId = mapId;
     }
     map = new Map(mapElement, mapOptions);
-
+    mapLoadedPromise = new Promise((resolve) => {
     // Keyboard zoom: + / = zooms in, - zooms out, active whenever the map modal is visible.
     document.addEventListener("keydown", function (e) {
       var modal = document.getElementById("modal-stc-map");
@@ -456,6 +456,7 @@ $(document).ready(function () {
       updateMarkerLabel(marker, displayNumber.toString());
       drawnOverlays.push({ rowId: rowId, overlay: marker });
     });
+    mapLoadedPromise.resolve();
   }
 
   // ───────────────────────────────────────────────────────────
@@ -752,28 +753,21 @@ $(document).ready(function () {
   }
 
   // Fetch the Google Maps API key and Map ID from settings.php, then initialize
-  fetch("settings.php?setting=apiKey")
+  var mapReady = fetch("settings.php?setting=apiKey")
     .then(function (response) {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (!response.ok) throw new Error("Network response was not ok");
       return response.json();
     })
     .then(function (data) {
-      if (data.apiKey) {
-        if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
-          loadGoogleMapsApi(data.apiKey);
-        }
-        window.google.maps.importLibrary("maps").then(function () {
-          initMap(data.mapId || "");
-        });
-      } else {
-        console.error("API key not found in the response");
+      if (!data.apiKey) throw new Error("API key not found in the response");
+      if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
+        loadGoogleMapsApi(data.apiKey);
       }
-    })
-    .catch(function (error) {
-      console.error("Error fetching the API key:", error);
+      return initMap(data.mapId || "");
     });
+  mapReady.catch(function (error) {
+    console.error("Map initialization failed:", error);
+  });
 
 
   // Make functions globally accessible
