@@ -18,6 +18,10 @@ describe('changelog renderer', () => {
     expect(container.querySelectorAll('.accordion-button[aria-expanded="true"]')).toHaveLength(1);
     expect(container.querySelectorAll('.badge')).toHaveLength(17);
     expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(16);
+    const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
+    expect(issueLinks).toHaveLength(13);
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #1127');
+    expect(issueLinks.map(link => link.textContent)).not.toContain('Issue #1058');
     expect(container.querySelectorAll('.accordion-item:not(:first-child) .badge')).toHaveLength(0);
     expect(container.querySelectorAll('.accordion-item:not(:first-child) a')).toHaveLength(0);
     expect(container.querySelectorAll('code')).toHaveLength(6);

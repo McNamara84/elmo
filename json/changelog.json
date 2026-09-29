@@ -20,6 +20,10 @@
               ],
               "references": [
                 {
+                  "type": "issue",
+                  "number": 1127
+                },
+                {
                   "type": "pull",
                   "number": 1188
                 }
@@ -36,6 +40,10 @@
                 "gem"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 1127
+                },
                 {
                   "type": "pull",
                   "number": 1188
@@ -71,6 +79,10 @@
               ],
               "references": [
                 {
+                  "type": "issue",
+                  "number": 1140
+                },
+                {
                   "type": "pull",
                   "number": 1222
                 }
@@ -87,6 +99,14 @@
                 "all"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 812
+                },
+                {
+                  "type": "issue",
+                  "number": 1009
+                },
                 {
                   "type": "pull",
                   "number": 1229
@@ -105,6 +125,10 @@
               ],
               "references": [
                 {
+                  "type": "issue",
+                  "number": 769
+                },
+                {
                   "type": "pull",
                   "number": 1229
                 }
@@ -121,6 +145,10 @@
                 "all"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 885
+                },
                 {
                   "type": "pull",
                   "number": 1235
@@ -146,6 +174,10 @@
                 "all"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 401
+                },
                 {
                   "type": "pull",
                   "number": 1235
@@ -197,6 +229,10 @@
               ],
               "references": [
                 {
+                  "type": "issue",
+                  "number": 1087
+                },
+                {
                   "type": "pull",
                   "number": 1213
                 }
@@ -213,6 +249,10 @@
                 "gem"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 1191
+                },
                 {
                   "type": "pull",
                   "number": 1234
@@ -246,6 +286,10 @@
                 "msl"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 1148
+                },
                 {
                   "type": "pull",
                   "number": 1233
@@ -298,6 +342,10 @@
               ],
               "references": [
                 {
+                  "type": "issue",
+                  "number": 1022
+                },
+                {
                   "type": "pull",
                   "number": 1238
                 }
@@ -319,6 +367,10 @@
                 "gem"
               ],
               "references": [
+                {
+                  "type": "issue",
+                  "number": 1127
+                },
                 {
                   "type": "pull",
                   "number": 1188

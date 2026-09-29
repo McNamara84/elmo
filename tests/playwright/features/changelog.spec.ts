@@ -78,6 +78,18 @@ test.describe('Changelog access and rendering', () => {
     await expect(changelog.getByText('ELMO-GEM', { exact: true }).first()).toBeVisible();
     await expect(changelog.getByRole('link', { name: 'PR #1188' }).first())
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
+    const latestEntries = changelog.locator('.accordion-item').first()
+      .locator('.accordion-body > ul > li > ul > li');
+    await expect(latestEntries.nth(0).getByRole('link', { name: 'Issue #1127' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1127');
+    await expect(latestEntries.nth(0).getByRole('link', { name: 'PR #1188' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
+    await expect(latestEntries.nth(4).getByRole('link', { name: 'Issue #812' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/812');
+    await expect(latestEntries.nth(4).getByRole('link', { name: 'Issue #1009' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1009');
+    await expect(latestEntries.nth(4).getByRole('link', { name: 'PR #1229' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1229');
     await expect(changelog.locator('.accordion-item').nth(1).locator('.badge')).toHaveCount(0);
   });
 
