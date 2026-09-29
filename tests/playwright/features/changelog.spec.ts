@@ -93,13 +93,22 @@ test.describe('Changelog access and rendering', () => {
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1009');
     await expect(relatedWorkEntry.getByRole('link', { name: 'PR #1229' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1229');
+    const changelogEntry = latestEntries.filter({ hasText: 'The footer version opens a separate changelog' });
+    await expect(changelogEntry.getByRole('link', { name: 'Issue #807' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/807');
+    await expect(changelogEntry.getByRole('link', { name: 'Issue #909' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/909');
+    await expect(changelogEntry.getByRole('link', { name: 'Issue #1240' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1240');
+    await expect(changelogEntry.getByRole('link', { name: 'PR #1246' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1246');
     const groups = await changelog.locator('.accordion-item').first()
       .locator('.accordion-body > ul > li').evaluateAll(sections => sections.map(section =>
         [...section.querySelectorAll(':scope > ul > li > .changelog-edition-badge')]
           .map(badge => badge.textContent?.trim())
       ));
     expect(groups).toEqual([
-      ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs',
+      ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs',
         'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM'],
       ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'ELMO-MSL', 'ELMO-GEM'],
       ['ELMO-GEM'],
@@ -170,7 +179,7 @@ test.describe('Changelog access and rendering', () => {
     await page.locator('#button-changelog-show').click();
     const badges = page.locator('#modal-changelog .accordion-item').first()
       .locator('.changelog-edition-badge');
-    await expect(badges).toHaveCount(17);
+    await expect(badges).toHaveCount(18);
     const metrics = await badges.evaluateAll(nodes => nodes.slice(0, 5).map(node => ({
       label: node.textContent,
       width: node.getBoundingClientRect().width,

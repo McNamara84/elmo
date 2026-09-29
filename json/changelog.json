@@ -12,6 +12,35 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "The footer version opens a separate changelog with edition badges and links to related issues and pull requests; About remains under Help."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 807
+                },
+                {
+                  "type": "issue",
+                  "number": 909
+                },
+                {
+                  "type": "issue",
+                  "number": 1240
+                },
+                {
+                  "type": "pull",
+                  "number": 1246
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Reformulated button labels in the clear form confirmation dialog. \"Clear\" instead of \"Reset\""
                 }
               ],

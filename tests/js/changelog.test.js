@@ -16,11 +16,12 @@ describe('changelog renderer', () => {
     expect(container.querySelector('.accordion-button').textContent).toBe('Version 2.2.0 - 2026/10/19');
     expect(container.querySelector('.accordion-collapse').classList.contains('show')).toBe(true);
     expect(container.querySelectorAll('.accordion-button[aria-expanded="true"]')).toHaveLength(1);
-    expect(container.querySelectorAll('.badge')).toHaveLength(17);
-    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(16);
+    expect(container.querySelectorAll('.badge')).toHaveLength(18);
+    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(17);
     const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
-    expect(issueLinks).toHaveLength(13);
+    expect(issueLinks).toHaveLength(16);
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1127');
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #1240');
     expect(issueLinks.map(link => link.textContent)).not.toContain('Issue #1058');
     expect(container.querySelectorAll('.accordion-item:not(:first-child) .badge')).toHaveLength(0);
     expect(container.querySelectorAll('.accordion-item:not(:first-child) a')).toHaveLength(0);

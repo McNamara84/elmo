@@ -28,7 +28,7 @@ describe('changelog migration', () => {
     const entries = changelog.releases.flatMap(release =>
       release.sections.flatMap(section => allEntries(section.entries))
     );
-    expect(entries).toHaveLength(260);
+    expect(entries).toHaveLength(261);
     expect(entries.filter(entry => entry.children?.length)).toHaveLength(2);
     expect(entries.flatMap(entry => entry.parts).filter(part => part.type === 'code')).toHaveLength(6);
 
@@ -59,10 +59,10 @@ describe('changelog migration', () => {
     const entryByText = prefix => latestEntries.find(entry =>
       entry.parts.map(part => part.value).join('').startsWith(prefix)
     );
-    expect(latestEntries).toHaveLength(17);
+    expect(latestEntries).toHaveLength(18);
     const allowedEditions = new Set(['all', 'elmo', 'msl', 'gem', 'igsn']);
-    const verifiedIssues = new Set([401, 769, 812, 885, 1009, 1022, 1087, 1127, 1140, 1148, 1191]);
-    const verifiedPullRequests = new Set([1188, 1213, 1222, 1229, 1233, 1234, 1235, 1238]);
+    const verifiedIssues = new Set([401, 769, 807, 812, 885, 909, 1009, 1022, 1087, 1127, 1140, 1148, 1191, 1240]);
+    const verifiedPullRequests = new Set([1188, 1213, 1222, 1229, 1233, 1234, 1235, 1238, 1246]);
 
     for (const entry of latestEntries) {
       expect(entry.editions.length).toBeGreaterThan(0);
@@ -76,6 +76,11 @@ describe('changelog migration', () => {
       }
     }
 
+    expect(entryByText('The footer version opens').editions).toEqual(['all']);
+    expect(entryByText('The footer version opens').references).toEqual([
+      { type: 'issue', number: 807 }, { type: 'issue', number: 909 },
+      { type: 'issue', number: 1240 }, { type: 'pull', number: 1246 }
+    ]);
     expect(entryByText('ELMO-GEM now branches').editions).toEqual(['gem']);
     expect(entryByText('ELMO-GEM now branches').references).toEqual([
       { type: 'issue', number: 1127 }, { type: 'pull', number: 1188 }
@@ -109,7 +114,7 @@ describe('changelog migration', () => {
     const editions = section => section.entries.map(entry => entry.editions[0]);
 
     expect(editions(features)).toEqual([
-      'all', 'all', 'all', 'all', 'all', 'all', 'gem', 'gem', 'gem'
+      'all', 'all', 'all', 'all', 'all', 'all', 'all', 'gem', 'gem', 'gem'
     ]);
     expect(editions(fixes)).toEqual([
       'all', 'all', 'all', 'all', 'all', 'msl', 'gem'
