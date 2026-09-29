@@ -110,6 +110,14 @@ describe('help.js', () => {
     expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
   });
 
+  test('keyboard opens a focusable field help icon', () => {
+    $.get = jest.fn(() => ({ fail: jest.fn() }));
+    const icon = $('<i data-help-section-id="help-resourceinformation-resourcetype" tabindex="0"></i>');
+    $(document.body).append(icon);
+    icon.trigger($.Event('keydown', { key: 'Enter' }));
+    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
+  });
+
   test('displayHelpSection populates modal on success', () => {
     const htmlData = '<div id="section1">Help Content</div>';
     help.displayHelpSection('section1', htmlData);

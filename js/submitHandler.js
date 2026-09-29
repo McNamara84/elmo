@@ -416,7 +416,7 @@ class SubmitHandler {
             return;
         }
 
-        const doiValidation = window.resourceInformation?.validateSubmissionDoi?.();
+        const doiValidation = window.resourceInformation?.validateSubmissionDoi?.({ forSubmit: true });
         const showAfterDoiValidation = valid => {
             if (valid) {
                 this.modals.submit.show();

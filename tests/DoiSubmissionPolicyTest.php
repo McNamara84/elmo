@@ -68,6 +68,8 @@ final class DoiSubmissionPolicyTest extends TestCase
         yield 'network failure' => [self::post('10.5880/abc'), static function () { throw new RuntimeException('timeout'); }, 'could not be verified'];
         yield 'malformed source version' => [self::post('10.5880/abc'),
             static fn () => ['found' => true, 'attributes' => ['version' => 'release two']], 'unclear version'];
+        yield 'version overflow' => [self::post('10.5880/abc'),
+            static fn () => ['found' => true, 'attributes' => ['version' => '999999999999999999999.0']], 'unclear version'];
         yield 'stale submitted version' => [self::post('10.5880/abc', '2.0'), $found, 'must be 3.0'];
         yield 'different DOI' => [self::post('10.5880/abc'),
             static fn () => ['found' => true, 'attributes' => ['doi' => '10.5880/other']], 'different DOI'];

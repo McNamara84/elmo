@@ -39,7 +39,7 @@ final class ResourceInformationImportXsltTest extends TestCase
     public static function documents(): iterable
     {
         $body = '<identifier identifierType="DOI">10.5880/example</identifier>'
-            . '<publicationYear>2026</publicationYear><types><resourceType resourceTypeGeneral="Dataset">Dataset</resourceType></types>'
+            . '<publicationYear>2026</publicationYear><resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>'
             . '<version>3.0</version><language>en</language><titles><title>Main</title>'
             . '<title titleType="AlternativeTitle">Later</title><title titleType="TranslatedTitle">Earlier</title></titles>';
         yield 'DataCite namespace' => ['<resource xmlns="http://datacite.org/schema/kernel-4">' . $body . '</resource>'];

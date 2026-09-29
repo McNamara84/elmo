@@ -51,7 +51,11 @@ function validateSubmissionResourceInformation(
     if ($sourceVersion === '') {
         $nextVersion = '1.0';
     } elseif (preg_match('/^(\d+)\.\d+$/D', $sourceVersion, $matches)) {
-        $nextVersion = ((int) $matches[1] + 1) . '.0';
+        $major = filter_var($matches[1], FILTER_VALIDATE_INT);
+        if ($major === false || $major >= PHP_INT_MAX) {
+            throw new DomainException("The published DOI has an unclear version. Please contact {$curationContact}.");
+        }
+        $nextVersion = ($major + 1) . '.0';
     } else {
         throw new DomainException("The published DOI has an unclear version. Please contact {$curationContact}.");
     }

@@ -102,6 +102,7 @@
         "doiVersionMismatch": "This DOI requires version {version}.",
         "existingDoiCuration": "Existing GFZ DOI: the same DOI and new major version will be sent for manual curation.",
         "moveTitle": "Move additional title",
+        "resourceTypeHelp": "Resource type help",
         "title": "Resource Information",
         "doi": "DOI",
         "doiValid": "The DOI format is valid.",

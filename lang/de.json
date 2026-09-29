@@ -103,6 +103,7 @@
         "doiVersionMismatch": "Für diese DOI ist Version {version} erforderlich.",
         "existingDoiCuration": "Bestehende GFZ-DOI: Dieselbe DOI und die neue Hauptversion gehen zur manuellen Kuration.",
         "moveTitle": "Zusätzlichen Titel verschieben",
+        "resourceTypeHelp": "Hilfe zu Ressourcentypen",
         "title": "Ressourceninformationen",
         "doi": "DOI",
         "doiValid": "Das DOI-Format ist gültig.",

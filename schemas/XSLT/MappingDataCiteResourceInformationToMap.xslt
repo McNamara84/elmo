@@ -8,7 +8,7 @@
       <xsl:variable name="resource" select="(//*[local-name()='resource' and (namespace-uri() = 'http://datacite.org/schema/kernel-4' or namespace-uri() = '')])[1]"/>
       <Doi><xsl:value-of select="$resource/*[local-name()='identifier'][1]"/></Doi>
       <Year><xsl:value-of select="$resource/*[local-name()='publicationYear'][1]"/></Year>
-      <ResourceType><xsl:value-of select="$resource/*[local-name()='types']/*[local-name()='resourceType'][1]/@resourceTypeGeneral"/></ResourceType>
+      <ResourceType><xsl:value-of select="($resource/*[local-name()='resourceType'] | $resource/*[local-name()='types']/*[local-name()='resourceType'])[1]/@resourceTypeGeneral"/></ResourceType>
       <Version><xsl:value-of select="$resource/*[local-name()='version'][1]"/></Version>
       <Language><xsl:value-of select="$resource/*[local-name()='language'][1]"/></Language>
       <Titles>

@@ -9,6 +9,7 @@ $(document).ready(function () {
   let validationToken = 0;
   let verifiedDoi = '';
   let expectedVersion = '';
+  let externalDoiRejected = false;
   const translate = (key, fallback) => window.elmo?.translate?.(key) || fallback;
   const isValidDoiFormat = doi => /^10\.\d{4,9}\/\S+$/.test(doi);
 
@@ -86,13 +87,17 @@ $(document).ready(function () {
     $doiInput.trigger('focus');
   });
 
-  async function validateSubmissionDoi() {
+  async function validateSubmissionDoi({ forSubmit = false } = {}) {
     if (window.ELMO_FEATURES?.showGGMsProperties) return true;
     const doi = String($doiInput.val() || '').trim();
     const token = ++validationToken;
     if (!doi) {
       verifiedDoi = '';
       expectedVersion = '';
+      if (externalDoiRejected) {
+        if (forSubmit) externalDoiRejected = false;
+        return !forSubmit;
+      }
       submissionStatus('resourceInfo.newDoiNotice', 'GFZ Data Services will register a new DOI.');
       return true;
     }
@@ -103,7 +108,9 @@ $(document).ready(function () {
     }
     if (!/^10\.5880\//i.test(doi)) {
       if ($doiInput.attr('data-imported-doi') !== 'true') {
-        $doiInput.val('').trigger('input');
+        $doiInput.val('');
+        window.resourceInformation?.sync?.();
+        externalDoiRejected = true;
       }
       submissionStatus('resourceInfo.externalDoiBlocked',
         'Only an existing 10.5880 DOI can be reused. Remove this DOI to request a new one.', 'danger');
@@ -131,7 +138,13 @@ $(document).ready(function () {
           'The published version is unclear. Please contact data curation.', 'danger');
         return false;
       }
-      expectedVersion = sourceVersion ? `${Number(sourceVersion.split('.')[0]) + 1}.0` : '1.0';
+      const major = sourceVersion ? Number(sourceVersion.split('.')[0]) : 0;
+      if (!Number.isSafeInteger(major) || major >= Number.MAX_SAFE_INTEGER) {
+        submissionStatus('resourceInfo.doiVersionBlocked',
+          'The published version is unclear. Please contact data curation.', 'danger');
+        return false;
+      }
+      expectedVersion = sourceVersion ? `${major + 1}.0` : '1.0';
       verifiedDoi = doi;
       $('#input-resourceinformation-version').val(expectedVersion).trigger('input');
     }
@@ -145,10 +158,11 @@ $(document).ready(function () {
   }
 
   $doiInput.on('change blur', validateSubmissionDoi);
-  $doiInput.on('input', function () { verifiedDoi = ''; expectedVersion = ''; });
+  $doiInput.on('input', function () { verifiedDoi = ''; expectedVersion = ''; externalDoiRejected = false; });
   document.addEventListener('resourceInformationDoi:cleared', () => {
     verifiedDoi = '';
     expectedVersion = '';
+    externalDoiRejected = false;
     submissionStatus('resourceInfo.newDoiNotice', 'GFZ Data Services will register a new DOI.');
   });
   window.resourceInformationDoiValidation = validateSubmissionDoi;

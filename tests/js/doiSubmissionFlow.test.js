@@ -53,6 +53,8 @@ describe('separate DOI search and submission DOI flow', () => {
     $('#input-resourceinformation-doi').val('10.1234/external');
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);
     expect($('#input-resourceinformation-doi').val()).toBe('');
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(false);
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(true);
     $('#input-resourceinformation-doi').val('10.1234/imported').attr('data-imported-doi', 'true');
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);
     expect($('#input-resourceinformation-doi').val()).toBe('10.1234/imported');
@@ -79,5 +81,19 @@ describe('separate DOI search and submission DOI flow', () => {
     $('#input-resourceinformation-doi').val('10.5880/three').trigger('input');
     lookupDoi.mockRejectedValueOnce(new Error('offline'));
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);
+  });
+
+  test('ICGEM keeps the existing DOI path without a DataCite reuse check', async () => {
+    window.ELMO_FEATURES.showGGMsProperties = true;
+    $('#input-resourceinformation-doi').val('10.1234/icgem-existing');
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(true);
+    expect(lookupDoi).not.toHaveBeenCalled();
+  });
+
+  test('unclear published version blocks the submit confirmation', async () => {
+    lookupDoi.mockResolvedValue({ found: true, attributes: { version: 'release two' } });
+    $('#input-resourceinformation-doi').val('10.5880/existing');
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(false);
+    expect($('#submission-doi-status').text()).toContain('unclear');
   });
 });

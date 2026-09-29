@@ -151,6 +151,12 @@ function initHelp() {
     });
   });
 
+  $(document).on('keydown', '[data-help-section-id][tabindex]', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    $(this).trigger('click');
+  });
+
   $(document).on('change', '#input-resourceinformation-resourcetype', function () {
     if ($('#helpModal').hasClass('show') && $('#helpModal').data('currentSection') === 'help-rights') {
       filterHelpRightsByResourceType();

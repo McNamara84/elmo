@@ -75,6 +75,11 @@ Following conditions are required for installation:
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
 11. Run `php scripts/install.php basic` to create the database structure and lookup data. Use `complete` instead of `basic` only when exemplar test data is required. The installer is intentionally not available through the browser.
+
+   For an existing database that contains submissions, run `php scripts/migrate_resource_information.php`
+   once after deploying this version. The migration keeps existing resources, converts stored versions
+   to text, and assigns a stable order to existing titles. It can be run again safely. Do not use
+   `scripts/install.php` as a migration on a database containing submissions.
 12. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 13. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
@@ -291,6 +296,7 @@ npm install
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/identifier/)
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
+  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI remains read-only until Edit is selected. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs are blocked at submission. The ICGEM DOI mail flow retains its own rules.
 
 - Publication Year
 
@@ -318,10 +324,10 @@ npm install
 - Version
 
   This field contains the version number of the resource.
-  - Data type: Float
+  - Data type: String (`major.minor`, preserving values such as `3.0`)
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
-  - Restrictions: None 
+  - Restrictions: optional on new submissions; when supplied on Submit, use `major.minor` with digits on both sides of the dot.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme
@@ -347,6 +353,7 @@ npm install
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/title/)
   - Example values: `Drone based photogrammetry data at the Geysir`
   - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
+  - The main title stays first. Additional titles can be reordered with the drag handle or the Up and Down arrow keys; their order is saved and restored.
 
 - Title Type
 

@@ -34,6 +34,24 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
             static fn (\DOMNode $node) => trim($node->textContent),
             iterator_to_array($xpath->query('//dc:titles/dc:title'))
         ));
+
+        $exported = new \DOMDocument();
+        self::assertTrue($exported->loadXML($xml, LIBXML_NONET));
+        $stylesheet = new \DOMDocument();
+        self::assertTrue($stylesheet->load(
+            dirname(__DIR__) . '/schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt', LIBXML_NONET
+        ));
+        $import = new \XSLTProcessor();
+        self::assertTrue($import->importStylesheet($stylesheet));
+        $mapped = $import->transformToDoc($exported);
+        self::assertInstanceOf(\DOMDocument::class, $mapped);
+        $mappedXPath = new \DOMXPath($mapped);
+        self::assertSame('Dataset', $mappedXPath->evaluate('string(/ResourceInformation/ResourceType)'));
+        self::assertSame('3.0', $mappedXPath->evaluate('string(/ResourceInformation/Version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($mappedXPath->query('/ResourceInformation/Titles/Title'))
+        ));
     }
 
     public function testDataCiteTransformPreservesAwardUriWithoutGrantNumberForIssue1147(): void
