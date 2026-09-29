@@ -110,8 +110,8 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
               <li><a class="dropdown-item" data-bs-theme-value="help-off" id="buttonHelpOff"
                   data-translate="buttons.helpOff">
                   <i class="bi bi-question-circle"></i> <span data-translate="header.off">Off</span></a></li>
-              <li><a class="dropdown-item" id="button-changelog-show">
-                  <i class="bi bi-card-checklist"></i> <span data-translate="buttons.about">About</span></a></li>
+              <li><button type="button" class="dropdown-item" id="button-about-show" data-bs-toggle="modal" data-bs-target="#modal-about">
+                  <i class="bi bi-info-circle"></i> <span data-translate="buttons.about">About</span></button></li>
             </ul>
           </div>
 

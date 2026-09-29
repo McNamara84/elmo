@@ -603,14 +603,25 @@ header .ms-auto.d-flex {
     font-size: 0.9rem;
 }
 
-.footer-info-nav a {
+.footer-info-nav a,
+.footer-info-nav button {
     color: #cbd6ff; 
     margin: 0 10px;
     text-decoration: none;
     transition: color 0.2s;
 }
 
-.footer-info-nav a:hover {
+.footer-info-nav button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+}
+
+.footer-info-nav a:hover,
+.footer-info-nav button:hover,
+.footer-info-nav button:focus-visible {
     color: #ffffff;
 }
 
@@ -621,7 +632,8 @@ header .ms-auto.d-flex {
         align-items: center;
     }
     
-    .footer-info-nav a {
+    .footer-info-nav a,
+    .footer-info-nav button {
         margin: 0 !important;
         padding: 0.25rem 0;
     }

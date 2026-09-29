@@ -115,19 +115,6 @@ $(document).ready(function () {
   });
 
   /**
-   * Show changelog modal and load its content.
-   */
-  $('#button-changelog-show').click(function (event) {
-    event.preventDefault(); // Prevents the default behavior of the link.
-
-    // Loads the content from 'doc/changelog.html' into the modal's content area.
-    $('#panel-changelog-content').load('doc/changelog.html', function () {
-      // Displays the modal after the content has been successfully loaded.
-      $('#modal-changelog').modal('show');
-    });
-  });
-
-  /**
    * Initialize all tooltips on the page.
    */
   const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;

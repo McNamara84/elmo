@@ -193,15 +193,14 @@
         </div>
     </div>
 </div>
-<!-- Changelog Modal -->
-<div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
+<!-- About Modal -->
+<div class="modal fade" id="modal-about" tabindex="-1" aria-labelledby="label-about-modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.aboutHeading">About ELMO - Enhanced Linked Metadata Organizer</h5>
+                <h5 class="modal-title" id="label-about-modal" data-translate="modals.about.heading">About ELMO - Enhanced Linked Metadata Organizer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <!-- Welcome Modal Overlay -->
             <div class="modal-body">
                 <h2 class="text-center" style="font-size: larger; color: inherit;" data-translate="welcome.title"></h2>
                 <p class="lead text-center fs-6">
@@ -209,13 +208,26 @@
                     <span data-translate="welcome.paragraph2"></span><br>
                     <span data-translate="welcome.paragraph3"></span>
                 </p>
-                <p class="lead text-center fs-6" data-translate="modals.changelog.aboutText"></p>
-                <hr>
-                <!-- Changelog -->
-                <h5 data-translate="modals.changelog.title">Changelog</h5>
-                <div id="panel-changelog-content">
-                    <!-- Content will be loaded from doc/changelog.html -->
-                </div>
+                <p class="lead text-center fs-6" data-translate="modals.about.text"></p>
+                <p class="text-center"><a href="https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions"
+                    target="_blank" rel="noopener noreferrer" data-translate="modals.about.metadataEditorLink">About the metadata editor</a></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Changelog Modal -->
+<div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.title">Changelog</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="panel-changelog-content" aria-live="polite"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
