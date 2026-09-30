@@ -186,6 +186,24 @@ test.describe('DOI Prefill Feature', () => {
     expect(doiLookupRequestCount).toBe(0);
   });
 
+  test('external submission DOI stays visible and blocked without console warnings', async ({ page }) => {
+    const consoleIssues: string[] = [];
+    page.on('console', message => {
+      if (message.type() === 'warning' || message.type() === 'error') consoleIssues.push(message.text());
+    });
+    page.on('pageerror', error => consoleIssues.push(error.message));
+    const submissionDoi = page.locator('#input-resourceinformation-doi');
+    await submissionDoi.evaluate((input: HTMLInputElement) => { input.readOnly = false; });
+    await submissionDoi.fill('10.1234/external');
+    await submissionDoi.blur();
+
+    await expect(submissionDoi).toHaveValue('10.1234/external');
+    await expect(page.locator('#submission-doi-status')).toContainText('10.5880');
+    expect(await page.evaluate(() => (window as any).resourceInformationDoiValidation())).toBe(false);
+    expect(await page.evaluate(() => (window as any).resourceInformationDoiValidation())).toBe(false);
+    expect(consoleIssues).toEqual([]);
+  });
+
   test('does not show modal for DOI not found in DataCite', async ({ page }) => {
     await page.locator('#input-resourceinformation-source-doi').fill('10.99999/nonexistent');
     const lookupResponse = page.waitForResponse(response =>
