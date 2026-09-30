@@ -363,7 +363,6 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const parser = new XMLParser({
     ignoreAttributes: false,
     attributeNamePrefix: '',
-    parseTagValue: false,
     isArray: (_tagName: string, jpath: unknown) => {
       // Force arrays for elements that can repeat
       const alwaysArray = [
