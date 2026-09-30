@@ -291,7 +291,7 @@ npm install
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/identifier/)
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
-  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI remains read-only until Edit is selected. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs are blocked at submission. The ICGEM DOI mail flow retains its own rules.
+  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI starts read-only; Edit unlocks it, and XML import may populate and unlock it. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs remain visible and block submission until corrected or removed. The ICGEM DOI mail flow retains its own rules.
 
 - Publication Year
 
