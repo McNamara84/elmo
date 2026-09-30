@@ -75,11 +75,6 @@ Following conditions are required for installation:
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
 11. Run `php scripts/install.php basic` to create the database structure and lookup data. Use `complete` instead of `basic` only when exemplar test data is required. The installer is intentionally not available through the browser.
-
-   For an existing database that contains submissions, run `php scripts/migrate_resource_information.php`
-   once after deploying this version. The migration keeps existing resources, converts stored versions
-   to text, and assigns a stable order to existing titles. It can be run again safely. Do not use
-   `scripts/install.php` as a migration on a database containing submissions.
 12. The metadata editor is now accessible in the browser via `localhost/directoryname`.
 13. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 

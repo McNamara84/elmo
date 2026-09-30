@@ -532,7 +532,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Resource Information now documents the separate DOI paths, required language, and migration command for databases with existing submissions."
+                  "value": "Resource Information now documents the separate DOI paths and required language."
                 }
               ],
               "editions": [
