@@ -21,6 +21,7 @@ $(document).ready(function () {
     return $mainRow.parent().children('.row[data-resource-title-row]');
   }
 
+  /** @returns {Object} Current fields and titles in display order. */
   function collectPayload() {
     return {
       doi: String($('#input-resourceinformation-doi').val() || '').trim(),
@@ -60,6 +61,10 @@ $(document).ready(function () {
     sync();
   }
 
+  /**
+   * Apply an imported or restored payload through the same visible form controls.
+   * @param {Object} data Fields to update; omitted fields keep their current value.
+   */
   function setResourceInformation(data = {}) {
     const fields = {
       doi: '#input-resourceinformation-doi',
@@ -98,6 +103,7 @@ $(document).ready(function () {
     document.dispatchEvent(new CustomEvent('resourceInformationDoi:cleared'));
   }
 
+  /** @param {boolean} imported Whether an XML import populated the DOI. */
   function enableDoiEditing(imported = false) {
     const $doi = $('#input-resourceinformation-doi');
     $doi.prop('readOnly', false).removeClass('input-greyed-out');

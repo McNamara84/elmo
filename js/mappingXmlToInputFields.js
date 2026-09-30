@@ -10,6 +10,12 @@ let relatedWorksXsltDocumentPromise = null;
 const RESOURCE_INFORMATION_XSLT_URL = 'schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt';
 let resourceInformationXsltPromise = null;
 
+/**
+ * Transform DataCite XML into the Resource Information import map. Cache the
+ * stylesheet promise so simultaneous imports share one request; retry after a failure.
+ * @param {Document} xmlDoc Parsed DataCite XML.
+ * @returns {Promise<Document>} The Resource Information map document.
+ */
 async function transformResourceInformationDocument(xmlDoc) {
   if (!resourceInformationXsltPromise) {
     resourceInformationXsltPromise = fetch(RESOURCE_INFORMATION_XSLT_URL, { credentials: 'same-origin' })
@@ -34,6 +40,13 @@ async function transformResourceInformationDocument(xmlDoc) {
   return mapped;
 }
 
+/**
+ * Resolve imported vocabulary names to the options available in this edition.
+ * @param {Document} mapped Resource Information XSLT output.
+ * @param {Record<string, string>} languageMapping Language code to option ID.
+ * @param {Record<string, string>} titleTypeMapping DataCite title type to option ID.
+ * @returns {Object} Ordered fields and titles for the Resource Information controller.
+ */
 function parseResourceInformationMap(mapped, languageMapping, titleTypeMapping) {
   const root = mapped.documentElement;
   if (root.localName !== 'ResourceInformation') throw new Error('Unexpected Resource Information map.');

@@ -56,7 +56,11 @@ function normalizeResourceInformationPostData(array $postData): array
     return $postData;
 }
 
-/** Keep a visible minor component for values saved by older numeric callers. */
+/**
+ * Keep a visible minor component for values saved by older numeric callers.
+ * @param string $version Version supplied by a browser or a legacy caller.
+ * @return string Version suitable for the textual database column.
+ */
 function normalizeResourceVersion(string $version): string
 {
     $version = trim($version);

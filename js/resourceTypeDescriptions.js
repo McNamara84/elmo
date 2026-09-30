@@ -36,6 +36,12 @@ const RESOURCE_TYPE_FALLBACKS = Object.freeze({
   workflow: 'A defined sequence of executable steps that produces an outcome reproducibly.'
 });
 
+/**
+ * Prefer ERNIE's definition and use a local definition when it is empty.
+ * @param {string} name Visible resource type name.
+ * @param {string} ernieDescription Definition supplied by ERNIE.
+ * @returns {string} Text for the option tooltip and help dialog.
+ */
 function getResourceTypeDescription(name, ernieDescription) {
   const provided = String(ernieDescription || '').trim();
   if (provided) return provided;

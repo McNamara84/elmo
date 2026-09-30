@@ -56,7 +56,13 @@ class DoiController
         }
     }
 
-    /** @return array{found: bool, attributes?: array<string, mixed>} */
+    /**
+     * Fetch filtered public DataCite metadata for both the API and submission check.
+     *
+     * @throws InvalidArgumentException When the DOI format is invalid.
+     * @throws RuntimeException When DataCite cannot return a usable response.
+     * @return array{found: bool, attributes?: array<string, mixed>}
+     */
     public function lookupPublicDoi(string $doi): array
     {
         $doi = trim($doi);
