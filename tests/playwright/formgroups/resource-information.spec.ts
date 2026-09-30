@@ -24,8 +24,11 @@ test.describe('Resource Information Form Tests', () => {
   test('Test all input fields functionality', async ({ page }) => {
     const doiInput = page.locator('#input-resourceinformation-doi');
     await expect(doiInput).toBeVisible();
-    await doiInput.fill('10.1234/example.doi');
-    await expect(doiInput).toHaveValue('10.1234/example.doi');
+    await expect(doiInput).toHaveAttribute('readonly');
+    await page.locator('#button-resourceinformation-edit-doi').click();
+    await expect(doiInput).toBeEditable();
+    await doiInput.fill('10.5880/example.doi');
+    await expect(doiInput).toHaveValue('10.5880/example.doi');
     await doiInput.clear();
 
     const yearInput = page.locator('#input-resourceinformation-publicationyear');
@@ -77,7 +80,7 @@ test.describe('Resource Information Form Tests', () => {
   });
 
   test('Test add title button functionality', async ({ page }) => {
-    const titleTypeContainers = page.locator('#container-resourceinformation-titletype');
+    const titleTypeContainers = page.locator('[id^="container-resourceinformation-titletype"]');
     await expect(titleTypeContainers.first()).toHaveClass(/unvisible/);
 
     const addTitleButton = page.locator('#button-resourceinformation-addtitle');
@@ -87,7 +90,7 @@ test.describe('Resource Information Form Tests', () => {
     const secondContainer = titleTypeContainers.nth(1);
     await expect(secondContainer).toBeVisible();
 
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
   });
 
@@ -100,7 +103,7 @@ test.describe('Resource Information Form Tests', () => {
 
     await page.locator('#button-resourceinformation-addtitle').click();
 
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
     const titleTypeOptions = titleTypeSelect.locator('option');
     const titleOptionCount = await titleTypeOptions.count();

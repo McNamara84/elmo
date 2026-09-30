@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
+import { injectModuleFromApp, injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 // ─── Mock instruments returned by the PID4INST/ERNIE API ────────────────────
 const MOCK_INSTRUMENTS_API = [
@@ -107,6 +107,7 @@ function loadTemplate(relativePath: string): string {
 }
 
 const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resource-information.html');
+const RESOURCE_INFORMATION_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
@@ -288,6 +289,13 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         const url = typeof input === 'string' ? input : input.toString();
 
+        if (url.includes('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt')) {
+          return Promise.resolve(new Response(data.resourceInformationXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' },
+          }));
+        }
+
         for (const [pattern, responseData] of mockDataMap.entries()) {
           if (url.includes(pattern)) {
             return Promise.resolve(new Response(JSON.stringify(responseData), {
@@ -312,7 +320,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
           headers: { 'Content-Type': 'application/json' },
         }));
       };
-    }, { mockData: MOCK_API_DATA });
+    }, { mockData: MOCK_API_DATA, resourceInformationXslt: RESOURCE_INFORMATION_XSLT });
 
     // Inject stylesheets
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
@@ -398,6 +406,9 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     for (const script of appScripts) {
       await injectProductionScript(page, script);
     }
+
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
+    await page.waitForFunction(() => !!(window as any).resourceInformation?.setResourceInformation);
 
     // Fire initialization events
     await page.evaluate(() => {

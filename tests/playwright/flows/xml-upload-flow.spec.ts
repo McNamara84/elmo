@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
+import { injectModuleFromApp, injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -76,6 +76,7 @@ const FREE_KEYWORDS_HTML = loadTemplate('formgroups/freeKeywords.html');
 const DATES_HTML = loadTemplate('formgroups/dates.html');
 const RELATED_WORK_HTML = loadTemplate('formgroups/relatedwork.html');
 const RELATED_WORK_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt');
+const RESOURCE_INFORMATION_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt');
 const RELATED_WORK_CONTROLLER = loadTemplate('js/eventhandlers/formgroups/relatedwork.js').replace(
   /^import .*$/m,
   'const { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } = window;'
@@ -468,6 +469,12 @@ test.describe('XML Upload Mapping Flow', () => {
             headers: { 'Content-Type': 'application/xml' }
           }));
         }
+        if (url.includes('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt')) {
+          return Promise.resolve(new Response(data.resourceInformationXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' }
+          }));
+        }
         
         // Check if we have mock data for this URL
         for (const [pattern, responseData] of mockDataMap.entries()) {
@@ -517,7 +524,8 @@ test.describe('XML Upload Mapping Flow', () => {
     }, {
       mockData: MOCK_API_DATA,
       mockThesauri: MOCK_THESAURI_TREE,
-      relatedWorksXslt: RELATED_WORK_XSLT
+      relatedWorksXslt: RELATED_WORK_XSLT,
+      resourceInformationXslt: RESOURCE_INFORMATION_XSLT
     });
 
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
@@ -646,6 +654,9 @@ test.describe('XML Upload Mapping Flow', () => {
     for (const script of appScripts) {
       await injectProductionScript(page, script);
     }
+
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
+    await page.waitForFunction(() => !!(window as any).resourceInformation?.setResourceInformation);
 
     await page.evaluate(() => {
       const $ = (window as any).jQuery;

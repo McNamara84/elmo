@@ -16,7 +16,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
     // Click Add Title to get a visible dropdown
     await page.locator('#button-resourceinformation-addtitle').click();
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
 
     // Get all option values
@@ -35,7 +35,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
     // Click Add Title to get a visible dropdown
     await page.locator('#button-resourceinformation-addtitle').click();
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
 
     const optionTexts = await titleTypeSelect.locator('option').allTextContents();
