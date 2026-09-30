@@ -106,7 +106,7 @@ function loadTemplate(relativePath: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
 }
 
-const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
+const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resource-information.html');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');

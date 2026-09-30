@@ -5,7 +5,7 @@ import { REPO_ROOT } from '../utils/constants';
 import { injectScript, injectStylesheet } from '../utils/assets';
 
 const RESOURCE_INFO_TEMPLATE = readFileSync(
-  path.join(REPO_ROOT, 'formgroups/resourceInformation.html'),
+  path.join(REPO_ROOT, 'formgroups/resource-information.html'),
   'utf8'
 );
 const AUTHORS_TEMPLATE = readFileSync(

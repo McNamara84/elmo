@@ -5,7 +5,7 @@ describe('resourceInformationTitle.js', () => {
   let $;
 
   beforeEach(() => {
-    // Set up DOM fixture matching the structure in formgroups/resourceInformation.html
+    // Set up DOM fixture matching the structure in formgroups/resource-information.html
     document.body.innerHTML = `
       <input type="hidden" id="resource-information-payload" name="resourceInformationPayload">
       <input id="input-resourceinformation-doi">
@@ -152,7 +152,7 @@ describe('resourceInformationTitle.js', () => {
   });
 
   test('cloned title type select becomes disabled when no options are available and original is enabled', () => {
-    // The template select in resourceInformation.html is not disabled by default.
+    // The template select in resource-information.html is not disabled by default.
     // If titleTypeOptionsHtml is empty while the original is enabled, the clone
     // must still be explicitly disabled to prevent a required empty control.
     window.titleTypeOptionsHtml = '';
