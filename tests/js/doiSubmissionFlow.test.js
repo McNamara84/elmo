@@ -49,15 +49,28 @@ describe('separate DOI search and submission DOI flow', () => {
     expect($('#doi-prefill-preview').html()).toContain('Preview');
   });
 
-  test('direct external DOI is removed but imported external DOI stays visible', async () => {
+  test('external DOI remains visible and blocks submission until manually removed', async () => {
     $('#input-resourceinformation-doi').val('10.1234/external');
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);
-    expect($('#input-resourceinformation-doi').val()).toBe('');
+    expect($('#input-resourceinformation-doi').val()).toBe('10.1234/external');
     expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(false);
-    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(true);
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(false);
     $('#input-resourceinformation-doi').val('10.1234/imported').attr('data-imported-doi', 'true');
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);
     expect($('#input-resourceinformation-doi').val()).toBe('10.1234/imported');
+    $('#input-resourceinformation-doi').val('').trigger('input');
+    expect(await window.resourceInformation.validateSubmissionDoi({ forSubmit: true })).toBe(true);
+  });
+
+  test('ignores an obsolete DataCite response after the DOI changes', async () => {
+    let resolveLookup;
+    lookupDoi.mockImplementation(() => new Promise(resolve => { resolveLookup = resolve; }));
+    $('#input-resourceinformation-doi').val('10.5880/first');
+    const pending = window.resourceInformation.validateSubmissionDoi();
+    $('#input-resourceinformation-doi').val('10.5880/second').trigger('input');
+    resolveLookup({ found: true, attributes: { version: '2.4' } });
+    expect(await pending).toBe(false);
+    expect($('#input-resourceinformation-version').val()).toBe('');
   });
 
   test('found GFZ DOI proposes the next major version and shows curation warning', async () => {

@@ -9,7 +9,6 @@ $(document).ready(function () {
   let validationToken = 0;
   let verifiedDoi = '';
   let expectedVersion = '';
-  let externalDoiRejected = false;
   const translate = (key, fallback) => window.elmo?.translate?.(key) || fallback;
   const isValidDoiFormat = doi => /^10\.\d{4,9}\/\S+$/.test(doi);
 
@@ -87,17 +86,18 @@ $(document).ready(function () {
     $doiInput.trigger('focus');
   });
 
-  async function validateSubmissionDoi({ forSubmit = false } = {}) {
+  /**
+   * Verify DOI reuse before opening the Submit modal. The backend repeats this
+   * check because a browser form can be changed after client-side validation.
+   * @returns {Promise<boolean>} Whether the current DOI may be submitted.
+   */
+  async function validateSubmissionDoi() {
     if (window.ELMO_FEATURES?.showGGMsProperties) return true;
     const doi = String($doiInput.val() || '').trim();
     const token = ++validationToken;
     if (!doi) {
       verifiedDoi = '';
       expectedVersion = '';
-      if (externalDoiRejected) {
-        if (forSubmit) externalDoiRejected = false;
-        return !forSubmit;
-      }
       submissionStatus('resourceInfo.newDoiNotice', 'GFZ Data Services will register a new DOI.');
       return true;
     }
@@ -107,11 +107,6 @@ $(document).ready(function () {
       return false;
     }
     if (!/^10\.5880\//i.test(doi)) {
-      if ($doiInput.attr('data-imported-doi') !== 'true') {
-        $doiInput.val('');
-        window.resourceInformation?.sync?.();
-        externalDoiRejected = true;
-      }
       submissionStatus('resourceInfo.externalDoiBlocked',
         'Only an existing 10.5880 DOI can be reused. Remove this DOI to request a new one.', 'danger');
       return false;
@@ -126,7 +121,8 @@ $(document).ready(function () {
           'This DOI could not be verified. Please contact data curation.', 'danger');
         return false;
       }
-      if (token !== validationToken) return false;
+      // Ignore a response for a DOI that changed while DataCite was loading.
+      if (token !== validationToken || String($doiInput.val() || '').trim() !== doi) return false;
       if (!result?.found || !result.attributes) {
         submissionStatus('resourceInfo.doiNotFoundBlocked',
           'This DOI is not in public DataCite records. Please contact data curation.', 'danger');
@@ -158,11 +154,11 @@ $(document).ready(function () {
   }
 
   $doiInput.on('change blur', validateSubmissionDoi);
-  $doiInput.on('input', function () { verifiedDoi = ''; expectedVersion = ''; externalDoiRejected = false; });
+  $doiInput.on('input', function () { validationToken++; verifiedDoi = ''; expectedVersion = ''; });
   document.addEventListener('resourceInformationDoi:cleared', () => {
     verifiedDoi = '';
     expectedVersion = '';
-    externalDoiRejected = false;
+    validationToken++;
     submissionStatus('resourceInfo.newDoiNotice', 'GFZ Data Services will register a new DOI.');
   });
   window.resourceInformationDoiValidation = validateSubmissionDoi;
