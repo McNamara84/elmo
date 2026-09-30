@@ -324,12 +324,43 @@ describe('map.js', () => {
       json: () => Promise.resolve({ apiKey: 'dummy', mapId: 'test-map-id' })
     }));
 
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
     eval(script);
 
     await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
 
     expect(createdMarkers.length).toBe(0);
+    expect(errorSpy).toHaveBeenCalledWith('Map initialization failed:', expect.any(Error));
+    expect(() => window.fitMapBounds()).not.toThrow();
+    expect(() => window.fitMapBoundsForRow('row1')).not.toThrow();
+    errorSpy.mockRestore();
+  });
+
+  test('fitMapBounds does nothing before the map is initialized', () => {
+    jest.resetModules();
+    document.body.innerHTML = '<div id="group-stc"></div><div id="panel-stc-map"></div>';
+    global.$ = createJQuery();
+    global.google = undefined;
+    global.fetch = jest.fn(() => new Promise(() => {}));
+
+    const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
+    eval(script);
+
+    expect(() => window.fitMapBounds()).not.toThrow();
+    expect(() => window.fitMapBoundsForRow('row1')).not.toThrow();
+  });
+
+  test('errors thrown while drawing an overlay are logged, not left unhandled', async () => {
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    google.maps.LatLngBounds = function () { throw new Error('boom'); };
+
+    await expect(
+      window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35')
+    ).resolves.toBeUndefined();
+
+    expect(errorSpy).toHaveBeenCalledWith('Map update failed:', expect.any(Error));
+    errorSpy.mockRestore();
   });
 
   // ─────────────────────────────────────────────────────────────────────────
