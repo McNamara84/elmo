@@ -1457,8 +1457,15 @@ include_once "../settings.php";
                     <div id="help-datasources-fg">
                         <h3>Data Sources</h3>
                         <p>
-                            This section allows you to specify the various data sources that were used in the creation of your GGM.
-                            This is crucial for traceability and understanding the context of your work. You can add multiple data sources as needed.
+                            <b>Overview of this form group</b>
+                            This section allows you to specify one or many data sources that were used in the development of the model being published.
+                            A Data Source is understood as a object containing or producing information relevant for understanding of the gravity field, information from which is used in the development of the published model. Such information is crucial for understanding the context of the model. You can add multiple data sources if needed. 
+                        </p>
+                        <p>
+                            <b>Satellite data sources</b>
+                            Satellites playing a major role in global gravity field modelling are considered data sources.
+                            Multiple satellites entered in one row are considered separate data sources downstream. Grouping satellites will make them share the description. 
+                            To specify which measuring devices from the satellites were used in calculation, you can refer to the GCMD Instruments form group further down in this editor.
                         </p>
                     </div>
                     <div id="help-datasource-type">
@@ -1468,8 +1475,8 @@ include_once "../settings.php";
                             <li><strong>S = Satellite:</strong> Satellite gravity-related observations including SLR.</li>
                             <li><strong>G = Ground data:</strong> Data measured by gravimeters or ground data derived from gravity models.</li>
                             <li><strong>A = Altimetry:</strong> Gravity data determined from Altimetry grid data or data produced from radar altimeters.</li>
-                            <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data.</li>
-                            <li><strong>M = Model:</strong> Physical Earth models taken “as is”. For temporal models, it is recommended to include Gravitational background models.</li>
+                            <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data. Relevant for Topographic gravity field models</li>
+                            <li><strong>M = Reference Model:</strong> Another physical Earth model that is used as a reference in the development of the published model. In this category the reference model taken “as is”. For temporal models, it is recommended to include Gravitational background model(s).</li>
                         </ul>
                     </div>
                     <div id="help-datasource-details">
@@ -1478,7 +1485,7 @@ include_once "../settings.php";
                     </div>
                     <div id="help-datasources-identifier">
                         <h4>Identifier</h4>
-                        <p>Identifier of the model that was included as a data source. 
+                        <p>Identifier of the reference model that is included as a data source. 
                             For model published on the ICGEM, please use the model DOI. 
                             Other models can be identified by a DOI of an article or a presentation about the model. 
                             If not available, a URL of model description can be used.
