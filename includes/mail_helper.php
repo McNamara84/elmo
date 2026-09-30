@@ -298,8 +298,8 @@ function generateEmailText(array $generated, array $settings = []): array
     if (!empty($settings['existingGfzDoi'])) {
         $doi = htmlspecialchars((string) $settings['doi'], ENT_QUOTES, 'UTF-8');
         $htmlBody = '<p><strong>Manuelle Kuration: bestehende GFZ-DOI ' . $doi
-            . ' und neue Hauptversion prÃ¼fen. ELMO hat den DataCite-Eintrag nicht aktualisiert.</strong></p>' . $htmlBody;
-        $plainBody = "Manuelle Kuration: bestehende GFZ-DOI {$settings['doi']} und neue Hauptversion prÃ¼fen. "
+            . ' und neue Hauptversion prüfen. ELMO hat den DataCite-Eintrag nicht aktualisiert.</strong></p>' . $htmlBody;
+        $plainBody = "Manuelle Kuration: bestehende GFZ-DOI {$settings['doi']} und neue Hauptversion prüfen. "
             . "ELMO hat den DataCite-Eintrag nicht aktualisiert.\n\n" . $plainBody;
     }
 
