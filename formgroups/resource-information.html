@@ -11,11 +11,24 @@
   </div>
   <form id="form-mde" method="post" action="index.php" class="needs-validation" novalidate>
     <input type="hidden" name="csrf-token" id="input-csrf-token" value="">
-    <div class="card mb-2">
+    <input type="hidden" name="resourceInformationPayload" id="resource-information-payload" value="">
+    <div class="card mb-2" id="group-resourceinformation" data-resource-information-group>
       <div class="card-header"><b data-translate="resourceInfo.title"></b>
         <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-fg"></i>
+        <div class="small text-muted mt-1" data-translate="resourceInfo.introduction">Please specify general metadata for the data here</div>
       </div>
       <div class="card-body">
+        <div class="row mb-2 align-items-end">
+          <div class="col-12 col-md-5 p-1">
+            <label for="input-resourceinformation-source-doi" class="form-label" data-translate="resourceInfo.sourceDoi"></label>
+            <input type="text" class="form-control" id="input-resourceinformation-source-doi" autocomplete="off" />
+            <div id="source-doi-status" class="form-text" role="status" aria-live="polite"></div>
+          </div>
+          <div class="col-12 col-md-auto p-1">
+            <button type="button" class="btn btn-outline-primary" id="button-resourceinformation-prefill-doi"
+              data-translate="resourceInfo.prefillFromDoi"></button>
+          </div>
+        </div>
         <div class="row">
           <!-- Input field for DOI -->
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
@@ -23,17 +36,20 @@
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners input-greyed-out"
                   id="input-resourceinformation-doi" name="doi"
-                  pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9&lt;&gt;]+$"  />
+                  pattern="^10\.\d{4,9}\/[._;\/\(\)\-:A-Za-z0-9&lt;&gt;]+$" readonly />
                 <label for="input-resourceinformation-doi" data-translate="resourceInfo.doi"></label>
                 <div class="invalid-feedback" data-translate="resourceInfo.doiInvalid"></div>
                 <div class="valid-feedback" data-translate="resourceInfo.doiValid"></div>
               </div>
               <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary" id="button-resourceinformation-edit-doi"
+                  aria-label="Edit DOI" title="Edit DOI" data-translate-title="resourceInfo.editDoi"><i class="bi bi-pencil" aria-hidden="true"></i></button>
                 <span class="input-group-text">
                   <i class="bi bi-question-circle-fill" data-help-section-id="help-resourceinformation-doi"></i>
                 </span>
               </div>
             </div>
+            <div id="submission-doi-status" class="form-text" role="status" aria-live="polite"></div>
           </div>
           <!-- Input field for Publication Year -->
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
@@ -71,7 +87,8 @@
               <div class="input-group-append">
                 <span class="input-group-text">
                   <i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-resourceinformation-resourcetype"></i>
+                    data-help-section-id="help-resourceinformation-resourcetype" role="button" tabindex="0"
+                    aria-label="Resource type help" data-translate-title="resourceInfo.resourceTypeHelp"></i>
                 </span>
               </div>
             </div>
@@ -96,11 +113,11 @@
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">
             <div class="input-group has-validation">
               <div class="form-floating">
-                <select class="form-select" id="input-resourceinformation-language" name="language">
+                <select class="form-select js-required-on-submit" id="input-resourceinformation-language" name="language" required>
                   <option disabled selected hidden value="" data-translate="general.choose"></option>
                 </select>
                 <label for="input-resourceinformation-language">
-                  <span data-translate="resourceInfo.datasetLanguage"></span>
+                  <span data-translate="resourceInfo.datasetLanguage"></span><span class="red-star">*</span>
                 </label>
               </div>
             </div>

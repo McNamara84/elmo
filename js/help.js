@@ -36,6 +36,25 @@ function getSelectedResourceType() {
   return $('#input-resourceinformation-resourcetype option:selected').text().trim();
 }
 
+/** Render definitions from exactly the options currently available in this edition. */
+function renderResourceTypeHelp() {
+  const target = document.querySelector('#helpModal #resource-type-help-list');
+  const select = document.getElementById('input-resourceinformation-resourcetype');
+  if (!target || !select) return;
+  const options = Array.from(select.options).filter(option => option.value && !option.disabled);
+  const list = document.createElement('dl');
+  list.className = 'resource-types-list';
+  options.forEach(option => {
+    const term = document.createElement('dt');
+    term.textContent = option.textContent.trim();
+    const definition = document.createElement('dd');
+    definition.textContent = window.resourceTypeDescriptions?.getResourceTypeDescription(
+      term.textContent, option.title) || option.title || 'No definition is currently available.';
+    list.append(term, definition);
+  });
+  target.replaceChildren(list);
+}
+
 /**
  * Classifies a license list item as 'software' or 'general' scope based on its content and URL
  * @param {jQuery} $li - The jQuery-wrapped list item element containing license information
@@ -101,6 +120,7 @@ function displayHelpSection(sectionId, htmlData) {
   }
   
   $('#helpModal .modal-body').html(content);
+  if (sectionId === 'help-resourceinformation-resourcetype') renderResourceTypeHelp();
   $('#helpModal').data('currentSection', sectionId).modal('show');
 
   if (sectionId === 'help-rights') {
@@ -131,6 +151,12 @@ function initHelp() {
     });
   });
 
+  $(document).on('keydown', '[data-help-section-id][tabindex]', function (event) {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    $(this).trigger('click');
+  });
+
   $(document).on('change', '#input-resourceinformation-resourcetype', function () {
     if ($('#helpModal').hasClass('show') && $('#helpModal').data('currentSection') === 'help-rights') {
       filterHelpRightsByResourceType();
@@ -143,10 +169,10 @@ function initHelp() {
   });
 }
 
-export { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType };
+export { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType, renderResourceTypeHelp };
 
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType };
+  module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType, renderResourceTypeHelp };
 }
 
 if (typeof window !== 'undefined') {

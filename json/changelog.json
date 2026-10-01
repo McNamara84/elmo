@@ -175,6 +175,72 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Resource Information now keeps fields and titles in a shared payload. Additional titles can be reordered by keyboard or drag and drop; XML, JSON-LD, and XSLT import preserve title order and textual versions."
+                }
+              ],
+              "editions": [
+                "all"
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "A separate DOI lookup imports metadata without assigning the source DOI to the submission. The submission DOI has its own edit action."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource type help follows the selectable dropdown options and shows ERNIE definitions or DataCite-based fallbacks, with a source link and keyboard access."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1013
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Information now shows a short introduction and its help modal separates form instructions from publisher guidance."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1061
+                },
+                {
+                  "type": "issue",
+                  "number": 1064
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
                 }
               ],
@@ -384,6 +450,25 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "For Standard, MSL, and IGSN submissions, an existing 10.5880 DOI is verified with DataCite and given the next major version for manual curation. External, unknown, and unverifiable DOIs are blocked before saving or mailing."
+                }
+              ],
+              "editions": [
+                "elmo",
+                "msl",
+                "igsn"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "ELMO-MSL restores the required free keywords "
                 },
                 {
@@ -443,6 +528,31 @@
         {
           "title": "Documentation:",
           "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Information now documents the separate DOI paths and required language."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                },
+                {
+                  "type": "issue",
+                  "number": 1061
+                },
+                {
+                  "type": "issue",
+                  "number": 1064
+                }
+              ]
+            },
             {
               "parts": [
                 {

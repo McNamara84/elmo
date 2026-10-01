@@ -243,15 +243,11 @@ function mapTitleTypeFromJson(titleType, mapping) {
  * Maps resource information fields (DOI, year, type, version, language).
  */
 function prefillResourceInfo(attr) {
-  if (attr.doi) {
-    $('#input-resourceinformation-doi').val(attr.doi);
-  }
-  if (attr.publicationYear) {
-    $('#input-resourceinformation-publicationyear').val(attr.publicationYear);
-  }
+  const resource = {};
+  if (attr.publicationYear) resource.year = String(attr.publicationYear);
   if (attr.version) {
     const $version = $('#input-resourceinformation-version');
-    $version.val(attr.version);
+    resource.version = String(attr.version);
     $version.addClass('prefill-highlight');
     $version.attr('title', window.elmo?.translate?.('doiPrefill.versionHint') || 'Please check and adjust the version if necessary.');
   }
@@ -262,8 +258,15 @@ function prefillResourceInfo(attr) {
         Array.from(selectField.options),
         attr.types.resourceTypeGeneral
       );
-      if (opt) opt.selected = true;
+      if (opt) resource.resourceTypeId = opt.value;
     }
+  }
+  if (window.resourceInformation?.setResourceInformation) {
+    window.resourceInformation.setResourceInformation(resource);
+  } else {
+    if (resource.year) $('#input-resourceinformation-publicationyear').val(resource.year);
+    if (resource.version) $('#input-resourceinformation-version').val(resource.version);
+    if (resource.resourceTypeId) $('#input-resourceinformation-resourcetype').val(resource.resourceTypeId);
   }
 }
 
@@ -272,7 +275,9 @@ async function prefillLanguage(attr) {
   const mapping = await getLanguageMapping();
   const id = mapping[attr.language.toLowerCase()];
   if (id) {
-    $('#input-resourceinformation-language').val(id);
+    if (window.resourceInformation?.setResourceInformation) {
+      window.resourceInformation.setResourceInformation({ languageId: id });
+    } else $('#input-resourceinformation-language').val(id);
   }
 }
 
@@ -282,6 +287,16 @@ async function prefillLanguage(attr) {
 async function prefillTitles(titles) {
   if (!Array.isArray(titles) || titles.length === 0) return;
   const mapping = await getTitleTypeMapping();
+
+  if (window.resourceInformation?.setResourceInformation) {
+    window.resourceInformation.setResourceInformation({ titles: titles.map((title, position) => ({
+      key: position === 0 ? 'main' : `prefill-${position}`,
+      text: title.title || '',
+      typeId: mapTitleTypeFromJson(title.titleType, mapping),
+      position
+    })) });
+    return;
+  }
 
   titles.forEach((t, i) => {
     if (i === 0) {

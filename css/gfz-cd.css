@@ -241,6 +241,17 @@ label.mandatory-field::after {
     /* Grey text color */
 }
 
+#resource-type-help-list dt {
+    margin-top: 0.75rem;
+    font-weight: 700;
+}
+
+#resource-type-help-list dd {
+    margin-left: 0;
+    padding-left: 1rem;
+    border-left: 2px solid #adb5bd;
+}
+
 .settings-menu-link {
     text-decoration: none;
     font-size: 20px;

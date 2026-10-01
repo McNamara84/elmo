@@ -180,14 +180,14 @@ describe('doiPrefill.js', () => {
       `;
     });
 
-    test('fills DOI, year, and version fields', () => {
+    test('fills year and version without copying the source DOI', () => {
       mod.prefillResourceInfo({
         doi: '10.14454/qdd3-ps68',
         publicationYear: 2024,
         version: '2.0',
       });
 
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('#input-resourceinformation-publicationyear').val()).toBe('2024');
       expect($('#input-resourceinformation-version').val()).toBe('2.0');
     });
@@ -956,7 +956,7 @@ describe('doiPrefill.js', () => {
 
       expect(window.loadClearInputFields).toHaveBeenCalled();
       expect(window.__clearInputFieldsSpy).toHaveBeenCalled();
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');
       expect($('input[name="dateCreated"]').val()).toBe('2024-01-15');

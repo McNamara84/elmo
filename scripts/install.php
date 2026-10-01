@@ -229,7 +229,7 @@ function createDatabaseStructure($connection): array
         "Resource" => "CREATE TABLE IF NOT EXISTS `Resource` (
     `resource_id` INT NOT NULL AUTO_INCREMENT,
     `doi` VARCHAR(200) NULL,
-    `version` FLOAT NULL,
+    `version` VARCHAR(32) NULL,
     `year` YEAR(4) NULL,
     `dateCreated` DATE NULL,
     `dateEmbargoUntil` DATE NULL,
@@ -250,6 +250,7 @@ function createDatabaseStructure($connection): array
     `text` VARCHAR(700) NOT NULL,
     `Title_Type_fk` INT NULL,
     `Resource_resource_id` INT NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
     PRIMARY KEY (`title_id`),
     FOREIGN KEY (`Title_Type_fk`)
     REFERENCES `Title_Type` (`title_type_id`),

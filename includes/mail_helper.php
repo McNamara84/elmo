@@ -295,6 +295,14 @@ function generateEmailText(array $generated, array $settings = []): array
 
     $plainBody = "Neue Metadaten-Einreichung von ELMO\n\nHallo! Ich bin ELMO und eine neue Metadaten-Einreichung wurde mit folgenden Details übermittelt:\n\nRessource ID in ELMO Datenbank: {$resourceId}\nPriorität: {$urgencyText} ({$priorityText})\nURL zu den Daten: {$dataUrlText}\nContact email addresses provided by the author(s): {$contactEmailsText}\nEingereicht am: " . date('d.m.Y H:i:s') . "\n\nIch habe die Metadaten" . ($hasDataDescription ? ' und die Datenbeschreibung' : '') . " an diese E-Mail angehängt.\n\nUnd jetzt an die Arbeit! Die Dringlichkeit dieses Datensatzes ist {$priorityText}! Aber ich habe bereits den größten Teil der Arbeit für Sie erledigt ;-)\n\nDiese E-Mail wurde automatisch von ELMO generiert.";
 
+    if (!empty($settings['existingGfzDoi'])) {
+        $doi = htmlspecialchars((string) $settings['doi'], ENT_QUOTES, 'UTF-8');
+        $htmlBody = '<p><strong>Manuelle Kuration: bestehende GFZ-DOI ' . $doi
+            . ' und neue Hauptversion prüfen. ELMO hat den DataCite-Eintrag nicht aktualisiert.</strong></p>' . $htmlBody;
+        $plainBody = "Manuelle Kuration: bestehende GFZ-DOI {$settings['doi']} und neue Hauptversion prüfen. "
+            . "ELMO hat den DataCite-Eintrag nicht aktualisiert.\n\n" . $plainBody;
+    }
+
     if ($settings['showGGMsProperties']) {
         if (!function_exists('buildGGMsDataServicesNote')) {
             require_once __DIR__ . '/GGMsRegistrationEmail.php';

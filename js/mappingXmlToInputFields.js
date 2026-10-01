@@ -7,6 +7,67 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
 
 const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
 let relatedWorksXsltDocumentPromise = null;
+const RESOURCE_INFORMATION_XSLT_URL = 'schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt';
+let resourceInformationXsltPromise = null;
+
+/**
+ * Transform DataCite XML into the Resource Information import map. Cache the
+ * stylesheet promise so simultaneous imports share one request; retry after a failure.
+ * @param {Document} xmlDoc Parsed DataCite XML.
+ * @returns {Promise<Document>} The Resource Information map document.
+ */
+async function transformResourceInformationDocument(xmlDoc) {
+  if (!resourceInformationXsltPromise) {
+    resourceInformationXsltPromise = fetch(RESOURCE_INFORMATION_XSLT_URL, { credentials: 'same-origin' })
+      .then(async response => {
+        if (!response.ok) throw new Error(`Resource Information stylesheet request failed: ${response.status}`);
+        const stylesheet = new DOMParser().parseFromString(await response.text(), 'application/xml');
+        if (stylesheet.querySelector('parsererror')) throw new Error('Invalid Resource Information stylesheet.');
+        return stylesheet;
+      }).catch(error => {
+        resourceInformationXsltPromise = null;
+        throw error;
+      });
+  }
+  const Processor = typeof XSLTProcessor !== 'undefined' ? XSLTProcessor : window.XSLTProcessor;
+  if (typeof Processor !== 'function') throw new Error('This browser does not support Resource Information XSLT import.');
+  const processor = new Processor();
+  processor.importStylesheet(await resourceInformationXsltPromise);
+  const mapped = processor.transformToDocument(xmlDoc);
+  if (!mapped?.documentElement || mapped.querySelector('parsererror')) {
+    throw new Error('Resource Information transformation failed.');
+  }
+  return mapped;
+}
+
+/**
+ * Resolve imported vocabulary names to the options available in this edition.
+ * @param {Document} mapped Resource Information XSLT output.
+ * @param {Record<string, string>} languageMapping Language code to option ID.
+ * @param {Record<string, string>} titleTypeMapping DataCite title type to option ID.
+ * @returns {Object} Ordered fields and titles for the Resource Information controller.
+ */
+function parseResourceInformationMap(mapped, languageMapping, titleTypeMapping) {
+  const root = mapped.documentElement;
+  if (root.localName !== 'ResourceInformation') throw new Error('Unexpected Resource Information map.');
+  const value = name => String(root.getElementsByTagName(name)[0]?.textContent || '').trim();
+  const typeSelect = document.getElementById('input-resourceinformation-resourcetype');
+  const typeOption = typeSelect && resourceTypeUtils.findResourceTypeOption(
+    Array.from(typeSelect.options), value('ResourceType'));
+  return {
+    doi: value('Doi'), year: value('Year'),
+    resourceTypeId: typeOption?.value || '',
+    version: value('Version'),
+    languageId: languageMapping[value('Language').toLowerCase()] ||
+      document.getElementById('input-resourceinformation-language')?.value || '',
+    titles: Array.from(root.getElementsByTagName('Title')).map((node, position) => ({
+      key: position === 0 ? 'main' : `import-${position}`,
+      text: String(node.textContent || '').trim(),
+      typeId: mapTitleType(node.getAttribute('type'), titleTypeMapping),
+      position
+    }))
+  };
+}
 
 /**
  * Creates an import error while retaining the original failure as its cause.
@@ -1971,30 +2032,8 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   const languageMapping = await createLanguageMapping();
   const titleTypeMapping = await createTitleTypeMapping();
 
-  // Definiere das komplette XML_MAPPING mit dem erstellten licenseMapping
+  // Non-resource fields retain their existing mapping.
   const XML_MAPPING = {
-    // Resource Information
-    identifier: {
-      selector: "#input-resourceinformation-doi",
-      attribute: "textContent",
-    },
-    publicationYear: {
-      selector: "#input-resourceinformation-publicationyear",
-      attribute: "textContent",
-    },
-    version: {
-      selector: "#input-resourceinformation-version",
-      attribute: "textContent",
-    },
-
-    // Language mapping
-    language: {
-      selector: "#input-resourceinformation-language",
-      attribute: "textContent",
-      transform: (value) => {
-        return languageMapping[value.toLowerCase()] || "1";
-      },
-    },
     // Rights
     "rightsList/ns:rights": {
       selector: "#input-rights-license",
@@ -2031,9 +2070,13 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     }
   }
 
-  processResourceType(xmlDoc, resolver);
-  // Process titles
-  processTitles(xmlDoc, resolver, titleTypeMapping);
+  const mappedResource = await transformResourceInformationDocument(xmlDoc);
+  if (!window.resourceInformation?.setResourceInformation) {
+    throw new Error('Resource Information form is not initialized.');
+  }
+  const resourceInformation = parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping);
+  window.resourceInformation.setResourceInformation(resourceInformation);
+  if (resourceInformation.doi) window.resourceInformation.enableDoiEditing?.(true);
   // Processing Creators
   processCreators(xmlDoc, resolver);
   // Allow DOM to settle after creator row insertion (fixes Firefox timing issue #1046)
@@ -2090,6 +2133,8 @@ if (typeof module !== 'undefined' && module.exports) {
         normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
         findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
         processResourceType,
+        transformResourceInformationDocument,
+        parseResourceInformationMap,
         extractLicenseIdentifier,
         mapTitleType,
         processTitles,
