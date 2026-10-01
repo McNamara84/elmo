@@ -116,21 +116,16 @@
         <!-- Satellite-specific Section -->
         <div class="col-11 col-md-5 p-1 visibility-datasources-satellite">
           <div class="input-group has-validation">
-            <div class="form-floating">
-              <div class="input-group has-validation">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-datasource-platforms" name="satellite_platform[]" aria-label="GCMD Platforms keywords"/>
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-gcmd-platforms-keyword" aria-hidden="true"></i></span>
-              </div>
-            </div>
-            <div class="col-auto p-2">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" aria-label="Open-search-modal"
-                data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms" aria-hidden="true">
-                <i class="bi bi-diagram-3" aria-hidden="true"></i>
-              </button>
-            </div>
+            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              id="input-datasource-platforms" name="satellite_platform[]" aria-label="GCMD Platforms keywords"/>
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-gcmd-platforms-keyword" aria-hidden="true"></i></span>
           </div>
+          <button type="button" class="btn btn-primary w-100 mt-1 d-flex justify-content-center align-items-center"
+            data-bs-toggle="modal" data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms"
+            data-translate-title="keywords.Platforms" title="GCMD Platforms" aria-label="GCMD Platforms">
+            <i class="bi bi-diagram-3" aria-hidden="true"></i>
+          </button>
         </div>
         <!-- Remove Button (always the last column of the entry) -->
         <div class="col-1 p-0 d-flex justify-content-center align-items-center">
@@ -141,12 +136,14 @@
         </div>
       </div>
     </div>
-    <button type="button" class="btn btn-primary addDataSource add-button d-inline-flex align-items-left gap-1 mt-2"
-      id="button-datasource-add" data-translate-title="dataSources.addEntry" title="Add data source"
-      aria-label="Add data source">
-      <i class="bi bi-plus-lg" aria-hidden="true"></i>
-      <span data-translate="dataSources.addEntry">Add data source</span>
-    </button>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-2" data-datasource-add-actions>
+      <button type="button" class="btn btn-primary addDataSource d-inline-flex align-items-center gap-1 text-nowrap px-3"
+        id="button-datasource-add" data-translate-title="dataSources.addEntry" title="Add data source"
+        aria-label="Add data source">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span data-translate="dataSources.addEntry">Add data source</span>
+      </button>
+    </div>
   </div>
 </div>
 

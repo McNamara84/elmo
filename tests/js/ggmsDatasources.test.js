@@ -64,29 +64,34 @@ describe('ggmsDatasources.js', () => {
               <option value="T">Elevation/Terrain</option>
               <option value="M">Model</option>
             </select>
+            <span class="input-group-text"><i data-help-section-id="help-datasource-type"></i></span>
           </div>
           <div class="col-md-5 visibility-datasources-basic"><textarea name="datasource_description[]"></textarea></div>
-          <div class="col-md-3 visibility-datasources-details"><select name="datasource_details[]"></select></div>
+          <div class="col-md-3 visibility-datasources-details">
+            <div class="input-group">
+              <select name="datasource_details[]" class="input-with-help"></select>
+              <span class="input-group-text"><i data-help-section-id="help-datasource-details"></i></span>
+            </div>
+          </div>
           <div class="col-md-12 visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
           <div class="col-md-3 visibility-datasources-satellite">
             <div class="input-group">
               <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
+              <span class="input-group-text"><i data-help-section-id="help-gcmd-platforms-keyword"></i></span>
             </div>
+            <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           </div>
           <div class="col-md-6 visibility-datasources-identifier"><input id="input-datasource-modelname" name="dName[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><input name="dIdentifier[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
-          <div class="input-group">
-            <input class="input-with-help" />
-            <div class="help-placeholder" data-help-section-id="ds"></div>
-          </div>
-          <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           <div class="col-1 d-flex justify-content-center align-items-center">
             <button type="button" class="removeButton"></button>
           </div>
         </div>
       </div>
-      <button type="button" class="addDataSource" id="button-datasource-add"></button>
+      <div data-datasource-add-actions>
+        <button type="button" class="addDataSource" id="button-datasource-add"></button>
+      </div>
       <input id="input-platforms-thesaurussearch-ds" />
       <div id="jstree-platforms-datasource"></div>
       <ul id="selected-keywords-platforms-ds"></ul>
@@ -261,7 +266,6 @@ describe('ggmsDatasources.js', () => {
       return originalIs.call(this, selector);
     };
 
-    global.replaceHelpButtonInClonedRows = jest.fn();
     global.setupIdentifierTypesDropdown = jest.fn(select => {
       select.append('<option value="id">id</option>');
     });
@@ -277,7 +281,6 @@ describe('ggmsDatasources.js', () => {
     window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
-    script = script.replace("import { replaceHelpButtonInClonedRows } from '../functions.js';", 'const { replaceHelpButtonInClonedRows } = window;');
     script = script.replace("import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
@@ -290,7 +293,6 @@ describe('ggmsDatasources.js', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    delete global.replaceHelpButtonInClonedRows;
     delete global.setupIdentifierTypesDropdown;
     delete global.Tagify;
     delete window.ELMO_FEATURES;
@@ -567,16 +569,59 @@ describe('ggmsDatasources.js', () => {
     expect($('#group-datasources .row')).toHaveLength(0);
   });
 
-  test('addDataSource clones row, resets values, and restores help button', () => {
+  describe('help icons', () => {
+    const helpWrapper = (row, sectionId) => row.find(`i[data-help-section-id="${sectionId}"]`).closest('span.input-group-text');
+    const isShown = wrapper => wrapper.css('display') !== 'none';
+
+    test('shows each help icon only on the first entry where its field is visible', () => {
+      $('.addDataSource').trigger('click');
+      const rows = $('#group-datasources .row');
+
+      expect(isShown(helpWrapper(rows.eq(0), 'help-datasource-type'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-type'))).toBe(false);
+      expect(isShown(helpWrapper(rows.eq(0), 'help-gcmd-platforms-keyword'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-gcmd-platforms-keyword'))).toBe(false);
+      expect(rows.eq(1).find('input[name="satellite_platform[]"]').hasClass('input-right-with-round-corners')).toBe(true);
+    });
+
+    test('moves a help icon to the next entry when the first one no longer shows the field', () => {
+      $('.addDataSource').trigger('click');
+      const rows = $('#group-datasources .row');
+
+      rows.eq(1).find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-details'))).toBe(true);
+
+      rows.eq(0).find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expect(isShown(helpWrapper(rows.eq(0), 'help-datasource-details'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-details'))).toBe(false);
+    });
+
+    test('promotes help icons to the new first entry after the first entry is removed', () => {
+      $('.addDataSource').trigger('click');
+      $('#group-datasources .row').first().find('.removeButton').trigger('click');
+
+      const row = $('#group-datasources .row').first();
+      expect(isShown(helpWrapper(row, 'help-datasource-type'))).toBe(true);
+    });
+
+    test('hides all help icons when help is switched off', () => {
+      localStorage.setItem('helpStatus', 'help-off');
+      document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+
+      const row = $('#group-datasources .row').first();
+      expect(isShown(helpWrapper(row, 'help-datasource-type'))).toBe(false);
+      expect(isShown(helpWrapper(row, 'help-gcmd-platforms-keyword'))).toBe(false);
+      localStorage.setItem('helpStatus', 'help-on');
+    });
+  });
+
+  test('addDataSource clones row, resets values, and initializes Tagify', () => {
     $('.addDataSource').trigger('click');
     const rows = $('#group-datasources .row');
     expect(rows.length).toBe(2);
     const newRow = rows.last();
-    expect(global.replaceHelpButtonInClonedRows).toHaveBeenCalled();
     expect(newRow.find('select[name="datasource_type[]"]').val()).toBe('S');
     expect(newRow.find('.removeButton').length).toBe(1);
-    expect(newRow.find('.help-placeholder').length).toBe(0);
-    expect(newRow.find('span.input-group-text i[data-help-section-id="ds"]').length).toBe(1);
     const tagifyInstance = newRow.find('input[id^="input-datasource-platforms"]')[0]._tagify;
     expect(tagifyInstance).toBeInstanceOf(MockTagify);
     expect(tagifyInstance._callbacks.add).toBeDefined();

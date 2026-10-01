@@ -2,7 +2,6 @@
  * @description Handles dynamic addition, removal, and visibility of data source rows in the form.
  * @module datasources
  */
-import { replaceHelpButtonInClonedRows } from '../functions.js';
 import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';
 
 $(document).ready(function () {
@@ -249,7 +248,7 @@ $(document).ready(function () {
         // Update required attributes based on type rules
         updateRequiredAttributes(row);
         resetValidationDisplay(row);
-        restoreHelpButtons(row);
+        applyDatasourceHelpStatus();
     }
 
     /**
@@ -264,45 +263,31 @@ $(document).ready(function () {
     }
 
     /**
-     * Restores help buttons that were replaced with placeholders during cloning.
-     * Ensures the associated input field has the correct corner styling.
-     *
-     * @param {jQuery} row - The data source row to process.
+     * Shows each help icon only on the first entry where its field is visible, so a stack
+     * of entries does not repeat the same help icon. Hidden icons give their input round corners.
      */
-    function restoreHelpButtons(row) {
-        const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
-        
-        row.find('.help-placeholder').each(function () {
-            const placeholder = $(this);
-            const helpSectionId = placeholder.data('help-section-id') || '';
+    function applyDatasourceHelpStatus() {
+        const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+        const shownSectionIds = new Set();
 
-            if (helpStatus === 'help-on') {
-                const inputGroup = placeholder.closest('.input-group');
-                placeholder.replaceWith(
-                    `<span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="${helpSectionId}"></i></span>`
-                );
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-no-round-corners')
-                    .removeClass('input-right-with-round-corners');
-            } else {
-                // If help is off, remove the placeholder and adjust input styling
-                const inputGroup = placeholder.closest('.input-group');
-                placeholder.remove();
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-with-round-corners')
-                    .removeClass('input-right-no-round-corners');
-            }
-        });
-        
-        // Also handle input-group-append containers that might be empty
-        row.find('.input-group-append').each(function() {
-            if ($(this).is(':empty') || $(this).children().length === 0) {
-                const inputGroup = $(this).closest('.input-group');
-                $(this).remove();
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-with-round-corners')
-                    .removeClass('input-right-no-round-corners');
-            }
+        datasourceGroup.children('.row').each(function () {
+            const row = $(this);
+            row.find('i[data-help-section-id]').each(function () {
+                const icon = $(this);
+                const sectionId = icon.attr('data-help-section-id');
+                const column = icon.parentsUntil(row).last();
+                const shouldBeVisible = helpOn
+                    && column.css('display') !== 'none'
+                    && !shownSectionIds.has(sectionId);
+                if (shouldBeVisible) shownSectionIds.add(sectionId);
+
+                const wrapper = icon.closest('span.input-group-text');
+                wrapper.css('display', shouldBeVisible ? '' : 'none')
+                    .attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+                wrapper.closest('.input-group').find('.input-with-help')
+                    .toggleClass('input-right-no-round-corners', shouldBeVisible)
+                    .toggleClass('input-right-with-round-corners', !shouldBeVisible);
+            });
         });
     }
 
@@ -363,7 +348,7 @@ $(document).ready(function () {
     // --- EVENT HANDLERS  ---
 
     // Add new data source entry. The add button sits below the entry stack.
-    datasourceGroup.siblings(".addDataSource").on("click", function () {
+    datasourceGroup.parent().find(".addDataSource").on("click", function () {
         const newRow = originalDataSourceRow.clone();
 
         newRow.find("input, textarea, select").val("").removeAttr("required");
@@ -383,11 +368,11 @@ $(document).ready(function () {
         newRow.find('select[name="datasource_type[]"]').val('S');
 
         resetDatasourcePlatformSearch();
-        replaceHelpButtonInClonedRows(newRow);
         updateRowState(newRow);
         initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
+        applyDatasourceHelpStatus();
     });
 
     // Remove a data source entry.
@@ -404,6 +389,7 @@ $(document).ready(function () {
         }
 
         row.remove();
+        applyDatasourceHelpStatus();
     });
 
     // Update row when type or details selection changes.
@@ -423,6 +409,8 @@ $(document).ready(function () {
     $(document).on('change', '#input-model-type', function() {
         updateTypeOptionsTopographicModels();
     });
+
+    document.addEventListener('helpStatus:changed', applyDatasourceHelpStatus);
 
     // --- INITIALIZATION ---
 
