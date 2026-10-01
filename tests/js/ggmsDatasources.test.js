@@ -513,8 +513,8 @@ describe('ggmsDatasources.js', () => {
     test('Satellite: Type/Description share the first row, satellite takes 11 columns on xs/sm', () => {
       const row = $('#group-datasources .row').first();
       expectCols(colOf(row, 'select[name="datasource_type[]"]'), ['col-6', 'col-md-3']);
-      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-5']);
-      expectCols(row.children('.visibility-datasources-satellite'), ['col-11', 'col-md-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-4']);
+      expectCols(row.children('.visibility-datasources-satellite'), ['col-11', 'col-md-5']);
       expectCols(colOf(row, '.removeButton'), ['col-1']);
       expect(row.children('.visibility-datasources-satellite').hasClass('col-sm-12')).toBe(false);
     });
@@ -533,7 +533,7 @@ describe('ggmsDatasources.js', () => {
 
       expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-4', 'col-lg-2']);
       expectCols(colOf(row, 'input[name="compensation_depth[]"]'), ['col-11', 'col-lg-3']);
-      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-5', 'col-lg-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-4', 'col-lg-3']);
 
       row.find('select[name="datasource_details[]"]').val('Bathymetry').trigger('change');
       const detailsCol = colOf(row, 'select[name="datasource_details[]"]');
@@ -561,19 +561,10 @@ describe('ggmsDatasources.js', () => {
     expect($('.addDataSource')).toHaveLength(1);
   });
 
-  test('remove button is disabled while only one entry exists', () => {
-    const firstRemove = () => $('#group-datasources .row').first().find('.removeButton');
-    expect(firstRemove().prop('disabled')).toBe(true);
-
-    firstRemove().trigger('click');
+  test('remove button deletes the only remaining entry', () => {
     expect($('#group-datasources .row')).toHaveLength(1);
-
-    $('.addDataSource').trigger('click');
-    expect($('#group-datasources .row .removeButton').toArray().every(btn => !btn.disabled)).toBe(true);
-
-    firstRemove().trigger('click');
-    expect($('#group-datasources .row')).toHaveLength(1);
-    expect(firstRemove().prop('disabled')).toBe(true);
+    $('#group-datasources .row').first().find('.removeButton').trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(0);
   });
 
   test('addDataSource clones row, resets values, and restores help button', () => {

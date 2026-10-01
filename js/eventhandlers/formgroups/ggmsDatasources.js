@@ -132,19 +132,19 @@ $(document).ready(function () {
      */
     const BASE_COLUMN_LAYOUT = {
         type: 'col-6 col-md-3',
-        description: 'col-6 col-md-5',
+        description: 'col-6 col-md-4',
         details: 'col-11 col-md-3',
         compensation: 'col-11 col-lg-3',
         modelName: 'col-12 col-md-4',
         identifier: 'col-12 col-sm-6 col-md-4',
         identifierType: 'col-11 col-sm-5 col-md-3',
-        satellite: 'col-11 col-md-3',
+        satellite: 'col-11 col-md-5',
         remove: 'col-1'
     };
 
     const COLUMN_LAYOUT_OVERRIDES = {
         model: { details: 'col-12 col-md-4' },
-        isostasy: { description: 'col-6 col-md-5 col-lg-3', details: 'col-12 col-md-4 col-lg-2' }
+        isostasy: { description: 'col-6 col-md-4 col-lg-3', details: 'col-12 col-md-4 col-lg-2' }
     };
 
     const COLUMN_CLASS_PATTERN = /^col(-(xs|sm|md|lg|xl|xxl))?(-\d+)?$/;
@@ -189,14 +189,6 @@ $(document).ready(function () {
             col.removeClass(staleClasses.join(' ')).addClass(layout[key]);
             row.append(col);
         });
-    }
-
-    /**
-     * Keeps at least one entry: the remove button is disabled while only one entry exists.
-     */
-    function updateRemoveButtons() {
-        const rows = datasourceGroup.children('.row');
-        rows.find('.removeButton').prop('disabled', rows.length <= 1);
     }
 
     /**
@@ -258,7 +250,6 @@ $(document).ready(function () {
         updateRequiredAttributes(row);
         resetValidationDisplay(row);
         restoreHelpButtons(row);
-        updateRemoveButtons();
     }
 
     /**
@@ -397,12 +388,10 @@ $(document).ready(function () {
         initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
-        updateRemoveButtons();
     });
 
     // Remove a data source entry.
     datasourceGroup.on("click", ".removeButton", function () {
-        if (datasourceGroup.children('.row').length <= 1) return;
         const row = $(this).closest('.row');
         const platformInput = row.find('input[name="satellite_platform[]"]')[0];
 
@@ -415,7 +404,6 @@ $(document).ready(function () {
         }
 
         row.remove();
-        updateRemoveButtons();
     });
 
     // Update row when type or details selection changes.
@@ -444,7 +432,6 @@ $(document).ready(function () {
             updateRowState(row);
             initializeRowWidgets(row);
         });
-        updateRemoveButtons();
     }
 
     initializeAllDatasourceRows();
