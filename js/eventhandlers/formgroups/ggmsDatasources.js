@@ -132,8 +132,8 @@ $(document).ready(function () {
      */
     const BASE_COLUMN_LAYOUT = {
         type: 'col-6 col-md-3',
-        description: 'col-6 col-md-4',
-        details: 'col-11 col-md-3',
+        description: 'col-6 col-md-3',
+        details: 'col-11 col-md-5',
         compensation: 'col-11 col-lg-3',
         modelName: 'col-12 col-md-4',
         identifier: 'col-12 col-sm-6 col-md-4',
@@ -143,8 +143,8 @@ $(document).ready(function () {
     };
 
     const COLUMN_LAYOUT_OVERRIDES = {
-        model: { details: 'col-12 col-md-4' },
-        isostasy: { description: 'col-6 col-md-4 col-lg-3', details: 'col-12 col-md-4 col-lg-2' }
+        model: { details: 'col-12 col-md-5' },
+        isostasy: { description: 'col-6 col-md-3 col-lg-3', details: 'col-12 col-md-5 col-lg-2' }
     };
 
     const COLUMN_CLASS_PATTERN = /^col(-(xs|sm|md|lg|xl|xxl))?(-\d+)?$/;

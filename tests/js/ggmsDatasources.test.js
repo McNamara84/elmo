@@ -513,7 +513,7 @@ describe('ggmsDatasources.js', () => {
     test('Satellite: Type/Description share the first row, satellite takes 11 columns on xs/sm', () => {
       const row = $('#group-datasources .row').first();
       expectCols(colOf(row, 'select[name="datasource_type[]"]'), ['col-6', 'col-md-3']);
-      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-4']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-3']);
       expectCols(row.children('.visibility-datasources-satellite'), ['col-11', 'col-md-5']);
       expectCols(colOf(row, '.removeButton'), ['col-1']);
       expect(row.children('.visibility-datasources-satellite').hasClass('col-sm-12')).toBe(false);
@@ -522,7 +522,7 @@ describe('ggmsDatasources.js', () => {
     test('Ground/Altimetry/Terrain: details take 11 columns on xs/sm next to the remove button', () => {
       const row = $('#group-datasources .row').first();
       row.find('select[name="datasource_type[]"]').val('G').trigger('change');
-      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-11', 'col-md-3']);
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-11', 'col-md-5']);
     });
 
     test('Isostasy: details take the whole row and compensation depth is the last field', () => {
@@ -531,13 +531,13 @@ describe('ggmsDatasources.js', () => {
       row.find('select[name="datasource_type[]"]').val('T').trigger('change');
       row.find('select[name="datasource_details[]"]').val('Isostasy').trigger('change');
 
-      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-4', 'col-lg-2']);
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-5', 'col-lg-2']);
       expectCols(colOf(row, 'input[name="compensation_depth[]"]'), ['col-11', 'col-lg-3']);
-      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-4', 'col-lg-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-3', 'col-lg-3']);
 
       row.find('select[name="datasource_details[]"]').val('Bathymetry').trigger('change');
       const detailsCol = colOf(row, 'select[name="datasource_details[]"]');
-      expectCols(detailsCol, ['col-11', 'col-md-3']);
+      expectCols(detailsCol, ['col-11', 'col-md-5']);
       expect(detailsCol.hasClass('col-12') || detailsCol.hasClass('col-lg-2')).toBe(false);
       expect(colOf(row, 'textarea[name="datasource_description[]"]').hasClass('col-lg-3')).toBe(false);
     });
@@ -546,7 +546,7 @@ describe('ggmsDatasources.js', () => {
       const row = $('#group-datasources .row').first();
       row.find('select[name="datasource_type[]"]').val('M').trigger('change');
 
-      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-4']);
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-5']);
       expectCols(colOf(row, 'input[name="dName[]"]'), ['col-12', 'col-md-4']);
       expectCols(colOf(row, 'input[name="dIdentifier[]"]'), ['col-12', 'col-sm-6', 'col-md-4']);
       expectCols(colOf(row, 'select[name="dIdentifierType[]"]'), ['col-11', 'col-sm-5', 'col-md-3']);
