@@ -10,7 +10,7 @@ $(document).ready(function () {
     const datasourcePlatformsModal = $('#modal-platforms-datasource');
     const datasourcePlatformsSearch = $('#input-platforms-thesaurussearch-ds');
     const datasourcePlatformsTree = $('#jstree-platforms-datasource');
-    const datasourcePlatformPlaceholder = 'Choose the satellite';
+    const datasourcePlatformPlaceholder = 'Type in the satellite name';
 
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();

@@ -368,8 +368,8 @@ describe('ggmsDatasources.js', () => {
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {
     const input = $('input[name="satellite_platform[]"]')[0];
     expect(input._tagify).toBeInstanceOf(MockTagify);
-    expect(input._tagify.settings.placeholder).toBe('Choose the satellite');
-    expect(input.getAttribute('data-placeholder')).toBe('Choose the satellite');
+    expect(input._tagify.settings.placeholder).toBe('Type in the satellite name');
+    expect(input.getAttribute('data-placeholder')).toBe('Type in the satellite name');
   });
 
   test('changing type to G shows details and populates options', () => {
@@ -630,11 +630,11 @@ describe('ggmsDatasources.js', () => {
 
   test('uses datasource-specific placeholder for initial and cloned platform inputs', () => {
     const firstInput = $('input[name="satellite_platform[]"]')[0];
-    expect(firstInput._tagify.settings.placeholder).toBe('Choose the satellite');
+    expect(firstInput._tagify.settings.placeholder).toBe('Type in the satellite name');
 
     $('.addDataSource').trigger('click');
     const clonedInput = $('#group-datasources .row').last().find('input[name="satellite_platform[]"]')[0];
-    expect(clonedInput._tagify.settings.placeholder).toBe('Choose the satellite');
+    expect(clonedInput._tagify.settings.placeholder).toBe('Type in the satellite name');
   });
 
   test('resets datasource modal search input on open and close', () => {
