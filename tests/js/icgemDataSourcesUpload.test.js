@@ -267,6 +267,20 @@ describe('populateIcgemDataSources satellite platforms', () => {
     expect(tagify.update).not.toHaveBeenCalled();
   });
 
+  test('selects Reference Model when the XML type is Model', async () => {
+    buildDatasourceDom();
+    $('select[name="datasource_type[]"] option[value="M"]').text('Reference Model');
+
+    await icgemModule.populateIcgemDataSources({
+      dataSources: [{
+        inputDataSourceType: 'Model',
+        modelDetail: 'Global Gravitational Model'
+      }]
+    });
+
+    expect($('select[name="datasource_type[]"]').val()).toBe('M');
+  });
+
   test('does not wait when there is no satellite platform', async () => {
     buildDatasourceDom({ addTags: jest.fn(), update: jest.fn() });
     window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
