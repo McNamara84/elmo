@@ -12,7 +12,7 @@ import { defineConfig, devices } from '@playwright/test';
  * TEST SCOPE:
  *   features, flows (excl. minimal-data-submission, contact-person-roundtrip,
  *   save-optional-formgroups), shared formgroups (excl. spatial-temporal-coverages,
- *   resource-type-ernie), elmogem-specific.
+ *   resource-type-ernie), formgroups/elmogem-specific, flows/elmogem-specific.
  *   Individual tests that require ERNIE or generic-only flows are excluded via grepInvert.
  */
 
@@ -21,7 +21,7 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
 export default defineConfig({
   testDir: './tests/playwright',
   fullyParallel: true,
-  workers: undefined,
+  workers: undefined, // use all available CPU cores
   forbidOnly: !!process.env.CI,
   retries: 0,
   reporter: [

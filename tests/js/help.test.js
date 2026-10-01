@@ -13,6 +13,10 @@ describe('help.js', () => {
       <div id="helpModal"><div class="modal-body"></div></div>
       <button id="buttonHelp"></button>
       <div id="helpIcon" data-help-section-id="section1"></div>
+      <i class="bi bi-question-circle-fill help-icon-author-affiliation"
+         data-help-section-id="help-contributorinstitutions-affiliation"
+         data-author-affiliation-help></i>
+      <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i></span>
     `;
     localStorage.clear();
     $ = require('jquery');
@@ -52,6 +56,8 @@ describe('help.js', () => {
     expect($('#buttonHelpOn').hasClass('active')).toBe(false);
     expect($('.input-with-help').hasClass('input-right-with-round-corners')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square')).toBe(true);
+    expect($('.help-icon-author-affiliation').hasClass('d-none')).toBe(true);
+    expect($('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])').css('display')).toBe('none');
   });
 
   test('clicking Help On stores status and updates UI', () => {
@@ -63,6 +69,22 @@ describe('help.js', () => {
     expect($('#buttonHelpOff').hasClass('active')).toBe(false);
     expect($('.input-with-help').hasClass('input-right-no-round-corners')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
+    expect($('.help-icon-author-affiliation').hasClass('d-none')).toBe(false);
+    expect($('.help-icon-author-affiliation').hasClass('bi-question-circle-fill')).toBe(true);
+    expect($('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])').css('display')).not.toBe('none');
+  });
+
+  test('updateHelpStatus reapplies visibility to newly created author help icons', () => {
+    $('#buttonHelpOff').trigger('click');
+
+    const newAffiliationHelp = $('<i class="bi bi-question-circle-fill help-icon-author-affiliation" data-help-section-id="help-contributorinstitutions-affiliation" data-author-affiliation-help></i>');
+    const newOrcidHelp = $('<span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i></span>');
+    $(document.body).append(newAffiliationHelp, newOrcidHelp);
+
+    help.updateHelpStatus();
+
+    expect(newAffiliationHelp.hasClass('d-none')).toBe(true);
+    expect(newOrcidHelp.css('display')).toBe('none');
   });
 
   test('clicking help icon triggers an AJAX call', () => {

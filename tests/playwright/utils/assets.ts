@@ -47,6 +47,12 @@ export async function fulfillWithLocalAsset(route: Route) {
 
   if (isLocalhostRequest || isBaseUrlHostRequest) {
     const pathname = decodeURIComponent(url.pathname);
+    // Never intercept API calls as static files. `**/*.json` would otherwise
+    // steal vocab/availability requests and skip Playwright API stubs.
+    if (pathname.includes('/api/')) {
+      await route.fallback();
+      return;
+    }
     const repoRelativePath = getRepositoryRelativePath(pathname);
     const filePath = path.join(REPO_ROOT, repoRelativePath);
 
@@ -62,6 +68,8 @@ export async function fulfillWithLocalAsset(route: Route) {
         body,
         headers: {
           'content-type': contentType,
+          // about:blank harness pages load ES modules from the app origin via addScriptTag({ url }).
+          'access-control-allow-origin': '*',
         },
       });
       return;
@@ -153,6 +161,47 @@ export async function injectScript(page: Page, filePath: string): Promise<void> 
 export async function injectModuleScript(page: Page, filePath: string): Promise<void> {
   const content = await loadFileContent(filePath);
   await page.addScriptTag({ content, type: 'module' });
+}
+
+/** Absolute URL for a repo file served by the running web app (e.g. localhost:8080). */
+export function appScriptUrl(relativePath: string): string {
+  return new URL(relativePath.replace(/^\//, ''), APP_BASE_URL).href;
+}
+
+/** Load a classic production script from the app origin (needed for dynamic import() in clear loader). */
+export async function injectScriptFromApp(page: Page, relativePath: string): Promise<void> {
+  await page.addScriptTag({ url: appScriptUrl(relativePath) });
+}
+
+/** Load an ES module from the app origin so relative imports resolve under js/. */
+export async function injectModuleFromApp(page: Page, relativePath: string): Promise<void> {
+  await page.addScriptTag({ url: appScriptUrl(relativePath), type: 'module' });
+}
+
+/** clear.js (module) + clearInputFieldsLoader.js for classic callers (mapping, doiPrefill, harness reset). */
+export async function injectClearFormDependencies(page: Page): Promise<void> {
+  // clear.js imports select.js; select expects dropdown helpers on window in the browser build.
+  await injectScriptFromApp(page, 'js/dropdownUtils.js');
+  await injectScriptFromApp(page, 'js/dropdownAjax.js');
+  await injectModuleFromApp(page, 'js/clear.js');
+  await injectModuleFromApp(page, 'js/clearInputFieldsLoader.js');
+}
+
+const APP_MODULE_SCRIPTS = new Set(['js/select.js', 'js/thesauri.js']);
+
+/**
+ * Inject a production script the same way footer.html does: modules by URL, classic scripts from app origin.
+ */
+export async function injectProductionScript(page: Page, relativePath: string): Promise<void> {
+  if (relativePath === 'js/clear.js') {
+    await injectClearFormDependencies(page);
+    return;
+  }
+  if (APP_MODULE_SCRIPTS.has(relativePath)) {
+    await injectModuleFromApp(page, relativePath);
+    return;
+  }
+  await injectScriptFromApp(page, relativePath);
 }
 
 /**

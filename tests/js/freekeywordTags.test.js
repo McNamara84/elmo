@@ -60,6 +60,8 @@ function loadScript(ajaxImpl, translations = { keywords: { free: { placeholder: 
 describe('freekeywordTags.js', () => {
   afterEach(() => {
     jest.resetAllMocks();
+    delete window.ELMO_FEATURES;
+    delete window.elmo;
   });
 
   test('initializes Tagify and loads keywords', async () => {
@@ -142,6 +144,42 @@ describe('freekeywordTags.js', () => {
       { value: 'EPOS' },
       { value: 'multi-scale laboratories' }
     ]);
+  });
+
+  test('restores missing MSL default free keywords after a user-confirmed clear without duplicates', () => {
+    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: true };
+    window.elmo = { isNewRecord: false };
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeyword');
+    input._tagify.addTags({ value: 'multi-scale laboratories' });
+
+    document.dispatchEvent(new Event('elmo:formClearedByUser'));
+    document.dispatchEvent(new Event('elmo:formClearedByUser'));
+
+    expect(input._tagify.value).toEqual([
+      { value: 'multi-scale laboratories' },
+      { value: 'EPOS' }
+    ]);
+  });
+
+  test('does not restore MSL default free keywords when the feature is disabled', () => {
+    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: false };
+    window.elmo = { isNewRecord: false };
+
+    loadScript(() => ({
+      done(cb) { cb([]); return { fail: jest.fn() }; },
+      fail: jest.fn()
+    }));
+
+    const input = document.getElementById('input-freekeyword');
+    document.dispatchEvent(new Event('elmo:formClearedByUser'));
+
+    expect(input._tagify.value).toEqual([]);
   });
 
   test('accepts valid csv file from input change and enables confirm', async () => {

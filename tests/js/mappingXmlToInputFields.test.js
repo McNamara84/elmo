@@ -15,6 +15,8 @@ function loadMappingModule(contextOverrides = {}) {
     XPathResult: global.XPathResult,
     ...contextOverrides,
   };
+  context.window.loadClearInputFields = context.window.loadClearInputFields
+    || (() => Promise.resolve(() => {}));
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;
@@ -49,6 +51,45 @@ function createJQuery() {
 }
 
 describe("mappingXmlToInputFields helpers", () => {
+  test('loads mixed DataCite contributors in document order and merges roles', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.authorStack = { setAuthors: jest.fn(), collectPayload: () => [{ type: 'person', familyname: 'Creator', givenname: 'Alice' }] };
+    const ctx = loadMappingModule();
+    const resolver = prefix => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+    const xml = new DOMParser().parseFromString(`<resource xmlns="http://datacite.org/schema/kernel-4"><contributors>
+      <contributor contributorType="HostingInstitution"><contributorName nameType="Organizational">Institute</contributorName></contributor>
+      <contributor contributorType="ContactPerson"><contributorName nameType="Personal">Doe, Jane</contributorName><givenName>Jane</givenName><familyName>Doe</familyName></contributor>
+      <contributor contributorType="DataCollector"><contributorName nameType="Personal">Doe, Jane</contributorName><givenName>Jane</givenName><familyName>Doe</familyName></contributor>
+      <contributor contributorType="ContactPerson"><contributorName nameType="Personal">Creator, Alice</contributorName><givenName>Alice</givenName><familyName>Creator</familyName></contributor>
+    </contributors></resource>`, 'application/xml');
+    ctx.processContributors(xml, resolver);
+    const entries = setContributors.mock.calls[0][0];
+    expect(entries.map(entry => entry.type)).toEqual(['institution', 'person']);
+    expect(entries[1].roles).toEqual(['Contact Person', 'Data Collector']);
+    delete window.contributorStack;
+    delete window.authorStack;
+  });
+
+  test('loads unmatched ISO institution contact with email and website', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.ELMO_FEATURES = { showContactInstitution: true };
+    const ctx = loadMappingModule();
+    const xml = new DOMParser().parseFromString(`<root xmlns:gmd="http://www.isotc211.org/2005/gmd" xmlns:gco="http://www.isotc211.org/2005/gco"><gmd:pointOfContact><gmd:CI_ResponsibleParty>
+      <gmd:organisationName><gco:CharacterString>Institute</gco:CharacterString></gmd:organisationName>
+      <gmd:contactInfo><gmd:CI_Contact><gmd:address><gmd:CI_Address><gmd:electronicMailAddress><gco:CharacterString>info@example.org</gco:CharacterString></gmd:electronicMailAddress></gmd:CI_Address></gmd:address>
+      <gmd:onlineResource><gmd:CI_OnlineResource><gmd:linkage><gmd:URL>https://example.org</gmd:URL></gmd:linkage></gmd:CI_OnlineResource></gmd:onlineResource></gmd:CI_Contact></gmd:contactInfo>
+    </gmd:CI_ResponsibleParty></gmd:pointOfContact></root>`, 'application/xml');
+    ctx.processContributors(xml, () => null);
+    expect(setContributors.mock.calls[0][0]).toEqual([expect.objectContaining({
+      type: 'institution', institutionname: 'Institute', roles: ['Contact Person'],
+      email: 'info@example.org', website: 'https://example.org'
+    })]);
+    delete window.contributorStack;
+    delete window.ELMO_FEATURES;
+  });
+
   test("processResourceType selects option matching resourceTypeGeneral", () => {
     document.body.innerHTML = `
       <select id="input-resourceinformation-resourcetype">
@@ -78,9 +119,15 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("mapTitleType maps known types to option values", () => {
     const ctx = loadMappingModule();
-    expect(ctx.mapTitleType("AlternativeTitle")).toBe("2");
-    expect(ctx.mapTitleType("TranslatedTitle")).toBe("3");
-    expect(ctx.mapTitleType("UnknownType")).toBe("1");
+    const mapping = {
+      MainTitle: "6",
+      AlternativeTitle: "1",
+      TranslatedTitle: "16",
+      "": "6",
+    };
+    expect(ctx.mapTitleType("AlternativeTitle", mapping)).toBe("1");
+    expect(ctx.mapTitleType("TranslatedTitle", mapping)).toBe("16");
+    expect(ctx.mapTitleType("UnknownType", mapping)).toBe("6");
   });
 
   test("normalizeRole inserts whitespace in contributor roles", () => {
@@ -91,11 +138,13 @@ describe("mappingXmlToInputFields helpers", () => {
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
     vm.runInContext(
-      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', affiliation_ror: 'https://ror.org/05y42nb95', affiliation_name: 'Max Planck Society'}];`,
+      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation_name: 'Max Planck Society', affiliation_ror: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
       ctx
     );
     const lab = ctx.findLabNameById("MSL-001");
-    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy", affiliation_ror: "https://ror.org/05y42nb95", affiliation_name: "Max Planck Society" });
+
+    expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy",
+      display_name: "Max Planck Institute for Astronomy - Max Planck Society", affiliation_name: "Max Planck Society", affiliation_ror: "https://ror.org/05y42nb95", scientific_domain: "Astronomy", country: "Germany" });
   });
 
   test("getNodeText returns trimmed text for relative paths", () => {
@@ -117,11 +166,17 @@ describe("mappingXmlToInputFields helpers", () => {
           <ns:creatorName nameType="Personal">Doe, Jane</ns:creatorName>
           <ns:givenName>Jane</ns:givenName>
           <ns:familyName>Doe</ns:familyName>
+          <ns:nameIdentifier nameIdentifierScheme="ORCID">https://orcid.org/0000-0002-1825-0097</ns:nameIdentifier>
           <ns:affiliation affiliationIdentifier="https://ror.org/04z8jg394">GFZ</ns:affiliation>
+          <ns:affiliation>Additional University</ns:affiliation>
         </ns:creator>
         <ns:creator>
           <ns:creatorName nameType="Organizational">Payload Institute</ns:creatorName>
           <ns:affiliation affiliationIdentifier="https://ror.org/03qjp1d79">Helmholtz</ns:affiliation>
+        </ns:creator>
+        <ns:creator>
+          <ns:creatorName nameType="Personal">Sukarno</ns:creatorName>
+          <ns:familyName>Sukarno</ns:familyName>
         </ns:creator>
       </ns:creators>
     </ns:resource>`;
@@ -136,12 +191,65 @@ describe("mappingXmlToInputFields helpers", () => {
           type: "person",
           familyname: "Doe",
           givenname: "Jane",
-          affiliations: [{ label: "GFZ", rorId: "04z8jg394" }]
+          orcid: "0000-0002-1825-0097",
+          affiliations: [
+            { label: "GFZ", rorId: "04z8jg394" },
+            { label: "Additional University", rorId: "" }
+          ]
         }),
         expect.objectContaining({
           type: "institution",
           institutionname: "Payload Institute",
           affiliations: [{ label: "Helmholtz", rorId: "03qjp1d79" }]
+        }),
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: ""
+        })
+      ]);
+    } finally {
+      delete window.authorStack;
+    }
+  });
+
+  test("processContactPersons restores contact state for a mononymous authorStack entry", () => {
+    const setAuthors = jest.fn();
+    window.authorStack = {
+      collectPayload: jest.fn(() => [{
+        type: "person",
+        familyname: "Sukarno",
+        givenname: "",
+        orcid: "",
+        isContact: false,
+        email: "",
+        website: "",
+        affiliations: []
+      }]),
+      setAuthors
+    };
+    const ctx = loadMappingModule();
+    const xml = `<ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+      <ns:contributors>
+        <ns:contributor contributorType="ContactPerson">
+          <ns:contributorName nameType="Personal">Sukarno</ns:contributorName>
+          <ns:familyName>Sukarno</ns:familyName>
+        </ns:contributor>
+      </ns:contributors>
+    </ns:resource>`;
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+
+    try {
+      ctx.processContactPersons(xmlDoc);
+
+      expect(setAuthors).toHaveBeenCalledWith([
+        expect.objectContaining({
+          type: "person",
+          familyname: "Sukarno",
+          givenname: "",
+          isContact: true,
+          email: "",
+          website: ""
         })
       ]);
     } finally {
@@ -237,26 +345,30 @@ describe("mappingXmlToInputFields helpers", () => {
     const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
     const fallback = await ctxFail.createTitleTypeMapping();
     expect(failingGetJSON).toHaveBeenCalled();
-    expect(fallback[""]).toBe("1");
-    expect(fallback.AlternativeTitle).toBe("2");
+    expect(fallback[""]).toBe("");
+    expect(fallback.AlternativeTitle).toBe("");
+    expect(fallback.MainTitle).toBe("");
+    expect(fallback.TranslatedTitle).toBe("");
   });
 
   test("setLabDataInRow populates fields and triggers change", () => {
     document.body.innerHTML = `
       <div id="row">
-        <select name="laboratoryName[]"><option></option><option value="Lab1">Lab1</option></select>
+        <select name="laboratoryName[]"><option></option><option value="Lab1 - Aff1">Lab1 - Aff1</option></select>
         <input name="laboratoryAffiliation[]" />
         <input name="laboratoryRorIds[]" />
         <input name="LabId[]" />
       </div>`;
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
-    vm.runInContext(`labData = [{ identifier: 'LAB1', name: 'Lab1', affiliation_ror: 'R1', affiliation_name: 'Aff1' }];`, ctx);
+
+    vm.runInContext(`labData = [{
+      identifier: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation_name: 'Aff1', affiliation_ror: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");
 
-    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1");
+    expect(row.find('select[name="laboratoryName[]"]').val()).toBe("Lab1 - Aff1");
     expect(row.find('input[name="laboratoryAffiliation[]"]').val()).toBe("Aff1");
     expect(row.find('input[name="laboratoryRorIds[]"]').val()).toBe("R1");
     expect(row.find('input[name="LabId[]"]').val()).toBe("LAB1");
@@ -302,9 +414,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(second).toEqual({
       place: "",
       latitudeMin: "41.2827",
-      latitudeMax: "41.2827",
+      latitudeMax: "",
       longitudeMin: "-101.1207",
-      longitudeMax: "-101.1207",
+      longitudeMax: "",
     });
   });
 
@@ -330,9 +442,36 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(data).toEqual({
       place: "",
       latitudeMin: "12.34",
-      latitudeMax: "12.34",
+      latitudeMax: "",
       longitudeMin: "56.78",
-      longitudeMax: "56.78",
+      longitudeMax: "",
+    });
+  });
+
+  test("getGeoLocationData keeps max empty when a point has no longitude", () => {
+    const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+    const xml =
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>12</ns:pointLatitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const node = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const data = ctx.getGeoLocationData(node, xmlDoc, nsResolver);
+
+    expect(data).toEqual({
+      place: "",
+      latitudeMin: "12",
+      latitudeMax: "",
+      longitudeMin: "",
+      longitudeMax: "",
     });
   });
 
@@ -397,9 +536,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(first).toEqual({
       place: "",
       latitudeMin: "1",
-      latitudeMax: "1",
+      latitudeMax: "",
       longitudeMin: "2",
-      longitudeMax: "2",
+      longitudeMax: "",
     });
 
     expect(second).toEqual({
@@ -444,9 +583,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(first).toEqual({
       place: "Pacific Ocean",
       latitudeMin: "-33",
-      latitudeMax: "-33",
+      latitudeMax: "",
       longitudeMin: "151",
-      longitudeMax: "151",
+      longitudeMax: "",
     });
 
     expect(second).toEqual({

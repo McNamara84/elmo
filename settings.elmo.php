@@ -54,6 +54,7 @@ $maxTitles = 2;
 $showContributorPersons = true;
 // Show Contributor Institutios form group
 $showContributorInstitutions = true;
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;
 // Show Free Keywords form group
@@ -79,7 +80,6 @@ $showMslVocabs = false;
 $showMslDefaultFreeKeywords = false;
 
 // MSL data sources.
-$mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 // Single source of truth for all MSL-specific features.
@@ -163,6 +163,20 @@ $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 
 // Target address for XML submit
 $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
+
+// Target address for the ELMO GEM ICGEM registration mail.
+$icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
+
+// ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
+// true: send confirmation emails to contact persons. false: do not email them.
+$sendResearcherConfirmationEmail = filter_var(
+    getenv('SEND_RESEARCHER_CONFIRMATION_EMAIL') ?: 'true',
+    FILTER_VALIDATE_BOOLEAN
+);
+
+// ELMO-GEM only ($showGGMsProperties). Upload page linked from the ICGEM registration mail.
+// Empty means the mail falls back to the test database URL.
+$icgemDatabaseUrl = getenv('ICGEM_UPLOAD_URL') ?: '';
 
 function getSettings($setting)
 {

@@ -147,7 +147,9 @@ test.describe('DOI Prefill Feature', () => {
     // Inject clearInputFields stub and DoiLookupService + doiPrefill + handler
     await page.addScriptTag({
       content: `
-        window.clearInputFields = function () {};
+        window.loadClearInputFields = function () {
+          return Promise.resolve(function () {});
+        };
         window.elmo = window.elmo || {};
       `,
     });

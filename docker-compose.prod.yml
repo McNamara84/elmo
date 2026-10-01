@@ -10,6 +10,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
+      interval: 10s
+      timeout: 5s
+      retries: 3
     networks:
       - internal
 
@@ -52,12 +58,14 @@ services:
       SHOW_MSL_MODE: ${SHOW_MSL_MODE:-false}
       SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-true}
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: ${SHOW_THESAURI:-true}
       SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS:-true}
       SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE:-true}
       SHOW_RELATED_WORK: ${SHOW_RELATED_WORK:-true}
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
@@ -107,13 +115,15 @@ services:
       SHOW_MSL_MODE: ${SHOW_MSL_MODE:-true}
       SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES_MSL:-false}
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS_MSL:-false}
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: ${SHOW_THESAURI_MSL:-true}
       SHOW_FREE_KEYWORDS: ${SHOW_FREE_KEYWORDS_MSL:-true}
       SHOW_SPATIAL_TEMPORAL_COVERAGE: ${SHOW_SPATIAL_TEMPORAL_COVERAGE_MSL:-true}
       SHOW_RELATED_WORK: ${SHOW_RELATED_WORK_MSL:-true}
       INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal

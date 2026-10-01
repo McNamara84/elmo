@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
-const SUBMIT_ENDPOINT = '**/send_xml_file.php';
+const SUBMIT_ENDPOINT = '**/endpoints/send_xml_file.php';
 
 async function openSubmitModal(page: Page) {
   await completeMinimalDatasetForm(page);

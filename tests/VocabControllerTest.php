@@ -16,8 +16,7 @@ final class VocabControllerTest extends TestCase
 {
     private function getController(): \VocabController
     {
-        global $mslLabsUrl, $mslVocabsUrl;
-        $mslLabsUrl = 'http://example.com/labs.json';
+        global $mslVocabsUrl;
         $mslVocabsUrl = 'http://example.com/vocab/';
         return new \VocabController();
     }

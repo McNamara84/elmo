@@ -702,4 +702,78 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         // Suggested to change to 6. The original dataset with DOI should be updated, not duplicated, so total count should be 6 instead of 5.
         $this->assertEquals(6, $total_count, "Should have six datasets in total");
     }
+
+    public function testGemSavePrefixesModelNameOntoMainTitle(): void
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $previous = $GLOBALS['showGGMsProperties'] ?? null;
+        $GLOBALS['showGGMsProperties'] = true;
+
+        try {
+            $resourceId = saveResourceInformationAndRights($this->connection, [
+                'doi' => '10.5880/GFZ.TEST.GEM.TITLE.PREFIX',
+                'year' => 2026,
+                'resourcetype' => 1,
+                'language' => 1,
+                'Rights' => 1,
+                'title' => ['Global gravity field'],
+                'titleType' => [1],
+                'model_name' => 'EIGEN-6C4',
+            ]);
+
+            $this->assertIsInt($resourceId);
+            $stmt = $this->connection->prepare('SELECT text FROM Title WHERE Resource_resource_id = ?');
+            $stmt->bind_param('i', $resourceId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+
+            $this->assertSame('EIGEN-6C4: Global gravity field', $row['text']);
+        } finally {
+            if ($previous === null) {
+                unset($GLOBALS['showGGMsProperties']);
+            } else {
+                $GLOBALS['showGGMsProperties'] = $previous;
+            }
+        }
+    }
+
+    public function testGemSaveKeepsEmptyTitleEmpty(): void
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $previous = $GLOBALS['showGGMsProperties'] ?? null;
+        $GLOBALS['showGGMsProperties'] = true;
+
+        try {
+            $resourceId = saveResourceInformationAndRights($this->connection, [
+                'doi' => '10.5880/GFZ.TEST.GEM.TITLE.EMPTY',
+                'year' => 2026,
+                'resourcetype' => 1,
+                'language' => 1,
+                'Rights' => 1,
+                'title' => [''],
+                'titleType' => [1],
+                'model_name' => 'EIGEN-6C4',
+            ]);
+
+            $this->assertIsInt($resourceId);
+            $stmt = $this->connection->prepare('SELECT COUNT(*) AS count FROM Title WHERE Resource_resource_id = ?');
+            $stmt->bind_param('i', $resourceId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+
+            $this->assertSame(0, (int) $row['count']);
+        } finally {
+            if ($previous === null) {
+                unset($GLOBALS['showGGMsProperties']);
+            } else {
+                $GLOBALS['showGGMsProperties'] = $previous;
+            }
+        }
+    }
 }

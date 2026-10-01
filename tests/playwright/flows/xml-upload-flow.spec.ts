@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -70,11 +70,16 @@ const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
 const AUTHOR_INSTITUTION_HTML = loadTemplate('formgroups/authorInstitution.html');
 const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
-const THESAURUS_HTML = loadTemplate('formgroups/thesaurusKeywords.html');
+const THESAURUS_HTML = loadTemplate('formgroups/thesaurus-keywords.html');
 const MSL_KEYWORDS_HTML = loadTemplate('formgroups/mslKeywords.html');
 const FREE_KEYWORDS_HTML = loadTemplate('formgroups/freeKeywords.html');
 const DATES_HTML = loadTemplate('formgroups/dates.html');
 const RELATED_WORK_HTML = loadTemplate('formgroups/relatedwork.html');
+const RELATED_WORK_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt');
+const RELATED_WORK_CONTROLLER = loadTemplate('js/eventhandlers/formgroups/relatedwork.js').replace(
+  /^import .*$/m,
+  'const { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } = window;'
+);
 const FUNDING_REFERENCE_HTML = loadTemplate('formgroups/fundingreference.html');
 const MODALS_HTML = loadTemplate('modals.html');
 
@@ -241,8 +246,11 @@ const MOCK_LABS = [
   {
     identifier: 'lab-123',
     name: 'Sample Lab',
+    display_name: 'Sample Lab - GFZ German Research Centre for Geosciences',
     affiliation_name: 'GFZ German Research Centre for Geosciences',
     affiliation_ror: 'https://ror.org/04abcd123',
+    scientific_domain: 'Geoscience',
+    country: 'Germany',
   },
 ];
 
@@ -300,7 +308,13 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/vocabs/freekeywords/curated': MOCK_FREE_KEYWORDS,
   'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
   'json/funders.json': MOCK_FUNDERS,
-  'json/msl-labs.json': MOCK_LABS,
+  // 'json/msl-labs.json': MOCK_LABS,
+  '/api/v2/vocabs/msl-laboratories': {
+    version: 'test',
+    lastUpdated: '2026-09-07T00:00:00+00:00',
+    total: MOCK_LABS.length,
+    data: MOCK_LABS,
+  },
   'json/affiliations.json': [{
     id: 'aff-1',
     name: 'GFZ German Research Centre for Geosciences',
@@ -431,6 +445,8 @@ test.describe('XML Upload Mapping Flow', () => {
       };
     }, { translations: TEST_TRANSLATIONS });
 
+    await registerStaticAssetRoutes(page);
+
     await page.goto('about:blank');
     await page.setContent(TEST_PAGE_HTML);
 
@@ -445,6 +461,13 @@ test.describe('XML Upload Mapping Flow', () => {
       window.fetch = function(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         const url = typeof input === 'string' ? input : input.toString();
         (window as any).__fetchCalls.push({ url, resolved: url });
+
+        if (url.includes('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt')) {
+          return Promise.resolve(new Response(data.relatedWorksXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' }
+          }));
+        }
         
         // Check if we have mock data for this URL
         for (const [pattern, responseData] of mockDataMap.entries()) {
@@ -491,7 +514,11 @@ test.describe('XML Upload Mapping Flow', () => {
           headers: { 'Content-Type': 'application/json' }
         }));
       };
-    }, { mockData: MOCK_API_DATA, mockThesauri: MOCK_THESAURI_TREE });
+    }, {
+      mockData: MOCK_API_DATA,
+      mockThesauri: MOCK_THESAURI_TREE,
+      relatedWorksXslt: RELATED_WORK_XSLT
+    });
 
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
     await injectStylesheet(page, 'node_modules/jquery-ui/dist/themes/base/jquery-ui.min.css');
@@ -603,6 +630,8 @@ test.describe('XML Upload Mapping Flow', () => {
 
     const appScripts = [
       'js/clear.js',
+      'js/dropdownUtils.js',
+      'js/dropdownAjax.js',
       'js/select.js',
       'js/originatingLaboratories.js',
       'js/affiliations.js',
@@ -615,14 +644,31 @@ test.describe('XML Upload Mapping Flow', () => {
     ];
 
     for (const script of appScripts) {
-      await injectScript(page, script);
+      await injectProductionScript(page, script);
     }
+
+    await page.evaluate(() => {
+      const $ = (window as any).jQuery;
+      (window as any).createRemoveButton = () => $('<button type="button" class="btn btn-danger removeButton"></button>');
+      (window as any).replaceHelpButtonInClonedRows = () => {};
+      (window as any).translateClonedRow = () => {};
+    });
+    await page.addScriptTag({ content: RELATED_WORK_CONTROLLER });
 
     await page.evaluate(() => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
     });
+
+    await page.evaluate(async () => {
+      const dropdownsReady = (window as any).elmo?.dropdownsReady;
+      if (dropdownsReady && typeof dropdownsReady.then === 'function') {
+        await dropdownsReady;
+      }
+    });
+
+    await page.waitForFunction(() => Boolean((window as any).relatedWorkStack));
 
     await page.evaluate(() => {
       // Initialize Tagify for keyword input fields that need it for the test
@@ -682,7 +728,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(page.locator('input[name="grantName[]"]').first()).toHaveValue('Grants database');
 
     const labSelect = page.locator('select[name="laboratoryName[]"]').first();
-    await expect(labSelect).toHaveValue('Sample Lab');
+    await expect(labSelect).toHaveValue('Sample Lab - GFZ German Research Centre for Geosciences');
     await expect(page.locator('input[name="LabId[]"]').first()).toHaveValue('lab-123');
 
     await expect(page.locator('input[name="rIdentifier[]"]').first()).toHaveValue('10.5555/example');

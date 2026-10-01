@@ -67,16 +67,21 @@ describe('checkMandatoryFields module coverage', () => {
                 </div>
             </div>
             <div id="group-relatedwork">
-                <div class="row" related-work-row>
-                    <input type="text" id="input-relatedwork-identifier" name="RelatedWorkIdentifier[]">
-                    <select id="input-relatedwork-relation" name="RelatedWorkRelation[]">
-                        <option value="">Select</option>
-                        <option value="IsPartOf">Is Part Of</option>
-                    </select>
-                    <select id="input-relatedwork-type" name="RelatedWorkIdentifierType[]">
-                        <option value="">Select</option>
-                        <option value="DOI">DOI</option>
-                    </select>
+                <div data-related-work-entry data-related-work-entry-key="related-work-test">
+                    <button type="button" data-related-work-toggle-edit aria-expanded="false"></button>
+                    <div class="collapse" data-related-work-edit-panel aria-hidden="true">
+                        <div class="row">
+                            <input type="text" id="input-relatedwork-identifier" name="rIdentifier[]">
+                            <select id="input-relatedwork-relation" name="relation[]">
+                                <option value="">Select</option>
+                                <option value="1">IsPartOf</option>
+                            </select>
+                            <select id="input-relatedwork-identifiertype" name="rIdentifierType[]">
+                                <option value="">Select</option>
+                                <option value="DOI">DOI</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="group-fundingreference">
@@ -119,6 +124,7 @@ describe('checkMandatoryFields module coverage', () => {
         delete window.jQuery;
         delete global.requestAnimationFrame;
         delete window.applyTagifyAccessibilityAttributes;
+        delete window.relatedWorkStack;
     });
 
     describe('validateSpatialTemporalCoverageRequirements', () => {
@@ -260,6 +266,45 @@ describe('checkMandatoryFields module coverage', () => {
             simulateSubmitValidation();
 
             expect($('#input-relatedwork-relation').attr('required')).toBe('required');
+        });
+
+        test('keeps a completely empty Related Work card optional', () => {
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+            simulateSubmitValidation();
+
+            expect($('#input-relatedwork-relation').attr('required')).toBeUndefined();
+            expect($('#input-relatedwork-identifier').attr('required')).toBeUndefined();
+            expect($('#input-relatedwork-identifiertype').attr('required')).toBeUndefined();
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('false');
+        });
+
+        test('marks all fields and expands an incomplete Related Work card for submit', () => {
+            window.relatedWorkStack = { expandEntry: jest.fn() };
+            $('#input-relatedwork-identifier').val('10.1234/test');
+
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+            simulateSubmitValidation();
+
+            expect($('#input-relatedwork-relation').attr('required')).toBe('required');
+            expect($('#input-relatedwork-identifier').attr('required')).toBe('required');
+            expect($('#input-relatedwork-identifiertype').attr('required')).toBe('required');
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('true');
+            expect(window.relatedWorkStack.expandEntry).toHaveBeenCalledWith(
+                $('[data-related-work-entry]')[0],
+                { focus: false }
+            );
+        });
+
+        test('does not expand a complete Related Work card', () => {
+            window.relatedWorkStack = { expandEntry: jest.fn() };
+            $('#input-relatedwork-identifier').val('10.1234/test');
+            $('#input-relatedwork-relation').val('1');
+            $('#input-relatedwork-identifiertype').val('DOI');
+
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('false');
+            expect(window.relatedWorkStack.expandEntry).not.toHaveBeenCalled();
         });
 
         test('validates funding reference - can be called without errors', () => {

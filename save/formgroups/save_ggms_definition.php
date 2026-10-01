@@ -50,7 +50,7 @@ function validateGGMData(array $data, int $resourceId): array
     }
 
     // Optional fields
-    $optional = ['product_type','file_format', 'celestial_body'];
+    $optional = ['product_type', 'icgem_file_format', 'celestial_body'];
     foreach ($optional as $f) {
         if (isset($data[$f])) {
             $data[$f] = is_string($data[$f]) ? trim($data[$f]) : $data[$f];
@@ -138,7 +138,7 @@ function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId
             'model_type' => trim($postData['model_type'] ?? ''),
             'mathematical_representation' => trim($postData['mathematical_representation'] ?? ''),
             'product_type' => trim($postData['product_type'] ?? ''),
-            'file_format' => trim($postData['file_format'] ?? ''),
+            'icgem_file_format' => trim($postData['icgem_file_format'] ?? ''),
             'celestial_body' => trim($postData['celestial_body'] ?? '')
         ];
     }
@@ -146,7 +146,7 @@ function saveGGMsDefinition(mysqli $connection, array $postData, int $resourceId
     // 2) Resolve foreign keys for Model_Type, Mathematical_Representation, and File_Format
     $modelTypeId = lookupForeignKeyId($connection, 'Model_Type', 'Model_type_id', 'name', $data['model_type']);
     $mathRepId = lookupForeignKeyId($connection, 'Mathematical_Representation', 'Mathematical_representation_id', 'name', $data['mathematical_representation']);
-    $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['file_format']);
+    $fileFmtId = lookupForeignKeyId($connection, 'File_Format', 'File_format_id', 'name', $data['icgem_file_format']);
 
     if ($action === 'submit' && (!$modelTypeId || !$mathRepId || !$fileFmtId)) {
         throw new Exception('Failed to resolve foreign keys for Model_Type, Mathematical_Representation, or File_Format.');

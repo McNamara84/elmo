@@ -150,12 +150,28 @@
         "name": "Nom de l'institution de l'auteur"
     },
     "contactPersons": {
-        "contactPersonError": "Veuillez choisir au moins une personne de contact.",
+        "contactPersonError": "Ajoutez un contact dans Auteurs ou Contributeurs avec un nom et une adresse e-mail valide.",
         "email": "Adresse e-mail",
         "emailInvalid": "Veuillez saisir une adresse e-mail valide au format xxx.xxx@xxx.xxx.",
         "toggleCheckbox": "Personne<br>à contacte?",
         "website": "Site web",
         "websiteInvalid": "Veuillez saisir une URL valide."
+    },
+    "contributors": {
+        "title": "Contributeurs",
+        "person": "Personne",
+        "institution": "Institution",
+        "addPerson": "Ajouter une personne",
+        "addInstitution": "Ajouter une institution",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "typeSwitcherLabel": "Type de contributeur",
+        "dragHandle": "Faire glisser pour changer l'ordre",
+        "collapseEntry": "Réduire l'entrée",
+        "editEntry": "Modifier l'entrée",
+        "moveEntryUp": "Déplacer vers le haut",
+        "moveEntryDown": "Déplacer vers le bas",
+        "removeEntry": "Supprimer l'entrée"
     },
     "contributorPersons": {
         "title": "Contributeurs: Personnes"
@@ -253,7 +269,16 @@
         "relation": "Relation",
         "identifierType": "Type d'identifiant",
         "identifier": "Identifiant",
-        "identifierInvalid": "Veuillez saisir un identifiant valide."
+        "identifierInvalid": "Veuillez saisir un identifiant valide.",
+        "addEntry": "Ajouter un travail connexe",
+        "dragHandle": "Réorganiser par glisser-déposer ou avec les touches fléchées",
+        "removeEntry": "Supprimer l'entrée de travail connexe",
+        "editEntry": "Modifier l'entrée de travail connexe",
+        "collapseEntry": "Replier l'entrée de travail connexe",
+        "entrySingular": "entrée",
+        "entryPlural": "entrées",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Travail connexe incomplet"
     },
     "funding": {
         "title": "Références de financement",
@@ -273,6 +298,7 @@
         "identifierType": "Type d'identifiant",
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
         "modelName": "Nom du modèle",
+        "modelNameInvalid": "Indiquez ici le nom du modèle",
         "compensationDepth": "Profondeur de compensation (en mètres)"
     },
     "technical": {
@@ -353,7 +379,18 @@
             "errorToast": "Erreur lors du chargement du fichier",
             "invalidFileType": "Veuillez télécharger un fichier XML ou JSON-LD.",
             "errorProcessing": "Erreur lors du traitement du fichier de métadonnées",
-            "errorReading": "Erreur lors de la lecture du fichier"
+            "errorReading": "Erreur lors de la lecture du fichier",
+            "relatedWorksProgress": "Travaux connexes {processed}/{total}"
+        },
+        "gfcUpload": {
+            "uploadButton": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "modalTitle": "Télécharger le fichier modèle",
+            "dropZone": "Glissez-déposez un fichier GFC ici",
+            "selectFile": "ou cliquez pour sélectionner un fichier",
+            "pasteHeaderLabel": "Ou collez le texte d'en-tête :",
+            "pasteHeaderPlaceholder": "Collez les lignes d'en-tête GFC ici…",
+            "fillMetadata": "Remplir les champs de métadonnées depuis le fichier modèle",
+            "errorNoInput": "Veuillez télécharger un fichier .gfc ou coller le texte d'en-tête dans le champ libre."
         },
         "icgemWrongApp": {
             "title": "Fichier de métadonnées ICGEM détecté",
@@ -362,8 +399,13 @@
         },
         "changelog": {
             "title": "Journal des modifications",
-            "aboutText": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",
-            "aboutHeading": "À propos d'ELMO - Enhanced Linked Metadata Organizer"
+            "loading": "Chargement du journal des modifications…",
+            "error": "Le journal des modifications n'a pas pu être chargé. Veuillez réessayer."
+        },
+        "about": {
+            "text": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",
+            "heading": "À propos d'ELMO - Enhanced Linked Metadata Organizer",
+            "metadataEditorLink": "À propos de l'éditeur de métadonnées"
         },
         "save": {
             "title": "Enregistrer les métadonnées",
@@ -377,7 +419,7 @@
             "urgency": "Urgence",
             "url": "URL des données",
             "dataDescription": "Description des données (conformément au <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>modèle de description</a> des données)",
-            "privacypolice": "J'ai lu la <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
+            "privacypolice": "J'ai lu la <a href='doc/privacy-policy.html' target='_blank' class='link-primary'>politique de confidentialité</a> et je consens au traitement de mes données.",
             "urgencyNotice": "Veuillez sélectionner l'urgence",
             "high": "élevée",
             "normal": "normale",
