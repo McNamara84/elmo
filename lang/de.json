@@ -299,7 +299,9 @@
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
         "modelNameInvalid": "Geben Sie hier den Namen des Modells ein",
-        "compensationDepth": "Ausgleichstiefe (in Metern)"
+        "compensationDepth": "Ausgleichstiefe (in Metern)",
+        "addEntry": "Datenquelle hinzufügen",
+        "removeEntry": "Datenquelle entfernen"
     },
     "technical": {
         "title": "Technische Angaben",

@@ -81,11 +81,12 @@ describe('ggmsDatasources.js', () => {
             <div class="help-placeholder" data-help-section-id="ds"></div>
           </div>
           <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
-          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
-            <button class="addDataSource"></button>
+          <div class="col-1 d-flex justify-content-center align-items-center">
+            <button type="button" class="removeButton"></button>
           </div>
         </div>
       </div>
+      <button type="button" class="addDataSource" id="button-datasource-add"></button>
       <input id="input-platforms-thesaurussearch-ds" />
       <div id="jstree-platforms-datasource"></div>
       <ul id="selected-keywords-platforms-ds"></ul>
@@ -260,7 +261,6 @@ describe('ggmsDatasources.js', () => {
       return originalIs.call(this, selector);
     };
 
-    global.createRemoveButton = jest.fn(() => $('<button class="removeButton"></button>'));
     global.replaceHelpButtonInClonedRows = jest.fn();
     global.setupIdentifierTypesDropdown = jest.fn(select => {
       select.append('<option value="id">id</option>');
@@ -277,7 +277,7 @@ describe('ggmsDatasources.js', () => {
     window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
-    script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
+    script = script.replace("import { replaceHelpButtonInClonedRows } from '../functions.js';", 'const { replaceHelpButtonInClonedRows } = window;');
     script = script.replace("import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
@@ -290,7 +290,6 @@ describe('ggmsDatasources.js', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    delete global.createRemoveButton;
     delete global.replaceHelpButtonInClonedRows;
     delete global.setupIdentifierTypesDropdown;
     delete global.Tagify;
@@ -465,25 +464,26 @@ describe('ggmsDatasources.js', () => {
     const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
     const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
     const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-    const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
+    const removeButtonCol = row.find('.removeButton').closest('div[class*="col-"]');
 
     // --- Assertions ---
-    // Expected order: Type -> Details -> ModelName -> Identifier -> IdentifierType -> Description -> AddButton
+    // Expected order: Type -> Description -> Details -> ModelName -> Identifier -> IdentifierType -> RemoveButton
     const children = row.children().toArray();
     const idxType = children.indexOf(typeCol[0]);
+    const idxDesc = children.indexOf(descCol[0]);
     const idxDetails = children.indexOf(detailsCol[0]);
     const idxModelName = children.indexOf(modelNameCol[0]);
     const idxIdentifier = children.indexOf(identifierCol[0]);
     const idxIdType = children.indexOf(identifierTypeCol[0]);
-    const idxDesc = children.indexOf(descCol[0]);
-    const idxAddBtn = children.indexOf(addButtonCol[0]);
+    const idxRemoveBtn = children.indexOf(removeButtonCol[0]);
 
-    expect(idxType).toBeLessThan(idxDetails);
+    expect(idxType).toBeLessThan(idxDesc);
+    expect(idxDesc).toBeLessThan(idxDetails);
     expect(idxDetails).toBeLessThan(idxModelName);
     expect(idxModelName).toBeLessThan(idxIdentifier);
     expect(idxIdentifier).toBeLessThan(idxIdType);
-    expect(idxIdType).toBeLessThan(idxDesc);
-    expect(idxDesc).toBeLessThan(idxAddBtn);
+    expect(idxIdType).toBeLessThan(idxRemoveBtn);
+    expect(idxRemoveBtn).toBe(children.length - 1);
 
     // Now set type back to Satellite and check order/visibility resets
     typeSelect.val('S').trigger('change');
@@ -491,6 +491,89 @@ describe('ggmsDatasources.js', () => {
     // Optionally, check that identifier fields are hidden again
     expect(identifierCol.css('display')).toBe('none');
     expect(identifierTypeCol.css('display')).toBe('none');
+  });
+
+  describe('responsive column layout', () => {
+    const colOf = (row, selector) => row.find(selector).closest('div[class*="col-"]');
+    const expectCols = (col, classes) => classes.forEach(cls => expect(col.hasClass(cls)).toBe(true));
+
+    test('places Description right after Type and the remove button last for every type', () => {
+      const row = $('#group-datasources .row').first();
+      $('#input-model-type').val('Topographic').trigger('change');
+
+      ['S', 'G', 'A', 'T', 'M'].forEach(type => {
+        row.find('select[name="datasource_type[]"]').val(type).trigger('change');
+        const children = row.children('div[class*="col-"]').toArray();
+        expect(children.indexOf(colOf(row, 'select[name="datasource_type[]"]')[0])).toBe(0);
+        expect(children.indexOf(colOf(row, 'textarea[name="datasource_description[]"]')[0])).toBe(1);
+        expect(children.indexOf(colOf(row, '.removeButton')[0])).toBe(children.length - 1);
+      });
+    });
+
+    test('Satellite: Type/Description share the first row, satellite takes 11 columns on xs/sm', () => {
+      const row = $('#group-datasources .row').first();
+      expectCols(colOf(row, 'select[name="datasource_type[]"]'), ['col-6', 'col-md-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-5']);
+      expectCols(row.children('.visibility-datasources-satellite'), ['col-11', 'col-md-3']);
+      expectCols(colOf(row, '.removeButton'), ['col-1']);
+      expect(row.children('.visibility-datasources-satellite').hasClass('col-sm-12')).toBe(false);
+    });
+
+    test('Ground/Altimetry/Terrain: details take 11 columns on xs/sm next to the remove button', () => {
+      const row = $('#group-datasources .row').first();
+      row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-11', 'col-md-3']);
+    });
+
+    test('Isostasy: details take the whole row and compensation depth is the last field', () => {
+      const row = $('#group-datasources .row').first();
+      $('#input-model-type').val('Topographic').trigger('change');
+      row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+      row.find('select[name="datasource_details[]"]').val('Isostasy').trigger('change');
+
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-4', 'col-lg-2']);
+      expectCols(colOf(row, 'input[name="compensation_depth[]"]'), ['col-11', 'col-lg-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-5', 'col-lg-3']);
+
+      row.find('select[name="datasource_details[]"]').val('Bathymetry').trigger('change');
+      const detailsCol = colOf(row, 'select[name="datasource_details[]"]');
+      expectCols(detailsCol, ['col-11', 'col-md-3']);
+      expect(detailsCol.hasClass('col-12') || detailsCol.hasClass('col-lg-2')).toBe(false);
+      expect(colOf(row, 'textarea[name="datasource_description[]"]').hasClass('col-lg-3')).toBe(false);
+    });
+
+    test('Model: details full row, identifier type leaves room for the remove button', () => {
+      const row = $('#group-datasources .row').first();
+      row.find('select[name="datasource_type[]"]').val('M').trigger('change');
+
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-4']);
+      expectCols(colOf(row, 'input[name="dName[]"]'), ['col-12', 'col-md-4']);
+      expectCols(colOf(row, 'input[name="dIdentifier[]"]'), ['col-12', 'col-sm-6', 'col-md-4']);
+      expectCols(colOf(row, 'select[name="dIdentifierType[]"]'), ['col-11', 'col-sm-5', 'col-md-3']);
+      expect(colOf(row, 'input[name="dName[]"]').hasClass('col-md-6')).toBe(false);
+    });
+  });
+
+  test('add button lives below the entries and is not cloned into new entries', () => {
+    expect($('#group-datasources .addDataSource')).toHaveLength(0);
+    $('#button-datasource-add').trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(2);
+    expect($('.addDataSource')).toHaveLength(1);
+  });
+
+  test('remove button is disabled while only one entry exists', () => {
+    const firstRemove = () => $('#group-datasources .row').first().find('.removeButton');
+    expect(firstRemove().prop('disabled')).toBe(true);
+
+    firstRemove().trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(1);
+
+    $('.addDataSource').trigger('click');
+    expect($('#group-datasources .row .removeButton').toArray().every(btn => !btn.disabled)).toBe(true);
+
+    firstRemove().trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(1);
+    expect(firstRemove().prop('disabled')).toBe(true);
   });
 
   test('addDataSource clones row, resets values, and restores help button', () => {

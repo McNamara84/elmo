@@ -2,7 +2,7 @@
  * @description Handles dynamic addition, removal, and visibility of data source rows in the form.
  * @module datasources
  */
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
+import { replaceHelpButtonInClonedRows } from '../functions.js';
 import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';
 
 $(document).ready(function () {
@@ -118,80 +118,85 @@ $(document).ready(function () {
         // FormData omits disabled controls. The backend consumes compensation_depth[]
         // as a sparse queue (Isostasy rows only), so hidden rows must not submit "".
         compensationField.find('input, select, textarea').prop('disabled', !showField);
-        adjustLayoutForIsostasy(row, showField);
     }
 
     /**
-     * Adjusts column widths when the "Compensation depth" field is shown for
-     * Elevation/Terrain data sources so that all fields, including the add button,
-     * fit on a single row.
-     *
-     * @param {jQuery} row - The row to modify.
-     * @param {boolean} isIsostasy - Whether the current selection requires the
-     *   compensation depth field.
+     * Column order inside an entry. Type and Description always share the first row;
+     * the remove button is always the last column.
      */
-    function adjustLayoutForIsostasy(row, isIsostasy) {
-        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
-        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
+    const COLUMN_ORDER = ['type', 'description', 'details', 'compensation', 'modelName', 'identifier', 'identifierType', 'satellite', 'remove'];
 
-        if (isIsostasy) {
-            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
-            compensationCol.removeClass('col-md-12 col-lg-12').addClass('col-md-3 col-lg-3');
-            detailsCol.removeClass('col-md-6 col-lg-3').addClass('col-md-5 col-lg-2');
-        } else {
-            descCol.removeClass('col-md-3 col-lg-3').addClass('col-md-5 col-lg-5');
-            compensationCol.removeClass('col-md-3 col-lg-3').addClass('col-md-12 col-lg-12');
-            detailsCol.removeClass('col-md-5 col-lg-2').addClass('col-md-6 col-lg-3');
-        }
+    /**
+     * Bootstrap column classes per column. On xs/sm the last visible field uses 11 columns
+     * so that the remove button (1 column) ends the last row; md/lg rows also sum to 12.
+     */
+    const BASE_COLUMN_LAYOUT = {
+        type: 'col-6 col-md-3',
+        description: 'col-6 col-md-5',
+        details: 'col-11 col-md-3',
+        compensation: 'col-11 col-lg-3',
+        modelName: 'col-12 col-md-4',
+        identifier: 'col-12 col-sm-6 col-md-4',
+        identifierType: 'col-11 col-sm-5 col-md-3',
+        satellite: 'col-11 col-md-3',
+        remove: 'col-1'
+    };
+
+    const COLUMN_LAYOUT_OVERRIDES = {
+        model: { details: 'col-12 col-md-4' },
+        isostasy: { description: 'col-6 col-md-5 col-lg-3', details: 'col-12 col-md-4 col-lg-2' }
+    };
+
+    const COLUMN_CLASS_PATTERN = /^col(-(xs|sm|md|lg|xl|xxl))?(-\d+)?$/;
+
+    function getLayoutColumns(row) {
+        const colOf = selector => row.find(selector).closest('div[class*="col-"]');
+        return {
+            type: colOf('select[name="datasource_type[]"]'),
+            description: colOf('textarea[name="datasource_description[]"]'),
+            details: colOf('select[name="datasource_details[]"]'),
+            compensation: colOf('input[name="compensation_depth[]"]'),
+            modelName: colOf('input[name="dName[]"]'),
+            identifier: colOf('input[name="dIdentifier[]"]'),
+            identifierType: colOf('select[name="dIdentifierType[]"]'),
+            satellite: row.children('.visibility-datasources-satellite'),
+            remove: colOf('.removeButton')
+        };
     }
 
     /**
-     * Adjusts column order and widths for the "Model" data source type.
-     * Row 1: Type, Identifier, Identifier Type
-     * Row 2: Model Name, Description, Button
+     * Puts the columns of an entry into the fixed order and applies the responsive widths
+     * for the selected type.
      *
-     * @param {jQuery} row - The row to modify.
-     * @param {boolean} isModel - Whether the selected type is "Model".
+     * @param {jQuery} row - The data source entry.
+     * @param {string} selectedType - Data source type code (S, G, A, T, M).
      */
-    function adjustLayoutForModel(row, isModel) {
-        const typeCol = row.find('select[name="datasource_type[]"]').closest('div[class*="col-"]');
-        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-        const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
-        const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
-        const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
-        const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
-        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
-        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
-        const satelliteCol = row.find('.visibility-datasources-satellite');
+    function applyRowLayout(row, selectedType) {
+        const isIsostasy = selectedType === 'T'
+            && row.find('select[name="datasource_details[]"]').val() === 'Isostasy';
+        const layout = {
+            ...BASE_COLUMN_LAYOUT,
+            ...(selectedType === 'M' ? COLUMN_LAYOUT_OVERRIDES.model : {}),
+            ...(isIsostasy ? COLUMN_LAYOUT_OVERRIDES.isostasy : {})
+        };
+        const columns = getLayoutColumns(row);
 
-        if (isModel) {
-            // Row 1: Type | Identifier | Identifier Type
-            detailsCol.insertAfter(typeCol);
-            modelNameCol.insertAfter(detailsCol);
+        COLUMN_ORDER.forEach(key => {
+            const col = columns[key];
+            if (!col || col.length === 0) return;
 
-            // Row 2: Model Name | Description | Button
-            identifierCol.insertAfter(modelNameCol);
-            identifierTypeCol.insertAfter(identifierCol);
-            descCol.insertAfter(identifierTypeCol);
-            addButtonCol.insertAfter(descCol);
+            const staleClasses = (col.attr('class') || '').split(/\s+/).filter(cls => COLUMN_CLASS_PATTERN.test(cls));
+            col.removeClass(staleClasses.join(' ')).addClass(layout[key]);
+            row.append(col);
+        });
+    }
 
-            // Adjust column widths for the new layout
-            identifierCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
-        }
-        // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
-        else {
-            // Clear the row and stack fields in the desired order
-            row.append(typeCol);          // Type
-            row.append(detailsCol);       // Details
-            row.append(compensationCol);  // Compensation
-            row.append(modelNameCol);     // Model Name
-            row.append(identifierCol);    // Identifier
-            row.append(identifierTypeCol);// Identifier Type
-            row.append(satelliteCol);     // Satellite
-            row.append(descCol);          // Description (always after detalisation)
-            row.append(addButtonCol);     // Add Button
-        }
+    /**
+     * Keeps at least one entry: the remove button is disabled while only one entry exists.
+     */
+    function updateRemoveButtons() {
+        const rows = datasourceGroup.children('.row');
+        rows.find('.removeButton').prop('disabled', rows.length <= 1);
     }
 
     /**
@@ -240,7 +245,7 @@ $(document).ready(function () {
         }
         updateTypeOptionsTopographicModelsRow(row);
         handleIsostasyField(row);
-        adjustLayoutForModel(row, selectedType === 'M');
+        applyRowLayout(row, selectedType);
 
         if (selectedType === 'M') {
             const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
@@ -253,6 +258,7 @@ $(document).ready(function () {
         updateRequiredAttributes(row);
         resetValidationDisplay(row);
         restoreHelpButtons(row);
+        updateRemoveButtons();
     }
 
     /**
@@ -365,8 +371,8 @@ $(document).ready(function () {
 
     // --- EVENT HANDLERS  ---
 
-    // Add new data source entry.
-    datasourceGroup.on("click", ".addDataSource", function () {
+    // Add new data source entry. The add button sits below the entry stack.
+    datasourceGroup.siblings(".addDataSource").on("click", function () {
         const newRow = originalDataSourceRow.clone();
 
         newRow.find("input, textarea, select").val("").removeAttr("required");
@@ -387,15 +393,16 @@ $(document).ready(function () {
 
         resetDatasourcePlatformSearch();
         replaceHelpButtonInClonedRows(newRow);
-        newRow.find(".addDataSource").replaceWith(createRemoveButton());
         updateRowState(newRow);
         initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
+        updateRemoveButtons();
     });
 
     // Remove a data source entry.
     datasourceGroup.on("click", ".removeButton", function () {
+        if (datasourceGroup.children('.row').length <= 1) return;
         const row = $(this).closest('.row');
         const platformInput = row.find('input[name="satellite_platform[]"]')[0];
 
@@ -408,6 +415,7 @@ $(document).ready(function () {
         }
 
         row.remove();
+        updateRemoveButtons();
     });
 
     // Update row when type or details selection changes.
@@ -436,6 +444,7 @@ $(document).ready(function () {
             updateRowState(row);
             initializeRowWidgets(row);
         });
+        updateRemoveButtons();
     }
 
     initializeAllDatasourceRows();

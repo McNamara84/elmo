@@ -298,7 +298,9 @@
         "identifierInvalid": "Please enter a valid identifier.",
         "modelName": "Model name",
         "modelNameInvalid": "Provide the name of the model here",
-        "compensationDepth": "Compensation depth (in meters)"
+        "compensationDepth": "Compensation depth (in meters)",
+        "addEntry": "Add data source",
+        "removeEntry": "Remove data source"
     },
     "technical": {
         "title": "Technical",
