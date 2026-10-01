@@ -414,9 +414,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(second).toEqual({
       place: "",
       latitudeMin: "41.2827",
-      latitudeMax: "41.2827",
+      latitudeMax: "",
       longitudeMin: "-101.1207",
-      longitudeMax: "-101.1207",
+      longitudeMax: "",
     });
   });
 
@@ -442,9 +442,36 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(data).toEqual({
       place: "",
       latitudeMin: "12.34",
-      latitudeMax: "12.34",
+      latitudeMax: "",
       longitudeMin: "56.78",
-      longitudeMax: "56.78",
+      longitudeMax: "",
+    });
+  });
+
+  test("getGeoLocationData keeps max empty when a point has no longitude", () => {
+    const ctx = loadMappingModule();
+    const nsResolver = (prefix) => prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+    const xml =
+      `<ns:resource xmlns:ns=\"http://datacite.org/schema/kernel-4\">\n` +
+      `  <ns:geoLocations>\n` +
+      `    <ns:geoLocation>\n` +
+      `      <ns:geoLocationPoint>\n` +
+      `        <ns:pointLatitude>12</ns:pointLatitude>\n` +
+      `      </ns:geoLocationPoint>\n` +
+      `    </ns:geoLocation>\n` +
+      `  </ns:geoLocations>\n` +
+      `</ns:resource>`;
+
+    const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    const node = xmlDoc.evaluate(".//ns:geoLocations/ns:geoLocation", xmlDoc, nsResolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const data = ctx.getGeoLocationData(node, xmlDoc, nsResolver);
+
+    expect(data).toEqual({
+      place: "",
+      latitudeMin: "12",
+      latitudeMax: "",
+      longitudeMin: "",
+      longitudeMax: "",
     });
   });
 
@@ -509,9 +536,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(first).toEqual({
       place: "",
       latitudeMin: "1",
-      latitudeMax: "1",
+      latitudeMax: "",
       longitudeMin: "2",
-      longitudeMax: "2",
+      longitudeMax: "",
     });
 
     expect(second).toEqual({
@@ -556,9 +583,9 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(first).toEqual({
       place: "Pacific Ocean",
       latitudeMin: "-33",
-      latitudeMax: "-33",
+      latitudeMax: "",
       longitudeMin: "151",
-      longitudeMax: "151",
+      longitudeMax: "",
     });
 
     expect(second).toEqual({

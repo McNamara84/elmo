@@ -511,7 +511,7 @@ describe('doiPrefill.js', () => {
       expect($('input[name="tscLatitudeMax[]"]').val()).toBe('52.7');
     });
 
-    test('fills point as equal min/max coordinates', () => {
+    test('fills a point in the min fields and leaves max empty', () => {
       mod.prefillGeoLocations([
         {
           geoLocationPoint: { pointLatitude: 48.8566, pointLongitude: 2.3522 },
@@ -519,9 +519,9 @@ describe('doiPrefill.js', () => {
       ]);
 
       expect($('input[name="tscLatitudeMin[]"]').val()).toBe('48.8566');
-      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('48.8566');
+      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('');
       expect($('input[name="tscLongitudeMin[]"]').val()).toBe('2.3522');
-      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('2.3522');
+      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('');
     });
   });
 
