@@ -401,8 +401,13 @@
         },
         "changelog": {
             "title": "Journal des modifications",
-            "aboutText": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",
-            "aboutHeading": "À propos d'ELMO - Enhanced Linked Metadata Organizer"
+            "loading": "Chargement du journal des modifications…",
+            "error": "Le journal des modifications n'a pas pu être chargé. Veuillez réessayer."
+        },
+        "about": {
+            "text": "Les bases de l'éditeur de métadonnées ELMO ont été développées en 2024 par des étudiants de l'Université des sciences appliquées Potsdam en collaboration avec le Centre Helmholtz pour les sciences de la Terre (GFZ) Potsdam. L'équipe de développement du GFZ a ensuite poursuivi son optimisation. L'éditeur de métadonnées ELMO est publié sous licence GNU General Public License, version 2.",
+            "heading": "À propos d'ELMO - Enhanced Linked Metadata Organizer",
+            "metadataEditorLink": "À propos de l'éditeur de métadonnées"
         },
         "save": {
             "title": "Enregistrer les métadonnées",

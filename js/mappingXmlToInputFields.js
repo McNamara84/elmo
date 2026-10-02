@@ -1463,14 +1463,14 @@ function getGeoLocationData(node, xmlDoc, resolver) {
   }
 
   if (pointNode) {
-    const lat = getText(pointNode, "pointLatitude");
-    const lon = getText(pointNode, "pointLongitude");
+    // A point is Latitude Min + Longitude Min. Max stays empty so re-upload
+    // does not turn the point into a bounding box.
     return {
       place,
-      latitudeMin: lat,
-      latitudeMax: lat,
-      longitudeMin: lon,
-      longitudeMax: lon,
+      latitudeMin: getText(pointNode, "pointLatitude"),
+      latitudeMax: "",
+      longitudeMin: getText(pointNode, "pointLongitude"),
+      longitudeMax: "",
     };
   }
 

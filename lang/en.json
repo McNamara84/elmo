@@ -403,8 +403,13 @@
         },
         "changelog": {
             "title": "Changelog",
-            "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
-            "aboutHeading": "About ELMO - Enhanced Linked Metadata Organizer"
+            "loading": "Loading changelog…",
+            "error": "The changelog could not be loaded. Please try again."
+        },
+        "about": {
+            "text": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
+            "heading": "About ELMO - Enhanced Linked Metadata Organizer",
+            "metadataEditorLink": "About the metadata editor"
         },
         "save": {
             "title": "Save Metadata",
