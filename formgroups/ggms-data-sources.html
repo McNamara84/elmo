@@ -5,10 +5,10 @@
   </div>
   <div class="card-body">
     <!-- Main container for data sources -->
-    <div id="group-datasources">
-      <div class="row" data-source-row>
+    <div id="group-datasources" class="d-grid gap-2">
+      <div class="row g-1 mx-0 border rounded p-1 bg-body" data-source-row>
         <!-- Data Source Type (Dropdown) -->
-        <div class="col-12 col-sm-12 col-md-3 col-lg-3 p-1 visibility-datasources-basic">
+        <div class="col-6 col-md-3 p-1 visibility-datasources-basic">
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help"
@@ -17,7 +17,7 @@
                 <option value="S" selected>Satellite</option>
                 <option value="G">Ground data</option>
                 <option value="A">Altimetry</option>
-                <option value="M">Model</option>
+                <option value="M">Reference Model</option>
                 <option value="T">Elevation/Terrain</option>
               </select>
               <label for="input-datasource-type" data-translate="dataSources.type">Type<span
@@ -30,8 +30,18 @@
             </div>
           </div>
         </div>
+        <!-- Description (free text) -->
+        <div class="col-6 col-md-3 p-1 visibility-datasources-basic">
+          <div class="input-group">
+            <div class="form-floating">
+              <textarea class="form-control"
+                id="input-datasource-description" name="datasource_description[]" rows="1"></textarea>
+              <label for="input-datasource-description" data-translate="dataSources.description">Description</label>
+            </div>
+          </div>
+        </div>
         <!-- Details (Dropdown) -->
-        <div class="col-12 col-sm-12 col-md-6 col-lg-3 p-1 visibility-datasources-details">
+        <div class="col-11 col-md-5 p-1 visibility-datasources-details">
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
@@ -49,7 +59,7 @@
           </div>
         </div>
         <!-- Isostasy-specific Section -->
-        <div class="col-12 col-sm-12 col-md-12 col-lg-12 p-1 visibility-datasources-compensation">
+        <div class="col-11 col-lg-3 p-1 visibility-datasources-compensation">
           <div class="input-group">
             <div class="form-floating">
               <input type="number" class="form-control" id="input-datasource-compensationdepth" name="compensation_depth[]" />
@@ -58,8 +68,20 @@
           </div>
         </div>
         <!-- Model-specific Section -->
+        <!-- Model Name (Text Input)-->
+        <div class="col-12 col-md-4 p-1 visibility-datasources-identifier">
+          <div class="input-group has-validation">
+            <div class="form-floating">
+              <input type="text" class="form-control" id="input-datasource-modelname" name="dName[]" />
+              <label for="input-datasource-modelname" data-translate="dataSources.modelName">Model name</label>
+              <div class="invalid-feedback" data-translate="dataSources.modelNameInvalid">
+                Provide the name of the model here
+              </div>
+            </div>
+          </div>
+        </div>
         <!-- Identifier (Text Input)-->
-        <div class="col-12 col-sm-6 col-md-5 col-lg-5 p-1 visibility-datasources-identifier">
+        <div class="col-12 col-sm-6 col-md-4 p-1 visibility-datasources-identifier">
           <div class="input-group has-validation">
             <div class="form-floating">
               <input type="text" class="form-control input-with-help input-right-no-round-corners"
@@ -75,7 +97,7 @@
           </div>
         </div>
         <!-- Identifier Type (Dropdown)-->
-        <div class="col-12 col-sm-6 col-md-3 col-lg-3 p-1 visibility-datasources-identifier">
+        <div class="col-11 col-sm-5 col-md-3 p-1 visibility-datasources-identifier">
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-with-help input-right-no-round-corners"
@@ -91,55 +113,36 @@
             </div>
           </div>
         </div>
-        <!-- Model Name (Text Input)-->
-        <div class="col-12 col-sm-12 col-md-6 col-lg-6 p-1 visibility-datasources-identifier">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control" id="input-datasource-modelname" name="dName[]" />
-              <label for="input-datasource-modelname" data-translate="dataSources.modelName">Model name</label>
-              <div class="invalid-feedback" data-translate="dataSources.modelNameInvalid">
-                Provide the name of the model here
-              </div>
-            </div>
-          </div>
-        </div>
-        <!-- Description (free text) -->
-        <div class="col-10 col-sm-4 col-md-5 col-lg-5 p-1 visibility-datasources-basic">
-          <div class="input-group">
-            <div class="form-floating">
-              <textarea class="form-control"
-                id="input-datasource-description" name="datasource_description[]" rows="1"></textarea>
-              <label for="input-datasource-description" data-translate="dataSources.description">Description</label>
-            </div>
-          </div>
-        </div>
         <!-- Satellite-specific Section -->
-        <div class="col-12 col-sm-6 col-md-3 col-lg-3 p-1 visibility-datasources-satellite">
+        <div class="col-11 col-md-5 p-1 visibility-datasources-satellite">
           <div class="input-group has-validation">
-            <div class="form-floating">
-              <div class="input-group has-validation">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-datasource-platforms" name="satellite_platform[]" aria-label="GCMD Platforms keywords"/>
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-gcmd-platforms-keyword" aria-hidden="true"></i></span>
-              </div>
-            </div>
-            <div class="col-auto p-2">
-              <button type="button" class="btn btn-primary" data-bs-toggle="modal" aria-label="Open-search-modal"
-                data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms" aria-hidden="true">
-                <i class="bi bi-diagram-3" aria-hidden="true"></i>
-              </button>
-            </div>
+            <input type="text" class="form-control input-with-help input-right-no-round-corners"
+              id="input-datasource-platforms" name="satellite_platform[]" aria-label="GCMD Platforms keywords"/>
+            <span class="input-group-text"><i class="bi bi-question-circle-fill"
+                data-help-section-id="help-gcmd-platforms-keyword" aria-hidden="true"></i></span>
           </div>
+          <button type="button" class="btn btn-primary w-100 mt-1 d-flex justify-content-center align-items-center"
+            data-bs-toggle="modal" data-bs-target="#modal-platforms-datasource" id="button-datasource-platforms"
+            aria-label="Open Thesaurus">
+            <span data-translate="keywords.thesaurus.button">Open Thesaurus</span>
+          </button>
         </div>
-        <!-- Add Button -->
-        <div class="col-2 col-md-1 col-lg-1 p-1 d-flex justify-content-end align-items-center visibility-datasources-basic">
-          <button type="button" class="btn btn-primary addDataSource add-button" id="button-datasource-add"
-            data-translate="general.add" aria-hidden="true">
-            +
+        <!-- Remove Button (always the last column of the entry) -->
+        <div class="col-1 p-0 d-flex justify-content-center align-items-center">
+          <button type="button" class="btn btn-danger btn-sm px-2 removeButton"
+            data-translate-title="dataSources.removeEntry" title="Remove data source" aria-label="Remove data source">
+            <i class="bi bi-dash-lg" aria-hidden="true"></i>
           </button>
         </div>
       </div>
+    </div>
+    <div class="d-flex flex-wrap align-items-center gap-2 mt-2" data-datasource-add-actions>
+      <button type="button" class="btn btn-primary addDataSource d-inline-flex align-items-center gap-1 text-nowrap px-3"
+        id="button-datasource-add" data-translate-title="dataSources.addEntry" title="Add data source"
+        aria-label="Add data source">
+        <i class="bi bi-plus-lg" aria-hidden="true"></i>
+        <span data-translate="dataSources.addEntry">Add data source</span>
+      </button>
     </div>
   </div>
 </div>

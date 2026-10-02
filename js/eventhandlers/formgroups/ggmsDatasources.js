@@ -2,7 +2,6 @@
  * @description Handles dynamic addition, removal, and visibility of data source rows in the form.
  * @module datasources
  */
-import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';
 import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';
 
 $(document).ready(function () {
@@ -11,7 +10,7 @@ $(document).ready(function () {
     const datasourcePlatformsModal = $('#modal-platforms-datasource');
     const datasourcePlatformsSearch = $('#input-platforms-thesaurussearch-ds');
     const datasourcePlatformsTree = $('#jstree-platforms-datasource');
-    const datasourcePlatformPlaceholder = 'Choose the satellite';
+    const datasourcePlatformPlaceholder = 'Type in the satellite name';
 
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
@@ -118,80 +117,77 @@ $(document).ready(function () {
         // FormData omits disabled controls. The backend consumes compensation_depth[]
         // as a sparse queue (Isostasy rows only), so hidden rows must not submit "".
         compensationField.find('input, select, textarea').prop('disabled', !showField);
-        adjustLayoutForIsostasy(row, showField);
     }
 
     /**
-     * Adjusts column widths when the "Compensation depth" field is shown for
-     * Elevation/Terrain data sources so that all fields, including the add button,
-     * fit on a single row.
-     *
-     * @param {jQuery} row - The row to modify.
-     * @param {boolean} isIsostasy - Whether the current selection requires the
-     *   compensation depth field.
+     * Column order inside an entry. Type and Description always share the first row;
+     * the remove button is always the last column.
      */
-    function adjustLayoutForIsostasy(row, isIsostasy) {
-        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
-        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
+    const COLUMN_ORDER = ['type', 'description', 'details', 'compensation', 'modelName', 'identifier', 'identifierType', 'satellite', 'remove'];
 
-        if (isIsostasy) {
-            descCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
-            compensationCol.removeClass('col-md-12 col-lg-12').addClass('col-md-3 col-lg-3');
-            detailsCol.removeClass('col-md-6 col-lg-3').addClass('col-md-5 col-lg-2');
-        } else {
-            descCol.removeClass('col-md-3 col-lg-3').addClass('col-md-5 col-lg-5');
-            compensationCol.removeClass('col-md-3 col-lg-3').addClass('col-md-12 col-lg-12');
-            detailsCol.removeClass('col-md-5 col-lg-2').addClass('col-md-6 col-lg-3');
-        }
+    /**
+     * Bootstrap column classes per column. On xs/sm the last visible field uses 11 columns
+     * so that the remove button (1 column) ends the last row; md/lg rows also sum to 12.
+     */
+    const BASE_COLUMN_LAYOUT = {
+        type: 'col-6 col-md-3',
+        description: 'col-6 col-md-3',
+        details: 'col-11 col-md-5',
+        compensation: 'col-11 col-lg-3',
+        modelName: 'col-12 col-md-4',
+        identifier: 'col-12 col-sm-6 col-md-4',
+        identifierType: 'col-11 col-sm-5 col-md-3',
+        satellite: 'col-11 col-md-5',
+        remove: 'col-1'
+    };
+
+    const COLUMN_LAYOUT_OVERRIDES = {
+        model: { details: 'col-12 col-md-5' },
+        isostasy: { description: 'col-6 col-md-3 col-lg-3', details: 'col-12 col-md-5 col-lg-2' }
+    };
+
+    const COLUMN_CLASS_PATTERN = /^col(-(xs|sm|md|lg|xl|xxl))?(-\d+)?$/;
+
+    function getLayoutColumns(row) {
+        const colOf = selector => row.find(selector).closest('div[class*="col-"]');
+        return {
+            type: colOf('select[name="datasource_type[]"]'),
+            description: colOf('textarea[name="datasource_description[]"]'),
+            details: colOf('select[name="datasource_details[]"]'),
+            compensation: colOf('input[name="compensation_depth[]"]'),
+            modelName: colOf('input[name="dName[]"]'),
+            identifier: colOf('input[name="dIdentifier[]"]'),
+            identifierType: colOf('select[name="dIdentifierType[]"]'),
+            satellite: row.children('.visibility-datasources-satellite'),
+            remove: colOf('.removeButton')
+        };
     }
 
     /**
-     * Adjusts column order and widths for the "Model" data source type.
-     * Row 1: Type, Identifier, Identifier Type
-     * Row 2: Model Name, Description, Button
+     * Puts the columns of an entry into the fixed order and applies the responsive widths
+     * for the selected type.
      *
-     * @param {jQuery} row - The row to modify.
-     * @param {boolean} isModel - Whether the selected type is "Model".
+     * @param {jQuery} row - The data source entry.
+     * @param {string} selectedType - Data source type code (S, G, A, T, M).
      */
-    function adjustLayoutForModel(row, isModel) {
-        const typeCol = row.find('select[name="datasource_type[]"]').closest('div[class*="col-"]');
-        const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-        const modelNameCol = row.find('input[name="dName[]"]').closest('div[class*="col-"]');
-        const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
-        const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
-        const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
-        const detailsCol = row.find('select[name="datasource_details[]"]').closest('div[class*="col-"]');
-        const compensationCol = row.find('input[name="compensation_depth[]"]').closest('div[class*="col-"]');
-        const satelliteCol = row.find('.visibility-datasources-satellite');
+    function applyRowLayout(row, selectedType) {
+        const isIsostasy = selectedType === 'T'
+            && row.find('select[name="datasource_details[]"]').val() === 'Isostasy';
+        const layout = {
+            ...BASE_COLUMN_LAYOUT,
+            ...(selectedType === 'M' ? COLUMN_LAYOUT_OVERRIDES.model : {}),
+            ...(isIsostasy ? COLUMN_LAYOUT_OVERRIDES.isostasy : {})
+        };
+        const columns = getLayoutColumns(row);
 
-        if (isModel) {
-            // Row 1: Type | Identifier | Identifier Type
-            detailsCol.insertAfter(typeCol);
-            modelNameCol.insertAfter(detailsCol);
+        COLUMN_ORDER.forEach(key => {
+            const col = columns[key];
+            if (!col || col.length === 0) return;
 
-            // Row 2: Model Name | Description | Button
-            identifierCol.insertAfter(modelNameCol);
-            identifierTypeCol.insertAfter(identifierCol);
-            descCol.insertAfter(identifierTypeCol);
-            addButtonCol.insertAfter(descCol);
-
-            // Adjust column widths for the new layout
-            identifierCol.removeClass('col-md-5 col-lg-5').addClass('col-md-3 col-lg-3');
-        }
-        // Restore original order: Type | Description | Details | Compensation | ModelName | Identifier | IdentifierType | Satellite | AddButton
-        else {
-            // Clear the row and stack fields in the desired order
-            row.append(typeCol);          // Type
-            row.append(detailsCol);       // Details
-            row.append(compensationCol);  // Compensation
-            row.append(modelNameCol);     // Model Name
-            row.append(identifierCol);    // Identifier
-            row.append(identifierTypeCol);// Identifier Type
-            row.append(satelliteCol);     // Satellite
-            row.append(descCol);          // Description (always after detalisation)
-            row.append(addButtonCol);     // Add Button
-        }
+            const staleClasses = (col.attr('class') || '').split(/\s+/).filter(cls => COLUMN_CLASS_PATTERN.test(cls));
+            col.removeClass(staleClasses.join(' ')).addClass(layout[key]);
+            row.append(col);
+        });
     }
 
     /**
@@ -240,7 +236,7 @@ $(document).ready(function () {
         }
         updateTypeOptionsTopographicModelsRow(row);
         handleIsostasyField(row);
-        adjustLayoutForModel(row, selectedType === 'M');
+        applyRowLayout(row, selectedType);
 
         if (selectedType === 'M') {
             const idTypeSelect = row.find('select[name="dIdentifierType[]"]');
@@ -252,7 +248,7 @@ $(document).ready(function () {
         // Update required attributes based on type rules
         updateRequiredAttributes(row);
         resetValidationDisplay(row);
-        restoreHelpButtons(row);
+        applyDatasourceHelpStatus();
     }
 
     /**
@@ -267,45 +263,31 @@ $(document).ready(function () {
     }
 
     /**
-     * Restores help buttons that were replaced with placeholders during cloning.
-     * Ensures the associated input field has the correct corner styling.
-     *
-     * @param {jQuery} row - The data source row to process.
+     * Shows each help icon only on the first entry where its field is visible, so a stack
+     * of entries does not repeat the same help icon. Hidden icons give their input round corners.
      */
-    function restoreHelpButtons(row) {
-        const helpStatus = localStorage.getItem('helpStatus') || 'help-on';
-        
-        row.find('.help-placeholder').each(function () {
-            const placeholder = $(this);
-            const helpSectionId = placeholder.data('help-section-id') || '';
+    function applyDatasourceHelpStatus() {
+        const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+        const shownSectionIds = new Set();
 
-            if (helpStatus === 'help-on') {
-                const inputGroup = placeholder.closest('.input-group');
-                placeholder.replaceWith(
-                    `<span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="${helpSectionId}"></i></span>`
-                );
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-no-round-corners')
-                    .removeClass('input-right-with-round-corners');
-            } else {
-                // If help is off, remove the placeholder and adjust input styling
-                const inputGroup = placeholder.closest('.input-group');
-                placeholder.remove();
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-with-round-corners')
-                    .removeClass('input-right-no-round-corners');
-            }
-        });
-        
-        // Also handle input-group-append containers that might be empty
-        row.find('.input-group-append').each(function() {
-            if ($(this).is(':empty') || $(this).children().length === 0) {
-                const inputGroup = $(this).closest('.input-group');
-                $(this).remove();
-                inputGroup.find('.input-with-help')
-                    .addClass('input-right-with-round-corners')
-                    .removeClass('input-right-no-round-corners');
-            }
+        datasourceGroup.children('.row').each(function () {
+            const row = $(this);
+            row.find('i[data-help-section-id]').each(function () {
+                const icon = $(this);
+                const sectionId = icon.attr('data-help-section-id');
+                const column = icon.parentsUntil(row).last();
+                const shouldBeVisible = helpOn
+                    && column.css('display') !== 'none'
+                    && !shownSectionIds.has(sectionId);
+                if (shouldBeVisible) shownSectionIds.add(sectionId);
+
+                const wrapper = icon.closest('span.input-group-text');
+                wrapper.css('display', shouldBeVisible ? '' : 'none')
+                    .attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+                wrapper.closest('.input-group').find('.input-with-help')
+                    .toggleClass('input-right-no-round-corners', shouldBeVisible)
+                    .toggleClass('input-right-with-round-corners', !shouldBeVisible);
+            });
         });
     }
 
@@ -365,8 +347,8 @@ $(document).ready(function () {
 
     // --- EVENT HANDLERS  ---
 
-    // Add new data source entry.
-    datasourceGroup.on("click", ".addDataSource", function () {
+    // Add new data source entry. The add button sits below the entry stack.
+    datasourceGroup.parent().find(".addDataSource").on("click", function () {
         const newRow = originalDataSourceRow.clone();
 
         newRow.find("input, textarea, select").val("").removeAttr("required");
@@ -386,12 +368,11 @@ $(document).ready(function () {
         newRow.find('select[name="datasource_type[]"]').val('S');
 
         resetDatasourcePlatformSearch();
-        replaceHelpButtonInClonedRows(newRow);
-        newRow.find(".addDataSource").replaceWith(createRemoveButton());
         updateRowState(newRow);
         initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
+        applyDatasourceHelpStatus();
     });
 
     // Remove a data source entry.
@@ -408,6 +389,7 @@ $(document).ready(function () {
         }
 
         row.remove();
+        applyDatasourceHelpStatus();
     });
 
     // Update row when type or details selection changes.
@@ -427,6 +409,8 @@ $(document).ready(function () {
     $(document).on('change', '#input-model-type', function() {
         updateTypeOptionsTopographicModels();
     });
+
+    document.addEventListener('helpStatus:changed', applyDatasourceHelpStatus);
 
     // --- INITIALIZATION ---
 

@@ -187,6 +187,20 @@ function selectOptionByText($select, text) {
 }
 
 /**
+ * XML stores the reference-model type as "Model". The form option is labelled
+ * "Reference Model", so an exact text match misses it and the row stays Satellite.
+ */
+const ICGEM_DATASOURCE_TYPE_LABELS = {
+  Model: 'Reference Model'
+};
+
+function selectDataSourceType($typeSelect, xmlType) {
+  const formLabel = ICGEM_DATASOURCE_TYPE_LABELS[xmlType];
+  if (formLabel && selectOptionByText($typeSelect, formLabel)) return true;
+  return selectOptionByText($typeSelect, xmlType);
+}
+
+/**
  * Reverse-maps ICGEM densityInformationType values to form select option values.
  * XML stores "Constant", "Layer-specific", "Density model"; form uses lowercase/hyphenated.
  * @param {string} xmlValue
@@ -463,7 +477,7 @@ async function populateIcgemDataSources(data) {
 
     const $row = $('[data-source-row]').last();
     const $typeSelect = $row.find('select[name="datasource_type[]"]');
-    selectOptionByText($typeSelect, ds.inputDataSourceType);
+    selectDataSourceType($typeSelect, ds.inputDataSourceType);
     $typeSelect.trigger('change');
 
     if (ds.description) $row.find('textarea[name="datasource_description[]"]').val(ds.description);
