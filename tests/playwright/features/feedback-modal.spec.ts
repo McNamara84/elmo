@@ -86,6 +86,65 @@ async function mockFeedbackEndpoint(
 }
 
 test.describe('Feedback modal interactions', () => {
+  test('does not send feedback when required questions are empty', async ({ page }) => {
+    const { feedbackModal } = await navigateToFeedbackModal(page);
+    const feedbackForm = feedbackModal.locator('#form-feedback');
+    const sendButton = feedbackModal.locator('#button-feedback-send');
+    let feedbackPosted = false;
+
+    await page.route(FEEDBACK_ENDPOINT, async (route) => {
+      feedbackPosted = true;
+      await route.abort();
+    });
+
+    const outsideMainForm = await feedbackForm.evaluate((form) => form.closest('#form-mde') === null);
+    expect(outsideMainForm).toBe(true);
+
+    const feedbackRequest = page
+      .waitForRequest((request) => request.url().includes('send_feedback_mail.php'), { timeout: 1500 })
+      .catch(() => null);
+
+    await sendButton.click();
+
+    await expect(feedbackForm).toBeVisible();
+    await expect(sendButton).toBeEnabled();
+    expect(await feedbackRequest).toBeNull();
+    expect(feedbackPosted).toBe(false);
+
+    const validity = await feedbackForm.evaluate((form) => {
+      const element = form as HTMLFormElement;
+      const requiredIds = [
+        'input-feedback-question1',
+        'input-feedback-question4',
+        'input-feedback-question6',
+      ];
+      return {
+        valid: element.checkValidity(),
+        focusedId: document.activeElement?.id ?? null,
+        required: requiredIds.map((id) => {
+          const field = element.querySelector<HTMLTextAreaElement>(`#${id}`);
+          const prompt = field?.nextElementSibling;
+          return {
+            id,
+            invalid: field?.classList.contains('is-invalid') ?? false,
+            prompt: prompt?.textContent?.trim() ?? '',
+          };
+        }),
+        optionalInvalid: ['input-feedback-question2', 'input-feedback-question3', 'input-feedback-question5', 'input-feedback-question7']
+          .filter((id) => element.querySelector(`#${id}`)?.classList.contains('is-invalid')),
+      };
+    });
+    expect(validity.valid).toBe(false);
+    expect(validity.focusedId).toBe('input-feedback-question1');
+    expect(validity.optionalInvalid).toEqual([]);
+    for (const field of validity.required) {
+      expect(field.invalid).toBe(true);
+      expect(field.prompt.length).toBeGreaterThan(0);
+    }
+
+    await page.unroute(FEEDBACK_ENDPOINT);
+  });
+
   test('shows success feedback flow when the backend responds with 200', async ({ page }) => {
     const { feedbackButton, feedbackModal } = await navigateToFeedbackModal(page);
     const feedbackForm = feedbackModal.locator('#form-feedback');

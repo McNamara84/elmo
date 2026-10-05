@@ -370,6 +370,7 @@
             "question6": "Do you miss certain functions in the new metadata editor?",
             "question7": "Is there a specific improvement you would like to see?",
             "sendButton": "Send Feedback",
+            "answerRequired": "Please answer this question.",
             "thankYouMessage": "Thanks for your feedback!"
         },
         "upload": {

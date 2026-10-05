@@ -371,6 +371,7 @@
             "question6": "Vermissen Sie bestimmte Funktionen im neuen Metadateneditor?",
             "question7": "Gibt es eine spezifische Verbesserung, die Sie sich wünschen?",
             "sendButton": "Feedback senden",
+            "answerRequired": "Bitte beantworten Sie diese Frage.",
             "thankYouMessage": "Vielen Dank für Ihr Feedback!"
         },
         "upload": {
