@@ -484,6 +484,18 @@ http://www.altova.com/mapforce
 								</CI_ResponsibleParty>
 							</pointOfContact>
 						</xsl:for-each>
+						<xsl:for-each select="*[local-name()='ContactInstitutions' and namespace-uri()='']/*[local-name()='ContactInstitution' and namespace-uri()='']">
+							<pointOfContact>
+								<CI_ResponsibleParty>
+									<organisationName><gco:CharacterString><xsl:value-of select="*[local-name()='name']"/></gco:CharacterString></organisationName>
+									<contactInfo><CI_Contact>
+										<address><CI_Address><electronicMailAddress><gco:CharacterString><xsl:value-of select="*[local-name()='email']"/></gco:CharacterString></electronicMailAddress></CI_Address></address>
+										<xsl:if test="normalize-space(*[local-name()='website'])!=''"><onlineResource><CI_OnlineResource><linkage><URL><xsl:value-of select="*[local-name()='website']"/></URL></linkage></CI_OnlineResource></onlineResource></xsl:if>
+									</CI_Contact></contactInfo>
+									<role><CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact">pointOfContact</CI_RoleCode></role>
+								</CI_ResponsibleParty>
+							</pointOfContact>
+						</xsl:for-each>
 						<descriptiveKeywords>
 							<xsl:for-each select="(./*[local-name()='ThesaurusKeywords' and namespace-uri()='']/*[local-name()='Keyword' and namespace-uri()=''])[contains(*[local-name()='scheme' and namespace-uri()=''], 'https://epos-msl.uu.nl/voc/paleomagnetism/1.3/')]">
 								<xsl:variable name="var17_filter" select="."/>

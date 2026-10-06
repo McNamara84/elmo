@@ -8,7 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 
-require_once __DIR__ . '/../includes/ggms_registration_mail.php';
+require_once __DIR__ . '/../includes/GGMsRegistrationEmail.php';
 
 /**
  * Prints the ELMO / ELMO GEM submit-mail decisions and composed bodies.
@@ -113,8 +113,9 @@ final class GGMsEmailWorkflowScenarioTest extends TestCase
                     'dataUrl' => self::DATA_URL,
                     'contactEmails' => [self::CONTACT_EMAIL],
                     'submittedAt' => '30.07.2026 12:00:00',
-                    'dataServicesEmailSent' => $dataServicesEmailSent,
+                    'elmogemSendsDataServicesMail' => $dataServicesEmailSent,
                     'icgemAddress' => self::ICGEM_SUBMIT_ADDRESS,
+                    'icgemDatabaseUrl' => FALLBACK_ICGEM_UPLOAD_URL,
                     'senderAddress' => 'elmo@example.com',
                 ],
                 [['filename' => 'metadata' . self::RESOURCE_ID . '.xml', 'content' => '<grav:envelope/>']]
@@ -132,9 +133,22 @@ final class GGMsEmailWorkflowScenarioTest extends TestCase
             $this->logLine('EMAIL 2 — ICGEM: SKIPPED (generic ELMO)');
         }
 
+        $sendResearcherMail = shouldSendResearcherConfirmationEmails([
+            'showGGMsProperties' => $showGGMsProperties,
+            'sendResearcherConfirmationEmail' => true,
+        ]);
+        $this->assertTrue($sendResearcherMail);
+        $this->assertSame(
+            !$showGGMsProperties,
+            shouldSendResearcherConfirmationEmails([
+                'showGGMsProperties' => $showGGMsProperties,
+                'sendResearcherConfirmationEmail' => false,
+            ])
+        );
+
         $confirmation = $this->buildResearcherConfirmationMail();
         $this->logMail(
-            'EMAIL 3 — Researcher confirmation (always attempted when contacts exist)',
+            'EMAIL 3 — Researcher confirmation (skipped for ELMO-GEM only when SEND_RESEARCHER_CONFIRMATION_EMAIL is false)',
             self::CONTACT_EMAIL . ' (' . self::CONTACT_NAME . ')',
             $confirmation['subject'],
             $confirmation['text'],

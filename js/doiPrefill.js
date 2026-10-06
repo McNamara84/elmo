@@ -29,6 +29,14 @@ function getAuthorStackController() {
     : null;
 }
 
+function getRelatedWorkStackController() {
+  return typeof window !== 'undefined'
+    && window.relatedWorkStack
+    && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+    ? window.relatedWorkStack
+    : null;
+}
+
 function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
@@ -420,6 +428,39 @@ function prefillCreators(creators) {
 function prefillContributors(contributors) {
   if (!Array.isArray(contributors) || contributors.length === 0) return;
 
+  if (window.contributorStack?.setContributors) {
+    const entries = [];
+    const byKey = new Map();
+    const authors = getCurrentAuthorsPayload(getAuthorStackController());
+    contributors.forEach(c => {
+      const role = normalizeRole(c.contributorType || 'Other');
+      const givenname = c.givenName || '';
+      const familyname = c.familyName || '';
+      const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
+      if (role === 'Contact Person' && person && authors.some(author =>
+        author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname))) return;
+      const orcid = (c.nameIdentifiers || []).find(item => item.nameIdentifierScheme === 'ORCID')?.nameIdentifier?.replace(/^https?:\/\/orcid\.org\//, '') || '';
+      const institutionname = c.name || '';
+      const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${institutionname.trim().toLowerCase()}`;
+      const affiliations = (c.affiliation || []).map(item => ({
+        label: typeof item === 'string' ? item : (item.name || ''),
+        rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
+      })).filter(item => item.label);
+      let entry = byKey.get(key);
+      if (!entry) {
+        entry = person
+          ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
+          : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
+        byKey.set(key, entry);
+        entries.push(entry);
+      }
+      if (!entry.roles.includes(role)) entry.roles.push(role);
+      affiliations.forEach(item => { if (!entry.affiliations.some(existing => existing.label === item.label)) entry.affiliations.push(item); });
+    });
+    window.contributorStack.setContributors(entries);
+    return;
+  }
+
   const personMap = new Map();
   const orgMap = new Map();
 
@@ -622,15 +663,20 @@ function prefillGeoLocations(geoLocations) {
       }
     }
 
-    // Point (set latMin=latMax, lonMin=lonMax)
+    // Point: Latitude Min + Longitude Min only. Max stays empty.
     const point = geo.geoLocationPoint;
     if (point && !box) {
       const lat = point.pointLatitude ?? '';
       const lon = point.pointLongitude ?? '';
       $lastRow.find('input[name="tscLatitudeMin[]"]').val(lat);
-      $lastRow.find('input[name="tscLatitudeMax[]"]').val(lat);
+      $lastRow.find('input[name="tscLatitudeMax[]"]').val('');
       $lastRow.find('input[name="tscLongitudeMin[]"]').val(lon);
-      $lastRow.find('input[name="tscLongitudeMax[]"]').val(lon);
+      $lastRow.find('input[name="tscLongitudeMax[]"]').val('');
+
+      const rowId = $lastRow.attr('tsc-row-id');
+      if (typeof window.updateMapOverlay === 'function' || typeof updateMapOverlay === 'function') {
+        window.updateMapOverlay(rowId, '', '', lat, lon);
+      }
     }
 
     // Clone row for next entry
@@ -711,23 +757,31 @@ function prefillRelatedWorks(relatedIdentifiers) {
     return true;
   });
 
-  entries.forEach((entry, i) => {
-    const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
+  const relatedWorkStack = getRelatedWorkStackController();
+  if (relatedWorkStack) {
+    relatedWorkStack.setRelatedWorks(entries.map(entry => ({
+      identifier: entry.relatedIdentifier || '',
+      identifierType: entry.relatedIdentifierType || '',
+      relation: entry.relationType || '',
+      relationId: ''
+    })));
+  } else {
+    entries.forEach((entry, i) => {
+      const $lastRow = $('input[name="rIdentifier[]"]').last().closest('.row');
 
-    $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
-    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
+      $lastRow.find('input[name="rIdentifier[]"]').val(entry.relatedIdentifier || '');
+      $lastRow.find('select[name="rIdentifierType[]"]').val(entry.relatedIdentifierType || '');
 
-    // Match relation by visible text; DataCite uses CamelCase (e.g. "IsDocumentedBy")
-    // while ELMO uses spaced form (e.g. "Is Documented By").
-    const normalizedRelation = normalizeRelationType(entry.relationType);
-    $lastRow.find('select[name="relation[]"]:first option').filter(function () {
-      return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
-    }).prop('selected', true);
+      const normalizedRelation = normalizeRelationType(entry.relationType);
+      $lastRow.find('select[name="relation[]"]:first option').filter(function () {
+        return $(this).text() === normalizedRelation || $(this).text() === entry.relationType;
+      }).prop('selected', true);
 
-    if (i < entries.length - 1) {
-      $('#button-relatedwork-add').click();
-    }
-  });
+      if (i < entries.length - 1) {
+        $('#button-relatedwork-add').click();
+      }
+    });
+  }
 
   // Handle Used Instruments
   if (showUsedInstruments) {
@@ -897,14 +951,15 @@ async function prefillContactPersons(creators, lookupService) {
  * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
  */
 async function applyDoiPrefill(attributes, lookupService) {
-  // Clear form first
-  if (typeof clearInputFields === 'function') {
-    clearInputFields();
-  }
+  const clearInputFields = await window.loadClearInputFields();
+  clearInputFields();
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
     await window.descriptionTypesReady;
+  }
+  if (window.elmo && window.elmo.dropdownsReady) {
+    await window.elmo.dropdownsReady;
   }
 
   // Synchronous prefills

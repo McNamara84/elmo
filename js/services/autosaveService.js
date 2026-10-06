@@ -125,6 +125,8 @@ class AutosaveService {
     this.registerRestoreModal();
     this.form.addEventListener('input', this.handleInput, true);
     this.form.addEventListener('change', this.handleInput, true);
+    document.addEventListener('relatedWorksPayload:updated', this.handleInput, { passive: true });
+    document.addEventListener('contributorsPayload:updated', this.handleInput, { passive: true });
 
     this.updateStatus('idle');
     this.refreshTranslations();
@@ -362,17 +364,35 @@ class AutosaveService {
     }
   }
 
-  applyPendingRestore() {
-    if (!this.pendingRestoreRecord || !this.pendingRestoreRecord.payload) {
+  async applyPendingRestore() {
+    const pendingRestoreRecord = this.pendingRestoreRecord;
+    if (!pendingRestoreRecord || !pendingRestoreRecord.payload) {
       return;
     }
 
-    this.applyDraftValues(this.pendingRestoreRecord.payload.values || {});
-    this.lastSavedPayloadHash = JSON.stringify(this.pendingRestoreRecord.payload.values || {});
-    this.lastSavedAt = this.pendingRestoreRecord.updatedAt
-      ? new Date(this.pendingRestoreRecord.updatedAt)
+    const dropdownsReady = typeof window !== 'undefined'
+      && window.elmo
+      && window.elmo.dropdownsReady;
+    if (dropdownsReady && typeof dropdownsReady.then === 'function') {
+      try {
+        await dropdownsReady;
+      } catch (error) {
+        // Restore still proceeds so cached drafts remain recoverable if a
+        // vocabulary request failed. Temporary select options are reconciled
+        // when dropdown data becomes available later.
+      }
+    }
+
+    if (this.pendingRestoreRecord !== pendingRestoreRecord) {
+      return;
+    }
+
+    this.applyDraftValues(pendingRestoreRecord.payload.values || {});
+    this.lastSavedPayloadHash = JSON.stringify(pendingRestoreRecord.payload.values || {});
+    this.lastSavedAt = pendingRestoreRecord.updatedAt
+      ? new Date(pendingRestoreRecord.updatedAt)
       : new Date();
-    this.draftId = this.pendingRestoreRecord.id || this.draftId;
+    this.draftId = pendingRestoreRecord.id || this.draftId;
     this.storeDraftId(this.draftId);
     this.pendingRestoreRecord = null;
 
@@ -396,9 +416,18 @@ class AutosaveService {
       return;
     }
 
-    const skippedAuthorNames = this.restoreAuthorsPayload(values) ? this.getAuthorPayloadFieldNames() : new Set();
+    const skippedPayloadNames = new Set();
+    if (this.restoreAuthorsPayload(values)) {
+      this.getAuthorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    }
+    if (this.restoreContributorsPayload(values)) {
+      this.getContributorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    }
+    if (this.restoreRelatedWorksPayload(values)) {
+      this.getRelatedWorksPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    }
 
-    this.prepareArrayFields(values, skippedAuthorNames);
+    this.prepareArrayFields(values, skippedPayloadNames);
 
     const elements = Array.from(this.form.elements);
     const handledNames = new Set(Object.keys(values));
@@ -409,7 +438,7 @@ class AutosaveService {
         return;
       }
 
-      if (skippedAuthorNames.has(element.name)) {
+      if (skippedPayloadNames.has(element.name)) {
         return;
       }
 
@@ -445,7 +474,7 @@ class AutosaveService {
       if (!element.name || element.disabled) {
         return;
       }
-      if (skippedAuthorNames.has(element.name)) {
+      if (skippedPayloadNames.has(element.name)) {
         return;
       }
       const type = (element.type || element.tagName).toLowerCase();
@@ -491,18 +520,74 @@ class AutosaveService {
     ]);
   }
 
+  restoreContributorsPayload(values) {
+    if (!values || !Object.prototype.hasOwnProperty.call(values, 'contributorsPayload') ||
+        typeof window === 'undefined' || typeof window.contributorStack?.setContributors !== 'function') {
+      return false;
+    }
+    let entries = values.contributorsPayload;
+    if (typeof entries === 'string') {
+      try { entries = JSON.parse(entries); } catch (_error) { entries = []; }
+    }
+    window.contributorStack.setContributors(Array.isArray(entries) ? entries : []);
+    return true;
+  }
+
+  getContributorPayloadFieldNames() {
+    return new Set([
+      'contributorsPayload', 'cbPersonLastname[]', 'cbPersonFirstname[]', 'cbORCID[]',
+      'cbPersonRoles[]', 'cbAffiliation[]', 'cbpRorIds[]', 'cbOrganisationName[]',
+      'cbOrganisationRoles[]', 'OrganisationAffiliation[]', 'hiddenOrganisationRorId[]',
+      'cbContactEmail[]', 'cbContactWebsite[]', 'cbPersonAffiliations[]',
+      'cbPersonRorIds[]', 'cbOrganisationAffiliations[]', 'cbOrganisationRorIds[]'
+    ]);
+  }
+
+  restoreRelatedWorksPayload(values) {
+    if (!values || !Object.prototype.hasOwnProperty.call(values, 'relatedWorksPayload')) {
+      return false;
+    }
+
+    const relatedWorkStack = typeof window !== 'undefined'
+      && window.relatedWorkStack
+      && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+      ? window.relatedWorkStack
+      : null;
+
+    if (!relatedWorkStack) {
+      return false;
+    }
+
+    relatedWorkStack.setRelatedWorks(values.relatedWorksPayload);
+    return true;
+  }
+
+  getRelatedWorksPayloadFieldNames() {
+    return new Set([
+      'relatedWorksPayload',
+      'relation[]',
+      'rIdentifier[]',
+      'rIdentifierType[]'
+    ]);
+  }
+
   serializeValues() {
     if (!this.form) {
       return {};
     }
 
     const values = {};
+    const contributorInput = this.form.querySelector('input[name="contributorsPayload"]');
+    const contributorPayload = contributorInput && window.contributorStack?.collectPayload?.();
+    if (Array.isArray(contributorPayload)) contributorInput.value = JSON.stringify(contributorPayload);
+    const contributorNames = Array.isArray(contributorPayload) ? this.getContributorPayloadFieldNames() : null;
     const elements = Array.from(this.form.elements);
 
     elements.forEach((element) => {
       if (!element.name || element.disabled) {
         return;
       }
+      if (contributorNames?.has(element.name) && element.name !== 'contributorsPayload') return;
 
       const type = (element.type || element.tagName).toLowerCase();
       if (['submit', 'button', 'reset', 'image'].includes(type)) {

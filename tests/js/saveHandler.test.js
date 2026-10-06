@@ -116,6 +116,7 @@ describe('saveHandler.js', () => {
     jest.useRealTimers();
     delete global.validateAuthorAffiliationEditors;
     delete window.authorStack;
+    delete window.relatedWorkStack;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -224,6 +225,34 @@ describe('saveHandler.js', () => {
     delete global.fetch;
   });
 
+  test('saveAndDownload posts Tagify platforms from chip state when the original input is empty', async () => {
+    const platformsInput = document.createElement('input');
+    platformsInput.name = 'platforms';
+    document.getElementById('form-mde').appendChild(platformsInput);
+    const graceFo = {
+      value: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO',
+      id: 'https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632',
+    };
+    platformsInput._tagify = {
+      value: [graceFo],
+      update: jest.fn(),
+    };
+
+    global.fetch = createSaveHandlerFetchMock({
+      blob: new Blob(['<xml/>'], { type: 'application/xml' })
+    });
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(saveCall[1].body.get('platforms')).toContain('GRACE-FO');
+
+    delete global.fetch;
+  });
+
   test('provides ES module exports', async () => {
     const mod = await import('../../js/saveHandler.js');
     expect(mod.default).toBeDefined();
@@ -319,6 +348,59 @@ describe('saveHandler.js', () => {
     expect(saveCall[1].body.get('authorsPayload')).toBe(currentAuthors);
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
     delete window.authorStack;
+    delete global.fetch;
+  });
+
+  test('saveAndDownload refreshes and sends the Related Works payload', async () => {
+    const freshPayload = [
+      {
+        relation: 'IsReferencedBy',
+        relationId: '7',
+        identifier: '10.1234/current',
+        identifierType: 'DOI',
+        order: 0
+      }
+    ];
+    document.getElementById('form-mde').insertAdjacentHTML(
+      'beforeend',
+      '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+    );
+    window.relatedWorkStack = {
+      updatePayload: jest.fn().mockReturnValue(freshPayload)
+    };
+    global.fetch = createSaveHandlerFetchMock();
+    window.URL.createObjectURL = jest.fn(() => 'blob:related-work');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    const saveCall = global.fetch.mock.calls.find((call) => call[0] === 'save/save_data.php');
+    expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+    expect(saveCall[1].body.get('relatedWorksPayload')).toBe(JSON.stringify(freshPayload));
+
+    delete global.fetch;
+  });
+
+  test('saveAndDownload aborts visibly when the Related Works payload cannot be synchronized', async () => {
+    document.getElementById('form-mde').insertAdjacentHTML(
+      'beforeend',
+      '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+    );
+    window.relatedWorkStack = {
+      updatePayload: jest.fn().mockReturnValue(null)
+    };
+    global.fetch = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset');
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+
+    consoleSpy.mockRestore();
     delete global.fetch;
   });
 

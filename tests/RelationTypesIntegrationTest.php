@@ -174,6 +174,62 @@ final class RelationTypesIntegrationTest extends DatabaseTestCase
         $this->assertEquals(1, $dbResult->num_rows);
     }
 
+    public function testRelationSyncKeepsCanonicalSeedNameForErnieDisplayLabel(): void
+    {
+        $seed = $this->connection
+            ->query("SELECT relation_id FROM Relation WHERE name = 'IsReferencedBy'")
+            ->fetch_assoc();
+        $this->assertNotNull($seed, 'Fresh installation must seed IsReferencedBy.');
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+        $method = (new \ReflectionClass($controller))->getMethod('syncRelationTypesFromErnie');
+        $method->invoke($controller, [[
+            'id' => 700,
+            'name' => 'Is Referenced By',
+            'description' => 'ERNIE display label must not replace the canonical token',
+        ]]);
+
+        $result = $this->connection->query(
+            'SELECT relation_id, ernie_id, name, description FROM Relation WHERE ernie_id = 700'
+        );
+        $row = $result->fetch_assoc();
+
+        $this->assertNotNull($row);
+        $this->assertSame((int) $seed['relation_id'], (int) $row['relation_id']);
+        $this->assertSame('IsReferencedBy', $row['name']);
+        $this->assertSame(
+            'ERNIE display label must not replace the canonical token',
+            $row['description']
+        );
+    }
+
+    public function testRelationSyncRejectsUnknownErnieRelationType(): void
+    {
+        $before = (int) $this->connection
+            ->query('SELECT COUNT(*) AS relation_count FROM Relation')
+            ->fetch_assoc()['relation_count'];
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+        $method = (new \ReflectionClass($controller))->getMethod('syncRelationTypesFromErnie');
+        $method->invoke($controller, [[
+            'id' => 701,
+            'name' => 'Made Available By',
+            'description' => 'Not defined by DataCite',
+        ]]);
+
+        $after = (int) $this->connection
+            ->query('SELECT COUNT(*) AS relation_count FROM Relation')
+            ->fetch_assoc()['relation_count'];
+
+        $this->assertSame($before, $after);
+        $this->assertSame(
+            0,
+            $this->connection->query('SELECT * FROM Relation WHERE ernie_id = 701')->num_rows
+        );
+    }
+
     /**
      * Test mapErnieToLocalIds returns correct structure for relation types
      */

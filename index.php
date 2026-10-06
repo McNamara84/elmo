@@ -37,6 +37,8 @@ $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, tr
 $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, true);
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
+/** @var bool $showContactInstitution */
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION'), FILTER_VALIDATE_BOOLEAN);
 /** @var bool $showThesauri */
 $showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */
@@ -90,11 +92,8 @@ if ($showGGMsProperties) {
     // their established form order below. JavaScript manages its visibility.
     include $baseDir . 'formgroups/coverage.html';
 }
-if ($showContributorPersons) {
-    include $baseDir . 'formgroups/contributorPersons.html';
-}
-if ($showContributorInstitutions) {
-    include $baseDir . 'formgroups/contributorInstitutions.html';
+if ($showContributorPersons || $showContributorInstitutions) {
+    include $baseDir . 'formgroups/contributors.html';
 }
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
@@ -108,7 +107,7 @@ if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showThesauri) {
-    include $baseDir . 'formgroups/thesaurusKeywords.html';
+    include $baseDir . 'formgroups/thesaurus-keywords.html';
 }
 if ($showFreeKeywords) {
     include $baseDir . 'formgroups/freeKeywords.html';

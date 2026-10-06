@@ -75,7 +75,7 @@ test.describe('Contextual help toggle', () => {
 
       const helpModalBody = helpModal.locator('.modal-body');
       await expect(helpModalBody).toContainText('Resource Information');
-      await expect(helpModalBody).toContainText('Please specify general metadata for the data set here.');
+      await expect(helpModalBody).toContainText('Please specify general metadata for the dataset here.');
 
       await helpModal.locator('button[aria-label="Close"]').click();
       await expect(helpModal).toBeHidden();

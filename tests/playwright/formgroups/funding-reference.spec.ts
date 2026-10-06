@@ -71,7 +71,7 @@ async function buildHarnessPage(): Promise<string> {
     <script src="js/checkMandatoryFields.js"></script>
     <script src="js/dropdownUtils.js"></script>
     <script src="js/dropdownAjax.js"></script>
-    <script src="js/select.js"></script>
+    <script type="module" src="js/select.js"></script>
     <script type="module" src="js/eventhandlers/functions.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/fundingreference.js"></script>
   </body>

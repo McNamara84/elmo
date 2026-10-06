@@ -401,6 +401,7 @@ function createDatabaseStructure($connection): array
     `Resource_has_Related_Work_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Related_Work_related_work_id` INT NOT NULL,
+    `sort_order` INT NOT NULL DEFAULT 0,
     PRIMARY KEY (`Resource_has_Related_Work_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
@@ -498,6 +499,11 @@ function createDatabaseStructure($connection): array
     `Resource_has_Contributor_Person_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Contributor_Person_contributor_person_id` INT NOT NULL,
+    `sort_order` INT NULL,
+    `roles_json` LONGTEXT NULL,
+    `affiliations_json` LONGTEXT NULL,
+    `contact_email` VARCHAR(255) NULL,
+    `contact_website` VARCHAR(2048) NULL,
     PRIMARY KEY (`Resource_has_Contributor_Person_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
@@ -528,6 +534,11 @@ function createDatabaseStructure($connection): array
     `Resource_has_Contributor_Institution_id` INT NOT NULL AUTO_INCREMENT,
     `Resource_resource_id` INT NOT NULL,
     `Contributor_Institution_contributor_institution_id` INT NOT NULL,
+    `sort_order` INT NULL,
+    `roles_json` LONGTEXT NULL,
+    `affiliations_json` LONGTEXT NULL,
+    `contact_email` VARCHAR(255) NULL,
+    `contact_website` VARCHAR(2048) NULL,
     PRIMARY KEY (`Resource_has_Contributor_Institution_id`),
     FOREIGN KEY (`Resource_resource_id`)
     REFERENCES `Resource` (`resource_id`),
@@ -876,7 +887,8 @@ function insertLookupData($connection)
             ["name" => "Supervisor", "description" => "Supervisor: Designated administrator over one or more groups/teams working to produce a resource or over one or more steps of a development process.", "forInstitutions" => "0"],
             ["name" => "Translator", "description" => "A person, organization, or automated system responsible for converting the content of a resource from one language into another, preserving its meaning and intended message.", "forInstitutions" => "2"],
             ["name" => "Work Package Leader", "description" => "Workpackage Leader: A Work Package is a recognized data product, not all of which is included in publication. The package, instead, may include notes, discarded documents, etc. The Work Package Leader is responsible for ensuring the comprehensive contents, versioning, and availability of the Work Package during the development of the resource.", "forInstitutions" => "2"],
-            ["name" => "Other", "description" => "Other: Any person or institution making a significant contribution to the development and/or maintenance of the resource, but whose contribution does not", "forInstitutions" => "2"]
+            ["name" => "Other", "description" => "Other: Any person or institution making a significant contribution to the development and/or maintenance of the resource, but whose contribution does not", "forInstitutions" => "2"],
+            ["name" => "Contact Person", "description" => "Person or institution responsible for contact about the resource.", "forInstitutions" => "2"]
         ],
         "Title_Type" => [
             ["name" => "Alternative Title"],
@@ -1287,14 +1299,14 @@ function insertTestResourceData($connection)
             ["Resource_resource_id" => 5, "Spatial_Temporal_Coverage_spatial_temporal_coverage_id" => 4]
         ],
         "Resource_has_Related_Work" => [
-            ["Resource_resource_id" => 3, "Related_Work_related_work_id" => 1],
-            ["Resource_resource_id" => 2, "Related_Work_related_work_id" => 3],
-            ["Resource_resource_id" => 1, "Related_Work_related_work_id" => 2],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 4],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 5],
-            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 6],
-            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 7],
-            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 8]
+            ["Resource_resource_id" => 3, "Related_Work_related_work_id" => 1, "sort_order" => 0],
+            ["Resource_resource_id" => 2, "Related_Work_related_work_id" => 3, "sort_order" => 0],
+            ["Resource_resource_id" => 1, "Related_Work_related_work_id" => 2, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 4, "sort_order" => 0],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 5, "sort_order" => 1],
+            ["Resource_resource_id" => 4, "Related_Work_related_work_id" => 6, "sort_order" => 2],
+            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 7, "sort_order" => 0],
+            ["Resource_resource_id" => 5, "Related_Work_related_work_id" => 8, "sort_order" => 1]
         ],
         "Resource_has_Funding_Reference" => [
             ["Resource_resource_id" => 3, "Funding_Reference_funding_reference_id" => 1],

@@ -4,6 +4,7 @@
  * initialising automatically in the browser environment.
  */
 
+import {visibilityOFF, visibilityON} from './eventhandlers/functions.js';
 function setHelpStatus(status) {
   localStorage.setItem('helpStatus', status);
   updateHelpStatus();
@@ -11,12 +12,24 @@ function setHelpStatus(status) {
 
 function updateHelpStatus() {
   var status = localStorage.getItem('helpStatus') || 'help-on';
-  $('#buttonHelpOn').toggleClass('active', status === 'help-on');
-  $('#bd-help-icon').toggleClass('bi bi-question-square-fill', status === 'help-on');
+  var helpOn = status === 'help-on';
+  $('#buttonHelpOn').toggleClass('active', helpOn);
+  $('#bd-help-icon').toggleClass('bi bi-question-square-fill', helpOn);
   $('#buttonHelpOff').toggleClass('active', status === 'help-off');
   $('#bd-help-icon').toggleClass('bi bi-question-square', status === 'help-off');
-  $('.input-with-help').toggleClass('input-right-no-round-corners', status === 'help-on');
+  $('.input-with-help').toggleClass('input-right-no-round-corners', helpOn);
   $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
+  if (helpOn) {
+    visibilityON('.help-icon-author-affiliation');
+  } else {
+    visibilityOFF('.help-icon-author-affiliation');
+  }
+
+  // Re-apply after author type switches recreate help icons from templates.
+  $('span.input-group-text:has(i[data-help-section-id])').css('display', helpOn ? '' : 'none');
+
+  // Trigger author stack sync to update affiliation help button visibility
+  document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status } }));
 }
 
 function getSelectedResourceType() {
@@ -130,11 +143,14 @@ function initHelp() {
   });
 }
 
+export { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType };
+
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { initHelp, loadHelpContent, setHelpStatus, updateHelpStatus, displayHelpSection, getSelectedResourceType, classifyLicenseScope, filterHelpRightsByResourceType };
 }
 
 if (typeof window !== 'undefined') {
   window.loadHelpContent = loadHelpContent;
+  window.updateHelpStatus = updateHelpStatus;
   $(document).ready(initHelp);
 }

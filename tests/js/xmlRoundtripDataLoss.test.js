@@ -43,6 +43,8 @@ function loadMappingModule(contextOverrides = {}) {
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;
+  context.window.loadClearInputFields = context.window.loadClearInputFields
+    || (() => Promise.resolve(() => {}));
   vm.runInContext(code, context);
   return context;
 }
@@ -608,7 +610,7 @@ describe("Contact person added as new author when name doesn't match (regression
 // ─── Relation type matching works with CamelCase ────────────────────────────
 
 describe("Relation type matching with CamelCase option text", () => {
-  test("relation type CamelCase from XML matches CamelCase dropdown option", () => {
+  test("canonical relation type from the transformed map is passed to the card stack", async () => {
     document.body.innerHTML = `
       <div id="group-relatedwork">
         <div class="row">
@@ -634,17 +636,31 @@ describe("Relation type matching with CamelCase option text", () => {
       </ns:relatedIdentifiers>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    ctx.processRelatedWorks(xmlDoc, NS_RESOLVER);
+    const transformedDocument = new DOMParser().parseFromString(`
+      <RelatedWorks>
+        <RelatedWork>
+          <Identifier>10.5555/related</Identifier>
+          <Relation><name>IsSupplementTo</name></Relation>
+          <IdentifierType><name>DOI</name></IdentifierType>
+        </RelatedWork>
+      </RelatedWorks>
+    `, "application/xml");
+    window.relatedWorkStack = { setRelatedWorks: jest.fn().mockResolvedValue([]) };
 
-    const idField = document.querySelector('input[name="rIdentifier[]"]');
-    expect(idField.value).toBe("10.5555/related");
+    await ctx.processRelatedWorks(xmlDoc, NS_RESOLVER, {
+      transformRelatedWorksDocument: jest.fn().mockResolvedValue(transformedDocument)
+    });
 
-    // CamelCase option text "IsSupplementTo" matches CamelCase XML relationType
-    const relationSelect = document.querySelector('select[name="relation[]"]');
-    const selectedOption = relationSelect.querySelector("option[selected]") ||
-      Array.from(relationSelect.options).find((o) => o.selected && o.value !== "");
-    expect(selectedOption).toBeTruthy();
-    expect(selectedOption.value).toBe("3");
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+      {
+        identifier: "10.5555/related",
+        relation: "IsSupplementTo",
+        relationId: "",
+        identifierType: "DOI"
+      }
+    ], expect.objectContaining({ bulk: true }));
+
+    delete window.relatedWorkStack;
   });
 });
 
@@ -1090,11 +1106,11 @@ describe("geoLocation import via XPath (regression for querySelector bug)", () =
     const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
 
     expect(data.place).toBe("Potsdam");
-    // Point coordinates should be set for both min and max
+    // A point fills only the min fields so it is not imported as a bounding box.
     expect(data.latitudeMin).toBe("52.3906");
-    expect(data.latitudeMax).toBe("52.3906");
+    expect(data.latitudeMax).toBe("");
     expect(data.longitudeMin).toBe("13.0645");
-    expect(data.longitudeMax).toBe("13.0645");
+    expect(data.longitudeMax).toBe("");
   });
 
   test("getGeoLocationData returns empty strings when no spatial data present", () => {

@@ -150,12 +150,28 @@
         "name": "Name der Autor Institution"
     },
     "contactPersons": {
-        "contactPersonError": "Bitte wählen Sie mindestens eine Kontaktperson aus.",
+        "contactPersonError": "Bitte fügen Sie bei Autoren oder Beitragenden einen Kontakt mit Namen und gültiger E-Mail-Adresse hinzu.",
         "email": "E-Mail-Adresse",
         "emailInvalid": "Bitte geben Sie eine gültige E-Mail-Adresse im Format xxx.xxx@xxx.xxx ein.",
         "toggleCheckbox": "Kontakt-<br>person?",
         "website": "Webseite",
         "websiteInvalid": "Bitte geben Sie eine gültige URL ein."
+    },
+    "contributors": {
+        "title": "Beitragende",
+        "person": "Person",
+        "institution": "Institution",
+        "addPerson": "Person hinzufügen",
+        "addInstitution": "Institution hinzufügen",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "typeSwitcherLabel": "Beitragendentyp",
+        "dragHandle": "Reihenfolge per Drag & Drop ändern",
+        "collapseEntry": "Beitrag einklappen",
+        "editEntry": "Beitrag bearbeiten",
+        "moveEntryUp": "Beitrag nach oben verschieben",
+        "moveEntryDown": "Beitrag nach unten verschieben",
+        "removeEntry": "Beitrag entfernen"
     },
     "contributorPersons": {
         "title": "Beitragende: Personen"
@@ -253,7 +269,16 @@
         "relation": "Beziehung",
         "identifierType": "Identifikatortyp",
         "identifier": "Identifikator",
-        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein."
+        "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "addEntry": "Verwandtes Werk hinzufügen",
+        "dragHandle": "Per Drag & Drop oder mit den Pfeiltasten neu anordnen",
+        "removeEntry": "Eintrag für verwandtes Werk entfernen",
+        "editEntry": "Eintrag für verwandtes Werk bearbeiten",
+        "collapseEntry": "Eintrag für verwandtes Werk einklappen",
+        "entrySingular": "Eintrag",
+        "entryPlural": "Einträge",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Unvollständiges verwandtes Werk"
     },
     "funding": {
         "title": "Förderungen",
@@ -273,6 +298,7 @@
         "identifierType": "Identifikatortyp",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
         "modelName": "Modellname",
+        "modelNameInvalid": "Geben Sie hier den Namen des Modells ein",
         "compensationDepth": "Ausgleichstiefe (in Metern)"
     },
     "technical": {
@@ -356,7 +382,8 @@
             "errorToast": "Fehler beim Laden der Datei",
             "invalidFileType": "Bitte laden Sie eine XML- oder JSON-LD-Datei hoch.",
             "errorProcessing": "Fehler beim Verarbeiten der Metadatendatei",
-            "errorReading": "Fehler beim Lesen der Datei"
+            "errorReading": "Fehler beim Lesen der Datei",
+            "relatedWorksProgress": "Verwandte Werke {processed}/{total}"
         },
         "gfcUpload": {
             "uploadButton": "Metadatenfelder aus Modelldatei ausfüllen",
@@ -375,8 +402,13 @@
         },
         "changelog": {
             "title": "Änderungsprotokoll",
-            "aboutText": "Die Grundlagen für den ELMO Metadateneditor wurden 2024 von Studierenden der Fachhochschule Potsdam in Zusammenarbeit mit dem GFZ Helmholtz-Zentrum für Geoforschung Potsdam entwickelt. Anschließend hat das Entwicklungsteam des GFZ weiter optimiert. Der ELMO Metadateneditor wird unter der GNU General Public License, Version 2, veröffentlicht.",
-            "aboutHeading": "Über ELMO - Enhanced Linked Metadata Organizer"
+            "loading": "Änderungsprotokoll wird geladen…",
+            "error": "Das Änderungsprotokoll konnte nicht geladen werden. Bitte erneut versuchen."
+        },
+        "about": {
+            "text": "Die Grundlagen für den ELMO Metadateneditor wurden 2024 von Studierenden der Fachhochschule Potsdam in Zusammenarbeit mit dem GFZ Helmholtz-Zentrum für Geoforschung Potsdam entwickelt. Anschließend hat das Entwicklungsteam des GFZ weiter optimiert. Der ELMO Metadateneditor wird unter der GNU General Public License, Version 2, veröffentlicht.",
+            "heading": "Über ELMO - Enhanced Linked Metadata Organizer",
+            "metadataEditorLink": "Über den Metadateneditor"
         },
         "save": {
             "title": "Metadaten speichern",

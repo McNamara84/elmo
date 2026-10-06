@@ -71,6 +71,7 @@ describe('processContactPersons (ISO)', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');
@@ -399,6 +400,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');
@@ -604,6 +606,7 @@ describe('processContactPersons ISO→DataCite fallback integration', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');

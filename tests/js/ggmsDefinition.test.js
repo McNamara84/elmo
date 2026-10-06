@@ -58,7 +58,7 @@ describe('ggmsDefinition.js', () => {
             <!-- File Format (Dropdown) -->
             <div class="col-12 col-md-6 col-lg-3 p-1">
                 <div class="form-floating">
-                    <select class="form-select" id="input-file-format" name="file_format" required>
+                    <select class="form-select" id="input-file-format" name="icgem_file_format" required>
                     </select>
                     <label for="input-file-format">File format</label>
                     <div class="invalid-feedback">Please provide file format</div>
@@ -145,7 +145,7 @@ describe('ggmsDefinition.js', () => {
                 }
             });
 
-            const selectElement = $('select[name="file_format"]');
+            const selectElement = $('select[name="icgem_file_format"]');
 
             // Call the function AFTER the mock is in place
             window.setupICGEMFileFormats();
@@ -169,7 +169,7 @@ describe('ggmsDefinition.js', () => {
 
             setupICGEMFileFormats();
 
-            const selectElement = $('select[name="file_format"]');
+            const selectElement = $('select[name="icgem_file_format"]');
             expect(selectElement.children().length).toBe(2); // "Choose..." + "No formats" message
             expect(selectElement.find('option').eq(1).text()).toBe('No ICGEM file formats available');
             expect(selectElement.prop('disabled')).toBe(false);
@@ -186,7 +186,7 @@ describe('ggmsDefinition.js', () => {
 
             setupICGEMFileFormats();
 
-            const selectElement = $('select[name="file_format"]');
+            const selectElement = $('select[name="icgem_file_format"]');
             expect(selectElement.children().length).toBe(1);
             expect(selectElement.find('option').text()).toBe('Error loading ICGEM file formats');
             expect(selectElement.prop('disabled')).toBe(false);

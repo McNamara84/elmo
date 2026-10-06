@@ -25,6 +25,7 @@ describe('mappingXmlToInputFields module coverage', () => {
         global.jQuery = $;
         window.$ = $;
         window.jQuery = $;
+        window.loadClearInputFields = () => Promise.resolve(() => {});
 
         // Set up DOM with necessary form elements
         document.body.innerHTML = `
@@ -109,6 +110,7 @@ describe('mappingXmlToInputFields module coverage', () => {
         delete global.Tagify;
         delete global.translations;
         delete window.updateMapOverlay;
+        delete window.waitForThesaurusVocabulary;
     });
 
     describe('module exports', () => {
@@ -544,11 +546,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             const geoNode = xmlDoc.documentElement;
             
             const result = mappingModule.getGeoLocationData(geoNode, xmlDoc, nsResolver);
-            // For point, lat/lon are duplicated to min and max
+            // A point fills only the min fields. Max stays empty.
             expect(result.latitudeMin).toBe('52.5');
-            expect(result.latitudeMax).toBe('52.5');
+            expect(result.latitudeMax).toBe('');
             expect(result.longitudeMin).toBe('13.4');
-            expect(result.longitudeMax).toBe('13.4');
+            expect(result.longitudeMax).toBe('');
         });
 
         test('extracts bounding box coordinates', () => {
@@ -592,6 +594,26 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect($row.find('input[name="tscLatitudeMax[]"]').val()).toBe('53');
             expect($row.find('input[name="tscLongitudeMin[]"]').val()).toBe('13');
             expect($row.find('input[name="tscLongitudeMax[]"]').val()).toBe('14');
+        });
+
+        test('leaves max empty when filling a point', () => {
+            const $row = $('[tsc-row-id="0"]');
+            $row.find('input[name="tscLatitudeMax[]"]').val('99');
+            $row.find('input[name="tscLongitudeMax[]"]').val('99');
+
+            mappingModule.fillSpatialFields($row, {
+                place: 'Point',
+                latitudeMin: '12',
+                latitudeMax: '',
+                longitudeMin: '12',
+                longitudeMax: ''
+            });
+
+            expect($row.find('input[name="tscLatitudeMin[]"]').val()).toBe('12');
+            expect($row.find('input[name="tscLatitudeMax[]"]').val()).toBe('');
+            expect($row.find('input[name="tscLongitudeMin[]"]').val()).toBe('12');
+            expect($row.find('input[name="tscLongitudeMax[]"]').val()).toBe('');
+            expect(window.updateMapOverlay).toHaveBeenCalledWith('0', '', '', '12', '12');
         });
 
         test('calls updateMapOverlay when available', () => {
@@ -811,7 +833,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(freeTagify.removeAllTags).toHaveBeenCalled();
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Test Keyword' })
             ]);
@@ -839,7 +860,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(mslTagify.removeAllTags).toHaveBeenCalled();
             expect(mslTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'msl Keyword' })
             ]);
@@ -867,7 +887,6 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(scienceTagify.removeAllTags).toHaveBeenCalled();
             expect(scienceTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Earth Science' })
             ]);
@@ -895,23 +914,24 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(chronostratTagify.removeAllTags).toHaveBeenCalled();
             expect(chronostratTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'one > two > chronostratigraphy' })
             ]);
         });
 
-        test('ignores keywords when the target field is not available', () => {
+        test('skips thesaurus keywords when the target field is not available', async () => {
             document.body.innerHTML = `
             <input id="input-freekeyword">
         `;
 
             const freeTagify = {
                 removeAllTags: jest.fn(),
-                addTags: jest.fn()
+                addTags: jest.fn(),
+                update: jest.fn()
             };
 
             document.querySelector('#input-freekeyword')._tagify = freeTagify;
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
 
             const xmlDoc = new DOMParser().parseFromString(`
             <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
@@ -922,13 +942,117 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
-            expect(freeTagify.removeAllTags).toHaveBeenCalled();
-            expect(freeTagify.addTags).toHaveBeenCalledTimes(1);
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Custom Keyword' })
             ]);
+        });
+
+        test('waits for thesaurus vocabulary before adding GCMD tags', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            let resolveWait;
+            window.waitForThesaurusVocabulary = jest.fn(() => new Promise((resolve) => {
+                resolveWait = resolve;
+            }));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            const done = mappingModule.processKeywords(xmlDoc, resolver);
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
+
+            resolveWait('loaded');
+            await done;
+
+            expect(scienceTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Earth Science' })
+            ]);
+            expect(scienceTagify.update).toHaveBeenCalled();
+        });
+
+        test('rejects GCMD tag import when thesaurus vocabulary wait times out', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+            <input id="input-freekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            const freeTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('timeout'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                    <ns:subject>Custom Keyword</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
+                'Thesaurus vocabularies not ready for import: science_keywords'
+            );
+
+            expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('science_keywords');
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+            expect(freeTagify.addTags).not.toHaveBeenCalled();
+        });
+
+        test('rejects GCMD tag import when thesaurus vocabulary fetch errors', async () => {
+            document.body.innerHTML = `
+            <input id="input-sciencekeyword">
+        `;
+
+            const scienceTagify = {
+                removeAllTags: jest.fn(),
+                addTags: jest.fn(),
+                update: jest.fn()
+            };
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('error'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords">Earth Science</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await expect(mappingModule.processKeywords(xmlDoc, resolver)).rejects.toThrow(
+                'Thesaurus vocabularies not ready for import: science_keywords'
+            );
+
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
         });
     });
 });

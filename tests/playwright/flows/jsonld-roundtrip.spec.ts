@@ -14,9 +14,15 @@ const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
   /third-party cookie/i,
   /API key not found/i,
-  /thesauri availability/i,
   /503 \(Service Unavailable\)/,
 ];
+
+function isUnexpectedConsoleError(text: string): boolean {
+  if (/thesaur/i.test(text)) {
+    return true;
+  }
+  return !BENIGN_CONSOLE_PATTERNS.some(pattern => pattern.test(text));
+}
 
 async function closeNotificationModalIfPresent(page: import('@playwright/test').Page) {
   const notificationModal = page.locator('#modal-notification');
@@ -94,6 +100,9 @@ async function saveJsonLd(page: import('@playwright/test').Page, filename: strin
 test.describe('JSON-LD roundtrip flow', () => {
   test('can save JSON-LD, load it again, and save it once more', async ({ page }) => {
     await registerGoogleMapsNoopRoute(page);
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
     const consoleErrors: string[] = [];
     page.on('console', msg => {
       if (msg.type() !== 'error') {
@@ -101,7 +110,7 @@ test.describe('JSON-LD roundtrip flow', () => {
       }
 
       const text = msg.text();
-      if (!BENIGN_CONSOLE_PATTERNS.some(pattern => pattern.test(text))) {
+      if (isUnexpectedConsoleError(text)) {
         consoleErrors.push(text);
       }
     });

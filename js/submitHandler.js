@@ -1,5 +1,9 @@
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
+import { hasCompleteContact } from './contactRequirement.js';
+import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -185,17 +189,8 @@ if (groupStc) {
  * @param {Record<string, unknown>|null} author - Authors payload entry.
  * @returns {boolean} True for a selected person contact with family name and email.
  */
-function isCompletePayloadContact(author) {
-    if (!author || author.type !== 'person' || author.isContact !== true) {
-        return false;
-    }
-
-    return String(author.familyname || '').trim() !== '' &&
-        String(author.email || '').trim() !== '';
-}
-
 /**
- * Validates that the synchronized Authors payload contains a complete contact.
+ * Validates that the synchronized Authors and Contributors payloads contain a complete contact.
  *
  * Direct calls rebuild the payload through the shared Authors synchronization
  * service. The optional payload is used by the `authorsPayload:updated` event,
@@ -207,7 +202,20 @@ function isCompletePayloadContact(author) {
  *        Payload supplied by an Authors update event, or null to synchronize now.
  * @returns {boolean} True when the payload contains a complete person contact.
  */
+let validatingContactPerson = false;
 function validateContactPerson(synchronizedPayload = null) {
+    if (validatingContactPerson) {
+        return false;
+    }
+    validatingContactPerson = true;
+    try {
+        return validateContactPersonPayload(synchronizedPayload);
+    } finally {
+        validatingContactPerson = false;
+    }
+}
+
+function validateContactPersonPayload(synchronizedPayload = null) {
     var authorsPayload = Array.isArray(synchronizedPayload) ? synchronizedPayload : null;
 
     if (!Array.isArray(authorsPayload)) {
@@ -218,19 +226,27 @@ function validateContactPerson(synchronizedPayload = null) {
         }
     }
 
-    var isValid = Array.isArray(authorsPayload) &&
-        authorsPayload.some(function (author) {
-            return isCompletePayloadContact(author);
-        });
+    let contributorsPayload = [];
+    try {
+        const input = document.querySelector('input[name="contributorsPayload"]');
+        if (input) {
+            contributorsPayload = window.contributorStack?.collectPayload?.() ?? JSON.parse(input.value);
+            if (!Array.isArray(contributorsPayload)) throw new Error('Malformed Contributors payload');
+        }
+    } catch (error) {
+        console.error('Could not read Contributors payload for contact validation:', error);
+        contributorsPayload = null;
+    }
+    const isValid = Array.isArray(authorsPayload) && Array.isArray(contributorsPayload) &&
+        hasCompleteContact(authorsPayload, contributorsPayload,
+            window.ELMO_FEATURES?.showContactInstitution === true);
 
     $('#contact-person-error').remove();
-    // 
+    $('input[name="contacts[]"]').prop('required', false);
     if (!isValid) {
-        $('#group-author').append('<div id="contact-person-error" class="text-danger mt-2" data-translate="contactPersons.contactPersonError"></div>');
+        const target = $('#formgroup-contributors').length ? $('#formgroup-contributors') : $('#group-author');
+        target.append('<div id="contact-person-error" class="text-danger mt-2" role="alert" data-translate="contactPersons.contactPersonError"></div>');
         applyTranslations();
-        $('input[name="contacts[]"]').prop('required', true);
-    } else {
-        $('input[name="contacts[]"]').prop('required', false);
     }
     return isValid;
 }
@@ -282,7 +298,11 @@ class SubmitHandler {
     initializeEventListeners() {
         $('#input-submit-privacycheck').on('change', () => this.toggleSubmitButton());
         $('#button-submit-submit').on('click', () => this.handleModalSubmit());
-        this.$form.on('change', 'input[name="contacts[]"]', () => validateContactPerson());
+        this.$form.on('change', 'input[name="contacts[]"]', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
+            }
+        });
         this.$form.on('input change', 'input[name="familynames[]"], input[name="cpEmail[]"]', () => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson();
@@ -291,6 +311,11 @@ class SubmitHandler {
         document.addEventListener('authorsPayload:updated', (event) => {
             if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
                 validateContactPerson(event.detail?.payload);
+            }
+        });
+        document.addEventListener('contributorsPayload:updated', () => {
+            if ($('#contact-person-error').length || this.$form.hasClass('was-validated')) {
+                validateContactPerson();
             }
         });
 
@@ -411,12 +436,11 @@ class SubmitHandler {
     }
 
     /**
-     * Submits the validated form using the same freshly generated Authors
-     * payload used by contact validation and file saving.
+     * Submits the validated form using freshly generated Authors and enabled
+     * Related Works payloads from their live stacks.
      *
      * Payload synchronization failures abort submission, display the standard
-     * submit error, and prevent stale legacy author fields from reaching the
-     * backend.
+     * submit error, and prevent stale legacy fields from reaching the backend.
      *
      * @returns {Promise<void>} Promise resolved after handing data to the AJAX submission.
      */
@@ -426,10 +450,19 @@ class SubmitHandler {
         }
 
         let authorsPayload;
+        let contributorsPayload = null;
+        let relatedWorksPayload = null;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+            contributorsPayload = synchronizeContributorsPayload(this.$form[0]);
+            const hasRelatedWorks = this.$form[0].querySelector(
+                'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
+            );
+            if (hasRelatedWorks) {
+                relatedWorksPayload = synchronizeRelatedWorksPayload(this.$form[0]);
+            }
         } catch (error) {
-            console.error('Could not synchronize Authors payload for submission:', error);
+            console.error('Could not synchronize structured form payloads for submission:', error);
             this.showNotification(
                 'danger',
                 translations.alerts.errorHeading,
@@ -438,6 +471,7 @@ class SubmitHandler {
             return;
         }
 
+        synchronizeTagifyInputs(this.$form[0]);
         const submitData = new FormData(this.$form[0]);
         const authorsPayloadInput = this.$form[0].querySelector('input[name="authorsPayload"]');
         if (authorsPayloadInput) {
@@ -445,6 +479,12 @@ class SubmitHandler {
         }
         if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
             window.ggmsExperimentalPayload.appendPayloadsToFormData(submitData);
+        submitData.set('authorsPayload', JSON.stringify(authorsPayload));
+        if (Array.isArray(contributorsPayload)) {
+            submitData.set('contributorsPayload', JSON.stringify(contributorsPayload));
+        }
+        if (Array.isArray(relatedWorksPayload)) {
+            submitData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
         }
 
         // Ensure the form-level CSRF token is present.
@@ -509,6 +549,7 @@ class SubmitHandler {
                         translations.alerts.successHeading,
                         translations.alerts.successMessage);
 
+                    /* COMMENTED OUT in hotfix/hide-data-upload
                     // Append primary data upload hint if URL is configured
                     const uploadUrl = window.ELMO_FEATURES?.dataUploadUrl;
                     if (uploadUrl) {
@@ -517,7 +558,7 @@ class SubmitHandler {
                         $('#modal-notification-body').append(hint);
                         $('#modal-notification .modal-dialog').addClass('modal-lg');
                     }
-
+                    */
                     if (this.autosaveService) {
                         this.autosaveService.clearDraft();
                     }

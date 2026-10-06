@@ -9,6 +9,23 @@ $(document).ready(function () {
   var AdvancedMarkerElement = null;
   /** @type {?Function} PinElement constructor, set after library load */
   var PinElement = null;
+  /** @type {Promise<void>} Resolves when the map and drawing tools are ready */
+  var mapReady;
+
+  /**
+   * Runs fn once the map is ready. Skips silently if map initialization failed
+   * (that error is logged once where mapReady is created); logs errors thrown by fn.
+   *
+   * @param {Function} fn - Callback that requires an initialized map.
+   * @returns {Promise<*>} Resolves with fn's result, or undefined if skipped or failed.
+   */
+  function whenMapReady(fn) {
+    return mapReady
+      .then(fn, function () { /* map failed to load – already logged; skip */ })
+      .catch(function (error) {
+        console.error("Map update failed:", error);
+      });
+  }
 
   /**
    * Standard rectangle style options used for all drawn rectangles.
@@ -37,26 +54,28 @@ $(document).ready(function () {
 
     // Adjust the map when the modal is shown
     $("#modal-stc-map").one("shown.bs.modal", function () {
-      google.maps.event.trigger(map, "resize");
+      whenMapReady(function () {
+        google.maps.event.trigger(map, "resize");
 
-      var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
-      var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
-      var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
-      var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
+        var latMin = $currentRow.find("[id^=input-stc-latmin]").val();
+        var lngMin = $currentRow.find("[id^=input-stc-longmin]").val();
+        var latMax = $currentRow.find("[id^=input-stc-latmax]").val();
+        var lngMax = $currentRow.find("[id^=input-stc-longmax]").val();
 
-      if (latMin && lngMin) {
-        // Ensure overlay exists for this row (may not if coords were set programmatically)
-        var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
-        if (!hasOverlay) {
-          updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
+        if (latMin && lngMin) {
+          // Ensure overlay exists for this row (may not if coords were set programmatically)
+          var hasOverlay = drawnOverlays.some(function (item) { return item.rowId === rowId; });
+          if (!hasOverlay) {
+            updateMapOverlay(rowId, latMax, lngMax, latMin, lngMin);
+          } else {
+            fitMapBoundsForRow(rowId);
+          }
         } else {
-          fitMapBoundsForRow(rowId);
+          // No coordinates yet – reset to whole-planet view
+          map.setCenter({ lat: 20, lng: 0 });
+          map.setZoom(2);
         }
-      } else {
-        // No coordinates yet – reset to whole-planet view
-        map.setCenter({ lat: 20, lng: 0 });
-        map.setZoom(2);
-      }
+      });
     });
   });
 
@@ -370,7 +389,7 @@ $(document).ready(function () {
   async function initMap(mapId) {
     const mapElement = document.getElementById("panel-stc-map");
     if (!mapElement) {
-      return;
+      throw new Error("Map container #panel-stc-map not found");
     }
 
     // Import required libraries (no 'drawing' library needed)
@@ -528,7 +547,9 @@ $(document).ready(function () {
       var latMin = $row.find("[id^=input-stc-latmin]").val();
       var lngMin = $row.find("[id^=input-stc-longmin]").val();
 
-      updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
+      whenMapReady(function () {
+        updateMapOverlay(currentRowId, latMax, lngMax, latMin, lngMin);
+      });
     }
   );
 
@@ -641,6 +662,7 @@ $(document).ready(function () {
    * @param {string} rowId - The row whose overlays define the viewport.
    */
   function fitMapBoundsForRow(rowId) {
+    if (!map) return;
     var bounds = new google.maps.LatLngBounds();
     drawnOverlays.forEach(function (item) {
       if (item.rowId !== rowId) return;
@@ -672,6 +694,7 @@ $(document).ready(function () {
    * Adjusts the map's viewport to fit all drawn overlays with a 50% buffer.
    */
   function fitMapBounds() {
+    if (!map) return;
     var bounds = new google.maps.LatLngBounds();
     drawnOverlays.forEach(function (item) {
       if (item.overlay.getBounds) {
@@ -752,28 +775,21 @@ $(document).ready(function () {
   }
 
   // Fetch the Google Maps API key and Map ID from settings.php, then initialize
-  fetch("settings.php?setting=apiKey")
+  mapReady = fetch("settings.php?setting=apiKey")
     .then(function (response) {
-      if (!response.ok) {
-        throw new Error("Network response was not ok");
-      }
+      if (!response.ok) throw new Error("Network response was not ok");
       return response.json();
     })
     .then(function (data) {
-      if (data.apiKey) {
-        if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
-          loadGoogleMapsApi(data.apiKey);
-        }
-        window.google.maps.importLibrary("maps").then(function () {
-          initMap(data.mapId || "");
-        });
-      } else {
-        console.error("API key not found in the response");
+      if (!data.apiKey) throw new Error("API key not found in the response");
+      if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
+        loadGoogleMapsApi(data.apiKey);
       }
-    })
-    .catch(function (error) {
-      console.error("Error fetching the API key:", error);
+      return initMap(data.mapId || "");
     });
+  mapReady.catch(function (error) {
+    console.error("Map initialization failed:", error);
+  });
 
 
   // Make functions globally accessible
@@ -781,5 +797,10 @@ $(document).ready(function () {
   window.fitMapBounds = fitMapBounds;
   window.fitMapBoundsForRow = fitMapBoundsForRow;
   window.updateOverlayLabels = updateOverlayLabels;
-  window.updateMapOverlay = updateMapOverlay;
+  window.updateMapOverlay = function () {
+    var args = arguments;
+    return whenMapReady(function () {
+      return updateMapOverlay.apply(null, args);
+    });
+  };
 });

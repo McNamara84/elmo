@@ -1,7 +1,9 @@
+import { setCCBYasDefault, setBrowserTimezone } from './select.js';
+
 /**
  * Clears and resets input fields and Tagify instances.
  */
-function clearInputFields() {
+export default function clearInputFields() {
 
     // Reset input fields in Resource Information
     $('#input-resourceinformation-doi').val('');
@@ -20,6 +22,7 @@ function clearInputFields() {
     $(document).trigger('elmo:clearTitles');  
     // Reset Rights License select field
     $('#input-rights-license').val('');
+    setCCBYasDefault();
   
     if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
         window.authorStack.setAuthors([]);
@@ -67,13 +70,14 @@ function clearInputFields() {
     $('#group-originatinglaboratory .row[data-laboratory-row]:first select').prop('selectedIndex', 0);
     $('#group-originatinglaboratory .row[data-laboratory-row]:first input[type="hidden"]').val('');
   
-    // Clear Contributor Person 
-    $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-    $('#group-contributorperson .row[contributor-person-row]:first input').val('');
-  
-    // Clear Contributor Institution
-    $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-    $('#group-contributororganisation .row[contributors-row]:first input').val('');
+    if (window.contributorStack && typeof window.contributorStack.setContributors === 'function') {
+        window.contributorStack.setContributors([]);
+    } else {
+        $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
+        $('#group-contributorperson .row[contributor-person-row]:first input').val('');
+        $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
+        $('#group-contributororganisation .row[contributors-row]:first input').val('');
+    }
   
     // Clear descriptions – covers abstract and all ICGEM description textareas
     // (textarea.textarea-description is the shared class on all GGMs description fields)
@@ -118,10 +122,16 @@ function clearInputFields() {
     $('#group-stc .row[tsc-row]').not(':first').remove();
     // Clear the input fields of the first row
     $('#group-stc .row[tsc-row]:first').find('input, textarea, select').val('');
+    setBrowserTimezone();
   
     // Reset Related Works
-    $('#group-relatedwork .row[related-work-row]').not(':first').remove();  // Remove all rows except the first one
-    $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');  // Clear the first row
+    if (window.relatedWorkStack && typeof window.relatedWorkStack.setRelatedWorks === 'function') {
+        window.relatedWorkStack.setRelatedWorks([]);
+    } else {
+        // Legacy fallback for pages without the card stack controller.
+        $('#group-relatedwork .row[related-work-row]').not(':first').remove();
+        $('#group-relatedwork .row[related-work-row]:first').find('input, select').val('').trigger('change');
+    }
 
     // Reset Used Instruments (Tagify)
     var instrumentsInput = document.getElementById('input-usedinstruments');
@@ -138,7 +148,7 @@ function clearInputFields() {
     $('#group-fundingreference .row[funding-reference-row]').not(':first').remove();
     $('#group-fundingreference .row[funding-reference-row]:first input').val('');
 
-    // === GGMs Definition fields (GGMsDefinition.html) ===
+    // === GGMs Definition fields (ggms-definition.html) ===
     // .trigger('change') is the correct jQuery idiom after programmatic val() — it fires
     // the delegated handler in ggmsModelTypes.js, which hides the model-specific-card
     // and resets section visibility when the value is empty.
@@ -259,7 +269,7 @@ const GGMS_SELECTORS = {
     },
 };
 
-// Export for testing
+// Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { clearInputFields, GGMS_SELECTORS };
 }

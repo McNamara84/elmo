@@ -16,7 +16,7 @@ module.exports = {
     '!js/eventhandlers/formgroups/fundingreference.js',
     '!js/eventhandlers/formgroups/ggmsDatasources.js',
     '!js/eventhandlers/formgroups/relatedwork.js',
-    '!js/eventhandlers/formgroups/resourceinformation-title.js',
+    '!js/eventhandlers/formgroups/resourceInformationTitle.js',
     '!js/eventhandlers/formgroups/stc.js',
     // Exclude jQuery-only files wrapped in $(document).ready() without exports
     '!js/map.js',

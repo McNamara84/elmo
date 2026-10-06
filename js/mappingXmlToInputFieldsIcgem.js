@@ -381,17 +381,110 @@ function populateIcgemModelTypes(data) {
 }
 
 /**
+ * Groups consecutive satellite XML entries with the same description for the form.
+ *
+ * ICGEM stores one satellite keyword per inputDataSource, while the form allows
+ * several keywords in one row. The repeated description is the only grouping
+ * hint available after a roundtrip. Entries without a keyword remain separate so
+ * an incomplete saved row is not hidden by a neighbouring populated row.
+ *
+ * @param {Array<Object>} dataSources
+ * @returns {Array<Object>}
+ */
+function groupIcgemDataSourcesForForm(dataSources) {
+  const grouped = [];
+
+  for (const dataSource of dataSources) {
+    const isPopulatedSatellite = dataSource.inputDataSourceType === 'Satellite'
+      && Boolean(dataSource.satelliteValueName);
+
+    if (!isPopulatedSatellite) {
+      grouped.push({ ...dataSource });
+      continue;
+    }
+
+    const description = typeof dataSource.description === 'string'
+      ? dataSource.description.trim()
+      : '';
+    const tag = {
+      value: dataSource.satelliteValueName,
+      id: dataSource.satelliteValueUri || '',
+      scheme: dataSource.satelliteSchemeName || '',
+      schemeURI: dataSource.satelliteSchemeUri || ''
+    };
+    const previous = grouped[grouped.length - 1];
+    const previousDescription = previous && typeof previous.description === 'string'
+      ? previous.description.trim()
+      : '';
+    const canJoinPrevious = previous
+      && previous.inputDataSourceType === 'Satellite'
+      && Array.isArray(previous.satellitePlatforms)
+      && previousDescription === description;
+
+    if (canJoinPrevious) {
+      previous.satellitePlatforms.push(tag);
+      continue;
+    }
+
+    grouped.push({
+      ...dataSource,
+      satellitePlatforms: [tag]
+    });
+  }
+
+  return grouped;
+}
+
+/**
+ * Writes satellite platform tags into a datasource Tagify (or the raw input)
+ * and flushes the hidden value so save POSTs the JSON, not only the UI chips.
+ * @param {HTMLInputElement|undefined} platformInput
+ * @param {Array<Object>} tags
+ */
+function applySatellitePlatformTags(platformInput, tags) {
+  if (platformInput && platformInput._tagify) {
+    platformInput._tagify.addTags(tags);
+    if (typeof platformInput._tagify.update === 'function') {
+      platformInput._tagify.update();
+    } else if (typeof platformInput._tagify._updateHiddenField === 'function') {
+      platformInput._tagify._updateHiddenField();
+    }
+    return;
+  }
+  if (platformInput) {
+    $(platformInput).val(JSON.stringify(tags));
+  }
+}
+
+/**
  * Populates the GGMsDataSources form rows.
- * Each data source entry becomes one form row; the datasource type 'change' event
- * is triggered so row visibility updates correctly.
+ * Consecutive satellite entries with the same description share one form row.
+ * All other entries become separate rows. The datasource type 'change' event is
+ * triggered so row visibility updates correctly.
+ *
+ * Waits for GCMD platforms (shared tree) before addTags; aborts on timeout.
+ * Flushes the hidden input so ingestSatellitePlatformAsKeyword sees the JSON.
+ *
  * @param {Object} data - Parsed ICGEM data from parseIcgemXml()
  */
-function populateIcgemDataSources(data) {
+async function populateIcgemDataSources(data) {
   const { dataSources } = data;
   if (dataSources.length === 0) return;
 
-  for (let i = 0; i < dataSources.length; i++) {
-    const ds = dataSources[i];
+  const formDataSources = groupIcgemDataSourcesForForm(dataSources);
+
+  const needsSatelliteVocab = formDataSources.some(
+    (ds) => Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0
+  );
+  if (needsSatelliteVocab && typeof window.waitForThesaurusVocabulary === 'function') {
+    const result = await window.waitForThesaurusVocabulary('platforms');
+    if (result !== 'loaded') {
+      throw new Error('GCMD platforms vocabulary not ready for satellite import');
+    }
+  }
+
+  for (let i = 0; i < formDataSources.length; i++) {
+    const ds = formDataSources[i];
 
     if (i > 0) {
       $('.addDataSource').last().trigger('click');
@@ -405,19 +498,11 @@ function populateIcgemDataSources(data) {
     if (ds.description) $row.find('textarea[name="datasource_description[]"]').val(ds.description);
 
     if (ds.inputDataSourceType === 'Satellite') {
-      if (ds.satelliteValueName) {
-        const platformInput = $row.find('input[name="satellite_platform[]"]')[0];
-        const tag = {
-          value: ds.satelliteValueName,
-          id: ds.satelliteValueUri || '',
-          scheme: ds.satelliteSchemeName || '',
-          schemeURI: ds.satelliteSchemeUri || ''
-        };
-        if (platformInput && platformInput._tagify) {
-          platformInput._tagify.addTags([tag]);
-        } else if (platformInput) {
-          $(platformInput).val(JSON.stringify([tag]));
-        }
+      if (Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0) {
+        applySatellitePlatformTags(
+          $row.find('input[name="satellite_platform[]"]')[0],
+          ds.satellitePlatforms
+        );
       }
     } else if (ds.inputDataSourceType === 'Ground data') {
       if (ds.groundDetail) $row.find('select[name="datasource_details[]"]').val(ds.groundDetail);
@@ -430,9 +515,24 @@ function populateIcgemDataSources(data) {
       if (ds.compensationDepth) $row.find('input[name="compensation_depth[]"]').val(ds.compensationDepth);
     } else if (ds.inputDataSourceType === 'Model') {
       if (ds.modelDetail) $row.find('select[name="datasource_details[]"]').val(ds.modelDetail);
-      if (ds.identifier) $row.find('input[name="dIdentifier[]"]').val(ds.identifier).trigger('input');
+      // Do not .trigger('input') when XML already has identifierType: that
+      // debounce-fires updateIdentifierType() and can overwrite the select
+      // after options arrive.
+      if (ds.identifier) {
+        const $idInput = $row.find('input[name="dIdentifier[]"]');
+        if (ds.identifierType) {
+          $idInput.val(ds.identifier);
+        } else {
+          $idInput.val(ds.identifier).trigger('input');
+        }
+      }
       if (ds.identifierType) {
         const $idTypeSelect = $row.find('select[name="dIdentifierType[]"]');
+        // Type change already asked setupIdentifierTypesDropdown to fetch; await
+        // that (or start it) so DOI/etc. options exist before .val().
+        if (typeof window.setupIdentifierTypesDropdown === 'function') {
+          await window.setupIdentifierTypesDropdown($idTypeSelect);
+        }
         if (!selectOptionByText($idTypeSelect, ds.identifierType)) {
           $idTypeSelect.val(ds.identifierType);
         }
@@ -447,9 +547,10 @@ function populateIcgemDataSources(data) {
  * grav:contact element (inside globalGravityProduct).
  *
  * Contact info (email/website) is stored positionally in grav:contact/grav:address
- * and grav:contact/grav:onlineResource. The i-th address and i-th onlineResource
- * correspond to the i-th ContactPerson contributor listed in the DataCite resource
- * section. Names from that section are used to locate the correct author row.
+ * and grav:contact/grav:onlineResource. Who the contact person *is* comes from
+ * DataCite contributors with contributorType="ContactPerson"; names from that
+ * section locate the matching author row. If no such contributor is present,
+ * a warning is logged and no author is marked as contact.
  *
  * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
  * does not show the hidden fields. This function explicitly checks the checkbox and
@@ -607,6 +708,13 @@ function populateIcgemContactPersons(xmlDoc) {
     });
   });
 
+  // Email lives in grav:contact because DataCite has no email field.
+  // Who the contact *is* comes only from a DataCite ContactPerson contributor;
+  if (contactPersons.length === 0) {
+    console.warn("couldn't determine the contact person from metadata");
+    return;
+  }
+
   for (let i = 0; i < contactPersons.length; i++) {
     const detail = contactDetails[i] || { email: '', website: '' };
 
@@ -732,7 +840,7 @@ function populateIcgemDescriptions(data) {
  * (definition, properties, model types, data sources, descriptions).
  * @param {Document} xmlDoc
  */
-function loadIcgemXmlToForm(xmlDoc) {
+async function loadIcgemXmlToForm(xmlDoc) {
   const data = parseIcgemXml(xmlDoc);
   if (!data) {
     console.error('loadIcgemXmlToForm: failed to locate ICGEM root node in XML document');
@@ -741,8 +849,8 @@ function loadIcgemXmlToForm(xmlDoc) {
   populateIcgemDefinition(data);
   populateIcgemProperties(data);
   populateIcgemModelTypes(data);
-  populateIcgemDataSources(data);
   populateIcgemDescriptions(data);
+  await populateIcgemDataSources(data);
   populateIcgemContactPersons(xmlDoc);
 
   $(document).trigger('icgem:form-populated');
@@ -779,6 +887,7 @@ if (typeof module !== 'undefined' && module.exports) {
     selectOptionByText,
     selectOrCreateOption,
     reverseDensityType,
+    groupIcgemDataSourcesForForm,
     populateIcgemDefinition,
     populateIcgemProperties,
     populateIcgemModelTypes,

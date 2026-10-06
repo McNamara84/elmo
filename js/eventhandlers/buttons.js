@@ -6,11 +6,11 @@
  */
 
 // ─── Import form group modules ────────────────────────────────────────────────
+import '../contactRequirement.js';
 import './formgroups/feedback.js';
 import './formgroups/authorStack.js';
-import './formgroups/contributor-person.js';
-import './formgroups/contributor-organisation.js';
-import './formgroups/resourceinformation-title.js';
+import './formgroups/contributorStack.js';
+import './formgroups/resourceInformationTitle.js';
 import './formgroups/stc.js';
 import './formgroups/relatedwork.js';
 import './formgroups/fundingreference.js';
@@ -24,7 +24,7 @@ import './formgroups/ggmsExperimentalPayload.js';
 import './formgroups/ggmsProperties.js';
 import './keywordsAutoAddition.js';
 import './confirmationModal.js';
-
+import clearInputFields from '../clear.js';
 
 import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels } from './functions.js';
 
@@ -96,12 +96,19 @@ $(document).ready(function () {
    * Requires translations object and clearInputFields() function to be loaded.
    */
   $('#button-form-reset').on('click', function () {
+    // Keep this notification in the user-facing flow: XML and DOI imports also call
+    // clearInputFields(), but must not restore MSL defaults before loading their data.
+    const clearFormAfterConfirmation = function () {
+      clearInputFields();
+      document.dispatchEvent(new Event('elmo:formClearedByUser'));
+    };
+
     window.showConfirmationModal(
       'confirmations.clear.title',
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      clearInputFields
+      clearFormAfterConfirmation
     );
   });
 
@@ -110,19 +117,6 @@ $(document).ready(function () {
    */
   $('#button-form-load').on('click', function () {
     $('#modal-uploadxml').modal('show');
-  });
-
-  /**
-   * Show changelog modal and load its content.
-   */
-  $('#button-changelog-show').click(function (event) {
-    event.preventDefault(); // Prevents the default behavior of the link.
-
-    // Loads the content from 'doc/changelog.html' into the modal's content area.
-    $('#panel-changelog-content').load('doc/changelog.html', function () {
-      // Displays the modal after the content has been successfully loaded.
-      $('#modal-changelog').modal('show');
-    });
   });
 
   /**
@@ -142,11 +136,25 @@ $(document).ready(function () {
   if (form) {
     const $form = $(form);
 
+    // Only real form controls — Tagify copies js-required-on-submit onto <tags>, which must not get required.
+    const submitOnlyFieldSelector = 'input.js-required-on-submit, select.js-required-on-submit, textarea.js-required-on-submit';
+
     // Reset submit-only required fields
     function resetSubmitOnlyFields() {
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
         el.removeAttribute('required');
         el.classList.remove('is-invalid');
+      });
+    }
+
+    /** Applies required only to enabled js-required-on-submit fields (skips hidden/disabled rows). */
+    function applySubmitRequiredFields() {
+      form.querySelectorAll(submitOnlyFieldSelector).forEach(el => {
+        if (el.disabled) {
+          el.removeAttribute('required');
+          return;
+        }
+        el.setAttribute('required', 'required');
       });
     }
 
@@ -161,15 +169,13 @@ $(document).ready(function () {
 
       // Apply specific rules
       validateFundingReferenceRequirements();
-      validateRelatedWorkRequirements();
+      validateRelatedWorkRequirements({ revealIncomplete: true });
       validateSpatialTemporalCoverageRequirements();
       validateContributorOrganisationRequirements();
       validateContributorPersonRequirements();
   
 
-      form.querySelectorAll('.js-required-on-submit').forEach(el => {
-        el.setAttribute('required', 'required');
-      });
+      applySubmitRequiredFields();
 
       // Validation is handled by submitHandler.handleSubmit() in validation.js.
       // The form has novalidate, so no native browser validation occurs.

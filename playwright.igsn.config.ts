@@ -51,6 +51,7 @@ export default defineConfig({
       ],
       testIgnore: [
         '**/minimal-data-submission.spec.ts',
+        '**/elmogem-specific/**',
       ],
     },
   ],

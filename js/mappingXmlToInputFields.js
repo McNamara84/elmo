@@ -5,6 +5,139 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
   ? require('./resourceTypeUtils')
   : window.resourceTypeUtils;
 
+const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
+let relatedWorksXsltDocumentPromise = null;
+
+/**
+ * Creates an import error while retaining the original failure as its cause.
+ * @param {string} message - User-facing processing context.
+ * @param {unknown} [cause] - Original error.
+ * @returns {Error} Error enriched with the original cause when available.
+ */
+function createRelatedWorksImportError(message, cause) {
+  const error = new Error(message);
+  if (cause) {
+    error.cause = cause;
+  }
+  return error;
+}
+
+/** Clears the cached Related Works stylesheet, primarily for isolated tests. */
+function resetRelatedWorksXsltCache() {
+  relatedWorksXsltDocumentPromise = null;
+}
+
+/**
+ * Loads and caches the browser-side Related Works import stylesheet.
+ * @returns {Promise<Document>} Parsed XSLT document.
+ */
+async function loadRelatedWorksXsltDocument() {
+  if (relatedWorksXsltDocumentPromise) {
+    return relatedWorksXsltDocumentPromise;
+  }
+
+  relatedWorksXsltDocumentPromise = (async function () {
+    if (typeof fetch !== 'function') {
+      throw new Error('Fetch API is not available.');
+    }
+
+    const response = await fetch(RELATED_WORK_XSLT_URL, { credentials: 'same-origin' });
+    if (!response.ok) {
+      throw new Error(`Stylesheet request failed with status ${response.status}.`);
+    }
+
+    const source = await response.text();
+    const stylesheet = new DOMParser().parseFromString(source, 'application/xml');
+    if (stylesheet.getElementsByTagName('parsererror').length > 0) {
+      throw new Error('Stylesheet is not valid XML.');
+    }
+
+    return stylesheet;
+  })().catch(function (error) {
+    relatedWorksXsltDocumentPromise = null;
+    throw createRelatedWorksImportError('Could not load the Related Works import stylesheet.', error);
+  });
+
+  return relatedWorksXsltDocumentPromise;
+}
+
+/**
+ * Transforms DataCite Related Identifiers into ELMO's internal RelatedWorks map.
+ * @param {Document} xmlDoc - Uploaded metadata document.
+ * @param {Object} [options] - Transformation options.
+ * @param {boolean} [options.excludeIsCollectedBy=false] - Leave Used Instruments to their form group.
+ * @returns {Promise<Document>} Transformed RelatedWorks document.
+ */
+async function transformRelatedWorksDocument(xmlDoc, options = {}) {
+  const Processor = typeof XSLTProcessor !== 'undefined'
+    ? XSLTProcessor
+    : (typeof window !== 'undefined' ? window.XSLTProcessor : null);
+  if (typeof Processor !== 'function') {
+    throw createRelatedWorksImportError('This browser does not support the Related Works XSLT import.');
+  }
+
+  try {
+    const stylesheet = await loadRelatedWorksXsltDocument();
+    const processor = new Processor();
+    processor.importStylesheet(stylesheet);
+    processor.setParameter(
+      null,
+      'excludeIsCollectedBy',
+      options.excludeIsCollectedBy === true ? 'true' : 'false'
+    );
+    const transformedDocument = processor.transformToDocument(xmlDoc);
+    if (!transformedDocument
+      || transformedDocument.getElementsByTagName('parsererror').length > 0
+      || !transformedDocument.documentElement) {
+      throw new Error('The stylesheet returned an invalid XML document.');
+    }
+    return transformedDocument;
+  } catch (error) {
+    if (error && error.message === 'This browser does not support the Related Works XSLT import.') {
+      throw error;
+    }
+    throw createRelatedWorksImportError('Could not transform Related Works from the uploaded XML file.', error);
+  }
+}
+
+/**
+ * Finds a direct element child by local name without assuming a namespace.
+ * @param {Node|null} node - Parent node.
+ * @param {string} localName - Child local name.
+ * @returns {Element|null} Matching direct child.
+ */
+function findDirectChildByLocalName(node, localName) {
+  return Array.from(node ? node.childNodes : []).find(function (child) {
+    return child.nodeType === 1 && child.localName === localName;
+  }) || null;
+}
+
+/**
+ * Converts a transformed RelatedWorks document into card payload entries.
+ * @param {Document} transformedDocument - Result of the import XSLT.
+ * @returns {Array<{identifier: string, relation: string, relationId: string, identifierType: string}>}
+ */
+function parseRelatedWorksMap(transformedDocument) {
+  if (!transformedDocument || !transformedDocument.documentElement) {
+    throw createRelatedWorksImportError('The Related Works transformation returned no document.');
+  }
+
+  return Array.from(transformedDocument.getElementsByTagName('RelatedWork')).map(function (workNode) {
+    const identifierNode = findDirectChildByLocalName(workNode, 'Identifier');
+    const relationNode = findDirectChildByLocalName(workNode, 'Relation');
+    const relationNameNode = findDirectChildByLocalName(relationNode, 'name');
+    const identifierTypeNode = findDirectChildByLocalName(workNode, 'IdentifierType');
+    const identifierTypeNameNode = findDirectChildByLocalName(identifierTypeNode, 'name');
+
+    return {
+      identifier: String(identifierNode ? identifierNode.textContent : '').trim(),
+      relation: String(relationNameNode ? relationNameNode.textContent : '').trim(),
+      relationId: '',
+      identifierType: String(identifierTypeNameNode ? identifierTypeNameNode.textContent : '').trim()
+    };
+  });
+}
+
 /**
  * Processes the resource type from an XML document and selects the corresponding option.
  *
@@ -315,7 +448,7 @@ function getCurrentAuthorsPayload(authorStack) {
   }
 }
 
-function applyContactsToAuthorStack(contactPersons) {
+function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
   const authorStack = getAuthorStackController();
   if (!authorStack || !contactPersons.length) {
     return false;
@@ -330,6 +463,7 @@ function applyContactsToAuthorStack(contactPersons) {
     ));
 
     if (!author) {
+      if (matchedOnly) return;
       author = {
         type: "person",
         familyname: contact.familyname,
@@ -618,7 +752,7 @@ function processContactPersons(xmlDoc) {
       contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
     }
 
-    applyContactsToAuthorStack(contactPersons);
+    applyContactsToAuthorStack(contactPersons, Boolean(window.contributorStack));
     return;
   }
 
@@ -708,7 +842,7 @@ function processContactPersonsFromDataCite(xmlDoc) {
   }
 
   if (getAuthorStackController()) {
-    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc));
+    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc), Boolean(window.contributorStack));
     return;
   }
 
@@ -805,7 +939,8 @@ function setLabDataInRow(row, labId) {
 
   try {
     // Set the select value to the lab name
-    selectName.val(lab.name);
+    selectName.val(lab.display_name);
+
 
     // Trigger change event to ensure any attached handlers run
     selectName.trigger("change");
@@ -820,8 +955,9 @@ function setLabDataInRow(row, labId) {
     const hiddenRorId = row.find('input[name="laboratoryRorIds[]"]');
     const hiddenLabId = row.find('input[name="LabId[]"]');
 
+
     if (hiddenRorId.length) hiddenRorId.val(lab.affiliation_ror || "");
-    if (hiddenLabId.length) hiddenLabId.val(lab.identifier);
+    if (hiddenLabId.length) hiddenLabId.val(lab.identifier || "");
   } catch (error) {
     console.error("Error in setLabDataInRow:", error);
     console.error("Error stack:", error.stack);
@@ -915,6 +1051,10 @@ function getOrCreatePersonRow(index) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processContributors(xmlDoc, resolver) {
+  if (window.contributorStack?.setContributors) {
+    processContributorsIntoStack(xmlDoc, resolver);
+    return;
+  }
   const contributorsNode = xmlDoc.evaluate(".//ns:contributors", xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
   if (!contributorsNode) return;
@@ -940,6 +1080,83 @@ function processContributors(xmlDoc, resolver) {
 
   // Populate form with processed data
   populateFormWithContributors(personMap, orgMap);
+}
+
+/** Preserve DataCite document order and merge repeated roles into one card. */
+function processContributorsIntoStack(xmlDoc, resolver) {
+  const entries = [];
+  const byKey = new Map();
+  const authors = getCurrentAuthorsPayload(getAuthorStackController());
+  const isAuthor = (familyname, givenname) => authors.some(author =>
+    author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname));
+  const append = (key, entry) => {
+    if (byKey.has(key)) return byKey.get(key);
+    entries.push(entry);
+    byKey.set(key, entry);
+    return entry;
+  };
+  const nodes = Array.from(xmlDoc.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', 'contributor'));
+  for (const node of nodes) {
+    const dcChildren = name => Array.from(node.getElementsByTagNameNS('http://datacite.org/schema/kernel-4', name));
+    const dcText = name => dcChildren(name)[0]?.textContent?.trim() || '';
+    if (dcChildren('nameIdentifier').some(item => item.getAttribute('nameIdentifierScheme') === 'labid')) continue;
+    const rawRole = node.getAttribute('contributorType') || 'Other';
+    const role = normalizeRole(rawRole);
+    const nameType = dcChildren('contributorName')[0]?.getAttribute('nameType') || '';
+    const display = dcText('contributorName');
+    let familyname = dcText('familyName');
+    let givenname = dcText('givenName');
+    if (nameType === 'Personal' && !familyname && display.includes(',')) {
+      [familyname, givenname] = display.split(',').map(part => part.trim());
+    }
+    const person = nameType === 'Personal' || Boolean(familyname || givenname);
+    if (rawRole === 'ContactPerson' && person && isAuthor(familyname, givenname)) continue;
+    const orcid = getOrcidFromNode(xmlDoc, node, resolver);
+    const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${display.trim().toLowerCase()}`;
+    const affiliations = [];
+    const affiliationNodes = dcChildren('affiliation');
+    for (const affiliation of affiliationNodes) {
+      const label = (affiliation.textContent || '').trim();
+      const rorId = normalizeRorId(affiliation.getAttribute('affiliationIdentifier'));
+      if (label) affiliations.push({ label, rorId });
+    }
+    const entry = append(key, person
+      ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations, email: '', website: '' }
+      : { type: 'institution', institutionname: display, roles: [], affiliations, email: '', website: '' });
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    affiliations.forEach(affiliation => {
+      if (!entry.affiliations.some(existing => existing.label === affiliation.label)) entry.affiliations.push(affiliation);
+    });
+  }
+
+  // ISO carries email and website, which DataCite cannot encode.
+  const contacts = Array.from(xmlDoc.getElementsByTagNameNS('*', 'pointOfContact'))
+    .flatMap(element => Array.from(element.getElementsByTagNameNS('*', 'CI_ResponsibleParty')));
+  for (const node of contacts) {
+    const textOf = name => node.getElementsByTagNameNS('*', name)[0]?.textContent?.trim() || '';
+    const fullName = textOf('individualName');
+    const institutionname = textOf('organisationName');
+    const email = textOf('electronicMailAddress');
+    const website = textOf('URL');
+    const [familyname, givenname = ''] = fullName ? fullName.split(',').map(part => part.trim()) : ['', ''];
+    if (familyname) {
+      if (isAuthor(familyname, givenname)) continue;
+      const key = `person:${normalizeNameKey(familyname, givenname)}`;
+      const entry = append(key, { type: 'person', familyname, givenname, roles: [], affiliations: [], email: '', website: '' });
+      if (!entry.roles.includes('Contact Person')) entry.roles.push('Contact Person');
+      entry.email = email || entry.email;
+      entry.website = website || entry.website;
+    } else if (institutionname) {
+      const key = `institution:${institutionname.trim().toLowerCase()}`;
+      const entry = append(key, { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' });
+      if (window.ELMO_FEATURES?.showContactInstitution === true && !entry.roles.includes('Contact Person')) {
+        entry.roles.push('Contact Person');
+      }
+      entry.email = email || entry.email;
+      entry.website = website || entry.website;
+    }
+  }
+  window.contributorStack.setContributors(entries);
 }
 
 /**
@@ -1246,14 +1463,14 @@ function getGeoLocationData(node, xmlDoc, resolver) {
   }
 
   if (pointNode) {
-    const lat = getText(pointNode, "pointLatitude");
-    const lon = getText(pointNode, "pointLongitude");
+    // A point is Latitude Min + Longitude Min. Max stays empty so re-upload
+    // does not turn the point into a bounding box.
     return {
       place,
-      latitudeMin: lat,
-      latitudeMax: lat,
-      longitudeMin: lon,
-      longitudeMax: lon,
+      latitudeMin: getText(pointNode, "pointLatitude"),
+      latitudeMax: "",
+      longitudeMin: getText(pointNode, "pointLongitude"),
+      longitudeMax: "",
     };
   }
 
@@ -1405,35 +1622,40 @@ function processDates(xmlDoc, resolver) {
 }
 
 /**
- * Process Subjects from XML and populate the Keyword fields
+ * Populate keyword Tagify fields from XML subjects.
+ * processKeywords collects thesaurus keys referenced in the XML,
+ * waits for each via waitForThesaurusVocabulary (whitelist applied, jsTree ready), then imports. On timeout/error, import is aborted so Tagify does not silently drop tags.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
-function processKeywords(xmlDoc, resolver) {
+async function processKeywords(xmlDoc, resolver) {
   // Collect all subject nodes from the XML
   const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
 
-  // Map each keyword group to its Tagify instance (if available)
-  const tagifyMap = {
-    free: document.querySelector("#input-freekeyword")?._tagify || null,
-    msl: document.querySelector("#input-mslkeyword")?._tagify || null,
-    gcmdScience: document.querySelector("#input-sciencekeyword")?._tagify || null,
-    gcmdPlatforms: document.querySelector("#input-platforms")?._tagify || null,
-    gcmdInstruments: document.querySelector("#input-instruments")?._tagify || null,
-    chronostrat: document.querySelector("#input-chronostratigraphy")?._tagify || null,
-    gemet: document.querySelector("#input-gemet")?._tagify || null,
-  };
+  // Keys for GCMD / GEMET / chronostrat match THESAURUS_CONFIG in thesauri.js.
+  // This file is a classic script, so it cannot import that object; the input
+  // ids below are the same values as THESAURUS_CONFIG[key].inputId.
+  function getTagifyMap() {
+    return {
+      free: document.querySelector("#input-freekeyword")?._tagify || null,
+      msl: document.querySelector("#input-mslkeyword")?._tagify || null,
+      science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
+      platforms: document.querySelector("#input-platforms")?._tagify || null,
+      instruments: document.querySelector("#input-instruments")?._tagify || null,
+      chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
+      gemet: document.querySelector("#input-gemet")?._tagify || null,
+    };
+  }
+
+  let tagifyMap = getTagifyMap();
 
   // Keep only initialized Tagify fields
-  const allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  let allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
     console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
     return;
   }
-
-  // Clear existing tags before importing new ones
-  allTagifyInstances.forEach(tagify => tagify.removeAllTags());
 
   function buildTagData(subjectNode) {
     const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
@@ -1465,19 +1687,19 @@ function processKeywords(xmlDoc, resolver) {
   // Resolve which form group a subject belongs to
   function resolveTargetGroup(subjectScheme, schemeURI) {
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      return "gcmdScience";
+      return "science_keywords";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      return "gcmdPlatforms";
+      return "platforms";
     }
 
     if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      return "gcmdInstruments";
+      return "instruments";
     }
 
     if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
-      return "chronostrat";
+      return "chronostratigraphy";
     }
 
     if (
@@ -1494,6 +1716,31 @@ function processKeywords(xmlDoc, resolver) {
     return "free";
   }
 
+  const thesaurusKeys = new Set();
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
+    const { subjectScheme, schemeURI } = buildTagData(subjectNode);
+    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
+    if (targetGroup !== "free" && targetGroup !== "msl") {
+      thesaurusKeys.add(targetGroup);
+    }
+  }
+  if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
+    const keys = [...thesaurusKeys];
+    // all existing thesauri inputs will wait for the corresponding fields to be ready
+    const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
+    const notReady = keys.filter((key, index) => results[index] !== 'loaded');
+    if (notReady.length > 0) {
+      throw new Error('Thesaurus vocabularies not ready for import: ' + notReady.join(', '));
+    }
+
+    tagifyMap = getTagifyMap();
+    allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  }
+
+  // We don't clear existing tags before importing new ones
+
+
   for (let i = 0; i < subjectNodes.snapshotLength; i++) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
@@ -1501,66 +1748,83 @@ function processKeywords(xmlDoc, resolver) {
     const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
     const targetTagify = tagifyMap[targetGroup];
 
-    // Ignore keywords if the target form group is disabled
+    // Ignore keywords if the target field is not initialized
+    // Different versions may have different thesaurus selections
     if (!targetTagify) {
       continue;
     }
 
     targetTagify.addTags([tagData]);
   }
+
+  allTagifyInstances.forEach((tagify) => {
+    if (typeof tagify.update === "function") {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === "function") {
+      tagify._updateHiddenField();
+    }
+  });
 }
 
 /**
- * Process related identifiers from XML and populate the formgroup Related Works
- * When showUsedInstruments is active, entries with relationType="IsCollectedBy" are
- * filtered out and handled by processUsedInstruments() instead.
+ * Transforms Related Identifiers into the internal RelatedWorks map and rebuilds
+ * the card stack in batches. When showUsedInstruments is active,
+ * relationType="IsCollectedBy" is filtered by the XSLT and remains owned by
+ * processUsedInstruments().
  * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
+ * @param {Function} resolver - Kept for backwards-compatible callers
+ * @param {Object} [options] - Import and rendering options
+ * @param {Function} [options.onProgress] - Receives {processed, total}
+ * @param {number} [options.batchSize=50] - Number of cards per render batch
+ * @param {Function} [options.transformRelatedWorksDocument] - Test seam for the XSLT transform
+ * @returns {Promise<Array<Record<string, string>>>} Imported entries in XML order
  */
-function processRelatedWorks(xmlDoc, resolver) {
-  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+async function processRelatedWorks(xmlDoc, resolver, options = {}) {
+  const relatedWorkStack = window.relatedWorkStack
+    && typeof window.relatedWorkStack.setRelatedWorks === 'function'
+    ? window.relatedWorkStack
+    : null;
+  const relatedWorkEnabled = relatedWorkStack || document.querySelector(
+    '[data-related-work-formgroup], [data-related-work-stack], input[name="relatedWorksPayload"]'
+  );
+  if (!relatedWorkEnabled) {
+    return [];
+  }
+  if (!relatedWorkStack) {
+    throw createRelatedWorksImportError('Related Works card stack is not initialized.');
+  }
 
-  // Collect entries, optionally filtering out instruments
+  if (window.elmo && window.elmo.dropdownsReady) {
+    await window.elmo.dropdownsReady;
+  }
+
   const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
-  let entries = [];
+  const transform = typeof options.transformRelatedWorksDocument === 'function'
+    ? options.transformRelatedWorksDocument
+    : transformRelatedWorksDocument;
+  const transformedDocument = await transform(xmlDoc, {
+    excludeIsCollectedBy: Boolean(showUsedInstruments)
+  });
+  const entries = parseRelatedWorksMap(transformedDocument);
 
-  for (let i = 0; i < identifierNodes.snapshotLength; i++) {
-    const identifierNode = identifierNodes.snapshotItem(i);
-    const relationType = identifierNode.getAttribute("relationType");
-    const identifierType = identifierNode.getAttribute("relatedIdentifierType");
-    const identifierValue = identifierNode.textContent;
-
-    // Skip IsCollectedBy entries when Used Instruments feature is active
-    if (showUsedInstruments && relationType === "IsCollectedBy") {
-      continue;
+  try {
+    await Promise.resolve(relatedWorkStack.setRelatedWorks(entries, {
+      bulk: true,
+      batchSize: options.batchSize,
+      onProgress: options.onProgress,
+      yieldControl: options.yieldControl
+    }));
+  } catch (error) {
+    try {
+      await Promise.resolve(relatedWorkStack.setRelatedWorks([]));
+    } catch (clearError) {
+      // Preserve the original import failure while making a best effort to
+      // return the Related Works form group to its empty state.
     }
-
-    entries.push({ relationType, identifierType, identifierValue });
+    throw createRelatedWorksImportError('Could not render Related Works from the uploaded XML file.', error);
   }
 
-  for (let i = 0; i < entries.length; i++) {
-    const entry = entries[i];
-
-    // Find last row
-    const $lastRow = $('input[name="rIdentifier[]"]').last().closest(".row");
-
-    // Set values
-    $lastRow.find('input[name="rIdentifier[]"]').val(entry.identifierValue);
-    $lastRow.find('select[name="rIdentifierType[]"]').val(entry.identifierType);
-    // Match relation by visible text instead of value
-    $lastRow
-      .find('select[name="relation[]"]:first option')
-      .filter(function () {
-        return $(this).text() === entry.relationType; // Match by visible text
-      })
-      .prop("selected", true);
-
-    // clone row for the next entry, if there is one
-    if (i < entries.length - 1) {
-      // Add Related Work
-      $("#button-relatedwork-add").click();
-    }
-  }
+  return entries;
 }
 
 /**
@@ -1578,7 +1842,13 @@ function processUsedInstruments(xmlDoc, resolver) {
     return;
   }
 
-  const identifierNodes = xmlDoc.evaluate(".//ns:relatedIdentifiers/ns:relatedIdentifier", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+  const identifierNodes = xmlDoc.evaluate(
+    ".//ns:relatedIdentifiers/ns:relatedIdentifier | .//relatedIdentifiers/relatedIdentifier",
+    xmlDoc,
+    resolver,
+    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
+    null
+  );
 
   const pidList = [];
 
@@ -1659,8 +1929,12 @@ function processFunders(xmlDoc, resolver) {
 /**
  * Loads XML data into form fields according to mapping configuration
  * @param {Document} xmlDoc - The parsed XML document
+ * @param {Object} [options] - Import integration options
+ * @param {Function} [options.onRelatedWorksProgress] - Receives Related Works batch progress
+ * @param {number} [options.relatedWorksBatchSize=50] - Related Works render batch size
  */
-async function loadXmlToForm(xmlDoc) {
+async function loadXmlToForm(xmlDoc, options = {}) {
+  const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
   const resourceNode = xmlDoc.evaluate(
     "//ns:resource | /resource | //resource",
@@ -1679,10 +1953,13 @@ async function loadXmlToForm(xmlDoc) {
     console.error("No DataCite resource element found");
     return;
   }
-  // Warte auf das Laden der Labordaten, falls noch nicht geschehen
-  if (!labData || labData.length === 0) {
+  // Load MSL laboratories only when the laboratory form group is present.
+  if (document.querySelector('#group-originatinglaboratory') && (!labData || labData.length === 0)) {
     try {
-      labData = await $.getJSON("json/msl-labs.json");
+      const originatingLaboratories = await $.getJSON(
+        "/api/v2/vocabs/msl-laboratories"
+      );
+      labData = originatingLaboratories.data;
     } catch (error) {
       console.error("Error loading laboratory data:", error);
       labData = [];
@@ -1778,10 +2055,19 @@ async function loadXmlToForm(xmlDoc) {
   }
   // Process Spatial and Temporal Coverages
   processSpatialTemporalCoverages(xmlDoc, resolver);
-  // Process Keywords
-  processKeywords(xmlDoc, resolver);
+  // Thesaurus Tagify inputs are created after an async availability fetch.
+  // Wait until that input scaffolding exists; processKeywords() then waits for
+  // only the thesaurus vocabularies referenced by the uploaded subjects.
+  if (window.thesauriReady) {
+    await window.thesauriReady;
+  }
+  // Process Keywords (async: waits for the referenced thesaurus vocabularies)
+  await processKeywords(xmlDoc, resolver);
   // Process Related Works
-  processRelatedWorks(xmlDoc, resolver);
+  await processRelatedWorks(xmlDoc, resolver, {
+    onProgress: options.onRelatedWorksProgress,
+    batchSize: options.relatedWorksBatchSize
+  });
   // Process Used Instruments (IsCollectedBy entries)
   processUsedInstruments(xmlDoc, resolver);
   // Process Funders
@@ -1790,8 +2076,12 @@ async function loadXmlToForm(xmlDoc) {
   processDates(xmlDoc, resolver);
   // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
   if (isIcgem) {
-    window.icgemModule.loadIcgemXmlToForm(xmlDoc);
+    await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
+}
+
+if (typeof window !== 'undefined') {
+  window.loadXmlToForm = loadXmlToForm;
 }
 
 // Export for testing (CommonJS)
@@ -1825,10 +2115,15 @@ if (typeof module !== 'undefined' && module.exports) {
         getGeoLocationData,
         fillSpatialFields,
         fillTemporalFields,
+        loadRelatedWorksXsltDocument,
+        transformRelatedWorksDocument,
+        parseRelatedWorksMap,
+        resetRelatedWorksXsltCache,
         processUsedInstruments,
         processDescriptions,
         processRelatedWorks,
         processFunders,
-        processSpatialTemporalCoverages
+        processSpatialTemporalCoverages,
+        loadXmlToForm
     };
 }

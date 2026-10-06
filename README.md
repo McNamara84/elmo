@@ -46,7 +46,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
 - Local save and reload of standardized metadata as XML or JSON-LD.
-- Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
+- Authors and Contributors use ordered cards for persons and institutions. A contact in either group satisfies the shared contact requirement.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
@@ -171,7 +171,6 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$database`: Name of the database created.
   - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
   - `$apiKeyElmo`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
-  - `$mslLabsUrl`: URL to the JSON file with the current list of laboratories.
   - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
   - `$smtpHost`: URL to the SMTP mail server
   - `$smtpPort`: Port of the mail server
@@ -179,11 +178,14 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpPassword`: Password of the mailbox
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
-  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
+  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `ICGEM_SUBMIT_ADDRESS` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
   - `$icgemSubmitAddress`: Email address that receives the ICGEM metadata file of every ELMO GEM submission, configured via the environment variable `ICGEM_SUBMIT_ADDRESS` (default `icgem@gfz.de`).
+  - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
+  - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
-  - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
-  - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
+  - `$showContributorPersons`: Controls whether the Contributors group offers the Add Person button (true/false).
+  - `$showContributorInstitutions`: Controls whether the Contributors group offers the Add Institution button (true/false). The group is hidden when both contributor types are disabled.
+  - `SHOW_CONTACT_INSTITUTION`: Allows contributor institutions to use the Contact Person role when set to `true` (default: `false`). An institution contact needs a name and valid email address to satisfy the shared contact requirement.
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
   - `$showThesauri`: Specifies whether the form group Thesauri Keywords should be displayed (true/false). Individual thesauri are controlled by ERNIE.
@@ -477,7 +479,7 @@ Occurrence is: 0-n
 
 
 #### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). A person author can be marked as a contact with the card toggle. A contributor person can be marked with the Contact Person role; contributor institutions can use that role when `SHOW_CONTACT_INSTITUTION=true`. Authors and Contributors show the same contact status. A complete contact needs a name and valid email address; a website is optional. The fields below describe person-author contacts.
 
 - Last Name
 
@@ -550,6 +552,8 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 
 
 ### Contributors
+
+The Contributors group starts empty. Use **Add Person** or **Add Institution** to create a card, then edit, remove, or reorder cards of either type in one list. Their order is preserved when saving and loading XML. A contributor person with the Contact Person role also satisfies the contact requirement shown in both Authors and Contributors. Contributor institutions can do so only when `SHOW_CONTACT_INSTITUTION=true`.
 
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
@@ -841,11 +845,11 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
 
 - Latitude Max
   
-  This field contains the larger geographic latitude of a rectangle.
+  This field contains the larger geographic latitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#northboundlatitude)
   - Example values: `49.72437624376` `-32.82438824398`
   
@@ -861,19 +865,21 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
 - Longitude Max
   
-  This field contains the larger geographic longitude of a rectangle.
+  This field contains the larger geographic longitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
-
- - Coordinate rules:
-    - A point requires Minimum Latitude Min + Longitude Min.
-    - A rectangle requires Latitude Min + Longitude Min + Latitude Max + Longitude Max.
+  
+- Coordinate rules:
+    - A point uses Latitude Min and Longitude Min. Latitude Max and Longitude Max stay empty.
+    - A rectangle uses Latitude Min, Longitude Min, Latitude Max, and Longitude Max.
+    - Latitude Max and Longitude Max are not required for a point.
     - Latitude Max or Longitude Max on its own is not permitted.
-    - Once a "Max" field is used, all four coordinate fields are mandatory.
+    - Once a Max field is used, all four coordinate fields are mandatory.
+    - Uploading a DataCite `geoLocationPoint` fills only Latitude Min and Longitude Min. Uploading a `geoLocationBox` fills all four bounds.
   
 - Description
 
@@ -1387,12 +1393,10 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Date created**                          |                   0-1                   |                  0-n                  | `<date dateType="Created">` when provided; `<date dateType="Submitted">` is added automatically on submit                                                                  |
 |                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
 | Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<pointLongitude>`                                                                                                                                                          |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<southBoundLatitude>`                                                                                                                                                      |
-|                            | **Latitude Max**                          |                    1                    |                   1                   | `<northBoundLatitude>`                                                                                                                                                      |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<westBoundLongitude>`                                                                                                                                                      |
-|                            | **Longitude Max**                         |                    1                    |                   1                   | `<eastBoundLongitudens>`                                                                                                                                                    |
+|                            | **Latitude Min**                          |                    1                    |                   1                   | Point: `<pointLatitude>`. Box: `<southBoundLatitude>`                                                                                                                       |
+|                            | **Longitude Min**                         |                    1                    |                   1                   | Point: `<pointLongitude>`. Box: `<westBoundLongitude>`                                                                                                                      |
+|                            | **Latitude Max**                          |                   0-1                   |                  0-1                  | Box only: `<northBoundLatitude>`. Left empty for a point.                                                                                                                   |
+|                            | **Longitude Max**                         |                   0-1                   |                  0-1                  | Box only: `<eastBoundLongitude>`. Left empty for a point.                                                                                                                   |
 |                            | **Description**                           |                    1                    |                   1                   | `<geoLocationPlace>`                                                                                                                                                        |
 | Temporal Coverage          |                                           |                   0-n                   |                  0-n                  | `<date>`                                                                                                                                                                    |
 |                            | **Start Date**                            |                    1                    |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
@@ -1668,6 +1672,8 @@ Providing this information is not mandatory for submission but strongly encourag
 
 We appreciate every contribution to this project! You can use the feedback form at the bottom of the page on your local instance, create an issue on GitHub, or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template, so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
+For user-visible changes, update `json/changelog.json` as described in [the changelog maintenance guide](docs/changelog-maintenance.md). The latest version in that file appears in the footer and opens the changelog dialog.
+
 ## Testing
 
 > [!NOTE]
@@ -1776,7 +1782,7 @@ npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated Geo
 npx playwright test tests/playwright/formgroups/authors.spec.ts
 
 # Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
-npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
+npx playwright test tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
 
 # Run a single test by title
 npx playwright test -g "populates author details"

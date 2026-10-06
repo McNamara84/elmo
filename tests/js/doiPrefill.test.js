@@ -32,6 +32,21 @@ function loadModule() {
 }
 
 describe('doiPrefill.js', () => {
+  test('prefills mixed contributor cards in DOI order', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.authorStack = { setAuthors: jest.fn(), collectPayload: () => [] };
+    mod.prefillContributors([
+      { contributorType: 'HostingInstitution', nameType: 'Organizational', name: 'Institute' },
+      { contributorType: 'ContactPerson', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+      { contributorType: 'DataCollector', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+    ]);
+    expect(setContributors.mock.calls[0][0].map(entry => entry.type)).toEqual(['institution', 'person']);
+    expect(setContributors.mock.calls[0][0][1].roles).toEqual(['Contact Person', 'Data Collector']);
+    delete window.contributorStack;
+    delete window.authorStack;
+  });
+
   beforeEach(() => {
     // Minimal jQuery / DOM setup
     const $ = require('jquery');
@@ -50,6 +65,9 @@ describe('doiPrefill.js', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     delete window.authorStack;
+    delete window.relatedWorkStack;
+    delete window.usedInstrumentsModule;
+    delete window.ELMO_FEATURES;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -493,7 +511,7 @@ describe('doiPrefill.js', () => {
       expect($('input[name="tscLatitudeMax[]"]').val()).toBe('52.7');
     });
 
-    test('fills point as equal min/max coordinates', () => {
+    test('fills a point in the min fields and leaves max empty', () => {
       mod.prefillGeoLocations([
         {
           geoLocationPoint: { pointLatitude: 48.8566, pointLongitude: 2.3522 },
@@ -501,9 +519,9 @@ describe('doiPrefill.js', () => {
       ]);
 
       expect($('input[name="tscLatitudeMin[]"]').val()).toBe('48.8566');
-      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('48.8566');
+      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('');
       expect($('input[name="tscLongitudeMin[]"]').val()).toBe('2.3522');
-      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('2.3522');
+      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('');
     });
   });
 
@@ -712,6 +730,83 @@ describe('doiPrefill.js', () => {
       mod.prefillRelatedWorks([]);
       expect($('input[name="rIdentifier[]"]').val()).toBe('');
     });
+
+    test('passes all Related Works to the stack in one call', () => {
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://example.org/documentation',
+          relatedIdentifierType: 'URL',
+          relationType: 'IsDocumentedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+        {
+          identifier: 'https://example.org/documentation',
+          identifierType: 'URL',
+          relation: 'IsDocumentedBy',
+          relationId: '',
+        },
+      ]);
+    });
+
+    test('keeps IsCollectedBy out of the Related Work stack when Used Instruments are enabled', () => {
+      jest.useFakeTimers();
+      window.ELMO_FEATURES = { showUsedInstruments: true };
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+      window.usedInstrumentsModule = {
+        loadInstrumentsFromAPI: jest.fn(),
+        addInstrumentsByData: jest.fn(),
+      };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://hdl.handle.net/1234/instrument',
+          relatedIdentifierType: 'Handle',
+          relationType: 'IsCollectedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+      ]);
+      expect(window.usedInstrumentsModule.loadInstrumentsFromAPI).toHaveBeenCalledTimes(1);
+
+      jest.runAllTimers();
+      expect(window.usedInstrumentsModule.addInstrumentsByData).toHaveBeenCalledWith([
+        {
+          pid: 'https://hdl.handle.net/1234/instrument',
+          pidType: 'Handle',
+          name: 'https://hdl.handle.net/1234/instrument',
+          instrumentTypes: [],
+        },
+      ]);
+      jest.useRealTimers();
+    });
   });
 
   /* ── prefillRights ──────────────────────────────────────────── */
@@ -838,8 +933,8 @@ describe('doiPrefill.js', () => {
 
       attachTagify('#input-freekeyword');
 
-      // Mock clearInputFields
-      global.clearInputFields = jest.fn();
+      window.__clearInputFieldsSpy = jest.fn();
+      window.loadClearInputFields = jest.fn().mockResolvedValue(window.__clearInputFieldsSpy);
     });
 
     test('applies all attributes to form fields', async () => {
@@ -859,11 +954,45 @@ describe('doiPrefill.js', () => {
         rightsList: [],
       });
 
-      expect(global.clearInputFields).toHaveBeenCalled();
+      expect(window.loadClearInputFields).toHaveBeenCalled();
+      expect(window.__clearInputFieldsSpy).toHaveBeenCalled();
       expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');
       expect($('input[name="dateCreated"]').val()).toBe('2024-01-15');
+    });
+
+    test('waits for Related Work dropdowns before populating the stack', async () => {
+      let resolveDropdowns;
+      window.elmo.dropdownsReady = new Promise((resolve) => {
+        resolveDropdowns = resolve;
+      });
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      const applying = mod.applyDoiPrefill({
+        creators: [],
+        contributors: [],
+        descriptions: [],
+        dates: [],
+        geoLocations: [],
+        subjects: [],
+        relatedIdentifiers: [{
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        }],
+        fundingReferences: [],
+        titles: [],
+        rightsList: [],
+      });
+
+      await Promise.resolve();
+      expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+
+      resolveDropdowns();
+      await applying;
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
     });
   });
 });

@@ -9,7 +9,6 @@ services:
       TZ: Europe/Berlin
     volumes:
       - db_data:/var/lib/mysql
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       start_period: 10s
@@ -59,6 +58,7 @@ services:
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
@@ -78,6 +78,12 @@ services:
       - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
       - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      # Shared API responses cache: all variants see the same cached responses.
+      # Ownership/mode come from the image (copied into a new named volume).
+      - api_cache_volume:/var/www/html/storage/cache
+      # Variant-specific drafts: isolated data, same image-seeded permissions.
+      - web_drafts:/var/www/html/storage/drafts
 
   web-msl:
     build:
@@ -116,6 +122,7 @@ services:
       SHOW_MSL_MODE: "true"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "true"
@@ -136,6 +143,9 @@ services:
       - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
       - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_msl_drafts:/var/www/html/storage/drafts
 
   web-igsn:
     build:
@@ -175,6 +185,7 @@ services:
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
       SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: "false"
       SHOW_FREE_KEYWORDS: "false"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
@@ -196,9 +207,16 @@ services:
       - "traefik.http.middlewares.elmo-igsn-stripprefix.stripprefix.prefixes=/elmo-igsn"
       - "traefik.http.services.elmo-igsn-service.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
+    volumes:
+      - api_cache_volume:/var/www/html/storage/cache
+      - web_igsn_drafts:/var/www/html/storage/drafts
 
 volumes:
   db_data:
+  api_cache_volume:
+  web_drafts:
+  web_msl_drafts:
+  web_igsn_drafts:
 
 networks:
   internal:

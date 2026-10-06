@@ -401,8 +401,13 @@ class ICGEMController extends DatasetController
                         if (!empty($dataSource['details'])) {
                             $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':elevationTerrainDetail', $this->prepare($dataSource['details'], 'description'), self::ICGEM_NAMESPACE_URI);
                         }
-                        if (!empty($dataSource['T_Isostasy_compensation_depth'])) {
-                            $compDepthElement = $dsElement->addChild(self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth', $this->prepare($dataSource['T_Isostasy_compensation_depth'], 'compensationDepth'), self::ICGEM_NAMESPACE_URI);
+                        $compensationDepth = $dataSource['T_Isostasy_compensation_depth'] ?? null;
+                        if ($compensationDepth !== null && $compensationDepth !== '') {
+                            $compDepthElement = $dsElement->addChild(
+                                self::ICGEM_NAMESPACE_PREFIX . ':compensationDepth',
+                                $this->prepare((string) $compensationDepth, 'compensationDepth'),
+                                self::ICGEM_NAMESPACE_URI
+                            );
                             $compDepthElement->addAttribute('uom', 'm');
                         }
                         break;
@@ -649,13 +654,13 @@ class ICGEMController extends DatasetController
      * (first letter uppercase, rest as-is) to match XSD enumeration requirements.
      * All other fields are passed through as-is (but always HTML-escaped).
      *
-     * @param string $value The value to prepare.
+     * @param int|float|string $value The value to prepare.
      * @param string $fieldName The XML field name to determine if normalization applies.
      * @return string The prepared value, HTML-escaped and possibly capitalized.
      */
-    private function prepare(string $value, string $fieldName): string
+    private function prepare(int|float|string $value, string $fieldName): string
     {
-        $trimmed = trim($value);
+        $trimmed = trim((string) $value);
         
         // Replace spaces with dashes in tide system
         if ($fieldName === 'tideSystem') {
