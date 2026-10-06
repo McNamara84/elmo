@@ -94,6 +94,21 @@ test.describe('Resource Information Form Tests', () => {
     await expect(titleTypeSelect).toBeVisible();
   });
 
+  test('additional title controls do not overlap its type field on mobile', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    await page.locator('#button-resourceinformation-addtitle').click();
+    const type = await page.locator('[id^="container-resourceinformation-titletype-"]').last().boundingBox();
+    const actions = await page.locator('.title-row-actions').boundingBox();
+    expect(type && actions).toBeTruthy();
+    expect(actions!.y).toBeGreaterThanOrEqual(type!.y + type!.height - 2);
+    const buttons = page.locator('.title-row-actions button');
+    for (let index = 0; index < await buttons.count(); index++) {
+      const button = await buttons.nth(index).boundingBox();
+      expect(button!.x).toBeGreaterThanOrEqual(actions!.x);
+      expect(button!.x + button!.width).toBeLessThanOrEqual(actions!.x + actions!.width + 2);
+    }
+  });
+
   test('Test title type dropdown options', async ({ page }) => {
     // Wait for title type dropdown options to be loaded from API before cloning
     await page.waitForFunction(() => {

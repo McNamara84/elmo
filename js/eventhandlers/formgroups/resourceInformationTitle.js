@@ -157,12 +157,16 @@ $(document).ready(function () {
     // Adjust Title Input field width
     newTitleRow.find(".col-10.col-sm-11.col-md-11.col-lg-11")
       .removeClass("col-10 col-sm-11 col-md-11 col-lg-11")
-      .addClass("col-10 col-sm-5 col-md-8 col-lg-8");
+      .addClass("col-12 col-sm-5 col-md-7 col-lg-8");
 
     // Adjust Title Type Dropdown width and make it visible
     newTitleRow.find("[id^='container-resourceinformation-titletype-']")
       .removeClass("col-10 col-md-3 unvisible")
-      .addClass("col-10 col-sm-5 col-md-3 col-lg-3");
+      .addClass("col-12 col-sm-5 col-md-3 col-lg-3");
+
+    newTitleRow.find('.addTitle').parent()
+      .removeClass('col-2 col-md-1 col-lg-1')
+      .addClass('col-12 col-sm-2 col-md-2 col-lg-1 title-row-actions');
 
     // Control the visibility of the title type dropdown.
     if (titlesNumber === 0) {
