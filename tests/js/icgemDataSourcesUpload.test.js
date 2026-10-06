@@ -295,7 +295,7 @@ describe('populateIcgemDataSources satellite platforms', () => {
     expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalled();
   });
 
-  describe('data source row count', () => {
+  describe('data source remain operational under changing row count', () => {
     const rowHtml = `
       <div class="row" data-source-row>
         <select name="datasource_type[]">
