@@ -3,6 +3,29 @@ import changelog from '../../json/changelog.json';
 
 const flush = () => new Promise(resolve => setTimeout(resolve, 0));
 
+function allEntries(entries) {
+  return entries.flatMap(entry => [entry, ...allEntries(entry.children || [])]);
+}
+
+function releaseEntries(release) {
+  return release.sections.flatMap(section => allEntries(section.entries));
+}
+
+function countCodeParts(data) {
+  const parts = [];
+  for (const release of data.releases) {
+    for (const entry of releaseEntries(release)) parts.push(...entry.parts);
+    for (const note of release.notes || []) parts.push(...note.parts);
+  }
+  return parts.filter(part => part.type === 'code').length;
+}
+
+function countReferences(releases, type) {
+  return releases.flatMap(release => releaseEntries(release))
+    .flatMap(entry => entry.references || [])
+    .filter(reference => reference.type === type).length;
+}
+
 describe('changelog renderer', () => {
   beforeEach(() => {
     document.body.innerHTML = '<div id="modal-changelog"><div id="panel-changelog-content"></div></div>';
@@ -12,20 +35,25 @@ describe('changelog renderer', () => {
     const container = document.getElementById('panel-changelog-content');
     renderChangelog(changelog, container);
 
-    expect(container.querySelectorAll('.accordion-item')).toHaveLength(19);
-    expect(container.querySelector('.accordion-button').textContent).toBe('Version 2.2.0 - 2026/10/19');
+    const latest = changelog.releases[0];
+    const badgeCount = changelog.releases.flatMap(release => releaseEntries(release))
+      .reduce((count, entry) => count + (entry.editions?.length || 0), 0);
+    expect(container.querySelectorAll('.accordion-item')).toHaveLength(changelog.releases.length);
+    expect(container.querySelector('.accordion-button').textContent)
+      .toBe(`Version ${latest.version} - ${latest.date.replaceAll('-', '/')}`);
     expect(container.querySelector('.accordion-collapse').classList.contains('show')).toBe(true);
     expect(container.querySelectorAll('.accordion-button[aria-expanded="true"]')).toHaveLength(1);
-    expect(container.querySelectorAll('.badge')).toHaveLength(20);
-    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(19);
+    expect(container.querySelectorAll('.badge')).toHaveLength(badgeCount);
+    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]'))
+      .toHaveLength(countReferences(changelog.releases, 'pull'));
     const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
-    expect(issueLinks).toHaveLength(18);
+    expect(issueLinks).toHaveLength(countReferences(changelog.releases.slice(0, 1), 'issue'));
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1127');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1240');
     expect(issueLinks.map(link => link.textContent)).not.toContain('Issue #1058');
     expect(container.querySelectorAll('.accordion-item:not(:first-child) .badge')).toHaveLength(0);
     expect(container.querySelectorAll('.accordion-item:not(:first-child) a')).toHaveLength(0);
-    expect(container.querySelectorAll('code')).toHaveLength(8);
+    expect(container.querySelectorAll('code')).toHaveLength(countCodeParts(changelog));
     expect(container.querySelector('.accordion-item:last-child .accordion-body p').textContent)
       .toBe('First alpha release of ELMO');
     expect(container.textContent).toContain('Added: Platforms and Instruments');
@@ -94,7 +122,7 @@ describe('changelog renderer', () => {
     expect(container.querySelector('[role="alert"]').textContent).toContain('could not be loaded');
     modal.dispatchEvent(new Event('show.bs.modal'));
     await flush();
-    expect(container.querySelectorAll('.accordion-item')).toHaveLength(19);
+    expect(container.querySelectorAll('.accordion-item')).toHaveLength(changelog.releases.length);
     modal.dispatchEvent(new Event('show.bs.modal'));
     await flush();
     expect(fetchMock).toHaveBeenCalledTimes(3);
@@ -122,7 +150,7 @@ describe('changelog renderer', () => {
 
     modal.dispatchEvent(new Event('show.bs.modal'));
     await flush();
-    expect(container.querySelectorAll('.accordion-item')).toHaveLength(19);
+    expect(container.querySelectorAll('.accordion-item')).toHaveLength(changelog.releases.length);
     expect(fetchMock).toHaveBeenCalledTimes(2);
     errorSpy.mockRestore();
     delete global.fetch;
