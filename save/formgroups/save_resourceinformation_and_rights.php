@@ -36,10 +36,6 @@ function saveResourceInformationAndRights($connection, $postData)
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $version = trim((string) ($postData['version'] ?? ''));
-            if ($version !== '' && !preg_match('/^\d+\.\d+$/D', $version)) {
-                return false;
-            }
             $requiredFields = ['year', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];
 
@@ -47,7 +43,9 @@ function saveResourceInformationAndRights($connection, $postData)
                 $requiredFields[] = 'Rights';
             }
 
-            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
+            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields, [
+                'version' => '/^\d+\.\d+$/D',
+            ])) {
                 return false;
             }
         }
