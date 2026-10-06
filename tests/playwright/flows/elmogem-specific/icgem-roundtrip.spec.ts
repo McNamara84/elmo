@@ -1303,7 +1303,11 @@ for (const testCase of TEST_CASES) {
       expectedSavedTitle(parsedData.title, parsedData.modelName),
     );
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
-    await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(parsedData.version);
+    // The editor writes an integer source version in major.minor form.
+    const expectedVersion = /^\d+$/.test(parsedData.version)
+      ? `${parsedData.version}.0`
+      : parsedData.version;
+    await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(expectedVersion);
     // The abstract is restored from grav:descriptions (ICGEM uploads skip the
     // DataCite description mapping), so it is asserted with the other sections below.
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue(parsedData.dateCreated);

@@ -200,6 +200,20 @@ body {
     outline-offset: 2px;
 }
 
+.title-sort-handle {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 2.25rem;
+}
+
+.title-sort-handle:not(:disabled) {
+    cursor: grab;
+}
+
+.title-sort-handle:active {
+    cursor: grabbing;
+}
+
 [data-creator-row].ui-sortable-helper {
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
@@ -239,6 +253,17 @@ label.mandatory-field::after {
     /* Light grey background for normal mode */
     color: #495057;
     /* Grey text color */
+}
+
+#resource-type-help-list dt {
+    margin-top: 0.75rem;
+    font-weight: 700;
+}
+
+#resource-type-help-list dd {
+    margin-left: 0;
+    padding-left: 1rem;
+    border-left: 2px solid #adb5bd;
 }
 
 .settings-menu-link {
@@ -755,6 +780,58 @@ header .ms-auto.d-flex {
   width: 140px;
   color: var(--bs-secondary);
   font-weight: 600;
+}
+
+/* DOI search runs independently of form submission, so Bootstrap's form-wide
+ * validation state must not paint this optional search input green or red. */
+#input-resourceinformation-source-doi,
+.was-validated #input-resourceinformation-source-doi:valid,
+.was-validated #input-resourceinformation-source-doi:invalid {
+    border-color: var(--bs-border-color);
+    background-image: none;
+    box-shadow: none;
+}
+
+#input-resourceinformation-source-doi:focus,
+.was-validated #input-resourceinformation-source-doi:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.resource-doi-search {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.resource-doi-search .form-control {
+    min-width: 0;
+}
+
+.resource-doi-search .btn {
+    max-width: 100%;
+}
+
+.resource-doi-edit-btn,
+.resource-doi-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(3.5rem + 2px);
+}
+
+.resource-doi-edit-btn {
+    border-radius: 0;
+}
+
+@media (max-width: 575.98px) {
+    .resource-doi-search {
+        flex-direction: column;
+    }
+
+    .resource-doi-search .btn {
+        align-self: flex-start;
+    }
 }
 
 /* Keep ORCID buttons aligned with the input height */

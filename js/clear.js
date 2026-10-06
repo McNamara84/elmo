@@ -6,6 +6,9 @@ import { setCCBYasDefault, setBrowserTimezone } from './select.js';
 export default function clearInputFields() {
 
     // Reset input fields in Resource Information
+    if (window.resourceInformation?.clear) {
+        window.resourceInformation.clear();
+    } else {
     $('#input-resourceinformation-doi').val('');
     $('#input-resourceinformation-publicationyear').val('');
     $('#input-resourceinformation-version').val('');
@@ -20,6 +23,7 @@ export default function clearInputFields() {
     $('#input-resourceinformation-titletype').val(window.mainTitleTypeId || '');
     // Notify title module to reset its internal counter
     $(document).trigger('elmo:clearTitles');  
+    }
     // Reset Rights License select field
     $('#input-rights-license').val('');
     setCCBYasDefault();

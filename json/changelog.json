@@ -12,48 +12,6 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "ELMO-GEM goundrtip coverage is extended to all input fields"
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 725
-                },
-                {
-                  "type": "pull",
-                  "number": 1218
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "Selected ELMO-GEM GCMD Science keywords are saved with the full paths"
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 951
-                },
-                {
-                  "type": "pull",
-                  "number": 1187
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
                   "value": "Help buttons are shown consistently: exactly once for each input field in the authors formgroup"
                 }
               ],
@@ -89,35 +47,6 @@
                 {
                   "type": "pull",
                   "number": 1243
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "Documentation and layout for the Data Sources formgroup are improved"
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 843
-                },
-                {
-                  "type": "issue",
-                  "number": 891
-                },
-                {
-                  "type": "issue",
-                  "number": 943
-                },
-                {
-                  "type": "pull",
-                  "number": 1250
                 }
               ]
             },
@@ -298,6 +227,143 @@
                 {
                   "type": "pull",
                   "number": 1235
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Information now keeps fields and titles in a shared payload. Additional titles can be reordered by keyboard or drag and drop; XML, JSON-LD, and XSLT import preserve title order and textual versions."
+                }
+              ],
+              "editions": [
+                "all"
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "A separate DOI lookup imports metadata without assigning the source DOI to the submission. The submission DOI has its own edit action."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource type help follows the selectable dropdown options and shows ERNIE definitions or DataCite-based fallbacks, with a source link and keyboard access."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1013
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Information now shows a short introduction and its help modal separates form instructions from publisher guidance."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1061
+                },
+                {
+                  "type": "issue",
+                  "number": 1064
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ELMO-GEM roundtrip coverage is extended to all input fields"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 725
+                },
+                {
+                  "type": "pull",
+                  "number": 1218
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Selected ELMO-GEM GCMD Science keywords are saved with the full paths"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 951
+                },
+                {
+                  "type": "pull",
+                  "number": 1187
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Documentation and layout for the Data Sources formgroup are improved"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 843
+                },
+                {
+                  "type": "issue",
+                  "number": 891
+                },
+                {
+                  "type": "issue",
+                  "number": 943
+                },
+                {
+                  "type": "pull",
+                  "number": 1250
                 }
               ]
             },
@@ -514,6 +580,42 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Resource Information DOI and title controls now align on desktop and mobile. Empty DOI metadata searches no longer show conflicting validation feedback. The metadata search accepts doi.org links and uses a compact search icon."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1249
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "For Standard, MSL, and IGSN submissions, an existing 10.5880 DOI is verified with DataCite and given the next major version for manual curation. External, unknown, and unverifiable DOIs are blocked before saving or mailing."
+                }
+              ],
+              "editions": [
+                "elmo",
+                "msl",
+                "igsn"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "ELMO-MSL restores the required free keywords "
                 },
                 {
@@ -573,6 +675,31 @@
         {
           "title": "Documentation:",
           "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Resource Information now documents the separate DOI paths and required language."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 831
+                },
+                {
+                  "type": "issue",
+                  "number": 1061
+                },
+                {
+                  "type": "issue",
+                  "number": 1064
+                }
+              ]
+            },
             {
               "parts": [
                 {

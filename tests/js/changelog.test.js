@@ -48,6 +48,10 @@ describe('changelog renderer', () => {
       .toHaveLength(countReferences(changelog.releases, 'pull'));
     const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
     expect(issueLinks).toHaveLength(countReferences(changelog.releases.slice(0, 1), 'issue'));
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #831');
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #1013');
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #1061');
+    expect(issueLinks.map(link => link.textContent)).toContain('Issue #1064');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1127');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1240');
     expect(issueLinks.map(link => link.textContent)).not.toContain('Issue #1058');

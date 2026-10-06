@@ -31,6 +31,23 @@ describe('help.js', () => {
     jest.clearAllMocks();
     delete global.$;
     delete global.jQuery;
+    delete window.resourceTypeDescriptions;
+  });
+
+  test('resource type modal follows selectable options and separates terms from definitions', () => {
+    document.body.insertAdjacentHTML('beforeend', `<select id="input-resourceinformation-resourcetype">
+      <option value="" disabled>Choose</option>
+      <option value="1" title="ERNIE description">Dataset</option>
+      <option value="2">Software</option>
+      <option value="3" disabled>Unavailable</option>
+    </select>`);
+    window.resourceTypeDescriptions = require('../../js/resourceTypeDescriptions.js');
+    help.displayHelpSection('help-resourceinformation-resourcetype',
+      '<div id="help-resourceinformation-resourcetype"><div id="resource-type-help-list"></div></div>');
+    expect($('#resource-type-help-list dt').map((_, element) => element.textContent).get())
+      .toEqual(['Dataset', 'Software']);
+    expect($('#resource-type-help-list dd').first().text()).toBe('ERNIE description');
+    expect($('#resource-type-help-list dd').last().text()).toContain('computer program');
   });
 
   test('initializes to help-on by default', () => {
@@ -90,6 +107,14 @@ describe('help.js', () => {
   test('clicking help icon triggers an AJAX call', () => {
     $.get = jest.fn(() => ({ fail: jest.fn() }));
     $('#helpIcon').trigger('click');
+    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
+  });
+
+  test('keyboard opens a focusable field help icon', () => {
+    $.get = jest.fn(() => ({ fail: jest.fn() }));
+    const icon = $('<i data-help-section-id="help-resourceinformation-resourcetype" tabindex="0"></i>');
+    $(document.body).append(icon);
+    icon.trigger($.Event('keydown', { key: 'Enter' }));
     expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
   });
 

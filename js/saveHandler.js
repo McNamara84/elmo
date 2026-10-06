@@ -8,6 +8,7 @@ import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeResourceInformationPayload } from './services/resourceInformationPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
@@ -210,6 +211,7 @@ class SaveHandler {
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
             const authorsPayload = synchronizeAuthorsPayload(formEl);
+            const resourceInformationPayload = synchronizeResourceInformationPayload(formEl);
             const contributorsPayload = synchronizeContributorsPayload(formEl);
             const hasRelatedWorks = formEl.querySelector(
                 'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
@@ -219,6 +221,7 @@ class SaveHandler {
                 : null;
             synchronizeTagifyInputs(formEl);
             const formData = new FormData(formEl);
+            if (resourceInformationPayload) formData.set('resourceInformationPayload', JSON.stringify(resourceInformationPayload));
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
             if (Array.isArray(contributorsPayload)) {
                 formData.set('contributorsPayload', JSON.stringify(contributorsPayload));
