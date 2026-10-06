@@ -193,6 +193,17 @@ include_once "../settings.php";
                         Leave DOI empty unless already assigned; GFZ registers it after submission.
                         Use YYYY format for years (1901–2155); for embargoes, enter the end date.
                         The title describes the data, not the article.</p>
+                    <h4>Re-using metadata from an existing DOI</h4>
+                    <p>If an existing publication has similar metadata, enter its DOI or doi.org link in the search
+                        field above the form. ELMO looks up its public metadata at
+                        <a href="https://datacite.org/" target="_blank" rel="noopener noreferrer">DataCite</a>
+                        and can fill supported fields after you confirm the preview. This can save time when
+                        publications from the same project or versions of a dataset share details.</p>
+                    <ul>
+                        <li>Only publications with a public DataCite record can be used for metadata import.</li>
+                        <li>Review the imported fields; some details may need to be changed or entered manually.</li>
+                        <li>Importing metadata does not copy the existing DOI into the submission DOI field.</li>
+                    </ul>
                     <h4>Publisher</h4>
                     <p>Please note that the publisher will be named in the dataset citation, as requested by the
                         DataCite citation guidelines. By default, the publisher is GFZ Data Services. However, if this
