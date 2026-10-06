@@ -753,6 +753,26 @@ header .ms-auto.d-flex {
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 
+.resource-doi-search {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.resource-doi-search .form-control {
+    min-width: 0;
+}
+
+@media (max-width: 575.98px) {
+    .resource-doi-search {
+        flex-direction: column;
+    }
+
+    .resource-doi-search .btn {
+        align-self: flex-start;
+    }
+}
+
 /* Keep ORCID buttons aligned with the input height */
 #checkbox-author-contactperson+label,
 .orcid-search-btn,

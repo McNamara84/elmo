@@ -208,6 +208,23 @@ test.describe('DOI Prefill Feature', () => {
     await expect(page.locator('#source-doi-status')).toBeEmpty();
   });
 
+  test('metadata search button aligns with the field and stacks on narrow screens', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    const field = page.locator('#input-resourceinformation-source-doi');
+    const button = page.locator('#button-resourceinformation-prefill-doi');
+    const desktopField = await field.boundingBox();
+    const desktopButton = await button.boundingBox();
+    expect(desktopField && desktopButton).toBeTruthy();
+    expect(Math.abs(desktopField!.y - desktopButton!.y)).toBeLessThan(2);
+    expect(Math.abs(desktopField!.height - desktopButton!.height)).toBeLessThan(2);
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    const mobileField = await field.boundingBox();
+    const mobileButton = await button.boundingBox();
+    expect(mobileField && mobileButton).toBeTruthy();
+    expect(mobileButton!.y).toBeGreaterThan(mobileField!.y + mobileField!.height);
+  });
+
   test('external submission DOI stays visible and blocked without console warnings', async ({ page }) => {
     const consoleIssues: string[] = [];
     page.on('console', message => {

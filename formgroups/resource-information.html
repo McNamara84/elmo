@@ -18,16 +18,16 @@
         <div class="small text-muted mt-1" data-translate="resourceInfo.introduction">Please specify general metadata for the data here</div>
       </div>
       <div class="card-body">
-        <div class="row mb-2 align-items-end">
-          <div class="col-12 col-md-5 p-1">
+        <div class="row mb-2">
+          <div class="col-12 col-lg-8 p-1">
             <label for="input-resourceinformation-source-doi" class="form-label" data-translate="resourceInfo.sourceDoi"></label>
-            <input type="text" class="form-control" id="input-resourceinformation-source-doi"
-              autocomplete="off" aria-invalid="false" aria-describedby="source-doi-status" />
+            <div class="resource-doi-search">
+              <input type="text" class="form-control" id="input-resourceinformation-source-doi"
+                autocomplete="off" aria-invalid="false" aria-describedby="source-doi-status" />
+              <button type="button" class="btn btn-outline-primary" id="button-resourceinformation-prefill-doi"
+                data-translate="resourceInfo.prefillFromDoi"></button>
+            </div>
             <div id="source-doi-status" class="form-text" role="status" aria-live="polite"></div>
-          </div>
-          <div class="col-12 col-md-auto p-1">
-            <button type="button" class="btn btn-outline-primary" id="button-resourceinformation-prefill-doi"
-              data-translate="resourceInfo.prefillFromDoi"></button>
           </div>
         </div>
         <div class="row">
