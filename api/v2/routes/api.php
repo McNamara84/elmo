@@ -33,7 +33,7 @@ return [
     ['GET', '/update/crossref', [new VocabController(), 'getCrossref']],
 
     // Vocabulary retrieval endpoints
-    ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']],
+    ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']], // Usage: ./api/v2/vocabs/roles?type=person/institution/both
     ['GET', '/vocabs/msl-laboratories', [new VocabController(), 'getMslLabs']],
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
