@@ -1,10 +1,37 @@
 import { test, expect } from '@playwright/test';
-import { promises as fs } from 'node:fs';
+import { promises as fs, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { registerStaticAssetRoutes, REPO_ROOT } from '../utils';
 
 const FIXTURE_PATH = '__changelog_fixture__';
 const CHANGELOG_PATH = '**/json/changelog.json';
+const EDITION_LABELS: Record<string, string> = {
+  all: 'All ELMOs',
+  elmo: 'ELMO',
+  msl: 'ELMO-MSL',
+  gem: 'ELMO-GEM',
+  igsn: 'ELMO-IGSN',
+};
+
+type ChangelogEntry = { editions?: string[] };
+type ChangelogData = {
+  currentVersion: string;
+  releases: { sections: { entries: ChangelogEntry[] }[] }[];
+};
+
+const changelogData = JSON.parse(
+  readFileSync(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8')
+) as ChangelogData;
+
+function escapeRegExp(value: string): string {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function editionGroups(data: ChangelogData): string[][] {
+  return data.releases[0].sections.map(section =>
+    section.entries.flatMap(entry => (entry.editions ?? []).map(edition => EDITION_LABELS[edition]))
+  );
+}
 
 async function fixtureHtml(baseURL: string): Promise<string> {
   const [header, modals, footer] = await Promise.all([
@@ -22,7 +49,7 @@ async function fixtureHtml(baseURL: string): Promise<string> {
   );
   const footerMarkup = footer
     .slice(footer.indexOf('<footer '), footer.indexOf('</footer>') + '</footer>'.length)
-    .replace(/<\?php echo htmlspecialchars\(\$changelogVersion[\s\S]*?\?>/u, '2.2.0')
+    .replace(/<\?php echo htmlspecialchars\(\$changelogVersion[\s\S]*?\?>/u, changelogData.currentVersion)
     .replace(/<\?php[\s\S]*?\?>/gu, '');
   const initScript = footer.match(/<script type="module" src="js\/changelogInit\.js[^"]*"><\/script>/u)?.[0]
     .replace(/<\?php[\s\S]*?\?>/gu, 'fixture');
@@ -71,11 +98,11 @@ test.describe('Changelog access and rendering', () => {
 
     const versionButton = page.locator('#button-changelog-show');
     await expect(versionButton).toContainText('Changelog');
-    await expect(versionButton).toContainText('2.2.0');
+    await expect(versionButton).toContainText(changelogData.currentVersion);
     await versionButton.click();
     const changelog = page.locator('#modal-changelog');
     await expect(changelog).toBeVisible();
-    await expect(changelog.locator('.accordion-item')).toHaveCount(19);
+    await expect(changelog.locator('.accordion-item')).toHaveCount(changelogData.releases.length);
     await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toHaveClass(/show/u);
     await expect(changelog.getByText('ELMO-GEM', { exact: true }).first()).toBeVisible();
     await expect(changelog.getByRole('link', { name: 'PR #1188' }).first())
@@ -108,12 +135,7 @@ test.describe('Changelog access and rendering', () => {
         [...section.querySelectorAll(':scope > ul > li > .changelog-edition-badge')]
           .map(badge => badge.textContent?.trim())
       ));
-    expect(groups).toEqual([
-      ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs',
-        'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM', 'ELMO-GEM'],
-      ['All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'All ELMOs', 'ELMO-MSL', 'ELMO-GEM'],
-      ['ELMO-GEM'],
-    ]);
+    expect(groups).toEqual(editionGroups(changelogData));
     await expect(changelog.locator('.accordion-item').nth(1).locator('.badge')).toHaveCount(0);
   });
 
@@ -132,7 +154,7 @@ test.describe('Changelog access and rendering', () => {
     await expect(changelog.getByRole('alert')).toContainText('could not be loaded');
     await changelog.locator('.btn-close').click();
     await page.locator('#button-changelog-show').click();
-    await expect(changelog.locator('.accordion-item')).toHaveCount(19);
+    await expect(changelog.locator('.accordion-item')).toHaveCount(changelogData.releases.length);
     expect(requests).toBe(2);
   });
 
@@ -180,7 +202,10 @@ test.describe('Changelog access and rendering', () => {
     await page.locator('#button-changelog-show').click();
     const badges = page.locator('#modal-changelog .accordion-item').first()
       .locator('.changelog-edition-badge');
-    await expect(badges).toHaveCount(20);
+    const badgeCount = data.releases[0].sections
+      .flatMap((section: { entries: { editions: string[] }[] }) => section.entries)
+      .reduce((count: number, entry: { editions: string[] }) => count + entry.editions.length, 0);
+    await expect(badges).toHaveCount(badgeCount);
     const metrics = await badges.evaluateAll(nodes => nodes.slice(0, 5).map(node => ({
       label: node.textContent,
       width: node.getBoundingClientRect().width,
@@ -207,11 +232,13 @@ test.describe('Changelog access and rendering', () => {
     await page.setViewportSize({ width: 375, height: 812 });
     const versionButton = page.locator('#button-changelog-show');
     await expect(versionButton).toBeVisible();
-    await expect(versionButton).toHaveAccessibleName(/Changelog\s*2\.2\.0/u);
+    await expect(versionButton).toHaveAccessibleName(
+      new RegExp(`Changelog\\s*${escapeRegExp(changelogData.currentVersion)}`, 'u')
+    );
     await versionButton.focus();
     await page.keyboard.press('Enter');
     await expect(page.locator('#modal-changelog')).toBeVisible();
-    await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(19);
+    await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(changelogData.releases.length);
   });
 
   test('shows the version at the same text size as the neighboring footer links', async ({ page }) => {
@@ -243,7 +270,7 @@ test.describe('Changelog access and rendering', () => {
     await expect(page.locator('#modal-about')).toBeVisible();
     await page.locator('#modal-about .btn-close').click();
     await page.locator('#button-changelog-show').click();
-    await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(19);
+    await expect(page.locator('#modal-changelog .accordion-item')).toHaveCount(changelogData.releases.length);
     expect(problems).toEqual([]);
   });
 });
