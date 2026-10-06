@@ -299,7 +299,10 @@
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
         "modelName": "Nom du modèle",
         "modelNameInvalid": "Indiquez ici le nom du modèle",
-        "compensationDepth": "Profondeur de compensation (en mètres)"
+        "compensationDepth": "Profondeur de compensation (en mètres)",
+        "addEntry": "Ajouter une source de données",
+        "removeEntry": "Supprimer la source de données",
+        "satelliteNameEntry": "Saisissez le nom du satellite"
     },
     "technical": {
         "title": "Informations techniques",

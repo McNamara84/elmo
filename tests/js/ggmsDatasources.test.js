@@ -64,27 +64,33 @@ describe('ggmsDatasources.js', () => {
               <option value="T">Elevation/Terrain</option>
               <option value="M">Model</option>
             </select>
+            <span class="input-group-text"><i data-help-section-id="help-datasource-type"></i></span>
           </div>
           <div class="col-md-5 visibility-datasources-basic"><textarea name="datasource_description[]"></textarea></div>
-          <div class="col-md-3 visibility-datasources-details"><select name="datasource_details[]"></select></div>
+          <div class="col-md-3 visibility-datasources-details">
+            <div class="input-group">
+              <select name="datasource_details[]" class="input-with-help"></select>
+              <span class="input-group-text"><i data-help-section-id="help-datasource-details"></i></span>
+            </div>
+          </div>
           <div class="col-md-12 visibility-datasources-compensation"><input name="compensation_depth[]" /></div>
           <div class="col-md-3 visibility-datasources-satellite">
             <div class="input-group">
               <input id="input-datasource-platforms-0" name="satellite_platform[]" class="form-control input-with-help input-right-no-round-corners" />
+              <span class="input-group-text"><i data-help-section-id="help-gcmd-platforms-keyword"></i></span>
             </div>
+            <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
           </div>
           <div class="col-md-6 visibility-datasources-identifier"><input id="input-datasource-modelname" name="dName[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><input name="dIdentifier[]" /></div>
           <div class="col-md-3 visibility-datasources-identifier"><select name="dIdentifierType[]"></select></div>
-          <div class="input-group">
-            <input class="input-with-help" />
-            <div class="help-placeholder" data-help-section-id="ds"></div>
-          </div>
-          <button id="button-datasource-platforms" data-bs-target="#modal-platforms-datasource"></button>
-          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center visibility-datasources-basic">
-            <button class="addDataSource"></button>
+          <div class="col-1 d-flex justify-content-center align-items-center">
+            <button type="button" class="removeButton"></button>
           </div>
         </div>
+      </div>
+      <div data-datasource-add-actions>
+        <button type="button" class="addDataSource" id="button-datasource-add"></button>
       </div>
       <input id="input-platforms-thesaurussearch-ds" />
       <div id="jstree-platforms-datasource"></div>
@@ -260,8 +266,6 @@ describe('ggmsDatasources.js', () => {
       return originalIs.call(this, selector);
     };
 
-    global.createRemoveButton = jest.fn(() => $('<button class="removeButton"></button>'));
-    global.replaceHelpButtonInClonedRows = jest.fn();
     global.setupIdentifierTypesDropdown = jest.fn(select => {
       select.append('<option value="id">id</option>');
     });
@@ -277,7 +281,6 @@ describe('ggmsDatasources.js', () => {
     window.eval(transformThesauriScriptForDatasources(thesauriScript));
 
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/ggmsDatasources.js'), 'utf8');
-    script = script.replace("import { createRemoveButton, replaceHelpButtonInClonedRows } from '../functions.js';", 'const { createRemoveButton, replaceHelpButtonInClonedRows } = window;');
     script = script.replace("import { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } from '../../thesauri.js';", 'const { cleanupTagifyForInput, initTagifyForInput, ensureThesaurusLoaded } = window.__thesauriTestExports;');
     script = script.replace('$(document).ready(function () {', '(function () {');
     script = script.replace(/\n\}\);$/, '\n})();');
@@ -290,8 +293,6 @@ describe('ggmsDatasources.js', () => {
 
   afterEach(() => {
     jest.restoreAllMocks();
-    delete global.createRemoveButton;
-    delete global.replaceHelpButtonInClonedRows;
     delete global.setupIdentifierTypesDropdown;
     delete global.Tagify;
     delete window.ELMO_FEATURES;
@@ -367,8 +368,8 @@ describe('ggmsDatasources.js', () => {
   test('initializes datasource platform Tagify with datasource-specific placeholder', () => {
     const input = $('input[name="satellite_platform[]"]')[0];
     expect(input._tagify).toBeInstanceOf(MockTagify);
-    expect(input._tagify.settings.placeholder).toBe('Choose the satellite');
-    expect(input.getAttribute('data-placeholder')).toBe('Choose the satellite');
+    expect(input._tagify.settings.placeholder).toBe('Type in the satellite name');
+    expect(input.getAttribute('data-placeholder')).toBe('Type in the satellite name');
   });
 
   test('changing type to G shows details and populates options', () => {
@@ -465,25 +466,26 @@ describe('ggmsDatasources.js', () => {
     const identifierCol = row.find('input[name="dIdentifier[]"]').closest('div[class*="col-"]');
     const identifierTypeCol = row.find('select[name="dIdentifierType[]"]').closest('div[class*="col-"]');
     const descCol = row.find('textarea[name="datasource_description[]"]').closest('div[class*="col-"]');
-    const addButtonCol = row.find('.addDataSource, .removeButton').closest('div[class*="col-"]');
+    const removeButtonCol = row.find('.removeButton').closest('div[class*="col-"]');
 
     // --- Assertions ---
-    // Expected order: Type -> Details -> ModelName -> Identifier -> IdentifierType -> Description -> AddButton
+    // Expected order: Type -> Description -> Details -> ModelName -> Identifier -> IdentifierType -> RemoveButton
     const children = row.children().toArray();
     const idxType = children.indexOf(typeCol[0]);
+    const idxDesc = children.indexOf(descCol[0]);
     const idxDetails = children.indexOf(detailsCol[0]);
     const idxModelName = children.indexOf(modelNameCol[0]);
     const idxIdentifier = children.indexOf(identifierCol[0]);
     const idxIdType = children.indexOf(identifierTypeCol[0]);
-    const idxDesc = children.indexOf(descCol[0]);
-    const idxAddBtn = children.indexOf(addButtonCol[0]);
+    const idxRemoveBtn = children.indexOf(removeButtonCol[0]);
 
-    expect(idxType).toBeLessThan(idxDetails);
+    expect(idxType).toBeLessThan(idxDesc);
+    expect(idxDesc).toBeLessThan(idxDetails);
     expect(idxDetails).toBeLessThan(idxModelName);
     expect(idxModelName).toBeLessThan(idxIdentifier);
     expect(idxIdentifier).toBeLessThan(idxIdType);
-    expect(idxIdType).toBeLessThan(idxDesc);
-    expect(idxDesc).toBeLessThan(idxAddBtn);
+    expect(idxIdType).toBeLessThan(idxRemoveBtn);
+    expect(idxRemoveBtn).toBe(children.length - 1);
 
     // Now set type back to Satellite and check order/visibility resets
     typeSelect.val('S').trigger('change');
@@ -493,16 +495,133 @@ describe('ggmsDatasources.js', () => {
     expect(identifierTypeCol.css('display')).toBe('none');
   });
 
-  test('addDataSource clones row, resets values, and restores help button', () => {
+  describe('responsive column layout', () => {
+    const colOf = (row, selector) => row.find(selector).closest('div[class*="col-"]');
+    const expectCols = (col, classes) => classes.forEach(cls => expect(col.hasClass(cls)).toBe(true));
+
+    test('places Description right after Type and the remove button last for every type', () => {
+      const row = $('#group-datasources .row').first();
+      $('#input-model-type').val('Topographic').trigger('change');
+
+      ['S', 'G', 'A', 'T', 'M'].forEach(type => {
+        row.find('select[name="datasource_type[]"]').val(type).trigger('change');
+        const children = row.children('div[class*="col-"]').toArray();
+        expect(children.indexOf(colOf(row, 'select[name="datasource_type[]"]')[0])).toBe(0);
+        expect(children.indexOf(colOf(row, 'textarea[name="datasource_description[]"]')[0])).toBe(1);
+        expect(children.indexOf(colOf(row, '.removeButton')[0])).toBe(children.length - 1);
+      });
+    });
+
+    test('Satellite: Type/Description share the first row, satellite takes 11 columns on xs/sm', () => {
+      const row = $('#group-datasources .row').first();
+      expectCols(colOf(row, 'select[name="datasource_type[]"]'), ['col-6', 'col-md-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-3']);
+      expectCols(row.children('.visibility-datasources-satellite'), ['col-11', 'col-md-5']);
+      expectCols(colOf(row, '.removeButton'), ['col-1']);
+      expect(row.children('.visibility-datasources-satellite').hasClass('col-sm-12')).toBe(false);
+    });
+
+    test('Ground/Altimetry/Terrain: details take 11 columns on xs/sm next to the remove button', () => {
+      const row = $('#group-datasources .row').first();
+      row.find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-11', 'col-md-5']);
+    });
+
+    test('Isostasy: details take the whole row and compensation depth is the last field', () => {
+      const row = $('#group-datasources .row').first();
+      $('#input-model-type').val('Topographic').trigger('change');
+      row.find('select[name="datasource_type[]"]').val('T').trigger('change');
+      row.find('select[name="datasource_details[]"]').val('Isostasy').trigger('change');
+
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-5', 'col-lg-2']);
+      expectCols(colOf(row, 'input[name="compensation_depth[]"]'), ['col-11', 'col-lg-3']);
+      expectCols(colOf(row, 'textarea[name="datasource_description[]"]'), ['col-6', 'col-md-3', 'col-lg-3']);
+
+      row.find('select[name="datasource_details[]"]').val('Bathymetry').trigger('change');
+      const detailsCol = colOf(row, 'select[name="datasource_details[]"]');
+      expectCols(detailsCol, ['col-11', 'col-md-5']);
+      expect(detailsCol.hasClass('col-12') || detailsCol.hasClass('col-lg-2')).toBe(false);
+      expect(colOf(row, 'textarea[name="datasource_description[]"]').hasClass('col-lg-3')).toBe(false);
+    });
+
+    test('Model: details full row, identifier type leaves room for the remove button', () => {
+      const row = $('#group-datasources .row').first();
+      row.find('select[name="datasource_type[]"]').val('M').trigger('change');
+
+      expectCols(colOf(row, 'select[name="datasource_details[]"]'), ['col-12', 'col-md-5']);
+      expectCols(colOf(row, 'input[name="dName[]"]'), ['col-12', 'col-md-4']);
+      expectCols(colOf(row, 'input[name="dIdentifier[]"]'), ['col-12', 'col-sm-6', 'col-md-4']);
+      expectCols(colOf(row, 'select[name="dIdentifierType[]"]'), ['col-11', 'col-sm-5', 'col-md-3']);
+      expect(colOf(row, 'input[name="dName[]"]').hasClass('col-md-6')).toBe(false);
+    });
+  });
+
+  test('add button lives below the entries and is not cloned into new entries', () => {
+    expect($('#group-datasources .addDataSource')).toHaveLength(0);
+    $('#button-datasource-add').trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(2);
+    expect($('.addDataSource')).toHaveLength(1);
+  });
+
+  test('remove button deletes the only remaining entry', () => {
+    expect($('#group-datasources .row')).toHaveLength(1);
+    $('#group-datasources .row').first().find('.removeButton').trigger('click');
+    expect($('#group-datasources .row')).toHaveLength(0);
+  });
+
+  describe('help icons', () => {
+    const helpWrapper = (row, sectionId) => row.find(`i[data-help-section-id="${sectionId}"]`).closest('span.input-group-text');
+    const isShown = wrapper => wrapper.css('display') !== 'none';
+
+    test('shows each help icon only on the first entry where its field is visible', () => {
+      $('.addDataSource').trigger('click');
+      const rows = $('#group-datasources .row');
+
+      expect(isShown(helpWrapper(rows.eq(0), 'help-datasource-type'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-type'))).toBe(false);
+      expect(isShown(helpWrapper(rows.eq(0), 'help-gcmd-platforms-keyword'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-gcmd-platforms-keyword'))).toBe(false);
+      expect(rows.eq(1).find('input[name="satellite_platform[]"]').hasClass('input-right-with-round-corners')).toBe(true);
+    });
+
+    test('moves a help icon to the next entry when the first one no longer shows the field', () => {
+      $('.addDataSource').trigger('click');
+      const rows = $('#group-datasources .row');
+
+      rows.eq(1).find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-details'))).toBe(true);
+
+      rows.eq(0).find('select[name="datasource_type[]"]').val('G').trigger('change');
+      expect(isShown(helpWrapper(rows.eq(0), 'help-datasource-details'))).toBe(true);
+      expect(isShown(helpWrapper(rows.eq(1), 'help-datasource-details'))).toBe(false);
+    });
+
+    test('promotes help icons to the new first entry after the first entry is removed', () => {
+      $('.addDataSource').trigger('click');
+      $('#group-datasources .row').first().find('.removeButton').trigger('click');
+
+      const row = $('#group-datasources .row').first();
+      expect(isShown(helpWrapper(row, 'help-datasource-type'))).toBe(true);
+    });
+
+    test('hides all help icons when help is switched off', () => {
+      localStorage.setItem('helpStatus', 'help-off');
+      document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+
+      const row = $('#group-datasources .row').first();
+      expect(isShown(helpWrapper(row, 'help-datasource-type'))).toBe(false);
+      expect(isShown(helpWrapper(row, 'help-gcmd-platforms-keyword'))).toBe(false);
+      localStorage.setItem('helpStatus', 'help-on');
+    });
+  });
+
+  test('addDataSource clones row, resets values, and initializes Tagify', () => {
     $('.addDataSource').trigger('click');
     const rows = $('#group-datasources .row');
     expect(rows.length).toBe(2);
     const newRow = rows.last();
-    expect(global.replaceHelpButtonInClonedRows).toHaveBeenCalled();
     expect(newRow.find('select[name="datasource_type[]"]').val()).toBe('S');
     expect(newRow.find('.removeButton').length).toBe(1);
-    expect(newRow.find('.help-placeholder').length).toBe(0);
-    expect(newRow.find('span.input-group-text i[data-help-section-id="ds"]').length).toBe(1);
     const tagifyInstance = newRow.find('input[id^="input-datasource-platforms"]')[0]._tagify;
     expect(tagifyInstance).toBeInstanceOf(MockTagify);
     expect(tagifyInstance._callbacks.add).toBeDefined();
@@ -511,11 +630,39 @@ describe('ggmsDatasources.js', () => {
 
   test('uses datasource-specific placeholder for initial and cloned platform inputs', () => {
     const firstInput = $('input[name="satellite_platform[]"]')[0];
-    expect(firstInput._tagify.settings.placeholder).toBe('Choose the satellite');
+    expect(firstInput._tagify.settings.placeholder).toBe('Type in the satellite name');
 
     $('.addDataSource').trigger('click');
     const clonedInput = $('#group-datasources .row').last().find('input[name="satellite_platform[]"]')[0];
-    expect(clonedInput._tagify.settings.placeholder).toBe('Choose the satellite');
+    expect(clonedInput._tagify.settings.placeholder).toBe('Type in the satellite name');
+  });
+
+  test('translates only the newly added row', () => {
+    window.applyTranslationsTo = jest.fn();
+    try {
+      $('.addDataSource').trigger('click');
+
+      const newRow = $('#group-datasources .row').last();
+      expect(window.applyTranslationsTo).toHaveBeenCalledTimes(1);
+      expect(window.applyTranslationsTo.mock.calls[0][0][0]).toBe(newRow[0]);
+    } finally {
+      delete window.applyTranslationsTo;
+    }
+  });
+
+  test('translates the satellite placeholder on all rows when translations load', () => {
+    $('.addDataSource').trigger('click');
+    window.elmo = { translate: key => (key === 'dataSources.satelliteNameEntry' ? 'Satellitenname eintippen' : undefined) };
+    try {
+      document.dispatchEvent(new Event('translationsLoaded'));
+
+      $('input[name="satellite_platform[]"]').each(function () {
+        expect(this._tagify.settings.placeholder).toBe('Satellitenname eintippen');
+        expect(this.getAttribute('placeholder')).toBe('Satellitenname eintippen');
+      });
+    } finally {
+      delete window.elmo;
+    }
   });
 
   test('resets datasource modal search input on open and close', () => {

@@ -12,6 +12,136 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "ELMO-GEM goundrtip coverage is extended to all input fields"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 725
+                },
+                {
+                  "type": "pull",
+                  "number": 1218
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Selected ELMO-GEM GCMD Science keywords are saved with the full paths"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 951
+                },
+                {
+                  "type": "pull",
+                  "number": 1187
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Help buttons are shown consistently: exactly once for each input field in the authors formgroup"
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1220
+                },
+                {
+                  "type": "pull",
+                  "number": 1224
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Geo-point is entered with latitudeMin and longitudeMin is now saved and uploaded correctly"
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1167
+                },
+                {
+                  "type": "pull",
+                  "number": 1243
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Documentation and layout for the Data Sources formgroup are improved"
+                }
+              ],
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 843
+                },
+                {
+                  "type": "issue",
+                  "number": 891
+                },
+                {
+                  "type": "issue",
+                  "number": 943
+                },
+                {
+                  "type": "pull",
+                  "number": 1250
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Sync of ERNIE vocabularies into the database on the container start. Ensuring that ERNIE ids are always present"
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1216
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "The footer version opens a separate changelog with edition badges and links to related issues and pull requests; About remains under Help."
                 }
               ],
