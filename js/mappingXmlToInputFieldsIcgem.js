@@ -442,6 +442,32 @@ function applySatellitePlatformTags(platformInput, tags) {
 }
 
 /**
+ * Makes the data source stack hold exactly `count` rows, also when the user
+ * removed every row. Rows are added via the add button and removed via their
+ * remove buttons so widgets, Tagify state and translations stay consistent.
+ * @param {number} count
+ * @returns {jQuery} The data source rows in form order
+ */
+function ensureDataSourceRows(count) {
+  const rowSelector = '#group-datasources [data-source-row]';
+  const $surplus = $(rowSelector).slice(count);
+  $surplus.find('.removeButton').trigger('click');
+  $surplus.remove();
+
+  const $addButton = $('.addDataSource').first();
+  const missing = count - $(rowSelector).length;
+  for (let i = 0; i < missing; i++) {
+    $addButton.trigger('click');
+  }
+
+  const $rows = $(rowSelector);
+  if ($rows.length !== count) {
+    throw new Error(`Expected ${count} data source rows, found ${$rows.length}`);
+  }
+  return $rows;
+}
+
+/**
  * Populates the GGMsDataSources form rows.
  * Consecutive satellite entries with the same description share one form row.
  * All other entries become separate rows. The datasource type 'change' event is
@@ -457,7 +483,6 @@ async function populateIcgemDataSources(data) {
   if (dataSources.length === 0) return;
 
   const formDataSources = groupIcgemDataSourcesForForm(dataSources);
-
   const needsSatelliteVocab = formDataSources.some(
     (ds) => Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0
   );
@@ -468,14 +493,11 @@ async function populateIcgemDataSources(data) {
     }
   }
 
+  const $rows = ensureDataSourceRows(formDataSources.length);
+
   for (let i = 0; i < formDataSources.length; i++) {
     const ds = formDataSources[i];
-
-    if (i > 0) {
-      $('.addDataSource').last().trigger('click');
-    }
-
-    const $row = $('[data-source-row]').last();
+    const $row = $rows.eq(i);
     const $typeSelect = $row.find('select[name="datasource_type[]"]');
     selectDataSourceType($typeSelect, ds.inputDataSourceType);
     $typeSelect.trigger('change');
@@ -858,6 +880,7 @@ if (typeof module !== 'undefined' && module.exports) {
     selectOptionByText,
     reverseDensityType,
     groupIcgemDataSourcesForForm,
+    ensureDataSourceRows,
     populateIcgemDefinition,
     populateIcgemProperties,
     populateIcgemModelTypes,
