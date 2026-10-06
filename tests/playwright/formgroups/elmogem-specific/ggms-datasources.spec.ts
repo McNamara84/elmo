@@ -1,5 +1,5 @@
 import path from 'path';
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator, type Page } from '@playwright/test';
 import { navigateToHome, uploadXmlIntoForm } from '../../utils';
 
 const GCMD_PLATFORMS_ROUTE = '**/api/v2/vocabs/thesauri/gcmd-platforms';
@@ -195,6 +195,146 @@ test.describe('GGMs Data Sources – upload into an empty stack', () => {
         await expect(row.locator('input[name="dName[]"]')).toHaveValue(source.name);
         await expect(row.locator('input[name="dIdentifier[]"]')).toHaveValue(source.identifier);
         await expect(row.locator('select[name="dIdentifierType[]"]')).toHaveValue(source.identifierType);
+      }
+    }
+  });
+});
+
+/** Rendered size of a remove button relative to its layout size (1 = unscaled). */
+async function getRenderedScale(button: Locator): Promise<number> {
+  return button.evaluate(element => {
+    const htmlElement = element as HTMLElement;
+    return element.getBoundingClientRect().width / htmlElement.offsetWidth;
+  });
+}
+
+/**
+ * Geometry of one data source entry relative to the surrounding card body and add button.
+ * fieldInset is the gap between the card-body edge and the first field of the entry.
+ */
+async function measureDatasourceEntry(page: Page, rowIndex: number) {
+  return page.evaluate(index => {
+    const group = document.querySelector('#group-datasources') as HTMLElement;
+    const row = group.querySelectorAll<HTMLElement>('[data-source-row]')[index];
+    const cardBody = group.closest('.card-body') as HTMLElement;
+    const columns = Array.from(row.children).filter(
+      child => (child as HTMLElement).offsetParent !== null,
+    ) as HTMLElement[];
+    const removeColumn = columns[columns.length - 1];
+    const lastFieldColumn = columns[columns.length - 2];
+    const removeButton = removeColumn.querySelector('.removeButton') as HTMLElement;
+    const addButton = document.querySelector('#button-datasource-add') as HTMLElement;
+
+    const rowBox = row.getBoundingClientRect();
+    const bodyBox = cardBody.getBoundingClientRect();
+    const removeBox = removeButton.getBoundingClientRect();
+    const lastFieldBox = (lastFieldColumn.querySelector('.input-group') ?? lastFieldColumn).getBoundingClientRect();
+    const firstFieldBox = (columns[0].querySelector('.input-group') ?? columns[0]).getBoundingClientRect();
+    const addBox = addButton.getBoundingClientRect();
+    const firstRowBox = group.querySelector('[data-source-row]')!.getBoundingClientRect();
+
+    return {
+      fieldInset: firstFieldBox.left - bodyBox.left,
+      rowSideGap: bodyBox.width - rowBox.width,
+      removeInsideRow: removeBox.left >= rowBox.left && removeBox.right <= rowBox.right + 0.5,
+      removeClearOfField: removeBox.left >= lastFieldBox.right - 0.5,
+      addAlignedWithRows: Math.abs(addBox.left - firstRowBox.left) < 1,
+      addBelowRows: addBox.top >= group.getBoundingClientRect().bottom,
+      horizontalScroll: document.documentElement.scrollWidth > window.innerWidth,
+    };
+  }, rowIndex);
+}
+
+test.describe('GGMs Data Sources – responsive mobile layout', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/modeltypes', async route => {
+      await route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify(MODEL_TYPES_MOCK),
+      });
+    });
+
+    await navigateToHome(page);
+    await expect(page.locator('#group-ggmspropertiesessential')).toBeVisible();
+  });
+
+  test('remove buttons render at 75% on 320–375px phones and full size on wider screens', async ({ page }) => {
+    const datasourceRows = page.locator('#group-datasources [data-source-row]');
+    const fundingRows = page.locator('#group-fundingreference [funding-reference-row]');
+
+    for (const { width, expectedScale } of [
+      { width: 320, expectedScale: 0.75 },
+      { width: 375, expectedScale: 0.75 },
+      { width: 376, expectedScale: 1 },
+      { width: 768, expectedScale: 1 },
+    ]) {
+      await page.setViewportSize({ width, height: 900 });
+
+      // Rows created by the add listeners must pick up the scaling as well.
+      await page.locator('#button-datasource-add').click();
+      await page.locator('#button-fundingreference-add').click();
+      await expect(datasourceRows).toHaveCount(2);
+      await expect(fundingRows).toHaveCount(2);
+
+      const removeButtons = [
+        datasourceRows.nth(0).locator('.removeButton'),
+        datasourceRows.nth(1).locator('.removeButton'),
+        fundingRows.nth(1).locator('.removeButton'),
+      ];
+      for (const button of removeButtons) {
+        expect(await getRenderedScale(button), `remove button scale at ${width}px`).toBeCloseTo(expectedScale, 2);
+      }
+
+      const entry = await measureDatasourceEntry(page, 1);
+      expect(entry.removeInsideRow, `remove button stays inside its entry at ${width}px`).toBe(true);
+      if (expectedScale < 1) {
+        expect(entry.removeClearOfField, `scaled remove button does not cover the last field at ${width}px`).toBe(true);
+      }
+      expect(entry.addAlignedWithRows, `add button keeps its position at ${width}px`).toBe(true);
+      expect(entry.addBelowRows, `add button stays below the entries at ${width}px`).toBe(true);
+
+      // The remove listeners keep working on the scaled buttons.
+      await removeButtons[1].click();
+      await removeButtons[2].click();
+      await expect(datasourceRows).toHaveCount(1);
+      await expect(fundingRows).toHaveCount(1);
+    }
+  });
+
+  test('data source entries use more of the card body below 769px and most on phones', async ({ page }) => {
+    await page.locator('#button-datasource-add').click();
+    const addedTypeSelect = page.locator('#input-datasource-type-1');
+    await expect(addedTypeSelect).toBeVisible();
+
+    const measureAt = async (width: number) => {
+      await page.setViewportSize({ width, height: 900 });
+      return measureDatasourceEntry(page, 1);
+    };
+
+    for (const type of ['S', 'M']) {
+      // The change listener re-orders and re-sizes the columns; the spacing must survive it.
+      await addedTypeSelect.selectOption(type);
+
+      const desktop = await measureAt(1024);
+      const boundary = await measureAt(769);
+      const tablet = await measureAt(768);
+      const phone = await measureAt(375);
+      const smallPhone = await measureAt(320);
+
+      expect(boundary.fieldInset, `type ${type}: 769px keeps the desktop spacing`).toBeCloseTo(desktop.fieldInset, 0);
+      expect(tablet.fieldInset, `type ${type}: tablet entries start closer to the card edge`).toBeLessThan(boundary.fieldInset);
+      expect(phone.fieldInset, `type ${type}: phone entries start closer still`).toBeLessThan(tablet.fieldInset);
+      expect(smallPhone.fieldInset, `type ${type}: 320px uses the phone spacing`).toBeCloseTo(phone.fieldInset, 0);
+      expect(tablet.rowSideGap, `type ${type}: tablet entry leaves less card padding`).toBeLessThan(boundary.rowSideGap);
+      expect(phone.rowSideGap, `type ${type}: phone entry leaves even less card padding`).toBeLessThan(tablet.rowSideGap);
+
+      for (const [label, entry] of Object.entries({ desktop, boundary, tablet, phone, smallPhone })) {
+        expect(entry.removeInsideRow, `type ${type} ${label}: remove button inside entry`).toBe(true);
+        expect(entry.removeClearOfField, `type ${type} ${label}: remove button clear of last field`).toBe(true);
+        expect(entry.addAlignedWithRows, `type ${type} ${label}: add button aligned with entries`).toBe(true);
+        expect(entry.addBelowRows, `type ${type} ${label}: add button below entries`).toBe(true);
+        expect(entry.horizontalScroll, `type ${type} ${label}: no horizontal scrolling`).toBe(false);
       }
     }
   });
