@@ -217,6 +217,7 @@ test.describe('DOI Prefill Feature', () => {
     expect(desktopField && desktopButton).toBeTruthy();
     expect(Math.abs(desktopField!.y - desktopButton!.y)).toBeLessThan(2);
     expect(Math.abs(desktopField!.height - desktopButton!.height)).toBeLessThan(2);
+    expect(await button.evaluate(element => getComputedStyle(element).whiteSpace)).toBe('nowrap');
 
     await page.setViewportSize({ width: 375, height: 800 });
     await button.evaluate(element => { element.textContent = "Importer les métadonnées d'un DOI existant"; });

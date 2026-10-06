@@ -767,6 +767,12 @@ header .ms-auto.d-flex {
     max-width: 100%;
 }
 
+@media (min-width: 576px) {
+    .resource-doi-search .btn {
+        white-space: nowrap;
+    }
+}
+
 .resource-doi-edit-btn,
 .resource-doi-help {
     display: flex;
