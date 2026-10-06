@@ -450,6 +450,23 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Resource Information DOI and title controls now align on desktop and mobile. Empty DOI metadata searches no longer show conflicting validation feedback."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1249
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "For Standard, MSL, and IGSN submissions, an existing 10.5880 DOI is verified with DataCite and given the next major version for manual curation. External, unknown, and unverifiable DOIs are blocked before saving or mailing."
                 }
               ],

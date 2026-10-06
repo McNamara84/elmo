@@ -16,8 +16,8 @@ describe('changelog renderer', () => {
     expect(container.querySelector('.accordion-button').textContent).toBe('Version 2.2.0 - 2026/10/19');
     expect(container.querySelector('.accordion-collapse').classList.contains('show')).toBe(true);
     expect(container.querySelectorAll('.accordion-button[aria-expanded="true"]')).toHaveLength(1);
-    expect(container.querySelectorAll('.badge')).toHaveLength(28);
-    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(19);
+    expect(container.querySelectorAll('.badge')).toHaveLength(29);
+    expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]')).toHaveLength(20);
     const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
     expect(issueLinks).toHaveLength(26);
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #831');

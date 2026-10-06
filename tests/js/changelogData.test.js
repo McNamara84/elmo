@@ -28,7 +28,7 @@ describe('changelog migration', () => {
     const entries = changelog.releases.flatMap(release =>
       release.sections.flatMap(section => allEntries(section.entries))
     );
-    expect(entries).toHaveLength(269);
+    expect(entries).toHaveLength(270);
     expect(entries.filter(entry => entry.children?.length)).toHaveLength(2);
     expect(entries.flatMap(entry => entry.parts).filter(part => part.type === 'code')).toHaveLength(8);
 
@@ -59,10 +59,10 @@ describe('changelog migration', () => {
     const entryByText = prefix => latestEntries.find(entry =>
       entry.parts.map(part => part.value).join('').startsWith(prefix)
     );
-    expect(latestEntries).toHaveLength(26);
+    expect(latestEntries).toHaveLength(27);
     const allowedEditions = new Set(['all', 'elmo', 'msl', 'gem', 'igsn']);
     const verifiedIssues = new Set([401, 769, 807, 812, 831, 885, 909, 1009, 1013, 1022, 1061, 1064, 1087, 1127, 1140, 1148, 1191, 1196, 1203, 1240]);
-    const verifiedPullRequests = new Set([1188, 1213, 1222, 1229, 1233, 1234, 1235, 1238, 1245, 1246]);
+    const verifiedPullRequests = new Set([1188, 1213, 1222, 1229, 1233, 1234, 1235, 1238, 1245, 1246, 1249]);
 
     for (const entry of latestEntries) {
       expect(entry.editions.length).toBeGreaterThan(0);
@@ -106,6 +106,8 @@ describe('changelog migration', () => {
     expect(entryByText('Submission errors').references).toBeUndefined();
     expect(entryByText('A separate DOI lookup').references).toEqual([{ type: 'issue', number: 831 }]);
     expect(entryByText('Resource type help').references).toEqual([{ type: 'issue', number: 1013 }]);
+    expect(entryByText('Resource Information DOI and title controls').references)
+      .toEqual([{ type: 'pull', number: 1249 }]);
     expect(entryByText('For Standard, MSL, and IGSN submissions').editions).toEqual(['elmo', 'msl', 'igsn']);
 
     for (const release of changelog.releases.slice(1)) {
@@ -127,7 +129,7 @@ describe('changelog migration', () => {
       'gem', 'gem', 'gem', 'gem', 'gem'
     ]);
     expect(editions(fixes)).toEqual([
-      'all', 'all', 'all', 'all', 'all', 'elmo', 'msl', 'gem'
+      'all', 'all', 'all', 'all', 'all', 'all', 'elmo', 'msl', 'gem'
     ]);
     expect(editions(documentation)).toEqual(['all', 'gem']);
   });
