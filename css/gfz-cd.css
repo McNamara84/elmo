@@ -763,6 +763,18 @@ header .ms-auto.d-flex {
     min-width: 0;
 }
 
+.resource-doi-edit-btn,
+.resource-doi-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(3.5rem + 2px);
+}
+
+.resource-doi-edit-btn {
+    border-radius: 0;
+}
+
 @media (max-width: 575.98px) {
     .resource-doi-search {
         flex-direction: column;

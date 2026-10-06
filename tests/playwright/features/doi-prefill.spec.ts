@@ -225,6 +225,15 @@ test.describe('DOI Prefill Feature', () => {
     expect(mobileButton!.y).toBeGreaterThan(mobileField!.y + mobileField!.height);
   });
 
+  test('submission DOI edit and help controls sit next to each other', async ({ page }) => {
+    const edit = await page.locator('#button-resourceinformation-edit-doi').boundingBox();
+    const help = await page.locator('.resource-doi-help').boundingBox();
+    expect(edit && help).toBeTruthy();
+    expect(help!.x).toBeGreaterThanOrEqual(edit!.x + edit!.width - 2);
+    expect(Math.abs(help!.y - edit!.y)).toBeLessThan(2);
+    expect(Math.abs(help!.height - edit!.height)).toBeLessThan(2);
+  });
+
   test('external submission DOI stays visible and blocked without console warnings', async ({ page }) => {
     const consoleIssues: string[] = [];
     page.on('console', message => {
