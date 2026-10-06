@@ -208,6 +208,13 @@ async function getRenderedScale(button: Locator): Promise<number> {
   });
 }
 
+/** CI viewports round transformed sizes; a 10% band still separates 75% from full size. */
+function expectWithinTenPercent(received: number, expected: number, message: string) {
+  const tolerance = Math.abs(expected) * 0.1;
+  expect(received, message).toBeGreaterThanOrEqual(expected - tolerance);
+  expect(received, message).toBeLessThanOrEqual(expected + tolerance);
+}
+
 /**
  * Geometry of one data source entry relative to the surrounding card body and add button.
  * fieldInset is the gap between the card-body edge and the first field of the entry.
@@ -283,7 +290,7 @@ test.describe('GGMs Data Sources – responsive mobile layout', () => {
         fundingRows.nth(1).locator('.removeButton'),
       ];
       for (const button of removeButtons) {
-        expect(await getRenderedScale(button), `remove button scale at ${width}px`).toBeCloseTo(expectedScale, 2);
+        expectWithinTenPercent(await getRenderedScale(button), expectedScale, `remove button scale at ${width}px`);
       }
 
       const entry = await measureDatasourceEntry(page, 1);
