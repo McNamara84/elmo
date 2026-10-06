@@ -10,7 +10,8 @@ $(document).ready(function () {
     const datasourcePlatformsModal = $('#modal-platforms-datasource');
     const datasourcePlatformsSearch = $('#input-platforms-thesaurussearch-ds');
     const datasourcePlatformsTree = $('#jstree-platforms-datasource');
-    const datasourcePlatformPlaceholder = 'Type in the satellite name';
+    const getDatasourcePlatformPlaceholder = () =>
+        window.elmo?.translate?.('dataSources.satelliteNameEntry') || 'Type in the satellite name';
 
     // Clone the first row to use as a template for new rows.
     const originalDataSourceRow = datasourceGroup.children(".row").first().clone();
@@ -324,6 +325,7 @@ $(document).ready(function () {
     function applyDatasourcePlatformPlaceholder(inputElement) {
         if (!inputElement) return;
 
+        const datasourcePlatformPlaceholder = getDatasourcePlatformPlaceholder();
         inputElement.setAttribute('data-placeholder', datasourcePlatformPlaceholder);
         inputElement.setAttribute('placeholder', datasourcePlatformPlaceholder);
 
@@ -372,6 +374,8 @@ $(document).ready(function () {
         initializeRowWidgets(newRow);
 
         datasourceGroup.append(newRow);
+        // The template is cloned at page load, possibly before the language file arrived.
+        window.applyTranslationsTo?.(newRow);
         applyDatasourceHelpStatus();
     });
 
@@ -411,6 +415,11 @@ $(document).ready(function () {
     });
 
     document.addEventListener('helpStatus:changed', applyDatasourceHelpStatus);
+    document.addEventListener('translationsLoaded', function () {
+        datasourceGroup.find('input[name="satellite_platform[]"]').each(function () {
+            applyDatasourcePlatformPlaceholder(this);
+        });
+    });
 
     // --- INITIALIZATION ---
 
