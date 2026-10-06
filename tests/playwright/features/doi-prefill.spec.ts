@@ -178,6 +178,17 @@ test.describe('DOI Prefill Feature', () => {
     await expect(preview).toContainText('E2E Test Dataset');
   });
 
+  test('accepts a doi.org link for metadata import without reusing its DOI', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    await sourceInput.fill('https://doi.org/10.5880/test.2024.001');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+
+    await expect(page.locator('#modal-doi-prefill')).toBeVisible();
+    await expect(sourceInput).toHaveValue('10.5880/test.2024.001');
+    await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('');
+    expect(doiLookupRequestCount).toBe(1);
+  });
+
   test('does not show modal for invalid DOI format', async ({ page }) => {
     await page.locator('#input-resourceinformation-source-doi').fill('not-a-doi');
     await page.locator('#button-resourceinformation-prefill-doi').click();

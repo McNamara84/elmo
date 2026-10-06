@@ -62,7 +62,9 @@ $(document).ready(function () {
   }
 
   $('#button-resourceinformation-prefill-doi').on('click', async function () {
-    const doi = String($sourceInput.val() || '').trim();
+    const enteredDoi = String($sourceInput.val() || '').trim();
+    const doi = enteredDoi.replace(/^https?:\/\/(?:www\.|dx\.)?doi\.org\//i, '');
+    if (doi !== enteredDoi) $sourceInput.val(doi);
     if (!doi) {
       sourceStatus();
       return;

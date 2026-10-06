@@ -49,6 +49,29 @@ describe('separate DOI search and submission DOI flow', () => {
     expect($('#doi-prefill-preview').html()).toContain('Preview');
   });
 
+  test.each([
+    'https://doi.org/10.5880/source',
+    'http://dx.doi.org/10.5880/source',
+  ])('accepts a DOI resolver link in the metadata search: %s', async resolverUrl => {
+    lookupDoi.mockResolvedValue({ found: true, attributes: { doi: '10.5880/source' } });
+    $('#input-resourceinformation-source-doi').val(resolverUrl);
+
+    await $('#button-resourceinformation-prefill-doi').triggerHandler('click');
+
+    expect(lookupDoi).toHaveBeenCalledWith('10.5880/source');
+    expect($('#input-resourceinformation-source-doi').val()).toBe('10.5880/source');
+    expect($('#input-resourceinformation-doi').val()).toBe('');
+  });
+
+  test('does not accept a link from a lookalike DOI host', async () => {
+    $('#input-resourceinformation-source-doi').val('https://doi.org.evil/10.5880/source');
+
+    await $('#button-resourceinformation-prefill-doi').triggerHandler('click');
+
+    expect(lookupDoi).not.toHaveBeenCalled();
+    expect($('#source-doi-status').hasClass('text-danger')).toBe(true);
+  });
+
   test('empty DOI search stays neutral and clears a stale error while typing', async () => {
     await $('#button-resourceinformation-prefill-doi').triggerHandler('click');
     expect($('#source-doi-status').text()).toBe('');
