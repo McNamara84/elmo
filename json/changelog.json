@@ -450,7 +450,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Resource Information DOI and title controls now align on desktop and mobile. Empty DOI metadata searches no longer show conflicting validation feedback."
+                  "value": "Resource Information DOI and title controls now align on desktop and mobile. Empty DOI metadata searches no longer show conflicting validation feedback. The metadata search accepts doi.org links and uses a compact search icon."
                 }
               ],
               "editions": [
