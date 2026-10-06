@@ -749,6 +749,81 @@ async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: 
       .toBe(true);
   }
 
+  // ── ICGEM Model Types – Temporal section ─────────────────────────────────
+
+  if (data.modelType.toLowerCase() === 'temporal') {
+    // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
+    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
+
+    await page.locator('#input-temporal-start').fill(data.temporalStart);
+
+    // Release frequency: use predefined select for standard day counts, else custom days.
+    if (data.temporalResolution) {
+      const days = parseInt(data.temporalResolution, 10);
+      const daysToFrequency: Record<number, string> = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
+      if (predefined) {
+        await page.locator('#select-release-frequency').selectOption(predefined);
+      } else {
+        await page.locator('#checkbox-custom-frequency').check();
+        await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
+        await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
+      }
+    }
+  }
+
+  // ── Data sources ──────────────────────────────────────────────────────────
+
+  const DS_ROW = '#group-datasources .row[data-source-row]';
+
+  for (let i = 0; i < data.dataSources.length; i++) {
+    const ds = data.dataSources[i];
+
+    // Add a new row for every source after the first
+    if (i > 0) {
+      await page.locator('#button-datasource-add').click();
+      await expect(page.locator(DS_ROW)).toHaveCount(i + 1, { timeout: 5_000 });
+    }
+
+    const dsRow = page.locator(DS_ROW).nth(i);
+
+    // Datasource type: 'Satellite' → 'S'
+    const typeCodeMap: Record<string, string> = {
+      satellite: 'S',
+      'ground data': 'G',
+      altimetry: 'A',
+      model: 'M',
+      'elevation/terrain': 'T',
+    };
+    const typeCode = typeCodeMap[ds.type.toLowerCase()] ?? 'S';
+    await dsRow.locator('select[name="datasource_type[]"]').selectOption(typeCode);
+    await dsRow.locator('select[name="datasource_type[]"]').dispatchEvent('change');
+
+    await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
+
+    // Satellite platform – inject via Tagify API
+    if (typeCode === 'S' && ds.satelliteValueName) {
+      const tag = {
+        value: ds.satelliteValueName,
+        id: ds.satelliteValueUri ?? '',
+        scheme: ds.satelliteSchemeName ?? '',
+        schemeURI: ds.satelliteSchemeUri ?? '',
+      };
+      const platformInput = dsRow.locator('input[name="satellite_platform[]"]');
+      await platformInput.evaluate(
+        (el: unknown, t: typeof tag) => {
+          const tagify = (el as Record<string, unknown>)._tagify;
+          if (tagify) (tagify as { addTags: (tags: typeof tag[]) => void }).addTags([t]);
+        },
+        tag,
+      );
+    }
   // The modal normally closes itself when showUploadToast fires; dismiss it via
   // the Bootstrap API when it does not, rather than blocking on the toast.
   if (await uploadModal.isVisible().catch(() => false)) {
@@ -1123,7 +1198,7 @@ for (const testCase of TEST_CASES) {
         expect(savedEnd, '[FIELD: temporalEnd]').toBe(parsedData.temporalEnd);
       }
 
-      // Temporal resolution
+      // Release frequency (exported as ICGEM temporalResolution days)
       const savedResolution = extractText(getNode(tmpNode, 'temporalResolution'));
       expect(savedResolution, '[FIELD: temporalResolution]').toBe(parsedData.temporalResolution);
 
@@ -1523,11 +1598,28 @@ for (const testCase of TEST_CASES) {
     }
 
     if (parsedData.temporalResolution) {
-      const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
-      expect(freqChecked, 'customFrequency checkbox').toBe(true);
-      await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
-        parsedData.temporalResolution,
-      );
+      // Known day counts map to the predefined release-frequency select on import;
+      // only non-standard values keep the custom-days checkbox path.
+      const days = parseInt(parsedData.temporalResolution, 10);
+      const daysToFrequency: Record<number, string> = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
+      if (predefined) {
+        await expect(page.locator('#select-release-frequency'), 'releaseFrequency').toHaveValue(predefined);
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(false);
+      } else {
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(true);
+        await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
+          parsedData.temporalResolution,
+        );
+      }
     }
 
     // ── ICGEM Topographic fields ───────────────────────────────────────────

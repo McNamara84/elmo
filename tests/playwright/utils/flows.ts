@@ -505,7 +505,7 @@ export async function fillGEM(page: Page) {
     () => ((document.querySelector('#input-mathematical-representation') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
     { timeout: 10_000 },
   );
-  await page.locator('#input-mathematical-representation').selectOption({ index: 1 });
+  await page.locator('#input-mathematical-representation').selectOption({ label: 'Spherical harmonics' });
 
   await page.waitForFunction(
     () => ((document.querySelector('#input-file-format') as HTMLSelectElement | null)?.options.length ?? 0) > 1,
@@ -556,7 +556,7 @@ export async function fillGEM(page: Page) {
   await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible();
   await page.locator('#input-temporal-start').fill('2002-04-01');
   await page.locator('#input-temporal-end').fill('2023-06-30');
-  await page.locator('#select-temporal-frequency-predef').selectOption('monthly');
+  await page.locator('#select-release-frequency').selectOption('monthly');
   await page.locator('#input-temporal-institution').fill('GFZ');
   await page.locator('#input-release-number').fill('RL07');
 

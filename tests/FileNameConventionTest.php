@@ -44,6 +44,21 @@ final class FileNameConventionTest extends TestCase
         ];
     }
 
+    public function testIndexPhpFormgroupIncludesExist(): void
+    {
+        $indexPath = dirname(__DIR__) . '/index.php';
+        $index = file_get_contents($indexPath);
+        $this->assertNotFalse($index);
+
+        preg_match_all('/include \$baseDir \. [\'"]formgroups\/([^\'"]+)[\'"]/', $index, $matches);
+        $this->assertNotEmpty($matches[1]);
+
+        foreach ($matches[1] as $fileName) {
+            $path = dirname(__DIR__) . '/formgroups/' . $fileName;
+            $this->assertFileExists($path, "index.php includes missing form group: {$fileName}");
+        }
+    }
+
     #[DataProvider('invalidPathProvider')]
     public function testRejectsInvalidNames(string $path, string $messageFragment): void
     {
@@ -60,6 +75,7 @@ final class FileNameConventionTest extends TestCase
             'procedural PHP with hyphen' => ['bad-endpoint.php', 'snake_case'],
             'PHP test without PascalCase' => ['tests/file_name_Test.php', 'PascalCase'],
             'JavaScript with snake case' => ['js/bad_module.js', 'camelCase'],
+            'JavaScript with kebab case' => ['js/eventhandlers/formgroups/ggms-properties.js', 'camelCase'],
             'JavaScript module with dots' => ['js/logging.module.js', 'camelCase'],
             'Jest test with snake case' => ['tests/js/bad_module.test.js', 'camelCase.test.js'],
             'Jest test with invalid segment' => ['tests/js/logging.bad_module.test.js', 'camelCase.test.js'],
