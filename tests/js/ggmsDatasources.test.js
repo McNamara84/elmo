@@ -637,6 +637,34 @@ describe('ggmsDatasources.js', () => {
     expect(clonedInput._tagify.settings.placeholder).toBe('Type in the satellite name');
   });
 
+  test('translates only the newly added row', () => {
+    window.applyTranslationsTo = jest.fn();
+    try {
+      $('.addDataSource').trigger('click');
+
+      const newRow = $('#group-datasources .row').last();
+      expect(window.applyTranslationsTo).toHaveBeenCalledTimes(1);
+      expect(window.applyTranslationsTo.mock.calls[0][0][0]).toBe(newRow[0]);
+    } finally {
+      delete window.applyTranslationsTo;
+    }
+  });
+
+  test('translates the satellite placeholder on all rows when translations load', () => {
+    $('.addDataSource').trigger('click');
+    window.elmo = { translate: key => (key === 'dataSources.satelliteNameEntry' ? 'Satellitenname eintippen' : undefined) };
+    try {
+      document.dispatchEvent(new Event('translationsLoaded'));
+
+      $('input[name="satellite_platform[]"]').each(function () {
+        expect(this._tagify.settings.placeholder).toBe('Satellitenname eintippen');
+        expect(this.getAttribute('placeholder')).toBe('Satellitenname eintippen');
+      });
+    } finally {
+      delete window.elmo;
+    }
+  });
+
   test('resets datasource modal search input on open and close', () => {
     $('#input-platforms-thesaurussearch-ds').val('Satellite');
     openDatasourceModal(document.getElementById('button-datasource-platforms'));
