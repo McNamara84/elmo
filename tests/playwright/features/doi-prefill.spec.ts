@@ -219,25 +219,28 @@ test.describe('DOI Prefill Feature', () => {
     await expect(page.locator('#source-doi-status')).toBeEmpty();
   });
 
-  test('metadata search button aligns with the field and stacks on narrow screens', async ({ page }) => {
+  test('metadata search icon is accessible and aligns on wide and narrow screens', async ({ page }) => {
     await page.setViewportSize({ width: 1200, height: 800 });
     const field = page.locator('#input-resourceinformation-source-doi');
     const button = page.locator('#button-resourceinformation-prefill-doi');
+    await expect(button).toHaveAccessibleName('Import metadata from an existing DOI');
+    await expect(button).toHaveAttribute('title', 'Import metadata from an existing DOI');
+    await expect(button).toHaveClass(/btn-outline-secondary/u);
+    await expect(button.locator('.bi-search')).toHaveCount(1);
     const desktopField = await field.boundingBox();
     const desktopButton = await button.boundingBox();
     expect(desktopField && desktopButton).toBeTruthy();
     expect(Math.abs(desktopField!.y - desktopButton!.y)).toBeLessThan(2);
     expect(Math.abs(desktopField!.height - desktopButton!.height)).toBeLessThan(2);
-    expect(await button.evaluate(element => getComputedStyle(element).whiteSpace)).toBe('nowrap');
 
     await page.setViewportSize({ width: 375, height: 800 });
-    await button.evaluate(element => { element.textContent = "Importer les métadonnées d'un DOI existant"; });
     const mobileField = await field.boundingBox();
     const mobileButton = await button.boundingBox();
     const mobileSearch = await page.locator('.resource-doi-search').boundingBox();
     expect(mobileField && mobileButton).toBeTruthy();
     expect(mobileButton!.y).toBeGreaterThan(mobileField!.y + mobileField!.height);
     expect(mobileButton!.x + mobileButton!.width).toBeLessThanOrEqual(mobileSearch!.x + mobileSearch!.width + 1);
+    expect(mobileButton!.width).toBeLessThan(60);
   });
 
   test('submission DOI edit and help controls sit next to each other', async ({ page }) => {
