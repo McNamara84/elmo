@@ -115,9 +115,9 @@ test.describe('ELMO-GEM save', () => {
     await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().waitFor({ state: 'visible' });
     await page.getByRole('option', { name: 'Space-based Platforms > Earth' }).first().click();
     await page.locator('#button-datasource-add').click();
-    await page.getByLabel('Type*', { exact: true }).selectOption('G');
+    await page.locator('#input-datasource-type-1').selectOption({ label: 'Ground data' });
     await page.locator('#button-datasource-add').click();
-    await page.locator('#input-datasource-type-2').selectOption('M');
+    await page.locator('#input-datasource-type-2').selectOption({ label: 'Reference Model' });
     await page.getByRole('textbox', { name: 'Model name', exact: true }).click();
     await page.getByRole('textbox', { name: 'Model name', exact: true }).fill('Model1');
     await page.getByRole('textbox', { name: 'Value' }).click();
@@ -147,7 +147,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('Model Type *').selectOption('Static');
     await page.getByRole('checkbox', { name: 'Time-variable coefficients' }).check();
     await page.locator('#button-datasource-add').click();
-    await page.getByLabel('Type*', { exact: true }).selectOption('M');
+    await page.locator('#input-datasource-type-1').selectOption({ label: 'Reference Model' });
     await page.locator('#input-datasource-identifier-1').dblclick();
     await page.locator('#input-datasource-identifier-1').fill('identifier');
     await page.locator('#input-datasource-identifiertype1').selectOption('');
