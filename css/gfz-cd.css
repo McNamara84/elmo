@@ -294,6 +294,37 @@ label.mandatory-field::after {
     margin-inline-end: 0.75rem;
 }
 
+/* Mobile phones (320–375px): shrink remove buttons visually; transform keeps the layout box,
+ * so neighbouring fields and add buttons do not shift. */
+@media (max-width: 375px) {
+    .removeButton {
+        transform: scale(0.75);
+    }
+}
+
+/* Data source entries: trim nested paddings (card-body + row p-1 + column p-1) so fields get
+ * more width. Bootstrap's p-1 utilities are !important, hence the overrides. */
+@media (max-width: 768.98px) {
+    .card-body.datasources-card-body {
+        padding: 0.5rem;
+    }
+
+    #group-datasources > [data-source-row],
+    #group-datasources > [data-source-row] > [class*="col-"]:not(.p-0) {
+        padding: 0.125rem !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .card-body.datasources-card-body {
+        padding: 0.5rem 0.25rem;
+    }
+
+    #group-datasources > [data-source-row] > [class*="col-"]:not(.p-0) {
+        padding: 0.125rem 0.0625rem !important;
+    }
+}
+
 .map-panel {
     height: 500px;
     width: 100%;

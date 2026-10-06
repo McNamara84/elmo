@@ -267,6 +267,20 @@ describe('populateIcgemDataSources satellite platforms', () => {
     expect(tagify.update).not.toHaveBeenCalled();
   });
 
+  test('selects Reference Model when the XML type is Model', async () => {
+    buildDatasourceDom();
+    $('select[name="datasource_type[]"] option[value="M"]').text('Reference Model');
+
+    await icgemModule.populateIcgemDataSources({
+      dataSources: [{
+        inputDataSourceType: 'Model',
+        modelDetail: 'Global Gravitational Model'
+      }]
+    });
+
+    expect($('select[name="datasource_type[]"]').val()).toBe('M');
+  });
+
   test('does not wait when there is no satellite platform', async () => {
     buildDatasourceDom({ addTags: jest.fn(), update: jest.fn() });
     window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
@@ -279,6 +293,85 @@ describe('populateIcgemDataSources satellite platforms', () => {
     });
 
     expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalled();
+  });
+
+  describe('data source remain operational under changing row count', () => {
+    const rowHtml = `
+      <div class="row" data-source-row>
+        <select name="datasource_type[]">
+          <option value="S">Satellite</option>
+          <option value="G">Ground data</option>
+          <option value="A">Altimetry</option>
+          <option value="M">Model</option>
+        </select>
+        <select name="datasource_details[]">
+          <option value="Terrestrial">Terrestrial</option>
+          <option value="Shipborne">Shipborne</option>
+        </select>
+        <textarea name="datasource_description[]"></textarea>
+        <input name="satellite_platform[]" />
+        <button type="button" class="removeButton"></button>
+      </div>`;
+
+    function buildStack(rowCount) {
+      document.body.innerHTML = `
+        <div id="group-datasources">${rowHtml.repeat(rowCount)}</div>
+        <button type="button" class="addDataSource"></button>
+      `;
+      $('.addDataSource').on('click', () => $('#group-datasources').append(rowHtml));
+      $('#group-datasources').on('click', '.removeButton', function () {
+        $(this).closest('.row').remove();
+      });
+    }
+
+    const ground = (description, groundDetail = 'Terrestrial') => ({
+      inputDataSourceType: 'Ground data',
+      description,
+      groundDetail
+    });
+
+    test('creates rows when the user removed every row', async () => {
+      buildStack(0);
+
+      await icgemModule.populateIcgemDataSources({
+        dataSources: [ground('one'), ground('two', 'Shipborne')]
+      });
+
+      const $rows = $('[data-source-row]');
+      expect($rows).toHaveLength(2);
+      expect($rows.eq(0).find('textarea').val()).toBe('one');
+      expect($rows.eq(1).find('textarea').val()).toBe('two');
+      expect($rows.eq(1).find('select[name="datasource_details[]"]').val()).toBe('Shipborne');
+    });
+
+    test('fills existing rows in order and removes surplus rows', async () => {
+      buildStack(3);
+
+      await icgemModule.populateIcgemDataSources({
+        dataSources: [ground('first'), ground('second')]
+      });
+
+      const descriptions = $('[data-source-row] textarea').map((_, el) => el.value).get();
+      expect(descriptions).toEqual(['first', 'second']);
+    });
+
+    test('creates one row per grouped data source, not per XML entry', async () => {
+      buildStack(1);
+      window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+      await icgemModule.populateIcgemDataSources({
+        dataSources: [satellite(grace, 'shared'), satellite(graceFo, 'shared'), ground('ground')]
+      });
+
+      expect($('[data-source-row]')).toHaveLength(2);
+    });
+
+    test('throws when rows cannot be created', () => {
+      document.body.innerHTML = '<div id="group-datasources"></div>';
+
+      expect(() => icgemModule.ensureDataSourceRows(2))
+        .toThrow('Expected 2 data source rows, found 0');
+    });
   });
 
   test('waits for identifier type options before setting Model identifierType', async () => {
