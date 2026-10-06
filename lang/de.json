@@ -87,8 +87,8 @@
     },
     "resourceInfo": {
         "introduction": "Bitte geben Sie hier allgemeine Metadaten zu den Daten an",
-        "sourceDoi": "DOI für den Metadatenimport",
-        "prefillFromDoi": "Metadaten aus DOI übernehmen",
+        "sourceDoi": "Metadaten einer bestehenden DOI übernehmen, um die Eingabe zu beschleunigen",
+        "prefillFromDoi": "Metadaten einer bestehenden DOI importieren",
         "sourceDoiInvalid": "Bitte geben Sie eine gültige DOI für den Metadatenimport ein.",
         "sourceDoiNotFound": "Für diese DOI wurde kein öffentlicher DataCite-Eintrag gefunden.",
         "sourceDoiLookupFailed": "DataCite ist nicht erreichbar. Bitte versuchen Sie es erneut.",

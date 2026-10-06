@@ -763,6 +763,10 @@ header .ms-auto.d-flex {
     min-width: 0;
 }
 
+.resource-doi-search .btn {
+    max-width: 100%;
+}
+
 .resource-doi-edit-btn,
 .resource-doi-help {
     display: flex;

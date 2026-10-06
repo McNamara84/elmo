@@ -86,8 +86,8 @@
     },
     "resourceInfo": {
         "introduction": "Please specify general metadata for the data here",
-        "sourceDoi": "DOI to import metadata from",
-        "prefillFromDoi": "Import metadata from DOI",
+        "sourceDoi": "Re-use metadata from an existing DOI to speed up the process",
+        "prefillFromDoi": "Import metadata from an existing DOI",
         "sourceDoiInvalid": "Enter a valid DOI to load metadata.",
         "sourceDoiNotFound": "No public DataCite record was found for this DOI.",
         "sourceDoiLookupFailed": "DataCite could not be reached. Please try again.",

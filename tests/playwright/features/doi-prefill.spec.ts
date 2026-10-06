@@ -219,10 +219,13 @@ test.describe('DOI Prefill Feature', () => {
     expect(Math.abs(desktopField!.height - desktopButton!.height)).toBeLessThan(2);
 
     await page.setViewportSize({ width: 375, height: 800 });
+    await button.evaluate(element => { element.textContent = "Importer les métadonnées d'un DOI existant"; });
     const mobileField = await field.boundingBox();
     const mobileButton = await button.boundingBox();
+    const mobileSearch = await page.locator('.resource-doi-search').boundingBox();
     expect(mobileField && mobileButton).toBeTruthy();
     expect(mobileButton!.y).toBeGreaterThan(mobileField!.y + mobileField!.height);
+    expect(mobileButton!.x + mobileButton!.width).toBeLessThanOrEqual(mobileSearch!.x + mobileSearch!.width + 1);
   });
 
   test('submission DOI edit and help controls sit next to each other', async ({ page }) => {
