@@ -17,6 +17,12 @@ $(document).ready(function () {
       .text(translate(key, fallback).replace(/\{version\}/g, expectedVersion));
   }
 
+  function sourceStatus(key = '', fallback = '', isError = false) {
+    $sourceInput.attr('aria-invalid', String(isError));
+    $('#source-doi-status').toggleClass('text-danger', isError)
+      .text(key ? translate(key, fallback) : '');
+  }
+
   function toggleSpinner(show) {
     $('#doi-lookup-spinner').remove();
     if (!show) return;
@@ -57,12 +63,15 @@ $(document).ready(function () {
 
   $('#button-resourceinformation-prefill-doi').on('click', async function () {
     const doi = String($sourceInput.val() || '').trim();
-    if (!isValidDoiFormat(doi)) {
-      $('#source-doi-status').addClass('text-danger').text(
-        translate('resourceInfo.sourceDoiInvalid', 'Enter a valid DOI to load metadata.'));
+    if (!doi) {
+      sourceStatus();
       return;
     }
-    $('#source-doi-status').removeClass('text-danger').text('');
+    if (!isValidDoiFormat(doi)) {
+      sourceStatus('resourceInfo.sourceDoiInvalid', 'Enter a valid DOI to load metadata.', true);
+      return;
+    }
+    sourceStatus();
     if (isLookupActive) return;
     isLookupActive = true;
     toggleSpinner(true);
@@ -70,16 +79,18 @@ $(document).ready(function () {
       const result = await lookupService.lookupDoi(doi);
       toggleSpinner(false);
       if (result?.found && result.attributes) showPrefillModal(result.attributes);
-      else $('#source-doi-status').addClass('text-danger').text(
-        translate('resourceInfo.sourceDoiNotFound', 'No public DataCite record was found for this DOI.'));
+      else sourceStatus('resourceInfo.sourceDoiNotFound',
+        'No public DataCite record was found for this DOI.', true);
     } catch (error) {
       toggleSpinner(false);
-      $('#source-doi-status').addClass('text-danger').text(
-        translate('resourceInfo.sourceDoiLookupFailed', 'DataCite could not be reached. Please try again.'));
+      sourceStatus('resourceInfo.sourceDoiLookupFailed',
+        'DataCite could not be reached. Please try again.', true);
     } finally {
       isLookupActive = false;
     }
   });
+
+  $sourceInput.on('input', () => sourceStatus());
 
   $('#button-resourceinformation-edit-doi').on('click', function () {
     window.resourceInformation?.enableDoiEditing?.(false);

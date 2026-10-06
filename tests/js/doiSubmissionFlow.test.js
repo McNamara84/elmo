@@ -49,6 +49,21 @@ describe('separate DOI search and submission DOI flow', () => {
     expect($('#doi-prefill-preview').html()).toContain('Preview');
   });
 
+  test('empty DOI search stays neutral and clears a stale error while typing', async () => {
+    await $('#button-resourceinformation-prefill-doi').triggerHandler('click');
+    expect($('#source-doi-status').text()).toBe('');
+    expect(lookupDoi).not.toHaveBeenCalled();
+
+    $('#input-resourceinformation-source-doi').val('invalid');
+    await $('#button-resourceinformation-prefill-doi').triggerHandler('click');
+    expect($('#source-doi-status').hasClass('text-danger')).toBe(true);
+    expect($('#input-resourceinformation-source-doi').attr('aria-invalid')).toBe('true');
+
+    $('#input-resourceinformation-source-doi').val('').trigger('input');
+    expect($('#source-doi-status').text()).toBe('');
+    expect($('#input-resourceinformation-source-doi').attr('aria-invalid')).toBe('false');
+  });
+
   test('external DOI remains visible and blocks submission until manually removed', async () => {
     $('#input-resourceinformation-doi').val('10.1234/external');
     expect(await window.resourceInformation.validateSubmissionDoi()).toBe(false);

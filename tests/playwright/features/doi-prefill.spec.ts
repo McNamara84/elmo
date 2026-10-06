@@ -140,6 +140,7 @@ test.describe('DOI Prefill Feature', () => {
 
     // Inject dependencies
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+    await injectStylesheet(page, 'css/gfz-cd.css');
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
     await injectScript(page, 'node_modules/jquery-ui/dist/jquery-ui.min.js');
     await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
@@ -184,6 +185,27 @@ test.describe('DOI Prefill Feature', () => {
     const modal = page.locator('#modal-doi-prefill');
     await expect(modal).not.toBeVisible();
     expect(doiLookupRequestCount).toBe(0);
+  });
+
+  test('empty metadata search keeps a neutral appearance after submit validation', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    const neutral = await sourceInput.evaluate(input => getComputedStyle(input).borderTopColor);
+    await page.locator('form').evaluate(form => form.classList.add('was-validated'));
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+
+    const state = await sourceInput.evaluate(input => ({
+      border: getComputedStyle(input).borderTopColor,
+      background: getComputedStyle(input).backgroundImage,
+      invalid: input.getAttribute('aria-invalid')
+    }));
+    expect(state).toEqual({ border: neutral, background: 'none', invalid: 'false' });
+    await expect(page.locator('#source-doi-status')).toBeEmpty();
+
+    await sourceInput.fill('invalid');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+    await expect(page.locator('#source-doi-status')).toContainText('valid DOI');
+    await sourceInput.clear();
+    await expect(page.locator('#source-doi-status')).toBeEmpty();
   });
 
   test('external submission DOI stays visible and blocked without console warnings', async ({ page }) => {
