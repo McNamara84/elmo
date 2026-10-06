@@ -223,7 +223,7 @@ $(document).ready(function () {
     newTitleRow.find(".addTitle").replaceWith(removeBtn);
     const $handle = $('<button/>', {
       type: 'button',
-      class: 'btn btn-outline-secondary title-sort-handle',
+      class: 'drag-handle title-sort-handle',
       html: '<i class="bi bi-grip-vertical" aria-hidden="true"></i>',
       title: window.elmo?.translate?.('resourceInfo.moveTitle') || 'Move title'
     });

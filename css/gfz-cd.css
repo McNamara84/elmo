@@ -200,6 +200,20 @@ body {
     outline-offset: 2px;
 }
 
+.title-sort-handle {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 2.25rem;
+}
+
+.title-sort-handle:not(:disabled) {
+    cursor: grab;
+}
+
+.title-sort-handle:active {
+    cursor: grabbing;
+}
+
 [data-creator-row].ui-sortable-helper {
     background: white;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
