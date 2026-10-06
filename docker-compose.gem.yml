@@ -51,8 +51,11 @@ services:
       SMTP_SECURE: ${SMTP_SECURE}
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
-      # ICGEM registration mail; Data Services still uses XML_SUBMIT_ADDRESS
+      # Data Services submission mail. Set XML_SUBMIT_ADDRESS in Portainer.
+      # XML_SUBMIT_ADDRESS is for sending to data curators. In our case, GFZ Data Services
+      # overrides it when a shared env file configures every variant.
+      XML_SUBMIT_ADDRESS: "${XML_SUBMIT_ADDRESS}"
+      # ICGEM registration mail
       ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS}
       # ELMO-GEM only: researcher confirmation mail and the upload link in the ICGEM mail
       SEND_RESEARCHER_CONFIRMATION_EMAIL: ${SEND_RESEARCHER_CONFIRMATION_EMAIL:-true}
