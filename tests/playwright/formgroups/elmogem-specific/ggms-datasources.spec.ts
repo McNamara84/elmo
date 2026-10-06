@@ -1,5 +1,6 @@
+import path from 'path';
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../../utils';
+import { navigateToHome, uploadXmlIntoForm } from '../../utils';
 
 const GCMD_PLATFORMS_ROUTE = '**/api/v2/vocabs/thesauri/gcmd-platforms';
 
@@ -139,5 +140,62 @@ test.describe('GGMs Data Sources – Elevation/Terrain type visibility', () => {
     await modelType.selectOption('Simulated');
     await expect(typeSelect.locator('option[value="T"]')).toHaveCount(0);
     await expect(clonedTypeSelect.locator('option[value="T"]')).toHaveCount(0);
+  });
+});
+
+/**
+ * icgem-testdata-defferent-datasources.xml holds four input data sources and
+ * no satellite source: Ground data, Altimetry, Elevation/Terrain, Model.
+ * Rows added into an empty stack are numbered from 0.
+ */
+const DIFFERENT_DATASOURCES_XML = path.join(
+  __dirname,
+  '../../flows/elmogem-specific/testDataIcgemRoundtrip/icgem-testdata-defferent-datasources.xml',
+);
+
+const EXPECTED_UPLOADED_SOURCES = [
+  { type: 'G', details: 'Terrestrial', description: 'd1' },
+  { type: 'A', details: 'Direct observations from altimetry satellites', description: 'd2' },
+  { type: 'T', details: 'Bathymetry', description: 'd3' },
+  {
+    type: 'M',
+    details: 'Global Gravitational Model',
+    description: 'd4',
+    name: 'GOCO7',
+    identifier: '10.5880/GFZ.GRACEFO_06_GSM',
+    identifierType: 'DOI',
+  },
+] as const;
+
+test.describe('GGMs Data Sources – upload into an empty stack', () => {
+  test('uploading into a form with the data source row deleted keeps only the file sources', async ({ page }) => {
+    await navigateToHome(page);
+    const rows = page.locator('#group-datasources [data-source-row]');
+    await expect(rows).toHaveCount(1);
+
+    await page.locator('#group-datasources .removeButton').click();
+    await expect(rows).toHaveCount(0);
+
+    await uploadXmlIntoForm(page, DIFFERENT_DATASOURCES_XML);
+
+    await expect(rows).toHaveCount(EXPECTED_UPLOADED_SOURCES.length);
+    await expect(page.locator('#input-datasource-type')).toHaveCount(0);
+    await expect(page.locator('#input-datasource-type-4')).toHaveCount(0);
+
+    for (let i = 0; i < EXPECTED_UPLOADED_SOURCES.length; i++) {
+      const source = EXPECTED_UPLOADED_SOURCES[i];
+      const row = rows.nth(i);
+
+      await expect(row.locator('select[name="datasource_type[]"]')).toHaveValue(source.type);
+      await expect(row.locator('select[name="datasource_type[]"]')).toHaveAttribute('id', `input-datasource-type-${i}`);
+      await expect(row.locator('select[name="datasource_details[]"]')).toHaveValue(source.details);
+      await expect(row.locator('textarea[name="datasource_description[]"]')).toHaveValue(source.description);
+
+      if ('name' in source) {
+        await expect(row.locator('input[name="dName[]"]')).toHaveValue(source.name);
+        await expect(row.locator('input[name="dIdentifier[]"]')).toHaveValue(source.identifier);
+        await expect(row.locator('select[name="dIdentifierType[]"]')).toHaveValue(source.identifierType);
+      }
+    }
   });
 });
