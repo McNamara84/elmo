@@ -10,7 +10,9 @@ final class ChangelogVersionTest extends TestCase
 {
     public function testReadsVersionFromChangelogData(): void
     {
-        self::assertSame('2.2.0', elmoChangelogVersion(__DIR__ . '/../json/changelog.json'));
+        $path = __DIR__ . '/../json/changelog.json';
+        $data = json_decode((string) file_get_contents($path), true, 512, JSON_THROW_ON_ERROR);
+        self::assertSame($data['currentVersion'], elmoChangelogVersion($path));
     }
 
     public function testRejectsMissingOrInconsistentChangelogData(): void
@@ -42,8 +44,10 @@ final class ChangelogVersionTest extends TestCase
             ob_end_clean();
         }
 
+        $data = json_decode((string) file_get_contents(__DIR__ . '/../json/changelog.json'), true, 512, JSON_THROW_ON_ERROR);
+        $version = preg_quote($data['currentVersion'], '/');
         self::assertStringContainsString('id="button-changelog-show"', $html);
         self::assertStringContainsString('data-bs-target="#modal-changelog"', $html);
-        self::assertMatchesRegularExpression('/<span>2\.2\.0<\/span>/', $html);
+        self::assertMatchesRegularExpression('/<span>' . $version . '<\/span>/', $html);
     }
 }

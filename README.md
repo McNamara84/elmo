@@ -178,7 +178,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpPassword`: Password of the mailbox
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
-  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
+  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `ICGEM_SUBMIT_ADDRESS` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
   - `$icgemSubmitAddress`: Email address that receives the ICGEM metadata file of every ELMO GEM submission, configured via the environment variable `ICGEM_SUBMIT_ADDRESS` (default `icgem@gfz.de`).
   - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
   - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
@@ -847,11 +847,11 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
 
 - Latitude Max
   
-  This field contains the larger geographic latitude of a rectangle.
+  This field contains the larger geographic latitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#northboundlatitude)
   - Example values: `49.72437624376` `-32.82438824398`
   
@@ -867,19 +867,21 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
 - Longitude Max
   
-  This field contains the larger geographic longitude of a rectangle.
+  This field contains the larger geographic longitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
 
- - Coordinate rules:
-    - A point requires Minimum Latitude Min + Longitude Min.
-    - A rectangle requires Latitude Min + Longitude Min + Latitude Max + Longitude Max.
+- Coordinate rules:
+    - A point uses Latitude Min and Longitude Min. Latitude Max and Longitude Max stay empty.
+    - A rectangle uses Latitude Min, Longitude Min, Latitude Max, and Longitude Max.
+    - Latitude Max and Longitude Max are not required for a point.
     - Latitude Max or Longitude Max on its own is not permitted.
-    - Once a "Max" field is used, all four coordinate fields are mandatory.
+    - Once a Max field is used, all four coordinate fields are mandatory.
+    - Uploading a DataCite `geoLocationPoint` fills only Latitude Min and Longitude Min. Uploading a `geoLocationBox` fills all four bounds.
   
 - Description
 
@@ -1393,12 +1395,10 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Date created**                          |                   0-1                   |                  0-n                  | `<date dateType="Created">` when provided; `<date dateType="Submitted">` is added automatically on submit                                                                  |
 |                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
 | Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<pointLongitude>`                                                                                                                                                          |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<southBoundLatitude>`                                                                                                                                                      |
-|                            | **Latitude Max**                          |                    1                    |                   1                   | `<northBoundLatitude>`                                                                                                                                                      |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<westBoundLongitude>`                                                                                                                                                      |
-|                            | **Longitude Max**                         |                    1                    |                   1                   | `<eastBoundLongitudens>`                                                                                                                                                    |
+|                            | **Latitude Min**                          |                    1                    |                   1                   | Point: `<pointLatitude>`. Box: `<southBoundLatitude>`                                                                                                                       |
+|                            | **Longitude Min**                         |                    1                    |                   1                   | Point: `<pointLongitude>`. Box: `<westBoundLongitude>`                                                                                                                      |
+|                            | **Latitude Max**                          |                   0-1                   |                  0-1                  | Box only: `<northBoundLatitude>`. Left empty for a point.                                                                                                                   |
+|                            | **Longitude Max**                         |                   0-1                   |                  0-1                  | Box only: `<eastBoundLongitude>`. Left empty for a point.                                                                                                                   |
 |                            | **Description**                           |                    1                    |                   1                   | `<geoLocationPlace>`                                                                                                                                                        |
 | Temporal Coverage          |                                           |                   0-n                   |                  0-n                  | `<date>`                                                                                                                                                                    |
 |                            | **Start Date**                            |                    1                    |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
