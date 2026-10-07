@@ -164,7 +164,7 @@
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",
-        "name": "Author Institution name"
+        "name": "Author Institution Name"
     },
     "contactPersons": {
         "contactPersonError": "Please add a contact in Authors or Contributors with a name and valid email address.",
