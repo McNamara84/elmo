@@ -160,7 +160,7 @@
         "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide an Institution name."
+        "InstitutionsNameInvalid": "Please provide an Institution Name."
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",
@@ -195,7 +195,7 @@
     },
     "contributorInstitutions": {
         "title": "Contributor: Institutions",
-        "organization": "Institution name",
+        "organization": "Institution Name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {
