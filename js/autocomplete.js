@@ -308,7 +308,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
  */
 $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () {
   const orcidInput = $(this);
-  const row = orcidInput.closest('[contributor-person-row]');
+  const row = orcidInput.closest('[data-contributor-card]');
   const orcid = normalizeOrcidForLookup(orcidInput.val());
   orcidInput.val(orcid);
 

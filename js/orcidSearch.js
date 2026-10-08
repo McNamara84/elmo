@@ -168,7 +168,7 @@ function getModalContext() {
       };
     }
   } else if (groupType === 'contributor') {
-    const rows = $('#group-contributorperson [contributor-person-row]');
+    const rows = $('[data-contributor-card][data-contributor-type="person"]');
     if (rowIndex >= 0 && rowIndex < rows.length) {
       return {
         row: $(rows[rowIndex]),
@@ -201,14 +201,14 @@ $(document).ready(function () {
   $(document).on('click', '.orcid-search-btn', function () {
     const btn = $(this);
     const authorRow = btn.closest('[data-creator-row]');
-    const contributorRow = btn.closest('[contributor-person-row]');
+    const contributorRow = btn.closest('[data-contributor-card][data-contributor-type="person"]');
 
     if (authorRow.length) {
       const index = $('#group-author [data-creator-row]').index(authorRow);
       document.getElementById('orcid-search-context-group').value = 'author';
       document.getElementById('orcid-search-context-row-index').value = index;
     } else if (contributorRow.length) {
-      const index = $('#group-contributorperson [contributor-person-row]').index(contributorRow);
+      const index = $('[data-contributor-card][data-contributor-type="person"]').index(contributorRow);
       document.getElementById('orcid-search-context-group').value = 'contributor';
       document.getElementById('orcid-search-context-row-index').value = index;
     }

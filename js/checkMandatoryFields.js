@@ -62,7 +62,7 @@ $(document).ready(function () {
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
 function validateContributorPersonRequirements() {
-    $('[data-contributor-stack] [contributor-person-row]').each(function () {
+    $('[data-contributor-stack] [data-contributor-card][data-contributor-type="person"]').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
         var fields = {
@@ -94,7 +94,7 @@ function validateContributorPersonRequirements() {
  * Ensures the "Name" and "Role" fields are required if any field in the row is filled.
  */
 function validateContributorOrganisationRequirements() {
-    $('[data-contributor-stack] [contributors-row]').each(function () {
+    $('[data-contributor-stack] [data-contributor-card][data-contributor-type="institution"]').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Organization section
         var fields = {

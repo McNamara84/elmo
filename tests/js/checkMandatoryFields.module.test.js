@@ -31,18 +31,22 @@ describe('checkMandatoryFields module coverage', () => {
                 </div>
             </div>
             <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="person">
                 <div class="row" contributor-person-row>
                     <input type="text" id="input-contributor-orcid" name="cbPersonOrcid[]">
                     <input type="text" id="input-contributor-lastname" name="cbPersonLastname[]">
                     <input type="text" id="input-contributor-firstname" name="cbPersonFirstname[]">
                     <input type="text" id="input-contributor-personrole" name="cbPersonRoles[]">
+                </div>
                     <input type="text" id="input-contributorpersons-affiliation" name="cbPersonAffiliation[]">
                 </div>
             </div>
             <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="institution">
                 <div class="row" contributors-row>
                     <input type="text" id="input-contributor-name" name="OrganisationName[]">
                     <input type="text" id="input-contributor-organisationrole" name="cbOrganisationRoles[]">
+                </div>
                     <input type="text" id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]">
                 </div>
             </div>
