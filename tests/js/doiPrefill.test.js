@@ -1,3 +1,4 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
 const { requireFresh } = require('./utils');
 const {
   getDataCite47ResourceTypes,
@@ -304,6 +305,7 @@ describe('doiPrefill.js', () => {
         </div>
         <button id="button-authorinstitution-add"></button>
       `;
+      mountAuthorStack();
     });
 
     test('fills person creator fields', () => {
@@ -931,6 +933,7 @@ describe('doiPrefill.js', () => {
         <input id="input-rights-license" />
       `;
 
+      mountAuthorStack();
       attachTagify('#input-freekeyword');
 
       window.__clearInputFieldsSpy = jest.fn();

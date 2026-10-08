@@ -656,23 +656,7 @@ function populateIcgemContactPersons(xmlDoc) {
     return details;
   }
 
-  function applyAffiliationsToRow($row, affiliations) {
-    if (!affiliations.length) return;
 
-    const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-    if (tagifyInput && tagifyInput._tagify) {
-      tagifyInput._tagify.removeAllTags();
-      tagifyInput._tagify.addTags(affiliations.map((affiliation) => ({
-        value: affiliation.label,
-        label: affiliation.label,
-        rorId: affiliation.rorId
-      })));
-    } else {
-      $row.find('input[name="personAffiliation[]"]').val(affiliations.map((affiliation) => affiliation.label).join(','));
-    }
-
-    $row.find('input[name="authorPersonRorIds[]"]').val(affiliations.map((affiliation) => affiliation.rorId).join(','));
-  }
 
   // Locate globalGravityProduct
   const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//grav:globalGravityProduct', xmlDoc)
@@ -763,45 +747,7 @@ function populateIcgemContactPersons(xmlDoc) {
     return;
   }
 
-  for (let i = 0; i < contactPersons.length; i++) {
-    const { familyName, givenName, orcid, affiliations, email, website } = contactPersons[i];
-
-    if (!email && !website) continue;
-    if (!familyName && !givenName) continue;
-
-    const normFamily = familyName.toLowerCase();
-    const normGiven  = givenName.toLowerCase();
-    let $row = $('div[data-creator-row]').filter(function () {
-      const rf = ($('input[name="familynames[]"]', this).val() || '').trim().toLowerCase();
-      const rg = ($('input[name="givennames[]"]', this).val() || '').trim().toLowerCase();
-      return rf === normFamily && rg === normGiven;
-    }).first();
-
-    if (!$row.length) {
-      const countBefore = $('div[data-creator-row]').length;
-      $('#button-author-add').trigger('click');
-      const $rows = $('div[data-creator-row]');
-      if ($rows.length <= countBefore) {
-        console.warn('populateIcgemContactPersons: could not create author row for contact person', { familyName, givenName });
-        continue;
-      }
-
-      $row = $rows.last();
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
-    }
-
-    // Ensure the contact-person toggle is active and fields are visible.
-    // The toggle handler fires on "click", not "change", so we must explicitly
-    // check the checkbox and show the fields rather than relying on the event.
-    $row.find('input[name="contacts[]"]').prop('checked', true);
-    $row.find('.contact-person-input').show();
-
-    if (email)   $row.find('input[name="cpEmail[]"]').val(email);
-    if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
-    if (orcid)   $row.find('input[name="orcids[]"]').val(orcid);
-    applyAffiliationsToRow($row, affiliations);
-  }
+  throw new Error('Authors form is not initialized.');
 }
 
 /**

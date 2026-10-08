@@ -1,3 +1,5 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
+
 /**
  * @jest-environment jsdom
  */
@@ -10,48 +12,7 @@ describe('ICGEM contact person import', () => {
   const DATACITE_NS = 'http://datacite.org/schema/kernel-4';
 
   function buildAuthorDom(authors) {
-    const rows = authors.map((author) => `
-      <div class="row" data-creator-row>
-        <input type="checkbox" name="contacts[]" />
-        <input type="text" name="personAffiliation[]" value="" />
-        <input type="hidden" name="authorPersonRorIds[]" value="" />
-        <input type="text" name="familynames[]" value="${author.familyname}" />
-        <input type="text" name="givennames[]" value="${author.givenname}" />
-        <input type="text" name="orcids[]" value="" />
-        <div class="contact-person-input" style="display: none;">
-          <input type="email" name="cpEmail[]" value="" />
-        </div>
-        <div class="contact-person-input" style="display: none;">
-          <input type="text" name="cpOnlineResource[]" value="" />
-        </div>
-      </div>
-    `).join('');
-
-    document.body.innerHTML = `
-      <div id="group-author">
-        ${rows}
-        <button type="button" id="button-author-add"></button>
-      </div>
-    `;
-
-    $('#button-author-add').on('click', () => {
-      $('#group-author').append(`
-        <div class="row" data-creator-row>
-          <input type="checkbox" name="contacts[]" />
-          <input type="text" name="familynames[]" value="" />
-          <input type="text" name="personAffiliation[]" value="" />
-          <input type="hidden" name="authorPersonRorIds[]" value="" />
-          <input type="text" name="givennames[]" value="" />
-          <input type="text" name="orcids[]" value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      `);
-    });
+    mountAuthorStack(authors.map(author => ({ type: 'person', ...author })));
   }
 
   function makeIcgemXml({ familyName, givenName, email, website }) {
@@ -167,7 +128,7 @@ describe('ICGEM contact person import', () => {
     expect(firstRow.querySelector('input[name="cpEmail[]"]').value).toBe('ada.alpha@gfz.de');
     expect(firstRow.querySelector('input[name="cpOnlineResource[]"]').value).toBe('https://ada.example.org');
     expect(firstRow.querySelector('input[name="orcids[]"]').value).toBe('0000-0001-2345-6789');
-    expect(firstRow.querySelector('input[name="personAffiliation[]"]').value).toBe('GFZ Potsdam');
+    expect(JSON.parse(firstRow.querySelector('input[name="personAffiliation[]"]').value)[0].value).toBe('GFZ Potsdam');
     expect(firstRow.querySelector('input[name="authorPersonRorIds[]"]').value).toBe('03yrm5c26');
 
     expect(secondRow.querySelector('input[name="cpEmail[]"]').value).toBe('ben.beta@gfz.de');
