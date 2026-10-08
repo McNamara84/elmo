@@ -556,14 +556,13 @@ async function populateIcgemDataSources(data) {
  * Contact info (email/website) is stored positionally in grav:contact/grav:address
  * and grav:contact/grav:onlineResource. Who the contact person *is* comes from
  * DataCite contributors with contributorType="ContactPerson"; names from that
- * section locate the matching author row. If no such contributor is present,
- * a warning is logged and no author is marked as contact.
+ * section locate the matching author or contributor card. Existing authors keep
+ * their contact fields; other contacts use Contributors with Contact Person role.
+ * If person Contributors are disabled, missing contacts remain recoverable as
+ * authors. If no ContactPerson contributor is present, no contact is inferred.
  *
- * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
- * does not show the hidden fields. This function explicitly checks the checkbox and
- * calls .show() to ensure the fields are visible before populating them.
- *
- * @param {Document} xmlDoc
+ * @param {Document} xmlDoc Parsed ICGEM envelope, including its DataCite resource.
+ * @throws {Error} When a present people group has no initialized stack.
  */
 function populateIcgemContactPersons(xmlDoc) {
   const daceNs = 'http://datacite.org/schema/kernel-4';
@@ -655,9 +654,6 @@ function populateIcgemContactPersons(xmlDoc) {
 
     return details;
   }
-
-
-
   // Locate globalGravityProduct
   const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//grav:globalGravityProduct', xmlDoc)
     || descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
@@ -713,41 +709,58 @@ function populateIcgemContactPersons(xmlDoc) {
     contactPersons[i].website = detail.website;
   }
 
-  if (window.authorStack && typeof window.authorStack.collectPayload === 'function' && typeof window.authorStack.setAuthors === 'function') {
-    const authors = window.authorStack.collectPayload().map(author => ({ ...author }));
-
-    contactPersons.forEach(({ familyName, givenName, orcid, affiliations, email, website }) => {
-      if ((!email && !website) || (!familyName && !givenName)) return;
-
-      const normFamily = familyName.toLowerCase();
-      const normGiven = givenName.toLowerCase();
-      let author = authors.find(candidate => candidate.type === 'person'
-        && String(candidate.familyname || '').trim().toLowerCase() === normFamily
-        && String(candidate.givenname || '').trim().toLowerCase() === normGiven);
-
-      if (!author) {
-        author = {
-          type: 'person',
-          familyname: familyName,
-          givenname: givenName,
-          orcid: '',
-          affiliations: []
-        };
-        authors.push(author);
-      }
-
-      author.isContact = true;
-      author.orcid = orcid || author.orcid || '';
-      if (affiliations.length) author.affiliations = affiliations;
-      author.email = email || author.email || '';
-      author.website = website || author.website || '';
-    });
-
-    window.authorStack.setAuthors(authors);
-    return;
+  const authorStack = window.authorStack;
+  if (typeof authorStack?.collectPayload !== 'function' || typeof authorStack?.setAuthors !== 'function') {
+    throw new Error('Authors form is not initialized.');
+  }
+  const contributorStack = window.contributorStack;
+  const contributorsReady = typeof contributorStack?.collectPayload === 'function'
+    && typeof contributorStack?.setContributors === 'function';
+  if (document.querySelector('[name="contributorsPayload"]') && !contributorsReady) {
+    throw new Error('Contributors form is not initialized.');
   }
 
-  throw new Error('Authors form is not initialized.');
+  const authors = authorStack.collectPayload().map(author => ({ ...author }));
+  const contributors = contributorsReady && contributorStack.supportsType?.('person') !== false
+    ? contributorStack.collectPayload().map(contributor => ({ ...contributor, roles: [...contributor.roles] }))
+    : null;
+  let authorsChanged = false;
+  let contributorsChanged = false;
+
+  contactPersons.forEach(({ familyName, givenName, orcid, affiliations, email, website }) => {
+    if ((!email && !website) || (!familyName && !givenName)) return;
+
+    const matchesName = candidate => candidate.type === 'person'
+      && String(candidate.familyname || '').trim().toLowerCase() === familyName.toLowerCase()
+      && String(candidate.givenname || '').trim().toLowerCase() === givenName.toLowerCase();
+    let entry = authors.find(matchesName);
+
+    if (entry) {
+      entry.isContact = true;
+      authorsChanged = true;
+    } else if (contributors) {
+      entry = contributors.find(candidate => candidate.type === 'person'
+        && (orcid && candidate.orcid ? normalizeOrcid(candidate.orcid) === orcid : matchesName(candidate)));
+      if (!entry) {
+        entry = { type: 'person', familyname: familyName, givenname: givenName, roles: [], affiliations: [] };
+        contributors.push(entry);
+      }
+      if (!entry.roles.includes('Contact Person')) entry.roles.push('Contact Person');
+      contributorsChanged = true;
+    } else {
+      entry = { type: 'person', familyname: familyName, givenname: givenName, isContact: true, affiliations: [] };
+      authors.push(entry);
+      authorsChanged = true;
+    }
+
+    entry.orcid = orcid || entry.orcid || '';
+    if (affiliations.length) entry.affiliations = affiliations;
+    entry.email = email || entry.email || '';
+    entry.website = website || entry.website || '';
+  });
+
+  if (authorsChanged) authorStack.setAuthors(authors);
+  if (contributorsChanged) contributorStack.setContributors(contributors);
 }
 
 /**
