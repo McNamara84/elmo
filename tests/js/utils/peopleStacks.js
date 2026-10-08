@@ -43,7 +43,7 @@ function mountAuthorStack(authors) {
   }
   const markup = fs.readFileSync(path.resolve(__dirname, '../../../formgroups/authors.html'), 'utf8')
     .replace(/<\?php[\s\S]*?\?>/g, '');
-  document.querySelectorAll('#formgroup-authors, #group-author, #group-authorinstitution, [data-creator-row], [data-authorinstitution-row]').forEach(element => element.remove());
+  document.querySelectorAll('[data-author-stack-formgroup], #group-author, [data-creator-row], [data-authorinstitution-row], #button-author-add, #button-authorinstitution-add').forEach(element => element.remove());
   (document.querySelector('form') || document.body).insertAdjacentHTML('beforeend', markup);
   loadStack('authorStack');
   window.authorStack.setAuthors(authors);
@@ -57,7 +57,7 @@ function mountContributorStack(contributors = []) {
   window.updateHelpStatus = jest.fn();
   const markup = fs.readFileSync(path.resolve(__dirname, '../../../formgroups/contributors.html'), 'utf8')
     .replace(/<\?php[\s\S]*?\?>/g, '');
-  document.querySelectorAll('#formgroup-contributors, #group-contributorperson, #group-contributororganisation').forEach(element => element.remove());
+  document.querySelectorAll('[data-contributor-formgroup]').forEach(element => element.remove());
   (document.querySelector('form') || document.body).insertAdjacentHTML('beforeend', markup);
   loadStack('contributorStack');
   window.contributorStack.setContributors(contributors);

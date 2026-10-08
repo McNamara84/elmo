@@ -566,19 +566,6 @@ describe("Contact person added as new author when name doesn't match (regression
       </div>
       <button id="button-author-add"></button>`;
 
-    // Simulate add-author button creating a new row
-    document.getElementById("button-author-add").addEventListener("click", () => {
-      const container = document.getElementById("group-author");
-      const firstRow = container.querySelector("[data-creator-row]");
-      const clone = firstRow.cloneNode(true);
-      clone.querySelectorAll("input").forEach((i) => {
-        if (i.type === "checkbox") i.checked = false;
-        else i.value = "";
-      });
-      clone.querySelector(".contact-person-input").style.display = "none";
-      container.appendChild(clone);
-    });
-
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
