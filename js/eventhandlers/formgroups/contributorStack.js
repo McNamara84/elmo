@@ -35,7 +35,7 @@ $(document).ready(function () {
     return tags.map((tag, index) => ({
       label: String(tag?.label ?? tag?.value ?? tag?.name ?? tag).trim(),
       rorId: String(tag?.rorId ?? tag?.id ?? rorIds[index] ?? '').replace(/^https?:\/\/ror\.org\//, '').trim()
-    })).filter(pair => pair.label);
+    })).filter(pair => pair.label || pair.rorId);
   }
 
   function field(card, name) {
@@ -411,6 +411,7 @@ $(document).ready(function () {
     });
   }
   window.contributorStack = {
+    supportsType: type => Boolean(templates[type]),
     addPerson: () => add('person'),
     addInstitution: () => add('institution'),
     collectPayload,

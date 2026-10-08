@@ -1,3 +1,7 @@
+import { migratePeopleDraft, authorDraftFields, contributorDraftFields } from './authorContributorDraftMigration.js';
+import { synchronizeAuthorsPayload } from './authorPayloadService.js';
+import { synchronizeContributorsPayload } from './contributorPayloadService.js';
+
 class AutosaveService {
   constructor(formId, options = {}) {
     this.form = typeof formId === 'string' ? document.getElementById(formId) : formId;
@@ -25,6 +29,9 @@ class AutosaveService {
     this.lastSavedPayloadHash = null;
     this.lastSavedAt = null;
     this.pendingRestoreRecord = null;
+    this.isRestoring = false;
+    this.restoreBlocked = false;
+    this.contactReviewRecord = null;
 
     this.handleInput = this.handleInput.bind(this);
     this.applyPendingRestore = this.applyPendingRestore.bind(this);
@@ -126,6 +133,7 @@ class AutosaveService {
     this.form.addEventListener('input', this.handleInput, true);
     this.form.addEventListener('change', this.handleInput, true);
     document.addEventListener('relatedWorksPayload:updated', this.handleInput, { passive: true });
+    document.addEventListener('authorsPayload:updated', this.handleInput, { passive: true });
     document.addEventListener('contributorsPayload:updated', this.handleInput, { passive: true });
     document.addEventListener('resourceInformationPayload:updated', this.handleInput, { passive: true });
 
@@ -160,6 +168,7 @@ class AutosaveService {
   }
 
   handleInput() {
+    if (this.isRestoring || this.restoreBlocked || this.pendingRestoreRecord) return;
     if (this.pendingTimeout) {
       clearTimeout(this.pendingTimeout);
     }
@@ -173,7 +182,7 @@ class AutosaveService {
   }
 
   async persistDraft(force = false) {
-    if (!this.form || !this.fetchImpl) {
+    if (!this.form || !this.fetchImpl || this.isRestoring || this.restoreBlocked || this.pendingRestoreRecord) {
       return Promise.resolve();
     }
 
@@ -181,7 +190,13 @@ class AutosaveService {
       return this.activeRequest ?? Promise.resolve();
     }
 
-    const values = this.serializeValues();
+    let values;
+    try {
+      values = this.serializeValues();
+    } catch (error) {
+      this.updateStatus('error', error.message);
+      return;
+    }
     const payloadHash = JSON.stringify(values);
 
     if (!force && payloadHash === this.lastSavedPayloadHash) {
@@ -275,6 +290,9 @@ class AutosaveService {
       }
     }
 
+    this.restoreBlocked = false;
+    this.contactReviewRecord = null;
+    this.contactReviewNotice?.remove();
     this.draftId = null;
     this.lastSavedPayloadHash = null;
     this.lastSavedAt = null;
@@ -388,7 +406,22 @@ class AutosaveService {
       return;
     }
 
-    this.applyDraftValues(pendingRestoreRecord.payload.values || {});
+    if (this.pendingTimeout) {
+      window.clearTimeout(this.pendingTimeout);
+      this.pendingTimeout = null;
+    }
+    this.restoreBlocked = true;
+    let result;
+    try {
+      result = this.applyDraftValues(pendingRestoreRecord.payload.values || {});
+    } catch (error) {
+      const message = this.peopleRestoreError(error);
+      if (this.restoreDescriptionElement) this.restoreDescriptionElement.textContent = message;
+      this.updateStatus('error', message);
+      return;
+    }
+    this.restoreBlocked = result.needsContactReview;
+    if (result.needsContactReview) this.showContactReview(pendingRestoreRecord);
     this.lastSavedPayloadHash = JSON.stringify(pendingRestoreRecord.payload.values || {});
     this.lastSavedAt = pendingRestoreRecord.updatedAt
       ? new Date(pendingRestoreRecord.updatedAt)
@@ -401,7 +434,8 @@ class AutosaveService {
       this.restoreModal.hide();
     }
 
-    this.updateStatus('synced');
+    this.updateStatus(result.needsContactReview ? 'error' : 'synced',
+      result.needsContactReview ? this.translate('autosave.restore.contactReview', 'Please check the restored contact selections. The original draft is kept until you confirm.') : '');
   }
 
   handleRestoreDismiss() {
@@ -413,16 +447,36 @@ class AutosaveService {
   }
 
   applyDraftValues(values) {
+    const wasRestoring = this.isRestoring;
+    this.isRestoring = true;
+    try {
+      return this.applyValues(values);
+    } catch (error) {
+      this.restoreBlocked = true;
+      throw error;
+    } finally {
+      this.isRestoring = wasRestoring;
+    }
+  }
+
+  applyValues(values) {
     if (!this.form || !values) {
-      return;
+      return { needsContactReview: false };
     }
 
     const skippedPayloadNames = new Set();
-    if (this.restoreAuthorsPayload(values)) {
-      this.getAuthorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
-    }
-    if (this.restoreContributorsPayload(values)) {
-      this.getContributorPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
+    const people = this.form.querySelector('[name="authorsPayload"], [name="contributorsPayload"]')
+      ? migratePeopleDraft(values)
+      : { authors: null, contributors: null, needsContactReview: false };
+    this.validatePeopleRestore(people);
+    for (const [group, fieldName, method, names] of [
+      ['authors', 'authorsPayload', 'setAuthors', authorDraftFields],
+      ['contributors', 'contributorsPayload', 'setContributors', contributorDraftFields]
+    ]) {
+      const input = this.form.querySelector(`[name="${fieldName}"]`);
+      if (people[group] === null && !input) continue;
+      if (people[group] !== null && input) window[group === 'authors' ? 'authorStack' : 'contributorStack'][method](people[group]);
+      names.forEach(name => skippedPayloadNames.add(name));
     }
     if (this.restoreRelatedWorksPayload(values)) {
       this.getRelatedWorksPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
@@ -488,63 +542,59 @@ class AutosaveService {
         }
       }
     });
+    return people;
   }
 
-  restoreAuthorsPayload(values) {
-    if (!values || !Object.prototype.hasOwnProperty.call(values, 'authorsPayload')) {
-      return false;
+  validatePeopleRestore(people) {
+    for (const [group, fieldName, stackName, method] of [
+      ['authors', 'authorsPayload', 'authorStack', 'setAuthors'],
+      ['contributors', 'contributorsPayload', 'contributorStack', 'setContributors']
+    ]) {
+      const entries = people[group];
+      if (entries === null) continue;
+      const input = this.form.querySelector(`[name="${fieldName}"]`);
+      if (!input && !entries.length) continue;
+      const stack = window[stackName];
+      if (!input || typeof stack?.[method] !== 'function' || entries.some(entry =>
+        (stack.supportsType && !stack.supportsType(entry.type)) ||
+        (group === 'contributors' && entry.type === 'institution' &&
+          entry.roles?.some(role => (role?.value ?? role) === 'Contact Person') &&
+          window.ELMO_FEATURES?.showContactInstitution !== true))) {
+        throw Object.assign(new Error('This draft contains author or contributor types that are not available here. The original draft has been kept.'),
+          { code: 'unsupportedPeople' });
+      }
     }
-
-    const authorStack = typeof window !== 'undefined' && window.authorStack && typeof window.authorStack.setAuthors === 'function'
-      ? window.authorStack
-      : null;
-
-    if (!authorStack) {
-      return false;
-    }
-
-    authorStack.setAuthors(values.authorsPayload);
-    return true;
   }
 
-  getAuthorPayloadFieldNames() {
-    return new Set([
-      'authorsPayload',
-      'familynames[]',
-      'givennames[]',
-      'orcids[]',
-      'contacts[]',
-      'cpEmail[]',
-      'cpOnlineResource[]',
-      'personAffiliation[]',
-      'authorPersonRorIds[]',
-      'authorinstitutionName[]',
-      'institutionAffiliation[]',
-      'authorInstitutionRorIds[]'
-    ]);
+  peopleRestoreError(error) {
+    return this.translate(`autosave.restore.${error.code || 'invalidPeople'}`, error.message);
   }
 
-  restoreContributorsPayload(values) {
-    if (!values || !Object.prototype.hasOwnProperty.call(values, 'contributorsPayload') ||
-        typeof window === 'undefined' || typeof window.contributorStack?.setContributors !== 'function') {
-      return false;
-    }
-    let entries = values.contributorsPayload;
-    if (typeof entries === 'string') {
-      try { entries = JSON.parse(entries); } catch (_error) { entries = []; }
-    }
-    window.contributorStack.setContributors(Array.isArray(entries) ? entries : []);
-    return true;
-  }
-
-  getContributorPayloadFieldNames() {
-    return new Set([
-      'contributorsPayload', 'cbPersonLastname[]', 'cbPersonFirstname[]', 'cbORCID[]',
-      'cbPersonRoles[]', 'cbAffiliation[]', 'cbpRorIds[]', 'cbOrganisationName[]',
-      'cbOrganisationRoles[]', 'OrganisationAffiliation[]', 'hiddenOrganisationRorId[]',
-      'cbContactEmail[]', 'cbContactWebsite[]', 'cbPersonAffiliations[]',
-      'cbPersonRorIds[]', 'cbOrganisationAffiliations[]', 'cbOrganisationRorIds[]'
-    ]);
+  showContactReview(record) {
+    this.contactReviewRecord = record;
+    this.contactReviewNotice?.remove();
+    const notice = document.createElement('div');
+    notice.className = 'alert alert-warning mt-2';
+    notice.setAttribute('role', 'status');
+    notice.dataset.draftContactReview = '';
+    const message = document.createElement('p');
+    message.dataset.translate = 'autosave.restore.contactReview';
+    message.textContent = this.translate('autosave.restore.contactReview', 'Please check the restored contact selections. The original draft is kept until you confirm.');
+    const confirm = document.createElement('button');
+    confirm.type = 'button';
+    confirm.className = 'btn btn-outline-primary btn-sm';
+    confirm.dataset.translate = 'autosave.restore.confirmContacts';
+    confirm.textContent = this.translate('autosave.restore.confirmContacts', 'I have checked the contacts');
+    confirm.addEventListener('click', () => {
+      this.restoreBlocked = false;
+      this.contactReviewRecord = null;
+      notice.remove();
+      this.handleInput();
+    });
+    notice.append(message, confirm);
+    if (this.statusElement) this.statusElement.after(notice);
+    else this.form.append(notice);
+    this.contactReviewNotice = notice;
   }
 
   restoreRelatedWorksPayload(values) {
@@ -599,17 +649,22 @@ class AutosaveService {
 
     const values = {};
     window.resourceInformation?.sync?.();
-    const contributorInput = this.form.querySelector('input[name="contributorsPayload"]');
-    const contributorPayload = contributorInput && window.contributorStack?.collectPayload?.();
-    if (Array.isArray(contributorPayload)) contributorInput.value = JSON.stringify(contributorPayload);
-    const contributorNames = Array.isArray(contributorPayload) ? this.getContributorPayloadFieldNames() : null;
+    const peopleNames = new Set();
+    if (this.form.querySelector('input[name="authorsPayload"]')) {
+      synchronizeAuthorsPayload(this.form);
+      authorDraftFields.filter(name => name !== 'authorsPayload').forEach(name => peopleNames.add(name));
+    }
+    if (this.form.querySelector('input[name="contributorsPayload"]')) {
+      synchronizeContributorsPayload(this.form);
+      contributorDraftFields.filter(name => name !== 'contributorsPayload').forEach(name => peopleNames.add(name));
+    }
     const elements = Array.from(this.form.elements);
 
     elements.forEach((element) => {
       if (!element.name || element.disabled) {
         return;
       }
-      if (contributorNames?.has(element.name) && element.name !== 'contributorsPayload') return;
+      if (peopleNames.has(element.name)) return;
 
       const type = (element.type || element.tagName).toLowerCase();
       if (['submit', 'button', 'reset', 'image'].includes(type)) {
