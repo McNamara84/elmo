@@ -78,12 +78,9 @@ function refreshTagifyInstances() {
 }
 
 /**
- * Initialize Tagify for affiliation fields when the document is ready.
- * Uses server-side search instead of loading the full JSON file.
+ * Cards initialize their affiliation widgets. Keep their translations in sync.
  */
 $(document).ready(function () {
-  autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
-  autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
   document.addEventListener('translationsLoaded', refreshTagifyInstances);
 });
 

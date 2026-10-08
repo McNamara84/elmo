@@ -21,7 +21,7 @@ describe('roles module coverage', () => {
             <div id="group-contributorperson">
                 <input type="text" id="input-contributor-personrole" name="cbPersonRoles[]">
             </div>
-            <div id="group-contributororganisation">
+            <div data-contributor-stack>
                 <input type="text" id="input-contributor-organisationrole" name="cbOrganisationRoles[]">
             </div>
         `;
