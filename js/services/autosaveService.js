@@ -447,6 +447,14 @@ class AutosaveService {
     this.clearDraft();
   }
 
+  /**
+   * Restore saved values without scheduling autosave from control updates.
+   * If restoration fails, writes stay blocked to preserve the original draft.
+   * The caller must also keep writes blocked while needsContactReview is true.
+   * @param {Record<string, unknown>} values The saved draft's payload.values map.
+   * @returns {Object} Restored people groups and the needsContactReview flag.
+   * @throws {Error} When data is invalid, card types are unavailable, or restoration fails.
+   */
   applyDraftValues(values) {
     const wasRestoring = this.isRestoring;
     this.isRestoring = true;
@@ -546,6 +554,14 @@ class AutosaveService {
     return people;
   }
 
+  /**
+   * Check both people groups before either stack is changed. A draft with an
+   * unsupported contributor must not leave its authors partially restored.
+   * @param {import('./authorContributorDraftMigration.js').PeopleDraftMigrationResult} people Validated or migrated entries.
+   * @returns {void}
+   * @throws {Error} With code unsupportedPeople when a required stack, entry
+   *   type, or institution contact role is unavailable in this configuration.
+   */
   validatePeopleRestore(people) {
     for (const [group, fieldName, stackName, method] of [
       ['authors', 'authorsPayload', 'authorStack', 'setAuthors'],
@@ -571,6 +587,12 @@ class AutosaveService {
     return this.translate(`autosave.restore.${error.code || 'invalidPeople'}`, error.message);
   }
 
+  /**
+   * Offer confirmation that releases the autosave block set during restoration.
+   * Until confirmation, edits stay in the form and the stored original survives.
+   * @param {Object} record Original draft retained while contacts are reviewed.
+   * @returns {void}
+   */
   showContactReview(record) {
     this.contactReviewRecord = record;
     this.contactReviewNotice?.remove();
@@ -643,6 +665,13 @@ class AutosaveService {
       'language', 'title[]', 'titleType[]']);
   }
 
+  /**
+   * Synchronize people payloads and serialize the remaining enabled controls.
+   * Payload synchronization emits update events; suppressing their autosave
+   * handlers here prevents serialization from scheduling another save.
+   * @returns {Record<string, unknown>} Values for the next autosaved draft.
+   * @throws {Error} When an active people stack cannot produce a valid payload.
+   */
   serializeValues() {
     if (!this.form) {
       return {};
