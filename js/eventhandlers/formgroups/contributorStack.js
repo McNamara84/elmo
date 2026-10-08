@@ -322,7 +322,12 @@ $(document).ready(function () {
 
   function writeTags(input, values) {
     if (!input) return;
-    const tags = values.map(value => typeof value === 'string' ? { value } : { value: value.label, rorId: value.rorId, id: value.rorId });
+    const tags = values.map(value => typeof value === 'string' ? { value } : {
+      value: value.label || value.rorId,
+      label: value.label,
+      rorId: value.rorId,
+      id: value.rorId
+    });
     if (input._tagify) {
       input._tagify.removeAllTags();
       input._tagify.addTags(tags);

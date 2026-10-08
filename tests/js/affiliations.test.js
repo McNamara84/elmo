@@ -217,6 +217,22 @@ describe('affiliations.js', () => {
     ]);
   });
 
+  test('keeps a ROR-only affiliation editable without inventing its label', () => {
+    autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
+    const input = document.getElementById('input-author-affiliation');
+    input._tagify.addTags([{ value: '04z8jg394', label: '', rorId: '04z8jg394' }]);
+    input._tagify._updateHiddenField();
+    expect(JSON.parse(input.value)[0]).toMatchObject({ value: '', label: '', rorId: '04z8jg394' });
+    expect(input._tagify.value[0].value).toBe('04z8jg394');
+
+    input._tagify.DOM.scope.querySelector('.tagify__tag__editBtn').click();
+    expect(document.getElementById('input-affiliation-edit-value').value).toBe('');
+    document.getElementById('input-affiliation-edit-value').value = 'Recovered label';
+    document.getElementById('button-affiliation-edit-save').click();
+    expect(JSON.parse(input.value)[0]).toMatchObject({ label: 'Recovered label', rorId: '04z8jg394' });
+    expect(document.getElementById('input-author-rorid').value).toBe('04z8jg394');
+  });
+
   test('editing an affiliation label restores the ROR ID from the hidden field when Tagify drops it', () => {
     autocompleteAffiliations('input-author-affiliation', 'input-author-rorid');
     const input = document.getElementById('input-author-affiliation');
