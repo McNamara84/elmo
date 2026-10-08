@@ -24,6 +24,16 @@ describe('stored author and contributor data', () => {
     expect(result.authors[1].affiliations).toEqual([{ label: '', rorId: '04z8jg394' }]);
   });
 
+  test('preserves an incomplete person marked as the only contact', () => {
+    const result = migratePeopleDraft({ 'familynames[]': [''], 'contacts[]': ['on'] });
+    expect(result.authors).toEqual([expect.objectContaining({ type: 'person', isContact: true })]);
+    expect(result.needsContactReview).toBe(false);
+  });
+
+  test('rejects unsupported checkbox encodings without guessing contact positions', () => {
+    expect(() => migratePeopleDraft({ 'familynames[]': ['Doe'], 'contacts[]': ['1'] })).toThrow();
+  });
+
   test('migrates each group independently and respects explicitly empty payloads', () => {
     const result = migratePeopleDraft({ ...legacy, authorsPayload: '[]' });
     expect(result.authors).toEqual([]);
@@ -45,7 +55,7 @@ describe('stored author and contributor data', () => {
     expect(all.authors.map(author => author.isContact)).toEqual([true, true]);
   });
 
-  test.each(['{', 'null', '{}', '[null]', '[{"type":"unknown"}]', '[{"type":"person","roles":{}}]'])
+  test.each(['{', 'null', '{}', '[null]', '[{"type":"unknown"}]', '[{"type":"person","roles":{}}]', '[{"type":"person","affiliations":[{"label":{}}]}]'])
   ('rejects damaged payload %s instead of falling back to old fields', value => {
     expect(() => migratePeopleDraft({ ...legacy, authorsPayload: value })).toThrow();
   });

@@ -76,7 +76,7 @@ function rows(values, fields, type) {
 }
 
 function hasContent(entry) {
-  return Object.entries(entry).some(([key, value]) => key !== 'type' && key !== 'isContact' &&
+  return Object.entries(entry).some(([key, value]) => key !== 'type' &&
     (Array.isArray(value) ? value.length > 0 : Boolean(value)));
 }
 
@@ -95,7 +95,8 @@ function payload(values, name) {
     if (entry.roles != null && (!Array.isArray(entry.roles) || entry.roles.some(role =>
       typeof role !== 'string' && (!role || typeof role.value !== 'string')))) throw invalidPeopleDraft();
     if (entry.affiliations != null && (!Array.isArray(entry.affiliations) || entry.affiliations.some(item =>
-      typeof item !== 'string' && (!item || typeof item !== 'object' || Array.isArray(item))))) throw invalidPeopleDraft();
+      typeof item !== 'string' && (!item || typeof item !== 'object' || Array.isArray(item) ||
+        ['label', 'value', 'name', 'rorId', 'id'].some(key => item[key] != null && typeof item[key] !== 'string'))))) throw invalidPeopleDraft();
   });
   return entries;
 }
@@ -110,6 +111,7 @@ export function migratePeopleDraft(values) {
   } else if (authorDraftFields.some(name => owns(values, name))) {
     const persons = rows(values, authorPersonFields, 'person');
     const contacts = list(values, 'contacts[]');
+    if (contacts.some(value => value !== 'on')) throw invalidPeopleDraft();
     const inferred = persons.filter(person => person.email || person.website).length;
     // The old checkbox value was always "on", so only unambiguous cases can be recovered.
     const allContacts = contacts.length === persons.length && contacts.length > 0;

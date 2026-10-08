@@ -30,6 +30,7 @@ class AutosaveService {
     this.lastSavedAt = null;
     this.pendingRestoreRecord = null;
     this.isRestoring = false;
+    this.isSerializing = false;
     this.restoreBlocked = false;
     this.contactReviewRecord = null;
 
@@ -168,7 +169,7 @@ class AutosaveService {
   }
 
   handleInput() {
-    if (this.isRestoring || this.restoreBlocked || this.pendingRestoreRecord) return;
+    if (this.isSerializing || this.isRestoring || this.restoreBlocked || this.pendingRestoreRecord) return;
     if (this.pendingTimeout) {
       clearTimeout(this.pendingTimeout);
     }
@@ -648,15 +649,21 @@ class AutosaveService {
     }
 
     const values = {};
-    window.resourceInformation?.sync?.();
     const peopleNames = new Set();
-    if (this.form.querySelector('input[name="authorsPayload"]')) {
-      synchronizeAuthorsPayload(this.form);
-      authorDraftFields.filter(name => name !== 'authorsPayload').forEach(name => peopleNames.add(name));
-    }
-    if (this.form.querySelector('input[name="contributorsPayload"]')) {
-      synchronizeContributorsPayload(this.form);
-      contributorDraftFields.filter(name => name !== 'contributorsPayload').forEach(name => peopleNames.add(name));
+    const wasSerializing = this.isSerializing;
+    this.isSerializing = true;
+    try {
+      window.resourceInformation?.sync?.();
+      if (this.form.querySelector('input[name="authorsPayload"]')) {
+        synchronizeAuthorsPayload(this.form);
+        authorDraftFields.filter(name => name !== 'authorsPayload').forEach(name => peopleNames.add(name));
+      }
+      if (this.form.querySelector('input[name="contributorsPayload"]')) {
+        synchronizeContributorsPayload(this.form);
+        contributorDraftFields.filter(name => name !== 'contributorsPayload').forEach(name => peopleNames.add(name));
+      }
+    } finally {
+      this.isSerializing = wasSerializing;
     }
     const elements = Array.from(this.form.elements);
 

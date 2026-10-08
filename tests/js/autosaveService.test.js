@@ -527,7 +527,7 @@ describe('autosaveService', () => {
     let authors = [];
     window.authorStack = {
       setAuthors: entries => { authors = entries; document.dispatchEvent(new Event('authorsPayload:updated')); },
-      updatePayload: () => authors
+      updatePayload: () => { document.dispatchEvent(new Event('authorsPayload:updated')); return authors; }
     };
     const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 204 });
     const service = new AutosaveService(form, { fetch: fetchMock, throttleMs: 0 });
@@ -544,6 +544,9 @@ describe('autosaveService', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const stored = JSON.parse(fetchMock.mock.calls[0][1].body).payload.values;
     expect(JSON.parse(stored.authorsPayload).map(author => author.familyname)).toEqual(['Roe', 'Doe']);
+    expect(service.pendingTimeout).toBeNull();
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
     authors = [];
     service.applyDraftValues(stored);
     expect(authors.map(author => author.familyname)).toEqual(['Roe', 'Doe']);
