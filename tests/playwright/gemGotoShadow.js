@@ -1,11 +1,19 @@
 /**
  * Loaded only for ELMO-GEM, via NODE_OPTIONS in playwright.gem.config.ts.
- * Shadows page.goto('/') so it keeps the baseURL path (for example /elmo/)
- * instead of opening the host root. Other variants never load this file.
+ * On an ICGEM host, page.goto('/') is sent to /elmo/ so the editor opens
+ * instead of the site root. Localhost and CI keep goto('/').
  */
 const playwright = require('playwright-core');
 
 const shadowed = Symbol('gemGotoShadow');
+
+function baseURL(page) {
+  const fromContext = page.context()?._options?.baseURL;
+  if (typeof fromContext === 'string' && fromContext) {
+    return fromContext;
+  }
+  return process.env.BASE_URL || '';
+}
 
 function shadowPage(page) {
   if (!page || page.goto[shadowed]) {
@@ -13,9 +21,8 @@ function shadowPage(page) {
   }
   const originalGoto = page.goto.bind(page);
   const goto = async function gemShadowedGoto(url, options) {
-    // '/' is resolved against the origin, which drops a base path such as /elmo/.
-    // An empty URL is resolved against baseURL and keeps that path.
-    return originalGoto(url === '/' ? '' : url, options);
+    const target = url === '/' && baseURL(page).toLowerCase().includes('icgem') ? '/elmo/' : url;
+    return originalGoto(target, options);
   };
   goto[shadowed] = true;
   page.goto = goto;
