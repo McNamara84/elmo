@@ -4,6 +4,12 @@ import { setCCBYasDefault, setBrowserTimezone } from './select.js';
  * Clears and resets input fields and Tagify instances.
  */
 export default function clearInputFields() {
+    if (document.querySelector('[name="authorsPayload"]') && !window.authorStack?.setAuthors) {
+        throw new Error('Authors form is not initialized.');
+    }
+    if (document.querySelector('[name="contributorsPayload"]') && !window.contributorStack?.setContributors) {
+        throw new Error('Contributors form is not initialized.');
+    }
 
     // Reset input fields in Resource Information
     if (window.resourceInformation?.clear) {
@@ -28,61 +34,16 @@ export default function clearInputFields() {
     $('#input-rights-license').val('');
     setCCBYasDefault();
   
-    if (window.authorStack && typeof window.authorStack.setAuthors === 'function') {
-        window.authorStack.setAuthors([]);
-    } else {
-        // Reset existing authors (legacy fallback)
-        $('div[data-creator-row]').not(':first').remove();
-        $('div[data-creator-row]:first').find('input').val('');
-        $('div[data-creator-row]:first').find('.contact-person-input').hide();
-        $('div[data-creator-row]:first').find('input[name="contacts[]"]').prop('checked', false);
-    }
-    // Remove the "Please choose at least one contact person" error inserted by submitHandler.js
+    window.authorStack?.setAuthors([]);
     $('#contact-person-error').remove();
 
-    // Clear Tagify for affiliations in the first author row
-    const firstAffiliationTagify = $('div[data-creator-row]:first').find('input[name="personAffiliation[]"]')[0];
-    if (firstAffiliationTagify && firstAffiliationTagify._tagify) {
-        firstAffiliationTagify._tagify.removeAllTags();
-        if (typeof firstAffiliationTagify._tagify._updateHiddenField === 'function') {
-            firstAffiliationTagify._tagify._updateHiddenField();
-        }
-    }
-
-    if (!window.authorStack || typeof window.authorStack.setAuthors !== 'function') {
-        // Removes all author-institution lines except the first one
-        $('div[data-authorinstitution-row]').not(':first').remove();
-        // Clears all input fields (input elements) in the first author-institution row
-        $('div[data-authorinstitution-row]:first').find('input').val('');
-    }
-
-    // Clear Tagify for institution affiliations in the first institution row
-    const firstInstitutionAffiliationTagify = $('div[data-authorinstitution-row]:first').find('input[name="institutionAffiliation[]"]')[0];
-    if (firstInstitutionAffiliationTagify && firstInstitutionAffiliationTagify._tagify) {
-        firstInstitutionAffiliationTagify._tagify.removeAllTags();
-        if (typeof firstInstitutionAffiliationTagify._tagify._updateHiddenField === 'function') {
-            firstInstitutionAffiliationTagify._tagify._updateHiddenField();
-        }
-    }
-
-
-    // Clear author ROR IDs
-    $('div[data-creator-row]:first').find('input[name="authorPersonRorIds[]"]').val('');
-  
     // Reset existing laboratories
     $('#group-originatinglaboratory .row[data-laboratory-row]').not(':first').remove();
     $('#group-originatinglaboratory .row[data-laboratory-row]:first select').prop('selectedIndex', 0);
     $('#group-originatinglaboratory .row[data-laboratory-row]:first input[type="hidden"]').val('');
   
-    if (window.contributorStack && typeof window.contributorStack.setContributors === 'function') {
-        window.contributorStack.setContributors([]);
-    } else {
-        $('#group-contributorperson .row[contributor-person-row]').not(':first').remove();
-        $('#group-contributorperson .row[contributor-person-row]:first input').val('');
-        $('#group-contributororganisation .row[contributors-row]').not(':first').remove();
-        $('#group-contributororganisation .row[contributors-row]:first input').val('');
-    }
-  
+    window.contributorStack?.setContributors([]);
+
     // Clear descriptions – covers abstract and all ICGEM description textareas
     // (textarea.textarea-description is the shared class on all GGMs description fields)
     $('#accordion-description textarea.textarea-description').val('');
@@ -100,12 +61,7 @@ export default function clearInputFields() {
         '#input-chronostratigraphy',
         '#input-gemet',
         '#input-mslkeyword',
-        '#input-freekeyword',
-        'input[name="cbPersonRoles[]"]',
-        'input[name="cbPersonAffiliation[]"]',  
-        'input[name="cbAffiliation[]"]', 
-        'input[name="cbOrganisationRoles[]"]', 
-        'input[name="OrganisationAffiliation[]"]'
+        '#input-freekeyword'
     ];
 
     tagifySelectors.forEach(selector => {

@@ -3,20 +3,18 @@
  */
 function setupContactPersonListener() {
     // When the checkbox for "Contact Person" is toggled (checked/unchecked), call validateContactPersonRequirements
-    const authorContainer = $('[data-author-stack]').length ? $('[data-author-stack]') : $('#group-author');
+    const authorContainer = $('[data-author-stack]');
     authorContainer.on('change', '[id^="checkbox-author-contactperson"]', function () {
         validateContactPersonRequirements();  // Re-run the validateContactPersonRequirements function whenever the checkbox state changes
     });
 }
 
 function getPersonAuthorRows() {
-    const stackRows = $('[data-author-stack] [data-creator-row]');
-    return stackRows.length ? stackRows : $('#group-author').children('.row');
+    return $('[data-author-stack] [data-creator-row]');
 }
 
 function getInstitutionAuthorRows() {
-    const stackRows = $('[data-author-stack] [data-authorinstitution-row]');
-    return stackRows.length ? stackRows : $('#group-authorinstitution').children('.row');
+    return $('[data-author-stack] [data-authorinstitution-row]');
 }
 
 /**
@@ -28,7 +26,7 @@ function getInstitutionAuthorRows() {
  * @returns {void}
  */
 function validateContactPersonRequirements() {
-    // Loops through each row in the "group-author" container
+    // Validate each person card in the shared author stack.
     getPersonAuthorRows().each(function () {
         var row = $(this);
 
@@ -64,7 +62,7 @@ $(document).ready(function () {
  * Ensures the "Last Name", "First Name", and "Role" fields are required if any field in the row is filled.
  */
 function validateContributorPersonRequirements() {
-    $('[data-contributor-stack] [contributor-person-row], #group-contributorperson > .row[contributor-person-row]').each(function () {
+    $('[data-contributor-stack] [contributor-person-row]').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Person section
         var fields = {
@@ -96,7 +94,7 @@ function validateContributorPersonRequirements() {
  * Ensures the "Name" and "Role" fields are required if any field in the row is filled.
  */
 function validateContributorOrganisationRequirements() {
-    $('[data-contributor-stack] [contributors-row], #group-contributororganisation > .row[contributors-row]').each(function () {
+    $('[data-contributor-stack] [contributors-row]').each(function () {
         var row = $(this);
         // Defines the relevant fields for the Contributor Organization section
         var fields = {
