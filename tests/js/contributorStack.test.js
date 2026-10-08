@@ -5,36 +5,8 @@ describe('combined contributor stack', () => {
   let controller;
 
   beforeEach(() => {
-    document.body.innerHTML = `
-      <div data-contributor-formgroup>
-        <span data-contributor-summary-count></span>
-        <div data-contributor-shell id="group-contributorperson">
-          <input name="contributorsPayload" value="[]">
-          <div data-contributor-stack></div>
-          <div data-contributor-add-actions>
-            <button id="button-contributor-addperson" data-contributor-add-type="person">Add Person</button>
-            <button id="button-contributor-addorganisation" data-contributor-add-type="institution">Add Institution</button>
-          </div>
-        </div>
-        <template id="contributor-person-template">
-          <div class="row" contributor-person-row>
-            <input id="input-contributor-lastname" name="cbPersonLastname[]"><label for="input-contributor-lastname">Last</label>
-            <input id="input-contributor-firstname" name="cbPersonFirstname[]">
-            <div class="col-12"><div class="input-group"><input id="input-contributor-orcid" name="cbORCID[]"><span class="input-group-text"><i data-help-section-id="help-contributorpersons-orcid"></i></span></div></div>
-            <div class="col-12"><div class="input-group"><input id="input-contributor-personrole" name="cbPersonRoles[]"><span class="input-group-text"><i data-help-section-id="help-contributorpersons-role"></i></span></div></div>
-            <div class="col-12"><div class="input-group"><input id="input-contributorpersons-affiliation" name="cbAffiliation[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-affiliation"></i></span><input id="input-contributor-personrorid" name="cbpRorIds[]" type="hidden"></div></div>
-            <div class="col-2"><button class="addContributorPerson">+</button></div>
-          </div>
-        </template>
-        <template id="contributor-institution-template">
-          <div class="row" contributors-row>
-            <div class="col-12"><div class="input-group"><input id="input-contributor-name" name="cbOrganisationName[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-organisationname"></i></span></div></div>
-            <div class="col-12"><div class="input-group"><input id="input-contributor-organisationrole" name="cbOrganisationRoles[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-organisationrole"></i></span></div></div>
-            <div class="col-12"><div class="input-group"><input id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]"><span class="input-group-text"><i data-help-section-id="help-contributorinstitutions-affiliation"></i></span><input id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" type="hidden"></div></div>
-            <div class="col-2"><button class="addContributor">+</button></div>
-          </div>
-        </template>
-      </div>`;
+    document.body.innerHTML = fs.readFileSync(path.resolve(__dirname, '../../formgroups/contributors.html'), 'utf8')
+      .replace(/<\?php[\s\S]*?\?>/g, '');
     const $ = require('jquery');
     global.$ = global.jQuery = window.$ = window.jQuery = $;
     localStorage.setItem('helpStatus', 'help-on');
@@ -64,6 +36,36 @@ describe('combined contributor stack', () => {
   };
   const helpIcon = (card, name) => card.querySelector(`[name="${name}"]`).closest('.input-group').querySelector('i[data-help-section-id]');
   const helpVisible = (card, name) => !helpIcon(card, name).classList.contains('d-none');
+
+  test('keeps real templates free of old group containers and cloning buttons', () => {
+    document.querySelectorAll('template').forEach(template => {
+      expect(template.content.querySelectorAll('[id^="group-"], .addContributor, .addContributorPerson')).toHaveLength(0);
+      const ids = Array.from(template.content.querySelectorAll('[id]'), element => element.id);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+  });
+
+  test('keeps IDs and label references unique after removal, type switches and repeated restore', () => {
+    controller.addPerson();
+    controller.addInstitution();
+    cards()[0].querySelector('[data-contributor-type-option="institution"]').click();
+    cards()[1].querySelector('[data-contributor-remove]').click();
+    controller.addPerson();
+    const entries = [{ type: 'person', familyname: 'Doe' }, { type: 'institution', institutionname: 'Lab' }];
+    controller.setContributors(entries);
+    controller.setContributors(entries);
+    controller.addPerson();
+    const ids = Array.from(document.querySelectorAll('[id]'), element => element.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    document.querySelectorAll('[data-contributor-card] label[for]').forEach(label => {
+      expect(label.closest('[data-contributor-card]').querySelector(`[id="${label.htmlFor}"]`)).not.toBeNull();
+    });
+    expect(window.setupRolesDropdown).toHaveBeenCalledWith(['institution', 'both'], expect.any(String));
+    expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
+      expect.stringMatching(/^input-contributor-organisationaffiliation-/),
+      expect.stringMatching(/^input-contributor-organisationrorid-/)
+    );
+  });
 
   test('starts empty and creates the first person only after Add Person', () => {
     expect(cards()).toHaveLength(0);

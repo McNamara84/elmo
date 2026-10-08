@@ -237,7 +237,6 @@ $(document).ready(function () {
     }
 
     const fields = template.cloneNode(true);
-    fields.querySelector('.addContributorPerson, .addContributor')?.closest('.col-2')?.remove();
     fields.querySelectorAll('[id]').forEach(element => { element.id = `${element.id}-${id}`; });
     fields.querySelectorAll('label[for]').forEach(label => { label.htmlFor = `${label.htmlFor}-${id}`; });
     fields.classList.add('g-1');
