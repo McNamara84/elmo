@@ -1,4 +1,22 @@
-/** Convert stored field lists without depending on the retired form groups. */
+/**
+ * Convert stored field lists without depending on the retired form groups.
+ * This module only reads draft data; restoring cards and protecting the stored
+ * original are responsibilities of the autosave service.
+ * @module authorContributorDraftMigration
+ */
+
+/**
+ * People data prepared for restoration through the shared card stacks.
+ * @typedef {Object} PeopleDraftMigrationResult
+ * @property {Array<Record<string, unknown>> | null} authors Author entries, or
+ *   null when the draft contains no author fields. An empty array clears the stack.
+ * @property {Array<Record<string, unknown>> | null} contributors Contributor
+ *   entries, with the same null and empty-array semantics as authors.
+ * @property {boolean} needsContactReview Whether legacy contact checkboxes could
+ *   not be assigned unambiguously. The caller must keep the original draft and
+ *   block autosave until the user confirms the restored contact selections.
+ */
+
 const authorPersonFields = {
   familyname: 'familynames[]', givenname: 'givennames[]', orcid: 'orcids[]',
   affiliation: 'personAffiliation[]', ror: 'authorPersonRorIds[]',
@@ -24,6 +42,11 @@ const owns = (values, name) => Object.prototype.hasOwnProperty.call(values, name
 const text = value => String(value ?? '').trim();
 const ror = value => text(value).replace(/^https?:\/\/ror\.org\//, '');
 
+/**
+ * Create the error used to reject invalid saved people data.
+ * @returns {Error & {code: 'invalidPeople'}} Error recognized by the autosave
+ *   restore flow, which displays a translated message and keeps the original.
+ */
 export function invalidPeopleDraft() {
   return Object.assign(new Error('The saved author or contributor data is invalid. The original draft has been kept.'),
     { code: 'invalidPeople' });
@@ -101,7 +124,28 @@ function payload(values, name) {
   return entries;
 }
 
-/** Payload presence, including [], takes precedence independently for each group. */
+/**
+ * Validate structured people payloads or convert legacy positional field lists.
+ *
+ * Each group is handled independently. A present payload takes precedence over
+ * its legacy fields, including an explicit empty array. Missing data for a group
+ * returns null so the caller can leave that group unchanged. Invalid payloads
+ * are rejected rather than replaced with legacy data or an empty stack.
+ *
+ * Legacy fields are aligned by their original indices before fully empty rows
+ * are removed. Persons precede institutions because the old separate lists did
+ * not store a shared order. Incomplete entries and affiliation/ROR pairs survive
+ * conversion; ambiguous contact positions require confirmation by the user.
+ *
+ * The input is not mutated. Structured payload arrays are returned as supplied;
+ * JSON payload strings are parsed, and legacy entries are constructed anew.
+ *
+ * @param {Record<string, unknown>} values The saved draft's payload.values map.
+ * @returns {PeopleDraftMigrationResult} People entries and contact review status.
+ * @throws {Error} With code invalidPeople when saved payloads or field lists are
+ *   malformed, checkbox encodings are unsupported, or contributor contact arrays
+ *   cannot safely be assigned without an ordered contributor payload.
+ */
 export function migratePeopleDraft(values) {
   let authors = null;
   let contributors = null;
