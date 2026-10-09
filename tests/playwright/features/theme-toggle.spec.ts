@@ -133,17 +133,17 @@ test.describe('Theme toggle', () => {
     const themeOption = (value: string) =>
       page.locator(`#bd-theme + ul.dropdown-menu [data-bs-theme-value="${value}"]`);
 
-    const expectThemeState = async (value: 'dark' | 'light') => {
+    const expectThemeState = async (value: 'dark' | 'light', choice: 'dark' | 'light' | 'auto' = value) => {
       // Use a generous timeout because theme application after reload can be
       // slow in CI environments (matchMedia mock + localStorage restore).
       await expect(html).toHaveAttribute('data-bs-theme', value, { timeout: 15_000 });
       await expect.poll(async () => page.evaluate(() => localStorage.getItem('theme')), { timeout: 10_000 }).toBe(
-        value,
+        choice,
       );
 
       const activeItems = page.locator('#bd-theme + ul.dropdown-menu .dropdown-item.active');
       await expect(activeItems).toHaveCount(1, { timeout: 10_000 });
-      await expect(activeItems.first()).toHaveAttribute('data-bs-theme-value', value);
+      await expect(activeItems.first()).toHaveAttribute('data-bs-theme-value', choice);
     };
 
     const chooseTheme = async (value: 'dark' | 'light' | 'auto') => {
@@ -166,15 +166,17 @@ test.describe('Theme toggle', () => {
     await expectThemeState('light');
 
     await chooseTheme('auto');
-    await expectThemeState('light');
+    await expectThemeState('light', 'auto');
 
     await page.evaluate(() => {
       window.__setPrefersDark(true);
     });
 
-    await expectThemeState('dark');
+    await expectThemeState('dark', 'auto');
 
     await page.reload({ waitUntil: 'domcontentloaded' });
-    await expectThemeState('dark');
+    await expectThemeState('dark', 'auto');
+    await page.evaluate(() => window.__setPrefersDark(false));
+    await expectThemeState('light', 'auto');
   });
 });

@@ -138,7 +138,7 @@ window.ELMO_FEATURES = {
 <!-- affiliations laden -->
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->
-<script src="js/darkmode.js"></script>
+<script src="js/darkmode.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/darkmode.js'), 0, 12); ?>"></script>
 <!-- JS-Datei für Hilfe-PopUps einbinden -->
 <script type="module" src="js/help.js"></script>
 <!-- JS-Karten-Funktionen einbinden -->
