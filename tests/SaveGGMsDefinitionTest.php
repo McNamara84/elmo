@@ -119,7 +119,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'TEST_MODEL_2024',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth',
             'product_type' => 'Gravity Field'
         ];
@@ -129,7 +129,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
         $this->assertEquals('TEST_MODEL_2024', $result['model_name']);
         $this->assertEquals('Static', $result['model_type']);
         $this->assertEquals('Spherical harmonics', $result['mathematical_representation']);
-        $this->assertEquals('icgem1.0', $result['file_format']);
+        $this->assertEquals('icgem1.0', $result['icgem_file_format']);
         $this->assertEquals('Earth', $result['celestial_body']);
         $this->assertEquals('Gravity Field', $result['product_type']);
     }
@@ -143,7 +143,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'TEST_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
@@ -161,7 +161,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
         $data = [
             'model_name' => 'TEST_MODEL',
             'model_type' => 'Static',
-            // Missing: mathematical_representation, file_format, celestial_body
+            // Missing: mathematical_representation, icgem_file_format, celestial_body
         ];
 
         $this->expectException(\Exception::class);
@@ -179,7 +179,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'TEST MODEL WITH SPACES',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
@@ -198,7 +198,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'TEST_MODEL',
             'model_type' => 'AnyTypeValue',  // No validation against specific values
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
@@ -216,7 +216,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'TEST_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Jupiter'  // No validation against specific values
         ];
 
@@ -238,7 +238,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'GRACE_FO_2024',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth',
             'product_type' => 'Gravity Field'
         ];
@@ -272,7 +272,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'LINKED_MODEL_2024',
             'model_type' => 'Temporal',
             'mathematical_representation' => 'Ellipsoidal harmonics',
-            'file_format' => 'icgem2.0',
+            'icgem_file_format' => 'icgem2.0',
             'celestial_body' => 'Mars',
             'product_type' => 'Gravity Field'
         ];
@@ -303,7 +303,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'MINIMAL_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
             // product_type is optional
         ];
@@ -332,7 +332,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'FIRST_MODEL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
@@ -340,7 +340,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'SECOND_MODEL',
             'model_type' => 'Temporal',
             'mathematical_representation' => 'Ellipsoidal harmonics',
-            'file_format' => 'icgem2.0',
+            'icgem_file_format' => 'icgem2.0',
             'celestial_body' => 'Mars'
         ];
 
@@ -372,7 +372,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'WILL_FAIL',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 
@@ -396,7 +396,7 @@ final class SaveGGMsDefinitionTest extends DatabaseTestCase
             'model_name' => 'INCOMPLETE_SAVE',
             'model_type' => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format' => 'icgem1.0',
+            'icgem_file_format' => 'icgem1.0',
             'celestial_body' => 'Earth'
         ];
 

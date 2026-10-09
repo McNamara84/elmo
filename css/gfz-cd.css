@@ -1,3 +1,53 @@
+:root {
+    /* Fixed GFZ blue keeps white text readable; heading colors follow the theme. */
+    --elmo-brand-color: #00589c;
+    --elmo-surface: #ffffff;
+    --elmo-surface-raised: #f8f9fa;
+    --elmo-field-bg: #ffffff;
+    --elmo-readonly-bg: #e9ecef;
+    --elmo-control-border: #858e96;
+    --elmo-heading-color: var(--elmo-brand-color);
+    --elmo-tooltip-bg: #ffffff;
+    --elmo-tooltip-color: #002864;
+    --elmo-tag-bg: #e5e5e5;
+    --elmo-tag-hover: #d3e2e2;
+    --elmo-tree-hover: #e7f4f9;
+    --elmo-tree-selected: #beebff;
+    --elmo-focus-color: var(--elmo-brand-color);
+    --elmo-info-bg: #cfe2ff;
+    --elmo-info-color: var(--elmo-brand-color);
+    --elmo-info-border: #b6d4fe;
+}
+
+.elmo-subheader {
+    background-color: var(--elmo-surface-raised);
+    color: var(--bs-body-color);
+}
+
+.elmo-badge {
+    background-color: var(--elmo-surface-raised);
+    color: var(--bs-body-color);
+}
+
+.ui-autocomplete .ui-state-active,
+.ui-autocomplete .ui-state-focus {
+    background: var(--elmo-brand-color);
+    color: #ffffff;
+    border-color: var(--elmo-focus-color);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--elmo-field-bg);
+    border-color: var(--elmo-control-border);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--elmo-field-bg);
+    border-color: var(--elmo-focus-color);
+}
+
 .jstree-container-ul>li>a>i.jstree-checkbox {
     display: none;
 }
@@ -7,25 +57,55 @@
 }
 
 .bg-primary {
-    background-color: #00589C !important;
+    background-color: var(--elmo-brand-color) !important;
 }
 
 .btn-primary {
-    background-color: #00589C !important;
-    border-color: #00589C !important;
+    --bs-btn-bg: var(--elmo-brand-color);
+    --bs-btn-border-color: var(--elmo-brand-color);
+    --bs-btn-hover-bg: #004878;
+    --bs-btn-hover-border-color: #004878;
+    --bs-btn-active-bg: #003d68;
+    --bs-btn-active-border-color: #003d68;
+    --bs-btn-disabled-bg: var(--elmo-brand-color);
+    --bs-btn-disabled-border-color: var(--elmo-brand-color);
+    --bs-btn-focus-shadow-rgb: 138, 185, 255;
 }
 
 /* Farbanpassung der aktiven Dropdown Items */
 .dropdown-item.active,
 .dropdown-item:active {
-    background-color: #00589C;
+    background-color: var(--elmo-brand-color);
 }
 
 .alert-info {
-    color: #00589C;
-    background-color: #cfe2ff;
-    border-color: #b6d4fe;
+    --bs-alert-color: var(--elmo-info-color);
+    --bs-alert-bg: var(--elmo-info-bg);
+    --bs-alert-border-color: var(--elmo-info-border);
     font-size: 1.1rem;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: #495057;
+    --bs-btn-border-color: #858e96;
+    --bs-btn-hover-bg: #495057;
+    --bs-btn-hover-border-color: #495057;
+    --bs-btn-active-bg: #495057;
+    --bs-btn-active-border-color: #495057;
+}
+
+.btn-outline-warning {
+    --bs-btn-color: #805b00;
+    --bs-btn-border-color: #967000;
+}
+
+.btn-outline-primary {
+    --bs-btn-color: var(--elmo-brand-color);
+    --bs-btn-border-color: var(--elmo-brand-color);
+    --bs-btn-hover-bg: var(--elmo-brand-color);
+    --bs-btn-hover-border-color: #004878;
+    --bs-btn-active-bg: #003d68;
+    --bs-btn-active-border-color: #003d68;
 }
 
 .footer-notes {
@@ -35,46 +115,45 @@
     opacity: 0.6;
 }
 
-/* Bottom padding keeps the fixed footer from overlapping page content.
- * 104px covers the compact footer stack (buttons + autosave status + padding)
- * across viewports while giving a bit more room back to the form. Keep in sync
- * with tests that exercise controls near the bottom of the page.
- */
+/* The footer script measures wrapped controls; these values also work without JS. */
 #main-content {
     padding-bottom: 15px !important;
 }
 
 /* Footer styling for consistent appearance */
 footer.fixed-bottom {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none;
-    border: 0;
+    background-color: var(--elmo-surface-raised);
+    border-top: 1px solid var(--bs-border-color);
+    box-shadow: 0 -0.125rem 0.5rem rgba(0, 0, 0, 0.08);
     z-index: 1020;
     width: 100%;
 }
 
 /* Desktop */
 body {
-    padding-bottom: 140px;
+    padding-bottom: calc(var(--elmo-fixed-footer-height, 140px) + 1rem);
+}
+
+.footer > .container {
+    padding-block: 0.75rem;
+}
+
+.footer-info-nav {
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
 }
 
 /* Tablets and smaller devices */
 @media (max-width: 768px) {
     body {
-        padding-bottom: 220px;
-    }
-
-    footer.fixed-bottom {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        padding-bottom: calc(var(--elmo-fixed-footer-height, 220px) + 1rem);
     }
 }
 
 /* Very small devices */
 @media (max-width: 480px) {
     body {
-        padding-bottom: 260px;
+        padding-bottom: calc(var(--elmo-fixed-footer-height, 260px) + 1rem);
     }
 }
 
@@ -165,7 +244,7 @@ body {
 
 /* Upload Modal */
 .drop-zone {
-    border: 2px dashed #dee2e6;
+    border: 2px dashed var(--elmo-control-border);
     transition: border-color 0.3s ease;
 }
 
@@ -177,7 +256,7 @@ body {
 /* Drag & drop sort */
 .drag-handle {
     cursor: move;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     background-color: transparent;
     border: 0;
     padding: 0;
@@ -192,32 +271,46 @@ body {
 
 .drag-handle:hover,
 .drag-handle:focus {
-    color: #495057;
+    color: var(--bs-body-color);
 }
 
 .drag-handle:focus-visible {
-    outline: 2px solid var(--bs-primary);
+    outline: 2px solid var(--elmo-focus-color);
     outline-offset: 2px;
 }
 
+.title-sort-handle {
+    width: 2.25rem;
+    height: 2.25rem;
+    flex: 0 0 2.25rem;
+}
+
+.title-sort-handle:not(:disabled) {
+    cursor: grab;
+}
+
+.title-sort-handle:active {
+    cursor: grabbing;
+}
+
 [data-creator-row].ui-sortable-helper {
-    background: white;
+    background: var(--elmo-surface);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Marker for mandatory fields */
 label.mandatory-field::after {
     content: "*";
-    color: #dc3545;
+    color: var(--bs-red-star-color, #dc3545);
     margin-left: 0.1rem;
 }
 
 .navbar-sidebar .nav-link {
-    color: #00589C;
+    color: var(--elmo-heading-color);
 }
 
 .navbar-sidebar .nav-link:hover {
-    color: black;
+    color: var(--bs-body-color);
 
     /* Optional: Same color or another color on hover */
 }
@@ -235,10 +328,29 @@ label.mandatory-field::after {
 
 /* Greyed out input fields */
 .input-greyed-out {
-    background-color: #e9ecef;
-    /* Light grey background for normal mode */
-    color: #495057;
-    /* Grey text color */
+    background-color: var(--elmo-readonly-bg);
+    color: var(--bs-body-color);
+}
+
+.input-greyed-out:focus,
+.form-floating > .form-control.input-greyed-out ~ label::after {
+    background-color: var(--elmo-readonly-bg);
+}
+
+.form-floating > .form-control ~ label::after,
+.form-floating > .form-select ~ label::after {
+    background-color: var(--elmo-field-bg);
+}
+
+#resource-type-help-list dt {
+    margin-top: 0.75rem;
+    font-weight: 700;
+}
+
+#resource-type-help-list dd {
+    margin-left: 0;
+    padding-left: 1rem;
+    border-left: 2px solid #adb5bd;
 }
 
 .settings-menu-link {
@@ -267,6 +379,37 @@ label.mandatory-field::after {
 .add-button {
     width: 36px;
     margin-inline-end: 0.75rem;
+}
+
+/* Mobile phones (320–375px): shrink remove buttons visually; transform keeps the layout box,
+ * so neighbouring fields and add buttons do not shift. */
+@media (max-width: 375px) {
+    .removeButton {
+        transform: scale(0.75);
+    }
+}
+
+/* Data source entries: trim nested paddings (card-body + row p-1 + column p-1) so fields get
+ * more width. Bootstrap's p-1 utilities are !important, hence the overrides. */
+@media (max-width: 768.98px) {
+    .card-body.datasources-card-body {
+        padding: 0.5rem;
+    }
+
+    #group-datasources > [data-source-row],
+    #group-datasources > [data-source-row] > [class*="col-"]:not(.p-0) {
+        padding: 0.125rem !important;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .card-body.datasources-card-body {
+        padding: 0.5rem 0.25rem;
+    }
+
+    #group-datasources > [data-source-row] > [class*="col-"]:not(.p-0) {
+        padding: 0.125rem 0.0625rem !important;
+    }
 }
 
 .map-panel {
@@ -314,7 +457,7 @@ label.mandatory-field::after {
 }
 
 [data-bs-theme="dark"] .autosave-status {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: var(--elmo-surface);
     border-color: rgba(255, 255, 255, 0.16);
     box-shadow: 0 0.125rem 0.35rem rgba(0, 0, 0, 0.45);
 }
@@ -401,10 +544,23 @@ label.mandatory-field::after {
 
 .tooltip {
     pointer-events: none;
+    --bs-tooltip-bg: var(--elmo-tooltip-bg);
+    --bs-tooltip-color: var(--elmo-tooltip-color);
+    --bs-tooltip-opacity: 1;
+}
+
+.tooltip.show {
+    opacity: 1;
+}
+
+.tooltip-inner {
+    background-color: var(--bs-tooltip-bg);
+    color: var(--bs-tooltip-color);
+    border: 1px solid var(--bs-border-color);
 }
 
 .text-feedback {
-    color: var(--bs-text-feedback-color, #000000);
+    color: var(--bs-body-color);
 }
 
 /* Style for small inline logos next to headings (e.g., ORCID, ROR) */
@@ -424,7 +580,7 @@ input.form-control[data-empty="true"]:valid,
 textarea.form-control[data-empty="true"]:valid,
 select.form-select[data-empty="true"]:valid {
   box-shadow: none !important;
-  border-color: #ced4da !important;
+  border-color: var(--elmo-control-border) !important;
   background-image: none !important;
 }
 
@@ -438,7 +594,7 @@ textarea.is-invalid:focus,
 /* Normal invalid state: red border only, no shadow or background image */
 textarea.is-invalid,
 .input-group.is-invalid textarea {
-  border-color: #dc3545 !important; /* Red border */
+  border-color: var(--bs-form-invalid-border-color) !important;
   box-shadow: none !important;      /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
 }
@@ -452,14 +608,14 @@ textarea.is-valid:focus,
 /* Normal valid state: green border only, no shadow or background image */
 textarea.is-valid,
 .input-group.is-valid textarea {
-  border-color: #198754 !important;  /* Green border */
+  border-color: var(--bs-form-valid-border-color) !important;
   box-shadow: none !important;       /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
 }
 
 .label-bold {
         font-weight: bold; /* Makes the text bold */
-        color: #00589C;    /* Example of a text color */
+        color: var(--elmo-heading-color);
     }
 
 
@@ -586,20 +742,61 @@ header .ms-auto.d-flex {
 }
 
 .footer-info {
-    background-color: #00589c;
+    background-color: var(--elmo-brand-color);
     color: #ffffff;
     font-size: 0.9rem;
 }
 
-.footer-info-nav a {
+.footer-info-nav a,
+.footer-info-nav button {
     color: #cbd6ff; 
     margin: 0 10px;
     text-decoration: none;
     transition: color 0.2s;
 }
 
-.footer-info-nav a:hover {
+.footer-info-nav button {
+    padding: 0;
+    border: 0;
+    background: none;
+    font-family: inherit;
+    line-height: inherit;
+    cursor: pointer;
+}
+
+.footer-info-nav a:hover,
+.footer-info-nav button:hover,
+.footer-info-nav button:focus-visible {
     color: #ffffff;
+}
+
+.footer-info-nav button:focus-visible {
+    outline: 2px solid #ffffff;
+    outline-offset: 3px;
+}
+
+.changelog-edition-badge {
+    min-width: 8.5em;
+    text-align: center;
+    color: #ffffff;
+}
+
+.changelog-edition-badge--all,
+.changelog-edition-badge--elmo {
+    background-color: #002864;
+}
+
+.changelog-edition-badge--msl {
+    background-color: #3d9c52;
+    color: #000000;
+}
+
+.changelog-edition-badge--gem {
+    background-color: #0062a3;
+}
+
+.changelog-edition-badge--igsn {
+    background-color: #000000;
 }
 
 @media (max-width: 768px) {
@@ -609,7 +806,8 @@ header .ms-auto.d-flex {
         align-items: center;
     }
     
-    .footer-info-nav a {
+    .footer-info-nav a,
+    .footer-info-nav button {
         margin: 0 !important;
         padding: 0.25rem 0;
     }
@@ -652,7 +850,7 @@ header .ms-auto.d-flex {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.85rem;
-  color: var(--bs-secondary);
+  color: var(--bs-secondary-color);
   margin-top: 0.25rem;
 }
 
@@ -668,8 +866,60 @@ header .ms-auto.d-flex {
 
 .doi-prefill-preview .table th {
   width: 140px;
-  color: var(--bs-secondary);
+  color: var(--bs-secondary-color);
   font-weight: 600;
+}
+
+/* DOI search runs independently of form submission, so Bootstrap's form-wide
+ * validation state must not paint this optional search input green or red. */
+#input-resourceinformation-source-doi,
+.was-validated #input-resourceinformation-source-doi:valid,
+.was-validated #input-resourceinformation-source-doi:invalid {
+    border-color: var(--elmo-control-border);
+    background-image: none;
+    box-shadow: none;
+}
+
+#input-resourceinformation-source-doi:focus,
+.was-validated #input-resourceinformation-source-doi:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.resource-doi-search {
+    display: flex;
+    align-items: stretch;
+    gap: 0.5rem;
+}
+
+.resource-doi-search .form-control {
+    min-width: 0;
+}
+
+.resource-doi-search .btn {
+    max-width: 100%;
+}
+
+.resource-doi-edit-btn,
+.resource-doi-help {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: calc(3.5rem + 2px);
+}
+
+.resource-doi-edit-btn {
+    border-radius: 0;
+}
+
+@media (max-width: 575.98px) {
+    .resource-doi-search {
+        flex-direction: column;
+    }
+
+    .resource-doi-search .btn {
+        align-self: flex-start;
+    }
 }
 
 /* Keep ORCID buttons aligned with the input height */
@@ -684,4 +934,54 @@ header .ms-auto.d-flex {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+
+@supports (appearance: base-select) {
+
+    #input-originatinglaboratory-name,
+    #input-originatinglaboratory-name::picker(select) {
+        appearance: base-select;
+    }
+
+    /* Preserve the existing Bootstrap styling of the select field */
+    #input-originatinglaboratory-name {
+        width: 100%;
+        box-sizing: border-box;
+        height: auto;
+        min-height: 58px;
+        padding-top: 1.625rem;
+        padding-bottom: 0.5rem;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+    }
+
+    /* Hide the additional picker arrow */
+    #input-originatinglaboratory-name::picker-icon {
+        display: none;
+    }
+
+    /* Match the dropdown menu width to the select field */
+    #input-originatinglaboratory-name::picker(select) {
+        width: anchor-size(width);
+        max-width: anchor-size(width);
+        max-height: 400px;
+        overflow-y: auto;
+        margin: 0;
+    }
+
+    /* Wrap long laboratory names within a single option */
+    #input-originatinglaboratory-name option {
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.35;
+        padding: 0.5rem 0.75rem;
+    }
+
+    /* Highlight an option in blue on hover */
+    #input-originatinglaboratory-name option:hover {
+        background-color: var(--elmo-brand-color);
+        color: #fff;
+    }
 }

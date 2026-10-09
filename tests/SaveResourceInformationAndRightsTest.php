@@ -13,6 +13,39 @@ namespace Tests;
  */
 final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
 {
+    public function testStructuredPayloadPreservesVersionAndTitleOrder(): void
+    {
+        require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        $resourceId = saveResourceInformationAndRights($this->connection, [
+            'action' => 'submit',
+            'Rights' => 1,
+            'resourceInformationPayload' => json_encode([
+                'doi' => '', 'year' => '2026', 'resourceTypeId' => '1',
+                'version' => '3.0', 'languageId' => '1',
+                'titles' => [
+                    ['text' => 'Main', 'typeId' => '1', 'position' => 0],
+                    ['text' => 'Second', 'typeId' => '2', 'position' => 1],
+                    ['text' => 'First', 'typeId' => '2', 'position' => 2],
+                ],
+            ], JSON_THROW_ON_ERROR),
+        ]);
+        self::assertIsInt($resourceId);
+        self::assertSame('3.0', $this->connection->query("SELECT version FROM Resource WHERE resource_id = {$resourceId}")->fetch_assoc()['version']);
+        $titles = $this->connection->query("SELECT text, sort_order FROM Title WHERE Resource_resource_id = {$resourceId} ORDER BY sort_order")->fetch_all(MYSQLI_ASSOC);
+        self::assertSame(['Main', 'Second', 'First'], array_column($titles, 'text'));
+        self::assertSame([0, 1, 2], array_map('intval', array_column($titles, 'sort_order')));
+    }
+
+    public function testSubmitRequiresLanguageAndValidVersion(): void
+    {
+        require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        $base = ['action' => 'submit', 'year' => '2026', 'resourcetype' => '1',
+            'title' => ['Main'], 'titleType' => ['1']];
+        self::assertFalse(saveResourceInformationAndRights($this->connection, $base));
+        self::assertFalse(saveResourceInformationAndRights($this->connection, $base + ['language' => '1', 'version' => 'bad']));
+        self::assertSame(0, (int) $this->connection->query('SELECT COUNT(*) AS count FROM Resource')->fetch_assoc()['count']);
+    }
+
     /**
      * Testet das Speichern von Ressourceninformationen und Rechten mit allen Feldern.
      */
@@ -701,5 +734,79 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         $total_count = $stmt->get_result()->fetch_assoc()['count'];
         // Suggested to change to 6. The original dataset with DOI should be updated, not duplicated, so total count should be 6 instead of 5.
         $this->assertEquals(6, $total_count, "Should have six datasets in total");
+    }
+
+    public function testGemSavePrefixesModelNameOntoMainTitle(): void
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $previous = $GLOBALS['showGGMsProperties'] ?? null;
+        $GLOBALS['showGGMsProperties'] = true;
+
+        try {
+            $resourceId = saveResourceInformationAndRights($this->connection, [
+                'doi' => '10.5880/GFZ.TEST.GEM.TITLE.PREFIX',
+                'year' => 2026,
+                'resourcetype' => 1,
+                'language' => 1,
+                'Rights' => 1,
+                'title' => ['Global gravity field'],
+                'titleType' => [1],
+                'model_name' => 'EIGEN-6C4',
+            ]);
+
+            $this->assertIsInt($resourceId);
+            $stmt = $this->connection->prepare('SELECT text FROM Title WHERE Resource_resource_id = ?');
+            $stmt->bind_param('i', $resourceId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+
+            $this->assertSame('EIGEN-6C4: Global gravity field', $row['text']);
+        } finally {
+            if ($previous === null) {
+                unset($GLOBALS['showGGMsProperties']);
+            } else {
+                $GLOBALS['showGGMsProperties'] = $previous;
+            }
+        }
+    }
+
+    public function testGemSaveKeepsEmptyTitleEmpty(): void
+    {
+        if (!function_exists('saveResourceInformationAndRights')) {
+            require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        }
+
+        $previous = $GLOBALS['showGGMsProperties'] ?? null;
+        $GLOBALS['showGGMsProperties'] = true;
+
+        try {
+            $resourceId = saveResourceInformationAndRights($this->connection, [
+                'doi' => '10.5880/GFZ.TEST.GEM.TITLE.EMPTY',
+                'year' => 2026,
+                'resourcetype' => 1,
+                'language' => 1,
+                'Rights' => 1,
+                'title' => [''],
+                'titleType' => [1],
+                'model_name' => 'EIGEN-6C4',
+            ]);
+
+            $this->assertIsInt($resourceId);
+            $stmt = $this->connection->prepare('SELECT COUNT(*) AS count FROM Title WHERE Resource_resource_id = ?');
+            $stmt->bind_param('i', $resourceId);
+            $stmt->execute();
+            $row = $stmt->get_result()->fetch_assoc();
+
+            $this->assertSame(0, (int) $row['count']);
+        } finally {
+            if ($previous === null) {
+                unset($GLOBALS['showGGMsProperties']);
+            } else {
+                $GLOBALS['showGGMsProperties'] = $previous;
+            }
+        }
     }
 }

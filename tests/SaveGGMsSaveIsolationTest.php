@@ -26,7 +26,7 @@ require_once __DIR__ . '/../save/formgroups/save_ggms_datasources.php';
  *   submit  : validateGGMData() enforces model_name (non-empty, no spaces),
  *             model_type and mathematical_representation (non-empty strings);
  *             FK resolution for model_type / mathematical_representation /
- *             file_format must all succeed.
+ *             icgem_file_format must all succeed.
  *   save    : Only checks resourceId > 0; null FKs are stored as NULL.
  *
  * save_ggms_properties.php
@@ -172,7 +172,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => '',
             'model_type'                => '',
             'mathematical_representation' => '',
-            'file_format'               => '',
+            'icgem_file_format'               => '',
             'celestial_body'            => '',
             'product_type'              => '',
         ];
@@ -207,7 +207,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'PARTIAL_MODEL',
             'model_type'                => '',
             'mathematical_representation' => '',
-            'file_format'               => '',
+            'icgem_file_format'               => '',
         ];
 
         $result = saveGGMsDefinition($this->connection, $postData, $this->resourceId);
@@ -243,7 +243,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'FULL_MODEL',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
             'celestial_body'            => 'Earth',
         ];
 
@@ -280,7 +280,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => '',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -299,7 +299,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'MODEL WITH SPACES',
             'model_type'                => 'Static',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -318,7 +318,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'VALID_MODEL',
             'model_type'                => 'Static',
             'mathematical_representation' => '',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -337,7 +337,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             'model_name'                => 'VALID_MODEL',
             'model_type'                => 'NonexistentType',
             'mathematical_representation' => 'Spherical harmonics',
-            'file_format'               => 'icgem1.0',
+            'icgem_file_format'               => 'icgem1.0',
         ];
 
         $this->expectException(\Exception::class);
@@ -641,7 +641,7 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
     /**
      * submit: Satellite row with no platform → validateDataSourceRow throws.
      */
-    public function testDataSourcesSubmitFailsWithMissingSatellitePlatform(): void
+    public function testDataSourcesSubmitSucceedsWithMissingSatellitePlatform(): void
     {
         $postData = [
             'action'                 => 'submit',
@@ -650,10 +650,23 @@ final class SaveGGMsSaveIsolationTest extends DatabaseTestCase
             // satellite_platform absent
         ];
 
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessageMatches('/satellite platform/i');
-
+        // Should not throw
         saveGGMsDataSources($this->connection, $postData, $this->resourceId);
+
+        $stmt = $this->connection->prepare(
+            "SELECT ds.type, ds.S_value_name
+             FROM `Data_Sources` ds
+             JOIN `Resource_has_Data_Sources` rhds ON rhds.data_source_id = ds.data_source_id
+             WHERE rhds.resource_id = ?"
+        );
+        $stmt->bind_param('i', $this->resourceId);
+        $stmt->execute();
+        $row = $stmt->get_result()->fetch_assoc();
+        $stmt->close();
+
+        $this->assertNotNull($row, 'Data_Sources record should be created on save despite missing platform');
+        $this->assertEquals('S', $row['type']);
+        $this->assertNull($row['S_value_name']);
     }
 
     /**

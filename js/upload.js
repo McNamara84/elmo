@@ -5,6 +5,7 @@
  */
 const DATACITE_NAMESPACE = 'http://datacite.org/schema/kernel-4';
 const XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
+const RELATED_WORK_PROGRESS_THRESHOLD = 100;
 
 $(document).ready(function () {
     // Event listener for load button click
@@ -358,8 +359,12 @@ function handleMetadataFile(file) {
                 return;
             }
 
-            // Load XML data into form
-            await loadXmlToForm(xmlDoc);
+            // Load XML data into form. The mapper reports large Related Work
+            // batches while this upload-level loading state remains active.
+            const loadXml = getLoadXmlToFormHandler();
+            await loadXml(xmlDoc, {
+                onRelatedWorksProgress: showRelatedWorksImportProgress
+            });
 
             // Show success toast; close modal only when toast is available.
             // Register a shown.bs.modal fallback first: Bootstrap's hide() is a silent
@@ -419,6 +424,35 @@ function setUploadLoadingState(loading) {
         dropZone.removeClass('pe-none opacity-50');
         spinner.addClass('d-none');
     }
+}
+
+/**
+ * Shows progress for large Related Works imports without scheduling the normal
+ * status auto-hide timer. The upload flow owns the lifetime of this message.
+ * @param {{processed: number, total: number}} progress - Current batch progress
+ */
+function showRelatedWorksImportProgress(progress) {
+    const processed = Number(progress && progress.processed) || 0;
+    const total = Number(progress && progress.total) || 0;
+    if (total <= RELATED_WORK_PROGRESS_THRESHOLD) {
+        return;
+    }
+
+    const template = translateWithFallback(
+        'modals.upload.relatedWorksProgress',
+        'Related works {processed}/{total}'
+    );
+    const message = template
+        .replace(/\{processed\}/g, String(processed))
+        .replace(/\{total\}/g, String(total));
+    const statusElement = $('#xml-upload-status');
+
+    clearStatusHideTimer();
+    statusElement.removeClass()
+        .addClass('alert alert-info')
+        .attr({ role: 'status', 'aria-live': 'polite', 'aria-atomic': 'true' })
+        .removeClass('d-none')
+        .text(message);
 }
 
 /**
@@ -520,6 +554,7 @@ if (typeof module !== 'undefined' && module.exports) {
         appendJsonLdField,
         appendJsonLdAttributes,
         createIdentifierElementFromResourceId,
+        showRelatedWorksImportProgress,
         clearStatusHideTimer
     };
 }

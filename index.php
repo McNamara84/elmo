@@ -37,6 +37,8 @@ $showAuthorInstitution = resolveFeatureToggle($showAuthorInstitution ?? null, tr
 $showContributorPersons = resolveFeatureToggle($showContributorPersons ?? null, true);
 /** @var bool $showContributorInstitutions */
 $showContributorInstitutions = resolveFeatureToggle($showContributorInstitutions ?? null, true);
+/** @var bool $showContactInstitution */
+$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION'), FILTER_VALIDATE_BOOLEAN);
 /** @var bool $showThesauri */
 $showThesauri = resolveFeatureToggle($showThesauri ?? null, true);
 /** @var bool $showFreeKeywords */
@@ -71,25 +73,22 @@ $showUsedInstruments = $variantOverrides['showUsedInstruments'];
 $thesauriHiddenKeys = $variantOverrides['thesauriHiddenKeys'];
 
 // Include HTML components using absolute paths to ensure reliable file access
-$mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="logos/EPOS_logo.png" alt="MSL Logo" class="logo logo-right logo-msl"> </a>';
+$mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener noreferrer"> <img src="assets/logos/epos-logo.png" alt="MSL Logo" class="logo logo-right logo-msl"> </a>';
 
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
-include $baseDir . 'formgroups/resourceInformation.html';
+include $baseDir . 'formgroups/resource-information.html';
 include $baseDir . 'formgroups/honeypot.html';
 
 include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
-    include $baseDir . 'formgroups/GGMsDefinition.html';
+    include $baseDir . 'formgroups/ggms-definition.html';
     include $baseDir . "formgroups/GGMsModelTypes.html";
-    include $baseDir . 'formgroups/GGMsDataSources.html';
-    include $baseDir . 'formgroups/GGMsProperties.html';
+    include $baseDir . 'formgroups/ggms-properties.html';
+    include $baseDir . 'formgroups/ggms-data-sources.html';
 }
-if ($showContributorPersons) {
-    include $baseDir . 'formgroups/contributorPersons.html';
-}
-if ($showContributorInstitutions) {
-    include $baseDir . 'formgroups/contributorInstitutions.html';
+if ($showContributorPersons || $showContributorInstitutions) {
+    include $baseDir . 'formgroups/contributors.html';
 }
 if ($showMslLabs) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
@@ -103,7 +102,7 @@ if ($showMslVocabs) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showThesauri) {
-    include $baseDir . 'formgroups/thesaurusKeywords.html';
+    include $baseDir . 'formgroups/thesaurus-keywords.html';
 }
 if ($showFreeKeywords) {
     include $baseDir . 'formgroups/freeKeywords.html';

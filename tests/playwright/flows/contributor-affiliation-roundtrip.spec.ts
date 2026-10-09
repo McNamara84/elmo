@@ -97,9 +97,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
   });
 
   test('second contributor person affiliation is loaded from XML', async ({ page }) => {
-    // The contributor persons card contains [contributor-person-row] attribute
-    const personContainer = page.locator('[contributor-person-row]').first().locator('..');
-    test.skip(!(await personContainer.isVisible()), 'Contributor Persons form group is not enabled');
+    test.skip(!(await page.locator('[data-contributor-add-type="person"]').isVisible()), 'Contributor Persons form group is not enabled');
 
     await uploadXml(page, XML_TWO_CONTRIBUTOR_PERSONS, 'two-contributors.xml');
 
@@ -109,9 +107,9 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
       { timeout: 20_000 },
     );
 
-    // Verify first contributor person — select rows by the attribute selector
-    const personRows = page.locator('[contributor-person-row]');
-    const firstPerson = personRows.nth(0);
+    // Verify both contributor persons within their cards.
+    const personCards = page.locator('[data-contributor-card][data-contributor-type="person"]');
+    const firstPerson = personCards.nth(0);
     await expect(firstPerson.locator('input[name="cbPersonLastname[]"]')).toHaveValue('Schmidt');
     await expect(firstPerson.locator('input[name="cbPersonFirstname[]"]')).toHaveValue('Hans');
 
@@ -121,7 +119,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     await expect(firstAffTags.first()).toContainText('Helmholtz-Zentrum Potsdam');
 
     // Verify second contributor person
-    const secondPerson = personRows.nth(1);
+    const secondPerson = personCards.nth(1);
     await expect(secondPerson.locator('input[name="cbPersonLastname[]"]')).toHaveValue('Mueller');
     await expect(secondPerson.locator('input[name="cbPersonFirstname[]"]')).toHaveValue('Erika');
 
@@ -137,8 +135,7 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
 
   test('second contributor organisation affiliation is loaded from XML', async ({ page }) => {
     // Skip if contributor institutions form group is not visible
-    const contributorOrgCard = page.locator('#group-contributororganisation');
-    test.skip(!(await contributorOrgCard.isVisible()), 'Contributor Institutions form group is not enabled');
+    test.skip(!(await page.locator('[data-contributor-add-type="institution"]').isVisible()), 'Contributor Institutions form group is not enabled');
 
     await uploadXml(page, XML_TWO_CONTRIBUTOR_ORGS, 'two-contributor-orgs.xml');
 
@@ -149,19 +146,19 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     );
 
     // Verify first organisation
-    const orgRows = page.locator('#group-contributororganisation [contributors-row]');
-    const firstOrg = orgRows.nth(0);
+    const orgCards = page.locator('[data-contributor-card][data-contributor-type="institution"]');
+    const firstOrg = orgCards.nth(0);
     await expect(firstOrg.locator('input[name="cbOrganisationName[]"]')).toHaveValue(
       'GFZ German Research Centre for Geosciences',
     );
 
-    // Check first org affiliation via Tagify tag — target specifically the affiliation input's tags
+    // Check the affiliation tags inside the first institution card.
     const firstAffTags = firstOrg.locator('input[name="OrganisationAffiliation[]"]').locator('..').locator('tags.tagify tag');
     await expect(firstAffTags.first()).toBeVisible({ timeout: 10_000 });
     await expect(firstAffTags.first()).toContainText('Helmholtz-Zentrum Potsdam');
 
     // Verify second organisation
-    const secondOrg = orgRows.nth(1);
+    const secondOrg = orgCards.nth(1);
     await expect(secondOrg.locator('input[name="cbOrganisationName[]"]')).toHaveValue(
       'Technical University of Berlin',
     );

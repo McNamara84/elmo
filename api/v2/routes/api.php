@@ -27,14 +27,14 @@ return [
     ['GET', '/affiliations/search', [new AffiliationController(), 'search']],
 
     // Vocabulary update endpoints
-    ['GET', '/update/vocabs/msl/labs', [new VocabController(), 'updateMslLabs']],
     ['GET', '/update/vocabs/msl', [new VocabController(), 'getMslVocab']],
     ['GET', '/update/timezones', [new VocabController(), 'updateTimezones']],
     ['GET', '/update/ror', [new VocabController(), 'getRorAffiliations']],
     ['GET', '/update/crossref', [new VocabController(), 'getCrossref']],
 
     // Vocabulary retrieval endpoints
-    ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']],
+    ['GET', '/vocabs/roles[/{type}]', [new VocabController(), 'getRoles']], // Usage: ./api/v2/vocabs/roles?type=person/institution/both
+    ['GET', '/vocabs/msl-laboratories', [new VocabController(), 'getMslLabs']],
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
     ['GET', '/vocabs/licenses/software', [new VocabController(), 'getSoftwareLicenses']],

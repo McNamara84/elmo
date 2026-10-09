@@ -23,6 +23,18 @@ warn_missing_dir() {
 warn_missing_dir "/var/www/html/vendor" "Run 'composer install' locally or rebuild the image."
 warn_missing_dir "/var/www/html/node_modules" "Run 'npm install' locally or rebuild the image."
 
+# Submission mail reads XML_SUBMIT_ADDRESS at request time (settings.elmo.php).
+# An empty value falls back to xmlsubmit@example.com.
+if [ -n "${XML_SUBMIT_ADDRESS}" ]; then
+  echo "Submission mail recipient: ${XML_SUBMIT_ADDRESS}"
+else
+  echo "===================================================================="
+  echo "WARNING: XML_SUBMIT_ADDRESS is empty."
+  echo "Submission mail will be sent to xmlsubmit@example.com."
+  echo "Set XML_SUBMIT_ADDRESS in the Portainer stack environment, then update the stack."
+  echo "===================================================================="
+fi
+
 # Ensure a settings.php exists; in production always refresh from settings.elmo.php
 # In local development, keep the existing settings.php
 # Set LOCAL_DEVELOPMENT=true in docker-compose for local deployments
@@ -76,13 +88,12 @@ mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
 EOSQL
 echo "Database and user configured at ${db_host}:${db_port}."
 
-# Always run install.php after DB is reachable.
+# Always run the CLI installer after DB is reachable.
 INSTALL_ACTION="${INSTALL_ACTION:-basic}"
-echo "Running database setup via install.php (${INSTALL_ACTION})..."
-php /var/www/html/install.php "${INSTALL_ACTION}"
+echo "Running database setup via scripts/install.php (${INSTALL_ACTION})..."
+php /var/www/html/scripts/install.php "${INSTALL_ACTION}"
 echo "Database setup finished."
-
-# Clean up install files (optional)
-rm -f /var/www/html/install.{php,html} || true
+# Do sync to DB so that ERNIE ids are correctly mapped.
+php /var/www/html/includes/sync_on_start.php
 
 exec "$@"

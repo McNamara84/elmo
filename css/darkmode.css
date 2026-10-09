@@ -1,44 +1,157 @@
-  /* darkmode.css */
-  [data-bs-theme="dark"] {
-    --bs-body-color: #adb5bd;
-    --bs-body-bg: #212529;
-    --bs-emphasis-color: #fff;
-    --bs-secondary-color: rgba(173, 181, 189, 0.75);
-    --bs-secondary-bg: #343a40;
-    --bs-tertiary-color: rgba(173, 181, 189, 0.5);
-    --bs-tertiary-bg: #2b3035;
-    --bs-primary-text-emphasis: #6ea8fe;
-    --bs-secondary-text-emphasis: #a7acb1;
-    --bs-success-text-emphasis: #75b798;
-    --bs-info-text-emphasis: #6edff6;
-    --bs-warning-text-emphasis: #ffda6a;
-    --bs-danger-text-emphasis: #ea868f;
-    --bs-light-text-emphasis: #f8f9fa;
-    --bs-dark-text-emphasis: #dee2e6;
-    --bs-primary-bg-subtle: #031633;
-    --bs-secondary-bg-subtle: #161719;
-    --bs-success-bg-subtle: #051b11;
-    --bs-info-bg-subtle: #032830;
-    --bs-warning-bg-subtle: #332701;
-    --bs-danger-bg-subtle: #2c0b0e;
-    --bs-light-bg-subtle: #343a40;
-    --bs-dark-bg-subtle: #1a1d20;
-    --bs-primary-border-subtle: #084298;
-    --bs-secondary-border-subtle: #41464b;
-    --bs-success-border-subtle: #0f5132;
-    --bs-info-border-subtle: #087990;
-    --bs-warning-border-subtle: #997404;
-    --bs-danger-border-subtle: #842029;
-    --bs-light-border-subtle: #495057;
-    --bs-dark-border-subtle: #343a40;
-    --bs-link-color: #6ea8fe;
-    --bs-link-hover-color: #8bb9fe;
-    --bs-code-color: #e685b5;
-    --bs-border-color: #495057;
-    --bs-border-color-translucent: rgba(255, 255, 255, 0.15);
-    --tagify-dd-bg-color: var(--bs-body-bg);
-    --tagify-dd-color-primary: var(--bs-secondary-bg);
-    --tagify-dd-text-color: var(--bs-body-color);
+/* Shared dark palette; branded images retain their original colors. */
+[data-bs-theme="dark"] {
+    color-scheme: dark;
+    --bs-body-bg: #1b1f23;
+    --bs-body-bg-rgb: 27, 31, 35;
+    --bs-body-color: #e2e8ee;
+    --bs-body-color-rgb: 226, 232, 238;
+    --bs-emphasis-color: #ffffff;
+    --bs-emphasis-color-rgb: 255, 255, 255;
+    --bs-secondary-color: #b0bac5;
+    --bs-secondary-color-rgb: 176, 186, 197;
+    --bs-secondary-bg: #2c333a;
+    --bs-secondary-bg-rgb: 44, 51, 58;
+    --bs-tertiary-color: #b0bac5;
+    --bs-tertiary-color-rgb: 176, 186, 197;
+    --bs-tertiary-bg: #242a30;
+    --bs-tertiary-bg-rgb: 36, 42, 48;
+    --bs-link-color: #8ab9ff;
+    --bs-link-color-rgb: 138, 185, 255;
+    --bs-link-hover-color: #b8d5ff;
+    --bs-link-hover-color-rgb: 184, 213, 255;
+    --bs-primary-text-emphasis: #8ab9ff;
+    --bs-info-bg-subtle: #15324b;
+    --bs-info-text-emphasis: #cae4ff;
+    --bs-info-border-subtle: #466c8c;
+    --bs-border-color: #46525f;
+    --bs-border-color-translucent: rgba(176, 186, 197, 0.3);
+    --elmo-surface: #242a30;
+    --elmo-surface-raised: #2c333a;
+    --elmo-field-bg: #1e2429;
+    --elmo-readonly-bg: #343d46;
+    --elmo-control-border: #718091;
+    --elmo-heading-color: #8ab9ff;
+    --elmo-tooltip-bg: #2c333a;
+    --elmo-tooltip-color: #e2e8ee;
+    --elmo-tag-bg: #344758;
+    --elmo-tag-hover: #425b71;
+    --elmo-tree-hover: #344758;
+    --elmo-tree-selected: #3e5871;
+    --elmo-focus-color: #8ab9ff;
+    --elmo-info-bg: var(--bs-info-bg-subtle);
+    --elmo-info-color: var(--bs-info-text-emphasis);
+    --elmo-info-border: var(--bs-info-border-subtle);
     --bs-red-star-color: #ff6b6b;
-    --bs-con-reduce-color: #518ee9;
+    --bs-con-reduce-color: #8ab9ff;
+}
+
+[data-bs-theme="dark"] .card {
+    --bs-card-bg: var(--elmo-surface);
+    --bs-card-cap-bg: var(--elmo-surface-raised);
+}
+
+[data-bs-theme="dark"] .modal {
+    --bs-modal-bg: var(--elmo-surface);
+}
+
+[data-bs-theme="dark"] .dropdown-menu {
+    --bs-dropdown-bg: var(--elmo-surface);
+    --bs-dropdown-link-hover-bg: var(--elmo-surface-raised);
+}
+
+[data-bs-theme="dark"] .btn-outline-secondary {
+    --bs-btn-color: #b0bac5;
+    --bs-btn-border-color: #718091;
+    --bs-btn-hover-color: #1b1f23;
+    --bs-btn-hover-bg: #b0bac5;
+    --bs-btn-hover-border-color: #b0bac5;
+    --bs-btn-active-color: #1b1f23;
+    --bs-btn-active-bg: #b0bac5;
+    --bs-btn-active-border-color: #b0bac5;
+    --bs-btn-disabled-color: #b0bac5;
+    --bs-btn-disabled-border-color: #718091;
+}
+
+[data-bs-theme="dark"] .btn-outline-primary {
+    --bs-btn-color: #8ab9ff;
+    --bs-btn-border-color: #8ab9ff;
+    --bs-btn-hover-bg: var(--elmo-brand-color);
+    --bs-btn-hover-border-color: #8ab9ff;
+    --bs-btn-active-bg: var(--elmo-brand-color);
+    --bs-btn-active-border-color: #8ab9ff;
+}
+
+[data-bs-theme="dark"] .btn-outline-warning {
+    --bs-btn-color: #ffda6a;
+    --bs-btn-border-color: #ffda6a;
+}
+
+[data-bs-theme="dark"] .invalid {
+    background-color: var(--bs-danger-bg-subtle);
+}
+
+[data-bs-theme="dark"] .text-danger {
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-success {
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-primary {
+    color: var(--elmo-heading-color) !important;
+}
+
+/* jsTree keeps its selection and expanded branches when the theme changes. */
+[data-bs-theme="dark"] .jstree-default .jstree-anchor {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-hovered,
+[data-bs-theme="dark"] .jstree-default .jstree-wholerow-hovered {
+    background: var(--elmo-tree-hover);
+    box-shadow: none;
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-clicked,
+[data-bs-theme="dark"] .jstree-default .jstree-wholerow-clicked {
+    background: var(--elmo-tree-selected);
+    box-shadow: inset 0 0 0 1px var(--elmo-control-border);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-search {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-disabled {
+    color: var(--bs-secondary-color);
+}
+
+/* The dark sprite uses the same positions; only icons change, never labels. */
+[data-bs-theme="dark"] .jstree-default .jstree-icon {
+    background-image: url("../node_modules/jstree/dist/themes/default-dark/32px.png");
+}
+
+[data-bs-theme="dark"] .jstree-default > .jstree-no-dots .jstree-leaf > .jstree-ocl,
+[data-bs-theme="dark"] .jstree-default .jstree-themeicon-custom {
+    background-image: none;
+}
+
+.jstree-anchor:focus-visible {
+    outline: 2px solid var(--elmo-focus-color);
+    outline-offset: 1px;
+}
+
+/* jQuery UI autocomplete is also attached to body. */
+[data-bs-theme="dark"] .ui-autocomplete.ui-widget-content {
+    background: var(--elmo-surface);
+    color: var(--bs-body-color);
+    border-color: var(--elmo-control-border);
+}
+
+[data-bs-theme="dark"] .ui-autocomplete .ui-state-active,
+[data-bs-theme="dark"] .ui-autocomplete .ui-state-focus {
+    background: var(--elmo-tree-selected);
+    color: var(--bs-body-color);
+    border-color: var(--elmo-focus-color);
 }

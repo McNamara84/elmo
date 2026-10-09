@@ -22,31 +22,35 @@ describe('checkMandatoryFields module coverage', () => {
 
         // Set up DOM for all validation functions
         document.body.innerHTML = `
-            <div id="group-author">
-                <div class="row">
+            <div data-author-stack>
+                <div class="row" data-creator-row>
                     <input type="text" id="input-author-firstname" name="authorGivenname[]">
                     <input type="text" id="input-author-lastname" name="authorFamilyname[]">
                     <input type="email" id="input-contactperson-email" name="contactEmail[]">
                     <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]">
                 </div>
             </div>
-            <div id="group-contributorperson">
+            <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="person">
                 <div class="row" contributor-person-row>
                     <input type="text" id="input-contributor-orcid" name="cbPersonOrcid[]">
                     <input type="text" id="input-contributor-lastname" name="cbPersonLastname[]">
                     <input type="text" id="input-contributor-firstname" name="cbPersonFirstname[]">
-                    <input type="text" id="input-contributor-role" name="cbPersonRoles[]">
-                    <input type="text" id="input-contributor-affiliation" name="cbPersonAffiliation[]">
+                    <input type="text" id="input-contributor-personrole" name="cbPersonRoles[]">
+                </div>
+                    <input type="text" id="input-contributorpersons-affiliation" name="cbPersonAffiliation[]">
                 </div>
             </div>
-            <div id="group-contributororganisation">
+            <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="institution">
                 <div class="row" contributors-row>
-                    <input type="text" id="input-contributororganisation-name" name="OrganisationName[]">
-                    <input type="text" id="input-contributororganisation-role" name="cbOrganisationRoles[]">
-                    <input type="text" id="input-contributororganisation-affiliation" name="OrganisationAffiliation[]">
+                    <input type="text" id="input-contributor-name" name="OrganisationName[]">
+                    <input type="text" id="input-contributor-organisationrole" name="cbOrganisationRoles[]">
+                </div>
+                    <input type="text" id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]">
                 </div>
             </div>
-            <div id="group-authorinstitution">
+            <div data-author-stack>
                 <div class="row" data-authorinstitution-row>
                     <input type="text" id="input-authorinstitution-name" name="authorinstitutionName[]">
                     <input type="text" id="input-authorinstitution-affiliation" name="institutionAffiliation[]">
@@ -67,16 +71,21 @@ describe('checkMandatoryFields module coverage', () => {
                 </div>
             </div>
             <div id="group-relatedwork">
-                <div class="row" related-work-row>
-                    <input type="text" id="input-relatedwork-identifier" name="RelatedWorkIdentifier[]">
-                    <select id="input-relatedwork-relation" name="RelatedWorkRelation[]">
-                        <option value="">Select</option>
-                        <option value="IsPartOf">Is Part Of</option>
-                    </select>
-                    <select id="input-relatedwork-type" name="RelatedWorkIdentifierType[]">
-                        <option value="">Select</option>
-                        <option value="DOI">DOI</option>
-                    </select>
+                <div data-related-work-entry data-related-work-entry-key="related-work-test">
+                    <button type="button" data-related-work-toggle-edit aria-expanded="false"></button>
+                    <div class="collapse" data-related-work-edit-panel aria-hidden="true">
+                        <div class="row">
+                            <input type="text" id="input-relatedwork-identifier" name="rIdentifier[]">
+                            <select id="input-relatedwork-relation" name="relation[]">
+                                <option value="">Select</option>
+                                <option value="1">IsPartOf</option>
+                            </select>
+                            <select id="input-relatedwork-identifiertype" name="rIdentifierType[]">
+                                <option value="">Select</option>
+                                <option value="DOI">DOI</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="group-fundingreference">
@@ -119,6 +128,7 @@ describe('checkMandatoryFields module coverage', () => {
         delete window.jQuery;
         delete global.requestAnimationFrame;
         delete window.applyTagifyAccessibilityAttributes;
+        delete window.relatedWorkStack;
     });
 
     describe('validateSpatialTemporalCoverageRequirements', () => {
@@ -260,6 +270,45 @@ describe('checkMandatoryFields module coverage', () => {
             simulateSubmitValidation();
 
             expect($('#input-relatedwork-relation').attr('required')).toBe('required');
+        });
+
+        test('keeps a completely empty Related Work card optional', () => {
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+            simulateSubmitValidation();
+
+            expect($('#input-relatedwork-relation').attr('required')).toBeUndefined();
+            expect($('#input-relatedwork-identifier').attr('required')).toBeUndefined();
+            expect($('#input-relatedwork-identifiertype').attr('required')).toBeUndefined();
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('false');
+        });
+
+        test('marks all fields and expands an incomplete Related Work card for submit', () => {
+            window.relatedWorkStack = { expandEntry: jest.fn() };
+            $('#input-relatedwork-identifier').val('10.1234/test');
+
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+            simulateSubmitValidation();
+
+            expect($('#input-relatedwork-relation').attr('required')).toBe('required');
+            expect($('#input-relatedwork-identifier').attr('required')).toBe('required');
+            expect($('#input-relatedwork-identifiertype').attr('required')).toBe('required');
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('true');
+            expect(window.relatedWorkStack.expandEntry).toHaveBeenCalledWith(
+                $('[data-related-work-entry]')[0],
+                { focus: false }
+            );
+        });
+
+        test('does not expand a complete Related Work card', () => {
+            window.relatedWorkStack = { expandEntry: jest.fn() };
+            $('#input-relatedwork-identifier').val('10.1234/test');
+            $('#input-relatedwork-relation').val('1');
+            $('#input-relatedwork-identifiertype').val('DOI');
+
+            checkMandatoryFields.validateRelatedWorkRequirements({ revealIncomplete: true });
+
+            expect($('[data-related-work-entry]').attr('data-related-work-validation-incomplete')).toBe('false');
+            expect(window.relatedWorkStack.expandEntry).not.toHaveBeenCalled();
         });
 
         test('validates funding reference - can be called without errors', () => {

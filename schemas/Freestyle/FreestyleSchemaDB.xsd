@@ -59,7 +59,7 @@
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="familyname" type="xs:string" />
-										<xs:element name="givenname" type="xs:string" />
+										<xs:element name="givenname" type="xs:string" minOccurs="0" />
 										<xs:element name="orcid" type="xs:string" minOccurs="0" maxOccurs="1" />
 										<xs:element name="Affiliations" minOccurs="0">
 											<xs:complexType>
@@ -102,16 +102,16 @@
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>
-				<xs:element name="ContactPersons">
+				<xs:element name="ContactPersons" minOccurs="0">
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="ContactPerson" maxOccurs="unbounded">
+							<xs:element name="ContactPerson" minOccurs="0" maxOccurs="unbounded">
 								<xs:complexType>
 									<xs:sequence>
 										<xs:element name="familyname" type="xs:string" />
-										<xs:element name="givenname" type="xs:string" />
+										<xs:element name="givenname" type="xs:string" minOccurs="0" />
 										<xs:element name="orcid" type="xs:string" minOccurs="0" maxOccurs="1"/>
-										<xs:element name="email" type="xs:string" />
+										<xs:element name="email" type="xs:string" minOccurs="0" />
 										<xs:element name="website" type="xs:string" minOccurs="0"/>
 										<xs:element name="Affiliations" minOccurs="0">
 											<xs:complexType>
@@ -120,8 +120,8 @@
 														minOccurs="0" maxOccurs="unbounded">
 														<xs:complexType>
 															<xs:sequence>
-																<xs:element name="affiliation_id"
-																	type="xs:integer" />
+														<xs:element name="affiliation_id"
+															type="xs:integer" minOccurs="0" />
 																<xs:element name="name"
 																	type="xs:string" />
 																<xs:element name="rorId"
@@ -138,6 +138,17 @@
 							</xs:element>
 						</xs:sequence>
 					</xs:complexType>
+				</xs:element>
+				<xs:element name="ContactInstitutions" minOccurs="0">
+					<xs:complexType><xs:sequence>
+						<xs:element name="ContactInstitution" minOccurs="0" maxOccurs="unbounded">
+							<xs:complexType><xs:sequence>
+								<xs:element name="name" type="xs:string"/>
+								<xs:element name="email" type="xs:string" minOccurs="0"/>
+								<xs:element name="website" type="xs:string" minOccurs="0"/>
+							</xs:sequence></xs:complexType>
+						</xs:element>
+					</xs:sequence></xs:complexType>
 				</xs:element>
 				<xs:element name="OriginatingLaboratories">
 					<xs:complexType>
@@ -176,6 +187,25 @@
 				<xs:element name="Contributors" minOccurs="0" maxOccurs="1">
 					<xs:complexType>
 						<xs:sequence>
+							<xs:element name="Contributor" minOccurs="0" maxOccurs="unbounded">
+								<xs:complexType><xs:sequence>
+									<xs:element name="familyname" type="xs:string" minOccurs="0"/>
+									<xs:element name="givenname" type="xs:string" minOccurs="0"/>
+									<xs:element name="orcid" type="xs:string" minOccurs="0"/>
+									<xs:element name="institutionname" type="xs:string" minOccurs="0"/>
+									<xs:element name="Affiliations" minOccurs="0"><xs:complexType><xs:sequence>
+										<xs:element name="Affiliation" minOccurs="0" maxOccurs="unbounded"><xs:complexType><xs:sequence>
+											<xs:element name="name" type="xs:string"/>
+											<xs:element name="rorId" type="xs:string" minOccurs="0"/>
+										</xs:sequence></xs:complexType></xs:element>
+									</xs:sequence></xs:complexType></xs:element>
+									<xs:element name="Roles" minOccurs="0"><xs:complexType><xs:sequence>
+										<xs:element name="Role" minOccurs="0" maxOccurs="unbounded"><xs:complexType><xs:sequence><xs:element name="name" type="xs:string"/></xs:sequence></xs:complexType></xs:element>
+									</xs:sequence></xs:complexType></xs:element>
+									<xs:element name="email" type="xs:string" minOccurs="0"/>
+									<xs:element name="website" type="xs:string" minOccurs="0"/>
+								</xs:sequence><xs:attribute name="type" type="xs:string" use="required"/><xs:attribute name="order" type="xs:integer" use="optional"/></xs:complexType>
+							</xs:element>
 							<xs:element name="Persons" minOccurs="0" maxOccurs="1">
 								<xs:complexType>
 									<xs:sequence>

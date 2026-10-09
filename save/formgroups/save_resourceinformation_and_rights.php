@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__FILE__) . '/../validation.php';
+require_once dirname(__FILE__) . '/../../includes/resource_information_payload.php';
 
 /**
  * Creates a new resource information and rights entry in the database.
@@ -16,7 +17,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  *                          - dateCreated (string|null): Creation date
  *                          - dateEmbargo (string|null): Embargo date
  *                          - resourcetype (int): Resource type ID
- *                          - version (float|null): Version number
+ *                          - version (string|null): Version number
  *                          - language (int): Language ID
  *                          - Rights (int): Rights ID
  *                          - title (array): Array of titles
@@ -27,23 +28,33 @@ require_once dirname(__FILE__) . '/../validation.php';
  */
 function saveResourceInformationAndRights($connection, $postData)
 {
-    global $showLicense;
+    global $showLicense, $showGGMsProperties;
     
-    try {        
+    try {
+        $postData = normalizeResourceInformationPostData($postData);
         // Only require Rights field if license form group is shown
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'resourcetype'];
+            $requiredFields = ['year', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {
                 $requiredFields[] = 'Rights';
             }
 
-            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
+            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields, [
+                'version' => '/^\d+\.\d+$/D',
+            ])) {
                 return false;
             }
+        }
+
+        if (($showGGMsProperties ?? false) && isset($postData['title']) && is_array($postData['title'])) {
+            $postData['title'] = applyGgmsModelNameToDatasetTitles(
+                $postData['title'],
+                (string) ($postData['model_name'] ?? '')
+            );
         }
 
         // Sanitize and prepare data
@@ -51,7 +62,7 @@ function saveResourceInformationAndRights($connection, $postData)
         // Create new resource 
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
-        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'], $action)) {
+        if (!saveTitles($connection, $resource_id, $postData['title'] ?? [], $postData['titleType'] ?? [], $action)) {
             error_log("[SAVE] Failed to save titles for resource_id: $resource_id");
             return false;
         }
@@ -134,8 +145,8 @@ function prepareResourceData($postData)
             ? trim($postData['dateEmbargo']) : null,
         'resourceType' => isset($postData['resourcetype']) && trim($postData['resourcetype']) !== ''
             ? trim($postData['resourcetype']): null,
-        'version' => isset($postData['version']) && trim($postData['version']) !== ''
-            ? (float) $postData['version'] : null,
+        'version' => isset($postData['version']) && trim((string) $postData['version']) !== ''
+            ? normalizeResourceVersion((string) $postData['version']) : null,
         'language' => isset($postData['language']) && trim($postData['language']) !== ''
             ? trim($postData['language']): null,
         'rights' => (int) $rightsId
@@ -157,7 +168,7 @@ function createNewResource($connection, $resourceData)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "sdissiii",
+        "ssissiii",
         $resourceData['doi'],
         $resourceData['version'],
         $resourceData['year'],
@@ -263,6 +274,34 @@ function getDefaultTitleTypeId($connection, $savedCount)
 }
 
 /**
+ * Prefix the GEM model name onto the main dataset title when it is not already present.
+ *
+ * Empty titles stay empty. Matching is case-insensitive.
+ *
+ * @param array<int, mixed> $titles
+ * @return array<int, mixed>
+ */
+function applyGgmsModelNameToDatasetTitles(array $titles, string $modelName): array
+{
+    $modelName = trim($modelName);
+    if ($modelName === '' || $titles === []) {
+        return $titles;
+    }
+
+    $title = trim((string) ($titles[0] ?? ''));
+    if ($title === '') {
+        return $titles;
+    }
+
+    if (mb_stripos($title, $modelName, 0, 'UTF-8') !== false) {
+        return $titles;
+    }
+
+    $titles[0] = $modelName . ': ' . $title;
+    return $titles;
+}
+
+/**
  * Saves titles for a resource, handling duplicates.
  * Allows saving:
  * - Titles with both text and titleType
@@ -290,16 +329,15 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
     for ($i = 0; $i < count($titles); $i++) {
         $title_text = isset($titles[$i]) ? trim($titles[$i]) : '';
         $title_type_str = isset($titleTypes[$i]) ? trim($titleTypes[$i]) : '';
+        error_log("Processing title index $i: text='$title_text', type='$title_type_str'");
 
-        // Skip entirely empty entries (both text and type are empty)
-        if (empty($title_text) && empty($title_type_str)) {
-            continue;
-        }
 
         // Skip if text is empty (text is required)
         if (empty($title_text)) {
             continue;
         }
+        // Convert title_type string to integer if present
+        $title_type = intval($title_type_str);
 
         // If type is empty but text exists, assign a default title type
         if (empty($title_type_str)) {
@@ -308,24 +346,18 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
                 error_log("Cannot assign default title type: no Title_Type rows exist in database");
                 return false;
             }
-            $title_type_str = (string) $defaultId;
-        }
-
-        // Convert title_type string to integer if present
-        $title_type_int = intval($title_type_str);
-
-        // (only for submit action): Validate the title type exists in the database
-        if ($action === 'submit' && !isTitleTypeValid($connection, $title_type_int)) {
-            error_log("Invalid title type ID provided: $title_type_int. Skipping this title.");
+            $title_type = $defaultId;
+        } elseif ($action === 'submit' && !isTitleTypeValid($connection, $title_type)) {
+            error_log("Invalid title type ID provided: $title_type. Skipping this title.");
             continue;
         }
 
         // Create unique key for deduplication
-        $key = $title_text . '|' . $title_type_int;
+        $key = $title_text . '|' . $title_type;
         if (!isset($uniqueTitles[$key])) {
             $uniqueTitles[$key] = [
                 'text' => $title_text,
-                'type' => $title_type_int
+                'type' => $title_type
             ];
         }
     }
@@ -338,15 +370,16 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
         return false;
     }
 
-    foreach ($uniqueTitles as $title) {
+    foreach (array_values($uniqueTitles) as $sortOrder => $title) {
         $stmt = $connection->prepare("INSERT INTO Title 
-            (`text`, `Title_Type_fk`, `Resource_resource_id`) 
-            VALUES (?, ?, ?)");
+            (`text`, `Title_Type_fk`, `Resource_resource_id`, `sort_order`)
+            VALUES (?, ?, ?, ?)");
         $stmt->bind_param(
-            "sii",
+            "siii",
             $title['text'],
             $title['type'],
-            $resource_id
+            $resource_id,
+            $sortOrder
         );
 
         if (!$stmt->execute()) {

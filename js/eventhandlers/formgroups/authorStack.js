@@ -5,6 +5,7 @@
  */
 
 import { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } from '../functions.js';
+import { updateHelpStatus } from '../../help.js';
 
 $(document).ready(function () {
   const stack = $('[data-author-stack]').first();
@@ -31,6 +32,7 @@ $(document).ready(function () {
   const affiliationSearchDebounceMs = 250;
   const affiliationSearchTimers = new WeakMap();
   let affiliationSearchRequestId = 0;
+  const personHelpSectionIds = ['help-author-orcid', 'help-contactperson-email', 'help-contactperson-website'];
 
   function escapeSelector(value) {
     if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
@@ -87,7 +89,7 @@ $(document).ready(function () {
           <i class="bi ${iconClass}" aria-hidden="true"></i>
         </span>
         <strong class="me-1" data-author-summary-name></strong>
-        <span class="badge text-bg-light border text-uppercase" data-author-type-badge></span>
+        <span class="badge elmo-badge border text-uppercase" data-author-type-badge></span>
         <span class="badge text-bg-warning d-none" data-author-contact-badge></span>
         <span class="small text-body-secondary" data-author-summary-orcid></span>
         <span class="d-flex flex-wrap gap-1" data-author-summary-affiliations></span>
@@ -126,7 +128,7 @@ $(document).ready(function () {
 
     authorTypes.forEach(function (type) {
       group.append(
-        $('<button type="button" class="btn btn-outline-dark" data-author-type-option></button>')
+        $('<button type="button" class="btn btn-outline-secondary" data-author-type-option></button>')
           .attr('data-author-type-option', type)
       );
     });
@@ -146,22 +148,139 @@ $(document).ready(function () {
     const editor = $('<div class="col-12 mt-2" data-author-affiliation-editor></div>');
     const panel = $('<div class="border rounded bg-body-tertiary p-3"></div>');
     const header = $('<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-2"></div>');
+    const titleGroup = $('<div class="d-flex align-items-center gap-1"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
-    const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
+    const helpButton = createAffiliationHelpButton();
+    const count = $('<span class="badge elmo-badge border" data-author-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-author-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
     const input = $('<input type="text" class="form-control" data-author-affiliation-input>');
-    const searchButton = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-search></button>')
+    const searchButton = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-search></button>')
       .append('<i class="bi bi-search" aria-hidden="true"></i>');
     const addButton = $('<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" data-author-affiliation-add></button>')
       .append('<i class="bi bi-plus-lg" aria-hidden="true"></i>')
       .append('<span data-author-affiliation-add-label></span>');
     const results = $('<div class="list-group mt-2 d-none" data-author-affiliation-results></div>');
 
-    header.append(title, count);
+    titleGroup.append(title, helpButton);
+    header.append(titleGroup, count);
     controls.append(input, searchButton, addButton);
     panel.append(header, list, controls, results);
     return editor.append(panel);
+  }
+
+  function createAffiliationHelpButton() {
+    return $('<i class="bi bi-question-circle-fill help-icon-author-affiliation" ' +
+      'data-help-section-id="help-contributorinstitutions-affiliation" ' +
+      'data-author-affiliation-help></i>');
+  }
+
+  function syncAffiliationHelpButtons() {
+    const editors = stack.find('[data-author-affiliation-editor]');
+    editors.each(function () {
+      const editor = $(this);
+      const help = editor.find('[data-author-affiliation-help]');
+      if (!help.length) {
+        editor.find('[data-author-affiliation-title]').first().after(createAffiliationHelpButton());
+      }
+      editor.find('[data-author-affiliation-help]').addClass('help-icon-author-affiliation');
+    });
+  }
+
+  function syncPersonHelpButtons() {
+    const personRows = stack.find('[data-creator-row]');
+
+    personRows.each(function () {
+      const row = $(this);
+      personHelpSectionIds.forEach(function (sectionId) {
+        // Target the icon only. Cloned-row placeholders copy data-help-section-id
+        // onto the wrapper span, and that duplicate must not be treated as a help icon.
+        const help = row.find(`i[data-help-section-id="${sectionId}"]`);
+        if (help.length) {
+          help.addClass('help-icon-author-affiliation');
+        }
+      });
+    });
+  }
+
+  function helpIconField(icon) {
+    const groupField = icon.closest('.input-group')
+      .find('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"])')
+      .first();
+    if (groupField.length) {
+      return groupField;
+    }
+
+    const precedingField = icon.closest('span').prevAll('input:not([type="hidden"]):not([type="checkbox"])').first();
+    if (precedingField.length) {
+      return precedingField;
+    }
+
+    return icon.closest('[data-author-affiliation-editor]').find('[data-author-affiliation-input]').first();
+  }
+
+  function isFieldShown(field) {
+    if (!field.length || field.attr('type') === 'hidden') {
+      return false;
+    }
+
+    let node = field.get(0);
+    while (node && node !== stack.get(0)) {
+      const $node = $(node);
+      if ($node.css('display') === 'none' || $node.hasClass('d-none')) {
+        return false;
+      }
+      node = node.parentElement;
+    }
+    return Boolean(node);
+  }
+
+  function isFirstHelpIconOfKind(icon) {
+    const field = helpIconField(icon);
+    if (!isFieldShown(field)) {
+      return false;
+    }
+
+    const name = field.attr('name');
+    const peers = name
+      ? stack.find(`input[name="${escapeSelector(name)}"]`)
+      : stack.find('[data-author-affiliation-input]');
+    const firstShown = peers.filter(function () {
+      return isFieldShown($(this));
+    }).first();
+    return firstShown.get(0) === field.get(0);
+  }
+
+  function setHelpIconVisibility(icon, shouldBeVisible) {
+    const wrapper = icon.closest('span.input-group-text');
+
+    icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    if (!wrapper.length) {
+      return;
+    }
+
+    wrapper.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
+    wrapper.css('display', shouldBeVisible ? '' : 'none');
+    if (shouldBeVisible) {
+      wrapper
+        .removeClass('help-placeholder')
+        .removeAttr('data-help-section-id')
+        .css({ visibility: '', width: '', height: '' });
+      return;
+    }
+
+    wrapper.css('visibility', 'hidden');
+  }
+
+  function applyAuthorHelpStatus() {
+    syncAffiliationHelpButtons();
+    syncPersonHelpButtons();
+
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
+    stack.find('.help-icon-author-affiliation').each(function () {
+      const icon = $(this);
+      setHelpIconVisibility(icon, helpOn && isFirstHelpIconOfKind(icon));
+    });
   }
 
   function getAffiliationFieldConfig(row) {
@@ -414,7 +533,10 @@ $(document).ready(function () {
     resetRow(row);
     row.find('.addAuthor, .addauthorinstitution').remove();
     ensureCardScaffold(row, type);
-    replaceHelpButtonInClonedRows(row);
+    // Keep person help icons as real buttons on every clone. applyAuthorHelpStatus()
+    // shows the first icon of each kind, including after type switch/delete/reorder.
+    replaceHelpButtonInClonedRows(row, "input-right-with-round-corners", personHelpSectionIds);
+
     translateClonedRow(row);
     setupContactFields(row);
     return row;
@@ -438,6 +560,7 @@ $(document).ready(function () {
     initializeAffiliationAutocomplete(row);
     initializeTooltips(row);
     updatePayload();
+    applyAuthorHelpStatus();
     if (options.focus !== false) {
       focusFirstEditableField(row);
     }
@@ -598,6 +721,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
 
+    applyAuthorHelpStatus();
     return updatePayload();
   }
 
@@ -626,7 +750,7 @@ $(document).ready(function () {
       contactToggle
         .addClass('btn d-inline-flex align-items-center gap-1 h-100 mb-0')
         .removeClass('btn-outline-primary btn-primary btn-outline-warning btn-warning text-dark lh-sm round-corners-left con-reduce')
-        .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning text-dark')
+        .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning')
         .attr('data-author-contact-toggle', '')
         .removeAttr('aria-pressed')
         .css('min-height', 'calc(3.5rem + 2px)')
@@ -644,6 +768,7 @@ $(document).ready(function () {
       } else {
         contactFields.hide().find('input').val('');
       }
+      applyAuthorHelpStatus();
     }
 
     checkbox.off('change.authorStack click.authorStack');
@@ -721,11 +846,11 @@ $(document).ready(function () {
       .attr('data-author-affiliation-ror-id', rorId)
       .attr('data-author-affiliation-original-label', label);
     const group = $('<div class="input-group input-group-sm"></div>');
-    const moveUp = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-move-up></button>')
+    const moveUp = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-move-up></button>')
       .attr('aria-label', translate('authors.affiliationMoveUp', 'Move affiliation up'))
       .prop('disabled', index === 0)
       .append('<i class="bi bi-chevron-up" aria-hidden="true"></i>');
-    const moveDown = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-move-down></button>')
+    const moveDown = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-move-down></button>')
       .attr('aria-label', translate('authors.affiliationMoveDown', 'Move affiliation down'))
       .prop('disabled', index === count - 1)
       .append('<i class="bi bi-chevron-down" aria-hidden="true"></i>');
@@ -892,7 +1017,7 @@ $(document).ready(function () {
         .attr('data-author-affiliation-ror-value', affiliation.rorId);
       button.append($('<span></span>').text(affiliation.label));
       if (affiliation.rorId) {
-        button.append($('<span class="badge text-bg-light border text-body-secondary"></span>').text(affiliation.rorId));
+        button.append($('<span class="badge elmo-badge border text-body-secondary"></span>').text(affiliation.rorId));
       }
       resultContainer.append(button);
     });
@@ -970,7 +1095,6 @@ $(document).ready(function () {
       ? readInstitution(row, 0) !== null
       : readPerson(row, 0) !== null;
   }
-
   function updateTypeSwitcher(row) {
     const switcher = row.find('[data-author-type-switcher]').first();
     if (!switcher.length) {
@@ -1035,6 +1159,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     focusFirstEditableField(replacement);
     return replacement;
   }
@@ -1120,6 +1245,11 @@ $(document).ready(function () {
     summaryCount.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
     contactSummary.attr({ 'aria-live': 'polite', 'aria-atomic': 'true' });
 
+    if (typeof window.updateSharedContactStatus === 'function') {
+      window.updateSharedContactStatus();
+      return;
+    }
+
     if (contactCount > 0) {
       contactSummary
         .removeClass('text-bg-warning')
@@ -1141,7 +1271,7 @@ $(document).ready(function () {
   }
 
   function createAffiliationBadge(affiliation) {
-    const badge = $('<span class="badge text-bg-light border text-body-secondary"></span>');
+    const badge = $('<span class="badge elmo-badge border text-body-secondary"></span>');
     const label = affiliation.label || '';
     const rorId = normalizeRorId(affiliation.rorId || '');
     badge.text(rorId ? `${label} ${rorId}` : label);
@@ -1252,6 +1382,7 @@ $(document).ready(function () {
       stack.sortable('refresh');
     }
     updatePayload();
+    applyAuthorHelpStatus();
     const preferredButton = row.find(direction < 0 ? '[data-author-move-up]' : '[data-author-move-down]');
     const fallbackButton = row.find(direction < 0 ? '[data-author-move-down]' : '[data-author-move-up]');
     const focusButton = preferredButton.prop('disabled') ? fallbackButton : preferredButton;
@@ -1310,7 +1441,10 @@ $(document).ready(function () {
       axis: 'y',
       tolerance: 'pointer',
       containment: 'parent',
-      update: updatePayload
+      update: function () {
+        updatePayload();
+        applyAuthorHelpStatus();
+      }
     });
   }
 
@@ -1435,6 +1569,7 @@ $(document).ready(function () {
     row.remove();
     authorUiState.delete(entryKey);
     updatePayload();
+    applyAuthorHelpStatus();
     focusAfterRemove(nextFocusTarget);
   });
 
@@ -1469,11 +1604,17 @@ $(document).ready(function () {
     });
     updateReorderControls();
     updateSummary(collectPayload());
+    applyAuthorHelpStatus();
+  });
+
+  document.addEventListener('helpStatus:changed', function () {
+    applyAuthorHelpStatus();
   });
 
   window.validateAuthorAffiliationEditors = validateAuthorAffiliationEditors;
 
   window.authorStack = {
+    supportsType: type => type === 'person' ? personTemplate.length > 0 : type === 'institution' && institutionTemplate.length > 0,
     addPerson: function () { return addRow('person'); },
     addInstitution: function () { return addRow('institution'); },
     setAuthors,

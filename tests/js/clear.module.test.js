@@ -1,3 +1,4 @@
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 /**
  * @jest-environment jsdom
  * 
@@ -43,32 +44,6 @@ describe('clear module coverage', () => {
                 </select>
             </div>
 
-            <div id="group-author">
-                <div data-creator-row>
-                    <input type="text" name="familynames[]" value="Doe">
-                    <input type="text" name="givennames[]" value="John">
-                    <input type="checkbox" name="contacts[]" checked>
-                    <div class="contact-person-input" style="display: block;">
-                        <input type="email" name="contactEmail[]" value="john@test.com">
-                    </div>
-                    <input type="text" name="personAffiliation[]" value="Test University">
-                    <input type="text" name="authorPersonRorIds[]" value="https://ror.org/12345">
-                </div>
-                <div data-creator-row>
-                    <input type="text" name="familynames[]" value="Smith">
-                </div>
-            </div>
-
-            <div id="group-authorinstitution">
-                <div data-authorinstitution-row>
-                    <input type="text" name="authorinstitutionName[]" value="Test Org">
-                    <input type="text" name="institutionAffiliation[]" value="Parent Org">
-                </div>
-                <div data-authorinstitution-row>
-                    <input type="text" name="authorinstitutionName[]" value="Second Org">
-                </div>
-            </div>
-
             <div id="group-originatinglaboratory">
                 <div class="row" data-laboratory-row>
                     <select name="laboratoryName[]"><option value="">Lab 1</option></select>
@@ -76,18 +51,6 @@ describe('clear module coverage', () => {
                 </div>
                 <div class="row" data-laboratory-row>
                     <select name="laboratoryName[]"><option value="">Lab 2</option></select>
-                </div>
-            </div>
-
-            <div id="group-contributorperson">
-                <div contributor-person-row>
-                    <input type="text" name="cbPersonLastname[]" value="Contributor">
-                </div>
-            </div>
-
-            <div id="group-contributororganisation">
-                <div contributors-row>
-                    <input type="text" name="OrganisationName[]" value="Org">
                 </div>
             </div>
 
@@ -168,6 +131,17 @@ describe('clear module coverage', () => {
 
         // Require the module
         clearModule = require('../../js/clear.js');
+        mountAuthorStack([
+            { type: 'person', familyname: 'Doe', isContact: true, email: 'jane@example.org' },
+            { type: 'institution', institutionname: 'Institute' },
+            { type: 'person', familyname: 'Smith' },
+            { type: 'institution', institutionname: 'University' }
+        ]);
+        mountContributorStack([
+            { type: 'person', familyname: 'Other', roles: ['Researcher'] },
+            { type: 'institution', institutionname: 'Lab', roles: ['Distributor'] }
+        ]);
+        $ = window.$;
     });
 
     afterEach(() => {
@@ -178,6 +152,7 @@ describe('clear module coverage', () => {
         delete window.$;
         delete window.jQuery;
         delete window.mainTitleTypeId;
+        delete window.relatedWorkStack;
     });
 
     describe('module exports', () => {
@@ -207,40 +182,33 @@ describe('clear module coverage', () => {
             expect($('input[name="title[]"]:first').val()).toBe('');
         });
 
-        test('removes extra author rows', () => {
-            expect($('div[data-creator-row]').length).toBe(2);
-
+        test('clears both mixed stacks and their payloads, including contact details', () => {
             clearModule.clearInputFields();
-
-            expect($('div[data-creator-row]').length).toBe(1);
+            clearModule.clearInputFields();
+            expect(document.querySelectorAll('[data-author-card], [data-contributor-card]')).toHaveLength(0);
+            expect(window.authorStack.collectPayload()).toEqual([]);
+            expect(window.contributorStack.collectPayload()).toEqual([]);
+            expect(document.querySelector('[name="authorsPayload"]').value).toBe('[]');
+            expect(document.querySelector('[name="contributorsPayload"]').value).toBe('[]');
         });
 
-        test('clears first author row inputs', () => {
-            clearModule.clearInputFields();
-
-            const firstRow = $('div[data-creator-row]:first');
-            expect(firstRow.find('input[name="familynames[]"]').val()).toBe('');
-            expect(firstRow.find('input[name="givennames[]"]').val()).toBe('');
+        test('fails before clearing any fields if a present stack is not initialized', () => {
+            delete window.authorStack;
+            expect(() => clearModule.clearInputFields()).toThrow('Authors form is not initialized.');
+            expect($('#input-resourceinformation-doi').val()).toBe('10.5880/test');
         });
 
-        test('unchecks contact person checkbox', () => {
+        test('notifies the title module when clearing', () => {
+            const listener = jest.fn();
+            $(document).one('elmo:clearTitles', listener);
             clearModule.clearInputFields();
-
-            expect($('input[name="contacts[]"]').prop('checked')).toBe(false);
+            expect(listener).toHaveBeenCalledTimes(1);
         });
 
-        test('hides contact person input', () => {
+        test('clears all descriptions', () => {
+            document.body.insertAdjacentHTML('beforeend', '<div id="accordion-description"><textarea class="textarea-description">Abstract</textarea><textarea class="textarea-description">Methods</textarea></div>');
             clearModule.clearInputFields();
-
-            expect($('.contact-person-input').css('display')).toBe('none');
-        });
-
-        test('removes extra author institution rows', () => {
-            expect($('div[data-authorinstitution-row]').length).toBe(2);
-
-            clearModule.clearInputFields();
-
-            expect($('div[data-authorinstitution-row]').length).toBe(1);
+            expect(Array.from(document.querySelectorAll('.textarea-description'), field => field.value)).toEqual(['', '']);
         });
 
         test('removes extra laboratory rows', () => {
@@ -275,6 +243,15 @@ describe('clear module coverage', () => {
             expect($('#group-relatedwork .row[related-work-row]').length).toBe(1);
         });
 
+        test('clears Related Works through the stack API when it is available', () => {
+            window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+            clearModule.clearInputFields();
+
+            expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([]);
+            expect($('#group-relatedwork .row[related-work-row]').length).toBe(2);
+        });
+
         test('removes extra funding reference rows', () => {
             expect($('#group-fundingreference .row[funding-reference-row]').length).toBe(2);
 
@@ -302,8 +279,50 @@ describe('clear module coverage', () => {
         test('clears rights license', () => {
             clearModule.clearInputFields();
 
-            // val() returns null for empty select, not empty string
-            expect($('#input-rights-license').val()).toBeFalsy();
+            // The default license should be set to "CC-BY" after clearing
+            expect($('#input-rights-license').val()).toEqual("1");
+        });
+
+        test('restores a license and a timezone value after clear', () => {
+            const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+            $('#input-rights-license').html(`
+                <option value="9" selected>MIT License (MIT)</option>
+                <option value="1">Creative Commons Attribution 4.0 International (CC-BY-4.0)</option>
+            `);
+
+            const $timezone = $('#group-stc .row[tsc-row]:first select[name="tscTimezone[]"]');
+            $timezone.attr('id', 'input-stc-timezone').html(`
+                <option value="+00:00" selected>UTC+00:00 (Etc/UTC)</option>
+                <option value="+02:00">UTC+02:00 (${browserTimezone})</option>
+            `);
+
+            clearModule.clearInputFields();
+
+            const license = document.getElementById('input-rights-license');
+            const timezone = document.getElementById('input-stc-timezone');
+
+            expect(license.options.length).toBeGreaterThan(0);
+            expect(license.value).toBeTruthy();
+            expect(license.selectedOptions[0].text).toContain('(CC-BY-4.0)');
+
+            expect(timezone.options.length).toBeGreaterThan(0);
+            expect(timezone.value).toBeTruthy();
+            expect(timezone.selectedOptions[0].text).toContain(`(${browserTimezone})`);
+        });
+        test ('falls back to the first license in the list if CC-BY-4.0 is not found', () => {
+            $('#input-rights-license').html(`
+                <option value="9" selected>MIT License (MIT)</option>
+                <option value="2">EUPL</option>
+                <option value="3">BSD</option>
+            `);
+
+            clearModule.clearInputFields();
+
+            const license = document.getElementById('input-rights-license');
+            expect(license.options.length).toBeGreaterThan(0);
+            expect(license.value).toBeTruthy();
+            expect(license.selectedOptions[0].text).toContain('(MIT)');
         });
     });
 });

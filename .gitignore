@@ -20,6 +20,8 @@ playwright/.cache/
 debug-page.png
 tests/playwright/flows/outputDataActual/*
 !tests/playwright/flows/outputDataActual/.gitkeep
+tests/playwright/flows/elmogem-specific/outputDataActual/*
+!tests/playwright/flows/elmogem-specific/outputDataActual/.gitkeep
 
 # Autosave files
 storage/drafts/
@@ -37,3 +39,4 @@ xml/*
 # ...but do not ignore the .gitkeep file.
 !xml/.gitkeep
 xml_submit_backup.txt
+.cursor/

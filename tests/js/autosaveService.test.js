@@ -3,8 +3,10 @@ const { requireFresh } = require('./utils');
 describe('autosaveService', () => {
   let AutosaveService;
   let modalInstance;
+  let documentListeners;
 
   beforeEach(() => {
+    documentListeners = jest.spyOn(document, 'addEventListener');
     jest.resetModules();
     AutosaveService = requireFresh('../../js/services/autosaveService.js');
     document.body.innerHTML = `
@@ -44,10 +46,31 @@ describe('autosaveService', () => {
   });
 
   afterEach(() => {
+    documentListeners.mock.calls.forEach(([event, handler, options]) => document.removeEventListener(event, handler, options));
+    documentListeners.mockRestore();
     jest.useRealTimers();
     delete global.bootstrap;
     delete window.elmo;
     delete window.authorStack;
+    delete window.relatedWorkStack;
+    delete window.contributorStack;
+    delete window.resourceInformation;
+  });
+
+  test('serializes live Resource Information and restores its ordered titles', () => {
+    document.querySelector('form').insertAdjacentHTML('beforeend',
+      '<input name="resourceInformationPayload"><input name="doi"><input name="title[]">');
+    const payload = { doi: '10.5880/example', titles: [{ text: 'Main' }, { text: 'Second' }] };
+    window.resourceInformation = {
+      sync: jest.fn(() => { document.querySelector('[name="resourceInformationPayload"]').value = JSON.stringify(payload); }),
+      setResourceInformation: jest.fn()
+    };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    const values = service.serializeValues();
+    expect(JSON.parse(values.resourceInformationPayload)).toEqual(payload);
+    service.applyDraftValues({ resourceInformationPayload: values.resourceInformationPayload,
+      doi: 'stale', 'title[]': ['stale'] });
+    expect(window.resourceInformation.setResourceInformation).toHaveBeenCalledWith(payload);
   });
 
   test('throttles autosave cadence before persisting', async () => {
@@ -86,6 +109,32 @@ describe('autosaveService', () => {
     input.dispatchEvent(new Event('input', { bubbles: true }));
     await jest.advanceTimersByTimeAsync(500);
     expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  test('schedules autosave when the Related Works stack publishes a payload update', async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      status: 204,
+      json: () => Promise.resolve(null)
+    });
+    const service = new AutosaveService('form-mde', {
+      fetch: fetchMock,
+      throttleMs: 100,
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text',
+      restoreModalId: 'modal-restore-draft'
+    });
+    service.start();
+    await Promise.resolve();
+    fetchMock.mockClear();
+
+    document.dispatchEvent(new CustomEvent('relatedWorksPayload:updated', {
+      detail: { payload: [] }
+    }));
+    await jest.advanceTimersByTimeAsync(100);
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[0][0]).toBe('./api/v2/drafts');
   });
 
   test('updateStatus applies semantic classes and localized messages', () => {
@@ -382,10 +431,261 @@ describe('autosaveService', () => {
       'contacts[]': ['on']
     });
 
-    expect(window.authorStack.setAuthors).toHaveBeenCalledWith(payload);
+    expect(window.authorStack.setAuthors).toHaveBeenCalledWith(JSON.parse(payload));
     expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
     expect(form.querySelector('input[name="familynames[]"]').value).toBe('');
     expect(form.querySelector('input[name="contacts[]"]').checked).toBe(false);
+  });
+
+  test('serializes the ordered contributor payload without legacy card arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `<input name="contributorsPayload" value="stale">
+      <input name="cbPersonLastname[]" value="Legacy">`);
+    const entries = [{ type: 'person', familyname: 'Doe', roles: ['Contact Person'] }];
+    window.contributorStack = { updatePayload: jest.fn(() => entries) };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    const values = service.serializeValues();
+    expect(JSON.parse(values.contributorsPayload)).toEqual(entries);
+    expect(values['cbPersonLastname[]']).toBeUndefined();
+  });
+
+  test('synchronizes author payloads without saving redundant field lists', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', '<input name="authorsPayload" value="stale"><input name="familynames[]" value="old">');
+    const authors = [{ type: 'person', familyname: 'Fresh', isContact: false }];
+    window.authorStack = { updatePayload: jest.fn(() => authors) };
+    const service = new AutosaveService(form, { fetch: jest.fn() });
+    const values = service.serializeValues();
+    expect(JSON.parse(values.authorsPayload)).toEqual(authors);
+    expect(values['familynames[]']).toBeUndefined();
+  });
+
+  test('restores both old groups through the stacks before filling unrelated fields', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', '<input name="authorsPayload"><input name="contributorsPayload"><input name="familynames[]">');
+    window.authorStack = { setAuthors: jest.fn() };
+    window.contributorStack = { setContributors: jest.fn() };
+    const service = new AutosaveService(form, { fetch: jest.fn() });
+    service.applyDraftValues({ title: 'Restored', 'familynames[]': ['Doe', 'Roe'], 'cbOrganisationName[]': ['Archive'] });
+    expect(window.authorStack.setAuthors.mock.calls[0][0].map(author => author.familyname)).toEqual(['Doe', 'Roe']);
+    expect(window.contributorStack.setContributors).toHaveBeenCalledWith([
+      expect.objectContaining({ type: 'institution', institutionname: 'Archive' })
+    ]);
+    expect(form.querySelector('[name="title"]').value).toBe('Restored');
+    expect(form.querySelector('[name="familynames[]"]').value).toBe('');
+  });
+
+  test.each(['damaged', 'disabled'])('protects the original %s draft before changing either stack', async reason => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', '<input name="authorsPayload"><input name="contributorsPayload">');
+    window.authorStack = { setAuthors: jest.fn() };
+    window.contributorStack = { setContributors: jest.fn(), supportsType: type => type === 'person' };
+    const fetchMock = jest.fn();
+    const service = new AutosaveService(form, { fetch: fetchMock });
+    const record = { id: 'old', payload: { values: {
+      authorsPayload: '[{"type":"person","familyname":"Doe"}]',
+      contributorsPayload: reason === 'damaged' ? '{' : '[{"type":"institution","institutionname":"Archive"}]'
+    } } };
+    service.pendingRestoreRecord = record;
+    await service.applyPendingRestore();
+    service.handleInput();
+    await service.persistDraft(true);
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(window.authorStack.setAuthors).not.toHaveBeenCalled();
+    expect(window.contributorStack.setContributors).not.toHaveBeenCalled();
+    expect(service.pendingRestoreRecord).toBe(record);
+    expect(document.getElementById('autosave-status-text').textContent).toContain('original draft');
+  });
+
+  test('keeps ambiguous contacts protected until the restored selection is reviewed', async () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', '<input name="authorsPayload">');
+    let authors = [];
+    window.authorStack = {
+      setAuthors: jest.fn(entries => { authors = entries; }),
+      updatePayload: jest.fn(() => authors)
+    };
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 204 });
+    const service = new AutosaveService(form, { fetch: fetchMock, throttleMs: 0 });
+    service.pendingRestoreRecord = { id: 'old', payload: { values: { 'familynames[]': ['Doe', 'Roe'], 'contacts[]': ['on'] } } };
+    await service.applyPendingRestore();
+    await service.persistDraft(true);
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(service.contactReviewRecord).not.toBeNull();
+    authors[1].isContact = true;
+    document.querySelector('[data-draft-contact-review] button').click();
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body).payload.values.authorsPayload).toContain('Roe');
+    expect(service.contactReviewRecord).toBeNull();
+  });
+
+  test('ignores stack events during restore and saves later author reorder events', async () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', '<input name="authorsPayload">');
+    let authors = [];
+    window.authorStack = {
+      setAuthors: entries => { authors = entries; document.dispatchEvent(new Event('authorsPayload:updated')); },
+      updatePayload: () => { document.dispatchEvent(new Event('authorsPayload:updated')); return authors; }
+    };
+    const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 204 });
+    const service = new AutosaveService(form, { fetch: fetchMock, throttleMs: 0 });
+    service.start();
+    await Promise.resolve();
+    fetchMock.mockClear();
+    service.pendingRestoreRecord = { id: 'old', payload: { values: { 'familynames[]': ['Doe', 'Roe'] } } };
+    await service.applyPendingRestore();
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).not.toHaveBeenCalled();
+    authors.reverse();
+    document.dispatchEvent(new Event('authorsPayload:updated'));
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const stored = JSON.parse(fetchMock.mock.calls[0][1].body).payload.values;
+    expect(JSON.parse(stored.authorsPayload).map(author => author.familyname)).toEqual(['Roe', 'Doe']);
+    expect(service.pendingTimeout).toBeNull();
+    await jest.runOnlyPendingTimersAsync();
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    authors = [];
+    service.applyDraftValues(stored);
+    expect(authors.map(author => author.familyname)).toEqual(['Roe', 'Doe']);
+  });
+
+  test('restores contributor cards before and instead of legacy arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.insertAdjacentHTML('beforeend', `<input name="contributorsPayload" value="[]">
+      <input name="cbPersonLastname[]" value="">`);
+    window.contributorStack = { setContributors: jest.fn() };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    service.applyDraftValues({ contributorsPayload: JSON.stringify([
+      { type: 'institution', institutionname: 'Institute', roles: [] }
+    ]), 'cbPersonLastname[]': ['Legacy'] });
+    expect(window.contributorStack.setContributors).toHaveBeenCalledWith([
+      { type: 'institution', institutionname: 'Institute', roles: [] }
+    ]);
+    expect(form.querySelector('[name="cbPersonLastname[]"]').value).toBe('');
+    service.applyDraftValues({ contributorsPayload: '[]', 'cbPersonLastname[]': ['Legacy'] });
+    expect(window.contributorStack.setContributors).toHaveBeenLastCalledWith([]);
+  });
+
+  test('applyDraftValues restores relatedWorksPayload through the stack before legacy arrays', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input name="title" value="">
+      <input type="hidden" name="relatedWorksPayload" value="[]">
+      <select name="relation[]"><option value="legacy">Legacy</option></select>
+      <input name="rIdentifier[]" value="">
+      <select name="rIdentifierType[]"><option value="DOI">DOI</option></select>
+    `;
+    const payload = JSON.stringify([
+      {
+        relation: 'IsReferencedBy',
+        relationId: '7',
+        identifier: '10.1234/current',
+        identifierType: 'DOI',
+        order: 0
+      }
+    ]);
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      title: 'Recovered dataset',
+      relatedWorksPayload: payload,
+      'relation[]': ['legacy'],
+      'rIdentifier[]': ['10.9999/stale'],
+      'rIdentifierType[]': ['DOI']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith(payload);
+    expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
+    expect(form.querySelector('input[name="rIdentifier[]"]').value).toBe('');
+  });
+
+  test('an explicitly empty relatedWorksPayload does not restore stale legacy rows', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input type="hidden" name="relatedWorksPayload" value="[]">
+      <input name="rIdentifier[]" value="">
+    `;
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      relatedWorksPayload: '[]',
+      'rIdentifier[]': ['10.9999/stale']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith('[]');
+    expect(form.querySelector('input[name="rIdentifier[]"]').value).toBe('');
+  });
+
+  test('falls back to legacy Related Work arrays when a draft has no structured payload', () => {
+    const form = document.getElementById('form-mde');
+    form.innerHTML = `
+      <input name="rIdentifier[]" value="">
+      <input name="rIdentifier[]" value="">
+    `;
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+
+    service.applyDraftValues({
+      'rIdentifier[]': ['10.1234/one', '10.1234/two']
+    });
+
+    expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+    expect(Array.from(form.querySelectorAll('input[name="rIdentifier[]"]')).map((input) => input.value))
+      .toEqual(['10.1234/one', '10.1234/two']);
+  });
+
+  test('waits for dropdown initialization before applying a pending Related Works restore', async () => {
+    let resolveDropdowns;
+    window.elmo = {
+      dropdownsReady: new Promise((resolve) => {
+        resolveDropdowns = resolve;
+      })
+    };
+    window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+    const service = new AutosaveService('form-mde', {
+      fetch: jest.fn(),
+      statusElementId: 'autosave-status',
+      statusTextId: 'autosave-status-text'
+    });
+    service.pendingRestoreRecord = {
+      id: 'related-work-draft',
+      updatedAt: '2024-01-03T08:05:00Z',
+      payload: {
+        values: {
+          relatedWorksPayload: '[{"identifier":"10.1234/related"}]'
+        }
+      }
+    };
+
+    const restoration = service.applyPendingRestore();
+    await Promise.resolve();
+    expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+
+    resolveDropdowns();
+    await restoration;
+
+    expect(window.relatedWorkStack.setRelatedWorks)
+      .toHaveBeenCalledWith('[{"identifier":"10.1234/related"}]');
   });
 
   test('restores draft when user accepts prompt', async () => {

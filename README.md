@@ -46,10 +46,11 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Configurable feature toggles via `ELMO_FEATURES` JavaScript object for conditional resource loading.
 - Submitting of metadata directly to data curators.
 - Local save and reload of standardized metadata as XML or JSON-LD.
-- Authors can be sorted by drag & drop and marked as contact person with a toggle switch button.
+- Authors and Contributors use ordered cards for persons and institutions. A contact in either group satisfies the shared contact requirement.
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
+- Light, Dark and Auto modes share the saved theme with the ELMO Guide. Auto follows the system's color preference.
 
 ## Installation
 
@@ -74,10 +75,9 @@ Following conditions are required for installation:
 8. Copy all files from this repository into the `htdocs` or `www` folder of your web server.
 9. In this folder run `npm install` via bash.
 10. There you run `composer install`. 
-11. Access `install.html` via the browser and choose to install with or without test datasets. The database tables will be created in your database, as well as 3 test datasets, if you chose that first option.
-12. Delete `install.php` and `install.html` after successfully creating the database.
-13. The metadata editor is now accessible in the browser via `localhost/directoryname`.
-14. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
+11. Run `php scripts/install.php basic` to create the database structure and lookup data. Use `complete` instead of `basic` only when exemplar test data is required. The installer is intentionally not available through the browser.
+12. The metadata editor is now accessible in the browser via `localhost/directoryname`.
+13. Adjust settings in `settings.php` (see [Settings Section](#einstellungen)).
 
 ### Installation via Docker
 1. Install [Docker](https://docs.docker.com/engine/install/).
@@ -87,8 +87,13 @@ Following conditions are required for installation:
 5. This directory contains .env_sample that you will need to rename to .env. Please feel free to change the credentials in it.
 	Please mind that: 
 	- Environment variables for database setup only apply on first container startup. If volumes persist, old configs stay alive.
-	- Use `docker-compose down -v` to reset the database when updating credentials.
-  - To recreate the database structure, a special variable 'DB_INIT_MODE' is introduced. Setting it to 'keep_data' will mean that the db is reset only if no tables are found. 'drop_data' will ensure an actual database structure (see install.php), but will lose data. Setting to 'skip' skips the procedure.   
+	- Use `docker compose down -v` to reset the disposable local database when updating credentials.
+  - The entrypoint invokes `php scripts/install.php` with the `INSTALL_ACTION` value when the `web` container starts. Supported values are `basic` (default) and `complete` (including exemplar test data). Both modes recreate the configured schema, so use them only with the intended database.
+  - If you change the database schema in `scripts/install.php` while reusing an existing local database, run the installer inside the running container:
+    ```bash
+    docker compose exec web php scripts/install.php basic
+    ```
+    For a disposable local reset, run `docker compose down -v` and then `docker compose up -d --build`; the entrypoint will run the installer again.
 
 6. Docker Environment Setup 🐳
 
@@ -127,9 +132,8 @@ This section outlines the automatic processes handled by the Docker environment 
 - **Entrypoint:** Executes the `docker-entrypoint.sh` script.
 
 **3. `docker-entrypoint.sh`** 
-- **Database Setup:** Responsible for initializing the database structure by running `install.php`.
-- **Idempotency:** Utilizes a `FLAG_FILE` to ensure the database setup runs only once. If this file exists, the installation process is skipped.
-- **Installation Options for `install.php`:**
+- **Database Setup:** Initializes the configured database by running the CLI-only `scripts/install.php`.
+- **Installation Options for `scripts/install.php`:**
   - `basic` (default): Creates only the database structure and inserts lookup data.
   - `complete`: Creates the database structure, inserts lookup data, *and* populates the database with exemplar (test) data. This is controlled by the `INSTALL_ACTION` environment variable (e.g., `INSTALL_ACTION=complete`).
 
@@ -140,15 +144,15 @@ This section outlines the automatic processes handled by the Docker environment 
 * **Full Reset for Dockerfile/Entrypoint Changes:**
     To apply changes made to `Dockerfile` or `docker-entrypoint.sh`, a full reset of the Docker containers is required:
     ```bash
-    docker-compose down -v
-    docker-compose build --no-cache
+    docker compose down -v
+    docker compose build --no-cache
     ```
 * **Applying Other Changes:**
     For changes to project files (which are copied, not mounted as volumes), you need to rebuild the service:
     ```bash
-    docker-compose up --build
+    docker compose up --build
     ```
-    This rebuilds the `web` service (and any other services specified in `docker-compose.yaml` that depend on the build context), ensuring your updated project files are included in the new container image.
+    This rebuilds the `web` service (and any other services specified in `docker-compose.yml` that depend on the build context), ensuring your updated project files are included in the new container image.
 
 
 If you encounter problems with the installation, feel free to leave an entry in the feedback form or in [our issue board on GitHub](https://github.com/McNamara84/elmo/issues)!
@@ -168,7 +172,6 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$database`: Name of the database created.
   - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
   - `$apiKeyElmo`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
-  - `$mslLabsUrl`: URL to the JSON file with the current list of laboratories.
   - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
   - `$smtpHost`: URL to the SMTP mail server
   - `$smtpPort`: Port of the mail server
@@ -176,10 +179,14 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$smtpPassword`: Password of the mailbox
   - `$smtpSender`: Name of the sender in the feedback mails
   - `$feedbackAddress`: Email Address to which the feedback is sent
-  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `XML_SUBMIT_ADDRESS_GEM` for the standard, MSL, and GEM variants respectively.
+  - `$xmlSubmitAddress`: Email Address to which the finished XML file is sent. When deploying the three frontend variants via `docker-compose.prod.yml`, configure this via the environment variables `XML_SUBMIT_ADDRESS`, `XML_SUBMIT_ADDRESS_MSL`, and `ICGEM_SUBMIT_ADDRESS` for the standard, MSL, and GEM variants respectively. For ELMO GEM this is also the GFZ Data Services recipient when the DOI field is empty.
+  - `$icgemSubmitAddress`: Email address that receives the ICGEM metadata file of every ELMO GEM submission, configured via the environment variable `ICGEM_SUBMIT_ADDRESS` (default `icgem@gfz.de`).
+  - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
+  - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
-  - `$showContributorPersons`: Specifies whether the form group Contributor Persons should be displayed (true/false).
-  - `$showContributorInstitutions`: Specifies whether the form group Contributor Institutions should be displayed (true/false).
+  - `$showContributorPersons`: Controls whether the Contributors group offers the Add Person button (true/false).
+  - `$showContributorInstitutions`: Controls whether the Contributors group offers the Add Institution button (true/false). The group is hidden when both contributor types are disabled.
+  - `SHOW_CONTACT_INSTITUTION`: Allows contributor institutions to use the Contact Person role when set to `true` (default: `false`). An institution contact needs a name and valid email address to satisfy the shared contact requirement.
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
   - `$showThesauri`: Specifies whether the form group Thesauri Keywords should be displayed (true/false). Individual thesauri are controlled by ERNIE.
@@ -275,7 +282,7 @@ npm install
 
 ### Resource Information
 
-- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="logos/doi.logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- DOI <a href="https://www.doi.org/" target="_blank" rel="noopener"><img src="assets/logos/doi-logo.svg" alt="DOI Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the DOI (Digital Object Identifier) that identifies the resource.
   - Data type: String
@@ -285,6 +292,7 @@ npm install
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/identifier/)
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
+  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI starts read-only; Edit unlocks it, and XML import may populate and unlock it. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs remain visible and block submission until corrected or removed. The ICGEM DOI mail flow retains its own rules.
 
 - Publication Year
 
@@ -312,10 +320,10 @@ npm install
 - Version
 
   This field contains the version number of the resource.
-  - Data type: Float
+  - Data type: String (`major.minor`, preserving values such as `3.0`)
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
-  - Restrictions: None 
+  - Restrictions: optional on new submissions; when supplied on Submit, use `major.minor` with digits on both sides of the dot.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme
@@ -341,6 +349,7 @@ npm install
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/title/)
   - Example values: `Drone based photogrammetry data at the Geysir`
   - Mapping: mapped to `<titles> <title>` in DataCite scheme and `<identificationInfo> <MD_DataIdentification> <citation> <CI_Citation> <title>` or `...<alternateTitle` depending on the title type
+  - The main title stays first. Additional titles can be reordered with the drag handle or the Up and Down arrow keys; their order is saved and restored.
 
 - Title Type
 
@@ -406,7 +415,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#givenname)
   - Example values: `Lisa`, `Elisa`
 
-- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- Author ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the author's ORCID (Open Researcher and Contributor ID).
   - Data type: String
@@ -416,7 +425,7 @@ Occurrence is: 1-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#nameidentifier)
   - Example values: `0000-0001-5727-2427`, `0000-0003-4816-5915`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
  
   This field contains the author's affiliation.
   - Data type: String
@@ -451,7 +460,7 @@ Occurrence is: 0-n
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/creator/#creatorname)
   - Example values: `California Digital Library`, `Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences`
 
-- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="\_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the author's affiliation.
   - Data type: String
@@ -473,7 +482,7 @@ Occurrence is: 0-n
 
 
 #### Contact Person(s)
-A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). Authors can be labelled as a contact person with the help of a toggle switch button which adds the additional fields required for contact (Email address, Website).
+A Contact Person is saved as a "Contributor" with the role "Contact Person" in the DataCite scheme and as a "Point of Contact" in the ISO scheme (Version 2012-07-13). A person author can be marked as a contact with the card toggle. A contributor person can be marked with the Contact Person role; contributor institutions can use that role when `SHOW_CONTACT_INSTITUTION=true`. Authors and Contributors show the same contact status. A complete contact needs a name and valid email address; a website is optional. The fields below describe person-author contacts.
 
 - Last Name
 
@@ -547,10 +556,12 @@ The controlled list is provided and maintained by Utrecht University ([MSL Labor
 
 ### Contributors
 
+The Contributors group starts empty. Use **Add Person** or **Add Institution** to create a card, then edit, remove, or reorder cards of either type in one list. Their order is preserved when saving and loading XML. A contributor person with the Contact Person role also satisfies the contact requirement shown in both Authors and Contributors. Contributor institutions can do so only when `SHOW_CONTACT_INSTITUTION=true`.
+
 #### _Person_
 Contributor fields are optional. Only when one of the fields is filled the fields "Last Name", "First Name" and "Role" become mandatory . The contents of the fields are mapped to `<contributor contributorType="ROLE">` with `<contributorName nameType="Personal">` in the DataCite scheme.
 
-- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="logos/orcid.logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
+- ORCID <a href="https://orcid.org/" target="_blank" rel="noopener"><img src="assets/logos/orcid-logo.png" alt="ORCID Logo" style="height:15px; vertical-align:9px; margin-left:-1px;"></a>
 
   This field contains the ORCID of the contributor (Open Researcher and Contributor ID).
   - Data type: String
@@ -590,7 +601,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Manager`, `Project Manager`
 
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributor(s).
   - Data type: String
@@ -624,7 +635,7 @@ Contributor fields are optional. Only when one of the fields is filled the field
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/contributor/#a-contributortype)
   - Example values: `Data Collector`, `Data Curator`.
   
-- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
+- Affiliation <a href="https://ror.org/" target="_blank" rel="noopener"><img src="assets/logos/ror-logo.svg" alt="ROR Logo" style="height:10px; vertical-align:7px; margin-left:-1px;"></a>
 
   This field contains the affiliation of the contributing institution.
   - Data type: String
@@ -837,11 +848,11 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
 
 - Latitude Max
   
-  This field contains the larger geographic latitude of a rectangle.
+  This field contains the larger geographic latitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: latitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -90 to +90
+  - Restrictions: Only positive and negative numbers in the value range from -90 to +90. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#northboundlatitude)
   - Example values: `49.72437624376` `-32.82438824398`
   
@@ -857,25 +868,27 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
 - Longitude Max
   
-  This field contains the larger geographic longitude of a rectangle.
+  This field contains the larger geographic longitude of a rectangle. Leave it empty for a single point. A point uses only Latitude Min and Longitude Min.
   - Data type: Floating-point number
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: longitudeMax in the spatial_temporal_coverage table
-  - Restrictions: Only positive and negative numbers in the value range from -180 to +180
+  - Restrictions: Only positive and negative numbers in the value range from -180 to +180. Not required for a point.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#eastboundlongitude)
   - Example values: `99.037543735498743` `-6.4`
 
- - Coordinate rules:
-    - A point requires Minimum Latitude Min + Longitude Min.
-    - A rectangle requires Latitude Min + Longitude Min + Latitude Max + Longitude Max.
+- Coordinate rules:
+    - A point uses Latitude Min and Longitude Min. Latitude Max and Longitude Max stay empty.
+    - A rectangle uses Latitude Min, Longitude Min, Latitude Max, and Longitude Max.
+    - Latitude Max and Longitude Max are not required for a point.
     - Latitude Max or Longitude Max on its own is not permitted.
-    - Once a "Max" field is used, all four coordinate fields are mandatory.
+    - Once a Max field is used, all four coordinate fields are mandatory.
+    - Uploading a DataCite `geoLocationPoint` fills only Latitude Min and Longitude Min. Uploading a `geoLocationBox` fills all four bounds.
   
 - Description
 
   This field contains a free-text explanation of the geographic and temporal context.
   - Data type: Free text
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: description in the spatial_temporal_coverage table
   - Restrictions: none
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/geolocation/#geolocationplace)
@@ -885,7 +898,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateStart in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -895,7 +908,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the starting time.
   - Data type: TIME  
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timeStart in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -905,7 +918,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending date of the temporal classification of the dataset.
   - Data type: DATE
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: dateEnd in the spatial_temporal_coverage table
   - Restrictions: YYYY-MM-DD
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -915,7 +928,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the ending time.
   - Data type: TIME 
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timeEnd in the spatial_temporal_coverage table
   - Restrictions: hh:mm:ss
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/dateType/#coverage)
@@ -925,7 +938,7 @@ In the ISO scheme: All field data are mapped to `<EX_Extent>`. Spatial data (coo
   
   This field contains the timezone of the start and end times specified. All possible timezones are regularly updated via the API using the getTimezones method if a CronJob is configured on the server. Important: The API key for timezonedb.com must be specified in the settings to enable automatic updates!
   - Data type: String
-  - Occurrence: 0
+  - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: timezone in the spatial_temporal_coverage table
   - Restrictions: Only values from the list are permitted
   - ISO documentation
@@ -1344,7 +1357,7 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Affiliation**                           |                   0-n                   |                  0-n                  | `<contributor><affiliation>`                                                                                                                                                |
 |                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<contributor><contributorName><affiliation>`                                                                                                                               |
 | Author (Institution) |                                           |                   0-n                   |                  0-n                  | `<creators>`                                                                                                                                   |
-|                            | **Author Institution name**                     |                    0-n                    |                   0-n                   | `<creators><creator><creatorName nameType="Organizational">Institution Name</creatorName>`                                                                                                                                                         |
+|                            | **Author Institution Name**                     |                    0-n                    |                   0-n                   | `<creators><creator><creatorName nameType="Organizational">Institution Name</creatorName>`                                                                                                                                                         |
 |                            | **affiliation**                           |                   0-n                   |                  0-n                  | `<creator><affiliation>…</affiliation>`                                                                                                                                                             |
 |                            | *rorID*                                   |                   0-1                   |                  0-1                  | `<creator><affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org/" affiliationIdentifier="https://ror.org/XXXXXXXXX">…</affiliation>`                                                                                                                               |
 | Originating Laboratory     |                                           |                   0-n                   |                  0-n                  | `<contributor contributorType="HostingInstitution"><contributorName>`                                                                                                       |
@@ -1383,12 +1396,10 @@ The following table gives a quick overview on the occurences of the form fields 
 |                            | **Date created**                          |                   0-1                   |                  0-n                  | `<date dateType="Created">` when provided; `<date dateType="Submitted">` is added automatically on submit                                                                  |
 |                            | **Embargo until**                         |                   0-1                   |                  0-n                  | `<date dateType="Available">`                                                                                                                                               |
 | Spatial Coverage           |                                           |                   0-n                   |                  0-n                  | `<geoLocation><geoLocationPoint>` or `<geoLocation><geoLocationBox>`                                                                                                        |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<pointLatitude>`                                                                                                                                                           |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<pointLongitude>`                                                                                                                                                          |
-|                            | **Latitude Min**                          |                    1                    |                   1                   | `<southBoundLatitude>`                                                                                                                                                      |
-|                            | **Latitude Max**                          |                    1                    |                   1                   | `<northBoundLatitude>`                                                                                                                                                      |
-|                            | **Longitude Min**                         |                    1                    |                   1                   | `<westBoundLongitude>`                                                                                                                                                      |
-|                            | **Longitude Max**                         |                    1                    |                   1                   | `<eastBoundLongitudens>`                                                                                                                                                    |
+|                            | **Latitude Min**                          |                    1                    |                   1                   | Point: `<pointLatitude>`. Box: `<southBoundLatitude>`                                                                                                                       |
+|                            | **Longitude Min**                         |                    1                    |                   1                   | Point: `<pointLongitude>`. Box: `<westBoundLongitude>`                                                                                                                      |
+|                            | **Latitude Max**                          |                   0-1                   |                  0-1                  | Box only: `<northBoundLatitude>`. Left empty for a point.                                                                                                                   |
+|                            | **Longitude Max**                         |                   0-1                   |                  0-1                  | Box only: `<eastBoundLongitude>`. Left empty for a point.                                                                                                                   |
 |                            | **Description**                           |                    1                    |                   1                   | `<geoLocationPlace>`                                                                                                                                                        |
 | Temporal Coverage          |                                           |                   0-n                   |                  0-n                  | `<date>`                                                                                                                                                                    |
 |                            | **Start Date**                            |                    1                    |                   1                   | `<date dateType="Collected">`                                                                                                                                               |
@@ -1432,15 +1443,17 @@ The JSON-LD workflow intentionally reuses the existing XML path instead of maint
 **Export flow**
 1. The frontend save flow submits the form as usual and passes `download_format=jsonld` to `save/save_data.php`.
 2. The save pipeline persists the current form state first, just like the XML workflow.
-3. `DatasetController::transformResourceToJsonLd()` generates the canonical DataCite XML export.
-4. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
-5. The download response is returned as `application/ld+json`.
+3. When a non-empty `authorsPayload` is present, ELMO replaces the database-derived `Authors` and `ContactPersons` sections in the internal Resource XML with that current payload. XML and JSON-LD downloads therefore share the same author ordering and values without re-reading the stored Authors representation.
+4. `DatasetController::transformResourceToJsonLd()` transforms the prepared Resource XML into the canonical DataCite XML export.
+5. `DataCiteJsonLdService` reads that XML and maps it to the compact DataCite JSON-LD shape with `attrs` and `value` keys.
+6. The download response is returned as `application/ld+json`.
 
 **Import flow**
 1. `js/upload.js` accepts XML and JSON-LD files through the same upload modal.
 2. JSON-LD uploads are parsed and converted back into a DataCite XML DOM.
 3. The converted XML is then handed to `loadXmlToForm()`.
-4. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
+4. The shared field mapping restores ordered person and institution authors, ORCID identifiers, affiliations, ROR identifiers, and the DataCite contact-person marker, including mononymous contacts.
+5. As a result, JSON-LD imports reuse the existing XML field-mapping logic and inherit most of the established XML import coverage.
 
 This design keeps the canonical transformation in one place: DataCite XML remains the internal interchange format, while JSON-LD is treated as an additional export and import representation built around that XML.
 
@@ -1662,10 +1675,12 @@ Providing this information is not mandatory for submission but strongly encourag
 
 We appreciate every contribution to this project! You can use the feedback form at the bottom of the page on your local instance, create an issue on GitHub, or contribute directly: If you have an idea, improvement, or bug fix, please create a new branch and open a pull request (PR). We have prepared a pull request template, so we kindly ask you to use it when submitting your changes. This helps ensure we have all the necessary information to review and merge your contribution smoothly.
 
+For user-visible changes, update `json/changelog.json` as described in [the changelog maintenance guide](docs/changelog-maintenance.md). The latest version in that file appears in the footer and opens the changelog dialog.
+
 ## Testing
 
 > [!NOTE]
-> Dependencies must be installed first: `composer install` and `npm install`.
+> Dependencies must be installed first: `composer install` and `npm install`. See also [Project structure](docs/project-structure.md) and [file-name conventions](docs/file-naming-conventions.md).
 
 ELMO uses three test frameworks:
 
@@ -1770,7 +1785,7 @@ npx playwright test --config=playwright.igsn.config.ts     # IGSN Integrated Geo
 npx playwright test tests/playwright/formgroups/authors.spec.ts
 
 # Run tests for a specific variant (e.g. only GEM variant roundtrip tests)
-npx playwright test tests/playwright/flows/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
+npx playwright test tests/playwright/flows/elmogem-specific/icgem-roundtrip.spec.ts --config=playwright.gem.config.ts --project=gem
 
 # Run a single test by title
 npx playwright test -g "populates author details"

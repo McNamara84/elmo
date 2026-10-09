@@ -103,6 +103,18 @@ RUN chown -R appuser:www-data /var/www/html
 # Copy built assets
 COPY --from=builder --chown=appuser:www-data /var/www/html /var/www/html
 
+# storage/ is dockerignored, so a named volume mounted here would otherwise be
+# created empty as root:root. Seed the dirs in the image: Docker copies
+# ownership and mode into each new named volume on first use (shared cache
+# volume once; each variant's drafts volume independently).
+RUN mkdir -p /var/www/html/storage/cache /var/www/html/storage/drafts \
+    && chown appuser:www-data /var/www/html/storage \
+        /var/www/html/storage/cache /var/www/html/storage/drafts \
+    && chmod 2775 /var/www/html/storage/cache /var/www/html/storage/drafts \
+    && touch /var/www/html/storage/cache/.keep /var/www/html/storage/drafts/.keep \
+    && chown appuser:www-data /var/www/html/storage/cache/.keep \
+        /var/www/html/storage/drafts/.keep
+
 # Copy entrypoint
 COPY --chown=appuser:www-data docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh

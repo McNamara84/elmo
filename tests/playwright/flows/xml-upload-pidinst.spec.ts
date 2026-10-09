@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectModuleFromApp, injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 // ─── Mock instruments returned by the PID4INST/ERNIE API ────────────────────
 const MOCK_INSTRUMENTS_API = [
@@ -106,7 +106,8 @@ function loadTemplate(relativePath: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
 }
 
-const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
+const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resource-information.html');
+const RESOURCE_INFORMATION_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
@@ -179,7 +180,13 @@ const MOCK_API_DATA: Record<string, any> = {
     other: ['GFZ'],
   }],
   'json/funders.json': [],
-  'json/msl-labs.json': [],
+  // 'json/msl-labs.json': [],
+  '/api/v2/vocabs/msl-laboratories': {
+    version: 'test',
+    lastUpdated: '2026-09-07T00:00:00+00:00',
+    total: 0,
+    data: [],
+  },
   'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
   'api/v2/vocabs/languages': MOCK_LANGUAGES,
   'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
@@ -197,7 +204,7 @@ async function waitForEditorReady(page: Page) {
   await page.waitForFunction(() => {
     const sel = document.querySelector<HTMLSelectElement>('#input-resourceinformation-language');
     return sel != null && sel.options.length > 1;
-  }, { timeout: 30_000 });
+  }, null, { timeout: 30_000 });
 }
 
 async function uploadXml(page: Page, xmlContent: string, fileName: string) {
@@ -211,14 +218,9 @@ async function uploadXml(page: Page, xmlContent: string, fileName: string) {
     buffer: Buffer.from(xmlContent, 'utf-8'),
   });
 
-  // Wait for title to be populated (indicates XML processing is done)
-  await page.waitForFunction(
-    () => {
-      const input = document.querySelector<HTMLInputElement>('#input-resourceinformation-title');
-      return input != null && input.value.length > 0;
-    },
-    { timeout: 20_000 },
-  );
+  await expect(page.locator('#toast-upload-feedback')).toHaveClass(/text-bg-success/, {
+    timeout: 20_000,
+  });
 }
 
 /**
@@ -268,10 +270,15 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       };
     }, { translations: TEST_TRANSLATIONS });
 
-    await page.goto('about:blank');
-    await page.setContent(TEST_PAGE_HTML);
+    await registerStaticAssetRoutes(page);
 
-    // Mock fetch() for about:blank pages (page.route doesn't work there)
+    await page.route('**/xml-upload-pidinst-fixture', route => route.fulfill({
+      contentType: 'text/html',
+      body: TEST_PAGE_HTML,
+    }));
+    await page.goto(`${APP_BASE_URL}xml-upload-pidinst-fixture`);
+
+    // Mock API responses and record any requests missing from the fixture.
     await page.evaluate((data) => {
       const mockDataMap = new Map(Object.entries(data.mockData));
       (window as any).__unmockedFetchUrls = [] as string[];
@@ -279,6 +286,13 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       (window as any).__originalFetch = window.fetch;
       window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
         const url = typeof input === 'string' ? input : input.toString();
+
+        if (url.includes('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt')) {
+          return Promise.resolve(new Response(data.resourceInformationXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' },
+          }));
+        }
 
         for (const [pattern, responseData] of mockDataMap.entries()) {
           if (url.includes(pattern)) {
@@ -304,7 +318,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
           headers: { 'Content-Type': 'application/json' },
         }));
       };
-    }, { mockData: MOCK_API_DATA });
+    }, { mockData: MOCK_API_DATA, resourceInformationXslt: RESOURCE_INFORMATION_XSLT });
 
     // Inject stylesheets
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
@@ -377,6 +391,8 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     // Inject app scripts
     const appScripts = [
       'js/clear.js',
+      'js/dropdownUtils.js',
+      'js/dropdownAjax.js',
       'js/select.js',
       'js/affiliations.js',
       'js/usedInstruments.js',
@@ -386,14 +402,26 @@ test.describe('XML Upload with PIDINST Instruments', () => {
     ];
 
     for (const script of appScripts) {
-      await injectScript(page, script);
+      await injectProductionScript(page, script);
     }
+
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
+    await page.waitForFunction(() => !!(window as any).authorStack?.setAuthors);
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
+    await page.waitForFunction(() => !!(window as any).resourceInformation?.setResourceInformation);
 
     // Fire initialization events
     await page.evaluate(() => {
       document.dispatchEvent(new Event('DOMContentLoaded'));
       window.dispatchEvent(new Event('load'));
       document.dispatchEvent(new Event('translationsLoaded'));
+    });
+
+    await page.evaluate(async () => {
+      const dropdownsReady = (window as any).elmo?.dropdownsReady;
+      if (dropdownsReady && typeof dropdownsReady.then === 'function') {
+        await dropdownsReady;
+      }
     });
 
     // Wait for Used Instruments module to be available

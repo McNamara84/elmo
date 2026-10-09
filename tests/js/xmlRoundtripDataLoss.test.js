@@ -1,3 +1,4 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
 /**
  * @file Round-trip data loss regression tests for XML export → import.
  *
@@ -43,6 +44,8 @@ function loadMappingModule(contextOverrides = {}) {
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;
+  context.window.loadClearInputFields = context.window.loadClearInputFields
+    || (() => Promise.resolve(() => {}));
   vm.runInContext(code, context);
   return context;
 }
@@ -439,6 +442,7 @@ describe("Contact person email/website from DataCite-only XML", () => {
       </ns:contributors>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     // Contact person checkbox should be checked (DataCite fallback matches by name)
@@ -528,6 +532,7 @@ describe("Contact person email/website from DataCite-only XML", () => {
 </envelope>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     const checkbox = document.querySelector('input[name="contacts[]"]');
@@ -561,19 +566,6 @@ describe("Contact person added as new author when name doesn't match (regression
       </div>
       <button id="button-author-add"></button>`;
 
-    // Simulate add-author button creating a new row
-    document.getElementById("button-author-add").addEventListener("click", () => {
-      const container = document.getElementById("group-author");
-      const firstRow = container.querySelector("[data-creator-row]");
-      const clone = firstRow.cloneNode(true);
-      clone.querySelectorAll("input").forEach((i) => {
-        if (i.type === "checkbox") i.checked = false;
-        else i.value = "";
-      });
-      clone.querySelector(".contact-person-input").style.display = "none";
-      container.appendChild(clone);
-    });
-
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
@@ -588,6 +580,7 @@ describe("Contact person added as new author when name doesn't match (regression
       </ns:contributors>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     // FIXED: A new author row is created for the contact person
@@ -608,7 +601,7 @@ describe("Contact person added as new author when name doesn't match (regression
 // ─── Relation type matching works with CamelCase ────────────────────────────
 
 describe("Relation type matching with CamelCase option text", () => {
-  test("relation type CamelCase from XML matches CamelCase dropdown option", () => {
+  test("canonical relation type from the transformed map is passed to the card stack", async () => {
     document.body.innerHTML = `
       <div id="group-relatedwork">
         <div class="row">
@@ -634,17 +627,31 @@ describe("Relation type matching with CamelCase option text", () => {
       </ns:relatedIdentifiers>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    ctx.processRelatedWorks(xmlDoc, NS_RESOLVER);
+    const transformedDocument = new DOMParser().parseFromString(`
+      <RelatedWorks>
+        <RelatedWork>
+          <Identifier>10.5555/related</Identifier>
+          <Relation><name>IsSupplementTo</name></Relation>
+          <IdentifierType><name>DOI</name></IdentifierType>
+        </RelatedWork>
+      </RelatedWorks>
+    `, "application/xml");
+    window.relatedWorkStack = { setRelatedWorks: jest.fn().mockResolvedValue([]) };
 
-    const idField = document.querySelector('input[name="rIdentifier[]"]');
-    expect(idField.value).toBe("10.5555/related");
+    await ctx.processRelatedWorks(xmlDoc, NS_RESOLVER, {
+      transformRelatedWorksDocument: jest.fn().mockResolvedValue(transformedDocument)
+    });
 
-    // CamelCase option text "IsSupplementTo" matches CamelCase XML relationType
-    const relationSelect = document.querySelector('select[name="relation[]"]');
-    const selectedOption = relationSelect.querySelector("option[selected]") ||
-      Array.from(relationSelect.options).find((o) => o.selected && o.value !== "");
-    expect(selectedOption).toBeTruthy();
-    expect(selectedOption.value).toBe("3");
+    expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+      {
+        identifier: "10.5555/related",
+        relation: "IsSupplementTo",
+        relationId: "",
+        identifierType: "DOI"
+      }
+    ], expect.objectContaining({ bulk: true }));
+
+    delete window.relatedWorkStack;
   });
 });
 
@@ -899,6 +906,7 @@ describe("Author ORCID URL stripping", () => {
       </ns:creators>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processCreators(xmlDoc, NS_RESOLVER);
 
     // Name fields work (simple XPath without attribute predicates)
@@ -933,23 +941,13 @@ describe("Contributor ORCID extraction", () => {
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
 
-    const personMap = new Map();
-    const orgMap = new Map();
-    const contributorNode = xmlDoc.evaluate(
-      ".//ns:contributors/ns:contributor",
-      xmlDoc,
-      NS_RESOLVER,
-      XPathResult.FIRST_ORDERED_NODE_TYPE,
-      null
-    ).singleNodeValue;
-
-    expect(contributorNode).not.toBeNull();
-    ctx.processIndividualContributor(contributorNode, xmlDoc, NS_RESOLVER, personMap, orgMap);
-
-    expect(personMap.size).toBe(1);
-    const person = personMap.values().next().value;
-    expect(person.givenName).toBe("Erika");
-    expect(person.familyName).toBe("Müller");
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    mountAuthorStack();
+    ctx.processContributors(xmlDoc, NS_RESOLVER);
+    const person = setContributors.mock.calls[0][0][0];
+    expect(person.givenname).toBe("Erika");
+    expect(person.familyname).toBe("Müller");
     expect(person.roles).toContain("Data Collector");
 
     // ORCID extraction depends on XPath attribute predicate support.
@@ -1090,11 +1088,11 @@ describe("geoLocation import via XPath (regression for querySelector bug)", () =
     const data = ctx.getGeoLocationData(geoNode, xmlDoc, NS_RESOLVER);
 
     expect(data.place).toBe("Potsdam");
-    // Point coordinates should be set for both min and max
+    // A point fills only the min fields so it is not imported as a bounding box.
     expect(data.latitudeMin).toBe("52.3906");
-    expect(data.latitudeMax).toBe("52.3906");
+    expect(data.latitudeMax).toBe("");
     expect(data.longitudeMin).toBe("13.0645");
-    expect(data.longitudeMax).toBe("13.0645");
+    expect(data.longitudeMax).toBe("");
   });
 
   test("getGeoLocationData returns empty strings when no spatial data present", () => {

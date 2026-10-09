@@ -32,7 +32,7 @@
             "title": "Reset Form?",
             "message": "Are you sure you want to reset the form? All entered data will be lost.",
             "cancel": "Cancel",
-            "confirm": "Reset"
+            "confirm": "Clear"
         }
     },
     "alerts": {
@@ -81,13 +81,35 @@
                 "discard": "Discard draft"
             },
             "foundWithTimestamp": "We found an autosaved draft from {timestamp}. Would you like to restore it?",
-            "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?"
+            "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?",
+            "invalidPeople": "The saved author or contributor data is invalid. The original draft has been kept.",
+            "unsupportedPeople": "This draft contains author or contributor types that are not available here. The original draft has been kept.",
+            "contactReview": "Please check the restored contact selections. The original draft is kept until you confirm.",
+            "confirmContacts": "I have checked the contacts"
         }
     },
     "resourceInfo": {
+        "introduction": "Please specify general metadata for the data here",
+        "sourceDoi": "Re-use metadata from an existing DOI to speed up the process",
+        "prefillFromDoi": "Import metadata from an existing DOI",
+        "sourceDoiInvalid": "Enter a valid DOI to load metadata.",
+        "sourceDoiNotFound": "No public DataCite record was found for this DOI.",
+        "sourceDoiLookupFailed": "DataCite could not be reached. Please try again.",
+        "editDoi": "Edit submission DOI",
+        "newDoiNotice": "GFZ Data Services will register a new DOI.",
+        "invalidSubmissionDoi": "Enter a valid DOI or clear the field to request a new one.",
+        "externalDoiBlocked": "Only an existing 10.5880 DOI can be reused. Remove this DOI to request a new one.",
+        "verifyingDoi": "Checking this DOI with DataCite…",
+        "doiLookupBlocked": "This DOI could not be verified. Please contact data curation.",
+        "doiNotFoundBlocked": "This DOI is not in public DataCite records. Please contact data curation.",
+        "doiVersionBlocked": "The published version is unclear. Please contact data curation.",
+        "doiVersionMismatch": "This DOI requires version {version}.",
+        "existingDoiCuration": "Existing GFZ DOI: the same DOI and new major version will be sent for manual curation.",
+        "moveTitle": "Move additional title",
+        "resourceTypeHelp": "Resource type help",
         "title": "Resource Information",
         "doi": "DOI",
-        "doiValid": "A new DOI will be registered.",
+        "doiValid": "The DOI format is valid.",
         "doiInvalid": "Please use the format 10.ORGANISATION/ID (i.e.: 10.57757/IUGG23-3081) or leave empty.",
         "publicationYear": "Publication Year (YYYY)",
         "yearPlaceholder": "YYYY",
@@ -142,26 +164,42 @@
         "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide an Institution name."
+        "InstitutionsNameInvalid": "Please provide an Institution Name."
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",
-        "name": "Author Institution name"
+        "name": "Author Institution Name"
     },
     "contactPersons": {
-        "contactPersonError": "Please choose at least one contact person.",
+        "contactPersonError": "Please add a contact in Authors or Contributors with a name and valid email address.",
         "email": "Email address",
         "emailInvalid": "Please provide a valid email address in the format xxx.xxx@xxx.xxx.",
         "toggleCheckbox": "Contact<br>Person?",
         "website": "Website",
         "websiteInvalid": "Please provide a valid URL."
     },
+    "contributors": {
+        "title": "Contributors",
+        "person": "Person",
+        "institution": "Institution",
+        "addPerson": "Add Person",
+        "addInstitution": "Add Institution",
+        "entrySingular": "entry",
+        "entryPlural": "entries",
+        "typeSwitcherLabel": "Contributor type",
+        "dragHandle": "Drag to change order",
+        "collapseEntry": "Collapse contributor entry",
+        "editEntry": "Edit contributor entry",
+        "moveEntryUp": "Move contributor up",
+        "moveEntryDown": "Move contributor down",
+        "removeEntry": "Remove contributor entry"
+    },
     "contributorPersons": {
         "title": "Contributor: Persons"
     },
     "contributorInstitutions": {
         "title": "Contributor: Institutions",
-        "organization": "Institution name",
+        "organization": "Institution Name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {
@@ -252,7 +290,16 @@
         "relation": "Relation",
         "identifierType": "Identifier type",
         "identifier": "Identifier",
-        "identifierInvalid": "Please enter a valid identifier."
+        "identifierInvalid": "Please enter a valid identifier.",
+        "addEntry": "Add related work",
+        "dragHandle": "Drag & drop or use arrow keys to change order",
+        "removeEntry": "Remove related work entry",
+        "editEntry": "Edit related work entry",
+        "collapseEntry": "Collapse related work entry",
+        "entrySingular": "entry",
+        "entryPlural": "entries",
+        "entriesSummary": "{count} {label}",
+        "incompleteEntry": "Incomplete related work"
     },
     "funding": {
         "title": "Funding Reference",
@@ -272,7 +319,11 @@
         "identifierType": "Identifier type",
         "identifierInvalid": "Please enter a valid identifier.",
         "modelName": "Model name",
-        "compensationDepth": "Compensation depth (in meters)"
+        "modelNameInvalid": "Provide the name of the model here",
+        "compensationDepth": "Compensation depth (in meters)",
+        "addEntry": "Add data source",
+        "removeEntry": "Remove data source",
+        "satelliteNameEntry": "Type in the satellite name"
     },
     "technical": {
         "title": "Technical",
@@ -355,7 +406,18 @@
             "errorToast": "Error loading file",
             "invalidFileType": "Please upload an XML or JSON-LD file.",
             "errorProcessing": "Error processing metadata file",
-            "errorReading": "Error reading file"
+            "errorReading": "Error reading file",
+            "relatedWorksProgress": "Related works {processed}/{total}"
+        },
+        "gfcUpload": {
+            "uploadButton": "Fill in metadata fields from model file",
+            "modalTitle": "Upload model file",
+            "dropZone": "Drag and drop a GFC file here",
+            "selectFile": "Or click to select a file",
+            "pasteHeaderLabel": "Or paste header text:",
+            "pasteHeaderPlaceholder": "Paste GFC header lines here…",
+            "fillMetadata": "Fill in metadata fields from model file",
+            "errorNoInput": "Please upload a .gfc file or paste the header text into the free text field."
         },
         "icgemWrongApp": {
             "title": "ICGEM Metadata File Detected",
@@ -364,8 +426,13 @@
         },
         "changelog": {
             "title": "Changelog",
-            "aboutText": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
-            "aboutHeading": "About ELMO - Enhanced Linked Metadata Organizer"
+            "loading": "Loading changelog…",
+            "error": "The changelog could not be loaded. Please try again."
+        },
+        "about": {
+            "text": "The foundations for the ELMO metadata editor were laid in 2024 by students at the University of Applied Sciences Potsdam in collaboration with the GFZ Helmholtz Centre for Geosciences Potsdam. The GFZ development team then continued to optimize it. The ELMO metadata editor is published under the GNU General Public License, Version 2.",
+            "heading": "About ELMO - Enhanced Linked Metadata Organizer",
+            "metadataEditorLink": "About the metadata editor"
         },
         "save": {
             "title": "Save Metadata",
@@ -379,7 +446,7 @@
             "urgency": "Urgency",
             "url": "URL to data",
             "dataDescription": "Data description (please use <a href='https://gfzpublic.gfz.de/pubman/faces/ViewItemOverviewPage.jsp?itemId=item_5007103' target='_blank' class='link-primary'>description template</a>)",
-            "privacypolice": "I have read the <a href='doc/privacyPolicy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
+            "privacypolice": "I have read the <a href='doc/privacy-policy.html' target='_blank' class='link-primary'>privacy policy</a> and agree to the processing of my data.",
             "urgencyNotice": "Please select an urgency",
             "high": "high",
             "normal": "normal",

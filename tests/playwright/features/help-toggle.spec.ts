@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { navigateToHome, runAxeAudit, SELECTORS } from '../utils';
+import { navigateToHome, runAxeAudit, SELECTORS, waitForHomepageReady } from '../utils';
 
 async function expectClassTokens(locator: Locator, expectedPresent: string[], expectedAbsent: string[] = []) {
   const classList = await locator.evaluate((element) =>
@@ -24,12 +24,20 @@ test.describe('Contextual help toggle', () => {
     browserName,
   }) => {
     await navigateToHome(page);
+    await waitForHomepageReady(page);
+    await page.waitForFunction(() => typeof (window as any).loadHelpContent === 'function');
 
     const helpDropdownToggle = page.locator(SELECTORS.navigation.helpToggle);
     await expect(helpDropdownToggle).toBeVisible();
 
     const sampleInput = page.locator('#input-resourceinformation-publicationyear');
     await expect(sampleInput).toBeVisible();
+    await expect(page.locator('label[for="input-resourceinformation-doi"]')).not.toBeEmpty();
+    await expect(page.locator('label[for="input-resourceinformation-version"]')).not.toBeEmpty();
+    await expect(page.locator('#button-resourceinformation-addtitle')).not.toBeEmpty();
+    if (await page.locator('#input-stc-timezone').isVisible()) {
+      await expect(page.locator('label[for="input-stc-timezone"]')).not.toBeEmpty();
+    }
 
     await helpDropdownToggle.click();
 
@@ -60,14 +68,7 @@ test.describe('Contextual help toggle', () => {
       await expect(helpEntry).toBeVisible();
       await helpEntry.scrollIntoViewIfNeeded();
 
-      const responsePromise = page.waitForResponse((response) =>
-        response.url().includes('doc/help.php')
-      );
-
       await helpEntry.click();
-
-      const response = await responsePromise;
-      expect(response.ok()).toBeTruthy();
 
       const helpModal = page.locator(SELECTORS.modals.help);
       await expect(helpModal).toBeVisible();
@@ -75,7 +76,8 @@ test.describe('Contextual help toggle', () => {
 
       const helpModalBody = helpModal.locator('.modal-body');
       await expect(helpModalBody).toContainText('Resource Information');
-      await expect(helpModalBody).toContainText('Please specify general metadata for the data set here.');
+      await expect(helpModalBody).toContainText('Provide essential details like Publication Year, Resource Type, Language, and Title');
+      await expect(helpModalBody).toContainText('Publisher');
 
       await helpModal.locator('button[aria-label="Close"]').click();
       await expect(helpModal).toBeHidden();

@@ -1,6 +1,8 @@
 // Global storage for roles data
 var personRoles = [];
 var organizationRoles = [];
+var sharedRoles = [];
+var fetchedRoleTypes = new Set();
 
 /**
  * Refreshes all role Tagify instances when translations are changed.
@@ -57,10 +59,12 @@ function setupRolesDropdown(roletypes, inputSelector) {
     rolesToUse = [...rolesToUse, ...organizationRoles];
   }
   if (roletypes.includes("both")) {
-    rolesToUse = [...rolesToUse, ...personRoles, ...organizationRoles];
+    rolesToUse = [...rolesToUse, ...sharedRoles];
   }
 
-  if (rolesToUse.length > 0) {
+  const allTypesFetched = roletypes.every(type => fetchedRoleTypes.has(type));
+  const hasPreloadedRoles = fetchedRoleTypes.size === 0 && rolesToUse.length > 0;
+  if (rolesToUse.length > 0 && (allTypesFetched || hasPreloadedRoles)) {
     initializeTagifyWithRoles(inputSelector, rolesToUse);
     return;
   }
@@ -78,16 +82,19 @@ function setupRolesDropdown(roletypes, inputSelector) {
   Promise.all(rolePromises)
     .then(results => {
       results.forEach((roles, index) => {
-        if (roletypes[index] === "person" || roletypes[index] === "both") {
+        fetchedRoleTypes.add(roletypes[index]);
+        if (roletypes[index] === "person") {
           personRoles = [...new Set([...personRoles, ...roles])];
         }
-        if (roletypes[index] === "institution" || roletypes[index] === "both") {
+        if (roletypes[index] === "institution") {
           organizationRoles = [...new Set([...organizationRoles, ...roles])];
+        }
+        if (roletypes[index] === "both") {
+          sharedRoles = [...new Set([...sharedRoles, ...roles])];
         }
       });
 
-      const allRoles = results.flat();
-      initializeTagifyWithRoles(inputSelector, allRoles);
+      initializeTagifyWithRoles(inputSelector, [...new Set(results.flat())]);
     })
     .catch(error => {
       console.error(`Error fetching roles for ${inputSelector}:`, error);
@@ -107,12 +114,19 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   const input = document.querySelector(inputSelector);
   if (!input) return;
 
+  const isPerson = input.name === 'cbPersonRoles[]';
+  const isInstitution = input.name === 'cbOrganisationRoles[]';
   const roleNames = roles.map(role =>
     typeof role === 'string' ? role : role.name
-  );
+  ).filter(name => !isInstitution || window.ELMO_FEATURES?.showContactInstitution === true || name !== 'Contact Person');
+  if (isPerson || (isInstitution && window.ELMO_FEATURES?.showContactInstitution === true)) {
+    roleNames.push('Contact Person');
+  }
+  // ERNIE and the local role table may already contain the synthetic contact role.
+  const allowedRoles = [...new Set(roleNames.filter(Boolean))];
 
   const tagifyOptions = {
-    whitelist: roleNames,
+    whitelist: allowedRoles,
     enforceWhitelist: true,
     maxTags: 16,
     dropdown: {
@@ -142,24 +156,8 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   }
 }
 
-// Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', function () {
-  // Read feature toggles
-  const features = window.ELMO_FEATURES || {};
-  
-  // Set up Contributor Persons role dropdown only if feature is enabled
-  if (features.showContributorPersons !== false) {
-    setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
-  }
-  
-  // Set up Contributor Institutions role dropdown only if feature is enabled  
-  if (features.showContributorInstitutions !== false) {
-    setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
-  }
-
-  // Add listener for translation changes
-  document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
-});
+// Cards initialize their own role fields. Keep translations in sync for all active cards.
+document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {

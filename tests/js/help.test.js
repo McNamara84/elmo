@@ -13,6 +13,10 @@ describe('help.js', () => {
       <div id="helpModal"><div class="modal-body"></div></div>
       <button id="buttonHelp"></button>
       <div id="helpIcon" data-help-section-id="section1"></div>
+      <i class="bi bi-question-circle-fill help-icon-author-affiliation"
+         data-help-section-id="help-contributorinstitutions-affiliation"
+         data-author-affiliation-help></i>
+      <span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i></span>
     `;
     localStorage.clear();
     $ = require('jquery');
@@ -27,6 +31,23 @@ describe('help.js', () => {
     jest.clearAllMocks();
     delete global.$;
     delete global.jQuery;
+    delete window.resourceTypeDescriptions;
+  });
+
+  test('resource type modal follows selectable options and separates terms from definitions', () => {
+    document.body.insertAdjacentHTML('beforeend', `<select id="input-resourceinformation-resourcetype">
+      <option value="" disabled>Choose</option>
+      <option value="1" title="ERNIE description">Dataset</option>
+      <option value="2">Software</option>
+      <option value="3" disabled>Unavailable</option>
+    </select>`);
+    window.resourceTypeDescriptions = require('../../js/resourceTypeDescriptions.js');
+    help.displayHelpSection('help-resourceinformation-resourcetype',
+      '<div id="help-resourceinformation-resourcetype"><div id="resource-type-help-list"></div></div>');
+    expect($('#resource-type-help-list dt').map((_, element) => element.textContent).get())
+      .toEqual(['Dataset', 'Software']);
+    expect($('#resource-type-help-list dd').first().text()).toBe('ERNIE description');
+    expect($('#resource-type-help-list dd').last().text()).toContain('computer program');
   });
 
   test('initializes to help-on by default', () => {
@@ -52,6 +73,8 @@ describe('help.js', () => {
     expect($('#buttonHelpOn').hasClass('active')).toBe(false);
     expect($('.input-with-help').hasClass('input-right-with-round-corners')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square')).toBe(true);
+    expect($('.help-icon-author-affiliation').hasClass('d-none')).toBe(true);
+    expect($('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])').css('display')).toBe('none');
   });
 
   test('clicking Help On stores status and updates UI', () => {
@@ -63,11 +86,35 @@ describe('help.js', () => {
     expect($('#buttonHelpOff').hasClass('active')).toBe(false);
     expect($('.input-with-help').hasClass('input-right-no-round-corners')).toBe(true);
     expect($('#bd-help-icon').hasClass('bi-question-square-fill')).toBe(true);
+    expect($('.help-icon-author-affiliation').hasClass('d-none')).toBe(false);
+    expect($('.help-icon-author-affiliation').hasClass('bi-question-circle-fill')).toBe(true);
+    expect($('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])').css('display')).not.toBe('none');
+  });
+
+  test('updateHelpStatus reapplies visibility to newly created author help icons', () => {
+    $('#buttonHelpOff').trigger('click');
+
+    const newAffiliationHelp = $('<i class="bi bi-question-circle-fill help-icon-author-affiliation" data-help-section-id="help-contributorinstitutions-affiliation" data-author-affiliation-help></i>');
+    const newOrcidHelp = $('<span class="input-group-text"><i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i></span>');
+    $(document.body).append(newAffiliationHelp, newOrcidHelp);
+
+    help.updateHelpStatus();
+
+    expect(newAffiliationHelp.hasClass('d-none')).toBe(true);
+    expect(newOrcidHelp.css('display')).toBe('none');
   });
 
   test('clicking help icon triggers an AJAX call', () => {
     $.get = jest.fn(() => ({ fail: jest.fn() }));
     $('#helpIcon').trigger('click');
+    expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
+  });
+
+  test('keyboard opens a focusable field help icon', () => {
+    $.get = jest.fn(() => ({ fail: jest.fn() }));
+    const icon = $('<i data-help-section-id="help-resourceinformation-resourcetype" tabindex="0"></i>');
+    $(document.body).append(icon);
+    icon.trigger($.Event('keydown', { key: 'Enter' }));
     expect($.get).toHaveBeenCalledWith('doc/help.php', expect.any(Function));
   });
 
