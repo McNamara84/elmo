@@ -36,7 +36,7 @@
 /* Dropdowns are attached to body, outside the original Tagify element. */
 :root {
     --tagify-dd-bg-color: var(--elmo-surface);
-    --tagify-dd-color-primary: #00589c;
+    --tagify-dd-color-primary: var(--elmo-brand-color);
     --tagify-dd-text-color: var(--bs-body-color);
 }
 

@@ -75,9 +75,9 @@
 [data-bs-theme="dark"] .btn-outline-primary {
     --bs-btn-color: #8ab9ff;
     --bs-btn-border-color: #8ab9ff;
-    --bs-btn-hover-bg: #00589c;
+    --bs-btn-hover-bg: var(--elmo-brand-color);
     --bs-btn-hover-border-color: #8ab9ff;
-    --bs-btn-active-bg: #00589c;
+    --bs-btn-active-bg: var(--elmo-brand-color);
     --bs-btn-active-border-color: #8ab9ff;
 }
 

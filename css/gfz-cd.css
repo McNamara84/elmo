@@ -1,19 +1,21 @@
 :root {
+    /* Fixed GFZ blue keeps white text readable; heading colors follow the theme. */
+    --elmo-brand-color: #00589c;
     --elmo-surface: #ffffff;
     --elmo-surface-raised: #f8f9fa;
     --elmo-field-bg: #ffffff;
     --elmo-readonly-bg: #e9ecef;
     --elmo-control-border: #858e96;
-    --elmo-heading-color: #00589c;
+    --elmo-heading-color: var(--elmo-brand-color);
     --elmo-tooltip-bg: #ffffff;
     --elmo-tooltip-color: #002864;
     --elmo-tag-bg: #e5e5e5;
     --elmo-tag-hover: #d3e2e2;
     --elmo-tree-hover: #e7f4f9;
     --elmo-tree-selected: #beebff;
-    --elmo-focus-color: #00589c;
+    --elmo-focus-color: var(--elmo-brand-color);
     --elmo-info-bg: #cfe2ff;
-    --elmo-info-color: #00589c;
+    --elmo-info-color: var(--elmo-brand-color);
     --elmo-info-border: #b6d4fe;
 }
 
@@ -29,7 +31,7 @@
 
 .ui-autocomplete .ui-state-active,
 .ui-autocomplete .ui-state-focus {
-    background: #00589c;
+    background: var(--elmo-brand-color);
     color: #ffffff;
     border-color: var(--elmo-focus-color);
 }
@@ -55,25 +57,25 @@
 }
 
 .bg-primary {
-    background-color: #00589C !important;
+    background-color: var(--elmo-brand-color) !important;
 }
 
 .btn-primary {
-    --bs-btn-bg: #00589c;
-    --bs-btn-border-color: #00589c;
+    --bs-btn-bg: var(--elmo-brand-color);
+    --bs-btn-border-color: var(--elmo-brand-color);
     --bs-btn-hover-bg: #004878;
     --bs-btn-hover-border-color: #004878;
     --bs-btn-active-bg: #003d68;
     --bs-btn-active-border-color: #003d68;
-    --bs-btn-disabled-bg: #00589c;
-    --bs-btn-disabled-border-color: #00589c;
+    --bs-btn-disabled-bg: var(--elmo-brand-color);
+    --bs-btn-disabled-border-color: var(--elmo-brand-color);
     --bs-btn-focus-shadow-rgb: 138, 185, 255;
 }
 
 /* Farbanpassung der aktiven Dropdown Items */
 .dropdown-item.active,
 .dropdown-item:active {
-    background-color: #00589C;
+    background-color: var(--elmo-brand-color);
 }
 
 .alert-info {
@@ -98,9 +100,9 @@
 }
 
 .btn-outline-primary {
-    --bs-btn-color: #00589c;
-    --bs-btn-border-color: #00589c;
-    --bs-btn-hover-bg: #00589c;
+    --bs-btn-color: var(--elmo-brand-color);
+    --bs-btn-border-color: var(--elmo-brand-color);
+    --bs-btn-hover-bg: var(--elmo-brand-color);
     --bs-btn-hover-border-color: #004878;
     --bs-btn-active-bg: #003d68;
     --bs-btn-active-border-color: #003d68;
@@ -740,7 +742,7 @@ header .ms-auto.d-flex {
 }
 
 .footer-info {
-    background-color: #00589c;
+    background-color: var(--elmo-brand-color);
     color: #ffffff;
     font-size: 0.9rem;
 }
@@ -979,7 +981,7 @@ header .ms-auto.d-flex {
 
     /* Highlight an option in blue on hover */
     #input-originatinglaboratory-name option:hover {
-        background-color: #00589C;
+        background-color: var(--elmo-brand-color);
         color: #fff;
     }
 }
