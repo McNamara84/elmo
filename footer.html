@@ -57,7 +57,7 @@ if ($changelogVersion === null) {
   </div>
   <div class="footer-info mt-0 py-3">
     <div class="container text-center">
-      <nav class="footer-info-nav mb-2 d-flex justify-content-center gap-4">
+      <nav class="footer-info-nav mb-2 d-flex justify-content-center">
         <a href="https://dataservices.gfz.de/web/about-us/legal-notice" target="_blank" class="settings-menu-link" id="buttonLegalNotice" data-translate="buttons.legalNotice">Legal Notice</a>
         <a href="doc/privacy-policy.html" target="_blank" class="settings-menu-link" id="buttonPrivacy" data-translate="buttons.PrivacyPolicy">Privacy Policy</a>
         <a href="doc/help.php" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
@@ -139,6 +139,7 @@ window.ELMO_FEATURES = {
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->
 <script src="js/darkmode.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/darkmode.js'), 0, 12); ?>"></script>
+<script src="js/footerLayout.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/footerLayout.js'), 0, 12); ?>"></script>
 <!-- JS-Datei für Hilfe-PopUps einbinden -->
 <script type="module" src="js/help.js"></script>
 <!-- JS-Karten-Funktionen einbinden -->

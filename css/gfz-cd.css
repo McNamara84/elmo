@@ -84,11 +84,7 @@
     opacity: 0.6;
 }
 
-/* Bottom padding keeps the fixed footer from overlapping page content.
- * 104px covers the compact footer stack (buttons + autosave status + padding)
- * across viewports while giving a bit more room back to the form. Keep in sync
- * with tests that exercise controls near the bottom of the page.
- */
+/* The footer script measures wrapped controls; these values also work without JS. */
 #main-content {
     padding-bottom: 15px !important;
 }
@@ -104,25 +100,29 @@ footer.fixed-bottom {
 
 /* Desktop */
 body {
-    padding-bottom: 140px;
+    padding-bottom: calc(var(--elmo-fixed-footer-height, 140px) + 1rem);
+}
+
+.footer > .container {
+    padding-block: 0.75rem;
+}
+
+.footer-info-nav {
+    flex-wrap: wrap;
+    gap: 0.5rem 1.5rem;
 }
 
 /* Tablets and smaller devices */
 @media (max-width: 768px) {
     body {
-        padding-bottom: 220px;
-    }
-
-    footer.fixed-bottom {
-        padding-top: 0.5rem;
-        padding-bottom: 0.5rem;
+        padding-bottom: calc(var(--elmo-fixed-footer-height, 220px) + 1rem);
     }
 }
 
 /* Very small devices */
 @media (max-width: 480px) {
     body {
-        padding-bottom: 260px;
+        padding-bottom: calc(var(--elmo-fixed-footer-height, 260px) + 1rem);
     }
 }
 
@@ -426,7 +426,7 @@ label.mandatory-field::after {
 }
 
 [data-bs-theme="dark"] .autosave-status {
-    background-color: rgba(255, 255, 255, 0.04);
+    background-color: var(--elmo-surface);
     border-color: rgba(255, 255, 255, 0.16);
     box-shadow: 0 0.125rem 0.35rem rgba(0, 0, 0, 0.45);
 }
