@@ -81,7 +81,11 @@
                 "discard": "Discard draft"
             },
             "foundWithTimestamp": "We found an autosaved draft from {timestamp}. Would you like to restore it?",
-            "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?"
+            "foundWithoutTimestamp": "We found an autosaved draft from a previous session. Would you like to restore it?",
+            "invalidPeople": "The saved author or contributor data is invalid. The original draft has been kept.",
+            "unsupportedPeople": "This draft contains author or contributor types that are not available here. The original draft has been kept.",
+            "contactReview": "Please check the restored contact selections. The original draft is kept until you confirm.",
+            "confirmContacts": "I have checked the contacts"
         }
     },
     "resourceInfo": {

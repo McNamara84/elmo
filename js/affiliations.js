@@ -78,12 +78,9 @@ function refreshTagifyInstances() {
 }
 
 /**
- * Initialize Tagify for affiliation fields when the document is ready.
- * Uses server-side search instead of loading the full JSON file.
+ * Cards initialize their affiliation widgets. Keep their translations in sync.
  */
 $(document).ready(function () {
-  autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
-  autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
   document.addEventListener('translationsLoaded', refreshTagifyInstances);
 });
 
@@ -198,7 +195,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
-    duplicates: false,
+    // Equal labels can represent different ROR records in restored drafts.
+    duplicates: true,
     placeholder: placeholderValue,
     whitelist: [], // Start with empty whitelist - will be populated via server search
     dropdown: {
@@ -321,7 +319,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   }
 
   function getTagLabel(tag) {
-    return String(tag.value || tag.label || tag.name || tag.mappedValue || '').trim();
+    return String(tag.label ?? tag.value ?? tag.name ?? tag.mappedValue ?? '').trim();
   }
 
   function findWhitelistRorId(label) {
@@ -339,7 +337,9 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     const label = getTagLabel(tag);
     const rorId = normalizeRorId(tag.rorId || tag.id) || normalizeRorId(fallbackRorId) || findWhitelistRorId(label);
 
-    tag.value = label;
+    // Tagify requires a nonempty value. Display the ROR ID for an incomplete
+    // affiliation while retaining its empty label in the structured data.
+    tag.value = label || rorId;
     tag.label = label;
     tag.rorId = rorId;
     tag.id = rorId;
@@ -392,7 +392,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     tagElm._tagify_updateHiddenField = syncStructuredAffiliations;
 
     const valueInput = document.getElementById('input-affiliation-edit-value');
-    valueInput.value = tagData.value;
+    valueInput.value = getTagLabel(tagData);
 
     const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     bsModal.show();
@@ -406,7 +406,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   /**
    * Save handler for the affiliation edit modal.
-   * Clones the original tag data, replaces only the `value`, then calls
+   * Clones the original tag data, updates its label and value, then calls
    * tagify.replaceTag() so the ROR id is preserved in the background.
    * The handler is registered only once (on the first autocompleteAffiliations call).
    */
@@ -424,7 +424,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       if (!newValue) return;
 
       // Preserve all original properties (especially `id` / ROR URI) but update value
-      const newTagData = Object.assign({}, originalData, { value: newValue });
+      const newTagData = Object.assign({}, originalData, { value: newValue, label: newValue });
 
       tagElm._tagify_originalTagify.replaceTag(tagElm, newTagData);
 
@@ -524,7 +524,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     }
   });
 
-  tagify.on("edit:updated", function () {
+  tagify.on("edit:updated", function (event) {
+    if (event.detail?.data) event.detail.data.label = event.detail.data.value;
     syncStructuredAffiliations({ preserveExistingRorIds: true });
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();

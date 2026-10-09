@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
 import { resolve } from 'path';
+import { registerStaticAssetRoutes } from '../utils/assets';
 
 const autosaveModuleSource = readFileSync(resolve(__dirname, '../../../js/services/autosaveService.js'), 'utf-8');
 
@@ -56,6 +57,7 @@ test.describe('Autosave experience', () => {
   </body>
 </html>`;
 
+    await registerStaticAssetRoutes(page);
     await page.route('**/__autosave_fixture__', async (route) => {
       await route.fulfill({
         status: 200,
@@ -115,8 +117,10 @@ test.describe('Autosave experience', () => {
     });
 
     await page.goto('__autosave_fixture__');
+    await page.waitForFunction(() => Boolean((window as any).__autosaveService));
 
     const statusRegion = page.getByRole('status');
+    await expect(statusRegion).toHaveClass(/autosave-status--idle/);
     await expect(statusRegion).toContainText('Autosave ready.');
 
     const titleInput = page.getByRole('textbox', { name: 'Title*' });
