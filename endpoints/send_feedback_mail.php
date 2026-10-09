@@ -47,7 +47,7 @@ function sendFeedbackMail(
     string $feedbackQuestion6,
     string $feedbackQuestion7
 ): void {
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslLabs, $showGGMsProperties;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslLabs, $showGGMsProperties, $SIMULATE_EMAIL;
     
     // Determine ELMO version
     if ($showMslLabs) {
@@ -59,6 +59,10 @@ function sendFeedbackMail(
     }
     // Testing log 
     error_log("ELMO Version for Feedback: {$elmoVersion}");
+    if ($SIMULATE_EMAIL ?? false) {
+        error_log("Simulating the sending of feedback email due to SIMULATE_EMAIL being set.");
+        return;
+    }
     // Network test before sending
     if (!testGfzSmtpConnectivity()) {
         echo json_encode(['success' => false, 'message' => 'Sorry, we had an issue connecting to the Email SMTP server. You can reach out to us directly per email.']);

@@ -29,8 +29,17 @@ $(document).ready(function () {
     return $elements;
   }
 
+  function allFieldsMissing(form) {
+    return [...form.querySelectorAll('textarea[name^="feedbackQuestion"]')]
+      .every((field) => field.value.trim() === '');
+  }
+
   sendButton.click(async function (event) {
     event.preventDefault();
+
+    if (allFieldsMissing(feedbackForm[0])) {
+      return;
+    }
 
     sendButton
       .prop("disabled", true)

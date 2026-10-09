@@ -86,6 +86,60 @@ async function mockFeedbackEndpoint(
 }
 
 test.describe('Feedback modal interactions', () => {
+  test('does not call the backend when every feedback field is empty', async ({ page }) => {
+    const { feedbackModal } = await navigateToFeedbackModal(page);
+    const sendButton = feedbackModal.locator('#button-feedback-send');
+    let feedbackPosted = false;
+
+    await page.route(FEEDBACK_ENDPOINT, async (route) => {
+      feedbackPosted = true;
+      await route.fulfill({
+        status: 200,
+        contentType: 'text/plain',
+        body: 'OK',
+      });
+    });
+
+    async function clickSendAndWatchForPost() {
+      const feedbackRequest = page
+        .waitForRequest((request) => request.url().includes('send_feedback_mail.php'), { timeout: 1500 })
+        .catch(() => null);
+
+      await sendButton.click();
+      return feedbackRequest;
+    }
+
+    expect(await clickSendAndWatchForPost()).toBeNull();
+    await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
+    await expect(sendButton).toBeEnabled();
+    expect(feedbackPosted).toBe(false);
+
+    const fieldState = await feedbackModal.locator('#form-feedback').evaluate((form) => {
+      const fields = [...form.querySelectorAll('textarea[name^="feedbackQuestion"]')];
+      return {
+        required: fields.filter((field) => field.required).map((field) => field.id),
+        invalid: fields.filter((field) => field.classList.contains('is-invalid') || field.getAttribute('aria-invalid') === 'true').map((field) => field.id),
+        wasValidated: form.classList.contains('was-validated'),
+      };
+    });
+    expect(fieldState.required).toEqual([]);
+    expect(fieldState.invalid).toEqual([]);
+    expect(fieldState.wasValidated).toBe(false);
+
+    await feedbackModal.locator('textarea[name="feedbackQuestion3"]').fill('   ');
+    expect(await clickSendAndWatchForPost()).toBeNull();
+    expect(feedbackPosted).toBe(false);
+
+    await feedbackModal.locator('textarea[name="feedbackQuestion3"]').fill('One answer');
+    const filledRequest = page.waitForRequest((request) =>
+      request.url().includes('send_feedback_mail.php')
+    );
+    await sendButton.click();
+    expect((await filledRequest)?.url()).toContain('send_feedback_mail.php');
+
+    await page.unroute(FEEDBACK_ENDPOINT);
+  });
+
   test('shows success feedback flow when the backend responds with 200', async ({ page }) => {
     const { feedbackButton, feedbackModal } = await navigateToFeedbackModal(page);
     const feedbackForm = feedbackModal.locator('#form-feedback');
