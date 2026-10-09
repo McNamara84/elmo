@@ -35,7 +35,7 @@ $(document).ready(function () {
     return tags.map((tag, index) => ({
       label: String(tag?.label ?? tag?.value ?? tag?.name ?? tag).trim(),
       rorId: String(tag?.rorId ?? tag?.id ?? rorIds[index] ?? '').replace(/^https?:\/\/ror\.org\//, '').trim()
-    })).filter(pair => pair.label);
+    })).filter(pair => pair.label || pair.rorId);
   }
 
   function field(card, name) {
@@ -175,15 +175,18 @@ $(document).ready(function () {
     const fields = document.createElement('div');
     fields.className = 'row g-2 mt-1 d-none';
     fields.dataset.contributorContactFields = '';
-    fields.innerHTML = `<div class="col-12 col-md-6"><div class="input-group has-validation"><div class="form-floating">
+    // Use the Authors website format, which accepts addresses without HTTP(S).
+    fields.innerHTML = String.raw`<div class="col-12 col-md-6"><div class="input-group has-validation"><div class="form-floating">
       <input type="email" class="form-control input-with-help input-right-no-round-corners" id="contributor-contact-email-${id}" name="cbContactEmail[]">
       <label for="contributor-contact-email-${id}" data-translate="contactPersons.email">Email address</label>
       <div class="invalid-feedback" data-translate="contactPersons.emailInvalid">Please provide a valid email address.</div>
     </div><div class="input-group-append"><span class="input-group-text"><i class="bi bi-question-circle-fill"
       data-help-section-id="help-contactperson-email"></i></span></div></div></div>
     <div class="col-12 col-md-6"><div class="input-group has-validation"><div class="form-floating">
-      <input type="url" class="form-control input-with-help input-right-no-round-corners" id="contributor-contact-website-${id}" name="cbContactWebsite[]">
+      <input type="text" inputmode="url" class="form-control input-with-help input-right-no-round-corners" id="contributor-contact-website-${id}" name="cbContactWebsite[]"
+        pattern="^(http(s)?:\/\/)?(www\.)?[a-zA-Z0-9\-\.]+(\.[a-zA-Z]{2,})+(\/[^\s]*)?$">
       <label for="contributor-contact-website-${id}" data-translate="contactPersons.website">Website</label>
+      <div class="invalid-feedback" data-translate="contactPersons.websiteInvalid">Please provide a valid URL.</div>
     </div><div class="input-group-append"><span class="input-group-text"><i class="bi bi-question-circle-fill"
       data-help-section-id="help-contactperson-website"></i></span></div></div></div>`;
     panel.append(fields);
@@ -237,7 +240,6 @@ $(document).ready(function () {
     }
 
     const fields = template.cloneNode(true);
-    fields.querySelector('.addContributorPerson, .addContributor')?.closest('.col-2')?.remove();
     fields.querySelectorAll('[id]').forEach(element => { element.id = `${element.id}-${id}`; });
     fields.querySelectorAll('label[for]').forEach(label => { label.htmlFor = `${label.htmlFor}-${id}`; });
     fields.classList.add('g-1');
@@ -323,7 +325,12 @@ $(document).ready(function () {
 
   function writeTags(input, values) {
     if (!input) return;
-    const tags = values.map(value => typeof value === 'string' ? { value } : { value: value.label, rorId: value.rorId, id: value.rorId });
+    const tags = values.map(value => typeof value === 'string' ? { value } : {
+      value: value.label || value.rorId,
+      label: value.label,
+      rorId: value.rorId,
+      id: value.rorId
+    });
     if (input._tagify) {
       input._tagify.removeAllTags();
       input._tagify.addTags(tags);
@@ -412,6 +419,7 @@ $(document).ready(function () {
     });
   }
   window.contributorStack = {
+    supportsType: type => Boolean(templates[type]),
     addPerson: () => add('person'),
     addInstitution: () => add('institution'),
     collectPayload,

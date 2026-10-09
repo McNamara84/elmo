@@ -82,7 +82,11 @@
                 "discard": "Entwurf verwerfen"
             },
             "foundWithTimestamp": "Wir haben einen automatisch gespeicherten Entwurf vom {timestamp} gefunden. Möchten Sie ihn wiederherstellen?",
-            "foundWithoutTimestamp": "Wir haben einen automatisch gespeicherten Entwurf aus einer früheren Sitzung gefunden. Möchten Sie ihn wiederherstellen?"
+            "foundWithoutTimestamp": "Wir haben einen automatisch gespeicherten Entwurf aus einer früheren Sitzung gefunden. Möchten Sie ihn wiederherstellen?",
+            "invalidPeople": "Die gespeicherten Autoren- oder Contributor-Daten sind ungültig. Der ursprüngliche Entwurf wurde erhalten.",
+            "unsupportedPeople": "Dieser Entwurf enthält hier nicht verfügbare Autoren- oder Contributor-Typen. Der ursprüngliche Entwurf wurde erhalten.",
+            "contactReview": "Bitte prüfe die wiederhergestellte Kontaktauswahl. Der ursprüngliche Entwurf bleibt bis zu deiner Bestätigung erhalten.",
+            "confirmContacts": "Ich habe die Kontakte geprüft"
         }
     },
     "resourceInfo": {

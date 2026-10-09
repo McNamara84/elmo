@@ -156,24 +156,8 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   }
 }
 
-// Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', function () {
-  // Read feature toggles
-  const features = window.ELMO_FEATURES || {};
-  
-  // Set up Contributor Persons role dropdown only if feature is enabled
-  if (features.showContributorPersons !== false) {
-    setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
-  }
-  
-  // Set up Contributor Institutions role dropdown only if feature is enabled  
-  if (features.showContributorInstitutions !== false) {
-    setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
-  }
-
-  // Add listener for translation changes
-  document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
-});
+// Cards initialize their own role fields. Keep translations in sync for all active cards.
+document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {

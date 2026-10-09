@@ -82,7 +82,11 @@
                 "discard": "Supprimer le brouillon"
             },
             "foundWithTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement du {timestamp}. Voulez-vous le restaurer ?",
-            "foundWithoutTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement d’une session précédente. Voulez-vous le restaurer ?"
+            "foundWithoutTimestamp": "Nous avons trouvé un brouillon sauvegardé automatiquement d’une session précédente. Voulez-vous le restaurer ?",
+            "invalidPeople": "Les données des auteurs ou contributeurs enregistrées sont invalides. Le brouillon original a été conservé.",
+            "unsupportedPeople": "Ce brouillon contient des types d’auteurs ou de contributeurs indisponibles ici. Le brouillon original a été conservé.",
+            "contactReview": "Veuillez vérifier les contacts restaurés. Le brouillon original est conservé jusqu’à votre confirmation.",
+            "confirmContacts": "J’ai vérifié les contacts"
         }
     },
     "resourceInfo": {

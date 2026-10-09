@@ -67,7 +67,6 @@ function loadTemplate(relativePath: string): string {
 const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resource-information.html');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
-const AUTHOR_INSTITUTION_HTML = loadTemplate('formgroups/authorInstitution.html');
 const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
 const THESAURUS_HTML = loadTemplate('formgroups/thesaurus-keywords.html');
@@ -95,7 +94,6 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${RESOURCE_INFORMATION_HTML}
     ${RIGHTS_HTML}
     ${AUTHORS_HTML}
-    ${AUTHOR_INSTITUTION_HTML}
     ${ORIGINATING_LAB_HTML}
     ${DESCRIPTIONS_HTML}
     ${THESAURUS_HTML}
@@ -448,8 +446,9 @@ test.describe('XML Upload Mapping Flow', () => {
 
     await registerStaticAssetRoutes(page);
 
-    await page.goto('about:blank');
-    await page.setContent(TEST_PAGE_HTML);
+    await page.route('**/xml-upload-fixture', route => route.fulfill({ contentType: 'text/html', body: TEST_PAGE_HTML }));
+    await page.goto(`${APP_BASE_URL}xml-upload-fixture`);
+
 
     // Inject mock fetch that returns data directly instead of making network requests
     // Uses the central MOCK_API_DATA configuration defined above
@@ -611,31 +610,6 @@ test.describe('XML Upload Mapping Flow', () => {
       }
     });
 
-    // Register simplified click handlers for add-row buttons since ES modules
-    // cannot load on about:blank pages. These mimic the core cloning logic from
-    // js/eventhandlers/formgroups/author.js and authorInstitution.js.
-    await page.evaluate(() => {
-      const $ = (window as any).jQuery;
-      $('#button-author-add').click(function () {
-        const $container = $('div[data-creator-row]').parent();
-        const $first = $('div[data-creator-row]').first();
-        const $clone = $first.clone(false);
-        $clone.find('input, select, textarea').val('').removeAttr('required');
-        $clone.find('.tagify').remove();
-        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
-        $container.append($clone);
-      });
-      $('#button-authorinstitution-add').click(function () {
-        const $container = $('div[data-authorinstitution-row]').parent();
-        const $first = $('div[data-authorinstitution-row]').first();
-        const $clone = $first.clone(false);
-        $clone.find('input, select, textarea').val('').removeAttr('required');
-        $clone.find('.tagify').remove();
-        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
-        $container.append($clone);
-      });
-    });
-
     const appScripts = [
       'js/clear.js',
       'js/dropdownUtils.js',
@@ -655,6 +629,8 @@ test.describe('XML Upload Mapping Flow', () => {
       await injectProductionScript(page, script);
     }
 
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
+    await page.waitForFunction(() => !!(window as any).authorStack?.setAuthors);
     await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
     await page.waitForFunction(() => !!(window as any).resourceInformation?.setResourceInformation);
 
