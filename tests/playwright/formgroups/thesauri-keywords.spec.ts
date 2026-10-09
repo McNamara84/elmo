@@ -101,7 +101,7 @@ const MOCK_INSTRUMENTS = {
     },
   ],
 };
-const TEST_ROUTE_PATH = '/thesauri-keywords-test';
+const TEST_ROUTE_PATH = 'thesauri-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
@@ -148,7 +148,7 @@ async function waitForThesauriInit(page: import('@playwright/test').Page) {
 
 test.describe('Thesauri Keywords Form Group', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route(`**${TEST_ROUTE_PATH}`, async route => {
+    await page.route(`**/${TEST_ROUTE_PATH}`, async route => {
       await route.fulfill({
         status: 200,
         contentType: 'text/html',
@@ -217,7 +217,7 @@ test.describe('Thesauri Keywords Form Group', () => {
       };
     });
 
-    await page.addScriptTag({ url: '/js/thesauri.js', type: 'module' });
+    await page.addScriptTag({ url: 'js/thesauri.js', type: 'module' });
 
     // Set up language handlers and fire translationsLoaded to trigger dynamic init
     await page.evaluate(() => {

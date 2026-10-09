@@ -24,7 +24,7 @@ function expectedDropdownNames(primary: string[], shared: string[], includeConta
 }
 
 async function fetchRoleNames(page: Page, type: 'person' | 'institution' | 'both'): Promise<string[]> {
-  const response = await page.request.get(`/api/v2/vocabs/roles?type=${type}`);
+  const response = await page.request.get(`api/v2/vocabs/roles?type=${type}`);
   expect(response.ok()).toBeTruthy();
   return roleNames(await response.json());
 }
