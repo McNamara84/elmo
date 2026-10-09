@@ -1,3 +1,36 @@
+:root {
+    --elmo-surface: #ffffff;
+    --elmo-surface-raised: #f8f9fa;
+    --elmo-field-bg: #ffffff;
+    --elmo-readonly-bg: #e9ecef;
+    --elmo-control-border: #858e96;
+    --elmo-heading-color: #00589c;
+    --elmo-tooltip-bg: #ffffff;
+    --elmo-tooltip-color: #002864;
+    --elmo-tag-bg: #e5e5e5;
+    --elmo-tag-hover: #d3e2e2;
+    --elmo-tree-hover: #e7f4f9;
+    --elmo-tree-selected: #beebff;
+    --elmo-focus-color: #00589c;
+}
+
+.elmo-subheader {
+    background-color: var(--elmo-surface-raised);
+    color: var(--bs-body-color);
+}
+
+.form-control,
+.form-select {
+    background-color: var(--elmo-field-bg);
+    border-color: var(--elmo-control-border);
+}
+
+.form-control:focus,
+.form-select:focus {
+    background-color: var(--elmo-field-bg);
+    border-color: var(--elmo-focus-color);
+}
+
 .jstree-container-ul>li>a>i.jstree-checkbox {
     display: none;
 }
@@ -11,8 +44,15 @@
 }
 
 .btn-primary {
-    background-color: #00589C !important;
-    border-color: #00589C !important;
+    --bs-btn-bg: #00589c;
+    --bs-btn-border-color: #00589c;
+    --bs-btn-hover-bg: #004878;
+    --bs-btn-hover-border-color: #004878;
+    --bs-btn-active-bg: #003d68;
+    --bs-btn-active-border-color: #003d68;
+    --bs-btn-disabled-bg: #00589c;
+    --bs-btn-disabled-border-color: #00589c;
+    --bs-btn-focus-shadow-rgb: 138, 185, 255;
 }
 
 /* Farbanpassung der aktiven Dropdown Items */
@@ -22,10 +62,19 @@
 }
 
 .alert-info {
-    color: #00589C;
-    background-color: #cfe2ff;
-    border-color: #b6d4fe;
+    --bs-alert-color: var(--bs-info-text-emphasis);
+    --bs-alert-bg: var(--bs-info-bg-subtle);
+    --bs-alert-border-color: var(--bs-info-border-subtle);
     font-size: 1.1rem;
+}
+
+.btn-outline-secondary {
+    --bs-btn-color: #495057;
+    --bs-btn-border-color: #858e96;
+    --bs-btn-hover-bg: #495057;
+    --bs-btn-hover-border-color: #495057;
+    --bs-btn-active-bg: #495057;
+    --bs-btn-active-border-color: #495057;
 }
 
 .footer-notes {
@@ -46,10 +95,9 @@
 
 /* Footer styling for consistent appearance */
 footer.fixed-bottom {
-    background: transparent !important;
-    background-color: transparent !important;
-    box-shadow: none;
-    border: 0;
+    background-color: var(--elmo-surface-raised);
+    border-top: 1px solid var(--bs-border-color);
+    box-shadow: 0 -0.125rem 0.5rem rgba(0, 0, 0, 0.08);
     z-index: 1020;
     width: 100%;
 }
@@ -165,7 +213,7 @@ body {
 
 /* Upload Modal */
 .drop-zone {
-    border: 2px dashed #dee2e6;
+    border: 2px dashed var(--elmo-control-border);
     transition: border-color 0.3s ease;
 }
 
@@ -177,7 +225,7 @@ body {
 /* Drag & drop sort */
 .drag-handle {
     cursor: move;
-    color: #6c757d;
+    color: var(--bs-secondary-color);
     background-color: transparent;
     border: 0;
     padding: 0;
@@ -192,11 +240,11 @@ body {
 
 .drag-handle:hover,
 .drag-handle:focus {
-    color: #495057;
+    color: var(--bs-body-color);
 }
 
 .drag-handle:focus-visible {
-    outline: 2px solid var(--bs-primary);
+    outline: 2px solid var(--elmo-focus-color);
     outline-offset: 2px;
 }
 
@@ -215,7 +263,7 @@ body {
 }
 
 [data-creator-row].ui-sortable-helper {
-    background: white;
+    background: var(--elmo-surface);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -249,10 +297,18 @@ label.mandatory-field::after {
 
 /* Greyed out input fields */
 .input-greyed-out {
-    background-color: #e9ecef;
-    /* Light grey background for normal mode */
-    color: #495057;
-    /* Grey text color */
+    background-color: var(--elmo-readonly-bg);
+    color: var(--bs-body-color);
+}
+
+.input-greyed-out:focus,
+.form-floating > .form-control.input-greyed-out ~ label::after {
+    background-color: var(--elmo-readonly-bg);
+}
+
+.form-floating > .form-control ~ label::after,
+.form-floating > .form-select ~ label::after {
+    background-color: var(--elmo-field-bg);
 }
 
 #resource-type-help-list dt {
@@ -457,8 +513,8 @@ label.mandatory-field::after {
 
 .tooltip {
     pointer-events: none;
-    --bs-tooltip-bg: #ffffff;
-    --bs-tooltip-color: #002864;
+    --bs-tooltip-bg: var(--elmo-tooltip-bg);
+    --bs-tooltip-color: var(--elmo-tooltip-color);
     --bs-tooltip-opacity: 1;
 }
 
@@ -467,12 +523,13 @@ label.mandatory-field::after {
 }
 
 .tooltip-inner {
-    background-color: #ffffff;
-    color: #002864;
+    background-color: var(--bs-tooltip-bg);
+    color: var(--bs-tooltip-color);
+    border: 1px solid var(--bs-border-color);
 }
 
 .text-feedback {
-    color: var(--bs-text-feedback-color, #000000);
+    color: var(--bs-body-color);
 }
 
 /* Style for small inline logos next to headings (e.g., ORCID, ROR) */
@@ -492,7 +549,7 @@ input.form-control[data-empty="true"]:valid,
 textarea.form-control[data-empty="true"]:valid,
 select.form-select[data-empty="true"]:valid {
   box-shadow: none !important;
-  border-color: #ced4da !important;
+  border-color: var(--elmo-control-border) !important;
   background-image: none !important;
 }
 
@@ -506,7 +563,7 @@ textarea.is-invalid:focus,
 /* Normal invalid state: red border only, no shadow or background image */
 textarea.is-invalid,
 .input-group.is-invalid textarea {
-  border-color: #dc3545 !important; /* Red border */
+  border-color: var(--bs-form-invalid-border-color) !important;
   box-shadow: none !important;      /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
 }
@@ -520,14 +577,14 @@ textarea.is-valid:focus,
 /* Normal valid state: green border only, no shadow or background image */
 textarea.is-valid,
 .input-group.is-valid textarea {
-  border-color: #198754 !important;  /* Green border */
+  border-color: var(--bs-form-valid-border-color) !important;
   box-shadow: none !important;       /* No shadow when not focused */
   background-image: none !important; /* Remove any default background icons/images */
 }
 
 .label-bold {
         font-weight: bold; /* Makes the text bold */
-        color: #00589C;    /* Example of a text color */
+        color: var(--elmo-heading-color);
     }
 
 

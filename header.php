@@ -160,9 +160,9 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 
   <!-- Subheader -->
   <section role="region" aria-label="Page subheader">
-    <div class="bg-white border-bottom shadow-sm">
+    <div class="elmo-subheader border-bottom shadow-sm">
       <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
-        <div class="fs-5 fw-semibold text-dark"><?php echo htmlspecialchars($instanceTitle); ?></div>
+        <div class="fs-5 fw-semibold"><?php echo htmlspecialchars($instanceTitle); ?></div>
         <?php if ($showMslLogo) echo $mslLogoHtml; ?>
       </div>
     </div>
