@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
-import { completeMinimalDatasetForm, navigateToHome } from '../utils';
+import { completeMinimalDatasetForm, navigateToHome, waitForHomepageReady } from '../utils';
 
 test.describe('Validation Failed Modal (#968)', () => {
 
   test.beforeEach(async ({ page }) => {
-    await page.goto('', { waitUntil: 'domcontentloaded' });
-    // Wait for JS modules to be fully loaded and initialized
+    await navigateToHome(page);
+    await waitForHomepageReady(page);
+    // The modal template exists before its translated links are ready.
     await page.waitForFunction(() =>
-      document.getElementById('modal-validation-failed') !== null
+      Boolean(window.elmo?.translations?.modals?.validationFailed?.saveHint)
     );
   });
 
@@ -77,9 +78,22 @@ test.describe('Validation Failed Modal (#968)', () => {
     await expect(guideLink).toBeVisible();
   });
 
-  test('validation-failed modal does NOT appear when all mandatory fields are filled', async ({ page }) => {
+  test('validation-failed modal does NOT appear when all mandatory fields are filled', async ({ page }, testInfo) => {
+    testInfo.setTimeout(90_000);
     // Use the shared helper that fills ALL mandatory fields reliably
     await completeMinimalDatasetForm(page);
+    if (await page.locator('#input-model-type').isVisible()) {
+      // GEM also requires the model definition and physical parameters.
+      await page.locator('#input-model-type').selectOption({ label: 'Static' });
+      await page.locator('#input-mathematical-representation').selectOption({ label: 'Spherical harmonics' });
+      await page.locator('#input-file-format').selectOption({ label: 'icgem1.0' });
+      await page.locator('#input-model-name').fill('TestModel');
+      await page.locator('#input-tide-system').selectOption({ label: 'Zero-tide' });
+      await page.locator('#input-degree').fill('2');
+      await page.locator('#input-errors').selectOption({ label: 'no' });
+      await page.locator('#input-radius').fill('6.371E+06');
+      await page.locator('#input-earth-gravity-constant').fill('3.986E+14');
+    }
 
     // Click Submit
     const submitButton = page.locator('#button-form-submit');
@@ -87,10 +101,9 @@ test.describe('Validation Failed Modal (#968)', () => {
 
     // The validation-failed modal should NOT appear
     const modal = page.locator('#modal-validation-failed');
-    await expect(modal).not.toBeVisible({ timeout: 2000 });
-
-    // Instead the submit modal should appear
+    // Wait for the async draft flush and DOI checks before checking the result.
     const submitModal = page.locator('#modal-submit');
-    await expect(submitModal).toBeVisible();
+    await expect(submitModal).toBeVisible({ timeout: 20_000 });
+    await expect(modal).not.toBeVisible();
   });
 });

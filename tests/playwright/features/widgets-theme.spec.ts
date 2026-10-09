@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { navigateToHome } from '../utils';
+import { navigateToHome, waitForHomepageReady } from '../utils';
 
 async function readable(page: Page, selector: string) {
   await page.locator(selector).evaluateAll(nodes => Promise.all(
@@ -38,6 +38,7 @@ test.describe('Widget theme', () => {
           json: [{ id: '04z8jg394', name: 'Example Foundation' }]
         }));
         await navigateToHome(page);
+        await waitForHomepageReady(page);
       });
 
       test('keeps tags and their dropdown readable when the theme changes', async ({ page }) => {
@@ -78,6 +79,9 @@ test.describe('Widget theme', () => {
         await readable(page, '.ui-autocomplete');
         await dropdown.locator('.ui-menu-item-wrapper').first().hover();
         await readable(page, '.ui-autocomplete');
+        await input.press('Escape');
+        await input.fill('Example');
+        await expect(dropdown).toBeVisible();
         await input.press('ArrowDown');
         await expect(dropdown.locator('.ui-state-active')).toBeVisible();
         await readable(page, '.ui-autocomplete');
@@ -88,7 +92,7 @@ test.describe('Widget theme', () => {
       test('keeps the thesaurus selection, search and focus readable', async ({ page }, testInfo) => {
         test.skip(testInfo.project.name === 'igsn', 'IGSN has no thesaurus fields.');
         const button = page.locator('#button-science_keywords-open');
-        await expect(button).toBeVisible();
+        await expect(button).toBeVisible({ timeout: 15_000 });
         await button.click();
         const modal = page.locator('#modal-sciencekeyword');
         await expect(modal).toBeVisible();
@@ -133,11 +137,15 @@ test.describe('Widget theme', () => {
           await page.locator(selector + ' [data-bs-dismiss="modal"]').first().click();
           await expect(page.locator(selector)).toBeHidden();
         }
-        await page.locator('#button-form-save-jsonld').hover();
-        await expect(page.locator('.tooltip.show')).toBeVisible();
-        await readable(page, '.tooltip.show');
+        const action = page.locator('#button-form-save-jsonld');
+        await action.hover();
+        await expect(action).toHaveAttribute('aria-describedby', /\S+/);
+        const tooltipId = await action.getAttribute('aria-describedby');
+        const tooltip = page.locator('[id="' + tooltipId + '"]');
+        await expect(tooltip).toBeVisible();
+        await readable(page, '[id="' + tooltipId + '"]');
         if (theme === 'dark') {
-          await expect(page.locator('.tooltip-inner')).toHaveCSS('background-color', 'rgb(44, 51, 58)');
+          await expect(tooltip.locator('.tooltip-inner')).toHaveCSS('background-color', 'rgb(44, 51, 58)');
         }
       });
     });
