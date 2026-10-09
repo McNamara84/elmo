@@ -114,6 +114,18 @@ test.describe('Feedback modal interactions', () => {
     await expect(sendButton).toBeEnabled();
     expect(feedbackPosted).toBe(false);
 
+    const fieldState = await feedbackModal.locator('#form-feedback').evaluate((form) => {
+      const fields = [...form.querySelectorAll('textarea[name^="feedbackQuestion"]')];
+      return {
+        required: fields.filter((field) => field.required).map((field) => field.id),
+        invalid: fields.filter((field) => field.classList.contains('is-invalid') || field.getAttribute('aria-invalid') === 'true').map((field) => field.id),
+        wasValidated: form.classList.contains('was-validated'),
+      };
+    });
+    expect(fieldState.required).toEqual([]);
+    expect(fieldState.invalid).toEqual([]);
+    expect(fieldState.wasValidated).toBe(false);
+
     await feedbackModal.locator('textarea[name="feedbackQuestion3"]').fill('   ');
     expect(await clickSendAndWatchForPost()).toBeNull();
     expect(feedbackPosted).toBe(false);
