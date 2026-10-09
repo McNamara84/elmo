@@ -64,7 +64,7 @@ const TEST_XML = `<?xml version="1.0" encoding="UTF-8"?>
   </subjects>
 </resource>`;
 
-const TEST_ROUTE_PATH = '/thesauri-roundtrip-test';
+const TEST_ROUTE_PATH = 'thesauri-roundtrip-test';
 
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
@@ -114,7 +114,7 @@ async function triggerTranslationsAndWaitForThesauri(page: import('@playwright/t
 
 test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route(`**${TEST_ROUTE_PATH}`, async route => {
+    await page.route(`**/${TEST_ROUTE_PATH}`, async route => {
       await route.fulfill({ status: 200, contentType: 'text/html', body: TEST_PAGE_HTML });
     });
     await page.route('**/api/v2/vocabs/thesauri/availability', async route => {
@@ -165,7 +165,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
       }
     });
 
-    await page.addScriptTag({ url: '/js/thesauri.js', type: 'module' });
+    await page.addScriptTag({ url: 'js/thesauri.js', type: 'module' });
 
     await triggerTranslationsAndWaitForThesauri(page);
   });

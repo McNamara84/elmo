@@ -12,7 +12,7 @@ test.describe('Header Responsive Design', () => {
   for (const viewport of viewports) {
     test(`should display all header elements on ${viewport.name} (${viewport.width}x${viewport.height})`, async ({ page }) => {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
-      await page.goto('/');
+      await page.goto('');
       await page.waitForSelector('header.navbar', { timeout: 5000 });
 
       const gfzLogo = page.locator('header a[href="https://www.gfz.de/"] img[alt="GFZ Logo"]');
@@ -41,7 +41,7 @@ test.describe('Header Responsive Design', () => {
 
   test('should center GFZ Data Services logo on small screens (< 768px)', async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 667 });
-    await page.goto('/');
+    await page.goto('');
     await page.waitForSelector('header.navbar', { timeout: 5000 });
 
     const logo = page.locator('header .logo-center-wrapper');
