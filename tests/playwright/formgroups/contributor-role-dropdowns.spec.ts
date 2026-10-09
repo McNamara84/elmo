@@ -49,7 +49,7 @@ test('contributor role dropdowns match the roles API exactly', async ({ page }) 
   const institutionApiResponse = await fetchRoleNames(page, 'institution');
   const sharedRoles = await fetchRoleNames(page, 'both');
 
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   const includeInstitutionContact = await page.evaluate(
     () => (window as any).ELMO_FEATURES?.showContactInstitution === true
