@@ -21,8 +21,8 @@ export const SELECTORS = {
   formGroups: {
     authors: '#group-author',
     authorInstitution: '#group-author',
-    contributorPersons: '#group-contributorperson',
-    contributorInstitutions: '#group-contributororganisation',
+    contributorPersons: '[data-contributor-stack]',
+    contributorInstitutions: '[data-contributor-stack]',
     descriptions: '#group-description',
     freeKeywords: '#group-freekeyword',
     fundingReference: '#group-fundingreference',

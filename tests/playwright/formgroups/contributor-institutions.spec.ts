@@ -1,61 +1,12 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { REPO_ROOT } from '../utils/constants';
 import { expect, test } from '@playwright/test';
 import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS, simulateSubmitValidation  } from '../utils';
 
-const contributorInstitutionsMarkup = String.raw`
-<div class="card mb-2">
-  <div class="card-header">
-    <b data-translate="contributorInstitutions.title">Contributor Institution(s)</b>
-    <i class="bi bi-question-circle-fill" data-help-section-id="help-contributorinstitutions-fg"></i>
-  </div>
-  <div class="card-body">
-    <div id="group-contributorperson">
-      <div id="group-contributororganisation">
-        <div class="row" contributors-row>
-          <div class="col-12 col-sm-12 col-md-12 col-lg-4 p-1">
-            <div class="input-group has-validation">
-              <div class="form-floating">
-                <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-contributor-name" name="cbOrganisationName[]" />
-                <label for="input-contributor-name" data-translate="contributorInstitutions.organization">Organisation name</label>
-                <div class="invalid-feedback" data-translate="contributorInstitutions.organizationInvalid">Please enter a valid organization name.</div>
-              </div>
-              <div class="input-group-append">
-                <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                    data-help-section-id="help-contributorinstitutions-organisationname"></i></span>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
-            <label for="input-contributor-organisationrole" class="visually-hidden" data-translate="general.roleLabel">Role</label>
-            <div class="input-group has-validation">
-              <input name="cbOrganisationRoles[]" id="input-contributor-organisationrole"
-                class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
-                data-translate-placeholder="general.roleLabel" />
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-contributorinstitutions-organisationrole"></i></span>
-              <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-            </div>
-          </div>
-          <div class="col-10 col-sm-10 col-md-7 col-lg-5 p-1">
-            <label for="input-contributor-organisationaffiliation" class="visually-hidden">Affiliation</label>
-            <div class="input-group has-validation">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]" />
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
-              <input type="hidden" id="input-contributor-organisationrorid" name="hiddenOrganisationRorId[]" />
-            </div>
-          </div>
-          <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
-            <button type="button" class="btn btn-primary addContributor add-button" id="button-contributor-addorganisation" data-translate="general.add">
-              +
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>`;
+// Use the same templates as the application, with both feature flags enabled.
+const contributorInstitutionsMarkup = readFileSync(path.join(REPO_ROOT, 'formgroups/contributors.html'), 'utf8')
+  .replace(/<\?php[\s\S]*?\?>/g, '');
 
 const roleFixtures = {
   institution: [
@@ -109,7 +60,7 @@ function buildTestPageMarkup() {
     <script src="js/checkMandatoryFields.js"></script>
     <script src="js/validation/orcidValidation.js"></script>
     <script src="js/autocomplete.js"></script>
-    <script type="module" src="js/eventhandlers/formgroups/contributor-organisation.js"></script>
+    <script type="module" src="js/eventhandlers/formgroups/contributorStack.js"></script>
   </body>
 </html>`;
 }
@@ -145,9 +96,11 @@ test.describe('Contributor (Institutions) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => Boolean((window as any).contributorStack));
+    await page.locator('[data-contributor-add-type="institution"]').click();
     await page.waitForFunction(() => {
-      const roleInput: any = document.querySelector('#input-contributor-organisationrole');
-      const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
+      const roleInput: any = document.querySelector('input[id^="input-contributor-organisationrole-"]');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       const roleReady = !!(roleInput && (roleInput._tagify || roleInput.tagify));
       const affiliationReady = !!(affiliationInput && (affiliationInput.tagify || affiliationInput._tagify));
       return roleReady && affiliationReady;
@@ -166,8 +119,8 @@ test.describe('Contributor (Institutions) form group', () => {
     const formGroup = page.locator(SELECTORS.formGroups.contributorInstitutions);
     await expect(formGroup).toBeVisible();
 
-    const heading = page.locator('b[data-translate="contributorInstitutions.title"]');
-    await expect(heading).toHaveText('Contributor Institution(s)');
+    const heading = page.locator('b[data-translate="contributors.title"]');
+    await expect(heading).toHaveText('Contributors');
 
     await expect(page.getByLabel('Organisation name')).toBeVisible();
     const nameHelpIcon = formGroup.locator('[data-help-section-id="help-contributorinstitutions-organisationname"]');
@@ -184,24 +137,24 @@ test.describe('Contributor (Institutions) form group', () => {
     await expect(affiliationTagify).toBeVisible();
     await expect(affiliationTagify.locator('.tagify__input')).toHaveAttribute('data-placeholder', 'Affiliation');
 
-    const affiliationLabel = formGroup.locator('label[for="input-contributor-organisationaffiliation"]');
+    const affiliationLabel = formGroup.locator('label[for^="input-contributor-organisationaffiliation-"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
 
     const affiliationHelpIcon = formGroup.locator('[data-help-section-id="help-contributorinstitutions-affiliation"]');
     await expect(affiliationHelpIcon).toHaveCount(1);
 
-    await expect(page.locator('#input-contributor-organisationrorid')).toHaveAttribute('type', 'hidden');
-    await expect(page.locator('#button-contributor-addorganisation')).toHaveAttribute('data-translate', 'general.add');
+    await expect(page.locator('input[id^="input-contributor-organisationrorid-"]')).toHaveAttribute('type', 'hidden');
+    await expect(page.locator('[data-contributor-add-type="institution"]')).toBeVisible();
   });
 
   test('supports selecting multiple institution roles through Tagify', async ({ page }) => {
     await page.waitForFunction(() => {
-      const input: any = document.querySelector('#input-contributor-organisationrole');
+      const input: any = document.querySelector('input[id^="input-contributor-organisationrole-"]');
       return !!(input && input._tagify && input._tagify.whitelist?.length >= 3);
     });
 
     await page.evaluate(() => {
-      const input: any = document.querySelector('#input-contributor-organisationrole');
+      const input: any = document.querySelector('input[id^="input-contributor-organisationrole-"]');
       input._tagify.removeAllTags();
       input._tagify.addTags(['Hosting Institution', 'Software Provider']);
     });
@@ -214,14 +167,14 @@ test.describe('Contributor (Institutions) form group', () => {
     await expect(renderedTags.nth(0)).toContainText('Hosting Institution');
     await expect(renderedTags.nth(1)).toContainText('Software Provider');
 
-    const roleInputValue = await page.locator('#input-contributor-organisationrole').inputValue();
+    const roleInputValue = await page.locator('input[id^="input-contributor-organisationrole-"]').inputValue();
     expect(roleInputValue).toContain('Hosting Institution');
     expect(roleInputValue).toContain('Software Provider');
   });
 
   test('updates hidden ROR identifier when affiliations change', async ({ page }) => {
     await page.evaluate(() => {
-      const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       affiliationInput._tagify.removeAllTags();
       affiliationInput._tagify.addTags([
         { value: 'Fraunhofer Institute for Open Communication Systems FOKUS', id: 'https://ror.org/019wvm592' },
@@ -229,51 +182,53 @@ test.describe('Contributor (Institutions) form group', () => {
       ]);
     });
 
-    await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('019wvm592,05p8bnz29');
+    await expect(page.locator('input[id^="input-contributor-organisationrorid-"]')).toHaveValue('019wvm592,05p8bnz29');
 
     await page.evaluate(() => {
-      const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       affiliationInput._tagify.removeAllTags();
     });
 
-    await expect(page.locator('#input-contributor-organisationrorid')).toHaveValue('');
+    await expect(page.locator('input[id^="input-contributor-organisationrorid-"]')).toHaveValue('');
   });
 
   test('toggles required attributes when contributor institution data is provided', async ({ page }) => {
-    const nameInput = page.locator('#input-contributor-name');
-    const roleInput = page.locator('#input-contributor-organisationrole');
+    const nameInput = page.locator('input[id^="input-contributor-name-"]');
+    const roleInput = page.locator('input[id^="input-contributor-organisationrole-"]');
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
     await expect(roleInput).not.toHaveAttribute('required', 'required');
 
     await page.evaluate(() => {
-      const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       affiliationInput._tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
       (window as any).validateAllMandatoryFields();
     });
 
-    await simulateSubmitValidation(page); 
+    await expect(nameInput).toHaveClass(/js-required-on-submit/);
+    await simulateSubmitValidation(page);
 
     await expect(nameInput).toHaveAttribute('required', 'required');
     await expect(roleInput).toHaveAttribute('required', 'required');
 
     await page.evaluate(() => {
-      const affiliationInput: any = document.querySelector('#input-contributor-organisationaffiliation');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       affiliationInput._tagify.removeAllTags();
       (window as any).validateAllMandatoryFields();
     });
 
-    await simulateSubmitValidation(page); 
+    await expect(nameInput).not.toHaveClass(/js-required-on-submit/);
+    await simulateSubmitValidation(page);
 
     await expect(nameInput).not.toHaveAttribute('required', 'required');
     await expect(roleInput).not.toHaveAttribute('required', 'required');
   });
 
   test('adds and removes organisation rows with unique, accessible controls', async ({ page }) => {
-    const addButton = page.locator('#button-contributor-addorganisation');
+    const addButton = page.locator('[data-contributor-add-type="institution"]');
     await addButton.click();
 
-    const rows = page.locator(`${SELECTORS.formGroups.contributorInstitutions} .row[contributors-row]`);
+    const rows = page.locator('[data-contributor-card][data-contributor-type="institution"]');
     await expect(rows).toHaveCount(2);
 
     const firstRow = rows.nth(0);
@@ -320,15 +275,13 @@ test.describe('Contributor (Institutions) form group', () => {
     const helpAffiliationCount = await secondRow.locator('[data-help-section-id^="help-contributorinstitutions-affiliation"]').count();
     expect(helpAffiliationCount).toBeGreaterThan(0);
 
-    const placeholderCount = await secondRow.locator('.help-placeholder').count();
-    expect(placeholderCount).toBeGreaterThan(0);
 
     const hiddenRorId = await secondRow.locator('input[name="hiddenOrganisationRorId[]"]').getAttribute('id');
     expect(hiddenRorId).not.toBeNull();
 
-    await expect(secondRow.locator('.removeButton')).toBeVisible();
+    await expect(page.locator('[data-contributor-card]').nth(1).locator('[data-contributor-remove]')).toBeVisible();
 
-    await secondRow.locator('.removeButton').click();
+    await page.locator('[data-contributor-card]').nth(1).locator('[data-contributor-remove]').click();
     await expect(rows).toHaveCount(1);
     await expect(addButton).toBeVisible();
 

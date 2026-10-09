@@ -17,7 +17,7 @@ describe('validateAuthorInstitutionRequirements', () => {
 
   beforeEach(() => {
     document.body.innerHTML = `
-      <div id="group-authorinstitution">
+      <div data-author-stack>
         <div class="row" data-authorinstitution-row>
           <input type="text" id="input-authorinstitution-name" name="authorinstitutionName[]" />
           <input type="text" id="input-authorinstitution-affiliation" name="institutionAffiliation[]" />

@@ -79,11 +79,13 @@ function buildFormGroupsHtml() {
       </div>
     </div>
     <div id="group-contributorperson">
+      <div data-contributor-card data-contributor-type="person">
       <div contributor-person-row>
         <input name="cbORCID[]" />
         <input name="cbPersonLastname[]" />
         <input name="cbPersonFirstname[]" />
-        <input id="input-contributorpersons-affiliation" />
+        </div>
+      <input id="input-contributorpersons-affiliation" />
         <input id="input-contributor-personrorid" />
       </div>
     </div>
@@ -494,7 +496,7 @@ describe('orcidSearch.js', () => {
     });
 
     test('stores contributor context when button in contributor row is clicked', () => {
-      const contribRow = document.querySelector('[contributor-person-row]');
+      const contribRow = document.querySelector('[data-contributor-card]');
       const btn = document.createElement('button');
       btn.className = 'orcid-search-btn';
       contribRow.appendChild(btn);
