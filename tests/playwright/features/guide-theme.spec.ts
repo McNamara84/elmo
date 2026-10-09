@@ -19,6 +19,19 @@ test.describe('Guide theme', () => {
       await expect(guide.locator('html')).toHaveAttribute('data-bs-theme', theme);
       const report = await new AxeBuilder({ page: guide }).withRules(['color-contrast']).analyze();
       expect(report.violations.map(rule => rule.nodes.map(node => node.failureSummary))).toEqual([]);
+      await guide.locator('.navbar-toggler').click();
+      const menu = guide.locator('#offcanvasNavbar');
+      await expect(menu).toBeVisible();
+      const menuReport = await new AxeBuilder({ page: guide }).include('#offcanvasNavbar')
+        .withRules(['color-contrast']).analyze();
+      expect(menuReport.violations).toEqual([]);
+      await menu.locator('.nav-link').nth(1).hover();
+      await menu.locator('.nav-link').nth(1).focus();
+      const focusedMenuReport = await new AxeBuilder({ page: guide }).include('#offcanvasNavbar')
+        .withRules(['color-contrast']).analyze();
+      expect(focusedMenuReport.violations).toEqual([]);
+      await menu.locator('.btn-close').click();
+      await expect(menu).toBeHidden();
       await guide.locator('#help-search').fill('metadata');
       await guide.locator('#help-search-btn').click();
       await expect(guide.locator('mark:visible').first()).toBeVisible();

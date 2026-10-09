@@ -151,3 +151,14 @@ mark {
     outline: 2px solid var(--elmo-focus-color);
     outline-offset: 2px;
 }
+
+.elmo-guide .offcanvas {
+    --bs-offcanvas-bg: var(--elmo-surface);
+    --bs-offcanvas-color: var(--bs-body-color);
+}
+
+.elmo-guide .offcanvas .navbar-nav {
+    --bs-nav-link-color: var(--bs-body-color);
+    --bs-nav-link-hover-color: var(--elmo-heading-color);
+    --bs-navbar-active-color: var(--elmo-heading-color);
+}
