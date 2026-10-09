@@ -189,6 +189,30 @@ describe('combined contributor stack', () => {
       .toEqual(['cbContactEmail[]', 'cbContactWebsite[]']);
   });
 
+  test.each(['person', 'institution'])('validates optional %s contact websites without requiring a scheme', type => {
+    window.ELMO_FEATURES.showContactInstitution = true;
+    controller.setContributors([{
+      type, familyname: 'Contact', institutionname: 'Institute', roles: ['Contact Person'], email: 'contact@example.org'
+    }]);
+    const website = cards()[0].querySelector('[name="cbContactWebsite[]"]');
+    const cases = [
+      ['', true],
+      ['www.whynot.com', true],
+      ['example.org/profile', true],
+      ['http://example.org/profile', true],
+      ['https://example.org/profile?lang=en#contact', true],
+      ['absolute-nonsense://https://git-scm.com/docs/git-submodule', false],
+      ['javascript:alert(1)', false],
+      ['not a website', false]
+    ];
+
+    for (const [value, valid] of cases) {
+      change(website, value);
+      expect({ value, valid: website.checkValidity() }).toEqual({ value, valid });
+      expect(payload()[0].website).toBe(value);
+    }
+  });
+
   test('shows contact help on the first visible contact across both contributor types', () => {
     window.ELMO_FEATURES.showContactInstitution = true;
     controller.setContributors([
