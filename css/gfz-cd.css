@@ -15,6 +15,23 @@
     border-color: #00589C !important;
 }
 
+/* Bootstrap outline-primary (#0d6efd) is 4.24:1 on the gray card header.
+   GFZ blue matches .btn-primary and clears the 4.5:1 text contrast minimum. */
+#button-ggms-gfc-upload {
+    --bs-btn-color: #00589C;
+    --bs-btn-border-color: #00589C;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #00589C;
+    --bs-btn-hover-border-color: #00589C;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #004a82;
+    --bs-btn-active-border-color: #004a82;
+    --bs-btn-disabled-color: #00589C;
+    --bs-btn-disabled-border-color: #00589C;
+    color: #00589C;
+    border-color: #00589C;
+}
+
 /* Farbanpassung der aktiven Dropdown Items */
 .dropdown-item.active,
 .dropdown-item:active {
