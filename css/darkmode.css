@@ -86,3 +86,15 @@
 [data-bs-theme="dark"] .invalid {
     background-color: var(--bs-danger-bg-subtle);
 }
+
+[data-bs-theme="dark"] .text-danger {
+    color: var(--bs-danger-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-success {
+    color: var(--bs-success-text-emphasis) !important;
+}
+
+[data-bs-theme="dark"] .text-primary {
+    color: var(--elmo-heading-color) !important;
+}

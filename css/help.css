@@ -1,5 +1,6 @@
 body {
     position: relative;
+    padding-bottom: 2rem;
 }
 
 ul.nav-pills {
@@ -36,17 +37,17 @@ ul.nav-pills {
 
 /* Einstellungen für die Sidebar */
 .nav-pills .nav-link {
-    color: #000000;
+    color: var(--bs-body-color);
     /* Textfarbe */
-    background-color: #ffffff;
+    background-color: var(--elmo-surface);
     /* Hintergrundfarbe */
 }
 
 .nav-pills .nav-link.active,
 .nav-pills .show>.nav-link {
-    color: #000000;
+    color: var(--elmo-heading-color);
     /* Aktive Textfarbe */
-    background-color: #f0f0f0;
+    background-color: var(--elmo-surface-raised);
     /* Aktive Hintergrundfarbe */
     font-weight: bold;
     /* Fett */
@@ -79,7 +80,7 @@ div[id^="help-"] {
 
 /* h3 Formatierung*/
 h3 {
-    color:#005b9d;   
+    color: var(--elmo-heading-color);
     /* Farbe */
     font-size:22pt;  
     /* Größe */
@@ -89,7 +90,7 @@ h3 {
 
 /* h4 Formatierung*/
 h4 {
-    color:#020202;   
+    color: var(--bs-body-color);
     /* Farbe */
     font-size:16pt;  
     /* Größe */
@@ -99,7 +100,7 @@ h4 {
 
 /* h5 Formatierung*/
 h5 {
-    color:#020202;
+    color: var(--bs-body-color);
     /* Farbe */
     font-size:11pt;
     /* Größe */
@@ -115,10 +116,16 @@ h5 {
     width: 250px;
 }
 
-.help-search-nav-btn {
-    color: #6c757d65;
-    border-color: #6c757d59;
-    background-color: #a2bee4;
+.elmo-guide .help-search-nav-btn {
+    --bs-btn-color: #ffffff;
+    --bs-btn-border-color: #cbd6ff;
+    --bs-btn-bg: #004878;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #003d68;
+    --bs-btn-hover-border-color: #ffffff;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #003d68;
+    --bs-btn-active-border-color: #ffffff;
 }
 
 @media (min-width: 768px) {
@@ -136,5 +143,11 @@ h5 {
 /* Highlight color for search results */
 mark {
     background-color: #ffc107;
+    color: #212529;
     padding: 0 2px;
+}
+
+.elmo-guide .nav-link:focus-visible {
+    outline: 2px solid var(--elmo-focus-color);
+    outline-offset: 2px;
 }

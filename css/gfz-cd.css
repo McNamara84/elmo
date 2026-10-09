@@ -285,11 +285,11 @@ label.mandatory-field::after {
 }
 
 .navbar-sidebar .nav-link {
-    color: #00589C;
+    color: var(--elmo-heading-color);
 }
 
 .navbar-sidebar .nav-link:hover {
-    color: black;
+    color: var(--bs-body-color);
 
     /* Optional: Same color or another color on hover */
 }
