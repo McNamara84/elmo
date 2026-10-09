@@ -74,6 +74,22 @@ if ($changelogVersion === null) {
 
 
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<!-- Version the changed imported modules as well as their entry scripts. -->
+<script type="importmap">
+<?php
+$themeModuleImports = [];
+foreach ([
+    'js/eventhandlers/formgroups/authorStack.js',
+    'js/eventhandlers/formgroups/contributorStack.js',
+    'js/eventhandlers/formgroups/relatedwork.js',
+    'js/submitHandler.js',
+] as $themeModulePath) {
+    $themeModuleImports['./' . $themeModulePath] = './' . $themeModulePath . '?v=' .
+        substr(hash_file('sha256', __DIR__ . '/' . $themeModulePath), 0, 12);
+}
+echo json_encode(['imports' => $themeModuleImports], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+?>
+</script>
 <!-- If some thesauri need to be hidden in regards of ERNIE settings, they can be added to the "hiddenThesauri" array here -->
 <script>
 window.ELMO_FEATURES = {

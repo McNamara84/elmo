@@ -89,7 +89,7 @@ $(document).ready(function () {
           <i class="bi ${iconClass}" aria-hidden="true"></i>
         </span>
         <strong class="me-1" data-author-summary-name></strong>
-        <span class="badge text-bg-light border text-uppercase" data-author-type-badge></span>
+        <span class="badge elmo-badge border text-uppercase" data-author-type-badge></span>
         <span class="badge text-bg-warning d-none" data-author-contact-badge></span>
         <span class="small text-body-secondary" data-author-summary-orcid></span>
         <span class="d-flex flex-wrap gap-1" data-author-summary-affiliations></span>
@@ -128,7 +128,7 @@ $(document).ready(function () {
 
     authorTypes.forEach(function (type) {
       group.append(
-        $('<button type="button" class="btn btn-outline-dark" data-author-type-option></button>')
+        $('<button type="button" class="btn btn-outline-secondary" data-author-type-option></button>')
           .attr('data-author-type-option', type)
       );
     });
@@ -151,11 +151,11 @@ $(document).ready(function () {
     const titleGroup = $('<div class="d-flex align-items-center gap-1"></div>');
     const title = $('<strong data-author-affiliation-title></strong>');
     const helpButton = createAffiliationHelpButton();
-    const count = $('<span class="badge text-bg-light border" data-author-affiliation-count>0</span>');
+    const count = $('<span class="badge elmo-badge border" data-author-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-author-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
     const input = $('<input type="text" class="form-control" data-author-affiliation-input>');
-    const searchButton = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-search></button>')
+    const searchButton = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-search></button>')
       .append('<i class="bi bi-search" aria-hidden="true"></i>');
     const addButton = $('<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" data-author-affiliation-add></button>')
       .append('<i class="bi bi-plus-lg" aria-hidden="true"></i>')
@@ -750,7 +750,7 @@ $(document).ready(function () {
       contactToggle
         .addClass('btn d-inline-flex align-items-center gap-1 h-100 mb-0')
         .removeClass('btn-outline-primary btn-primary btn-outline-warning btn-warning text-dark lh-sm round-corners-left con-reduce')
-        .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning text-dark')
+        .addClass(checkbox.prop('checked') ? 'btn-warning text-dark' : 'btn-outline-warning')
         .attr('data-author-contact-toggle', '')
         .removeAttr('aria-pressed')
         .css('min-height', 'calc(3.5rem + 2px)')
@@ -846,11 +846,11 @@ $(document).ready(function () {
       .attr('data-author-affiliation-ror-id', rorId)
       .attr('data-author-affiliation-original-label', label);
     const group = $('<div class="input-group input-group-sm"></div>');
-    const moveUp = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-move-up></button>')
+    const moveUp = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-move-up></button>')
       .attr('aria-label', translate('authors.affiliationMoveUp', 'Move affiliation up'))
       .prop('disabled', index === 0)
       .append('<i class="bi bi-chevron-up" aria-hidden="true"></i>');
-    const moveDown = $('<button type="button" class="btn btn-outline-dark" data-author-affiliation-move-down></button>')
+    const moveDown = $('<button type="button" class="btn btn-outline-secondary" data-author-affiliation-move-down></button>')
       .attr('aria-label', translate('authors.affiliationMoveDown', 'Move affiliation down'))
       .prop('disabled', index === count - 1)
       .append('<i class="bi bi-chevron-down" aria-hidden="true"></i>');
@@ -1017,7 +1017,7 @@ $(document).ready(function () {
         .attr('data-author-affiliation-ror-value', affiliation.rorId);
       button.append($('<span></span>').text(affiliation.label));
       if (affiliation.rorId) {
-        button.append($('<span class="badge text-bg-light border text-body-secondary"></span>').text(affiliation.rorId));
+        button.append($('<span class="badge elmo-badge border text-body-secondary"></span>').text(affiliation.rorId));
       }
       resultContainer.append(button);
     });
@@ -1271,7 +1271,7 @@ $(document).ready(function () {
   }
 
   function createAffiliationBadge(affiliation) {
-    const badge = $('<span class="badge text-bg-light border text-body-secondary"></span>');
+    const badge = $('<span class="badge elmo-badge border text-body-secondary"></span>');
     const label = affiliation.label || '';
     const rorId = normalizeRorId(affiliation.rorId || '');
     badge.text(rorId ? `${label} ${rorId}` : label);

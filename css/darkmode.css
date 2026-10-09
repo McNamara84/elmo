@@ -78,6 +78,11 @@
     --bs-btn-active-border-color: #8ab9ff;
 }
 
+[data-bs-theme="dark"] .btn-outline-warning {
+    --bs-btn-color: #ffda6a;
+    --bs-btn-border-color: #ffda6a;
+}
+
 [data-bs-theme="dark"] .invalid {
     background-color: var(--bs-danger-bg-subtle);
 }

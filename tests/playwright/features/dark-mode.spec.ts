@@ -72,6 +72,29 @@ test.describe('Theme appearance', () => {
           )).toBe(true);
         });
       }
+
+      test('keeps new author and contributor cards readable in both contact states', async ({ page }) => {
+        await page.locator('#button-author-add').click();
+        const author = page.locator('[data-author-entry-row]:visible').first();
+        await author.locator('input[name="familynames[]"]').fill('Example');
+        await author.locator('input[name="givennames[]"]').fill('Alex');
+        await author.locator('[data-author-affiliation-input]').fill('Example Research Institute');
+        await author.locator('[data-author-affiliation-add]').click();
+        await page.locator('#button-contributor-addperson').click();
+        await author.scrollIntoViewIfNeeded();
+        await expectReadable(page, '#formgroup-authors');
+        await expectReadable(page, '#formgroup-contributors');
+        const contact = author.locator('[data-author-contact-toggle]');
+        await contact.hover();
+        await expectReadable(page, '#formgroup-authors');
+        await contact.click();
+        await expect(author.locator('input[name="contacts[]"]')).toBeChecked();
+        await expectReadable(page, '#formgroup-authors');
+        await page.mouse.move(0, 0);
+        await contact.click();
+        await expect(author.locator('input[name="contacts[]"]')).not.toBeChecked();
+        await expectReadable(page, '#formgroup-authors');
+      });
     });
   }
 });

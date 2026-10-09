@@ -174,8 +174,8 @@ $(document).ready(function () {
           <i class="bi bi-link-45deg" aria-hidden="true"></i>
         </span>
         <strong class="me-1" data-related-work-summary-identifier></strong>
-        <span class="badge text-bg-light border" data-related-work-summary-relation></span>
-        <span class="badge text-bg-light border" data-related-work-summary-identifier-type></span>
+        <span class="badge elmo-badge border" data-related-work-summary-relation></span>
+        <span class="badge elmo-badge border" data-related-work-summary-identifier-type></span>
       </div>`
     );
   }
