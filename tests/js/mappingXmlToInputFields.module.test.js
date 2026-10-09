@@ -50,17 +50,6 @@ describe('mappingXmlToInputFields module coverage', () => {
                         <input name="orcids[]" id="input-author-orcid">
                     </div>
                 </div>
-                <div id="group-contributorperson">
-                    <div class="row" contributor-person-row>
-                        <input name="cpLastname[]">
-                        <input name="cpFirstname[]">
-                    </div>
-                </div>
-                <div id="group-contributororganisation">
-                    <div class="row" contributors-row>
-                        <input name="OrganisationName[]">
-                    </div>
-                </div>
                 <div id="group-stc">
                     <div class="row" tsc-row tsc-row-id="0">
                         <textarea name="tscDescription[]"></textarea>
@@ -71,8 +60,6 @@ describe('mappingXmlToInputFields module coverage', () => {
                     </div>
                 </div>
                 <button id="button-resourceinformation-addtitle" type="button"></button>
-                <button id="button-contributor-addorganisation" type="button"></button>
-                <button id="button-contributor-addperson" type="button"></button>
             </form>
         `;
 
@@ -139,9 +126,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(typeof mappingModule.normalizeRole).toBe('function');
         });
 
-        test('exports updateContributorMap function', () => {
-            expect(typeof mappingModule.updateContributorMap).toBe('function');
-        });
+
 
         test('exports parseTemporalData function', () => {
             expect(typeof mappingModule.parseTemporalData).toBe('function');
@@ -155,9 +140,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(typeof mappingModule.fillSpatialFields).toBe('function');
         });
 
-        test('exports getTagifyInstance function', () => {
-            expect(typeof mappingModule.getTagifyInstance).toBe('function');
-        });
+
     });
 
     describe('extractLicenseIdentifier', () => {
@@ -243,181 +226,23 @@ describe('mappingXmlToInputFields module coverage', () => {
         });
     });
 
-    describe('updateContributorMap', () => {
-        test('creates new entry if key does not exist', () => {
-            const map = new Map();
-            const newData = { 
-                name: 'Test', 
-                roles: ['DataCurator'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror123' }]
-            };
-            
-            mappingModule.updateContributorMap(map, 'key1', newData);
-            
-            expect(map.has('key1')).toBe(true);
-            expect(map.get('key1').name).toBe('Test');
-        });
-
-        test('merges roles when key exists', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: []
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role2'],
-                affiliationPairs: []
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.roles).toContain('Role1');
-            expect(entry.roles).toContain('Role2');
-        });
-
-
-    describe('processCreators', () => {
-        test('preserves imported ROR ids on Tagify tags', () => {
-            document.body.innerHTML = `
-                <div data-creator-row>
-                    <input name="familynames[]">
-                    <input name="givennames[]">
-                    <input name="orcids[]">
-                    <input name="personAffiliation[]">
-                    <input name="authorPersonRorIds[]">
-                    <input name="contacts[]" type="checkbox">
-                    <div class="contact-person-input"></div>
-                    <input name="cpEmail[]">
-                    <input name="cpOnlineResource[]">
-                </div>
-                <button id="button-author-add" type="button"></button>
-            `;
-
-            const tagifyInput = document.querySelector('input[name="personAffiliation[]"]');
-            tagifyInput._tagify = {
-                removeAllTags: jest.fn(),
-                addTags: jest.fn()
-            };
-
+    describe('creator affiliations', () => {
+        test('preserves imported affiliation labels and ROR pairs in the author payload', () => {
+            const setAuthors = jest.fn();
+            window.authorStack = { setAuthors };
             const xmlDoc = new DOMParser().parseFromString(`
-                <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
-                    <ns:creators>
-                        <ns:creator>
-                            <ns:creatorName nameType="Personal">Carberry, Josiah</ns:creatorName>
-                            <ns:givenName>Josiah</ns:givenName>
-                            <ns:familyName>Carberry</ns:familyName>
-                            <ns:affiliation affiliationIdentifier="https://ror.org/01bj3aw27">Technical University of Berlin</ns:affiliation>
-                            <ns:affiliation>Free Text Institute</ns:affiliation>
-                        </ns:creator>
-                    </ns:creators>
-                </ns:resource>
-            `, 'text/xml');
-
-            const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
-
-            mappingModule.processCreators(xmlDoc, resolver);
-
-            expect(tagifyInput._tagify.removeAllTags).toHaveBeenCalled();
-            expect(tagifyInput._tagify.addTags).toHaveBeenCalledWith([
-                { value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' },
-                { value: 'Free Text Institute' }
+              <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4"><ns:creators><ns:creator>
+                <ns:creatorName nameType="Personal">Carberry, Josiah</ns:creatorName>
+                <ns:givenName>Josiah</ns:givenName><ns:familyName>Carberry</ns:familyName>
+                <ns:affiliation affiliationIdentifier="https://ror.org/01bj3aw27">Technical University of Berlin</ns:affiliation>
+                <ns:affiliation>Free Text Institute</ns:affiliation>
+              </ns:creator></ns:creators></ns:resource>`, 'text/xml');
+            mappingModule.processCreators(xmlDoc, prefix => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null);
+            expect(setAuthors.mock.calls[0][0][0].affiliations).toEqual([
+              { label: 'Technical University of Berlin', rorId: '01bj3aw27' },
+              { label: 'Free Text Institute', rorId: '' }
             ]);
-            expect(document.querySelector('input[name="authorPersonRorIds[]"]').value).toBe('https://ror.org/01bj3aw27,');
-        });
-    });
-        test('does not duplicate existing roles', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: []
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: []
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.roles.filter(r => r === 'Role1').length).toBe(1);
-        });
-
-        test('merges affiliationPairs', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: '' }]
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org2', rorId: 'ror456' }]
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.affiliationPairs).toEqual([
-                { name: 'Org1', rorId: '' },
-                { name: 'Org2', rorId: 'ror456' }
-            ]);
-        });
-
-        test('does not duplicate existing affiliationPairs', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror1' }]
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror1' }]
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.affiliationPairs.length).toBe(1);
-        });
-
-        test('upgrades empty rorId when incoming pair has a value', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: '' }]
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror123' }]
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror123' }]);
-        });
-
-        test('does not overwrite existing rorId with incoming value', () => {
-            const map = new Map();
-            map.set('key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror_original' }]
-            });
-            
-            mappingModule.updateContributorMap(map, 'key1', { 
-                name: 'Test', 
-                roles: ['Role1'],
-                affiliationPairs: [{ name: 'Org1', rorId: 'ror_different' }]
-            });
-            
-            const entry = map.get('key1');
-            expect(entry.affiliationPairs).toEqual([{ name: 'Org1', rorId: 'ror_original' }]);
+            delete window.authorStack;
         });
     });
 
@@ -781,33 +606,6 @@ describe('mappingXmlToInputFields module coverage', () => {
         });
     });
 
-    describe('getTagifyInstance', () => {
-        test('returns null for null input', () => {
-            expect(mappingModule.getTagifyInstance(null)).toBeNull();
-        });
-
-        test('returns tagify from _tagify property (direct)', () => {
-            const mockTagify = { addTags: jest.fn() };
-            const element = { _tagify: mockTagify };
-            
-            expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
-        });
-
-        test('returns tagify from _tagify property', () => {
-            const mockTagify = { addTags: jest.fn() };
-            const element = { _tagify: mockTagify };
-            
-            expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
-        });
-
-        test('returns tagify from jQuery-like element with _tagify', () => {
-            const mockTagify = { addTags: jest.fn() };
-            const element = { 0: { _tagify: mockTagify } };
-            
-            expect(mappingModule.getTagifyInstance(element)).toBe(mockTagify);
-        });
-    });
-
     describe('processKeywords', () => {
         const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
 
@@ -1054,5 +852,32 @@ describe('mappingXmlToInputFields module coverage', () => {
 
             expect(scienceTagify.addTags).not.toHaveBeenCalled();
         });
+    });
+});
+
+describe('contributor import merging', () => {
+    afterEach(() => {
+        delete window.authorStack;
+        delete window.contributorStack;
+    });
+
+    test.each(['Personal', 'Organizational'])('merges roles and affiliations for %s contributors', nameType => {
+        const setContributors = jest.fn();
+        window.authorStack = { collectPayload: () => [] };
+        window.contributorStack = { setContributors };
+        const name = nameType === 'Personal'
+            ? '<contributorName nameType="Personal">Doe, Jane</contributorName><familyName>Doe</familyName><givenName>Jane</givenName>'
+            : '<contributorName nameType="Organizational">Institute</contributorName>';
+        const contributor = (role, affiliations) => `<contributor contributorType="${role}">${name}${affiliations}</contributor>`;
+        const xml = new DOMParser().parseFromString(`<resource xmlns="http://datacite.org/schema/kernel-4"><contributors>${
+            contributor('Researcher', '<affiliation>University</affiliation>') +
+            contributor('DataCollector', '<affiliation affiliationIdentifier="https://ror.org/123">University</affiliation><affiliation>Lab</affiliation>') +
+            contributor('Researcher', '<affiliation affiliationIdentifier="https://ror.org/456">University</affiliation>')
+        }</contributors></resource>`, 'application/xml');
+        require('../../js/mappingXmlToInputFields.js').processContributors(xml, () => 'http://datacite.org/schema/kernel-4');
+        expect(setContributors).toHaveBeenCalledWith([expect.objectContaining({
+            roles: ['Researcher', 'Data Collector'],
+            affiliations: [{ label: 'University', rorId: '123' }, { label: 'Lab', rorId: '' }]
+        })]);
     });
 });

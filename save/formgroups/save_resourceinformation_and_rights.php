@@ -1,5 +1,6 @@
 <?php
 require_once dirname(__FILE__) . '/../validation.php';
+require_once dirname(__FILE__) . '/../../includes/resource_information_payload.php';
 
 /**
  * Creates a new resource information and rights entry in the database.
@@ -16,7 +17,7 @@ require_once dirname(__FILE__) . '/../validation.php';
  *                          - dateCreated (string|null): Creation date
  *                          - dateEmbargo (string|null): Embargo date
  *                          - resourcetype (int): Resource type ID
- *                          - version (float|null): Version number
+ *                          - version (string|null): Version number
  *                          - language (int): Language ID
  *                          - Rights (int): Rights ID
  *                          - title (array): Array of titles
@@ -29,19 +30,22 @@ function saveResourceInformationAndRights($connection, $postData)
 {
     global $showLicense, $showGGMsProperties;
     
-    try {        
+    try {
+        $postData = normalizeResourceInformationPostData($postData);
         // Only require Rights field if license form group is shown
         global $showLicense;
         $action = $postData['action'] ?? 'save_and_download';
         if ($action === 'submit') {
-            $requiredFields = ['year', 'resourcetype'];
+            $requiredFields = ['year', 'resourcetype', 'language'];
             $requiredArrayFields = ['title', 'titleType'];
 
             if ($showLicense) {
                 $requiredFields[] = 'Rights';
             }
 
-            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields)) {
+            if (!validateRequiredFields($postData, $requiredFields, $requiredArrayFields, [
+                'version' => '/^\d+\.\d+$/D',
+            ])) {
                 return false;
             }
         }
@@ -58,7 +62,7 @@ function saveResourceInformationAndRights($connection, $postData)
         // Create new resource 
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
-        if (!saveTitles($connection, $resource_id, $postData['title'], $postData['titleType'], $action)) {
+        if (!saveTitles($connection, $resource_id, $postData['title'] ?? [], $postData['titleType'] ?? [], $action)) {
             error_log("[SAVE] Failed to save titles for resource_id: $resource_id");
             return false;
         }
@@ -141,8 +145,8 @@ function prepareResourceData($postData)
             ? trim($postData['dateEmbargo']) : null,
         'resourceType' => isset($postData['resourcetype']) && trim($postData['resourcetype']) !== ''
             ? trim($postData['resourcetype']): null,
-        'version' => isset($postData['version']) && trim($postData['version']) !== ''
-            ? (float) $postData['version'] : null,
+        'version' => isset($postData['version']) && trim((string) $postData['version']) !== ''
+            ? normalizeResourceVersion((string) $postData['version']) : null,
         'language' => isset($postData['language']) && trim($postData['language']) !== ''
             ? trim($postData['language']): null,
         'rights' => (int) $rightsId
@@ -164,7 +168,7 @@ function createNewResource($connection, $resourceData)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
 
     $stmt->bind_param(
-        "sdissiii",
+        "ssissiii",
         $resourceData['doi'],
         $resourceData['version'],
         $resourceData['year'],
@@ -366,15 +370,16 @@ function saveTitles($connection, $resource_id, $titles, $titleTypes, $action = '
         return false;
     }
 
-    foreach ($uniqueTitles as $title) {
+    foreach (array_values($uniqueTitles) as $sortOrder => $title) {
         $stmt = $connection->prepare("INSERT INTO Title 
-            (`text`, `Title_Type_fk`, `Resource_resource_id`) 
-            VALUES (?, ?, ?)");
+            (`text`, `Title_Type_fk`, `Resource_resource_id`, `sort_order`)
+            VALUES (?, ?, ?, ?)");
         $stmt->bind_param(
-            "sii",
+            "siii",
             $title['text'],
             $title['type'],
-            $resource_id
+            $resource_id,
+            $sortOrder
         );
 
         if (!$stmt->execute()) {

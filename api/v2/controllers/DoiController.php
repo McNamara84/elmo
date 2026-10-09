@@ -47,43 +47,39 @@ class DoiController
     public function lookup(array $vars = [], ?array $body = null): void
     {
         $doi = trim($vars['doi'] ?? '');
+        try {
+            $this->respond(200, $this->lookupPublicDoi($doi));
+        } catch (InvalidArgumentException $error) {
+            $this->respond(400, ['error' => $error->getMessage()]);
+        } catch (RuntimeException $error) {
+            $this->respond(502, ['error' => $error->getMessage()]);
+        }
+    }
 
+    /**
+     * Fetch filtered public DataCite metadata for both the API and submission check.
+     *
+     * @throws InvalidArgumentException When the DOI format is invalid.
+     * @throws RuntimeException When DataCite cannot return a usable response.
+     * @return array{found: bool, attributes?: array<string, mixed>}
+     */
+    public function lookupPublicDoi(string $doi): array
+    {
+        $doi = trim($doi);
         if ($doi === '' || !$this->isValidDoi($doi)) {
-            $this->respond(400, ['error' => 'Invalid DOI format']);
-            return;
+            throw new InvalidArgumentException('Invalid DOI format');
         }
-
-        $url = $this->dataciteApiUrl . rawurlencode($doi) . '?affiliation=true';
-
-        $result = $this->fetchFromDataCite($url);
-
-        if ($result === null) {
-            $this->respond(502, ['error' => 'Failed to reach DataCite API']);
-            return;
-        }
-
-        if ($result['httpCode'] === 404) {
-            $this->respond(200, ['found' => false]);
-            return;
-        }
-
+        $result = $this->fetchFromDataCite($this->dataciteApiUrl . rawurlencode($doi) . '?affiliation=true');
+        if ($result === null) throw new RuntimeException('Failed to reach DataCite API');
+        if ($result['httpCode'] === 404) return ['found' => false];
         if ($result['httpCode'] < 200 || $result['httpCode'] >= 300) {
-            $this->respond(502, ['error' => 'DataCite API returned status ' . $result['httpCode']]);
-            return;
+            throw new RuntimeException('DataCite API returned status ' . $result['httpCode']);
         }
-
         $decoded = json_decode($result['body'], true);
         if (!is_array($decoded) || !isset($decoded['data']['attributes'])) {
-            $this->respond(502, ['error' => 'Unexpected DataCite API response']);
-            return;
+            throw new RuntimeException('Unexpected DataCite API response');
         }
-
-        $attributes = $decoded['data']['attributes'];
-
-        $this->respond(200, [
-            'found' => true,
-            'attributes' => $this->filterAttributes($attributes),
-        ]);
+        return ['found' => true, 'attributes' => $this->filterAttributes($decoded['data']['attributes'])];
     }
 
     /**

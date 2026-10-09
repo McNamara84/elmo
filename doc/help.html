@@ -189,14 +189,25 @@ include_once "../settings.php";
             <div id="help-resourceinformation" class="section-content">
                 <div id="help-resourceinformation-fg">
                     <h3>Resource Information</h3>
-                    <p>Please specify general metadata for the dataset here. Mandatory
-                        fields are: Publication Year, Resource Type, Language of dataset, Title.
-                    </p>
-                    <p>By default, GFZ Data Services is the publisher. If this should not be the case, e.g. in some
-                        cooperation projects, please contact us for further advice. Note: the
-                        publisher will be named in the citation of the dataset as requested by the citation
-                        guidelines of DataCite.
-                    </p>
+                    <p>Provide essential details like Publication Year, Resource Type, Language, and Title (mandatory).
+                        Leave DOI empty unless already assigned; GFZ registers it after submission.
+                        Use YYYY format for years (1901–2155); for embargoes, enter the end date.
+                        The title describes the data, not the article.</p>
+                    <h4>Re-using metadata from an existing DOI</h4>
+                    <p>If an existing publication has similar metadata, enter its DOI or doi.org link in the search
+                        field above the form. ELMO looks up its public metadata at
+                        <a href="https://datacite.org/" target="_blank" rel="noopener noreferrer">DataCite</a>
+                        and can fill supported fields after you confirm the preview. This can save time when
+                        publications from the same project or versions of a dataset share details.</p>
+                    <ul>
+                        <li>Only publications with a public DataCite record can be used for metadata import.</li>
+                        <li>Review the imported fields; some details may need to be changed or entered manually.</li>
+                        <li>Importing metadata does not copy the existing DOI into the submission DOI field.</li>
+                    </ul>
+                    <h4>Publisher</h4>
+                    <p>Please note that the publisher will be named in the dataset citation, as requested by the
+                        DataCite citation guidelines. By default, the publisher is GFZ Data Services. However, if this
+                        should not be the case (e.g. in some cooperation projects), please contact us for further advice.</p>
                     <?php if (!($showLicense ?? true)): ?>
                     <p>By default, this publication will be published under a Creative Commons Attribution 4.0 (CC-BY) license. 
                         This follows the GFZ German Research Centre for Geosciences' Guidelines for open science.
@@ -206,11 +217,13 @@ include_once "../settings.php";
                 </div>
                 <div id="help-resourceinformation-doi">
                     <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../assets/logos/doi-logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='../assets/logos/doi-logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
-                    <p>The DOI is a unique string that identifies a resource. Format should be 10.ORGANISATION/ID.
-                        GFZ DataServices will register a DOI for your Dataset after submission and curation.
-                    </p>
-                    <p><strong>Optional field. Please leave this field empty if your dataset is not published
-                            yet.</strong></p>
+                    <p>The DOI is a unique identifier in the format 10.ORGANISATION/ID. The separate DOI search above
+                        the form can import metadata without copying that DOI into this submission field.</p>
+                    <p><strong>Leave the submission DOI empty to request a new GFZ Data Services DOI.</strong>
+                        Use Edit only when submitting a new major version of an existing GFZ DOI beginning with
+                        10.5880. ELMO verifies it against public DataCite metadata and sends the same DOI for manual
+                        curation. If the DOI is not found, contact the data curation team. Other publishers' DOIs
+                        cannot be used in this field.</p>
                     <?php if ($showGGMsProperties ?? false): ?>
                     <p>
                         Leave this field empty if your model does not have a DOI yet: GFZ Data Services then receives
@@ -241,6 +254,7 @@ include_once "../settings.php";
                     <h4>Resource Type</h4>
                     <p>Please specify the type of Dataset here.</p>
                     <p>Available Resource Types are:</p>
+                    <div id="resource-type-help-list">
                     <?php
                     // Fetch resource types directly from ERNIE API
                     require_once __DIR__ . '/../api/v2/services/ErnieService.php';
@@ -268,6 +282,11 @@ include_once "../settings.php";
                         echo '<p><em>Resource types list could not be loaded. Please refer to the dropdown in the form.</em></p>';
                     }
                     ?>
+                    </div>
+                    <p class="small">Where applicable, the definitions are based on the
+                        <a href="https://datacite-metadata-schema.readthedocs.io/en/4.7/appendices/appendix-1/resourceTypeGeneral/"
+                           target="_blank" rel="noopener">DataCite resource type definitions</a>
+                        to ensure compatibility.</p>
                 </div>
                 <div id="help-resourceinformation-version">
                     <h4>Version</h4>
@@ -275,7 +294,8 @@ include_once "../settings.php";
                         first time, this field can be left empty. If it has been updated, specify the version number
                         here.
                         The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Use the format digits.digits, for example 1.4. Major changes typically require registration of a new DOI.
+                        changes in the dataset. Use the format digits.digits, for example 1.4. For an existing GFZ DOI,
+                        ELMO proposes the next major version: 2.4 becomes 3.0; a DOI without a published version starts at 1.0.
                     </p>
                     <p><strong>Optional field. If unsure, leave blank.</strong></p>
                 </div>
@@ -288,7 +308,8 @@ include_once "../settings.php";
                     <h4>Title</h4>
                     <p>The title of the dataset. Please note that the title shall describe the data and not repeat
                         the title of the corresponding article! The first row is reserved for the main title. You can specify up to
-                        <?php echo $maxTitles-1; ?> additional title if your dataset is known by multiple names or translations.
+                        <?php echo $maxTitles-1; ?> additional titles if your dataset is known by multiple names or translations.
+                        Additional titles can be reordered by dragging their handle or using the Up and Down arrow keys.
                     </p>
                 </div>
                 <div id="help-resourceinformation-titletype">
@@ -1460,20 +1481,28 @@ include_once "../settings.php";
                     <div id="help-datasources-fg">
                         <h3>Data Sources</h3>
                         <p>
-                            This section allows you to specify the various data sources that were used in the creation of your GGM.
-                            This is crucial for traceability and understanding the context of your work. You can add multiple data sources as needed.
+                            <b>Overview of this form group</b>
+                            This section allows you to specify one or many data sources that were used in the development of the model being published.
+                            A Data Source is understood as a object containing or producing information relevant for understanding of the gravity field, information from which is used in the development of the published model. Such information is crucial for understanding the context of the model. You can add multiple data sources if needed.
+                        </p>
+                        <p>
+                            <b>Satellite data sources</b>
+                            Satellites playing a major role in global gravity field modelling are considered data sources.
+                            Multiple satellites entered in one row are considered separate data sources downstream. Grouping satellites will make them share the description.
+                            To specify which measuring devices from the satellites were used in calculation, you can refer to the GCMD Instruments form group further down in this editor.
                         </p>
                     </div>
                     <div id="help-datasource-type">
                         <h4>Type</h4>
-                        <p>Select the general category of the data source from the following options:</p>
+                        <p>Select the category of the data source from the following options:</p>
                         <ul>
                             <li><strong>S = Satellite:</strong> Satellite gravity-related observations including SLR.</li>
                             <li><strong>G = Ground data:</strong> Data measured by gravimeters or ground data derived from gravity models.</li>
                             <li><strong>A = Altimetry:</strong> Gravity data determined from Altimetry grid data or data produced from radar altimeters.</li>
-                            <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data.</li>
-                            <li><strong>M = Model:</strong> Physical Earth models taken “as is”. For temporal models, it is recommended to include Gravitational background models.</li>
+                            <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data. Relevant for Topographic gravity field models</li>
+                            <li><strong>M = Reference Model:</strong> Another physical Earth model that is used as a reference in the development of the published model. In this category the reference model taken “as is”. For temporal models, it is recommended to include Gravitational background model(s).</li>
                         </ul>
+                        <p>The letter type codes are taken from the classification used on the ICGEM website.</p>
                     </div>
                     <div id="help-datasource-details">
                         <h4>Details</h4>
@@ -1481,7 +1510,7 @@ include_once "../settings.php";
                     </div>
                     <div id="help-datasources-identifier">
                         <h4>Identifier</h4>
-                        <p>Identifier of the model that was included as a data source. 
+                        <p>Identifier of the reference model that is included as a data source.
                             For model published on the ICGEM, please use the model DOI. 
                             Other models can be identified by a DOI of an article or a presentation about the model. 
                             If not available, a URL of model description can be used.

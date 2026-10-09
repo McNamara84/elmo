@@ -17,6 +17,43 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
         $this->controller = new \DatasetController();
     }
 
+    public function testResourceInformationVersionAndTitleOrderSurviveDataCiteExport(): void
+    {
+        $source = str_replace(
+            '<Titles><Title><text>Issue Regression Dataset</text><type>Main Title</type></Title></Titles>',
+            '<version>3.0</version><Titles>'
+            . '<Title><text>Main</text><type>Main Title</type></Title>'
+            . '<Title><text>Second</text><type>Alternative Title</type></Title>'
+            . '<Title><text>First</text><type>Translated Title</type></Title></Titles>',
+            $this->resourceXmlWithCoverage()
+        );
+        $xml = $this->controller->transformResourceXmlString($source, 'datacite');
+        $xpath = $this->dataCiteXPath($xml);
+        self::assertSame('3.0', $xpath->evaluate('string(//dc:version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($xpath->query('//dc:titles/dc:title'))
+        ));
+
+        $exported = new \DOMDocument();
+        self::assertTrue($exported->loadXML($xml, LIBXML_NONET));
+        $stylesheet = new \DOMDocument();
+        self::assertTrue($stylesheet->load(
+            dirname(__DIR__) . '/schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt', LIBXML_NONET
+        ));
+        $import = new \XSLTProcessor();
+        self::assertTrue($import->importStylesheet($stylesheet));
+        $mapped = $import->transformToDoc($exported);
+        self::assertInstanceOf(\DOMDocument::class, $mapped);
+        $mappedXPath = new \DOMXPath($mapped);
+        self::assertSame('Dataset', $mappedXPath->evaluate('string(/ResourceInformation/ResourceType)'));
+        self::assertSame('3.0', $mappedXPath->evaluate('string(/ResourceInformation/Version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($mappedXPath->query('/ResourceInformation/Titles/Title'))
+        ));
+    }
+
     public function testDataCiteTransformPreservesAwardUriWithoutGrantNumberForIssue1147(): void
     {
         $sourceXml = $this->resourceXmlWithCoverage(fundingReferences: <<<'XML'

@@ -1614,6 +1614,7 @@ $(document).ready(function () {
   window.validateAuthorAffiliationEditors = validateAuthorAffiliationEditors;
 
   window.authorStack = {
+    supportsType: type => type === 'person' ? personTemplate.length > 0 : type === 'institution' && institutionTemplate.length > 0,
     addPerson: function () { return addRow('person'); },
     addInstitution: function () { return addRow('institution'); },
     setAuthors,

@@ -187,6 +187,20 @@ function selectOptionByText($select, text) {
 }
 
 /**
+ * XML stores the reference-model type as "Model". The form option is labelled
+ * "Reference Model", so an exact text match misses it and the row stays Satellite.
+ */
+const ICGEM_DATASOURCE_TYPE_LABELS = {
+  Model: 'Reference Model'
+};
+
+function selectDataSourceType($typeSelect, xmlType) {
+  const formLabel = ICGEM_DATASOURCE_TYPE_LABELS[xmlType];
+  if (formLabel && selectOptionByText($typeSelect, formLabel)) return true;
+  return selectOptionByText($typeSelect, xmlType);
+}
+
+/**
  * Reverse-maps ICGEM densityInformationType values to form select option values.
  * XML stores "Constant", "Layer-specific", "Density model"; form uses lowercase/hyphenated.
  * @param {string} xmlValue
@@ -428,6 +442,32 @@ function applySatellitePlatformTags(platformInput, tags) {
 }
 
 /**
+ * Makes the data source stack hold exactly `count` rows, also when the user
+ * removed every row. Rows are added via the add button and removed via their
+ * remove buttons so widgets, Tagify state and translations stay consistent.
+ * @param {number} count
+ * @returns {jQuery} The data source rows in form order
+ */
+function ensureDataSourceRows(count) {
+  const rowSelector = '#group-datasources [data-source-row]';
+  const $surplus = $(rowSelector).slice(count);
+  $surplus.find('.removeButton').trigger('click');
+  $surplus.remove();
+
+  const $addButton = $('.addDataSource').first();
+  const missing = count - $(rowSelector).length;
+  for (let i = 0; i < missing; i++) {
+    $addButton.trigger('click');
+  }
+
+  const $rows = $(rowSelector);
+  if ($rows.length !== count) {
+    throw new Error(`Expected ${count} data source rows, found ${$rows.length}`);
+  }
+  return $rows;
+}
+
+/**
  * Populates the GGMsDataSources form rows.
  * Consecutive satellite entries with the same description share one form row.
  * All other entries become separate rows. The datasource type 'change' event is
@@ -443,7 +483,6 @@ async function populateIcgemDataSources(data) {
   if (dataSources.length === 0) return;
 
   const formDataSources = groupIcgemDataSourcesForForm(dataSources);
-
   const needsSatelliteVocab = formDataSources.some(
     (ds) => Array.isArray(ds.satellitePlatforms) && ds.satellitePlatforms.length > 0
   );
@@ -454,16 +493,13 @@ async function populateIcgemDataSources(data) {
     }
   }
 
+  const $rows = ensureDataSourceRows(formDataSources.length);
+
   for (let i = 0; i < formDataSources.length; i++) {
     const ds = formDataSources[i];
-
-    if (i > 0) {
-      $('.addDataSource').last().trigger('click');
-    }
-
-    const $row = $('[data-source-row]').last();
+    const $row = $rows.eq(i);
     const $typeSelect = $row.find('select[name="datasource_type[]"]');
-    selectOptionByText($typeSelect, ds.inputDataSourceType);
+    selectDataSourceType($typeSelect, ds.inputDataSourceType);
     $typeSelect.trigger('change');
 
     if (ds.description) $row.find('textarea[name="datasource_description[]"]').val(ds.description);
@@ -520,14 +556,13 @@ async function populateIcgemDataSources(data) {
  * Contact info (email/website) is stored positionally in grav:contact/grav:address
  * and grav:contact/grav:onlineResource. Who the contact person *is* comes from
  * DataCite contributors with contributorType="ContactPerson"; names from that
- * section locate the matching author row. If no such contributor is present,
- * a warning is logged and no author is marked as contact.
+ * section locate the matching author or contributor card. Existing authors keep
+ * their contact fields; other contacts use Contributors with Contact Person role.
+ * If person Contributors are disabled, missing contacts remain recoverable as
+ * authors. If no ContactPerson contributor is present, no contact is inferred.
  *
- * The contact-person toggle checkbox fires on "click", so .prop('checked', true) alone
- * does not show the hidden fields. This function explicitly checks the checkbox and
- * calls .show() to ensure the fields are visible before populating them.
- *
- * @param {Document} xmlDoc
+ * @param {Document} xmlDoc Parsed ICGEM envelope, including its DataCite resource.
+ * @throws {Error} When a present people group has no initialized stack.
  */
 function populateIcgemContactPersons(xmlDoc) {
   const daceNs = 'http://datacite.org/schema/kernel-4';
@@ -619,25 +654,6 @@ function populateIcgemContactPersons(xmlDoc) {
 
     return details;
   }
-
-  function applyAffiliationsToRow($row, affiliations) {
-    if (!affiliations.length) return;
-
-    const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-    if (tagifyInput && tagifyInput._tagify) {
-      tagifyInput._tagify.removeAllTags();
-      tagifyInput._tagify.addTags(affiliations.map((affiliation) => ({
-        value: affiliation.label,
-        label: affiliation.label,
-        rorId: affiliation.rorId
-      })));
-    } else {
-      $row.find('input[name="personAffiliation[]"]').val(affiliations.map((affiliation) => affiliation.label).join(','));
-    }
-
-    $row.find('input[name="authorPersonRorIds[]"]').val(affiliations.map((affiliation) => affiliation.rorId).join(','));
-  }
-
   // Locate globalGravityProduct
   const ggpNode = xpFirst('.//icgv:globalGravityProduct | .//grav:globalGravityProduct', xmlDoc)
     || descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
@@ -693,79 +709,58 @@ function populateIcgemContactPersons(xmlDoc) {
     contactPersons[i].website = detail.website;
   }
 
-  if (window.authorStack && typeof window.authorStack.collectPayload === 'function' && typeof window.authorStack.setAuthors === 'function') {
-    const authors = window.authorStack.collectPayload().map(author => ({ ...author }));
-
-    contactPersons.forEach(({ familyName, givenName, orcid, affiliations, email, website }) => {
-      if ((!email && !website) || (!familyName && !givenName)) return;
-
-      const normFamily = familyName.toLowerCase();
-      const normGiven = givenName.toLowerCase();
-      let author = authors.find(candidate => candidate.type === 'person'
-        && String(candidate.familyname || '').trim().toLowerCase() === normFamily
-        && String(candidate.givenname || '').trim().toLowerCase() === normGiven);
-
-      if (!author) {
-        author = {
-          type: 'person',
-          familyname: familyName,
-          givenname: givenName,
-          orcid: '',
-          affiliations: []
-        };
-        authors.push(author);
-      }
-
-      author.isContact = true;
-      author.orcid = orcid || author.orcid || '';
-      if (affiliations.length) author.affiliations = affiliations;
-      author.email = email || author.email || '';
-      author.website = website || author.website || '';
-    });
-
-    window.authorStack.setAuthors(authors);
-    return;
+  const authorStack = window.authorStack;
+  if (typeof authorStack?.collectPayload !== 'function' || typeof authorStack?.setAuthors !== 'function') {
+    throw new Error('Authors form is not initialized.');
+  }
+  const contributorStack = window.contributorStack;
+  const contributorsReady = typeof contributorStack?.collectPayload === 'function'
+    && typeof contributorStack?.setContributors === 'function';
+  if (document.querySelector('[name="contributorsPayload"]') && !contributorsReady) {
+    throw new Error('Contributors form is not initialized.');
   }
 
-  for (let i = 0; i < contactPersons.length; i++) {
-    const { familyName, givenName, orcid, affiliations, email, website } = contactPersons[i];
+  const authors = authorStack.collectPayload().map(author => ({ ...author }));
+  const contributors = contributorsReady && contributorStack.supportsType?.('person') !== false
+    ? contributorStack.collectPayload().map(contributor => ({ ...contributor, roles: [...contributor.roles] }))
+    : null;
+  let authorsChanged = false;
+  let contributorsChanged = false;
 
-    if (!email && !website) continue;
-    if (!familyName && !givenName) continue;
+  contactPersons.forEach(({ familyName, givenName, orcid, affiliations, email, website }) => {
+    if ((!email && !website) || (!familyName && !givenName)) return;
 
-    const normFamily = familyName.toLowerCase();
-    const normGiven  = givenName.toLowerCase();
-    let $row = $('div[data-creator-row]').filter(function () {
-      const rf = ($('input[name="familynames[]"]', this).val() || '').trim().toLowerCase();
-      const rg = ($('input[name="givennames[]"]', this).val() || '').trim().toLowerCase();
-      return rf === normFamily && rg === normGiven;
-    }).first();
+    const matchesName = candidate => candidate.type === 'person'
+      && String(candidate.familyname || '').trim().toLowerCase() === familyName.toLowerCase()
+      && String(candidate.givenname || '').trim().toLowerCase() === givenName.toLowerCase();
+    let entry = authors.find(matchesName);
 
-    if (!$row.length) {
-      const countBefore = $('div[data-creator-row]').length;
-      $('#button-author-add').trigger('click');
-      const $rows = $('div[data-creator-row]');
-      if ($rows.length <= countBefore) {
-        console.warn('populateIcgemContactPersons: could not create author row for contact person', { familyName, givenName });
-        continue;
+    if (entry) {
+      entry.isContact = true;
+      authorsChanged = true;
+    } else if (contributors) {
+      entry = contributors.find(candidate => candidate.type === 'person'
+        && (orcid && candidate.orcid ? normalizeOrcid(candidate.orcid) === orcid : matchesName(candidate)));
+      if (!entry) {
+        entry = { type: 'person', familyname: familyName, givenname: givenName, roles: [], affiliations: [] };
+        contributors.push(entry);
       }
-
-      $row = $rows.last();
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
+      if (!entry.roles.includes('Contact Person')) entry.roles.push('Contact Person');
+      contributorsChanged = true;
+    } else {
+      entry = { type: 'person', familyname: familyName, givenname: givenName, isContact: true, affiliations: [] };
+      authors.push(entry);
+      authorsChanged = true;
     }
 
-    // Ensure the contact-person toggle is active and fields are visible.
-    // The toggle handler fires on "click", not "change", so we must explicitly
-    // check the checkbox and show the fields rather than relying on the event.
-    $row.find('input[name="contacts[]"]').prop('checked', true);
-    $row.find('.contact-person-input').show();
+    entry.orcid = orcid || entry.orcid || '';
+    if (affiliations.length) entry.affiliations = affiliations;
+    entry.email = email || entry.email || '';
+    entry.website = website || entry.website || '';
+  });
 
-    if (email)   $row.find('input[name="cpEmail[]"]').val(email);
-    if (website) $row.find('input[name="cpOnlineResource[]"]').val(website);
-    if (orcid)   $row.find('input[name="orcids[]"]').val(orcid);
-    applyAffiliationsToRow($row, affiliations);
-  }
+  if (authorsChanged) authorStack.setAuthors(authors);
+  if (contributorsChanged) contributorStack.setContributors(contributors);
 }
 
 /**
@@ -844,6 +839,7 @@ if (typeof module !== 'undefined' && module.exports) {
     selectOptionByText,
     reverseDensityType,
     groupIcgemDataSourcesForForm,
+    ensureDataSourceRows,
     populateIcgemDefinition,
     populateIcgemProperties,
     populateIcgemModelTypes,
