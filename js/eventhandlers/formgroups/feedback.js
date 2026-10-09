@@ -1,6 +1,5 @@
 /**
- * @description Sends the feedback form with AJAX after its own required questions are filled.
- * Questions 1, 4, and 6 use HTML required. Empty ones are marked and focused on submit.
+ * @description Handles feedback form submission with AJAX.
  *
  * @module feedback
  */
@@ -30,57 +29,8 @@ $(document).ready(function () {
     return $elements;
   }
 
-  function clearFeedbackValidation(formElement) {
-    formElement.querySelectorAll("textarea[required]").forEach((field) => {
-      field.classList.remove("is-invalid");
-      field.removeAttribute("aria-invalid");
-    });
-  }
-
-  function missingRequiredFields(formElement) {
-    return [...formElement.querySelectorAll("textarea[required]")].filter((field) => !field.checkValidity());
-  }
-
-  feedbackForm.on("input", "textarea[required]", function () {
-    if (this.checkValidity()) {
-      this.classList.remove("is-invalid");
-      this.removeAttribute("aria-invalid");
-    }
-  });
-
-  function showMissingFeedbackFields(formElement) {
-    const missingFields = missingRequiredFields(formElement);
-    formElement.querySelectorAll("textarea[required]").forEach((field) => {
-      const missing = missingFields.includes(field);
-      field.classList.toggle("is-invalid", missing);
-      if (missing) {
-        field.setAttribute("aria-invalid", "true");
-      } else {
-        field.removeAttribute("aria-invalid");
-      }
-    });
-
-    if (missingFields.length > 0) {
-      missingFields[0].scrollIntoView({ block: "center" });
-    }
-
-    return missingFields;
-  }
-
-  sendButton.on("click", function () {
-    showMissingFeedbackFields(feedbackForm[0]);
-  });
-
-  feedbackForm.on("submit", async function (event) {
+  sendButton.click(async function (event) {
     event.preventDefault();
-
-    const missingFields = showMissingFeedbackFields(this);
-    if (missingFields.length > 0) {
-      const firstMissing = missingFields[0];
-      firstMissing.focus();
-      firstMissing.reportValidity();
-      return;
-    }
 
     sendButton
       .prop("disabled", true)
@@ -159,7 +109,6 @@ $(document).ready(function () {
       await startInteraction(INTERACTION_SCOPES.feedback);
 
       feedbackForm[0].reset();
-      clearFeedbackValidation(feedbackForm[0]);
       csrfTokenField.val('');
 
       feedbackForm.show().attr({ "aria-hidden": "false", "aria-busy": "false" });

@@ -176,7 +176,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $feedbackQuestion5 = $_POST['feedbackQuestion5'] ?? '';
     $feedbackQuestion6 = $_POST['feedbackQuestion6'] ?? '';
     $feedbackQuestion7 = $_POST['feedbackQuestion7'] ?? '';
-
+    
     sendFeedbackMail(
         $feedbackQuestion1,
         $feedbackQuestion2,
