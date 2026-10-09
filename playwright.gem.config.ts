@@ -1,19 +1,5 @@
 import './playwright-require.cjs';
-import path from 'node:path';
 import { defineConfig, devices } from '@playwright/test';
-
-/**
- * ELMO-GEM only. Test workers are forked after this file loads, and Node
- * applies --require in those workers. gemGotoShadow.js then shadows page.goto:
- * when the base URL contains "icgem", goto('/') opens /elmo/. Otherwise it stays '/'.
- * Other Playwright configs never set this, so generic, MSL, and IGSN are unchanged.
- */
-const gemGotoShadow = path.resolve(process.cwd(), 'tests/playwright/gemGotoShadow.js');
-if (!process.env.NODE_OPTIONS?.includes(gemGotoShadow)) {
-  process.env.NODE_OPTIONS = [process.env.NODE_OPTIONS, `--require ${JSON.stringify(gemGotoShadow)}`]
-    .filter(Boolean)
-    .join(' ');
-}
 
 /**
  * Per-variant config for ELMO-GEM (Firefox).
