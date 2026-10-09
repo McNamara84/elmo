@@ -1,5 +1,6 @@
 ﻿<?php
 include_once "../settings.php";
+$assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) . '/' . $path), 0, 12);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,10 +9,12 @@ include_once "../settings.php";
     <title>Guide</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/themeInit.js?v=<?php echo $assetVersion('js/themeInit.js'); ?>"></script>
     <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="../css/help.css">
-    <link rel="stylesheet" href="../css/gfz-cd.css">
+    <link rel="stylesheet" href="../css/gfz-cd.css?v=<?php echo $assetVersion('css/gfz-cd.css'); ?>">
+    <link rel="stylesheet" href="../css/help.css?v=<?php echo $assetVersion('css/help.css'); ?>">
+    <link rel="stylesheet" href="../css/darkmode.css?v=<?php echo $assetVersion('css/darkmode.css'); ?>">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../assets/icons/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg" />
@@ -20,7 +23,7 @@ include_once "../settings.php";
     <link rel="manifest" href="../site.webmanifest" />
 </head>
 
-<body>
+<body class="elmo-guide">
     <!-- Navbar -->
     <nav class="navbar navbar-dark fixed-top navbar-help-header">
         <div class="container-fluid">
@@ -47,11 +50,11 @@ include_once "../settings.php";
             </form>
             <a class="nav-link text-white ms-3" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
                 rel="noopener">Legal notice</a>
-            <div class="offcanvas offcanvas-start navbar-help-header text-white" tabindex="-1" id="offcanvasNavbar"
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar"
                 aria-labelledby="offcanvasNavbarLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Main Menu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
                         aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
@@ -169,8 +172,11 @@ include_once "../settings.php";
                 <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
                     your
                     language already exists in the language selection drop-down menu at the top right. However, the
-                    form must be filled out in english. There is also
-                    a switch for changing from light mode to dark mode for better contrast ratios.</p>
+                    form must be filled out in English.</p>
+                <p>Use the <strong>Mode</strong> menu in the editor to choose <strong>Light</strong>,
+                    <strong>Dark</strong> or <strong>Auto</strong>. Auto follows your system's color preference
+                    and updates when it changes. Your choice is saved in this browser and applies to the
+                    ELMO Guide, including a Guide that is already open in another tab.</p>
                 <p>Select the version number in the footer to open the changelog. Its badges identify the affected
                     ELMO editions, and linked issues and pull requests provide details about each change. You can find
                     information about the metadata editor under <strong>Help → About</strong>.</p>

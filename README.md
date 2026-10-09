@@ -50,6 +50,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Submission of data descriptions files and link to data is possible.
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
+- Light, Dark and Auto modes share the saved theme with the ELMO Guide. Auto follows the system's color preference.
 
 ## Installation
 
