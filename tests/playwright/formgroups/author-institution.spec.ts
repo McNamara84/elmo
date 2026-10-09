@@ -30,7 +30,7 @@ test.describe('Author institution entries in the Authors form group', () => {
 
     const nameInput = formGroup.locator('input[name="authorinstitutionName[]"]');
     await expect(nameInput).toBeVisible();
-    await expect(page.getByLabel('Author Institution name')).toBeVisible();
+    await expect(page.getByLabel('Author Institution Name')).toBeVisible();
 
     const affiliationEditor = firstRow.locator('[data-author-affiliation-editor]');
     await expect(affiliationEditor).toBeVisible();
