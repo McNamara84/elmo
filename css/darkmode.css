@@ -38,6 +38,9 @@
     --elmo-tree-hover: #344758;
     --elmo-tree-selected: #3e5871;
     --elmo-focus-color: #8ab9ff;
+    --elmo-info-bg: var(--bs-info-bg-subtle);
+    --elmo-info-color: var(--bs-info-text-emphasis);
+    --elmo-info-border: var(--bs-info-border-subtle);
     --bs-red-star-color: #ff6b6b;
     --bs-con-reduce-color: #8ab9ff;
 }
@@ -97,4 +100,58 @@
 
 [data-bs-theme="dark"] .text-primary {
     color: var(--elmo-heading-color) !important;
+}
+
+/* jsTree keeps its selection and expanded branches when the theme changes. */
+[data-bs-theme="dark"] .jstree-default .jstree-anchor {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-hovered,
+[data-bs-theme="dark"] .jstree-default .jstree-wholerow-hovered {
+    background: var(--elmo-tree-hover);
+    box-shadow: none;
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-clicked,
+[data-bs-theme="dark"] .jstree-default .jstree-wholerow-clicked {
+    background: var(--elmo-tree-selected);
+    box-shadow: inset 0 0 0 1px var(--elmo-control-border);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-search {
+    color: var(--bs-body-color);
+}
+
+[data-bs-theme="dark"] .jstree-default .jstree-disabled {
+    color: var(--bs-secondary-color);
+}
+
+/* The dark sprite uses the same positions; only icons change, never labels. */
+[data-bs-theme="dark"] .jstree-default .jstree-icon {
+    background-image: url("../node_modules/jstree/dist/themes/default-dark/32px.png");
+}
+
+[data-bs-theme="dark"] .jstree-default > .jstree-no-dots .jstree-leaf > .jstree-ocl,
+[data-bs-theme="dark"] .jstree-default .jstree-themeicon-custom {
+    background-image: none;
+}
+
+.jstree-anchor:focus-visible {
+    outline: 2px solid var(--elmo-focus-color);
+    outline-offset: 1px;
+}
+
+/* jQuery UI autocomplete is also attached to body. */
+[data-bs-theme="dark"] .ui-autocomplete.ui-widget-content {
+    background: var(--elmo-surface);
+    color: var(--bs-body-color);
+    border-color: var(--elmo-control-border);
+}
+
+[data-bs-theme="dark"] .ui-autocomplete .ui-state-active,
+[data-bs-theme="dark"] .ui-autocomplete .ui-state-focus {
+    background: var(--elmo-tree-selected);
+    color: var(--bs-body-color);
+    border-color: var(--elmo-focus-color);
 }

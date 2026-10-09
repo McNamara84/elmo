@@ -1,8 +1,8 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { navigateToHome } from '../utils';
 
-async function expectReadable(page, selector: string) {
+async function expectReadable(page: Page, selector: string) {
   const report = await new AxeBuilder({ page }).include(selector).withRules(['color-contrast']).analyze();
   expect(report.violations.map(rule => ({
     id: rule.id, nodes: rule.nodes.map(node => ({ target: node.target, summary: node.failureSummary }))

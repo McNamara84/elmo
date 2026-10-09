@@ -12,6 +12,9 @@
     --elmo-tree-hover: #e7f4f9;
     --elmo-tree-selected: #beebff;
     --elmo-focus-color: #00589c;
+    --elmo-info-bg: #cfe2ff;
+    --elmo-info-color: #00589c;
+    --elmo-info-border: #b6d4fe;
 }
 
 .elmo-subheader {
@@ -22,6 +25,13 @@
 .elmo-badge {
     background-color: var(--elmo-surface-raised);
     color: var(--bs-body-color);
+}
+
+.ui-autocomplete .ui-state-active,
+.ui-autocomplete .ui-state-focus {
+    background: #00589c;
+    color: #ffffff;
+    border-color: var(--elmo-focus-color);
 }
 
 .form-control,
@@ -67,9 +77,9 @@
 }
 
 .alert-info {
-    --bs-alert-color: var(--bs-info-text-emphasis);
-    --bs-alert-bg: var(--bs-info-bg-subtle);
-    --bs-alert-border-color: var(--bs-info-border-subtle);
+    --bs-alert-color: var(--elmo-info-color);
+    --bs-alert-bg: var(--elmo-info-bg);
+    --bs-alert-border-color: var(--elmo-info-border);
     font-size: 1.1rem;
 }
 
@@ -280,7 +290,7 @@ body {
 /* Marker for mandatory fields */
 label.mandatory-field::after {
     content: "*";
-    color: #dc3545;
+    color: var(--bs-red-star-color, #dc3545);
     margin-left: 0.1rem;
 }
 
