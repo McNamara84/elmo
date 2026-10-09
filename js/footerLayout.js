@@ -1,5 +1,11 @@
 /* Keep the last form controls above the fixed footer, including wrapped translations. */
 (function (root) {
+  /**
+   * Measure the fixed footer and keep its reserved body space up to date.
+   * Use mutation and window resize events when ResizeObserver is unavailable.
+   * @param {Window} host Browser window containing the footer.
+   * @returns {(() => void)|null} Observer cleanup, or null when there is no footer.
+   */
   function initFooterLayout(host) {
     const doc = host.document;
     const footer = doc.querySelector('footer.fixed-bottom');

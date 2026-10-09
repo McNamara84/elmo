@@ -1,3 +1,9 @@
+/**
+ * Mark the selected theme choice for visual and assistive technology feedback.
+ * @param {NodeListOf<HTMLElement>} items Theme menu buttons.
+ * @param {string} choice Selected mode: light, dark or auto.
+ * @returns {void}
+ */
 function updateActiveTheme(items, choice) {
   items.forEach(item => {
     const active = item.getAttribute('data-bs-theme-value') === choice;
@@ -6,6 +12,12 @@ function updateActiveTheme(items, choice) {
   });
 }
 
+/**
+ * Connect the theme menu to the shared controller, when the page has a menu.
+ * @param {Document} doc Document containing the theme dropdown.
+ * @param {ThemeController} controller Controller created by themeInit.js.
+ * @returns {void}
+ */
 function initThemeMenu(doc, controller) {
   const dropdown = doc.getElementById('bd-theme');
   if (!dropdown || !dropdown.parentElement || !controller) return;

@@ -1,5 +1,22 @@
 /* Apply the saved choice before styles load, also on pages without a theme menu. */
 (function (root) {
+  /** @typedef {'light'|'dark'|'auto'} ThemeChoice */
+  /**
+   * @typedef {Object} ThemeController
+   * @property {function(): ThemeChoice} getChoice Read the selected mode, including Auto.
+   * @property {function(string|null): void} setChoice Save and apply a mode; invalid values use Auto.
+   * @property {function(function(ThemeChoice, string): void): function(): void} subscribe
+   *   Notify a listener immediately and after each change; return an unsubscribe function.
+   * @property {function(): void} destroy Remove browser listeners and subscribers.
+   */
+
+  /**
+   * Apply the saved theme and follow system or same-origin tab changes.
+   * Auto remains the stored choice while the displayed theme follows the system.
+   * Blocked storage and unavailable system preferences fall back without throwing.
+   * @param {Window} host Browser window whose document and preferences are used.
+   * @returns {ThemeController} Controller shared by the editor and standalone Guide.
+   */
   function createThemeController(host) {
     const normalize = value => ['light', 'dark', 'auto'].includes(value) ? value : 'auto';
     let media = null;
