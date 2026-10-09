@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
-import { navigateToHome } from '../utils';
+import { navigateToHome, waitForHomepageReady } from '../utils';
 
 async function expectReadable(page: Page, selector: string) {
   const report = await new AxeBuilder({ page }).include(selector).withRules(['color-contrast']).analyze();
@@ -16,10 +16,12 @@ test.describe('Theme appearance', () => {
       test.beforeEach(async ({ page }) => {
         await page.addInitScript(value => localStorage.setItem('theme', value), theme);
         await navigateToHome(page);
+        await waitForHomepageReady(page);
         await expect(page.locator('html')).toHaveAttribute('data-bs-theme', theme);
       });
 
       test('keeps the subheader, notice and JSON-LD action readable', async ({ page }) => {
+        await expectReadable(page, 'body');
         await expectReadable(page, '.elmo-subheader');
         await expectReadable(page, '.alert-info');
         await expectReadable(page, '#button-form-save-jsonld');

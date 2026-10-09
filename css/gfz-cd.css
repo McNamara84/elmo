@@ -97,6 +97,15 @@
     --bs-btn-border-color: #967000;
 }
 
+.btn-outline-primary {
+    --bs-btn-color: #00589c;
+    --bs-btn-border-color: #00589c;
+    --bs-btn-hover-bg: #00589c;
+    --bs-btn-hover-border-color: #004878;
+    --bs-btn-active-bg: #003d68;
+    --bs-btn-active-border-color: #003d68;
+}
+
 .footer-notes {
     font-size: 0.8rem;
     background-color: #b6d4fe;
