@@ -568,6 +568,15 @@ class ErnieService
     private function refreshAllCache(): void
     {
         global $ELMO_API_KEY;
+        if (!isset($_POST['token']) || $_POST['token'] !== $ELMO_API_KEY) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid API token'
+            ]);
+            exit;
+        }
         $ernieService = $this->getErnieService();
 
             if (!$ernieService->isConfigured()) {
@@ -592,6 +601,26 @@ class ErnieService
             }
          
     }
+    private function getAllCacheStatus(): array
+    {
+        global $ELMO_API_KEY;
+        if (!isset($GET->token) || $GET->token !== $ELMO_API_KEY) {
+            http_response_code(403);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'Invalid API token'
+            ]);
+            exit;
+        }
+        $returnArray = [];
+        foreach ($this->memory as $key => $value) {
+            $cacheFile = $value->cacheFile;
+            $returnArray[$key] = $this->getCacheStatus($cacheFile);
+        }
+        return $returnArray;
+    };
+
 
     // ──────────────────────────────────────────────────────────────
     //  Generic cache workflow helpers
@@ -614,20 +643,18 @@ class ErnieService
      * This runs on the HTTP request that needs the vocab (e.g. GET /vocabs/relations),
      * not at container start.
      *
-     * @param string $endpoint The API endpoint path
-     * @param string $label Human-readable label for logging
-     * @param string $cacheFile Path to the cache file
+     * @param string $label Human-readable label for logging, that matches the key of memory array
      * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
      * @param (callable(array<mixed>): void)|null $onFreshData Invoked only after a successful live ERNIE fetch and cache write. Not called on cache hit, stale cache, or hardcoded fallback.
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
     private function getDataWithCache(
-        string $endpoint,
         string $label,
-        string $cacheFile,
         callable $fallbackFn,
         ?callable $onFreshData = null
     ): array {
+        $endpoint = $this->memory[$label]->endpoint;
+        $cacheFile = $this->memory[$label]->cacheFile;
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
             if (!empty($cachedData)) {
