@@ -12,6 +12,8 @@ info:
     ### Authentication
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
+    `POST /admin/cache/refresh` does not use the `X-API-KEY` header. Send the API token in the body field `token`. It must match `ELMO_API_KEY`. Cache status is not published yet. When it is, `getAllCacheStatus` returns an `AllCacheStatus` object: one entry per vocabulary, not a JSON list.
+
     ### Binary Data
     Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
     or `application/ld+json` depending on the selected export scheme.
@@ -1333,6 +1335,59 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /admin/cache/refresh:
+    post:
+      tags:
+        - admin
+      security: []
+      summary: Refresh all ERNIE caches
+      description: |-
+        Fetches every ERNIE vocabulary and writes its cache file. The request runs for at most 300 seconds.
+
+        Authenticate with a body field named `token`, not the `X-API-KEY` header. The value must match `ELMO_API_KEY`. Form-encoded and JSON bodies are both accepted.
+
+        Cache status is not available from this API yet. `getAllCacheStatus` will return an `AllCacheStatus` object keyed by vocabulary slug.
+      operationId: refreshAllCache
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: "#/components/schemas/CacheRefreshRequest"
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CacheRefreshRequest"
+      responses:
+        "200":
+          description: Every cache file was refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheRefreshResponse"
+        "400":
+          description: ERNIE is not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheRefreshResponse"
+        "401":
+          description: The token field is missing or does not match ELMO_API_KEY
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    example: Invalid or missing API token
+                required:
+                  - error
+        "502":
+          description: One or more vocabularies could not be refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheRefreshResponse"
   /admin/cache/titletypes/refresh:
     post:
       tags:
@@ -2115,6 +2170,136 @@ components:
       name: X-API-Key
       description: API key to access protected endpoints. Required for all /update/ endpoints.
   schemas:
+    CacheRefreshRequest:
+      type: object
+      description: Body for POST /admin/cache/refresh. The API token is the `token` field.
+      properties:
+        token:
+          type: string
+          description: API token. Must match the ELMO_API_KEY environment variable.
+      required:
+        - token
+    CacheRefreshResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          description: True only when every vocabulary cache was written.
+        message:
+          type: string
+          example: All ERNIE caches refreshed
+        failed:
+          type: array
+          description: Vocabulary slugs that failed. Present when success is false.
+          items:
+            type: string
+          example:
+            - gemet
+        results:
+          type: object
+          description: Whether each vocabulary cache was written, keyed by slug.
+          additionalProperties:
+            type: boolean
+          example:
+            resourceTypes: true
+            titleTypes: true
+            gemet: false
+      required:
+        - success
+        - message
+        - results
+    ErnieCacheFileStatus:
+      type: object
+      description: Status of one ERNIE cache file.
+      properties:
+        exists:
+          type: boolean
+        valid:
+          type: boolean
+          description: True when the file exists and is younger than the cache TTL.
+        lastUpdated:
+          type: string
+          nullable: true
+          example: "2026-10-10 23:21:11"
+        age:
+          type: integer
+          nullable: true
+          description: Age of the cache file in seconds.
+        ageFormatted:
+          type: string
+          nullable: true
+          description: Human-readable age. Omitted when the file has no timestamp.
+          example: 2 hours
+        ttl:
+          type: integer
+          description: Cache time-to-live in seconds. Omitted when the file is missing or unreadable.
+          example: 21600
+        itemCount:
+          type: integer
+        error:
+          type: string
+          description: Present when the file exists but cannot be read.
+          example: Unable to read cache file
+      required:
+        - exists
+        - valid
+        - lastUpdated
+        - age
+        - itemCount
+    AllCacheStatus:
+      type: object
+      description: |-
+        Object returned by getAllCacheStatus. This is a map, not a JSON array. Each property is a vocabulary slug and each value is that cache file's status. The status endpoint is not published yet.
+      properties:
+        resourceTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        titleTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        descriptionTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        languages:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        contributorPersonRoles:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        contributorInstitutionRoles:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        relationTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        identifierTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        pid4instInstruments:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        mslLabs:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdScienceKeywords:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdPlatforms:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdInstruments:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        chronostratTimescale:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gemet:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        thesauriAvailability:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+      required:
+        - resourceTypes
+        - titleTypes
+        - descriptionTypes
+        - languages
+        - contributorPersonRoles
+        - contributorInstitutionRoles
+        - relationTypes
+        - identifierTypes
+        - pid4instInstruments
+        - mslLabs
+        - gcmdScienceKeywords
+        - gcmdPlatforms
+        - gcmdInstruments
+        - chronostratTimescale
+        - gemet
+        - thesauriAvailability
     License:
       type: object
       properties:
