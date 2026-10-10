@@ -97,7 +97,33 @@ class VocabController
 
         return true;
     }
+    function handleGetAllCacheStatus(): void
+    {
+        error_log('[ELMO admin] GET /admin/cache/status received');
 
+        if (!$this->validateApiKey()) {
+            error_log('[ELMO admin] GET /admin/cache/status rejected: X-API-KEY does not match ELMO_API_KEY');
+            return;
+        }
+
+        $ernieService = $this->getErnieService();
+        if (!$ernieService->isConfigured()) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'ERNIE service is not configured',
+            ]);
+            return;
+        }
+
+        $status = $ernieService->getAllCacheStatus();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'status' => $status,
+        ]);
+    }
     /**
      * Refreshes every ERNIE cache file.
      *
@@ -107,7 +133,7 @@ class VocabController
      * @param array<mixed> $vars Route parameters (unused)
      * @return void Outputs JSON directly
      */
-    public function refreshAllCache(array $vars = []): void
+    public function handleRefreshAllCache(array $vars = []): void
     {
         error_log('[ELMO admin] POST /admin/cache/refresh received');
 

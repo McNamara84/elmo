@@ -84,8 +84,8 @@ return [
     ['GET', '/drafts/{id}', [new DraftController(), 'get']],
 
     // ERNIE cache management endpoints
-    ['POST', '/admin/cache/refresh', [new VocabController(), 'refreshAllCache']],
-    ['GET', '/admin/cache/status', [new VocabController(), 'getAllCacheStatus']],
+    ['POST', '/admin/cache/refresh', [new VocabController(), 'handleRefreshAllCache']],
+    ['GET', '/admin/cache/status', [new VocabController(), 'handleGetAllCacheStatus']],
     
     // PID4INST instruments endpoints
     ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
