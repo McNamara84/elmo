@@ -128,7 +128,7 @@ class ErnieService
         $this->apiKey = $ernieApiKey ?? '';
         // Support both new shared variable and legacy variable for backwards compatibility
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
-        $this->cacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
+        $this->resourceTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
         $this->titleTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_title_types.json';
         $this->languagesCacheFile = __DIR__ . '/../../../storage/cache/ernie_languages.json';
         $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
@@ -151,7 +151,76 @@ class ErnieService
             'chronostrat-timescale' => $this->chronostratCacheFile,
             'gemet' => $this->gemetCacheFile,
         ];
-    }
+        /** @var array<string, array{cacheFile: string, ernieEndpoint: string}> */
+    private array $memory;
+
+    $this->memory = [
+        'resourceTypes' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_resource_types.json',
+            'ernieEndpoint' => '/api/v1/resource-types/elmo',
+        ],
+        'titleTypes' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_title_types.json',
+            'ernieEndpoint' => '/api/v1/title-types/elmo',
+        ],
+        'descriptionTypes' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_description_types.json',
+            'ernieEndpoint' => '/api/v1/description-types/elmo',
+        ],
+        'languages' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_languages.json',
+            'ernieEndpoint' => '/api/v1/languages/elmo',
+        ],
+        'contributorPersonRoles' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json',
+            'ernieEndpoint' => '/api/v1/roles/contributor-persons/elmo',
+        ],
+        'contributorInstitutionRoles' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json',
+            'ernieEndpoint' => '/api/v1/roles/contributor-institutions/elmo',
+        ],
+        'relationTypes' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_relation_types.json',
+            'ernieEndpoint' => '/api/v1/relation-types/elmo',
+        ],
+        'identifierTypes' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_identifier_types.json',
+            'ernieEndpoint' => '/api/v1/identifier-types/elmo',
+        ],
+        'pid4instInstruments' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_pid4inst.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/pid4inst-instruments',
+        ],
+        'mslLabs' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_msl_labs.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/msl-laboratories',
+        ],
+        'gcmdScienceKeywords' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_gcmd_science_keywords.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/gcmd-science-keywords',
+        ],
+        'gcmdPlatforms' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_gcmd_platforms.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/gcmd-platforms',
+        ],
+        'gcmdInstruments' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_gcmd_instruments.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/gcmd-instruments',
+        ],
+        'chronostratTimescale' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/chronostrat-timescale',
+        ],
+        'gemet' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_gemet.json',
+            'ernieEndpoint' => '/api/v1/vocabularies/gemet',
+        ],
+        'thesauriAvailability' => [
+            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json',
+            'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
+        ],
+    ];
+    
 
     /**
      * Gets the resource types cache file path
@@ -160,7 +229,7 @@ class ErnieService
      */
     protected function getCacheFile(): string
     {
-        return $this->cacheFile;
+        return $this->resourceTypesCacheFile;
     }
 
     /**
@@ -340,7 +409,7 @@ class ErnieService
     /**
      * Checks if a cache file exists and is not expired
      * 
-     * @param string $cacheFilePath Path to the cache file
+     * @param string $Path Path to the cache file
      * @return bool True if cache is valid
      */
     private function isCacheFileValid(string $cacheFilePath): bool
@@ -493,6 +562,35 @@ class ErnieService
             'ttl' => $this->cacheTtl,
             'itemCount' => isset($cache['data']) ? count($cache['data']) : 0
         ];
+    }
+
+
+    private function refreshAllCache(): void
+    {
+        global $ELMO_API_KEY;
+        $ernieService = $this->getErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured'
+                ]);
+                return;
+            }
+            foreach ($this->memory as $key => $value) {
+                // Use memory object to write cache files, using the value as descriptive label
+                $ernieData = $this->fetchFromErnie($value->$endpoint, $key);
+                if ($ernieData !== null && !empty($ernieData)) {
+                    $this->writeCacheFile($cacheFile, $ernieData);
+                    if ($onFreshData !== null) {
+                        // trigger the onFreshData callback with the newly fetched data
+                        $onFreshData($ernieData);
+                    }
+                }
+            }
+         
     }
 
     // ──────────────────────────────────────────────────────────────
