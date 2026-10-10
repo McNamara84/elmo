@@ -99,6 +99,118 @@ class VocabController
     }
 
     /**
+     * Refreshes every ERNIE cache file.
+     *
+     * The body must include a token field equal to ELMO_API_KEY ($apiKeyElmo).
+     * Form-encoded and JSON bodies are both accepted. The token is not logged.
+     *
+     * @param array<mixed> $vars Route parameters (unused)
+     * @return void Outputs JSON directly
+     */
+    public function refreshAllCache(array $vars = []): void
+    {
+        error_log('[ELMO admin] POST /admin/cache/refresh received');
+
+        if (!$this->validateRefreshToken()) {
+            return;
+        }
+
+        set_time_limit(300);
+        error_log('[ELMO admin] POST /admin/cache/refresh authorized; refreshing all ERNIE caches (time limit 300s)');
+
+        try {
+            $ernieService = $this->getErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured',
+                ]);
+                return;
+            }
+
+            $results = $ernieService->refreshAllCache();
+            $failed = array_keys(array_filter(
+                $results,
+                static fn(bool $ok): bool => !$ok
+            ));
+
+            header('Content-Type: application/json');
+            if ($failed === []) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'All ERNIE caches refreshed',
+                    'results' => $results,
+                ]);
+                return;
+            }
+
+            http_response_code(502);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Some ERNIE caches failed to refresh',
+                'failed' => $failed,
+                'results' => $results,
+            ]);
+        } catch (Exception $e) {
+            error_log('[ELMO admin] cache refresh failed: ' . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
+    }
+
+    /**
+     * Checks the token request field against ELMO_API_KEY.
+     *
+     * @return bool True when the field matches, false after a 401 response
+     */
+    private function validateRefreshToken(): bool
+    {
+        global $apiKeyElmo;
+
+        $provided = $this->readRequestField('token');
+        $expected = is_string($apiKeyElmo) ? $apiKeyElmo : '';
+
+        if ($expected === '' || !is_string($provided) || !hash_equals($expected, $provided)) {
+            error_log('[ELMO admin] POST /admin/cache/refresh rejected: token does not match ELMO_API_KEY');
+            http_response_code(401);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Invalid or missing API token']);
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Reads one string field from a form body or a JSON body.
+     *
+     * @param string $name Field name
+     * @return string|null The field value, or null when it is absent or not a string
+     */
+    private function readRequestField(string $name): ?string
+    {
+        if (isset($_POST[$name]) && is_string($_POST[$name])) {
+            return $_POST[$name];
+        }
+
+        $raw = file_get_contents('php://input');
+        if (!is_string($raw) || $raw === '') {
+            return null;
+        }
+
+        $data = json_decode($raw, true);
+        if (!is_array($data) || !isset($data[$name]) || !is_string($data[$name])) {
+            return null;
+        }
+
+        return $data[$name];
+    }
+
+    /**
      * Retrieves relation types, preferring ERNIE data with local DB fallback
      *
      * When ERNIE is configured, loads relation types from the file cache or ERNIE.

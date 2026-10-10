@@ -33,7 +33,7 @@ class ErnieService
     /**
      * @var string Path to the resource types cache file
      */
-    private string $cacheFile;
+    private string $resourceTypesCacheFile;
 
     /**
      * @var string Path to the title types cache file
@@ -116,6 +116,13 @@ class ErnieService
     private array $thesaurusCacheFiles;
 
     /**
+     * Cache file path and ERNIE endpoint for each vocabulary ELMO refreshes.
+     *
+     * @var array<string, array{cacheFile: string, ernieEndpoint: string}>
+     */
+    private array $memory;
+
+    /**
      * ErnieService constructor.
      * 
      * Initializes the service with configuration from global settings.
@@ -151,10 +158,8 @@ class ErnieService
             'chronostrat-timescale' => $this->chronostratCacheFile,
             'gemet' => $this->gemetCacheFile,
         ];
-        /** @var array<string, array{cacheFile: string, ernieEndpoint: string}> */
-    private array $memory;
 
-    $this->memory = [
+        $this->memory = [
         'resourceTypes' => [
             'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_resource_types.json',
             'ernieEndpoint' => '/api/v1/resource-types/elmo',
@@ -220,7 +225,7 @@ class ErnieService
             'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
         ],
     ];
-    
+    }
 
     /**
      * Gets the resource types cache file path
@@ -565,61 +570,41 @@ class ErnieService
     }
 
 
-    private function refreshAllCache(): void
+    /**
+     * Fetches every vocabulary in the memory map and writes its cache file.
+     *
+     * Callers must authenticate before invoking this. The method does not
+     * read the HTTP request.
+     *
+     * @return array<string, bool> Whether each cache file was written
+     */
+    public function refreshAllCache(): array
     {
-        global $ELMO_API_KEY;
-        if (!isset($_POST['token']) || $_POST['token'] !== $ELMO_API_KEY) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid API token'
-            ]);
-            exit;
+        $results = [];
+        foreach ($this->memory as $key => $entry) {
+            error_log("[ERNIE service] refreshAllCache: {$key} from {$entry['ernieEndpoint']}");
+            $results[$key] = $this->refreshCacheFromApi(
+                $entry['ernieEndpoint'],
+                $key,
+                $entry['cacheFile']
+            );
         }
-        $ernieService = $this->getErnieService();
 
-            if (!$ernieService->isConfigured()) {
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ERNIE service is not configured'
-                ]);
-                return;
-            }
-            foreach ($this->memory as $key => $value) {
-                // Use memory object to write cache files, using the value as descriptive label
-                $ernieData = $this->fetchFromErnie($value->$endpoint, $key);
-                if ($ernieData !== null && !empty($ernieData)) {
-                    $this->writeCacheFile($cacheFile, $ernieData);
-                    if ($onFreshData !== null) {
-                        // trigger the onFreshData callback with the newly fetched data
-                        $onFreshData($ernieData);
-                    }
-                }
-            }
-         
+        return $results;
     }
-    private function getAllCacheStatus(): array
+
+    /**
+     * @return array<string, array<string, mixed>> Cache status keyed by vocabulary slug
+     */
+    public function getAllCacheStatus(): array
     {
-        global $ELMO_API_KEY;
-        if (!isset($GET->token) || $GET->token !== $ELMO_API_KEY) {
-            http_response_code(403);
-            header('Content-Type: application/json');
-            echo json_encode([
-                'success' => false,
-                'message' => 'Invalid API token'
-            ]);
-            exit;
-        }
         $returnArray = [];
-        foreach ($this->memory as $key => $value) {
-            $cacheFile = $value->cacheFile;
-            $returnArray[$key] = $this->getCacheStatus($cacheFile);
+        foreach ($this->memory as $key => $entry) {
+            $returnArray[$key] = $this->getCacheFileStatus($entry['cacheFile']);
         }
+
         return $returnArray;
-    };
+    }
 
 
     // ──────────────────────────────────────────────────────────────
@@ -653,8 +638,8 @@ class ErnieService
         callable $fallbackFn,
         ?callable $onFreshData = null
     ): array {
-        $endpoint = $this->memory[$label]->endpoint;
-        $cacheFile = $this->memory[$label]->cacheFile;
+        $endpoint = $this->memory[$label]['ernieEndpoint'];
+        $cacheFile = $this->memory[$label]['cacheFile'];
         if ($this->isCacheFileValid($cacheFile)) {
             $cachedData = $this->readCacheFile($cacheFile);
             if (!empty($cachedData)) {
