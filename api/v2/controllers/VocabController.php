@@ -101,8 +101,8 @@ class VocabController
     /**
      * Refreshes every ERNIE cache file.
      *
-     * The body must include a token field equal to ELMO_API_KEY ($apiKeyElmo).
-     * Form-encoded and JSON bodies are both accepted. The token is not logged.
+     * Requires the X-API-KEY header, checked against ELMO_API_KEY ($apiKeyElmo).
+     * The header value is not logged.
      *
      * @param array<mixed> $vars Route parameters (unused)
      * @return void Outputs JSON directly
@@ -111,7 +111,8 @@ class VocabController
     {
         error_log('[ELMO admin] POST /admin/cache/refresh received');
 
-        if (!$this->validateRefreshToken()) {
+        if (!$this->validateApiKey()) {
+            error_log('[ELMO admin] POST /admin/cache/refresh rejected: X-API-KEY does not match ELMO_API_KEY');
             return;
         }
 
@@ -160,54 +161,6 @@ class VocabController
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Internal Server Error']);
         }
-    }
-
-    /**
-     * Checks the token request field against ELMO_API_KEY.
-     *
-     * @return bool True when the field matches, false after a 401 response
-     */
-    private function validateRefreshToken(): bool
-    {
-        global $apiKeyElmo;
-
-        $provided = $this->readRequestField('token');
-        $expected = is_string($apiKeyElmo) ? $apiKeyElmo : '';
-
-        if ($expected === '' || !is_string($provided) || !hash_equals($expected, $provided)) {
-            error_log('[ELMO admin] POST /admin/cache/refresh rejected: token does not match ELMO_API_KEY');
-            http_response_code(401);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => 'Invalid or missing API token']);
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Reads one string field from a form body or a JSON body.
-     *
-     * @param string $name Field name
-     * @return string|null The field value, or null when it is absent or not a string
-     */
-    private function readRequestField(string $name): ?string
-    {
-        if (isset($_POST[$name]) && is_string($_POST[$name])) {
-            return $_POST[$name];
-        }
-
-        $raw = file_get_contents('php://input');
-        if (!is_string($raw) || $raw === '') {
-            return null;
-        }
-
-        $data = json_decode($raw, true);
-        if (!is_array($data) || !isset($data[$name]) || !is_string($data[$name])) {
-            return null;
-        }
-
-        return $data[$name];
     }
 
     /**

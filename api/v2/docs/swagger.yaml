@@ -12,7 +12,7 @@ info:
     ### Authentication
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
-    `POST /admin/cache/refresh` does not use the `X-API-KEY` header. Send the API token in the body field `token`. It must match `ELMO_API_KEY`. Cache status is not published yet. When it is, `getAllCacheStatus` returns an `AllCacheStatus` object: one entry per vocabulary, not a JSON list.
+    `POST /admin/cache/refresh` uses the same `X-API-KEY` header. The value must match `ELMO_API_KEY`. Cache status is not published yet. When it is, `getAllCacheStatus` returns an `AllCacheStatus` object: one entry per vocabulary, not a JSON list.
 
     ### Binary Data
     Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
@@ -1339,24 +1339,21 @@ paths:
     post:
       tags:
         - admin
-      security: []
       summary: Refresh all ERNIE caches
       description: |-
         Fetches every ERNIE vocabulary and writes its cache file. The request runs for at most 300 seconds.
 
-        Authenticate with a body field named `token`, not the `X-API-KEY` header. The value must match `ELMO_API_KEY`. Form-encoded and JSON bodies are both accepted.
+        Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
 
         Cache status is not available from this API yet. `getAllCacheStatus` will return an `AllCacheStatus` object keyed by vocabulary slug.
       operationId: refreshAllCache
-      requestBody:
-        required: true
-        content:
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: "#/components/schemas/CacheRefreshRequest"
-          application/json:
-            schema:
-              $ref: "#/components/schemas/CacheRefreshRequest"
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key. Must match the ELMO_API_KEY environment variable.
       responses:
         "200":
           description: Every cache file was refreshed
@@ -1371,7 +1368,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/CacheRefreshResponse"
         "401":
-          description: The token field is missing or does not match ELMO_API_KEY
+          description: The X-API-KEY header is missing or does not match ELMO_API_KEY
           content:
             application/json:
               schema:
@@ -1379,7 +1376,7 @@ paths:
                 properties:
                   error:
                     type: string
-                    example: Invalid or missing API token
+                    example: Invalid or missing API key
                 required:
                   - error
         "502":
@@ -2170,15 +2167,6 @@ components:
       name: X-API-Key
       description: API key to access protected endpoints. Required for all /update/ endpoints.
   schemas:
-    CacheRefreshRequest:
-      type: object
-      description: Body for POST /admin/cache/refresh. The API token is the `token` field.
-      properties:
-        token:
-          type: string
-          description: API token. Must match the ELMO_API_KEY environment variable.
-      required:
-        - token
     CacheRefreshResponse:
       type: object
       properties:
