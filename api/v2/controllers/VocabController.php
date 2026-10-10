@@ -82,13 +82,13 @@ class VocabController
      */
     private function validateApiKey(): bool
     {
-        global $apiKeyElmo;
+        global $ELMO_API_KEY;
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
 
-        // Check if key exists and matches
-        if (!$providedKey || $providedKey !== $apiKeyElmo) {
+        // Check if key exists and matches the value defined in settings.php
+        if (!is_string($ELMO_API_KEY) || $ELMO_API_KEY === '' || !is_string($providedKey) || !hash_equals($ELMO_API_KEY, $providedKey)) {
             http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Invalid or missing API key']);
@@ -127,7 +127,7 @@ class VocabController
     /**
      * Refreshes every ERNIE cache file.
      *
-     * Requires the X-API-KEY header, checked against ELMO_API_KEY ($apiKeyElmo).
+     * Requires the X-API-KEY header, checked against $ELMO_API_KEY from settings.php.
      * The header value is not logged.
      *
      * @param array<mixed> $vars Route parameters (unused)

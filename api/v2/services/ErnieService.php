@@ -578,7 +578,7 @@ class ErnieService
      *
      * @return array<string, bool> Whether each cache file was written
      */
-    protected function refreshAllCache(): array
+    public function refreshAllCache(): array
     {
         $results = [];
         foreach ($this->memory as $key => $entry) {
@@ -596,7 +596,7 @@ class ErnieService
     /**
      * @return array<string, array<string, mixed>> Cache status keyed by vocabulary slug
      */
-    protected function getAllCacheStatus(): array
+    public function getAllCacheStatus(): array
     {
         $returnArray = [];
         foreach ($this->memory as $key => $entry) {
