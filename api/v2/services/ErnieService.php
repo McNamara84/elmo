@@ -120,7 +120,7 @@ class ErnieService
      *
      * @var array<string, array{cacheFile: string, ernieEndpoint: string}>
      */
-    private array $memory;
+    protected array $memory;
 
     /**
      * ErnieService constructor.
@@ -638,6 +638,11 @@ class ErnieService
         callable $fallbackFn,
         ?callable $onFreshData = null
     ): array {
+        if (!isset($this->memory[$label])) {
+            error_log("ERNIE: Unknown cache label: $label");
+            return $fallbackFn();
+        }
+
         $endpoint = $this->memory[$label]['ernieEndpoint'];
         $cacheFile = $this->memory[$label]['cacheFile'];
         if ($this->isCacheFileValid($cacheFile)) {
@@ -722,9 +727,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/resource-types/elmo',
-            'resource types',
-            $this->getCacheFile(),
+            'resourceTypes',
             [$this, 'getHardcodedResourceTypeFallback'],
             $onFreshData
         );
@@ -777,20 +780,6 @@ class ErnieService
     }
 
     /**
-     * Forces resource types cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/resource-types/elmo',
-            'resource types',
-            $this->getCacheFile()
-        );
-    }
-
-    /**
      * Gets resource types cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
@@ -840,9 +829,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/description-types/elmo',
-            'description types',
-            $this->getDescriptionTypesCacheFile(),
+            'descriptionTypes',
             [$this, 'getHardcodedDescriptionTypeFallback']
         );
     }
@@ -943,9 +930,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/title-types/elmo',
-            'title types',
-            $this->getTitleTypesCacheFile(),
+            'titleTypes',
             [$this, 'getHardcodedTitleTypeFallback'],
             $onFreshData
         );
@@ -1042,9 +1027,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/languages/elmo',
             'languages',
-            $this->getLanguagesCacheFile(),
             [$this, 'getHardcodedLanguageFallback'],
             $onFreshData
         );
@@ -1159,9 +1142,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/vocabularies/pid4inst-instruments',
-            'PID4INST instruments',
-            $this->getPid4instCacheFile(),
+            'pid4instInstruments',
             fn() => []
         );
     }
@@ -1242,9 +1223,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/vocabularies/msl-laboratories',
-            'MSL laboratories',
-            $this->getMslLabsCacheFile(),
+            'mslLabs',
             static fn(): array => []
         );
     }
@@ -1334,9 +1313,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/roles/contributor-persons/elmo',
-            'contributor person roles',
-            $this->getContributorPersonRolesCacheFile(),
+            'contributorPersonRoles',
             [$this, 'getHardcodedContributorPersonRoleFallback'],
             $onFreshData
         );
@@ -1434,9 +1411,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/roles/contributor-institutions/elmo',
-            'contributor institution roles',
-            $this->getContributorInstitutionRolesCacheFile(),
+            'contributorInstitutionRoles',
             [$this, 'getHardcodedContributorInstitutionRoleFallback'],
             $onFreshData
         );
@@ -1661,8 +1636,14 @@ class ErnieService
      */
     public function getThesaurusVocabularyWithCache(string $slug): array
     {
-        $cacheFile = $this->getThesaurusCacheFile($slug);
-        if ($cacheFile === null) {
+        $label = null;
+        foreach ($this->memory as $key => $entry) {
+            if ($entry['ernieEndpoint'] === '/api/v1/vocabularies/' . $slug) {
+                $label = $key;
+                break;
+            }
+        }
+        if ($label === null) {
             error_log("ERNIE: Unknown thesaurus slug: $slug");
             return [];
         }
@@ -1677,9 +1658,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            "/api/v1/vocabularies/$slug",
-            "thesaurus vocabulary ($slug)",
-            $cacheFile,
+            $label,
             fn() => []
         );
     }
@@ -1766,9 +1745,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/relation-types/elmo',
-            'relation types',
-            $this->getRelationTypesCacheFile(),
+            'relationTypes',
             [$this, 'getHardcodedRelationTypeFallback'],
             $onFreshData
         );
@@ -1854,9 +1831,7 @@ class ErnieService
         }
 
         return $this->getDataWithCache(
-            '/api/v1/identifier-types/elmo',
-            'identifier types',
-            $this->getIdentifierTypesCacheFile(),
+            'identifierTypes',
             [$this, 'getHardcodedIdentifierTypeFallback'],
             $onFreshData
         );
