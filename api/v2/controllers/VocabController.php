@@ -13,11 +13,6 @@ if (!defined('UNIT_TESTING')) {
 }
 require_once __DIR__ . '/../services/DataCiteRelationType.php';
 
-/**
- * Class VocabController
- *
- * Handles vocabulary-related API requests.
- */
 class VocabController
 {
     /**
@@ -1684,15 +1679,6 @@ class VocabController
         return $result;
     }
 
-    /**
-     * Gets the status of the ERNIE resource types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getResourceTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getCacheStatus', 'resource types');
-    }
 
     /**
      * Retrieves all languages, preferring ERNIE data with local DB fallback
@@ -1891,15 +1877,6 @@ class VocabController
         }
     }
 
-    /**
-     * Gets the status of the ERNIE description types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getDescriptionTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getDescriptionTypesCacheStatus', 'description types');
-    }
 
     /**
      * Retrieves all title types, preferring ERNIE data with local DB fallback
@@ -1976,55 +1953,6 @@ class VocabController
         echo json_encode($types);
     }
 
-    /**
-     * Gets the status of the ERNIE title types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getTitleTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getTitleTypesCacheStatus', 'title types');
-    }
-
-    // ==================== Generic ERNIE cache handlers ====================
-
-    /**
-     * Generic handler for ERNIE cache status endpoints
-     *
-     * @param string $cacheStatusMethod The ErnieService method to call
-     * @param string $label Human-readable label for error logging
-     * @return void Outputs JSON response directly
-     */
-    private function handleCacheStatus(string $cacheStatusMethod, string $label): void
-    {
-        try {
-            $ernieService = $this->getErnieService();
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->$cacheStatusMethod()
-            ]);
-        } catch (Exception $e) {
-            error_log("Error getting $label cache status: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    // ==================== Languages cache endpoints ====================
-
-    /**
-     * Gets the status of the ERNIE languages cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getLanguagesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getLanguagesCacheStatus', 'languages');
-    }
-
     // ==================== PID4INST Instruments ====================
 
     /**
@@ -2075,53 +2003,6 @@ class VocabController
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
-    }
-
-    /**
-     * Gets the status of the PID4INST instruments cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getPid4instCacheStatus(): void
-    {
-        $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
-    }
-
-    // ==================== MSL Laboratories cache endpoints ====================
-
-    /**
-     * Gets the status of the ERNIE MSL laboratories cache.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getMslLabsCacheStatus(): void
-    {
-        $this->handleCacheStatus(
-            'getMslLabsCacheStatus',
-            'MSL laboratories'
-        );
-    }
-
-    // ==================== Contributor Roles cache endpoints ====================
-
-    /**
-     * Gets the status of the ERNIE contributor person roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getContributorPersonRolesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getContributorPersonRolesCacheStatus', 'contributor person roles');
-    }
-
-    /**
-     * Gets the status of the ERNIE contributor institution roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getContributorInstitutionRolesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getContributorInstitutionRolesCacheStatus', 'contributor institution roles');
     }
 
     // ==================== Thesauri (ERNIE proxy) endpoints ====================
@@ -2238,40 +2119,6 @@ class VocabController
     public function getGemet(): void
     {
         $this->getThesaurusVocabulary('gemet');
-    }
-
-    /**
-     * Gets the status of the thesauri availability cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getThesauriAvailabilityCacheStatus(): void
-    {
-        $this->handleCacheStatus('getThesauriAvailabilityCacheStatus', 'thesauri availability');
-    }
-
-    // ==================== Relation Types (ERNIE) cache management ====================
-
-    /**
-     * Gets the status of the ERNIE relation types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getRelationTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getRelationTypesCacheStatus', 'relation types');
-    }
-
-    // ==================== Identifier Types (ERNIE) cache management ====================
-
-    /**
-     * Gets the status of the ERNIE identifier types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getIdentifierTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getIdentifierTypesCacheStatus', 'identifier types');
     }
 
     /**
