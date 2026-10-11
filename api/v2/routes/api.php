@@ -53,6 +53,8 @@ return [
     ['GET', '/vocabs/thesauri/gcmd-instruments', [new VocabController(), 'getGcmdInstrumentsFromErnie']],
     ['GET', '/vocabs/thesauri/chronostrat-timescale', [new VocabController(), 'getChronostratTimescale']],
     ['GET', '/vocabs/thesauri/gemet', [new VocabController(), 'getGemet']],
+    // PID4INST instruments endpoints
+    ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
 
     // Vocabulary retrieval for ICGEM implementation
     ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
@@ -71,10 +73,8 @@ return [
     ['GET', '/dataset/export/{id}/{scheme}/download', [new DatasetController(), 'exportResourceDownload']],
     ['GET', '/dataset/export/{id}/{scheme}', [new DatasetController(), 'exportResource']],
 
-
     // Export base xml for data mapping to the ICGEM metadatabase
     ['GET', '/dataset/icgem_export/{id}', [new ICGEMController(), 'exportICGEMxml']],
-
 
     // Draft autosave endpoints
     ['POST', '/drafts', [new DraftController(), 'create']],
@@ -85,11 +85,5 @@ return [
 
     // ERNIE cache management endpoints
     ['POST', '/admin/cache/refresh', [new VocabController(), 'handleRefreshAllCache']],
-    ['GET', '/admin/cache/status', [new VocabController(), 'handleGetAllCacheStatus']],
-    
-    // PID4INST instruments endpoints
-    ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
-
-
-    ['GET', '/admin/cache/thesauri/availability/status', [new VocabController(), 'getThesauriAvailabilityCacheStatus']]
-];
+    ['GET', '/admin/cache/status', [new VocabController(), 'handleGetAllCacheStatus']]
+    ];
