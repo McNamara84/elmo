@@ -1,12 +1,5 @@
 <?php
 
-/**
- * Service for communicating with the ERNIE API
- * 
- * This service handles fetching resource types and title types from the external 
- * ERNIE vocabulary service with caching support to minimize API calls and provide 
- * fallback when ERNIE is unavailable.
- */
 
 // Only require settings.php if not in a test environment that already defined the globals
 if (!defined('ERNIE_SERVICE_TEST_MODE')) {
@@ -402,7 +395,14 @@ class ErnieService
     {
         $returnArray = [];
         foreach ($this->memory as $key => $entry) {
-            $returnArray[$key] = $this->getCacheFileStatus($entry['cacheFile']);
+            $status = $this->getCacheFileStatus($entry['cacheFile']);
+            if ($key === 'mslLabs') {
+                $vocabulary = $this->readCacheFile($entry['cacheFile'], true);
+                if (isset($vocabulary['data']) && is_array($vocabulary['data'])) {
+                    $status['itemCount'] = count($vocabulary['data']);
+                }
+            }
+            $returnArray[$key] = $status;
         }
 
         return $returnArray;
@@ -495,15 +495,6 @@ class ErnieService
     //  Resource Types
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches resource types from ERNIE API
-     * 
-     * @return array<array{id: int, name: string, description: string|null}>|null Array of resource types or null on failure
-     */
-    public function fetchResourceTypes(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/resource-types/elmo', 'resource types');
-    }
 
     /**
      * Gets resource types with caching logic
@@ -519,7 +510,7 @@ class ErnieService
      */
     public function getResourceTypesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['resourceTypes']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Resource types] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -581,29 +572,11 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets resource types cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['resourceTypes']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Description Types
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches description types from ERNIE API
-     * 
-     * @return array<mixed>|null Raw API response or null on failure
-     */
-    public function fetchDescriptionTypes(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/description-types/elmo', 'description types');
-    }
 
     /**
      * Gets description types with caching logic
@@ -621,7 +594,7 @@ class ErnieService
      */
     public function getDescriptionTypesWithCache(): array
     {
-        $fileStatus = $this->getDescriptionTypesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['descriptionTypes']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Description types] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -670,29 +643,11 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets description types cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getDescriptionTypesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['descriptionTypes']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Title Types
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches title types from ERNIE API
-     * 
-     * @return array<array{id: int, name: string, slug: string}>|null Array of title types or null on failure
-     */
-    public function fetchTitleTypes(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/title-types/elmo', 'title types');
-    }
 
     /**
      * Gets title types with caching logic
@@ -708,7 +663,7 @@ class ErnieService
      */
     public function getTitleTypesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getTitleTypesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['titleTypes']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Title types] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -753,29 +708,11 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets title types cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getTitleTypesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['titleTypes']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Languages
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches languages from ERNIE API
-     * 
-     * @return array<array{id: int, name: string, code: string}>|null Array of languages or null on failure
-     */
-    public function fetchLanguages(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/languages/elmo', 'languages');
-    }
 
     /**
      * Gets languages with caching logic
@@ -791,7 +728,7 @@ class ErnieService
      */
     public function getLanguagesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getLanguagesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['languages']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Languages] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -831,15 +768,6 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets languages cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getLanguagesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['languages']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Utilities
@@ -882,7 +810,7 @@ class ErnieService
      */
     public function getPid4instInstrumentsWithCache(): array
     {
-        $fileStatus = $this->getPid4instCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['pid4instInstruments']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | PID4INST instruments] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -897,35 +825,11 @@ class ErnieService
         );
     }
 
-    /**
-     * Gets PID4INST cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getPid4instCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['pid4instInstruments']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  MSL Laboratories
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches the MSL laboratories from the ERNIE API.
-     *
-     * The response contains file-metadata and the actual laboratories
-     * in the "data" property.
-     *
-     * @return array<string, mixed>|null MSL laboratories or null on failure
-     */
-    public function fetchMslLabs(): ?array
-    {
-        return $this->fetchFromErnie(
-            '/api/v1/vocabularies/msl-laboratories',
-            'MSL laboratories'
-        );
-    }
 
     /**
      * Gets the MSL laboratories with caching logic.
@@ -948,7 +852,7 @@ class ErnieService
      */
     public function getMslLabsWithCache(): array
     {
-        $fileStatus = $this->getMslLabsCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['mslLabs']['cacheFile']);
 
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | MSL laboratories] cache file is not available. Fetching new from ERNIE');
@@ -964,51 +868,11 @@ class ErnieService
         );
     }
 
-    /**
-     * Gets status information for the MSL laboratories cache.
-     *
-     * @return array{
-     *     exists: bool,
-     *     valid: bool,
-     *     lastUpdated: string|null,
-     *     age: int|null,
-     *     ageFormatted?: string|null,
-     *     ttl?: int,
-     *     itemCount: int,
-     *     error?: string
-     * }
-     */
-    public function getMslLabsCacheStatus(): array
-    {
-        $cacheFile = $this->memory['mslLabs']['cacheFile'];
-        $status = $this->getCacheFileStatus($cacheFile);
-
-        $laboratoriesVocabulary = $this->readCacheFile(
-            $cacheFile,
-            true
-        );
-
-        if (isset($laboratoriesVocabulary['data']) &&
-            is_array($laboratoriesVocabulary['data'])) {
-            $status['itemCount'] = count($laboratoriesVocabulary['data']);
-        }
-
-        return $status;
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Contributor Person Roles
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches contributor person roles from ERNIE API
-     * 
-     * @return array<array{id: int, name: string}>|null Array of roles or null on failure
-     */
-    public function fetchContributorPersonRoles(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/roles/contributor-persons/elmo', 'contributor person roles');
-    }
 
     /**
      * Gets contributor person roles with caching logic
@@ -1024,7 +888,7 @@ class ErnieService
      */
     public function getContributorPersonRolesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getContributorPersonRolesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['contributorPersonRoles']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Contributor person roles] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -1070,29 +934,11 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets contributor person roles cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getContributorPersonRolesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['contributorPersonRoles']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Contributor Institution Roles
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches contributor institution roles from ERNIE API
-     * 
-     * @return array<array{id: int, name: string}>|null Array of roles or null on failure
-     */
-    public function fetchContributorInstitutionRoles(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/roles/contributor-institutions/elmo', 'contributor institution roles');
-    }
 
     /**
      * Gets contributor institution roles with caching logic
@@ -1108,7 +954,7 @@ class ErnieService
      */
     public function getContributorInstitutionRolesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getContributorInstitutionRolesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['contributorInstitutionRoles']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Contributor institution roles] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -1151,15 +997,6 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets contributor institution roles cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getContributorInstitutionRolesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['contributorInstitutionRoles']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Thesauri Availability
@@ -1173,7 +1010,7 @@ class ErnieService
      * 
      * @return array<string, array{available: bool, displayName: string}>|null Availability data or null on failure
      */
-    public function fetchThesauriAvailability(): ?array
+    private function fetchThesauriAvailability(): ?array
     {
         // Try ELMO-specific endpoint first (requires API key)
         $data = $this->fetchFromErnie('/api/v1/elmo/vocabularies/thesauri-availability', 'thesauri availability (ELMO)');
@@ -1205,7 +1042,7 @@ class ErnieService
         // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
         $cacheFile = $this->memory['thesauriAvailability']['cacheFile'];
 
-        $fileStatus = $this->getThesauriAvailabilityCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['thesauriAvailability']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Thesauri availability] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -1256,15 +1093,6 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets thesauri availability cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getThesauriAvailabilityCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['thesauriAvailability']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Thesaurus Vocabulary Data
@@ -1296,7 +1124,7 @@ class ErnieService
             return [];
         }
 
-        $fileStatus = $this->getThesaurusVocabularyCacheStatus($slug);
+        $fileStatus = $this->getCacheFileStatus($this->memory[$label]['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log("[ERNIE service | Thesaurus vocabulary ($slug)] cache file is not available. Fetching new from ERNIE");
         } else if (!$fileStatus['valid']) {
@@ -1311,48 +1139,11 @@ class ErnieService
         );
     }
 
-    /**
-     * Gets thesaurus vocabulary cache status for a given slug
-     * 
-     * @param string $slug The thesaurus slug
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getThesaurusVocabularyCacheStatus(string $slug): array
-    {
-        $cacheFile = null;
-        foreach ($this->memory as $entry) {
-            if ($entry['ernieEndpoint'] === '/api/v1/vocabularies/' . $slug) {
-                $cacheFile = $entry['cacheFile'];
-                break;
-            }
-        }
-        if ($cacheFile === null) {
-            return [
-                'exists' => false,
-                'valid' => false,
-                'lastUpdated' => null,
-                'age' => null,
-                'itemCount' => 0,
-                'error' => "Unknown thesaurus slug: $slug"
-            ];
-        }
-
-        return $this->getCacheFileStatus($cacheFile);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Relation Types
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches relation types from ERNIE API
-     * 
-     * @return array<array{id: int, name: string, description: string|null}>|null Array of relation types or null on failure
-     */
-    public function fetchRelationTypes(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/relation-types/elmo', 'relation types');
-    }
 
     /**
      * Gets relation types with caching logic
@@ -1368,7 +1159,7 @@ class ErnieService
      */
     public function getRelationTypesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getRelationTypesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['relationTypes']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Relation types] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -1402,29 +1193,11 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets relation types cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getRelationTypesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['relationTypes']['cacheFile']);
-    }
 
     // ──────────────────────────────────────────────────────────────
     //  Identifier Types
     // ──────────────────────────────────────────────────────────────
 
-    /**
-     * Fetches identifier types from ERNIE API
-     * 
-     * @return array<array{id: int, name: string, description: string|null, pattern: string|null}>|null Array of identifier types or null on failure
-     */
-    public function fetchIdentifierTypes(): ?array
-    {
-        return $this->fetchFromErnie('/api/v1/identifier-types/elmo', 'identifier types');
-    }
 
     /**
      * Gets identifier types with caching logic
@@ -1440,7 +1213,7 @@ class ErnieService
      */
     public function getIdentifierTypesWithCache(?callable $onFreshData = null): array
     {
-        $fileStatus = $this->getIdentifierTypesCacheStatus();
+        $fileStatus = $this->getCacheFileStatus($this->memory['identifierTypes']['cacheFile']);
         if (!$fileStatus['exists']) {
             error_log('[ERNIE service | Identifier types] cache file is not available. Fetching new from ERNIE');
         } else if (!$fileStatus['valid']) {
@@ -1475,13 +1248,4 @@ class ErnieService
         ];
     }
 
-    /**
-     * Gets identifier types cache status information
-     * 
-     * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
-     */
-    public function getIdentifierTypesCacheStatus(): array
-    {
-        return $this->getCacheFileStatus($this->memory['identifierTypes']['cacheFile']);
-    }
 }
