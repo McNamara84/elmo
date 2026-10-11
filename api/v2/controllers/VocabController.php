@@ -1685,30 +1685,6 @@ class VocabController
     }
 
     /**
-     * Manually refreshes the ERNIE resource types cache
-     * 
-     * Requires API key authentication.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshResourceTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshCache',
-            'getCacheStatus',
-            'Resource types',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieTypes = $ernieService->getResourceTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $this->syncResourceTypesFromErnie($ernieTypes);
-                }
-            }
-        );
-    }
-
-    /**
      * Gets the status of the ERNIE resource types cache
      *
      * @return void Outputs JSON response directly
