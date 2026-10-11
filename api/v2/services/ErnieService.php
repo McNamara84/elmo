@@ -31,91 +31,6 @@ class ErnieService
     private int $cacheTtl;
 
     /**
-     * @var string Path to the resource types cache file
-     */
-    private string $resourceTypesCacheFile;
-
-    /**
-     * @var string Path to the title types cache file
-     */
-    private string $titleTypesCacheFile;
-
-    /**
-     * @var string Path to the languages cache file
-     */
-    private string $languagesCacheFile;
-
-    /**
-     * @var string Path to the PID4INST instruments cache file
-     */
-    private string $pid4instCacheFile;
-
-    /**
-     * @var string Path to the contributor person roles cache file
-     */
-    private string $contributorPersonRolesCacheFile;
-
-    /**
-     * @var string Path to the contributor institution roles cache file
-     */
-    private string $contributorInstitutionRolesCacheFile;
-
-    /**
-     * @var string Path to the MSL laboratories cache file
-     */
-    private string $mslLabsCacheFile;
-
-    /**
-     * @var string Path to the thesauri availability cache file
-     */
-    private string $thesauriAvailabilityCacheFile;
-
-    /**
-     * @var string Path to the GCMD Science Keywords cache file
-     */
-    private string $scienceKeywordsCacheFile;
-
-    /**
-     * @var string Path to the GCMD Platforms cache file
-     */
-    private string $platformsCacheFile;
-
-    /**
-     * @var string Path to the GCMD Instruments cache file
-     */
-    private string $instrumentsCacheFile;
-
-    /**
-     * @var string Path to the Chronostratigraphy cache file
-     */
-    private string $chronostratCacheFile;
-
-    /**
-     * @var string Path to the GEMET cache file
-     */
-    private string $gemetCacheFile;
-
-    /**
-     * @var string Path to the description types cache file
-     */
-    private string $descriptionTypesCacheFile;
-
-    /**
-     * @var string Path to the relation types cache file
-     */
-    private string $relationTypesCacheFile;
-
-    /**
-     * @var string Path to the identifier types cache file
-     */
-    private string $identifierTypesCacheFile;
-
-    /**
-     * @var array<string, string> Mapping of thesaurus slugs to cache file paths
-     */
-    private array $thesaurusCacheFiles;
-
-    /**
      * Cache file path and ERNIE endpoint for each vocabulary ELMO refreshes.
      *
      * @var array<string, array{cacheFile: string, ernieEndpoint: string}>
@@ -135,29 +50,6 @@ class ErnieService
         $this->apiKey = $ernieApiKey ?? '';
         // Support both new shared variable and legacy variable for backwards compatibility
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
-        $this->resourceTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_resource_types.json';
-        $this->titleTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_title_types.json';
-        $this->languagesCacheFile = __DIR__ . '/../../../storage/cache/ernie_languages.json';
-        $this->pid4instCacheFile = __DIR__ . '/../../../storage/cache/ernie_pid4inst.json';
-        $this->contributorPersonRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_person_roles.json';
-        $this->contributorInstitutionRolesCacheFile = __DIR__ . '/../../../storage/cache/ernie_contributor_institution_roles.json';
-        $this->mslLabsCacheFile = __DIR__ . '/../../../storage/cache/ernie_msl_labs.json';
-        $this->thesauriAvailabilityCacheFile = __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json';
-        $this->scienceKeywordsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_science_keywords.json';
-        $this->platformsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_platforms.json';
-        $this->instrumentsCacheFile = __DIR__ . '/../../../storage/cache/ernie_gcmd_instruments.json';
-        $this->chronostratCacheFile = __DIR__ . '/../../../storage/cache/ernie_chronostrat_timescale.json';
-        $this->gemetCacheFile = __DIR__ . '/../../../storage/cache/ernie_gemet.json';
-        $this->descriptionTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_description_types.json';
-        $this->relationTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_relation_types.json';
-        $this->identifierTypesCacheFile = __DIR__ . '/../../../storage/cache/ernie_identifier_types.json';
-        $this->thesaurusCacheFiles = [
-            'gcmd-science-keywords' => $this->scienceKeywordsCacheFile,
-            'gcmd-platforms' => $this->platformsCacheFile,
-            'gcmd-instruments' => $this->instrumentsCacheFile,
-            'chronostrat-timescale' => $this->chronostratCacheFile,
-            'gemet' => $this->gemetCacheFile,
-        ];
 
         $this->memory = [
         'resourceTypes' => [
@@ -225,96 +117,6 @@ class ErnieService
             'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
         ],
     ];
-    }
-
-    /**
-     * Gets the resource types cache file path
-     * 
-     * @return string Path to the cache file
-     */
-    protected function getCacheFile(): string
-    {
-        return $this->resourceTypesCacheFile;
-    }
-
-    /**
-     * Gets the title types cache file path
-     * 
-     * @return string Path to the title types cache file
-     */
-    protected function getTitleTypesCacheFile(): string
-    {
-        return $this->titleTypesCacheFile;
-    }
-
-    /**
-     * Gets the description types cache file path
-     * 
-     * @return string Path to the description types cache file
-     */
-    protected function getDescriptionTypesCacheFile(): string
-    {
-        return $this->descriptionTypesCacheFile;
-    }
-
-    /**
-     * Gets the languages cache file path
-     * 
-     * @return string Path to the languages cache file
-     */
-    protected function getLanguagesCacheFile(): string
-    {
-        return $this->languagesCacheFile;
-    }
-
-    /**
-     * Gets the contributor person roles cache file path
-     * 
-     * @return string Path to the contributor person roles cache file
-     */
-    protected function getContributorPersonRolesCacheFile(): string
-    {
-        return $this->contributorPersonRolesCacheFile;
-    }
-
-    /**
-     * Gets the contributor institution roles cache file path
-     * 
-     * @return string Path to the contributor institution roles cache file
-     */
-    protected function getContributorInstitutionRolesCacheFile(): string
-    {
-        return $this->contributorInstitutionRolesCacheFile;
-    }
-
-    /**
-     * Gets the MSL laboratories cache file path
-     *
-     * @return string Path to the MSL laboratories cache file
-     */
-    protected function getMslLabsCacheFile(): string
-    {
-        return $this->mslLabsCacheFile;
-    }
-
-    /**
-     * Gets the relation types cache file path
-     * 
-     * @return string Path to the relation types cache file
-     */
-    protected function getRelationTypesCacheFile(): string
-    {
-        return $this->relationTypesCacheFile;
-    }
-
-    /**
-     * Gets the identifier types cache file path
-     * 
-     * @return string Path to the identifier types cache file
-     */
-    protected function getIdentifierTypesCacheFile(): string
-    {
-        return $this->identifierTypesCacheFile;
     }
 
     /**
@@ -786,7 +588,7 @@ class ErnieService
      */
     public function getCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getCacheFile());
+        return $this->getCacheFileStatus($this->memory['resourceTypes']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -869,27 +671,13 @@ class ErnieService
     }
 
     /**
-     * Forces description types cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshDescriptionTypesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/description-types/elmo',
-            'description types',
-            $this->getDescriptionTypesCacheFile()
-        );
-    }
-
-    /**
      * Gets description types cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getDescriptionTypesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getDescriptionTypesCacheFile());
+        return $this->getCacheFileStatus($this->memory['descriptionTypes']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -966,27 +754,13 @@ class ErnieService
     }
 
     /**
-     * Forces title types cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshTitleTypesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/title-types/elmo',
-            'title types',
-            $this->getTitleTypesCacheFile()
-        );
-    }
-
-    /**
      * Gets title types cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getTitleTypesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getTitleTypesCacheFile());
+        return $this->getCacheFileStatus($this->memory['titleTypes']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -1058,27 +832,13 @@ class ErnieService
     }
 
     /**
-     * Forces languages cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshLanguagesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/languages/elmo',
-            'languages',
-            $this->getLanguagesCacheFile()
-        );
-    }
-
-    /**
      * Gets languages cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getLanguagesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getLanguagesCacheFile());
+        return $this->getCacheFileStatus($this->memory['languages']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -1110,16 +870,6 @@ class ErnieService
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * Gets the PID4INST instruments cache file path
-     * 
-     * @return string Path to the PID4INST cache file
-     */
-    protected function getPid4instCacheFile(): string
-    {
-        return $this->pid4instCacheFile;
-    }
-
-    /**
      * Gets PID4INST instruments with caching logic
      * 
      * Priority:
@@ -1148,27 +898,13 @@ class ErnieService
     }
 
     /**
-     * Forces PID4INST cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshPid4instCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/vocabularies/pid4inst-instruments',
-            'PID4INST instruments',
-            $this->getPid4instCacheFile()
-        );
-    }
-
-    /**
      * Gets PID4INST cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getPid4instCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getPid4instCacheFile());
+        return $this->getCacheFileStatus($this->memory['pid4instInstruments']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -1229,20 +965,6 @@ class ErnieService
     }
 
     /**
-     * Forces the MSL laboratories cache to refresh from ERNIE.
-     *
-     * @return bool True if the refresh was successful
-     */
-    public function refreshMslLabsCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/vocabularies/msl-laboratories',
-            'MSL laboratories',
-            $this->getMslLabsCacheFile()
-        );
-    }
-
-    /**
      * Gets status information for the MSL laboratories cache.
      *
      * @return array{
@@ -1258,12 +980,11 @@ class ErnieService
      */
     public function getMslLabsCacheStatus(): array
     {
-        $status = $this->getCacheFileStatus(
-            $this->getMslLabsCacheFile()
-        );
+        $cacheFile = $this->memory['mslLabs']['cacheFile'];
+        $status = $this->getCacheFileStatus($cacheFile);
 
         $laboratoriesVocabulary = $this->readCacheFile(
-            $this->getMslLabsCacheFile(),
+            $cacheFile,
             true
         );
 
@@ -1350,27 +1071,13 @@ class ErnieService
     }
 
     /**
-     * Forces contributor person roles cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshContributorPersonRolesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/roles/contributor-persons/elmo',
-            'contributor person roles',
-            $this->getContributorPersonRolesCacheFile()
-        );
-    }
-
-    /**
      * Gets contributor person roles cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getContributorPersonRolesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getContributorPersonRolesCacheFile());
+        return $this->getCacheFileStatus($this->memory['contributorPersonRoles']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -1445,42 +1152,18 @@ class ErnieService
     }
 
     /**
-     * Forces contributor institution roles cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshContributorInstitutionRolesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/roles/contributor-institutions/elmo',
-            'contributor institution roles',
-            $this->getContributorInstitutionRolesCacheFile()
-        );
-    }
-
-    /**
      * Gets contributor institution roles cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getContributorInstitutionRolesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getContributorInstitutionRolesCacheFile());
+        return $this->getCacheFileStatus($this->memory['contributorInstitutionRoles']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
     //  Thesauri Availability
     // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Gets the thesauri availability cache file path
-     * 
-     * @return string Path to the thesauri availability cache file
-     */
-    protected function getThesauriAvailabilityCacheFile(): string
-    {
-        return $this->thesauriAvailabilityCacheFile;
-    }
 
     /**
      * Fetches thesauri availability from ERNIE API
@@ -1520,7 +1203,7 @@ class ErnieService
     public function getThesauriAvailabilityWithCache(): array
     {
         // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
-        $cacheFile = $this->getThesauriAvailabilityCacheFile();
+        $cacheFile = $this->memory['thesauriAvailability']['cacheFile'];
 
         $fileStatus = $this->getThesauriAvailabilityCacheStatus();
         if (!$fileStatus['exists']) {
@@ -1574,53 +1257,18 @@ class ErnieService
     }
 
     /**
-     * Forces thesauri availability cache refresh
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshThesauriAvailabilityCache(): bool
-    {
-        $data = $this->fetchThesauriAvailability();
-        if ($data !== null && !empty($data)) {
-            return $this->writeCacheFile($this->getThesauriAvailabilityCacheFile(), $data);
-        }
-        return false;
-    }
-
-    /**
      * Gets thesauri availability cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getThesauriAvailabilityCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getThesauriAvailabilityCacheFile());
+        return $this->getCacheFileStatus($this->memory['thesauriAvailability']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
     //  Thesaurus Vocabulary Data
     // ──────────────────────────────────────────────────────────────
-
-    /**
-     * Returns the cache file path for a given thesaurus slug
-     * 
-     * @param string $slug The thesaurus slug (e.g. 'gcmd-science-keywords')
-     * @return string|null Cache file path or null if slug is unknown
-     */
-    protected function getThesaurusCacheFile(string $slug): ?string
-    {
-        return $this->thesaurusCacheFiles[$slug] ?? null;
-    }
-
-    /**
-     * Returns the list of valid thesaurus slugs
-     * 
-     * @return array<string> Valid slug names
-     */
-    public function getValidThesaurusSlugs(): array
-    {
-        return array_keys($this->thesaurusCacheFiles);
-    }
 
     /**
      * Gets thesaurus vocabulary data with caching logic
@@ -1664,27 +1312,6 @@ class ErnieService
     }
 
     /**
-     * Forces thesaurus vocabulary cache refresh for a given slug
-     * 
-     * @param string $slug The thesaurus slug
-     * @return bool True if refresh was successful
-     */
-    public function refreshThesaurusVocabularyCache(string $slug): bool
-    {
-        $cacheFile = $this->getThesaurusCacheFile($slug);
-        if ($cacheFile === null) {
-            error_log("ERNIE: Cannot refresh cache for unknown thesaurus slug: $slug");
-            return false;
-        }
-
-        return $this->refreshCacheFromApi(
-            "/api/v1/vocabularies/$slug",
-            "thesaurus vocabulary ($slug)",
-            $cacheFile
-        );
-    }
-
-    /**
      * Gets thesaurus vocabulary cache status for a given slug
      * 
      * @param string $slug The thesaurus slug
@@ -1692,7 +1319,13 @@ class ErnieService
      */
     public function getThesaurusVocabularyCacheStatus(string $slug): array
     {
-        $cacheFile = $this->getThesaurusCacheFile($slug);
+        $cacheFile = null;
+        foreach ($this->memory as $entry) {
+            if ($entry['ernieEndpoint'] === '/api/v1/vocabularies/' . $slug) {
+                $cacheFile = $entry['cacheFile'];
+                break;
+            }
+        }
         if ($cacheFile === null) {
             return [
                 'exists' => false,
@@ -1770,27 +1403,13 @@ class ErnieService
     }
 
     /**
-     * Forces relation types cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshRelationTypesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/relation-types/elmo',
-            'relation types',
-            $this->getRelationTypesCacheFile()
-        );
-    }
-
-    /**
      * Gets relation types cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getRelationTypesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getRelationTypesCacheFile());
+        return $this->getCacheFileStatus($this->memory['relationTypes']['cacheFile']);
     }
 
     // ──────────────────────────────────────────────────────────────
@@ -1857,26 +1476,12 @@ class ErnieService
     }
 
     /**
-     * Forces identifier types cache refresh by fetching fresh data from ERNIE
-     * 
-     * @return bool True if refresh was successful
-     */
-    public function refreshIdentifierTypesCache(): bool
-    {
-        return $this->refreshCacheFromApi(
-            '/api/v1/identifier-types/elmo',
-            'identifier types',
-            $this->getIdentifierTypesCacheFile()
-        );
-    }
-
-    /**
      * Gets identifier types cache status information
      * 
      * @return array{exists: bool, valid: bool, lastUpdated: string|null, age: int|null, ageFormatted?: string|null, ttl?: int, itemCount: int, error?: string} Cache status
      */
     public function getIdentifierTypesCacheStatus(): array
     {
-        return $this->getCacheFileStatus($this->getIdentifierTypesCacheFile());
+        return $this->getCacheFileStatus($this->memory['identifierTypes']['cacheFile']);
     }
 }
