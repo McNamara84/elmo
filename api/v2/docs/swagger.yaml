@@ -595,39 +595,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /admin/cache/pid4inst/refresh:
-    post:
-      tags:
-        - update
-      summary: Refresh PID4INST instruments cache
-      description: Forces a refresh of the cached PID4INST instrument data from the ERNIE API. Requires API key authentication.
-      operationId: refreshPid4instCache
-      parameters:
-        - name: X-API-KEY
-          in: header
-          required: true
-          schema:
-            type: string
-          description: API key for authentication
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "PID4INST instruments cache refreshed successfully."
-        "401":
-          description: Unauthorized - Invalid or missing API key
-        "500":
-          description: Failed to refresh cache
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /admin/cache/pid4inst/status:
     get:
       tags:
@@ -1385,58 +1352,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CacheRefreshResponse"
-  /admin/cache/titletypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh title types cache
-      description: Forces a refresh of the ERNIE title types cache and syncs the data to the local database. Requires API key authentication. This endpoint is typically triggered by ERNIE after title type configuration changes.
-      operationId: refreshTitleTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Title types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 5
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-02-27T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /admin/cache/titletypes/status:
     get:
       tags:
@@ -1483,58 +1398,6 @@ paths:
                       itemCount:
                         type: integer
                         example: 5
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/descriptiontypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh description types cache
-      description: Forces a refresh of the ERNIE description types cache. Requires API key authentication. This endpoint is typically triggered by ERNIE after description type configuration changes.
-      operationId: refreshDescriptionTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Description types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 6
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-16T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
           content:
@@ -1593,58 +1456,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-persons/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh contributor person roles cache
-      description: Forces a refresh of the ERNIE contributor person roles cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshContributorPersonRolesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Contributor person roles cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 16
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /admin/cache/roles/contributor-persons/status:
     get:
       tags:
@@ -1691,58 +1502,6 @@ paths:
                       itemCount:
                         type: integer
                         example: 16
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-institutions/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh contributor institution roles cache
-      description: Forces a refresh of the ERNIE contributor institution roles cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshContributorInstitutionRolesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Contributor institution roles cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 13
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
           content:
@@ -1801,58 +1560,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /admin/cache/relationtypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh relation types cache
-      description: Forces a refresh of the ERNIE relation types cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshRelationTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Relation types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 36
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /admin/cache/relationtypes/status:
     get:
       tags:
@@ -1899,58 +1606,6 @@ paths:
                       itemCount:
                         type: integer
                         example: 36
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/identifiertypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh identifier types cache
-      description: Forces a refresh of the ERNIE identifier types cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshIdentifierTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Identifier types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 8
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "500":
           description: Internal server error
           content:

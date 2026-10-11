@@ -52,70 +52,15 @@ class TestableErnieService extends \ErnieService
         $this->customDescriptionTypesCacheFile = $descriptionTypesCacheFile;
         $this->customRelationTypesCacheFile = $relationTypesCacheFile;
         $this->customIdentifierTypesCacheFile = $identifierTypesCacheFile;
-    }
 
-    /**
-     * Override getCacheFile to use custom path
-     */
-    protected function getCacheFile(): string
-    {
-        return $this->customCacheFile;
-    }
-
-    /**
-     * Override getTitleTypesCacheFile to use custom path
-     */
-    protected function getTitleTypesCacheFile(): string
-    {
-        return $this->customTitleTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getLanguagesCacheFile to use custom path
-     */
-    protected function getLanguagesCacheFile(): string
-    {
-        return $this->customLanguagesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getContributorPersonRolesCacheFile to use custom path
-     */
-    protected function getContributorPersonRolesCacheFile(): string
-    {
-        return $this->customContributorPersonRolesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getContributorInstitutionRolesCacheFile to use custom path
-     */
-    protected function getContributorInstitutionRolesCacheFile(): string
-    {
-        return $this->customContributorInstitutionRolesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getDescriptionTypesCacheFile to use custom path
-     */
-    protected function getDescriptionTypesCacheFile(): string
-    {
-        return $this->customDescriptionTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getRelationTypesCacheFile to use custom path
-     */
-    protected function getRelationTypesCacheFile(): string
-    {
-        return $this->customRelationTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getIdentifierTypesCacheFile to use custom path
-     */
-    protected function getIdentifierTypesCacheFile(): string
-    {
-        return $this->customIdentifierTypesCacheFile ?: $this->customCacheFile;
+        $this->memory['resourceTypes']['cacheFile'] = $cacheFile;
+        $this->memory['titleTypes']['cacheFile'] = $titleTypesCacheFile !== '' ? $titleTypesCacheFile : $cacheFile;
+        $this->memory['languages']['cacheFile'] = $languagesCacheFile !== '' ? $languagesCacheFile : $cacheFile;
+        $this->memory['contributorPersonRoles']['cacheFile'] = $contributorPersonRolesCacheFile !== '' ? $contributorPersonRolesCacheFile : $cacheFile;
+        $this->memory['contributorInstitutionRoles']['cacheFile'] = $contributorInstitutionRolesCacheFile !== '' ? $contributorInstitutionRolesCacheFile : $cacheFile;
+        $this->memory['descriptionTypes']['cacheFile'] = $descriptionTypesCacheFile !== '' ? $descriptionTypesCacheFile : $cacheFile;
+        $this->memory['relationTypes']['cacheFile'] = $relationTypesCacheFile !== '' ? $relationTypesCacheFile : $cacheFile;
+        $this->memory['identifierTypes']['cacheFile'] = $identifierTypesCacheFile !== '' ? $identifierTypesCacheFile : $cacheFile;
     }
 
     /**
@@ -559,30 +504,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== refreshCache() Tests ====================
-
-    /**
-     * Test refreshCache returns false when not configured
-     */
-    public function testRefreshCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshCache returns false when ERNIE unavailable
-     */
-    public function testRefreshCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshCache();
-
-        $this->assertFalse($result);
-    }
-
     // ==================== formatAge() Tests (via getCacheStatus) ====================
 
     /**
@@ -931,29 +852,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== Title Types: refreshTitleTypesCache() Tests ====================
-
-    /**
-     * Test refreshTitleTypesCache returns false when not configured
-     */
-    public function testRefreshTitleTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshTitleTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshTitleTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshTitleTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshTitleTypesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Title Types: Hardcoded Fallback Tests ====================
 
@@ -1464,29 +1362,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== Languages: refreshLanguagesCache() Tests ====================
-
-    /**
-     * Test refreshLanguagesCache returns false when not configured
-     */
-    public function testRefreshLanguagesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshLanguagesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshLanguagesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshLanguagesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshLanguagesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Languages: Hardcoded Fallback Tests ====================
 
@@ -1805,27 +1680,6 @@ final class ErnieServiceTest extends TestCase
 
     // ==================== Contributor Person Roles: refresh Tests ====================
 
-    /**
-     * Test refreshContributorPersonRolesCache returns false when not configured
-     */
-    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshContributorPersonRolesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshContributorPersonRolesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshContributorPersonRolesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Contributor Person Roles: Hardcoded Fallback Tests ====================
 
@@ -2013,27 +1867,6 @@ final class ErnieServiceTest extends TestCase
 
     // ==================== Contributor Institution Roles: refresh Tests ====================
 
-    /**
-     * Test refreshContributorInstitutionRolesCache returns false when not configured
-     */
-    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshContributorInstitutionRolesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshContributorInstitutionRolesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshContributorInstitutionRolesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Contributor Institution Roles: Hardcoded Fallback Tests ====================
 
@@ -2531,29 +2364,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== Description Types: refreshDescriptionTypesCache() Tests ====================
-
-    /**
-     * Test refreshDescriptionTypesCache returns false when not configured
-     */
-    public function testRefreshDescriptionTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshDescriptionTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshDescriptionTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshDescriptionTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshDescriptionTypesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Description Types: Hardcoded Fallback Tests ====================
 
@@ -2797,29 +2607,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== Relation Types: refreshRelationTypesCache Tests ====================
-
-    /**
-     * Test refreshRelationTypesCache returns false when not configured
-     */
-    public function testRefreshRelationTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshRelationTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshRelationTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshRelationTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshRelationTypesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Relation Types: Cache Independence Tests ====================
 
@@ -3035,29 +2822,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertNull($result);
     }
 
-    // ==================== Identifier Types: refreshIdentifierTypesCache Tests ====================
-
-    /**
-     * Test refreshIdentifierTypesCache returns false when not configured
-     */
-    public function testRefreshIdentifierTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshIdentifierTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshIdentifierTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshIdentifierTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshIdentifierTypesCache();
-
-        $this->assertFalse($result);
-    }
 
     // ==================== Identifier Types: Cache Independence Tests ====================
 
