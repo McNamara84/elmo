@@ -435,11 +435,20 @@ class ErnieService
      * @param (callable(array<mixed>): void)|null $onFreshData Invoked only after a successful live ERNIE fetch and cache write. Not called on cache hit, stale cache, or hardcoded fallback.
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
+    /**
+     * Test seam: records the memory key a cache getter is about to use.
+     */
+    protected function recordMemoryLabel(string $label): void
+    {
+    }
+
     private function getDataWithCache(
         string $label,
         callable $fallbackFn,
         ?callable $onFreshData = null
     ): array {
+        $this->recordMemoryLabel($label);
+
         if (!isset($this->memory[$label])) {
             error_log("ERNIE: Unknown cache label: $label");
             return $fallbackFn();
