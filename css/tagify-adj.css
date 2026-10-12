@@ -14,8 +14,38 @@
 .tagify {
     flex-wrap: wrap;
     --tag-inset-shadow-size: 200em;
-    --placeholder-color: rgba(var(--bs-body-color-rgb), .65) !important;
-    --placeholder-color-focus: rgba(var(--bs-body-color-rgb), .65) !important;
+    --tags-border-color: var(--elmo-control-border);
+    --tags-hover-border-color: var(--elmo-control-border);
+    --tags-focus-border-color: var(--elmo-focus-color);
+    --tags-disabled-bg: var(--elmo-readonly-bg);
+    --tag-bg: var(--elmo-tag-bg);
+    --tag-hover: var(--elmo-tag-hover);
+    --tag-text-color: var(--bs-body-color);
+    --tag-text-color--edit: var(--bs-body-color);
+    --tag-remove-btn-color: var(--bs-body-color);
+    --tag-remove-btn-bg--hover: var(--bs-danger-bg-subtle);
+    --tag-remove-bg: var(--bs-danger-bg-subtle);
+    --tag-invalid-bg: var(--bs-danger-bg-subtle);
+    --tag-invalid-color: var(--bs-danger-text-emphasis);
+    --input-color: var(--bs-body-color);
+    --placeholder-color: var(--bs-secondary-color);
+    --placeholder-color-focus: var(--bs-secondary-color);
+    background-color: var(--elmo-field-bg);
+}
+
+/* Dropdowns are attached to body, outside the original Tagify element. */
+:root {
+    --tagify-dd-bg-color: var(--elmo-surface);
+    --tagify-dd-color-primary: var(--elmo-brand-color);
+    --tagify-dd-text-color: var(--bs-body-color);
+}
+
+.tagify__dropdown__wrapper {
+    border-color: var(--elmo-control-border);
+}
+
+.tagify__dropdown__item--active {
+    color: #ffffff;
 }
 
 /* Prevents the help button from "growing" when invalid-feedback is displayed */

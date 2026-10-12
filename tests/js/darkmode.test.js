@@ -1,125 +1,37 @@
-const fs = require('fs');
-const path = require('path');
+const { createThemeController } = require('../../js/themeInit');
+const { initThemeMenu } = require('../../js/darkmode');
 
-describe('darkmode.js (integration)', () => {
-  let prefersDark;
-  let triggerMediaQueryChange;
-
-  function loadScript() {
-    // Load the script and transform to run immediately
-    let script = fs.readFileSync(
-      path.resolve(__dirname, '../../js/darkmode.js'),
-      'utf8'
-    );
-    // Remove module.exports block at the end
-    script = script.replace(/\/\/ Export functions for testing[\s\S]*$/, '');
-    // Replace DOMContentLoaded with IIFE
-    script = script.replace('document.addEventListener("DOMContentLoaded", function () {', '(function () {');
-    // Find the last }); and replace with })();
-    script = script.replace(/\}\);(\s*)$/, '})();$1');
-    
-    window.eval(script);
-  }
-
+describe('theme menu integration', () => {
+  let controller;
   beforeEach(() => {
-    document.body.innerHTML = `
-      <div id="dropdown">
-        <button id="bd-theme"></button>
-        <button class="dropdown-item" data-bs-theme-value="light"></button>
-        <button class="dropdown-item" data-bs-theme-value="dark"></button>
-        <button class="dropdown-item" data-bs-theme-value="auto"></button>
-      </div>
-    `;
-    document.documentElement.removeAttribute('data-bs-theme');
-    prefersDark = false;
-    const listeners = new Set();
-    const mediaQueryList = {
-      media: '(prefers-color-scheme: dark)',
-      get matches() {
-        return prefersDark;
-      },
-      onchange: null,
-      addEventListener: (_type, listener) => {
-        listeners.add(listener);
-      },
-      removeEventListener: (_type, listener) => {
-        listeners.delete(listener);
-      },
-      addListener: (listener) => {
-        listeners.add(listener);
-      },
-      removeListener: (listener) => {
-        listeners.delete(listener);
-      },
-    };
-
-    window.matchMedia = jest.fn().mockImplementation(() => mediaQueryList);
-
-    triggerMediaQueryChange = (value) => {
-      prefersDark = value;
-      const event = { matches: value, media: mediaQueryList.media };
-
-      listeners.forEach((listener) => {
-        if (typeof listener === 'function') {
-          listener(event);
-        } else if (listener && typeof listener.handleEvent === 'function') {
-          listener.handleEvent(event);
-        }
-      });
-
-      if (typeof mediaQueryList.onchange === 'function') {
-        mediaQueryList.onchange(event);
-      }
-    };
     localStorage.clear();
+    document.body.innerHTML = '<div><button id="bd-theme"></button>' +
+      ['auto', 'light', 'dark'].map(value =>
+        '<button class="dropdown-item" data-bs-theme-value="' + value + '"></button>').join('') + '</div>';
+    controller = createThemeController(window);
+    initThemeMenu(document, controller);
   });
-
-  test('applies stored dark theme on load', () => {
-    localStorage.setItem('theme', 'dark');
-    loadScript();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[1].classList.contains('active')).toBe(true);
+  afterEach(() => controller.destroy());
+  function active() { return document.querySelector('.active')?.dataset.bsThemeValue; }
+  test('shows Auto when no choice was saved', () => {
+    expect(active()).toBe('auto');
+    expect(localStorage.getItem('theme')).toBeNull();
   });
-
-  test('defaults to light theme when system preference is light', () => {
-    loadScript();
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
-    expect(localStorage.getItem('theme')).toBe('light');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[0].classList.contains('active')).toBe(true);
+  test.each(['light', 'dark', 'auto'])('stores the %s choice on click', choice => {
+    document.querySelector('[data-bs-theme-value="' + choice + '"]').click();
+    expect(localStorage.getItem('theme')).toBe(choice);
+    expect(active()).toBe(choice);
+    expect(document.querySelectorAll('.active')).toHaveLength(1);
   });
-
-  test('clicking dark item updates theme and localStorage', () => {
-    loadScript();
-    const darkItem = document.querySelector('.dropdown-item[data-bs-theme-value="dark"]');
-    darkItem.dispatchEvent(new Event('click', { bubbles: true }));
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
-    const items = document.querySelectorAll('.dropdown-item');
-    expect(items[1].classList.contains('active')).toBe(true);
+  test('updates the menu when another page changes the theme', () => {
+    window.dispatchEvent(new StorageEvent('storage', { key: 'theme', newValue: 'dark', storageArea: localStorage }));
+    expect(active()).toBe('dark');
+    expect(document.documentElement.dataset.bsTheme).toBe('dark');
   });
-
-  test('clicking auto selects system preference', () => {
-    loadScript();
-    prefersDark = true;
-    const autoItem = document.querySelector('.dropdown-item[data-bs-theme-value="auto"]');
-    autoItem.dispatchEvent(new Event('click', { bubbles: true }));
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
-  });
-
-  test('auto mode updates when system preference changes', () => {
-    loadScript();
-    const autoItem = document.querySelector('.dropdown-item[data-bs-theme-value="auto"]');
-    autoItem.dispatchEvent(new Event('click', { bubbles: true }));
-
-    triggerMediaQueryChange(true);
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('dark');
-    expect(localStorage.getItem('theme')).toBe('dark');
-
-    triggerMediaQueryChange(false);
-    expect(document.documentElement.getAttribute('data-bs-theme')).toBe('light');
-    expect(localStorage.getItem('theme')).toBe('light');
+  test('works without a menu or controller', () => {
+    document.body.innerHTML = '';
+    expect(() => initThemeMenu(document, controller)).not.toThrow();
+    document.body.innerHTML = '<button id="bd-theme"></button>';
+    expect(() => initThemeMenu(document, null)).not.toThrow();
   });
 });

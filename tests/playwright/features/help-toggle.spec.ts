@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from '@playwright/test';
-import { navigateToHome, runAxeAudit, SELECTORS } from '../utils';
+import { navigateToHome, runAxeAudit, SELECTORS, waitForHomepageReady } from '../utils';
 
 async function expectClassTokens(locator: Locator, expectedPresent: string[], expectedAbsent: string[] = []) {
   const classList = await locator.evaluate((element) =>
@@ -24,6 +24,7 @@ test.describe('Contextual help toggle', () => {
     browserName,
   }) => {
     await navigateToHome(page);
+    await waitForHomepageReady(page);
     await page.waitForFunction(() => typeof (window as any).loadHelpContent === 'function');
 
     const helpDropdownToggle = page.locator(SELECTORS.navigation.helpToggle);
@@ -31,6 +32,12 @@ test.describe('Contextual help toggle', () => {
 
     const sampleInput = page.locator('#input-resourceinformation-publicationyear');
     await expect(sampleInput).toBeVisible();
+    await expect(page.locator('label[for="input-resourceinformation-doi"]')).not.toBeEmpty();
+    await expect(page.locator('label[for="input-resourceinformation-version"]')).not.toBeEmpty();
+    await expect(page.locator('#button-resourceinformation-addtitle')).not.toBeEmpty();
+    if (await page.locator('#input-stc-timezone').isVisible()) {
+      await expect(page.locator('label[for="input-stc-timezone"]')).not.toBeEmpty();
+    }
 
     await helpDropdownToggle.click();
 

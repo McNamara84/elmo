@@ -28,7 +28,7 @@ if ($changelogVersion === null) {
             data-translate="buttons.saveAs" data-translate-tooltip="buttons.saveAsTooltip">
             Save as XML
           </button>
-          <button type="submit" class="btn btn-outline-dark m-0 m-md-1" form="form-mde" id="button-form-save-jsonld" data-action="save-jsonld"
+          <button type="submit" class="btn btn-outline-secondary m-0 m-md-1" form="form-mde" id="button-form-save-jsonld" data-action="save-jsonld"
             data-translate="buttons.saveAsJsonLd" data-translate-tooltip="buttons.saveAsJsonLdTooltip">
             Save as JSON-LD
           </button>
@@ -57,7 +57,7 @@ if ($changelogVersion === null) {
   </div>
   <div class="footer-info mt-0 py-3">
     <div class="container text-center">
-      <nav class="footer-info-nav mb-2 d-flex justify-content-center gap-4">
+      <nav class="footer-info-nav mb-2 d-flex justify-content-center">
         <a href="https://dataservices.gfz.de/web/about-us/legal-notice" target="_blank" class="settings-menu-link" id="buttonLegalNotice" data-translate="buttons.legalNotice">Legal Notice</a>
         <a href="doc/privacy-policy.html" target="_blank" class="settings-menu-link" id="buttonPrivacy" data-translate="buttons.PrivacyPolicy">Privacy Policy</a>
         <a href="doc/help.php" target="_blank" class="settings-menu-link" id="buttonHelp" data-translate="buttons.elmoGuide">Elmo Guide</a>
@@ -74,6 +74,22 @@ if ($changelogVersion === null) {
 
 
 <!-- Feature Toggles for JavaScript - enables conditional loading of resources -->
+<!-- Version the changed imported modules as well as their entry scripts. -->
+<script type="importmap">
+<?php
+$themeModuleImports = [];
+foreach ([
+    'js/eventhandlers/formgroups/authorStack.js',
+    'js/eventhandlers/formgroups/contributorStack.js',
+    'js/eventhandlers/formgroups/relatedwork.js',
+    'js/submitHandler.js',
+] as $themeModulePath) {
+    $themeModuleImports['./' . $themeModulePath] = './' . $themeModulePath . '?v=' .
+        substr(hash_file('sha256', __DIR__ . '/' . $themeModulePath), 0, 12);
+}
+echo json_encode(['imports' => $themeModuleImports], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
+?>
+</script>
 <!-- If some thesauri need to be hidden in regards of ERNIE settings, they can be added to the "hiddenThesauri" array here -->
 <script>
 window.ELMO_FEATURES = {
@@ -138,7 +154,8 @@ window.ELMO_FEATURES = {
 <!-- affiliations laden -->
 <script src="js/affiliations.js"></script>
 <!-- Darkmode-Funktionen eingebunden -->
-<script src="js/darkmode.js"></script>
+<script src="js/darkmode.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/darkmode.js'), 0, 12); ?>"></script>
+<script src="js/footerLayout.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/footerLayout.js'), 0, 12); ?>"></script>
 <!-- JS-Datei für Hilfe-PopUps einbinden -->
 <script type="module" src="js/help.js"></script>
 <!-- JS-Karten-Funktionen einbinden -->

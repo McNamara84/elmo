@@ -597,6 +597,69 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Dark mode now uses consistent surfaces and readable text for headers, notices, buttons, form cards, dialogs, tags, vocabulary trees and autocomplete in all ELMO editions and the Guide."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1247
+                },
+                {
+                  "type": "pull",
+                  "number": 1265
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The theme choice survives page reloads, stays in sync with an open Guide, and follows changing system preferences in Auto mode."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1247
+                },
+                {
+                  "type": "pull",
+                  "number": 1265
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The fixed action bar has an opaque theme background and reserves enough space for the last form fields, including wrapped buttons and longer translations."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1247
+                },
+                {
+                  "type": "pull",
+                  "number": 1265
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "For Standard, MSL, and IGSN submissions, an existing 10.5880 DOI is verified with DataCite and given the next major version for manual curation. External, unknown, and unverifiable DOIs are blocked before saving or mailing."
                 }
               ],

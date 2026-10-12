@@ -162,7 +162,7 @@ describe('combined contributor stack', () => {
 
   test('allows type switching only for an empty card', () => {
     controller.addPerson();
-    expect(cards()[0].querySelector('[data-contributor-type-option="institution"]').classList.contains('btn-outline-dark'))
+    expect(cards()[0].querySelector('[data-contributor-type-option="institution"]').classList.contains('btn-outline-secondary'))
       .toBe(true);
     cards()[0].querySelector('[data-contributor-type-option="institution"]').click();
     expect(cards()[0].dataset.contributorType).toBe('institution');
