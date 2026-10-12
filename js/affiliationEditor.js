@@ -43,6 +43,7 @@ export function createAffiliationEditor(options) {
   const affiliationSearchTimers = new WeakMap();
   let requestVersion = 0;
   let destroyed = false;
+  let searchStatus = '';
   const element = createEditorMarkup();
 
   function applyAliases() {
@@ -72,8 +73,6 @@ export function createAffiliationEditor(options) {
     const list = $('<div class="d-grid gap-2" data-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
     const input = $('<input type="text" class="form-control" data-affiliation-input>');
-    const searchButton = $('<button type="button" class="btn btn-outline-secondary" data-affiliation-search></button>')
-      .append('<i class="bi bi-search" aria-hidden="true"></i>');
     const addButton = $('<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" data-affiliation-add></button>')
       .append('<i class="bi bi-plus-lg" aria-hidden="true"></i>')
       .append('<span data-affiliation-add-label></span>');
@@ -81,21 +80,25 @@ export function createAffiliationEditor(options) {
 
     titleGroup.append(title, helpButton);
     header.append(titleGroup, count);
-    controls.append(input, searchButton, addButton);
-    panel.append(header, list, controls, results);
+    controls.append(input, addButton);
+    const hint = $('<p class="small text-body-secondary mt-2 mb-0" data-affiliation-hint></p>');
+    const status = $('<div class="small mt-1" role="status" aria-live="polite" data-affiliation-status></div>');
+    panel.append(header, list, controls, hint, status, results);
     return editor.append(panel);
   }
 
 
   function updateAffiliationEditorTexts(editor) {
-    editor.find('[data-affiliation-title]').text(translate('authors.affiliations', 'Affiliations'));
+    editor.find('[data-affiliation-title]').text(translate('affiliations.title', 'Affiliations'));
     editor.find('[data-affiliation-input]').attr({
       placeholder: translate('general.affiliation', 'Affiliation'),
       'aria-label': translate('general.affiliation', 'Affiliation')
     });
-    editor.find('[data-affiliation-search]').attr('aria-label', translate('authors.affiliationSearch', 'Search affiliation'));
-    editor.find('[data-affiliation-add]').attr('aria-label', translate('authors.affiliationAdd', 'Add affiliation'));
-    editor.find('[data-affiliation-add-label]').text(translate('authors.affiliationAdd', 'Add affiliation'));
+    editor.find('[data-affiliation-add]').attr('aria-label', translate('affiliations.addFreeText', 'Add free text'));
+    editor.find('[data-affiliation-add-label]').text(translate('affiliations.addFreeText', 'Add free text'));
+    editor.find('[data-affiliation-hint]').text(translate('affiliations.hint', 'ROR suggestions appear after three characters. Select a result or add your input as free text.'));
+    editor.find('[data-affiliation-add]').prop('disabled', !String(editor.find('[data-affiliation-input]').val() || '').trim());
+    editor.find('[data-affiliation-status]').text(searchStatus ? translate(`affiliations.${searchStatus}`, {loading: 'Searching…', noResults: 'No ROR matches. You can add free text.', error: 'Search unavailable. Try again or add free text.'}[searchStatus]) : '');
   }
 
 
@@ -108,25 +111,25 @@ export function createAffiliationEditor(options) {
       .attr('data-affiliation-original-label', label);
     const group = $('<div class="input-group input-group-sm"></div>');
     const moveUp = $('<button type="button" class="btn btn-outline-secondary" data-affiliation-move-up></button>')
-      .attr('aria-label', translate('authors.affiliationMoveUp', 'Move affiliation up'))
+      .attr('aria-label', translate('affiliations.moveUp', 'Move affiliation up'))
       .prop('disabled', index === 0)
       .append('<i class="bi bi-chevron-up" aria-hidden="true"></i>');
     const moveDown = $('<button type="button" class="btn btn-outline-secondary" data-affiliation-move-down></button>')
-      .attr('aria-label', translate('authors.affiliationMoveDown', 'Move affiliation down'))
+      .attr('aria-label', translate('affiliations.moveDown', 'Move affiliation down'))
       .prop('disabled', index === count - 1)
       .append('<i class="bi bi-chevron-down" aria-hidden="true"></i>');
     const labelInput = $('<input type="text" class="form-control" data-affiliation-label>')
       .attr({
-        'aria-label': translate('authors.affiliationEdit', 'Edit affiliation'),
+        'aria-label': translate('affiliations.edit', 'Edit affiliation'),
         required: 'required'
       })
       .val(label);
     const rorSegment = $('<span class="input-group-text small" data-affiliation-ror></span>')
-      .attr('aria-label', rorId ? `${translate('authors.affiliationRorId', 'ROR ID')} ${rorId}` : translate('authors.affiliationRorId', 'ROR ID'))
+      .attr('aria-label', rorId ? `${translate('affiliations.rorId', 'ROR ID')} ${rorId}` : translate('affiliations.rorId', 'ROR ID'))
       .toggleClass('d-none', rorId === '')
       .text(rorId);
     const remove = $('<button type="button" class="btn btn-outline-danger" data-affiliation-remove></button>')
-      .attr('aria-label', translate('authors.affiliationRemove', 'Remove affiliation'))
+      .attr('aria-label', translate('affiliations.remove', 'Remove affiliation'))
       .append('<i class="bi bi-x-lg" aria-hidden="true"></i>');
 
     const invalidFeedback = $('<div class="invalid-feedback mt-1" data-affiliation-invalid></div>');
@@ -170,7 +173,7 @@ export function createAffiliationEditor(options) {
 
 
   function getAffiliationInvalidMessage() {
-    return translate('authors.affiliationInvalid', 'Please provide an affiliation.');
+    return translate('affiliations.invalid', 'Please provide an affiliation.');
   }
 
 
@@ -229,7 +232,8 @@ export function createAffiliationEditor(options) {
     affiliations.push(normalizedAffiliation);
     setRowAffiliations(row, affiliations);
     invalidateAffiliationSearch(row);
-    input.val('').trigger('focus');
+    clearPendingInput();
+    input.trigger('focus');
     editor.find('[data-affiliation-results]').empty().addClass('d-none');
     updatePayload();
   }
@@ -297,11 +301,23 @@ export function createAffiliationEditor(options) {
       return;
     }
 
-    const results = await searchFunction(query, 20);
+    searchStatus = 'loading';
+    updateAffiliationEditorTexts(element);
+    let results;
+    try { results = await searchFunction(query, 20); }
+    catch (_error) {
+      if (!destroyed && requestVersion === requestId) {
+        searchStatus = 'error';
+        updateAffiliationEditorTexts(element);
+      }
+      return;
+    }
     if (destroyed || requestVersion !== requestId || String(input.val() || '').trim() !== query) {
       return;
     }
+    searchStatus = Array.isArray(results) && results.length ? '' : 'noResults';
     renderAffiliationSearchResults(row, Array.isArray(results) ? results : []);
+    updateAffiliationEditorTexts(element);
   }
 
 
@@ -317,6 +333,8 @@ export function createAffiliationEditor(options) {
     }
 
     invalidateAffiliationSearch(row);
+    searchStatus = '';
+    renderAffiliationSearchResults(row, []);
     const query = String(inputElement.value || '').trim();
     if (query.length < affiliationSearchMinLength) {
       invalidateAffiliationSearch(row);
@@ -340,6 +358,8 @@ export function createAffiliationEditor(options) {
   });
   element.on('input keyup search paste', '[data-affiliation-input]', function () {
     scheduleAffiliationSearch(row);
+    updateAffiliationEditorTexts(element);
+    updatePayload();
   });
   element.on('keydown', '[data-affiliation-input]', function (event) {
     if (event.key === 'Enter' && !event.originalEvent?.isComposing) {
@@ -350,9 +370,6 @@ export function createAffiliationEditor(options) {
   element.on('click', '[data-affiliation-add]', function () {
     const label = String(element.find('[data-affiliation-input]').val() || '').trim();
     if (label) addAffiliation(row, { label, rorId: '' });
-  });
-  element.on('click', '[data-affiliation-search]', function () {
-    searchAffiliations(row).catch(error => console.error('Affiliation search error:', error));
   });
   element.on('click', '[data-affiliation-result]', function () {
     addAffiliation(row, {
@@ -374,6 +391,15 @@ export function createAffiliationEditor(options) {
     updatePayload();
   });
 
+  function clearPendingInput() {
+    invalidateAffiliationSearch(row);
+    clearTimeout(affiliationSearchTimers.get(element.find('[data-affiliation-input]').get(0)));
+    element.find('[data-affiliation-input]').val('');
+    renderAffiliationSearchResults(row, []);
+    searchStatus = '';
+    updateAffiliationEditorTexts(element);
+  }
+
   const api = {
     element,
     render: () => renderAffiliationEditor(row),
@@ -381,7 +407,8 @@ export function createAffiliationEditor(options) {
     getAffiliations: () => readEditorAffiliations(row),
     setAffiliations: values => { setRowAffiliations(row, values); updatePayload(); },
     getPendingInput: () => String(element.find('[data-affiliation-input]').val() || ''),
-    setPendingInput: value => element.find('[data-affiliation-input]').val(value || ''),
+    setPendingInput: value => { clearPendingInput(); element.find('[data-affiliation-input]').val(value || ''); updateAffiliationEditorTexts(element); updatePayload(); },
+    clearPendingInput: () => { clearPendingInput(); updatePayload(); },
     focus: () => element.find('[data-affiliation-input]').trigger('focus'),
     destroy() {
       destroyed = true;

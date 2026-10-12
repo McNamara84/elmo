@@ -105,7 +105,7 @@ $(document).ready(function () {
         const active = button.dataset.contributorTypeOption === entry.type;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
-        button.disabled = !active && hasContent(entry);
+        button.disabled = !active && (hasContent(entry) || Boolean(card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput().trim()));
       });
     }
   }
@@ -413,7 +413,7 @@ $(document).ready(function () {
         button.focus();
       }
     } else if (button.matches('[data-contributor-type-option]')) {
-      if (button.disabled || hasContent(read(card))) return;
+      if (button.disabled || hasContent(read(card)) || card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput().trim()) return;
       const replacement = buildCard(button.dataset.contributorTypeOption);
       if (!replacement) return;
       card.querySelector('[data-affiliation-editor]')?.affiliationEditor.destroy();

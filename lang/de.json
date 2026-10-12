@@ -1,4 +1,20 @@
 {
+    "affiliations": {
+        "title": "Affiliations",
+        "addFreeText": "Freitext hinzufügen",
+        "hint": "Ab drei Zeichen werden ROR-Vorschläge angezeigt. Wählen Sie einen Treffer oder fügen Sie Ihre Eingabe als Freitext hinzu.",
+        "edit": "Affiliation bearbeiten",
+        "moveUp": "Affiliation nach oben verschieben",
+        "moveDown": "Affiliation nach unten verschieben",
+        "rorId": "ROR-ID",
+        "remove": "Affiliation entfernen",
+        "invalid": "Bitte geben Sie eine Affiliation an.",
+        "loading": "Suche läuft…",
+        "noResults": "Keine ROR-Treffer. Sie können Freitext hinzufügen.",
+        "error": "Suche nicht verfügbar. Versuchen Sie es erneut oder fügen Sie Freitext hinzu.",
+        "pending": "Eine Affiliation-Eingabe ist noch offen. Wählen Sie einen ROR-Treffer, fügen Sie die Eingabe als Freitext hinzu oder verwerfen Sie sie. Wiederholen Sie danach Ihre Aktion.",
+        "discard": "Eingabe verwerfen"
+    },
     "header": {
         "help": "Hilfe",
         "on": "An",

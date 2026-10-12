@@ -264,7 +264,7 @@ describe('authorStack.js', () => {
         'authors.entriesSummary': '{count} {label}',
         'authors.contactsSummary': '{count} {label}',
         'authors.affiliations': 'Affiliations',
-        'authors.affiliationAdd': 'Affiliation hinzufügen',
+        'affiliations.addFreeText': 'Freitext hinzufügen',
         'authors.affiliationEdit': 'Affiliation bearbeiten',
         'authors.affiliationSearch': 'Affiliation in ROR suchen',
         'authors.affiliationMoveUp': 'Affiliation nach oben verschieben',
@@ -285,8 +285,8 @@ describe('authorStack.js', () => {
     expect($('[data-author-remove]').first().attr('aria-label')).toBe('Autoreneintrag entfernen');
     expect($('[data-author-move-down]').first().attr('aria-label')).toBe('Autoreneintrag nach unten verschieben');
     expect($('[data-author-type-switcher] [role="group"]').first().attr('aria-label')).toBe('Autorentyp');
-    expect($('[data-author-affiliation-search]').first().attr('aria-label')).toBe('Affiliation in ROR suchen');
-    expect($('[data-author-affiliation-add-label]').first().text()).toBe('Affiliation hinzufügen');
+    expect($('[data-author-affiliation-search]')).toHaveLength(0);
+    expect($('[data-author-affiliation-add-label]').first().text()).toBe('Freitext hinzufügen');
 
     const person = $('[data-creator-row]').first();
     person.find('input[name="familynames[]"]').val('Doe').trigger('input');

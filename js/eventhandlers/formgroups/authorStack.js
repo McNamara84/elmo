@@ -802,6 +802,7 @@ $(document).ready(function () {
   }
 
   function rowHasContent(row) {
+    if (row.find('[data-affiliation-editor]')[0]?.affiliationEditor.getPendingInput().trim()) return true;
     return getEntryType(row) === 'institution'
       ? readInstitution(row, 0) !== null
       : readPerson(row, 0) !== null;

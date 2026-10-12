@@ -1,4 +1,20 @@
 {
+    "affiliations": {
+        "title": "Affiliations",
+        "addFreeText": "Ajouter du texte libre",
+        "hint": "Les suggestions ROR apparaissent à partir de trois caractères. Sélectionnez un résultat ou ajoutez votre saisie comme texte libre.",
+        "edit": "Modifier l’affiliation",
+        "moveUp": "Déplacer l’affiliation vers le haut",
+        "moveDown": "Déplacer l’affiliation vers le bas",
+        "rorId": "Identifiant ROR",
+        "remove": "Supprimer l’affiliation",
+        "invalid": "Veuillez indiquer une affiliation.",
+        "loading": "Recherche en cours…",
+        "noResults": "Aucun résultat ROR. Vous pouvez ajouter du texte libre.",
+        "error": "Recherche indisponible. Réessayez ou ajoutez du texte libre.",
+        "pending": "Une saisie d’affiliation est en attente. Sélectionnez un résultat ROR, ajoutez la saisie comme texte libre ou abandonnez-la, puis répétez votre action.",
+        "discard": "Abandonner la saisie"
+    },
     "header": {
         "help": "Aide",
         "on": "Actif",

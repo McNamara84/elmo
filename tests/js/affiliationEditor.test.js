@@ -28,6 +28,43 @@ describe('shared affiliation editor', () => {
   }
   const tick = async () => { jest.advanceTimersByTime(250); await Promise.resolve(); await Promise.resolve(); };
 
+  test('free text is explicit, works below search threshold and disables empty submissions', () => {
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    const add = editor.element.find('[data-affiliation-add]');
+    expect(add.prop('disabled')).toBe(true);
+    expect(editor.element.find('[data-affiliation-search]')).toHaveLength(0);
+    input.val('  ').trigger('input');
+    input.trigger($.Event('keydown', { key: 'Enter' }));
+    expect(values()).toEqual([]);
+    input.val('AB').trigger('input').trigger('blur');
+    expect(add.prop('disabled')).toBe(false);
+    expect(values()).toEqual([]);
+    const enter = $.Event('keydown', { key: 'Enter' });
+    input.trigger(enter);
+    expect(enter.isDefaultPrevented()).toBe(true);
+    expect(values()).toEqual([{ label: 'AB', rorId: '' }]);
+    expect(add.prop('disabled')).toBe(true);
+  });
+  test('Enter adds free text even when a matching ROR suggestion exists', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockResolvedValue([{ name: 'GFZ', id: '04z8jg394' }]);
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('GFZ').trigger('input'); await tick();
+    input.trigger($.Event('keydown', { key: 'Enter' }));
+    expect(values()).toEqual([{ label: 'GFZ', rorId: '' }]);
+  });
+  test('a rejected search leaves input usable and announces the failure', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockRejectedValue(new Error('offline'));
+    const { editor, values } = mount();
+    editor.element.find('[data-affiliation-input]').val('Lab').trigger('input'); await tick();
+    expect(editor.element.find('[data-affiliation-status]').text()).toContain('Search unavailable');
+    editor.element.find('[data-affiliation-add]').trigger('click');
+    expect(values()).toEqual([{ label: 'Lab', rorId: '' }]);
+  });
+
   test('editing and reordering preserve each label/ROR pair including commas', () => {
     const { editor, values } = mount([{ label: 'GFZ', rorId: 'https://ror.org/04z8jg394' }, { label: 'Other, Department' }]);
     const input = editor.element.find('[data-affiliation-label]').first();
