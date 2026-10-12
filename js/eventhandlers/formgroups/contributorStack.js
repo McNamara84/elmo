@@ -1,3 +1,5 @@
+import { createAffiliationEditor, createAffiliationBadge } from '../../affiliationEditor.js';
+
 /** Combined, ordered contributor cards. The hidden payload is only a transport field. */
 $(document).ready(function () {
   const shell = document.querySelector('[data-contributor-shell]');
@@ -90,6 +92,9 @@ $(document).ready(function () {
     avatar.querySelector('i').className = `bi ${person ? 'bi-person' : 'bi-building'}`;
     const roleSummary = card.querySelector('[data-contributor-roles]');
     roleSummary.textContent = entry.roles.join(', ');
+    card.querySelector('[data-contributor-summary-orcid]').textContent = person && entry.orcid ? `ORCID ${entry.orcid}` : '';
+    const affiliations = card.querySelector('[data-contributor-summary-affiliations]');
+    affiliations.replaceChildren(...entry.affiliations.map(item => createAffiliationBadge(item)[0]));
     const contact = entry.roles.includes('Contact Person') && (person || window.ELMO_FEATURES?.showContactInstitution === true);
     const contactFields = card.querySelector('[data-contributor-contact-fields]');
     contactFields.classList.toggle('d-none', !contact);
@@ -151,7 +156,7 @@ $(document).ready(function () {
     const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
     const firstShownFields = new Set();
     stack.querySelectorAll('i[data-help-section-id]').forEach(icon => {
-      const field = icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
+      const field = icon.closest('[data-affiliation-editor]')?.querySelector('[data-affiliation-input]') || icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
       const key = icon.dataset.helpSectionId || field?.name;
       const fieldShown = isHelpFieldShown(field);
       const show = helpOn && fieldShown && !firstShownFields.has(key);
@@ -215,7 +220,7 @@ $(document).ready(function () {
     const summary = document.createElement('div');
     summary.className = 'd-flex flex-wrap align-items-center gap-2 p-2';
     summary.id = summaryId;
-    summary.innerHTML = '<span class="d-inline-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-dark text-white" style="width: 2rem; height: 2rem;" role="img" data-contributor-avatar><i class="bi" aria-hidden="true"></i></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span>';
+    summary.innerHTML = '<span class="d-inline-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-dark text-white" style="width: 2rem; height: 2rem;" role="img" data-contributor-avatar><i class="bi" aria-hidden="true"></i></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span><span class="small text-body-secondary" data-contributor-summary-orcid></span><span class="d-flex flex-wrap gap-1" data-contributor-summary-affiliations></span>';
     const panel = document.createElement('div');
     panel.className = 'collapse show border-top p-2';
     panel.id = panelId;
@@ -306,8 +311,23 @@ $(document).ready(function () {
     if (typeof window.setupRolesDropdown === 'function' && role) {
       window.setupRolesDropdown(person ? ['person', 'both'] : ['institution', 'both'], `#${role.id}`);
     }
-    if (typeof window.autocompleteAffiliations === 'function' && affiliation && ror) {
-      window.autocompleteAffiliations(affiliation.id, ror.id);
+    if (affiliation && ror) {
+      const group = affiliation.closest('.input-group');
+      const help = group.querySelector('i[data-help-section-id]');
+      help?.remove();
+      group.classList.add('d-none');
+      affiliation.type = 'hidden';
+      const editor = createAffiliationEditor({
+        card, group: 'contributor', translate: t, helpButton: help ? $(help).attr('data-contributor-affiliation-help', '') : undefined,
+        readAffiliations: () => affiliationPairs(affiliation.value, ror.value),
+        writeAffiliations: values => {
+          writeTags(affiliation, values);
+          ror.value = values.map(item => item.rorId).join(',');
+          affiliation.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+        onChange: updatePayload
+      });
+      group.parentElement.append(editor.element[0]);
     }
     if (typeof window.applyTranslations === 'function') window.applyTranslations();
   }
@@ -340,6 +360,7 @@ $(document).ready(function () {
 
   function setContributors(entries) {
     rendering = true;
+    stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.destroy());
     stack.replaceChildren();
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const type = entry?.type === 'institution' ? 'institution' : 'person';
@@ -364,6 +385,7 @@ $(document).ready(function () {
       field(card, person ? 'cbpRorIds[]' : 'hiddenOrganisationRorId[]').value = affiliations.map(item => item.rorId).join(',');
       field(card, 'cbContactEmail[]').value = entry.email || '';
       field(card, 'cbContactWebsite[]').value = entry.website || '';
+      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.render();
     });
     rendering = false;
     updatePayload();
@@ -376,6 +398,7 @@ $(document).ready(function () {
     const card = button?.closest('[data-contributor-card]');
     if (!card) return;
     if (button.matches('[data-contributor-remove]')) {
+      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.destroy();
       card.remove();
       updatePayload();
       shell.querySelector('[data-contributor-add-type]')?.focus();
@@ -393,6 +416,7 @@ $(document).ready(function () {
       if (button.disabled || hasContent(read(card))) return;
       const replacement = buildCard(button.dataset.contributorTypeOption);
       if (!replacement) return;
+      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.destroy();
       card.replaceWith(replacement);
       initializeWidgets(replacement);
       updatePayload();
@@ -402,6 +426,7 @@ $(document).ready(function () {
   stack.addEventListener('input', updatePayload);
   stack.addEventListener('change', updatePayload);
   document.addEventListener('translationsLoaded', () => {
+    stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.render());
     Array.from(stack.children).forEach(renderCard);
     updatePayload();
   });

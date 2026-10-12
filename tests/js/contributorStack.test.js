@@ -14,7 +14,9 @@ describe('combined contributor stack', () => {
     window.setupRolesDropdown = jest.fn();
     window.autocompleteAffiliations = jest.fn();
     window.applyTranslations = jest.fn();
+    Object.assign(window, require('../../js/affiliationEditor.js'));
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/contributorStack.js'), 'utf8');
+    script = script.replace(/^import.*$/gm, '');
     script = script.replace('$(document).ready(function () {', '(function () {').replace(/\n\}\);\s*$/, '\n})();');
     window.eval(script);
     controller = window.contributorStack;
@@ -34,7 +36,7 @@ describe('combined contributor stack', () => {
     element.value = value;
     element.dispatchEvent(new Event('input', { bubbles: true }));
   };
-  const helpIcon = (card, name) => card.querySelector(`[name="${name}"]`).closest('.input-group').querySelector('i[data-help-section-id]');
+  const helpIcon = (card, name) => name.includes('Affiliation') ? card.querySelector('[data-contributor-affiliation-help]') : card.querySelector(`[name="${name}"]`).closest('.input-group').querySelector('i[data-help-section-id]');
   const helpVisible = (card, name) => !helpIcon(card, name).classList.contains('d-none');
 
   test('keeps real templates free of old group containers and cloning buttons', () => {
@@ -61,10 +63,8 @@ describe('combined contributor stack', () => {
       expect(label.closest('[data-contributor-card]').querySelector(`[id="${label.htmlFor}"]`)).not.toBeNull();
     });
     expect(window.setupRolesDropdown).toHaveBeenCalledWith(['institution', 'both'], expect.any(String));
-    expect(window.autocompleteAffiliations).toHaveBeenCalledWith(
-      expect.stringMatching(/^input-contributor-organisationaffiliation-/),
-      expect.stringMatching(/^input-contributor-organisationrorid-/)
-    );
+    expect(window.autocompleteAffiliations).not.toHaveBeenCalled();
+    expect(document.querySelectorAll('[data-contributor-affiliation-editor]')).toHaveLength(3);
   });
 
   test('starts empty and creates the first person only after Add Person', () => {
@@ -104,7 +104,9 @@ describe('combined contributor stack', () => {
     for (const name of ['cbORCID[]', 'cbPersonRoles[]', 'cbAffiliation[]']) {
       expect(helpVisible(cards()[0], name)).toBe(true);
       expect(helpVisible(cards()[2], name)).toBe(false);
-      expect(helpIcon(cards()[2], name).closest('.input-group-text').classList.contains('d-none')).toBe(true);
+      if (name !== 'cbAffiliation[]') {
+        expect(helpIcon(cards()[2], name).closest('.input-group-text').classList.contains('d-none')).toBe(true);
+      }
     }
     for (const name of ['cbOrganisationName[]', 'cbOrganisationRoles[]']) {
       expect(helpVisible(cards()[1], name)).toBe(true);
@@ -261,5 +263,27 @@ describe('combined contributor stack', () => {
     toggle.click();
     expect(card.dataset.contributorExpanded).toBe('true');
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
+  });
+});
+
+describe('contributor affiliation summaries', () => {
+  const { mountContributorStack } = require('./utils/peopleStacks');
+  test('both contributor types use the shared editor and update summaries and ordered pairs', () => {
+    document.body.innerHTML = '<form></form>';
+    window.ELMO_FEATURES = {};
+    const stack = mountContributorStack([
+      { type: 'person', familyname: 'Doe', orcid: '0000-0002-1825-0097', affiliations: [{label: 'GFZ', rorId: '04z8jg394'}] },
+      { type: 'institution', institutionname: 'Lab', affiliations: [{label: 'Department', rorId: ''}] }
+    ]);
+    const cards = document.querySelectorAll('[data-contributor-card]');
+    expect(cards[0].querySelector('[data-contributor-summary-orcid]').textContent).toBe('ORCID 0000-0002-1825-0097');
+    expect(cards[1].querySelector('[data-contributor-summary-orcid]').textContent).toBe('');
+    const editor = cards[0].querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.element.find('[data-affiliation-label]').val('GFZ, Department').trigger('input');
+    expect(cards[0].querySelector('[data-contributor-summary-affiliations]').textContent).toBe('GFZ, Department 04z8jg394');
+    expect(stack.collectPayload()[0].affiliations).toEqual([{label: 'GFZ, Department', rorId: '04z8jg394'}]);
+    editor.element.find('[data-affiliation-remove]').trigger('click');
+    expect(cards[0].querySelector('[data-contributor-summary-affiliations]').textContent).toBe('');
+    delete window.ELMO_FEATURES;
   });
 });
