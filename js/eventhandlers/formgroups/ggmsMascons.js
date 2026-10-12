@@ -117,6 +117,46 @@ function initMasconBackgroundModels() {
 	});
 }
 
+/** Makes cloned applied-correction field ids unique and keeps labels in sync. */
+function uniquifyAppliedCorrectionIds($correction, index) {
+	$correction.find('[id]').each(function () {
+		const oldId = $(this).attr('id');
+		if (!oldId) {
+			return;
+		}
+		const newId = `${oldId}-${index}`;
+		$(this).attr('id', newId);
+		$correction.find(`label[for="${oldId}"]`).attr('for', newId);
+	});
+}
+
+/**
+ * Two corrections share one accordion row (each is col-md-6).
+ * The first slot keeps +; extra slots get a remove button.
+ */
+function initMasconAppliedCorrections() {
+	const list = $('#mascon-applied-correction-list');
+	if (!list.length) {
+		return;
+	}
+
+	const originalCorrection = list.children('[data-mascon-applied-correction]').first().clone();
+
+	list.on('click', '.addMasconAppliedCorrection', function () {
+		const newCorrection = originalCorrection.clone();
+		newCorrection.find('input, select')
+			.val('')
+			.removeClass('is-invalid is-valid');
+		uniquifyAppliedCorrectionIds(newCorrection, list.children('[data-mascon-applied-correction]').length);
+		newCorrection.find('.addMasconAppliedCorrection').replaceWith(createRemoveButton());
+		list.append(newCorrection);
+	});
+
+	list.on('click', '.removeButton', function () {
+		$(this).closest('[data-mascon-applied-correction]').remove();
+	});
+}
+
 $(document).ready(function () {
 	const masconCard = $('#group-ggmsmascons').closest('.card');
 	if (!masconCard.length) {
@@ -124,6 +164,7 @@ $(document).ready(function () {
 	}
 	masconCard.find('[id$="-switch"]').each(toggleMasconVariable);
 	initMasconBackgroundModels();
+	initMasconAppliedCorrections();
 	$(document).on('change', '#input-mathematical-representation', toggleMasconSpecificGroups);
 	$(document).on('icgem:form-populated', toggleMasconSpecificGroups);
 	$(document).on('change', '[id$="-switch"]', toggleMasconVariable);

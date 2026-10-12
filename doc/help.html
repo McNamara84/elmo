@@ -1760,6 +1760,19 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li><b>General relativity</b> - Example: IERS2010</li>
                     </ul>
                 </div>
+                <div id="help-mascon-applied-corrections">
+                    <h4>Applied Corrections</h4>
+                    <p>This section allows to specify the corrections that were applied to the MASCON solution. The following correction types are available:</p>
+                    <ul>
+                        <li><b>GIA</b> - Glacial Isostatic Adjustment correction applied. Can be a free-text description or model selection.</li>
+                        <li><b>Degree-1</b> - Degree-1 (monopole) correction applied. Free-text description of the method or model used.</li>
+                        <li><b>C20 replacement</b> - Replacement of C20 (degree 2, order 0) coefficients. Free-text description of the source or method.</li>
+                        <li><b>C30 replacement</b> - Replacement of C30 (degree 3, order 0) coefficients. Free-text description of the source or method.</li>
+                        <li><b>Ellipsoidal Corrections</b> - Corrections for ellipsoidal effects (optional). Free-text description of the corrections applied.</li>
+                        <li><b>Baseline</b> - Baseline or reference data corrections applied (optional). Free-text description of the baseline used or corrections made.</li>
+                    </ul>
+                    <p>Click the "+" button to add multiple corrections, and use the "-" button to remove corrections.</p>
+                </div>
             </div>
         <?php endif; ?>
     </div>

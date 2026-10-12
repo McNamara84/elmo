@@ -58,6 +58,7 @@
 							<option value="" selected>Unit</option>
 							<option value="degrees">degrees</option>
 							<option value="km">km</option>
+							<option value="m²">m²</option>
 						</select>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -345,6 +346,56 @@
 										</div>
 										<div class="col-auto d-flex align-items-center">
 											<button type="button" class="btn btn-primary addMasconBackgroundModel add-button" id="button-mascon-background-model-add" aria-label="Add background model" style="width: 36px;">+</button>
+										</div>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="accordion mt-2" id="accordion-mascon-applied-corrections">
+				<div class="accordion-item">
+					<h2 class="accordion-header">
+						<button class="accordion-button" type="button" data-bs-toggle="collapse"
+							data-bs-target="#collapse-mascon-applied-corrections" aria-expanded="true"
+							aria-controls="collapse-mascon-applied-corrections">
+							Applied Corrections
+							<i class="bi bi-question-circle-fill ms-2" data-help-section-id="help-mascon-applied-corrections" aria-hidden="true"></i>
+						</button>
+					</h2>
+					<div id="collapse-mascon-applied-corrections" class="accordion-collapse collapse show"
+						data-bs-parent="#accordion-mascon-applied-corrections">
+						<div class="accordion-body">
+							<div class="row" id="mascon-applied-correction-list">
+								<!-- One correction occupies half a row: type, description, add/remove -->
+								<div class="col-12 col-md-6 p-1" data-mascon-applied-correction>
+									<div class="row g-1 align-items-center">
+										<div class="col">
+											<div class="form-floating">
+												<select class="form-select form-control" id="input-mascon-applied-correction-type" name="mascon_applied_correction_type[]">
+													<option value="" selected>Choose...</option>
+													<option value="gia">GIA</option>
+													<option value="degree_1">Degree-1</option>
+													<option value="c20_replacement">C20 replacement</option>
+													<option value="c30_replacement">C30 replacement</option>
+													<option value="ellipsoidal_corrections">Ellipsoidal Corrections</option>
+													<option value="baseline">Baseline</option>
+													<option value="other">Other</option>
+												</select>
+												<label for="input-mascon-applied-correction-type">Correction type</label>
+											</div>
+										</div>
+										<div class="col">
+											<div class="form-floating">
+												<input type="text" class="form-control" id="input-mascon-applied-correction-description" name="mascon_applied_correction_description[]">
+												<label for="input-mascon-applied-correction-description">Correction description</label>
+												<div class="invalid-feedback">Please provide the correction description.</div>
+											</div>
+										</div>
+										<div class="col-auto d-flex align-items-center">
+											<button type="button" class="btn btn-primary addMasconAppliedCorrection add-button" id="button-mascon-applied-correction-add" aria-label="Add correction" style="width: 36px;">+</button>
 										</div>
 									</div>
 								</div>

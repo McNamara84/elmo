@@ -90,6 +90,22 @@ function collectMasconsPayload() {
     return null;
   }
 
+  // Collect applied corrections (type + description pairs)
+  const appliedCorrections = [];
+  const correctionTypes = document.querySelectorAll('select[name="mascon_applied_correction_type[]"]');
+  const correctionDescriptions = document.querySelectorAll('input[name="mascon_applied_correction_description[]"]');
+  
+  correctionTypes.forEach((typeEl, index) => {
+    const type = (typeEl.value || '').trim();
+    const description = (correctionDescriptions[index]?.value || '').trim();
+    if (type || description) {
+      appliedCorrections.push({
+        type: type || null,
+        description: description || null,
+      });
+    }
+  });
+
   return {
     mathematicalRepresentation: 'MASCON',
     classificationMask: readVal('#input-mascon-classification-mask'),
@@ -109,6 +125,7 @@ function collectMasconsPayload() {
     spatialResolution: readVal('#input-mascon-spatial-resolution'),
     spatialResolutionUnit: readVal('#input-mascon-size-unit'),
     productSampling: readVal('#input-mascon-product-resolution'),
+    appliedCorrections: appliedCorrections.length > 0 ? appliedCorrections : null,
   };
 }
 

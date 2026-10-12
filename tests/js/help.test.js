@@ -186,6 +186,7 @@ describe('help.html visibility', () => {
       'help-mascon-regularization-method',
       'help-mascon-correlation-model',
       'help-mascon-background-models',
+      'help-mascon-applied-corrections',
     ];
     ids.forEach((id) => {
       const tag = helpHtml.match(new RegExp(`<div[^>]*\\bid="${id}"[^>]*>`));
