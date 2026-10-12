@@ -171,7 +171,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$password`: Password of database user.
   - `$database`: Name of the database created.
   - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
-  - `$apiKeyElmo`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
+  - `$ELMO_API_KEY`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
   - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
   - `$smtpHost`: URL to the SMTP mail server
   - `$smtpPort`: Port of the mail server
@@ -217,10 +217,10 @@ If you encounter problems with the installation, feel free to leave an entry in 
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/relationtypes/refresh
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/identifiertypes/refresh
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
-  └─ ELMO verifies against $apiKeyElmo in ELMO's .env
+  └─ ELMO verifies against $ELMO_API_KEY in ELMO's .env
   ```
 
-  - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
+  - `$ELMO_API_KEY`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
   - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types, title types, relation types, identifier types, and other vocabularies are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
   - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
