@@ -123,6 +123,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     buildPageDom();
 
     window.ELMO_FEATURES = {};
+    window.resourceTypeDescriptions = require('../../js/resourceTypeDescriptions.js');
     window.setUpAutocompleteFunder = jest.fn();
     delete window.mainTitleTypeId;
     delete window.alternativeTitleTypeId;
@@ -141,6 +142,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
 
   afterAll(() => {
     jest.restoreAllMocks();
+    delete window.resourceTypeDescriptions;
   });
 
   test('calls initial parallel fetch endpoints without funders', () => {
@@ -181,6 +183,14 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect(options).toContain('Dataset');
     expect(options).toContain('Collection');
     expect(options).toHaveLength(1 + toArray(resourceTypesMockResponse).length);
+  });
+
+  test('option mouseover descriptions use ERNIE values or a local definition', () => {
+    const options = $('#input-resourceinformation-resourcetype option');
+    expect(options.filter((_, option) => option.textContent === 'Dataset').attr('title'))
+      .toBe('Data encoded in a defined structure.');
+    expect(options.filter((_, option) => option.textContent === 'Collection').attr('title'))
+      .toContain('aggregation');
   });
 
   test('populates language dropdown and pre-selects English', () => {

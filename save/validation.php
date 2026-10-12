@@ -5,9 +5,10 @@
  * @param array $postData The POST data to validate
  * @param array $requiredFields Array of field names that must be present and filled
  * @param array $requiredArrayFields Array of field names that must be present as non-empty arrays
+ * @param array<string, string> $optionalPatterns Regular expressions for optional scalar fields
  * @return bool True if all required fields are present and filled, false otherwise
  */
-function validateRequiredFields($postData, $requiredFields = [], $requiredArrayFields = [])
+function validateRequiredFields($postData, $requiredFields = [], $requiredArrayFields = [], $optionalPatterns = [])
 {
     // Check regular fields
     foreach ($requiredFields as $field) {
@@ -21,6 +22,25 @@ function validateRequiredFields($postData, $requiredFields = [], $requiredArrayF
     foreach ($requiredArrayFields as $field) {
         if (!isset($postData[$field]) || !is_array($postData[$field]) || empty($postData[$field])) {
             error_log("[SAVE] Validation failed: Required array field '$field' is missing, not an array, or empty.");
+            return false;
+        }
+    }
+
+    foreach ($optionalPatterns as $field => $pattern) {
+        $value = $postData[$field] ?? null;
+        if ($value === null) {
+            continue;
+        }
+        if (!is_scalar($value)) {
+            error_log("[SAVE] Validation failed: Optional field '$field' has an invalid format.");
+            return false;
+        }
+        $value = trim((string) $value);
+        if ($value === '') {
+            continue;
+        }
+        if (!preg_match($pattern, $value)) {
+            error_log("[SAVE] Validation failed: Optional field '$field' has an invalid format.");
             return false;
         }
     }

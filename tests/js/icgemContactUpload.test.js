@@ -1,3 +1,5 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
+
 /**
  * @jest-environment jsdom
  *
@@ -17,46 +19,7 @@ describe('populateIcgemContactPersons', () => {
 
   /** Build the author-group DOM. Each entry in `authors` is { familyname, givenname }. */
   function buildAuthorDom(authors) {
-    const rows = authors.map((a, i) => `
-      <div class="row" data-creator-row>
-        <input type="checkbox" id="checkbox-author-contactperson${i > 0 ? '-' + i : ''}"
-               name="contacts[]" />
-        <input type="text" name="familynames[]" value="${a.familyname}" />
-        <input type="text" name="givennames[]"  value="${a.givenname}"  />
-        <input type="text" name="orcids[]"      value=""                />
-        <div class="contact-person-input" style="display: none;">
-          <input type="email" name="cpEmail[]"          value="" />
-        </div>
-        <div class="contact-person-input" style="display: none;">
-          <input type="text"  name="cpOnlineResource[]" value="" />
-        </div>
-      </div>
-    `).join('');
-
-    document.body.innerHTML = `
-      <div id="group-author">
-        ${rows}
-        <button type="button" id="button-author-add"></button>
-      </div>
-    `;
-
-    // Minimal add-row handler so the module can create new rows if needed
-    $('#button-author-add').on('click', function () {
-      $('#group-author').append(`
-        <div class="row" data-creator-row>
-          <input type="checkbox" name="contacts[]" />
-          <input type="text"  name="familynames[]"      value="" />
-          <input type="text"  name="givennames[]"       value="" />
-          <input type="text"  name="orcids[]"           value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]"          value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text"  name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      `);
-    });
+    mountAuthorStack(authors.map(author => ({ type: 'person', ...author })));
   }
 
   // ─── XML helpers ──────────────────────────────────────────────────────────

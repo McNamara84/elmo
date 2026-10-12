@@ -7,6 +7,67 @@ var resourceTypeUtils = typeof module !== 'undefined' && module.exports
 
 const RELATED_WORK_XSLT_URL = 'schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt';
 let relatedWorksXsltDocumentPromise = null;
+const RESOURCE_INFORMATION_XSLT_URL = 'schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt';
+let resourceInformationXsltPromise = null;
+
+/**
+ * Transform DataCite XML into the Resource Information import map. Cache the
+ * stylesheet promise so simultaneous imports share one request; retry after a failure.
+ * @param {Document} xmlDoc Parsed DataCite XML.
+ * @returns {Promise<Document>} The Resource Information map document.
+ */
+async function transformResourceInformationDocument(xmlDoc) {
+  if (!resourceInformationXsltPromise) {
+    resourceInformationXsltPromise = fetch(RESOURCE_INFORMATION_XSLT_URL, { credentials: 'same-origin' })
+      .then(async response => {
+        if (!response.ok) throw new Error(`Resource Information stylesheet request failed: ${response.status}`);
+        const stylesheet = new DOMParser().parseFromString(await response.text(), 'application/xml');
+        if (stylesheet.querySelector('parsererror')) throw new Error('Invalid Resource Information stylesheet.');
+        return stylesheet;
+      }).catch(error => {
+        resourceInformationXsltPromise = null;
+        throw error;
+      });
+  }
+  const Processor = typeof XSLTProcessor !== 'undefined' ? XSLTProcessor : window.XSLTProcessor;
+  if (typeof Processor !== 'function') throw new Error('This browser does not support Resource Information XSLT import.');
+  const processor = new Processor();
+  processor.importStylesheet(await resourceInformationXsltPromise);
+  const mapped = processor.transformToDocument(xmlDoc);
+  if (!mapped?.documentElement || mapped.querySelector('parsererror')) {
+    throw new Error('Resource Information transformation failed.');
+  }
+  return mapped;
+}
+
+/**
+ * Resolve imported vocabulary names to the options available in this edition.
+ * @param {Document} mapped Resource Information XSLT output.
+ * @param {Record<string, string>} languageMapping Language code to option ID.
+ * @param {Record<string, string>} titleTypeMapping DataCite title type to option ID.
+ * @returns {Object} Ordered fields and titles for the Resource Information controller.
+ */
+function parseResourceInformationMap(mapped, languageMapping, titleTypeMapping) {
+  const root = mapped.documentElement;
+  if (root.localName !== 'ResourceInformation') throw new Error('Unexpected Resource Information map.');
+  const value = name => String(root.getElementsByTagName(name)[0]?.textContent || '').trim();
+  const typeSelect = document.getElementById('input-resourceinformation-resourcetype');
+  const typeOption = typeSelect && resourceTypeUtils.findResourceTypeOption(
+    Array.from(typeSelect.options), value('ResourceType'));
+  return {
+    doi: value('Doi'), year: value('Year'),
+    resourceTypeId: typeOption?.value || '',
+    version: value('Version'),
+    languageId: languageMapping[value('Language').toLowerCase()] ||
+      document.getElementById('input-resourceinformation-language')?.value || '',
+    titles: Array.from(root.getElementsByTagName('Title')).map((node, position) => ({
+      key: position === 0 ? 'main' : `import-${position}`,
+      text: String(node.textContent || '').trim(),
+      typeId: mapTitleType(node.getAttribute('type'), titleTypeMapping),
+      position
+    }))
+  };
+}
 
 /**
  * Creates an import error while retaining the original failure as its cause.
@@ -431,21 +492,9 @@ function normalizeNameKey(familyName, givenName) {
 }
 
 function getCurrentAuthorsPayload(authorStack) {
-  if (authorStack && typeof authorStack.collectPayload === "function") {
-    return authorStack.collectPayload();
-  }
-
-  const payloadInput = document.querySelector('input[name="authorsPayload"]');
-  if (!payloadInput || !payloadInput.value) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(payloadInput.value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (error) {
-    return [];
-  }
+  if (authorStack?.collectPayload) return authorStack.collectPayload();
+  if (document.querySelector('[name="authorsPayload"]')) throw new Error("Authors form is not initialized.");
+  return [];
 }
 
 function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
@@ -522,180 +571,42 @@ function processCreators(xmlDoc, resolver) {
   const creatorNodes = xmlDoc.evaluate(".//ns:creators/ns:creator", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
   const authorStack = getAuthorStackController();
-  if (authorStack) {
-    const authors = [];
-
-    for (let i = 0; i < creatorNodes.snapshotLength; i++) {
-      const creatorNode = creatorNodes.snapshotItem(i);
-      const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
-      const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
-      const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
-      const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-      const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
-      const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
-      const affiliations = buildAffiliationsPayload(xmlDoc, creatorNode, resolver);
-
-      if (givenname || familyname || nameType === "Personal") {
-        authors.push({
-          type: "person",
-          familyname,
-          givenname,
-          orcid,
-          isContact: false,
-          email: "",
-          website: "",
-          affiliations
-        });
-      } else if (creatorName || nameType === "Organizational") {
-        authors.push({
-          type: "institution",
-          institutionname: creatorName,
-          affiliations
-        });
-      }
-    }
-
-    if (authors.length > 0) {
-      authorStack.setAuthors(authors);
-      return;
-    }
-  }
-
-  // Separate counter for person authors to avoid index mismatch when creators
-  // contain a mix of persons and institutions (fixes #739)
-  let personIndex = 0;
+  if (!authorStack) throw new Error("Authors form is not initialized.");
+  const authors = [];
 
   for (let i = 0; i < creatorNodes.snapshotLength; i++) {
     const creatorNode = creatorNodes.snapshotItem(i);
-
-    // Extract basic creator info: given name, family name, ORCID, and creatorName
-    const givenName = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
-    const familyName = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
-    // Clean ORCID by removing URL prefix if present
+    const givenname = getNodeText(creatorNode, "ns:givenName", xmlDoc, resolver);
+    const familyname = getNodeText(creatorNode, "ns:familyName", xmlDoc, resolver);
     const orcid = getOrcidFromNode(xmlDoc, creatorNode, resolver);
-    const creatorName = getNodeText(creatorNode, "ns:creatorName", xmlDoc, resolver);
+    const creatorNameNode = xmlDoc.evaluate("ns:creatorName", creatorNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+    const creatorName = creatorNameNode ? creatorNameNode.textContent.trim() : "";
+    const nameType = creatorNameNode ? creatorNameNode.getAttribute("nameType") : "";
+    const affiliations = buildAffiliationsPayload(xmlDoc, creatorNode, resolver);
 
-    // Extract affiliations, either <personAffiliation> or <affiliation> elements under the current creator node
-    const affiliationNodes = xmlDoc.evaluate("ns:personAffiliation | ns:affiliation", creatorNode, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-    const affiliations = [];
-    const rorIds = [];
-    const affiliationTags = [];
-
-    // Collect all affiliation names and ROR IDs for the current creator
-    for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
-      const affNode = affiliationNodes.snapshotItem(j);
-      const affiliationName = affNode.textContent;
-      const rorId = affNode.getAttribute("affiliationIdentifier") || '';
-
-      if (affiliationName) {
-        affiliations.push(affiliationName);
-        rorIds.push(rorId);
-        affiliationTags.push(rorId ? { value: affiliationName, id: rorId } : { value: affiliationName });
-      }
-    }
-
-    // ------- Handle Person Authors -------
-    // If givenName or familyName exists, we treat this as a personal author
-    if (givenName || familyName) {
-      let $row;
-      const $rows = $("div[data-creator-row]");
-
-      if (personIndex === 0) {
-        // For the first person creator, use the first existing row in the form.
-        // If no row exists yet, create one first.
-        if ($rows.length === 0) {
-          $("#button-author-add").trigger("click");
-        }
-        $row = $("div[data-creator-row]").eq(0);
-      } else {
-        // For subsequent person creators, add a new row and verify it exists.
-        const countBefore = $rows.length;
-        $("#button-author-add").trigger("click");
-        const countAfter = $("div[data-creator-row]").length;
-
-        if (countAfter <= countBefore) {
-          console.warn(
-            "processCreators: could not create new author row; skipping creator",
-            { givenName, familyName }
-          );
-          continue;
-        }
-
-        // Use the newly created last row rather than relying on a specific index.
-        $row = $("div[data-creator-row]").last();
-      }
-
-      if (!$row || $row.length === 0) {
-        console.warn(
-          "processCreators: target author row not found; skipping creator",
-          { givenName, familyName }
-        );
-        continue;
-      }
-
-      personIndex++;
-
-      // Populate the personal author fields
-      $row.find('input[name="orcids[]"]').val(orcid);
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
-
-      // Handle affiliations with Tagify plugin if initialized
-      const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput._tagify) {
-        tagifyInput._tagify.removeAllTags(); // Clear existing tags
-        tagifyInput._tagify.addTags(affiliationTags); // Preserve imported ROR ids on Tagify tags
-        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(",")); // Set ROR IDs as CSV string
-      } else {
-        // Fallback if Tagify is not used: set affiliations as comma-separated string
-        $row.find('input[name="personAffiliation[]"]').val(affiliations.join(","));
-        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(","));
-      }
-
-      // Reset contact-related inputs (checkbox, email, online resource) for the author row
-      $row.find('input[name="contacts[]"]').prop("checked", false);
-      $row.find(".contact-person-input").hide();
-      $row.find('input[name="cpEmail[]"]').val("");
-      $row.find('input[name="cpOnlineResource[]"]').val("");
-    }
-    // ------- Handle Institution Authors -------
-    else if (creatorName) {
-      // Select all institution rows container
-      let $instRows = $("div[data-authorinstitution-row]");
-      let $instRow;
-
-      // Try to find the first empty institution row to reuse
-      const foundEmptyRow = $instRows.toArray().find((row) => {
-        return $(row).find('input[name="authorinstitutionName[]"]').val().trim() === "";
+    if (givenname || familyname || nameType === "Personal") {
+      authors.push({
+        type: "person",
+        familyname,
+        givenname,
+        orcid,
+        isContact: false,
+        email: "",
+        website: "",
+        affiliations
       });
-
-      if (foundEmptyRow) {
-        $instRow = $(foundEmptyRow);
-      } else {
-        // If no empty row found, simulate click to add new institution row and select it
-        $("#button-authorinstitution-add").click();
-        $instRow = $("div[data-authorinstitution-row]").last();
-      }
-
-      // Set institution name
-      $instRow.find('input[name="authorinstitutionName[]"]').val(creatorName);
-
-      // Handle institution affiliations with Tagify plugin if present
-      const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
-      if (tagifyInput && tagifyInput._tagify) {
-        tagifyInput._tagify.removeAllTags(); // Clear existing tags
-        tagifyInput._tagify.addTags(affiliationTags); // Preserve imported ROR ids on Tagify tags
-      } else {
-        // Fallback: set affiliations as comma-separated string if no Tagify
-        $instRow.find('input[name="institutionAffiliation[]"]').val(affiliations.join(","));
-      }
-
-      // Set ROR IDs for the institution as CSV string
-      $instRow.find('input[name="authorInstitutionRorIds[]"]').val(rorIds.join(","));
+    } else if (creatorName || nameType === "Organizational") {
+      authors.push({
+        type: "institution",
+        institutionname: creatorName,
+        affiliations
+      });
     }
   }
-}
 
+  authorStack.setAuthors(authors);
+
+}
 
 /**
  * Process contact persons from XML and populate the form
@@ -756,78 +667,7 @@ function processContactPersons(xmlDoc) {
     return;
   }
 
-  for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
-    const contactPersonNode = contactPersonNodes.snapshotItem(i);
-
-    // Extract Contact Person details
-    const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
-    const [familyName, givenName] = fullName?.split(", "); // Use optional chaining
-
-    if (!givenName || !familyName) {
-      continue;
-    }
-
-    // Extract email and website, handling potential namespace issues
-    let email = getNodeText(
-      contactPersonNode,
-      "gmd:contactInfo/gmd:CI_Contact/gmd:address/gmd:CI_Address/gmd:electronicMailAddress/gco:CharacterString",
-      xmlDoc,
-      nsResolver
-    );
-    let website = getNodeText(
-      contactPersonNode,
-      "gmd:contactInfo/gmd:CI_Contact/gmd:onlineResource/gmd:CI_OnlineResource/gmd:linkage/gmd:URL",
-      xmlDoc,
-      nsResolver
-    );
-
-    if (!email) {
-      email = getNodeText(contactPersonNode, "//electronicMailAddress/CharacterString", xmlDoc, null);
-    }
-    if (!website) {
-      website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
-    }
-
-    // Find the matching author row based on name (case-insensitive, trimmed)
-    const normalizedFamily = familyName.trim().toLowerCase();
-    const normalizedGiven = givenName.trim().toLowerCase();
-    let $row = $("div[data-creator-row]")
-      .filter(function () {
-        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
-        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
-        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
-      })
-      .first();
-
-    if ($row.length === 0) {
-      // No matching author found — add a new author row for the contact person
-      const countBefore = $("div[data-creator-row]").length;
-      $("#button-author-add").click();
-      const countAfter = $("div[data-creator-row]").length;
-      if (countAfter <= countBefore) {
-        console.warn("Could not create new author row for contact person:", familyName, givenName);
-        continue;
-      }
-      $row = $("div[data-creator-row]").last();
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
-    }
-
-    // Mark the row as contact person
-    $row.find('input[name="contacts[]"]').prop("checked", true);
-
-    // Show the contact person fields
-    $row.find(".contact-person-input").show();
-
-    // Populate the contact person fields
-    $row.find('input[name="cpEmail[]"]').val(email || "");
-    $row.find('input[name="cpOnlineResource[]"]').val(website || "");
-  }
-
-  // If no ISO contact persons were found, try DataCite fallback
-  if (contactPersonNodes.snapshotLength === 0) {
-    processContactPersonsFromDataCite(xmlDoc);
-  }
+  throw new Error("Authors form is not initialized.");
 }
 
 /**
@@ -837,62 +677,8 @@ function processContactPersons(xmlDoc) {
  * @param {Document} xmlDoc - The parsed XML document
  */
 function processContactPersonsFromDataCite(xmlDoc) {
-  function dcResolver(prefix) {
-    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
-  }
-
-  if (getAuthorStackController()) {
-    applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc), Boolean(window.contributorStack));
-    return;
-  }
-
-  // Select all contributors, then filter by attribute in JS
-  // (some XPath engines don't support attribute predicates on namespaced elements)
-  const allContributors = xmlDoc.evaluate(
-    './/ns:contributors/ns:contributor',
-    xmlDoc,
-    dcResolver,
-    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-    null
-  );
-
-  for (let i = 0; i < allContributors.snapshotLength; i++) {
-    const node = allContributors.snapshotItem(i);
-    if (node.getAttribute("contributorType") !== "ContactPerson") continue;
-
-    const familyName = getNodeText(node, "ns:familyName", xmlDoc, dcResolver);
-    const givenName = getNodeText(node, "ns:givenName", xmlDoc, dcResolver);
-
-    if (!familyName && !givenName) continue;
-
-    const normalizedFamily = familyName.trim().toLowerCase();
-    const normalizedGiven = givenName.trim().toLowerCase();
-    let $row = $("div[data-creator-row]")
-      .filter(function () {
-        const rowFamily = ($(this).find('input[name="familynames[]"]').val() || "").trim().toLowerCase();
-        const rowGiven = ($(this).find('input[name="givennames[]"]').val() || "").trim().toLowerCase();
-        return rowFamily === normalizedFamily && rowGiven === normalizedGiven;
-      })
-      .first();
-
-    if ($row.length === 0) {
-      // No matching author found — add a new author row for the contact person
-      const countBefore = $("div[data-creator-row]").length;
-      $("#button-author-add").click();
-      const countAfter = $("div[data-creator-row]").length;
-      if (countAfter <= countBefore) {
-        console.warn("Could not create new author row for contact person:", familyName, givenName);
-        continue;
-      }
-      $row = $("div[data-creator-row]").last();
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
-    }
-
-    $row.find('input[name="contacts[]"]').prop("checked", true);
-    $row.find(".contact-person-input").show();
-    // Email/website not available in DataCite schema
-  }
+  if (!getAuthorStackController()) throw new Error("Authors form is not initialized.");
+  applyContactsToAuthorStack(collectDataCiteContactPersons(xmlDoc), Boolean(window.contributorStack));
 }
 
 // Global variable to store labs data
@@ -1017,72 +803,15 @@ function normalizeRole(contributorType) {
   return contributorType.replace(/([a-z])([A-Z])/g, "$1 $2");
 }
 
-// Helper function to get or create a new organization row
-function getOrCreateOrgRow(index) {
-  const container = $("#group-contributororganisation");
-  if (index === 0) {
-    return container.find("[contributors-row]").first();
-  }
-
-  // Simulate click on add button to create new row
-  $("#button-contributor-addorganisation").click();
-
-  // Return the newly created row
-  return container.find(".row").last();
-}
-
-// Helper function to get or create a new person row
-function getOrCreatePersonRow(index) {
-  const container = $("#group-contributorperson");
-  if (index === 0) {
-    return container.find("[contributor-person-row]").first();
-  }
-
-  // Simulate click on add button to create new row
-  $("#button-contributor-addperson").click();
-
-  // Return the newly created row
-  return container.find(".row").last();
-}
-
-/**
- * Process contributors from XML and populate the form
- * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
- */
+/** Load contributors only when the shared group is enabled. */
 function processContributors(xmlDoc, resolver) {
-  if (window.contributorStack?.setContributors) {
-    processContributorsIntoStack(xmlDoc, resolver);
+  if (!window.contributorStack?.setContributors) {
+    if (document.querySelector('[name="contributorsPayload"]')) throw new Error("Contributors form is not initialized.");
     return;
   }
-  const contributorsNode = xmlDoc.evaluate(".//ns:contributors", xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-
-  if (!contributorsNode) return;
-
-  // Get all contributors except ContactPerson and Contributers with nameIdentifierScheme labid, because those are loaded into fg Contact Person and fg Originating Laboratory
-  const contributorNodes = xmlDoc.evaluate(
-    'ns:contributor[not(@contributorType="ContactPerson") and not(ns:nameIdentifier[@nameIdentifierScheme="labid"])]',
-    contributorsNode,
-    resolver,
-    XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,
-    null
-  );
-
-  // Create maps to store unique contributors
-  const personMap = new Map(); // Key: ORCID or name, Value: contributor data
-  const orgMap = new Map(); // Key: name, Value: contributor data
-
-  // Process all contributors
-  for (let i = 0; i < contributorNodes.snapshotLength; i++) {
-    const contributor = contributorNodes.snapshotItem(i);
-    processIndividualContributor(contributor, xmlDoc, resolver, personMap, orgMap);
-  }
-
-  // Populate form with processed data
-  populateFormWithContributors(personMap, orgMap);
+  processContributorsIntoStack(xmlDoc, resolver);
 }
 
-/** Preserve DataCite document order and merge repeated roles into one card. */
 function processContributorsIntoStack(xmlDoc, resolver) {
   const entries = [];
   const byKey = new Map();
@@ -1125,7 +854,9 @@ function processContributorsIntoStack(xmlDoc, resolver) {
       : { type: 'institution', institutionname: display, roles: [], affiliations, email: '', website: '' });
     if (!entry.roles.includes(role)) entry.roles.push(role);
     affiliations.forEach(affiliation => {
-      if (!entry.affiliations.some(existing => existing.label === affiliation.label)) entry.affiliations.push(affiliation);
+      const existing = entry.affiliations.find(item => item.label === affiliation.label);
+      if (!existing) entry.affiliations.push(affiliation);
+      else if (!existing.rorId && affiliation.rorId) existing.rorId = affiliation.rorId;
     });
   }
 
@@ -1157,208 +888,6 @@ function processContributorsIntoStack(xmlDoc, resolver) {
     }
   }
   window.contributorStack.setContributors(entries);
-}
-
-/**
- * Process an individual contributor node and update the corresponding maps
- * @param {Node} contributor - The contributor XML node
- * @param {Document} xmlDoc - The parsed XML document
- * @param {Function} resolver - The namespace resolver function
- * @param {Map} personMap - Map to store person contributors
- * @param {Map} orgMap - Map to store organization contributors
- */
-function processIndividualContributor(contributor, xmlDoc, resolver, personMap, orgMap) {
-  const contributorType = contributor.getAttribute("contributorType");
-  const nameType = getNodeText(contributor, "ns:contributorName/@nameType", xmlDoc, resolver);
-  const contributorName = getNodeText(contributor, "ns:contributorName", xmlDoc, resolver);
-  const givenName = getNodeText(contributor, "ns:givenName", xmlDoc, resolver);
-  const familyName = getNodeText(contributor, "ns:familyName", xmlDoc, resolver);
-  const orcid = getOrcidFromNode(xmlDoc, contributor, resolver);
-
-  // Get affiliations as aligned pairs of { name, rorId }
-  const affiliationNodes = xmlDoc.evaluate("ns:affiliation", contributor, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-
-  const affiliationPairs = [];
-
-  for (let j = 0; j < affiliationNodes.snapshotLength; j++) {
-    const affNode = affiliationNodes.snapshotItem(j);
-    const affiliationName = affNode.textContent ? affNode.textContent.trim().replace(/\s+/g, ' ') : '';
-    const rorId = affNode.getAttribute("affiliationIdentifier");
-
-    if (affiliationName && !affiliationPairs.some(p => p.name === affiliationName)) {
-      affiliationPairs.push({
-        name: affiliationName,
-        rorId: rorId ? rorId.replace("https://ror.org/", "") : ""
-      });
-    }
-  }
-
-  const isPerson = nameType === "Personal" || (givenName && familyName);
-
-  if (isPerson) {
-    const key = orcid || `${givenName}_${familyName}`;
-    updateContributorMap(personMap, key, {
-      givenName,
-      familyName,
-      orcid,
-      roles: [normalizeRole(contributorType)],
-      affiliationPairs,
-    });
-  } else {
-    updateContributorMap(orgMap, contributorName, {
-      name: contributorName,
-      roles: [normalizeRole(contributorType)],
-      affiliationPairs,
-    });
-  }
-}
-
-/**
- * Update the contributor map with new data, merging if the key already exists
- * @param {Map} map - The map to update
- * @param {string} key - The key for the contributor
- * @param {Object} newData - The new contributor data
- */
-function updateContributorMap(map, key, newData) {
-  if (map.has(key)) {
-    const existing = map.get(key);
-    if (!existing.roles.includes(newData.roles[0])) {
-      existing.roles.push(newData.roles[0]);
-    }
-    newData.affiliationPairs.forEach((pair) => {
-      const existingPair = existing.affiliationPairs.find(p => p.name === pair.name);
-      if (existingPair) {
-        if (!existingPair.rorId && pair.rorId) {
-          existingPair.rorId = pair.rorId;
-        }
-      } else {
-        existing.affiliationPairs.push(pair);
-      }
-    });
-  } else {
-    map.set(key, newData);
-  }
-}
-
-/**
- * Get or retrieve the Tagify instance for an input element
- * @param {HTMLElement} inputElement - The input element
- * @returns {Tagify|null} The Tagify instance or null if not available
- */
-function getTagifyInstance(inputElement) {
-  if (!inputElement) return null;
-
-  // Check for direct property
-  if (inputElement._tagify) {
-    return inputElement._tagify;
-  }
-
-  // Check for _tagify property
-  if (inputElement._tagify) {
-    return inputElement._tagify;
-  }
-
-  // Check for jQuery element with tagify
-  if (inputElement[0] && inputElement[0]._tagify) {
-    return inputElement[0]._tagify;
-  }
-
-  // Look for data- attribute
-  if (inputElement.dataset && inputElement.dataset._tagify) {
-    return window[inputElement.dataset._tagify];
-  }
-
-  console.log("No existing Tagify instance found for element, returning null", inputElement);
-  return null;
-}
-
-/**
- * Populate the form with processed contributor data using canonical field names
- * (cbAffiliation[], cbpRorIds[], OrganisationAffiliation[], hiddenOrganisationRorId[]).
- * @param {Map} personMap - Map containing person contributors
- * @param {Map} orgMap - Map containing organization contributors
- */
-function populateFormWithContributors(personMap, orgMap) {
-  let personIndex = 0;
-  let orgIndex = 0;
-
-  // Process persons
-  for (const person of personMap.values()) {
-    const personRow = getOrCreatePersonRow(personIndex++);
-
-    // Roles
-    const roleInput = personRow.find('input[name="cbPersonRoles[]"]')[0];
-    const tagifyRoles = getTagifyInstance(roleInput);
-    if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
-      tagifyRoles.addTags(person.roles.map((role) => ({ value: role })));
-    } else {
-      console.warn("No Tagify instance found for role input:", roleInput);
-    }
-
-    // ORCID
-    if (person.orcid) {
-      personRow.find('input[name="cbORCID[]"]').val(person.orcid);
-    }
-
-    // Names
-    personRow.find('input[name="cbPersonLastname[]"]').val(person.familyName);
-    personRow.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
-
-    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
-    const affiliationInput = personRow.find('input[name="cbAffiliation[]"]')[0];
-    const tagifyAffiliations = getTagifyInstance(affiliationInput);
-    if (tagifyAffiliations) {
-      tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(person.affiliationPairs.map((pair) => ({
-        value: pair.name,
-        id: pair.rorId
-      })));
-    } else {
-      console.warn("No Tagify instance found for affiliation input:", affiliationInput);
-    }
-
-    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
-    personRow.find('input[name="cbpRorIds[]"]').val(
-      person.affiliationPairs.map((pair) => pair.rorId).join(",")
-    );
-  }
-
-  // Process organizations
-  for (const org of orgMap.values()) {
-    const orgRow = getOrCreateOrgRow(orgIndex++);
-
-    // Roles
-    const roleInput = orgRow.find('input[name="cbOrganisationRoles[]"]')[0];
-    const tagifyRoles = getTagifyInstance(roleInput);
-    if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
-      tagifyRoles.addTags(org.roles.map((role) => ({ value: role })));
-    } else {
-      console.warn("No Tagify instance found for organization role input:", roleInput);
-    }
-
-    // Organization name
-    orgRow.find('input[name="cbOrganisationName[]"]').val(org.name);
-
-    // Affiliations — add tags with both value and id (ROR) for Tagify state consistency
-    const affiliationInput = orgRow.find('input[name="OrganisationAffiliation[]"]')[0];
-    const tagifyAffiliations = getTagifyInstance(affiliationInput);
-    if (tagifyAffiliations) {
-      tagifyAffiliations.removeAllTags();
-      tagifyAffiliations.addTags(org.affiliationPairs.map((pair) => ({
-        value: pair.name,
-        id: pair.rorId
-      })));
-    } else {
-      console.warn("No Tagify instance found for organization affiliation input:", affiliationInput);
-    }
-
-    // ROR IDs — aligned with affiliations (empty string for missing ROR IDs)
-    orgRow.find('input[name="hiddenOrganisationRorId[]"]').val(
-      org.affiliationPairs.map((pair) => pair.rorId).join(",")
-    );
-  }
 }
 
 /**
@@ -1971,30 +1500,8 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   const languageMapping = await createLanguageMapping();
   const titleTypeMapping = await createTitleTypeMapping();
 
-  // Definiere das komplette XML_MAPPING mit dem erstellten licenseMapping
+  // Non-resource fields retain their existing mapping.
   const XML_MAPPING = {
-    // Resource Information
-    identifier: {
-      selector: "#input-resourceinformation-doi",
-      attribute: "textContent",
-    },
-    publicationYear: {
-      selector: "#input-resourceinformation-publicationyear",
-      attribute: "textContent",
-    },
-    version: {
-      selector: "#input-resourceinformation-version",
-      attribute: "textContent",
-    },
-
-    // Language mapping
-    language: {
-      selector: "#input-resourceinformation-language",
-      attribute: "textContent",
-      transform: (value) => {
-        return languageMapping[value.toLowerCase()] || "1";
-      },
-    },
     // Rights
     "rightsList/ns:rights": {
       selector: "#input-rights-license",
@@ -2031,9 +1538,13 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     }
   }
 
-  processResourceType(xmlDoc, resolver);
-  // Process titles
-  processTitles(xmlDoc, resolver, titleTypeMapping);
+  const mappedResource = await transformResourceInformationDocument(xmlDoc);
+  if (!window.resourceInformation?.setResourceInformation) {
+    throw new Error('Resource Information form is not initialized.');
+  }
+  const resourceInformation = parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping);
+  window.resourceInformation.setResourceInformation(resourceInformation);
+  if (resourceInformation.doi) window.resourceInformation.enableDoiEditing?.(true);
   // Processing Creators
   processCreators(xmlDoc, resolver);
   // Allow DOM to settle after creator row insertion (fixes Firefox timing issue #1046)
@@ -2090,6 +1601,8 @@ if (typeof module !== 'undefined' && module.exports) {
         normalizeResourceTypeGeneral: resourceTypeUtils.normalizeResourceTypeGeneral,
         findResourceTypeOption: resourceTypeUtils.findResourceTypeOption,
         processResourceType,
+        transformResourceInformationDocument,
+        parseResourceInformationMap,
         extractLicenseIdentifier,
         mapTitleType,
         processTitles,
@@ -2102,14 +1615,8 @@ if (typeof module !== 'undefined' && module.exports) {
         setLabDataInRow,
         processOriginatingLaboratories,
         normalizeRole,
-        getOrCreateOrgRow,
-        getOrCreatePersonRow,
         processContributors,
-        processIndividualContributor,
         processDates,
-        updateContributorMap,
-        getTagifyInstance,
-        populateFormWithContributors,
         processKeywords,
         parseTemporalData,
         getGeoLocationData,

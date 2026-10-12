@@ -2,7 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
-import { injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
+import { injectModuleFromApp, injectProductionScript, injectScript, injectStylesheet, registerStaticAssetRoutes } from '../utils/assets';
 
 const SAMPLE_XML_CONTENT = `<?xml version="1.0" encoding="UTF-8"?>
 <resource xmlns="http://datacite.org/schema/kernel-4">
@@ -64,10 +64,9 @@ function loadTemplate(relativePath: string): string {
   return readFileSync(path.join(REPO_ROOT, relativePath), 'utf8');
 }
 
-const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resourceInformation.html');
+const RESOURCE_INFORMATION_HTML = loadTemplate('formgroups/resource-information.html');
 const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
-const AUTHOR_INSTITUTION_HTML = loadTemplate('formgroups/authorInstitution.html');
 const ORIGINATING_LAB_HTML = loadTemplate('formgroups/originatingLaboratory.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
 const THESAURUS_HTML = loadTemplate('formgroups/thesaurus-keywords.html');
@@ -76,6 +75,7 @@ const FREE_KEYWORDS_HTML = loadTemplate('formgroups/freeKeywords.html');
 const DATES_HTML = loadTemplate('formgroups/dates.html');
 const RELATED_WORK_HTML = loadTemplate('formgroups/relatedwork.html');
 const RELATED_WORK_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt');
+const RESOURCE_INFORMATION_XSLT = loadTemplate('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt');
 const RELATED_WORK_CONTROLLER = loadTemplate('js/eventhandlers/formgroups/relatedwork.js').replace(
   /^import .*$/m,
   'const { createRemoveButton, replaceHelpButtonInClonedRows, translateClonedRow } = window;'
@@ -94,7 +94,6 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     ${RESOURCE_INFORMATION_HTML}
     ${RIGHTS_HTML}
     ${AUTHORS_HTML}
-    ${AUTHOR_INSTITUTION_HTML}
     ${ORIGINATING_LAB_HTML}
     ${DESCRIPTIONS_HTML}
     ${THESAURUS_HTML}
@@ -447,8 +446,9 @@ test.describe('XML Upload Mapping Flow', () => {
 
     await registerStaticAssetRoutes(page);
 
-    await page.goto('about:blank');
-    await page.setContent(TEST_PAGE_HTML);
+    await page.route('**/xml-upload-fixture', route => route.fulfill({ contentType: 'text/html', body: TEST_PAGE_HTML }));
+    await page.goto(`${APP_BASE_URL}xml-upload-fixture`);
+
 
     // Inject mock fetch that returns data directly instead of making network requests
     // Uses the central MOCK_API_DATA configuration defined above
@@ -464,6 +464,12 @@ test.describe('XML Upload Mapping Flow', () => {
 
         if (url.includes('schemas/XSLT/MappingDataCiteRelatedWorksToMap.xslt')) {
           return Promise.resolve(new Response(data.relatedWorksXslt, {
+            status: 200,
+            headers: { 'Content-Type': 'application/xml' }
+          }));
+        }
+        if (url.includes('schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt')) {
+          return Promise.resolve(new Response(data.resourceInformationXslt, {
             status: 200,
             headers: { 'Content-Type': 'application/xml' }
           }));
@@ -517,7 +523,8 @@ test.describe('XML Upload Mapping Flow', () => {
     }, {
       mockData: MOCK_API_DATA,
       mockThesauri: MOCK_THESAURI_TREE,
-      relatedWorksXslt: RELATED_WORK_XSLT
+      relatedWorksXslt: RELATED_WORK_XSLT,
+      resourceInformationXslt: RESOURCE_INFORMATION_XSLT
     });
 
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
@@ -603,31 +610,6 @@ test.describe('XML Upload Mapping Flow', () => {
       }
     });
 
-    // Register simplified click handlers for add-row buttons since ES modules
-    // cannot load on about:blank pages. These mimic the core cloning logic from
-    // js/eventhandlers/formgroups/author.js and authorInstitution.js.
-    await page.evaluate(() => {
-      const $ = (window as any).jQuery;
-      $('#button-author-add').click(function () {
-        const $container = $('div[data-creator-row]').parent();
-        const $first = $('div[data-creator-row]').first();
-        const $clone = $first.clone(false);
-        $clone.find('input, select, textarea').val('').removeAttr('required');
-        $clone.find('.tagify').remove();
-        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
-        $container.append($clone);
-      });
-      $('#button-authorinstitution-add').click(function () {
-        const $container = $('div[data-authorinstitution-row]').parent();
-        const $first = $('div[data-authorinstitution-row]').first();
-        const $clone = $first.clone(false);
-        $clone.find('input, select, textarea').val('').removeAttr('required');
-        $clone.find('.tagify').remove();
-        $clone.find('.is-invalid, .is-valid').removeClass('is-invalid is-valid');
-        $container.append($clone);
-      });
-    });
-
     const appScripts = [
       'js/clear.js',
       'js/dropdownUtils.js',
@@ -646,6 +628,11 @@ test.describe('XML Upload Mapping Flow', () => {
     for (const script of appScripts) {
       await injectProductionScript(page, script);
     }
+
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
+    await page.waitForFunction(() => !!(window as any).authorStack?.setAuthors);
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
+    await page.waitForFunction(() => !!(window as any).resourceInformation?.setResourceInformation);
 
     await page.evaluate(() => {
       const $ = (window as any).jQuery;

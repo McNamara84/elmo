@@ -77,7 +77,7 @@ $mslLogoHtml = '<a href="https://epos-msl.uu.nl/" target="_blank" rel="noopener 
 
 $baseDir = __DIR__ . '/';
 include $baseDir . 'header.php';
-include $baseDir . 'formgroups/resourceInformation.html';
+include $baseDir . 'formgroups/resource-information.html';
 include $baseDir . 'formgroups/honeypot.html';
 
 include $baseDir . 'formgroups/authors.html';

@@ -230,6 +230,7 @@ class DatasetController
         FROM Title t
         JOIN Title_Type tt ON t.Title_Type_fk = tt.title_type_id
         WHERE t.Resource_resource_id = ?
+        ORDER BY t.sort_order ASC, t.title_id ASC
     ");
         $stmt->bind_param('i', $resource_id);
         $stmt->execute();

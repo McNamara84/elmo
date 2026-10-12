@@ -9,10 +9,6 @@ module.exports = {
     // Exclude ES-Module files (use 'import' statements - not testable with CommonJS/Jest)
     '!js/validation.js',
     '!js/eventhandlers/buttons.js',
-    '!js/eventhandlers/formgroups/author.js',
-    '!js/eventhandlers/formgroups/authorInstitution.js',
-    '!js/eventhandlers/formgroups/contributor-organisation.js',
-    '!js/eventhandlers/formgroups/contributor-person.js',
     '!js/eventhandlers/formgroups/fundingreference.js',
     '!js/eventhandlers/formgroups/ggmsDatasources.js',
     '!js/eventhandlers/formgroups/relatedwork.js',

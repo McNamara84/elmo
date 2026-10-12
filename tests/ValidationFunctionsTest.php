@@ -69,6 +69,16 @@ final class ValidationFunctionsTest extends TestCase
         $this->assertFalse(validateRequiredFields($data, [], ['list']));
     }
 
+    public function testOptionalFieldPatternRejectsMalformedValueAndAllowsEmptyValue(): void
+    {
+        $pattern = ['version' => '/^\d+\.\d+$/D'];
+        self::assertTrue(validateRequiredFields(['version' => ''], [], [], $pattern));
+        self::assertTrue(validateRequiredFields(['version' => '   '], [], [], $pattern));
+        self::assertTrue(validateRequiredFields(['version' => '3.0'], [], [], $pattern));
+        self::assertFalse(validateRequiredFields(['version' => 'release 3'], [], [], $pattern));
+        self::assertFalse(validateRequiredFields(['version' => ['3.0']], [], [], $pattern));
+    }
+
     /**
      * Checks array dependency validation with matching indices.
      *

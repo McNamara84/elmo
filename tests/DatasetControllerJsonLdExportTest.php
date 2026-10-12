@@ -33,6 +33,7 @@ final class DatasetControllerJsonLdExportTest extends TestCase
     <title>Test Dataset Title</title>
   </titles>
   <publicationYear>2024</publicationYear>
+  <version>3.0</version>
   <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
   <subjects>
     <subject>Earth Science</subject>
@@ -65,6 +66,7 @@ XML;
         $this->assertSame('Doe, John', $payload['creators']['creator']['creatorName']['value']);
         $this->assertSame('John', $payload['creators']['creator']['givenName']['value']);
         $this->assertSame('2024', $payload['publicationYear']['value']);
+        $this->assertSame('3.0', $payload['version']['value']);
         $this->assertSame('Dataset', $payload['resourceType']['attrs']['resourceTypeGeneral']);
         $this->assertSame('Earth Science', $payload['subjects']['subject']['value']);
         $this->assertSame('Test Funder', $payload['fundingReferences']['fundingReference']['funderName']['value']);

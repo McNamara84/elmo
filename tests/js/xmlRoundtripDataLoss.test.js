@@ -1,3 +1,4 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
 /**
  * @file Round-trip data loss regression tests for XML export → import.
  *
@@ -441,6 +442,7 @@ describe("Contact person email/website from DataCite-only XML", () => {
       </ns:contributors>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     // Contact person checkbox should be checked (DataCite fallback matches by name)
@@ -530,6 +532,7 @@ describe("Contact person email/website from DataCite-only XML", () => {
 </envelope>`;
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     const checkbox = document.querySelector('input[name="contacts[]"]');
@@ -563,19 +566,6 @@ describe("Contact person added as new author when name doesn't match (regression
       </div>
       <button id="button-author-add"></button>`;
 
-    // Simulate add-author button creating a new row
-    document.getElementById("button-author-add").addEventListener("click", () => {
-      const container = document.getElementById("group-author");
-      const firstRow = container.querySelector("[data-creator-row]");
-      const clone = firstRow.cloneNode(true);
-      clone.querySelectorAll("input").forEach((i) => {
-        if (i.type === "checkbox") i.checked = false;
-        else i.value = "";
-      });
-      clone.querySelector(".contact-person-input").style.display = "none";
-      container.appendChild(clone);
-    });
-
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
@@ -590,6 +580,7 @@ describe("Contact person added as new author when name doesn't match (regression
       </ns:contributors>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processContactPersons(xmlDoc);
 
     // FIXED: A new author row is created for the contact person
@@ -915,6 +906,7 @@ describe("Author ORCID URL stripping", () => {
       </ns:creators>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
+    mountAuthorStack();
     ctx.processCreators(xmlDoc, NS_RESOLVER);
 
     // Name fields work (simple XPath without attribute predicates)
@@ -949,23 +941,13 @@ describe("Contributor ORCID extraction", () => {
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
 
-    const personMap = new Map();
-    const orgMap = new Map();
-    const contributorNode = xmlDoc.evaluate(
-      ".//ns:contributors/ns:contributor",
-      xmlDoc,
-      NS_RESOLVER,
-      XPathResult.FIRST_ORDERED_NODE_TYPE,
-      null
-    ).singleNodeValue;
-
-    expect(contributorNode).not.toBeNull();
-    ctx.processIndividualContributor(contributorNode, xmlDoc, NS_RESOLVER, personMap, orgMap);
-
-    expect(personMap.size).toBe(1);
-    const person = personMap.values().next().value;
-    expect(person.givenName).toBe("Erika");
-    expect(person.familyName).toBe("Müller");
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    mountAuthorStack();
+    ctx.processContributors(xmlDoc, NS_RESOLVER);
+    const person = setContributors.mock.calls[0][0][0];
+    expect(person.givenname).toBe("Erika");
+    expect(person.familyname).toBe("Müller");
     expect(person.roles).toContain("Data Collector");
 
     // ORCID extraction depends on XPath attribute predicate support.

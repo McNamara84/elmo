@@ -109,21 +109,9 @@ function normalizeNameKey(familyName, givenName) {
 }
 
 function getCurrentAuthorsPayload(authorStack) {
-  if (authorStack && typeof authorStack.collectPayload === 'function') {
-    return authorStack.collectPayload();
-  }
-
-  const payloadInput = document.querySelector('input[name="authorsPayload"]');
-  if (!payloadInput || !payloadInput.value) {
-    return [];
-  }
-
-  try {
-    const parsed = JSON.parse(payloadInput.value);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
+  if (authorStack?.collectPayload) return authorStack.collectPayload();
+  if (document.querySelector('[name="authorsPayload"]')) throw new Error('Authors form is not initialized.');
+  return [];
 }
 
 /**
@@ -243,15 +231,11 @@ function mapTitleTypeFromJson(titleType, mapping) {
  * Maps resource information fields (DOI, year, type, version, language).
  */
 function prefillResourceInfo(attr) {
-  if (attr.doi) {
-    $('#input-resourceinformation-doi').val(attr.doi);
-  }
-  if (attr.publicationYear) {
-    $('#input-resourceinformation-publicationyear').val(attr.publicationYear);
-  }
+  const resource = {};
+  if (attr.publicationYear) resource.year = String(attr.publicationYear);
   if (attr.version) {
     const $version = $('#input-resourceinformation-version');
-    $version.val(attr.version);
+    resource.version = String(attr.version);
     $version.addClass('prefill-highlight');
     $version.attr('title', window.elmo?.translate?.('doiPrefill.versionHint') || 'Please check and adjust the version if necessary.');
   }
@@ -262,8 +246,15 @@ function prefillResourceInfo(attr) {
         Array.from(selectField.options),
         attr.types.resourceTypeGeneral
       );
-      if (opt) opt.selected = true;
+      if (opt) resource.resourceTypeId = opt.value;
     }
+  }
+  if (window.resourceInformation?.setResourceInformation) {
+    window.resourceInformation.setResourceInformation(resource);
+  } else {
+    if (resource.year) $('#input-resourceinformation-publicationyear').val(resource.year);
+    if (resource.version) $('#input-resourceinformation-version').val(resource.version);
+    if (resource.resourceTypeId) $('#input-resourceinformation-resourcetype').val(resource.resourceTypeId);
   }
 }
 
@@ -272,7 +263,9 @@ async function prefillLanguage(attr) {
   const mapping = await getLanguageMapping();
   const id = mapping[attr.language.toLowerCase()];
   if (id) {
-    $('#input-resourceinformation-language').val(id);
+    if (window.resourceInformation?.setResourceInformation) {
+      window.resourceInformation.setResourceInformation({ languageId: id });
+    } else $('#input-resourceinformation-language').val(id);
   }
 }
 
@@ -282,6 +275,16 @@ async function prefillLanguage(attr) {
 async function prefillTitles(titles) {
   if (!Array.isArray(titles) || titles.length === 0) return;
   const mapping = await getTitleTypeMapping();
+
+  if (window.resourceInformation?.setResourceInformation) {
+    window.resourceInformation.setResourceInformation({ titles: titles.map((title, position) => ({
+      key: position === 0 ? 'main' : `prefill-${position}`,
+      text: title.title || '',
+      typeId: mapTitleTypeFromJson(title.titleType, mapping),
+      position
+    })) });
+    return;
+  }
 
   titles.forEach((t, i) => {
     if (i === 0) {
@@ -303,123 +306,13 @@ function prefillCreators(creators) {
   if (!Array.isArray(creators) || creators.length === 0) return;
 
   const authorStack = getAuthorStackController();
-  if (authorStack) {
-    const authors = buildAuthorsPayloadFromCreators(creators);
-    if (authors.length > 0) {
-      authorStack.setAuthors(authors);
-      return;
-    }
+  if (!authorStack) throw new Error("Authors form is not initialized.");
+  const authors = buildAuthorsPayloadFromCreators(creators);
+  if (authors.length > 0) {
+    authorStack.setAuthors(authors);
+    return;
   }
 
-  let personIndex = 0;
-
-  creators.forEach(creator => {
-    const givenName = creator.givenName || '';
-    const familyName = creator.familyName || '';
-    const nameType = creator.nameType || '';
-    const creatorName = creator.name || '';
-
-    // Extract ORCID
-    let orcid = '';
-    if (Array.isArray(creator.nameIdentifiers)) {
-      const orcidEntry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-      if (orcidEntry) {
-        orcid = (orcidEntry.nameIdentifier || '').replace('https://orcid.org/', '');
-      }
-    }
-
-    // Extract affiliations and ROR IDs
-    const affiliations = [];
-    const rorIds = [];
-    if (Array.isArray(creator.affiliation)) {
-      creator.affiliation.forEach(aff => {
-        const name = typeof aff === 'string' ? aff : (aff.name || '');
-        if (name) {
-          affiliations.push(name);
-          const rorId = typeof aff === 'object' ? (aff.affiliationIdentifier || '') : '';
-          if (rorId) rorIds.push(rorId.replace('https://ror.org/', ''));
-        }
-      });
-    }
-
-    // Person authors
-    if (givenName || familyName || nameType === 'Personal') {
-      let $row;
-      if (personIndex === 0) {
-        $row = $('div[data-creator-row]').eq(0);
-        if (!$row.length) {
-          $('#button-author-add').click();
-          $row = $('div[data-creator-row]').last();
-        }
-      } else {
-        $('#button-author-add').click();
-        $row = $('div[data-creator-row]').eq(personIndex);
-      }
-      personIndex++;
-
-      $row.find('input[name="orcids[]"]').val(orcid);
-      $row.find('input[name="familynames[]"]').val(familyName);
-      $row.find('input[name="givennames[]"]').val(givenName);
-
-      const affiliationValues = affiliations.map((affiliation, index) => ({
-        value: affiliation,
-        label: affiliation,
-        rorId: rorIds[index] || '',
-        id: rorIds[index] || ''
-      }));
-      const tagifyInput = $row.find('input[name="personAffiliation[]"]')[0];
-      const tagify = getTagify(tagifyInput);
-      if (tagify) {
-        tagify.removeAllTags();
-        tagify.addTags(affiliationValues);
-        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
-      } else if (tagifyInput) {
-        $(tagifyInput).val(JSON.stringify(affiliationValues));
-        $row.find('input[name="authorPersonRorIds[]"]').val(rorIds.join(','));
-      }
-      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
-
-      // Reset contact person fields
-      $row.find('input[name="contacts[]"]').prop('checked', false);
-      $row.find('.contact-person-input').hide();
-      $row.find('input[name="cpEmail[]"]').val('');
-      $row.find('input[name="cpOnlineResource[]"]').val('');
-    }
-    // Institutional authors
-    else if (creatorName || nameType === 'Organizational') {
-      let $instRows = $('div[data-authorinstitution-row]');
-      const emptyRow = $instRows.toArray().find(row =>
-        $(row).find('input[name="authorinstitutionName[]"]').val().trim() === ''
-      );
-
-      let $instRow;
-      if (emptyRow) {
-        $instRow = $(emptyRow);
-      } else {
-        $('#button-authorinstitution-add').click();
-        $instRow = $('div[data-authorinstitution-row]').last();
-      }
-
-      $instRow.find('input[name="authorinstitutionName[]"]').val(creatorName);
-
-      const affiliationValues = affiliations.map((affiliation, index) => ({
-        value: affiliation,
-        label: affiliation,
-        rorId: rorIds[index] || '',
-        id: rorIds[index] || ''
-      }));
-      const tagifyInput = $instRow.find('input[name="institutionAffiliation[]"]')[0];
-      const tagify = getTagify(tagifyInput);
-      if (tagify) {
-        tagify.removeAllTags();
-        tagify.addTags(affiliationValues);
-      } else if (tagifyInput) {
-        $(tagifyInput).val(JSON.stringify(affiliationValues));
-      }
-      $instRow.find('input[name="authorInstitutionRorIds[]"]').val(rorIds.join(','));
-      tagifyInput?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
-    }
-  });
 }
 
 /**
@@ -455,141 +348,17 @@ function prefillContributors(contributors) {
         entries.push(entry);
       }
       if (!entry.roles.includes(role)) entry.roles.push(role);
-      affiliations.forEach(item => { if (!entry.affiliations.some(existing => existing.label === item.label)) entry.affiliations.push(item); });
+      affiliations.forEach(item => {
+        const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
+        if (!existing) entry.affiliations.push(item);
+        else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
+      });
     });
     window.contributorStack.setContributors(entries);
     return;
   }
 
-  const personMap = new Map();
-  const orgMap = new Map();
-
-  contributors.forEach(c => {
-    const contributorType = c.contributorType || '';
-    const nameType = c.nameType || '';
-    const givenName = c.givenName || '';
-    const familyName = c.familyName || '';
-    const contributorName = c.name || '';
-
-    let orcid = '';
-    if (Array.isArray(c.nameIdentifiers)) {
-      const entry = c.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-      if (entry) orcid = (entry.nameIdentifier || '').replace('https://orcid.org/', '');
-    }
-
-    const affiliations = [];
-    const rorIds = [];
-    if (Array.isArray(c.affiliation)) {
-      c.affiliation.forEach(aff => {
-        const name = typeof aff === 'string' ? aff : (aff.name || '');
-        if (name && !affiliations.includes(name)) {
-          affiliations.push(name);
-          const rid = typeof aff === 'object' ? (aff.affiliationIdentifier || '') : '';
-          if (rid) {
-            const clean = rid.replace('https://ror.org/', '');
-            if (!rorIds.includes(clean)) rorIds.push(clean);
-          }
-        }
-      });
-    }
-
-    const isPerson = nameType === 'Personal' || (givenName && familyName);
-
-    if (isPerson) {
-      const key = orcid || `${givenName}_${familyName}`;
-      if (personMap.has(key)) {
-        const existing = personMap.get(key);
-        const role = normalizeRole(contributorType);
-        if (!existing.roles.includes(role)) existing.roles.push(role);
-        affiliations.forEach(a => { if (!existing.affiliations.includes(a)) existing.affiliations.push(a); });
-        rorIds.forEach(r => { if (!existing.rorIds.includes(r)) existing.rorIds.push(r); });
-      } else {
-        personMap.set(key, { givenName, familyName, orcid, roles: [normalizeRole(contributorType)], affiliations, rorIds });
-      }
-    } else {
-      if (orgMap.has(contributorName)) {
-        const existing = orgMap.get(contributorName);
-        const role = normalizeRole(contributorType);
-        if (!existing.roles.includes(role)) existing.roles.push(role);
-        affiliations.forEach(a => { if (!existing.affiliations.includes(a)) existing.affiliations.push(a); });
-        rorIds.forEach(r => { if (!existing.rorIds.includes(r)) existing.rorIds.push(r); });
-      } else {
-        orgMap.set(contributorName, { name: contributorName, roles: [normalizeRole(contributorType)], affiliations, rorIds });
-      }
-    }
-  });
-
-  // Populate person contributors
-  let personIdx = 0;
-  for (const person of personMap.values()) {
-    let $row;
-    if (personIdx === 0) {
-      $row = $('#group-contributorperson').find('[contributor-person-row]').first();
-    } else {
-      $('#button-contributor-addperson').click();
-      $row = $('#group-contributorperson').find('.row').last();
-    }
-    const isCloned = personIdx > 0;
-    personIdx++;
-
-    // Roles
-    const roleInput = $row.find('input[name="cbPersonRoles[]"]')[0];
-    const tagifyRoles = getTagify(roleInput);
-    if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
-      tagifyRoles.addTags(person.roles.map(r => ({ value: r })));
-    }
-
-    if (person.orcid) $row.find('input[name="cbORCID[]"]').val(person.orcid);
-    $row.find('input[name="cbPersonLastname[]"]').val(person.familyName);
-    $row.find('input[name="cbPersonFirstname[]"]').val(person.givenName);
-
-    // Affiliations — handle original vs cloned field names
-    const affName = isCloned ? 'cbPersonAffiliations[]' : 'cbAffiliation[]';
-    const affInput = $row.find(`input[name="${affName}"]`)[0];
-    const tagifyAff = getTagify(affInput);
-    if (tagifyAff) {
-      tagifyAff.removeAllTags();
-      tagifyAff.addTags(person.affiliations.map(a => ({ value: a })));
-    }
-
-    const rorName = isCloned ? 'cbPersonRorIds[]' : 'cbpRorIds[]';
-    $row.find(`input[name="${rorName}"]`).val(person.rorIds.join(','));
-  }
-
-  // Populate organization contributors
-  let orgIdx = 0;
-  for (const org of orgMap.values()) {
-    let $row;
-    if (orgIdx === 0) {
-      $row = $('#group-contributororganisation').find('[contributors-row]').first();
-    } else {
-      $('#button-contributor-addorganisation').click();
-      $row = $('#group-contributororganisation').find('.row').last();
-    }
-    const isCloned = orgIdx > 0;
-    orgIdx++;
-
-    const roleInput = $row.find('input[name="cbOrganisationRoles[]"]')[0];
-    const tagifyRoles = getTagify(roleInput);
-    if (tagifyRoles) {
-      tagifyRoles.removeAllTags();
-      tagifyRoles.addTags(org.roles.map(r => ({ value: r })));
-    }
-
-    $row.find('input[name="cbOrganisationName[]"]').val(org.name);
-
-    const affName = isCloned ? 'cbOrganisationAffiliations[]' : 'OrganisationAffiliation[]';
-    const affInput = $row.find(`input[name="${affName}"]`)[0];
-    const tagifyAff = getTagify(affInput);
-    if (tagifyAff) {
-      tagifyAff.removeAllTags();
-      tagifyAff.addTags(org.affiliations.map(a => ({ value: a })));
-    }
-
-    const rorName = isCloned ? 'cbOrganisationRorIds[]' : 'hiddenOrganisationRorId[]';
-    $row.find(`input[name="${rorName}"]`).val(org.rorIds.join(','));
-  }
+  if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
 }
 
 /**
@@ -906,38 +675,7 @@ async function prefillContactPersons(creators, lookupService) {
     return;
   }
 
-  const $rows = $('div[data-creator-row]');
-  const promises = [];
-
-  creators.forEach((creator, i) => {
-    const givenName = creator.givenName || '';
-    const familyName = creator.familyName || '';
-    if (!givenName && !familyName) return;
-
-    let orcid = '';
-    if (Array.isArray(creator.nameIdentifiers)) {
-      const entry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-      if (entry) orcid = (entry.nameIdentifier || '').replace('https://orcid.org/', '');
-    }
-
-    const $row = $rows.eq(i);
-    if (!$row.length) return;
-
-    const promise = lookupService.lookupContacts({ orcid, familyname: familyName, givenname: givenName })
-      .then(contact => {
-        if (contact.email || contact.website) {
-          $row.find('input[name="contacts[]"]').prop('checked', true);
-          $row.find('.contact-person-input').show();
-          if (contact.email) $row.find('input[name="cpEmail[]"]').val(contact.email);
-          if (contact.website) $row.find('input[name="cpOnlineResource[]"]').val(contact.website);
-        }
-      })
-      .catch(() => { /* best-effort: silently ignore lookup failures */ });
-
-    promises.push(promise);
-  });
-
-  await Promise.all(promises);
+  throw new Error('Authors form is not initialized.');
 }
 
 /* ================================================================== */

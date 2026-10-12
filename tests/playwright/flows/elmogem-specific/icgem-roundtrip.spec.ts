@@ -21,7 +21,7 @@
  *
  * ── Helper / utility usage by step ───────────────────────────────────────────
  *   parseIcgemXmlFile()         step 1
- *   uploadXmlIntoForm()         step 2, step 4, step 5
+ *   uploadXmlIntoForm()         step 2, step 4, step 5 (tests/playwright/utils)
  *   downloadAndSaveIcgemXml()   step 2 → produces artifact consumed by step 3
  *   extractEnvelope()           step 3
  *   extractResource()           step 3
@@ -62,7 +62,7 @@
  */
 
 import { test, expect, type Locator, type Page } from '@playwright/test';
-import { navigateToHome, waitForFormInteractionReady } from '../../utils';
+import { navigateToHome, uploadXmlIntoForm, waitForFormInteractionReady } from '../../utils';
 import {
   collectFilledGgmFieldIds,
   diffMissingHtmlIds,
@@ -669,16 +669,6 @@ function keywordInputSelector(schemeURI: string): string {
     return '#input-mslkeyword';
   }
   return '#input-freekeyword';
-}
-
-/** True once any Tagify instance on the page holds a tag with this label. */
-function findTagifyTag(page: Page, label: string): Promise<boolean> {
-  return page.evaluate((text: string) => {
-    type TagifyInput = HTMLInputElement & { _tagify?: { value?: Array<{ value: string }> } };
-    return Array.from(document.querySelectorAll<TagifyInput>('input')).some(
-      (input) => input._tagify?.value?.some((tag) => tag.value.trim() === text),
-    );
-  }, label);
 }
 
 /** True once the given Tagify input holds a tag with this label. */
@@ -1462,7 +1452,11 @@ for (const testCase of TEST_CASES) {
       expectedSavedTitle(parsedData.title, parsedData.modelName),
     );
     await expect(page.locator('#input-resourceinformation-publicationyear'), 'publicationYear').toHaveValue(parsedData.publicationYear);
-    await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(parsedData.version);
+    // The editor writes an integer source version in major.minor form.
+    const expectedVersion = /^\d+$/.test(parsedData.version)
+      ? `${parsedData.version}.0`
+      : parsedData.version;
+    await expect(page.locator('#input-resourceinformation-version'), 'version').toHaveValue(expectedVersion);
     // The abstract is restored from grav:descriptions (ICGEM uploads skip the
     // DataCite description mapping), so it is asserted with the other sections below.
     await expect(page.locator('#input-date-created'), 'dateCreated').toHaveValue(parsedData.dateCreated);

@@ -13,7 +13,7 @@ import exampleData from './inputDataEndToEnd.json';
 export async function completeMinimalDatasetForm(page: Page) {
   
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
-  await page.getByLabel('Resource Type*').selectOption('5');
+  await page.getByLabel('Resource Type*').selectOption({ label: 'Dataset' });
   await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
 
   // Fill author using the robust addAuthor function

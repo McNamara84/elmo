@@ -3,6 +3,7 @@ import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
 import { hasCompleteContact } from './contactRequirement.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeResourceInformationPayload } from './services/resourceInformationPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 /**
@@ -415,7 +416,21 @@ class SubmitHandler {
             return;
         }
 
-        this.modals.submit.show();
+        const doiValidation = window.resourceInformation?.validateSubmissionDoi?.({ forSubmit: true });
+        const showAfterDoiValidation = valid => {
+            if (valid) {
+                this.modals.submit.show();
+                return;
+            }
+            this.showNotification('danger', translations.alerts.errorHeading,
+                $('#submission-doi-status').text() || translations.alerts.submitError);
+            $('#input-resourceinformation-doi').trigger('focus');
+        };
+        if (doiValidation && typeof doiValidation.then === 'function') {
+            doiValidation.then(showAfterDoiValidation).catch(() => showAfterDoiValidation(false));
+        } else {
+            showAfterDoiValidation(doiValidation !== false);
+        }
     }
 
     /**
@@ -454,6 +469,7 @@ class SubmitHandler {
         let relatedWorksPayload = null;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
+            synchronizeResourceInformationPayload(this.$form[0]);
             contributorsPayload = synchronizeContributorsPayload(this.$form[0]);
             const hasRelatedWorks = this.$form[0].querySelector(
                 'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
@@ -692,7 +708,7 @@ class SubmitHandler {
         const escapedTitle = this.escapeHtml(mainTitle);
         const titleHint = escapedTitle
             ? `<p class="mb-1"><strong>${translations.alerts.dataUploadFileNameHint}</strong></p>
-               <p class="mb-0 font-monospace bg-light rounded px-2 py-1">${escapedTitle}</p>`
+               <p class="mb-0 font-monospace bg-body-tertiary rounded px-2 py-1">${escapedTitle}</p>`
             : '';
 
         return `

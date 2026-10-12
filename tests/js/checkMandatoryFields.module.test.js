@@ -22,31 +22,35 @@ describe('checkMandatoryFields module coverage', () => {
 
         // Set up DOM for all validation functions
         document.body.innerHTML = `
-            <div id="group-author">
-                <div class="row">
+            <div data-author-stack>
+                <div class="row" data-creator-row>
                     <input type="text" id="input-author-firstname" name="authorGivenname[]">
                     <input type="text" id="input-author-lastname" name="authorFamilyname[]">
                     <input type="email" id="input-contactperson-email" name="contactEmail[]">
                     <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]">
                 </div>
             </div>
-            <div id="group-contributorperson">
+            <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="person">
                 <div class="row" contributor-person-row>
                     <input type="text" id="input-contributor-orcid" name="cbPersonOrcid[]">
                     <input type="text" id="input-contributor-lastname" name="cbPersonLastname[]">
                     <input type="text" id="input-contributor-firstname" name="cbPersonFirstname[]">
-                    <input type="text" id="input-contributor-role" name="cbPersonRoles[]">
-                    <input type="text" id="input-contributor-affiliation" name="cbPersonAffiliation[]">
+                    <input type="text" id="input-contributor-personrole" name="cbPersonRoles[]">
+                </div>
+                    <input type="text" id="input-contributorpersons-affiliation" name="cbPersonAffiliation[]">
                 </div>
             </div>
-            <div id="group-contributororganisation">
+            <div data-contributor-stack>
+                <div data-contributor-card data-contributor-type="institution">
                 <div class="row" contributors-row>
-                    <input type="text" id="input-contributororganisation-name" name="OrganisationName[]">
-                    <input type="text" id="input-contributororganisation-role" name="cbOrganisationRoles[]">
-                    <input type="text" id="input-contributororganisation-affiliation" name="OrganisationAffiliation[]">
+                    <input type="text" id="input-contributor-name" name="OrganisationName[]">
+                    <input type="text" id="input-contributor-organisationrole" name="cbOrganisationRoles[]">
+                </div>
+                    <input type="text" id="input-contributor-organisationaffiliation" name="OrganisationAffiliation[]">
                 </div>
             </div>
-            <div id="group-authorinstitution">
+            <div data-author-stack>
                 <div class="row" data-authorinstitution-row>
                     <input type="text" id="input-authorinstitution-name" name="authorinstitutionName[]">
                     <input type="text" id="input-authorinstitution-affiliation" name="institutionAffiliation[]">

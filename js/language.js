@@ -78,67 +78,7 @@ function applyTranslations() {
     // Set document title
     document.title = translations.general.logoTitle;
 
-    // Update elements with data-translate attribute
-    $('[data-translate]').each(function () {
-        const element = $(this);
-        const translateKey = element.data('translate');
-        const translatedText = getNestedValue(translations, translateKey);
-
-        if (translatedText) {
-            const icon = element.find('i.bi').prop('outerHTML');
-            element.html(icon ? `${icon} ${translatedText}` : translatedText);
-        }
-    });
-
-    // Update tooltips
-    $('[data-translate-tooltip]').each(function () {
-        const element = $(this);
-        const tooltipKey = element.data('translate-tooltip');
-        const translatedTooltip = getNestedValue(translations, tooltipKey);
-
-        if (translatedTooltip) {
-            element.attr('data-bs-original-title', translatedTooltip);
-            const tooltip = bootstrap.Tooltip.getInstance(element[0]);
-            if (tooltip) {
-                tooltip.dispose();
-            }
-            const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-            new bootstrap.Tooltip(element[0], { container: tooltipContainer });
-        }
-    });
-
-    // Update placeholders
-    $('[data-translate-placeholder]').each(function () {
-        const element = $(this);
-        const placeholderKey = element.data('translate-placeholder');
-        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
-
-        if (translatedPlaceholder) {
-            element.attr('placeholder', translatedPlaceholder);
-        }
-    });
-
-    // Update title attributes and matching accessible labels
-    $('[data-translate-title]').each(function () {
-        const element = $(this);
-        const titleKey = element.data('translate-title');
-        const translatedTitle = getNestedValue(translations, titleKey);
-
-        if (translatedTitle) {
-            element.attr('title', translatedTitle);
-            element.attr('aria-label', translatedTitle);
-            element.attr('data-bs-original-title', translatedTitle);
-
-            if (window.bootstrap && typeof bootstrap.Tooltip === 'function' && typeof bootstrap.Tooltip.getInstance === 'function') {
-                const tooltip = bootstrap.Tooltip.getInstance(element[0]);
-                if (tooltip) {
-                    tooltip.dispose();
-                    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-                    new bootstrap.Tooltip(element[0], { container: tooltipContainer });
-                }
-            }
-        }
-    });
+    translateElements($(document));
 
     translatePlaceholders($("#group-stc").children().first());
 
@@ -161,6 +101,90 @@ function applyTranslations() {
         detail: { translations }
     });
     document.dispatchEvent(translationEvent);
+}
+
+/**
+ * Translates only the given subtree (e.g. a freshly cloned form row).
+ * Unlike applyTranslations it does not touch the rest of the page, re-layout
+ * the header or dispatch translationsLoaded, so it is cheap to call per row.
+ * @param {Element|jQuery} root - Element whose subtree (including itself) is translated
+ */
+function applyTranslationsTo(root) {
+    if (!translations || !translations.general) {
+        return;
+    }
+    translateElements($(root));
+}
+
+/**
+ * Applies data-translate, data-translate-tooltip, data-translate-placeholder and
+ * data-translate-title within a container.
+ * @param {jQuery} $root - Container to translate; the container itself is included
+ */
+function translateElements($root) {
+    const within = selector => $root.find(selector).addBack(selector);
+
+    // Update elements with data-translate attribute
+    within('[data-translate]').each(function () {
+        const element = $(this);
+        const translateKey = element.data('translate');
+        const translatedText = getNestedValue(translations, translateKey);
+
+        if (translatedText) {
+            const icon = element.find('i.bi').prop('outerHTML');
+            element.html(icon ? `${icon} ${translatedText}` : translatedText);
+        }
+    });
+
+    // Update tooltips
+    within('[data-translate-tooltip]').each(function () {
+        const element = $(this);
+        const tooltipKey = element.data('translate-tooltip');
+        const translatedTooltip = getNestedValue(translations, tooltipKey);
+
+        if (translatedTooltip) {
+            element.attr('data-bs-original-title', translatedTooltip);
+            const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+            if (tooltip) {
+                tooltip.dispose();
+            }
+            const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+            new bootstrap.Tooltip(element[0], { container: tooltipContainer });
+        }
+    });
+
+    // Update placeholders
+    within('[data-translate-placeholder]').each(function () {
+        const element = $(this);
+        const placeholderKey = element.data('translate-placeholder');
+        const translatedPlaceholder = getNestedValue(translations, placeholderKey);
+
+        if (translatedPlaceholder) {
+            element.attr('placeholder', translatedPlaceholder);
+        }
+    });
+
+    // Update title attributes and matching accessible labels
+    within('[data-translate-title]').each(function () {
+        const element = $(this);
+        const titleKey = element.data('translate-title');
+        const translatedTitle = getNestedValue(translations, titleKey);
+
+        if (translatedTitle) {
+            element.attr('title', translatedTitle);
+            element.attr('aria-label', translatedTitle);
+            element.attr('data-bs-original-title', translatedTitle);
+
+            if (window.bootstrap && typeof bootstrap.Tooltip === 'function' && typeof bootstrap.Tooltip.getInstance === 'function') {
+                const tooltip = bootstrap.Tooltip.getInstance(element[0]);
+                if (tooltip) {
+                    tooltip.dispose();
+                    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+                    new bootstrap.Tooltip(element[0], { container: tooltipContainer });
+                }
+            }
+        }
+    });
 }
 
 /**
@@ -212,6 +236,7 @@ function translatePlaceholders(container) {
 }
 
 window.applyTranslations = applyTranslations;
+window.applyTranslationsTo = applyTranslationsTo;
 
 /**
  * Initializes the language handling system
@@ -261,6 +286,7 @@ if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
         loadTranslations,
         applyTranslations,
+        applyTranslationsTo,
         changeLanguage,
         getBrowserLanguage,
         updateActiveLanguage,

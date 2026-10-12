@@ -1,3 +1,4 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
 const { requireFresh } = require('./utils');
 const {
   getDataCite47ResourceTypes,
@@ -180,14 +181,14 @@ describe('doiPrefill.js', () => {
       `;
     });
 
-    test('fills DOI, year, and version fields', () => {
+    test('fills year and version without copying the source DOI', () => {
       mod.prefillResourceInfo({
         doi: '10.14454/qdd3-ps68',
         publicationYear: 2024,
         version: '2.0',
       });
 
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('#input-resourceinformation-publicationyear').val()).toBe('2024');
       expect($('#input-resourceinformation-version').val()).toBe('2.0');
     });
@@ -283,27 +284,8 @@ describe('doiPrefill.js', () => {
 
   describe('prefillCreators', () => {
     beforeEach(() => {
-      document.body.innerHTML = `
-        <div data-creator-row>
-          <input name="orcids[]" />
-          <input name="familynames[]" />
-          <input name="givennames[]" />
-          <input name="personAffiliation[]" />
-          <input name="authorPersonRorIds[]" />
-          <input name="contacts[]" type="checkbox" />
-          <div class="contact-person-input" style="display:none;">
-            <input name="cpEmail[]" />
-            <input name="cpOnlineResource[]" />
-          </div>
-        </div>
-        <button id="button-author-add"></button>
-        <div data-authorinstitution-row>
-          <input name="authorinstitutionName[]" value="" />
-          <input name="institutionAffiliation[]" />
-          <input name="authorInstitutionRorIds[]" />
-        </div>
-        <button id="button-authorinstitution-add"></button>
-      `;
+      document.body.innerHTML = '';
+      mountAuthorStack();
     });
 
     test('fills person creator fields', () => {
@@ -378,7 +360,7 @@ describe('doiPrefill.js', () => {
     test('handles empty/null input gracefully', () => {
       mod.prefillCreators(null);
       mod.prefillCreators([]);
-      expect($('input[name="familynames[]"]').val()).toBe('');
+      expect(window.authorStack.collectPayload()).toEqual([]);
     });
   });
 
@@ -931,6 +913,7 @@ describe('doiPrefill.js', () => {
         <input id="input-rights-license" />
       `;
 
+      mountAuthorStack();
       attachTagify('#input-freekeyword');
 
       window.__clearInputFieldsSpy = jest.fn();
@@ -956,7 +939,7 @@ describe('doiPrefill.js', () => {
 
       expect(window.loadClearInputFields).toHaveBeenCalled();
       expect(window.__clearInputFieldsSpy).toHaveBeenCalled();
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');
       expect($('input[name="dateCreated"]').val()).toBe('2024-01-15');

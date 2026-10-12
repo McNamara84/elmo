@@ -5,7 +5,7 @@ import { REPO_ROOT } from '../utils/constants';
 import { injectScript, injectStylesheet } from '../utils/assets';
 
 const RESOURCE_INFO_TEMPLATE = readFileSync(
-  path.join(REPO_ROOT, 'formgroups/resourceInformation.html'),
+  path.join(REPO_ROOT, 'formgroups/resource-information.html'),
   'utf8'
 );
 const AUTHORS_TEMPLATE = readFileSync(
@@ -140,6 +140,7 @@ test.describe('DOI Prefill Feature', () => {
 
     // Inject dependencies
     await injectStylesheet(page, 'node_modules/bootstrap/dist/css/bootstrap.min.css');
+    await injectStylesheet(page, 'css/gfz-cd.css');
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
     await injectScript(page, 'node_modules/jquery-ui/dist/jquery-ui.min.js');
     await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
@@ -163,11 +164,10 @@ test.describe('DOI Prefill Feature', () => {
     await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
   });
 
-  test('shows prefill modal after DOI blur with valid DOI', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('10.5880/test.2024.001');
-    // Trigger blur
-    await doiInput.blur();
+  test('shows prefill modal after explicit DOI lookup', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    await sourceInput.fill('10.5880/test.2024.001');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     // Wait for the modal to appear
     const modal = page.locator('#modal-doi-prefill');
@@ -178,23 +178,104 @@ test.describe('DOI Prefill Feature', () => {
     await expect(preview).toContainText('E2E Test Dataset');
   });
 
+  test('accepts a doi.org link for metadata import without reusing its DOI', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    await sourceInput.fill('https://doi.org/10.5880/test.2024.001');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+
+    await expect(page.locator('#modal-doi-prefill')).toBeVisible();
+    await expect(sourceInput).toHaveValue('10.5880/test.2024.001');
+    await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('');
+    expect(doiLookupRequestCount).toBe(1);
+  });
+
   test('does not show modal for invalid DOI format', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('not-a-doi');
-    await doiInput.blur();
+    await page.locator('#input-resourceinformation-source-doi').fill('not-a-doi');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     const modal = page.locator('#modal-doi-prefill');
     await expect(modal).not.toBeVisible();
     expect(doiLookupRequestCount).toBe(0);
   });
 
+  test('empty metadata search keeps a neutral appearance after submit validation', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    const neutral = await sourceInput.evaluate(input => getComputedStyle(input).borderTopColor);
+    await page.locator('form').evaluate(form => form.classList.add('was-validated'));
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+
+    const state = await sourceInput.evaluate(input => ({
+      border: getComputedStyle(input).borderTopColor,
+      background: getComputedStyle(input).backgroundImage,
+      invalid: input.getAttribute('aria-invalid')
+    }));
+    expect(state).toEqual({ border: neutral, background: 'none', invalid: 'false' });
+    await expect(page.locator('#source-doi-status')).toBeEmpty();
+
+    await sourceInput.fill('invalid');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+    await expect(page.locator('#source-doi-status')).toContainText('valid DOI');
+    await sourceInput.clear();
+    await expect(page.locator('#source-doi-status')).toBeEmpty();
+  });
+
+  test('metadata search icon is accessible and aligns on wide and narrow screens', async ({ page }) => {
+    await page.setViewportSize({ width: 1200, height: 800 });
+    const field = page.locator('#input-resourceinformation-source-doi');
+    const button = page.locator('#button-resourceinformation-prefill-doi');
+    await expect(button).toHaveAccessibleName('Import metadata from an existing DOI');
+    await expect(button).toHaveAttribute('title', 'Import metadata from an existing DOI');
+    await expect(button).toHaveClass(/btn-outline-secondary/u);
+    await expect(button.locator('.bi-search')).toHaveCount(1);
+    const desktopField = await field.boundingBox();
+    const desktopButton = await button.boundingBox();
+    expect(desktopField && desktopButton).toBeTruthy();
+    expect(Math.abs(desktopField!.y - desktopButton!.y)).toBeLessThan(2);
+    expect(Math.abs(desktopField!.height - desktopButton!.height)).toBeLessThan(2);
+
+    await page.setViewportSize({ width: 375, height: 800 });
+    const mobileField = await field.boundingBox();
+    const mobileButton = await button.boundingBox();
+    const mobileSearch = await page.locator('.resource-doi-search').boundingBox();
+    expect(mobileField && mobileButton).toBeTruthy();
+    expect(mobileButton!.y).toBeGreaterThan(mobileField!.y + mobileField!.height);
+    expect(mobileButton!.x + mobileButton!.width).toBeLessThanOrEqual(mobileSearch!.x + mobileSearch!.width + 1);
+    expect(mobileButton!.width).toBeLessThan(60);
+  });
+
+  test('submission DOI edit and help controls sit next to each other', async ({ page }) => {
+    const edit = await page.locator('#button-resourceinformation-edit-doi').boundingBox();
+    const help = await page.locator('.resource-doi-help').boundingBox();
+    expect(edit && help).toBeTruthy();
+    expect(help!.x).toBeGreaterThanOrEqual(edit!.x + edit!.width - 2);
+    expect(Math.abs(help!.y - edit!.y)).toBeLessThan(2);
+    expect(Math.abs(help!.height - edit!.height)).toBeLessThan(2);
+  });
+
+  test('external submission DOI stays visible and blocked without console warnings', async ({ page }) => {
+    const consoleIssues: string[] = [];
+    page.on('console', message => {
+      if (message.type() === 'warning' || message.type() === 'error') consoleIssues.push(message.text());
+    });
+    page.on('pageerror', error => consoleIssues.push(error.message));
+    const submissionDoi = page.locator('#input-resourceinformation-doi');
+    await submissionDoi.evaluate((input: HTMLInputElement) => { input.readOnly = false; });
+    await submissionDoi.fill('10.1234/external');
+    await submissionDoi.blur();
+
+    await expect(submissionDoi).toHaveValue('10.1234/external');
+    await expect(page.locator('#submission-doi-status')).toContainText('10.5880');
+    expect(await page.evaluate(() => (window as any).resourceInformationDoiValidation())).toBe(false);
+    expect(await page.evaluate(() => (window as any).resourceInformationDoiValidation())).toBe(false);
+    expect(consoleIssues).toEqual([]);
+  });
+
   test('does not show modal for DOI not found in DataCite', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('10.99999/nonexistent');
+    await page.locator('#input-resourceinformation-source-doi').fill('10.99999/nonexistent');
     const lookupResponse = page.waitForResponse(response =>
       response.url().includes('/api/v2/doi/lookup/')
     );
-    await doiInput.blur();
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     await lookupResponse;
     await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
@@ -204,9 +285,10 @@ test.describe('DOI Prefill Feature', () => {
   });
 
   test('applies prefill data to form on confirm', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('10.5880/test.2024.001');
-    await doiInput.blur();
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    const submissionDoi = page.locator('#input-resourceinformation-doi');
+    await sourceInput.fill('10.5880/test.2024.001');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     // Wait for modal
     const confirmBtn = page.locator('#button-doi-prefill-confirm');
@@ -218,7 +300,9 @@ test.describe('DOI Prefill Feature', () => {
     await expect(page.locator('#modal-doi-prefill')).toBeHidden({ timeout: 10000 });
 
     // Check form fields were populated
-    await expect(doiInput).toHaveValue('10.5880/test.2024.001');
+    await expect(sourceInput).toHaveValue('10.5880/test.2024.001');
+    await expect(submissionDoi).toHaveValue('');
+    await expect(submissionDoi).toHaveAttribute('readonly');
 
     const yearInput = page.locator('#input-resourceinformation-publicationyear');
     await expect(yearInput).toHaveValue('2024');
@@ -229,9 +313,8 @@ test.describe('DOI Prefill Feature', () => {
   });
 
   test('cancel button closes modal without applying data', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('10.5880/test.2024.001');
-    await doiInput.blur();
+    await page.locator('#input-resourceinformation-source-doi').fill('10.5880/test.2024.001');
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     const cancelBtn = page.locator('#button-doi-prefill-cancel');
     await expect(cancelBtn).toBeVisible({ timeout: 10000 });
@@ -251,10 +334,12 @@ test.describe('DOI Prefill Feature', () => {
     await expect(yearInput).toHaveValue('');
   });
 
-  test('does not re-trigger lookup for same DOI', async ({ page }) => {
-    const doiInput = page.locator('#input-resourceinformation-doi');
-    await doiInput.fill('10.5880/test.2024.001');
-    await doiInput.blur();
+  test('does not look up the source DOI on blur', async ({ page }) => {
+    const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    await sourceInput.fill('10.5880/test.2024.001');
+    await sourceInput.blur();
+    expect(doiLookupRequestCount).toBe(0);
+    await page.locator('#button-resourceinformation-prefill-doi').click();
 
     // Wait for first modal
     const modal = page.locator('#modal-doi-prefill');
@@ -264,9 +349,9 @@ test.describe('DOI Prefill Feature', () => {
     await page.locator('#button-doi-prefill-confirm').click();
     await expect(modal).not.toBeVisible({ timeout: 5000 });
 
-    // Blur again with same DOI
-    await doiInput.click();
-    await doiInput.blur();
+    // Blur again with the same source DOI; lookup still requires the button.
+    await sourceInput.click();
+    await sourceInput.blur();
 
     // The duplicate guard runs synchronously before any request can be issued.
     await expect(modal).not.toBeVisible();

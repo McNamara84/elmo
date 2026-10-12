@@ -5,8 +5,14 @@ describe('resourceInformationTitle.js', () => {
   let $;
 
   beforeEach(() => {
-    // Set up DOM fixture matching the structure in formgroups/resourceInformation.html
+    // Set up DOM fixture matching the structure in formgroups/resource-information.html
     document.body.innerHTML = `
+      <input type="hidden" id="resource-information-payload" name="resourceInformationPayload">
+      <input id="input-resourceinformation-doi">
+      <input id="input-resourceinformation-publicationyear">
+      <select id="input-resourceinformation-resourcetype"><option value="1">Dataset</option></select>
+      <input id="input-resourceinformation-version">
+      <select id="input-resourceinformation-language"><option value="1" title="en">English</option></select>
       <div id="group-resourceinformation">
         <div class="row">
           <div class="col-10 col-sm-11 col-md-11 col-lg-11 p-1">
@@ -88,6 +94,7 @@ describe('resourceInformationTitle.js', () => {
     delete window.alternativeTitleTypeId;
     delete window.titleTypeOptionsHtml;
     delete window.replaceHelpButtonInClonedRows;
+    delete window.resourceInformation;
   });
 
   test('adds a new title row when add button is clicked', () => {
@@ -145,7 +152,7 @@ describe('resourceInformationTitle.js', () => {
   });
 
   test('cloned title type select becomes disabled when no options are available and original is enabled', () => {
-    // The template select in resourceInformation.html is not disabled by default.
+    // The template select in resource-information.html is not disabled by default.
     // If titleTypeOptionsHtml is empty while the original is enabled, the clone
     // must still be explicitly disabled to prevent a required empty control.
     window.titleTypeOptionsHtml = '';
@@ -187,7 +194,7 @@ describe('resourceInformationTitle.js', () => {
     const rows = $('#group-resourceinformation .row');
     expect(rows.length).toBe(2);
     const newRow = rows.last();
-    const $container = newRow.find('[id="container-resourceinformation-titletype"]');
+    const $container = newRow.find('[id^="container-resourceinformation-titletype-"]');
     expect($container.length).toBe(1);
 
     expect($container.hasClass('unvisible')).toBe(false);
@@ -271,7 +278,33 @@ describe('resourceInformationTitle.js', () => {
     $('#button-resourceinformation-addtitle').trigger('click');
     expect($('#button-resourceinformation-addtitle').prop('disabled')).toBe(true);
 
+    $('.removeTitle').closest('.row').remove();
     $(document).trigger('elmo:clearTitles');
     expect($('#button-resourceinformation-addtitle').prop('disabled')).toBe(false);
+  });
+
+  test('structured payload follows keyboard title order and keeps main title first', () => {
+    $('#input-resourceinformation-title').val('Main');
+    $('#button-resourceinformation-addtitle').trigger('click');
+    $('#button-resourceinformation-addtitle').trigger('click');
+    $('input[name="title[]"]').eq(1).val('A');
+    $('input[name="title[]"]').eq(2).val('B');
+
+    $('.title-sort-handle').last().trigger($.Event('keydown', { key: 'ArrowUp' }));
+    expect(window.resourceInformation.collectPayload().titles.map(title => title.text)).toEqual(['Main', 'B', 'A']);
+    expect(window.resourceInformation.collectPayload().titles.map(title => title.position)).toEqual([0, 1, 2]);
+    expect(JSON.parse($('#resource-information-payload').val()).titles[1].text).toBe('B');
+  });
+
+  test('setter restores fields and titles through one controller', () => {
+    window.resourceInformation.setResourceInformation({
+      doi: '10.5880/example', year: '2026', version: '3.0',
+      titles: [{ text: 'Main', typeId: '1' }, { text: 'Extra', typeId: '3' }]
+    });
+    expect($('input[name="title[]"]').map((_, input) => input.value).get()).toEqual(['Main', 'Extra']);
+    expect(window.resourceInformation.collectPayload().version).toBe('3.0');
+    window.resourceInformation.clear();
+    expect($('input[name="title[]"]').length).toBe(1);
+    expect(window.resourceInformation.collectPayload().doi).toBe('');
   });
 });

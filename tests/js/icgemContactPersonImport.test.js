@@ -1,3 +1,5 @@
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
+
 /**
  * @jest-environment jsdom
  */
@@ -10,51 +12,10 @@ describe('ICGEM contact person import', () => {
   const DATACITE_NS = 'http://datacite.org/schema/kernel-4';
 
   function buildAuthorDom(authors) {
-    const rows = authors.map((author) => `
-      <div class="row" data-creator-row>
-        <input type="checkbox" name="contacts[]" />
-        <input type="text" name="personAffiliation[]" value="" />
-        <input type="hidden" name="authorPersonRorIds[]" value="" />
-        <input type="text" name="familynames[]" value="${author.familyname}" />
-        <input type="text" name="givennames[]" value="${author.givenname}" />
-        <input type="text" name="orcids[]" value="" />
-        <div class="contact-person-input" style="display: none;">
-          <input type="email" name="cpEmail[]" value="" />
-        </div>
-        <div class="contact-person-input" style="display: none;">
-          <input type="text" name="cpOnlineResource[]" value="" />
-        </div>
-      </div>
-    `).join('');
-
-    document.body.innerHTML = `
-      <div id="group-author">
-        ${rows}
-        <button type="button" id="button-author-add"></button>
-      </div>
-    `;
-
-    $('#button-author-add').on('click', () => {
-      $('#group-author').append(`
-        <div class="row" data-creator-row>
-          <input type="checkbox" name="contacts[]" />
-          <input type="text" name="familynames[]" value="" />
-          <input type="text" name="personAffiliation[]" value="" />
-          <input type="hidden" name="authorPersonRorIds[]" value="" />
-          <input type="text" name="givennames[]" value="" />
-          <input type="text" name="orcids[]" value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      `);
-    });
+    mountAuthorStack(authors.map(author => ({ type: 'person', ...author })));
   }
 
-  function makeIcgemXml({ familyName, givenName, email, website }) {
+  function makeIcgemXml({ familyName, givenName, email = '', website = '', orcid = '' }) {
     return new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <icgv:envelope xmlns:icgv="${ICGEM_NS}" xmlns:dc="${DATACITE_NS}">
         <dc:resource>
@@ -63,6 +24,7 @@ describe('ICGEM contact person import', () => {
               <dc:contributorName>${givenName} ${familyName}</dc:contributorName>
               <dc:givenName>${givenName}</dc:givenName>
               <dc:familyName>${familyName}</dc:familyName>
+              ${orcid ? `<dc:nameIdentifier nameIdentifierScheme="ORCID">${orcid}</dc:nameIdentifier>` : ''}
             </dc:contributor>
           </dc:contributors>
         </dc:resource>
@@ -94,8 +56,11 @@ describe('ICGEM contact person import', () => {
     delete window.authorStack;
   });
 
-  test('creates a new frontend contact row when no author row matches', () => {
+  test('imports a non-author contact into Contributors without adding an author', () => {
     buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([{ type: 'person', familyname: 'Contact', givenname: 'New',
+      roles: ['Contact Person'], affiliations: [] }]);
+    const authorsBefore = window.authorStack.collectPayload();
     const xmlDoc = makeIcgemXml({
       familyName: 'Contact',
       givenName: 'New',
@@ -105,23 +70,25 @@ describe('ICGEM contact person import', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const rows = document.querySelectorAll('[data-creator-row]');
-    expect(rows.length).toBe(2);
-
-    const createdRow = rows[1];
-    expect(createdRow.querySelector('input[name="familynames[]"]').value).toBe('Contact');
-    expect(createdRow.querySelector('input[name="givennames[]"]').value).toBe('New');
-    expect(createdRow.querySelector('input[name="contacts[]"]').checked).toBe(true);
-    expect(createdRow.querySelector('input[name="cpEmail[]"]').value).toBe('new.contact@gfz.de');
-    expect(createdRow.querySelector('input[name="cpOnlineResource[]"]').value).toBe('https://new-contact.example.org');
+    expect(window.authorStack.collectPayload()).toEqual(authorsBefore);
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ type: 'person', familyname: 'Contact', givenname: 'New',
+        roles: ['Contact Person'], email: 'new.contact@gfz.de', website: 'https://new-contact.example.org' })
+    ]);
+    const contactCard = document.querySelector('[data-contributor-card]');
+    expect(contactCard.querySelector('input[name="cbContactEmail[]"]').value).toBe('new.contact@gfz.de');
+    expect(contactCard.querySelector('input[name="cbContactWebsite[]"]').value).toBe('https://new-contact.example.org');
   });
 
-  test('preserves sparse websites and identifiers with grav/dace prefixes', () => {
-    buildAuthorDom([
+  test.each(['authors', 'contributors'])('preserves sparse websites and identifiers in %s with grav/dace prefixes', group => {
+    const people = [
       { familyname: 'Alpha', givenname: 'Ada' },
       { familyname: 'Beta', givenname: 'Ben' },
       { familyname: 'Gamma', givenname: 'Gina' }
-    ]);
+    ];
+    buildAuthorDom(group === 'authors' ? people : [{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack(group === 'contributors'
+      ? people.map(person => ({ type: 'person', ...person, roles: ['Contact Person'] })) : []);
 
     const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <grav:envelope xmlns:grav="${ICGEM_NS}" xmlns:dace="${DATACITE_NS}">
@@ -159,25 +126,80 @@ describe('ICGEM contact person import', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const rows = document.querySelectorAll('[data-creator-row]');
-    const firstRow = rows[0];
-    const secondRow = rows[1];
-    const thirdRow = rows[2];
-
-    expect(firstRow.querySelector('input[name="cpEmail[]"]').value).toBe('ada.alpha@gfz.de');
-    expect(firstRow.querySelector('input[name="cpOnlineResource[]"]').value).toBe('https://ada.example.org');
-    expect(firstRow.querySelector('input[name="orcids[]"]').value).toBe('0000-0001-2345-6789');
-    expect(firstRow.querySelector('input[name="personAffiliation[]"]').value).toBe('GFZ Potsdam');
-    expect(firstRow.querySelector('input[name="authorPersonRorIds[]"]').value).toBe('03yrm5c26');
-
-    expect(secondRow.querySelector('input[name="cpEmail[]"]').value).toBe('ben.beta@gfz.de');
-    expect(secondRow.querySelector('input[name="cpOnlineResource[]"]').value).toBe('');
-
-    expect(thirdRow.querySelector('input[name="cpEmail[]"]').value).toBe('gina.gamma@gfz.de');
-    expect(thirdRow.querySelector('input[name="cpOnlineResource[]"]').value).toBe('https://gina.example.org');
+    const contacts = group === 'authors' ? window.authorStack.collectPayload() : window.contributorStack.collectPayload();
+    expect(contacts).toHaveLength(3);
+    expect(contacts[0]).toMatchObject({ email: 'ada.alpha@gfz.de', website: 'https://ada.example.org',
+      orcid: '0000-0001-2345-6789', affiliations: [{ label: 'GFZ Potsdam', rorId: '03yrm5c26' }] });
+    expect(contacts[1]).toMatchObject({ email: 'ben.beta@gfz.de', website: '' });
+    expect(contacts[2]).toMatchObject({ email: 'gina.gamma@gfz.de', website: 'https://gina.example.org' });
+    if (group === 'authors') expect(window.contributorStack.collectPayload()).toEqual([]);
+    else expect(window.authorStack.collectPayload()).toHaveLength(1);
   });
 
-  test('adds a missing contact person to authorStack payload when authorStack is active', () => {
+  test('creates a contributor contact when no person card matches', () => {
+    buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([]);
+    const xmlDoc = makeIcgemXml({ familyName: 'Contact', givenName: 'New',
+      email: 'new@example.org', orcid: 'https://orcid.org/0000-0002-1825-0097' });
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(window.authorStack.collectPayload()).toHaveLength(1);
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ familyname: 'Contact', givenname: 'New', roles: ['Contact Person'],
+        email: 'new@example.org', orcid: '0000-0002-1825-0097' })
+    ]);
+  });
+
+  test('matches contributor ORCIDs and keeps roles and other cards on repeated imports', () => {
+    buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([
+      { type: 'institution', institutionname: 'Archive', roles: ['Distributor'] },
+      { type: 'person', familyname: 'Contact', givenname: 'Alias', roles: ['Researcher'],
+        orcid: '0000-0002-1825-0097', affiliations: [{ label: 'Lab', rorId: '03yrm5c26' }] }
+    ]);
+    const archive = window.contributorStack.collectPayload()[0];
+    const xmlDoc = makeIcgemXml({ familyName: 'Contact', givenName: 'New',
+      email: 'new@example.org', website: 'https://example.org', orcid: 'https://orcid.org/0000-0002-1825-0097' });
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    const contributors = window.contributorStack.collectPayload();
+    expect(contributors).toHaveLength(2);
+    expect(contributors[0]).toEqual(archive);
+    expect(contributors[1]).toMatchObject({ roles: ['Researcher', 'Contact Person'],
+      email: 'new@example.org', website: 'https://example.org',
+      affiliations: [{ label: 'Lab', rorId: '03yrm5c26' }] });
+    expect(window.authorStack.collectPayload()).toHaveLength(1);
+  });
+
+  test('keeps contacts recoverable when only institution Contributors are enabled', () => {
+    buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([{ type: 'institution', institutionname: 'Archive', roles: ['Distributor'] }]);
+    window.contributorStack.supportsType = type => type === 'institution';
+    const contributorsBefore = window.contributorStack.collectPayload();
+    const xmlDoc = makeIcgemXml({ familyName: 'Contact', givenName: 'New', email: 'new@example.org' });
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(window.authorStack.collectPayload()).toHaveLength(2);
+    expect(window.authorStack.collectPayload()[1]).toMatchObject({ isContact: true, email: 'new@example.org' });
+    expect(window.contributorStack.collectPayload()).toEqual(contributorsBefore);
+  });
+
+  test('rejects a present uninitialized Contributors group before changing authors', () => {
+    buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([]);
+    delete window.contributorStack;
+    const authorsBefore = window.authorStack.collectPayload();
+    const xmlDoc = makeIcgemXml({ familyName: 'Existing', givenName: 'Author', email: 'author@example.org' });
+
+    expect(() => icgemModule.populateIcgemContactPersons(xmlDoc)).toThrow('Contributors form is not initialized.');
+    expect(window.authorStack.collectPayload()).toEqual(authorsBefore);
+  });
+
+  test('keeps a missing contact in Authors when Contributors are disabled', () => {
     window.authorStack = {
       collectPayload: jest.fn(() => [
         {

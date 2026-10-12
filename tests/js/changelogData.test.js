@@ -112,6 +112,11 @@ describe('changelog migration', () => {
       { type: 'issue', number: 1148 }, { type: 'pull', number: 1233 }
     ]);
     expect(entryByText('Submission errors').references).toBeUndefined();
+    expect(entryByText('A separate DOI lookup').references).toEqual([{ type: 'issue', number: 831 }]);
+    expect(entryByText('Resource type help').references).toEqual([{ type: 'issue', number: 1013 }]);
+    expect(entryByText('Resource Information DOI and title controls').references)
+      .toEqual([{ type: 'pull', number: 1249 }]);
+    expect(entryByText('For Standard, MSL, and IGSN submissions').editions).toEqual(['elmo', 'msl', 'igsn']);
 
     for (const release of changelog.releases.filter(item => !isEditionScopedRelease(item.version))) {
       for (const section of release.sections) {
@@ -119,6 +124,16 @@ describe('changelog migration', () => {
           expect(entry.editions).toBeUndefined();
           expect(entry.references).toBeUndefined();
         }
+      }
+    }
+  });
+
+  test('groups edition-scoped entries by edition within each section', () => {
+    const editionOrder = ['all', 'elmo', 'msl', 'gem', 'igsn'];
+    for (const release of changelog.releases.filter(item => isEditionScopedRelease(item.version))) {
+      for (const section of release.sections) {
+        const positions = section.entries.map(entry => editionOrder.indexOf(entry.editions[0]));
+        expect(positions).toEqual([...positions].sort((a, b) => a - b));
       }
     }
   });

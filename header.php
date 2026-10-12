@@ -13,7 +13,7 @@ $langFiles = glob(__DIR__ . '/lang/*.json');
 $langCodes = array_map(fn($file) => basename($file, '.json'), $langFiles);
 sort($langCodes);
 // The custom stylesheet has a long cache lifetime; change its URL when its content changes.
-$gfzCssVersion = substr(hash_file('sha256', __DIR__ . '/css/gfz-cd.css'), 0, 12);
+$assetVersion = static fn($path) => substr(hash_file('sha256', __DIR__ . '/' . $path), 0, 12);
 
 // Fallback for instance title if not defined in settings
 if (!isset($instanceTitle)) {
@@ -33,6 +33,7 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <meta charset="utf-8" />
   <base href="<?php echo htmlspecialchars($baseHref); ?>">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <script src="js/themeInit.js?v=<?php echo $assetVersion('js/themeInit.js'); ?>"></script>
   <!-- Local Bootstrap CSS -->
   <link href="node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
   <!-- Local jQuery UI CSS -->
@@ -44,9 +45,9 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
   <!-- Local jsTree CSS -->
   <link rel="stylesheet" href="node_modules/jstree/dist/themes/default/style.min.css" />
   <!-- Custom CSS -->
-  <link rel="stylesheet" href="css/gfz-cd.css?v=<?php echo $gfzCssVersion; ?>">
-  <link rel="stylesheet" href="./css/tagify-adj.css">
-  <link rel="stylesheet" href="./css/darkmode.css">
+  <link rel="stylesheet" href="css/gfz-cd.css?v=<?php echo $assetVersion('css/gfz-cd.css'); ?>">
+  <link rel="stylesheet" href="css/tagify-adj.css?v=<?php echo $assetVersion('css/tagify-adj.css'); ?>">
+  <link rel="stylesheet" href="css/darkmode.css?v=<?php echo $assetVersion('css/darkmode.css'); ?>">
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon-96x96.png" sizes="96x96" />
   <link rel="icon" type="image/svg+xml" href="favicon.svg" />
@@ -125,12 +126,12 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
               Mode
             </button>
             <ul class="dropdown-menu shadow" aria-labelledby="bd-theme">
-              <li><a class="dropdown-item active" data-bs-theme-value="auto" data-translate="buttons.auto">
-                  <i class="bi bi-circle-half"></i> Auto</a></li>
-              <li><a class="dropdown-item" data-bs-theme-value="light" data-translate="buttons.light">
-                  <i class="bi bi-sun-fill"></i> <span data-translate="header.light">Light</span></a></li>
-              <li><a class="dropdown-item" data-bs-theme-value="dark" data-translate="buttons.dark">
-                  <i class="bi bi-moon-stars-fill"></i> <span data-translate="header.dark">Dark</span></a></li>
+              <li><button type="button" class="dropdown-item active" data-bs-theme-value="auto" data-translate="buttons.auto">
+                  <i class="bi bi-circle-half"></i> Auto</button></li>
+              <li><button type="button" class="dropdown-item" data-bs-theme-value="light" data-translate="buttons.light">
+                  <i class="bi bi-sun-fill"></i> <span data-translate="header.light">Light</span></button></li>
+              <li><button type="button" class="dropdown-item" data-bs-theme-value="dark" data-translate="buttons.dark">
+                  <i class="bi bi-moon-stars-fill"></i> <span data-translate="header.dark">Dark</span></button></li>
             </ul>
           </div>
           
@@ -159,9 +160,9 @@ if (!empty($_SERVER['HTTP_X_FORWARDED_PREFIX'])) {
 
   <!-- Subheader -->
   <section role="region" aria-label="Page subheader">
-    <div class="bg-white border-bottom shadow-sm">
+    <div class="elmo-subheader border-bottom shadow-sm">
       <div class="container-fluid py-2 d-flex justify-content-between align-items-center">
-        <div class="fs-5 fw-semibold text-dark"><?php echo htmlspecialchars($instanceTitle); ?></div>
+        <div class="fs-5 fw-semibold"><?php echo htmlspecialchars($instanceTitle); ?></div>
         <?php if ($showMslLogo) echo $mslLogoHtml; ?>
       </div>
     </div>

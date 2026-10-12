@@ -168,11 +168,12 @@ describe('roles.js', () => {
     expect(window.applyTagifyAccessibilityAttributes).toHaveBeenCalledTimes(3);
   });
 
-  test('DOM initialization creates Tagify and reacts to translationsLoaded', () => {
+  test('card role fields react to translationsLoaded', () => {
     window.personRoles = ['p'];
     window.organizationRoles = ['o'];
 
-    document.dispatchEvent(new Event('DOMContentLoaded'));
+    window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
+    window.setupRolesDropdown(['institution', 'both'], '#input-contributor-organisationrole');
     const personInput = document.getElementById('input-contributor-personrole');
     const orgInput = document.getElementById('input-contributor-organisationrole');
 

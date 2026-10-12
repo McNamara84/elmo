@@ -218,7 +218,8 @@ function populateResourceTypeDropdownWithData(types) {
         $("<option>", {
           value: type.id,
           text: type.resource_type_general,
-          title: type.description
+          title: window.resourceTypeDescriptions?.getResourceTypeDescription(
+            type.resource_type_general, type.description) || type.description
         })
       );
     });
