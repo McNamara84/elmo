@@ -225,6 +225,7 @@ class SaveHandler {
             formData.set('authorsPayload', JSON.stringify(authorsPayload));
             if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
                 window.ggmsExperimentalPayload.appendPayloadsToFormData(formData);
+            }
             if (Array.isArray(contributorsPayload)) {
                 formData.set('contributorsPayload', JSON.stringify(contributorsPayload));
             }

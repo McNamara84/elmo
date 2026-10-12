@@ -82,7 +82,7 @@ include $baseDir . 'formgroups/honeypot.html';
 
 include $baseDir . 'formgroups/authors.html';
 if ($showGGMsProperties) {
-    include $baseDir . 'formgroups/GGMsDefinition.html';
+    include $baseDir . 'formgroups/ggms-definition.html';
     include $baseDir . 'formgroups/ggms-altimetry-models.html';
     include $baseDir . 'formgroups/ggms-mascons.html';
     include $baseDir . 'formgroups/ggms-model-types.html';

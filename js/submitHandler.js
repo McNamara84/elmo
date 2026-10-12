@@ -495,6 +495,7 @@ class SubmitHandler {
         }
         if (window.ggmsExperimentalPayload && typeof window.ggmsExperimentalPayload.appendPayloadsToFormData === 'function') {
             window.ggmsExperimentalPayload.appendPayloadsToFormData(submitData);
+        }
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
         if (Array.isArray(contributorsPayload)) {
             submitData.set('contributorsPayload', JSON.stringify(contributorsPayload));
