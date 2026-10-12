@@ -680,155 +680,6 @@ function findTagifyTagIn(page: Page, selector: string, label: string): Promise<b
   }, { field: selector, text: label });
 }
 
-// ─── Upload helper ─────────────────────────────────────────────────────────────
-
-/**
- * Loads an XML file into the form through the application's own upload path.
- *
- * This is what drives every step of the roundtrip: the Load button hands the
- * file to loadXmlToForm(), which runs the DataCite mappings, processKeywords()
- * and – for ICGEM documents – icgemModule.loadIcgemXmlToForm(). Filling the
- * form any other way would test the test rather than the feature.
- */
-async function uploadXmlIntoForm(page: Page, xmlPath: string, expectedSubjects: string[] = []): Promise<void> {
-  if (!fs.existsSync(xmlPath)) {
-    throw new Error(`Upload source XML not found: ${xmlPath}`);
-  }
-
-  const loadButton = page.locator('#button-form-load');
-  await loadButton.waitFor({ state: 'visible', timeout: 10_000 });
-  await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
-  // thesauriReady resolves after thesaurus inputs exist. XML upload then waits
-  // only for the keyword vocabularies actually referenced by the uploaded XML.
-  await page.waitForFunction(async () => {
-    await (window as any).thesauriReady;
-    return true;
-  }, { timeout: 40_000 });
-  await page.waitForFunction(() => {
-    const science = document.querySelector('#input-sciencekeyword') as { _tagify?: unknown } | null;
-    const platforms = document.querySelector('#input-platforms') as { _tagify?: unknown } | null;
-    return Boolean(science?._tagify && platforms?._tagify);
-  }, { timeout: 15_000 });
-
-  await loadButton.click();
-
-  const uploadModal = page.locator('#modal-uploadxml');
-  await uploadModal.waitFor({ state: 'visible', timeout: 5_000 });
-  await page.locator('#input-uploadxml-file').setInputFiles(xmlPath);
-
-  // Model name is written at the start of loadIcgemXmlToForm. The upload
-  // spinner stays up until loadXmlToForm returns, which is after keywords
-  // and data sources are fully applied. Saving earlier persists whatever
-  // happens to be in the POST at that moment (often satellite subjects only).
-  await page.waitForFunction(
-    () => {
-      const modelName = document.querySelector<HTMLInputElement>('#input-model-name')?.value;
-      const spinner = document.getElementById('upload-spinner-overlay');
-      return Boolean(modelName) && Boolean(spinner?.classList.contains('d-none'));
-    },
-    { timeout: 60_000 },
-  );
-
-  // Wait until every imported subject is on a Tagify instance.
-  for (const subject of expectedSubjects) {
-    await expect
-      .poll(() => findTagifyTag(page, subject), {
-        message: `subject "${subject}" imported into a keyword field before save`,
-        timeout: 20_000,
-      })
-      .toBe(true);
-  }
-
-  // ── ICGEM Model Types – Temporal section ─────────────────────────────────
-
-  if (data.modelType.toLowerCase() === 'temporal') {
-    // Wait for temporal section to become visible (change event on model-type triggers jQuery handler)
-    await expect(page.locator('.visibility-modeltype-temporal')).toBeVisible({ timeout: 10_000 });
-
-    await page.locator('#input-temporal-start').fill(data.temporalStart);
-
-    // Release frequency: use predefined select for standard day counts, else custom days.
-    if (data.temporalResolution) {
-      const days = parseInt(data.temporalResolution, 10);
-      const daysToFrequency: Record<number, string> = {
-        1: 'daily',
-        7: 'weekly',
-        30: 'monthly',
-        90: 'quarterly',
-        365: 'yearly',
-      };
-      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
-      if (predefined) {
-        await page.locator('#select-release-frequency').selectOption(predefined);
-      } else {
-        await page.locator('#checkbox-custom-frequency').check();
-        await page.locator('#custom-frequency-container').waitFor({ state: 'visible', timeout: 5_000 });
-        await page.locator('#input-temporal-frequency').fill(data.temporalResolution);
-      }
-    }
-  }
-
-  // ── Data sources ──────────────────────────────────────────────────────────
-
-  const DS_ROW = '#group-datasources .row[data-source-row]';
-
-  for (let i = 0; i < data.dataSources.length; i++) {
-    const ds = data.dataSources[i];
-
-    // Add a new row for every source after the first
-    if (i > 0) {
-      await page.locator('#button-datasource-add').click();
-      await expect(page.locator(DS_ROW)).toHaveCount(i + 1, { timeout: 5_000 });
-    }
-
-    const dsRow = page.locator(DS_ROW).nth(i);
-
-    // Datasource type: 'Satellite' → 'S'
-    const typeCodeMap: Record<string, string> = {
-      satellite: 'S',
-      'ground data': 'G',
-      altimetry: 'A',
-      model: 'M',
-      'elevation/terrain': 'T',
-    };
-    const typeCode = typeCodeMap[ds.type.toLowerCase()] ?? 'S';
-    await dsRow.locator('select[name="datasource_type[]"]').selectOption(typeCode);
-    await dsRow.locator('select[name="datasource_type[]"]').dispatchEvent('change');
-
-    await dsRow.locator('textarea[name="datasource_description[]"]').fill(ds.description);
-
-    // Satellite platform – inject via Tagify API
-    if (typeCode === 'S' && ds.satelliteValueName) {
-      const tag = {
-        value: ds.satelliteValueName,
-        id: ds.satelliteValueUri ?? '',
-        scheme: ds.satelliteSchemeName ?? '',
-        schemeURI: ds.satelliteSchemeUri ?? '',
-      };
-      const platformInput = dsRow.locator('input[name="satellite_platform[]"]');
-      await platformInput.evaluate(
-        (el: unknown, t: typeof tag) => {
-          const tagify = (el as Record<string, unknown>)._tagify;
-          if (tagify) (tagify as { addTags: (tags: typeof tag[]) => void }).addTags([t]);
-        },
-        tag,
-      );
-    }
-  // The modal normally closes itself when showUploadToast fires; dismiss it via
-  // the Bootstrap API when it does not, rather than blocking on the toast.
-  if (await uploadModal.isVisible().catch(() => false)) {
-    await page.evaluate(() => {
-      const modalEl = document.getElementById('modal-uploadxml');
-      if (!modalEl) return;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const bsModal = (window as any).bootstrap?.Modal?.getInstance?.(modalEl);
-      if (bsModal) bsModal.hide();
-      else modalEl.classList.remove('show');
-    });
-    await uploadModal.waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {});
-  }
-}
-
 // ─── Save / download helper ────────────────────────────────────────────────────
 
 /**
@@ -1386,7 +1237,7 @@ for (const testCase of TEST_CASES) {
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue('');
     await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue('');
-    await expect(page.locator('#select-temporal-frequency-predef'), 'temporalFrequencyPredef').toHaveValue('');
+    await expect(page.locator('#select-release-frequency'), 'releaseFrequency').toHaveValue('');
     await expect(page.locator('#input-temporal-frequency'), 'temporalFrequency').toHaveValue('');
     await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue('');
     await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue('');
@@ -1765,7 +1616,6 @@ test('GGM HTML fields missing after re-upload (warning only)', () => {
     test.info().annotations.push({ type: 'warning', description: message });
   }
 
-  // Always pass: some controls (e.g. #select-temporal-frequency-predef) cannot survive
-  // XML roundtrip because export stores days only.
-  expect("the test always passes").toBe("the test always passes");
+  // Always pass: some controls cannot survive XML roundtrip because export stores days only.
+  expect('the test always passes').toBe('the test always passes');
 });
