@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 
 test('Contributors starts empty and shares contact status with Authors', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack && (window as any).authorStack));
   test.skip((await page.locator('[data-contributor-add-type]').count()) < 2, 'Both Contributor types are required for this flow.');
   const cards = page.locator('[data-contributor-card]');
@@ -38,7 +38,7 @@ test('Contributors starts empty and shares contact status with Authors', async (
 });
 
 test('disabled institution contact role does not become active on restore', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   test.skip(await page.evaluate(() => (window as any).ELMO_FEATURES?.showContactInstitution === true),
     'This case applies only when institution contacts are disabled.');
@@ -54,7 +54,7 @@ test('disabled institution contact role does not become active on restore', asyn
 });
 
 test('contributor summaries show person and building icons instead of type badges', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.evaluate(() => (window as any).contributorStack.setContributors([
     { type: 'person', familyname: 'Doe', roles: [] },
@@ -73,7 +73,7 @@ test('contributor summaries show person and building icons instead of type badge
 
 test('help icons follow the first visible contributor field of each kind', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('helpStatus', 'help-on'));
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.evaluate(() => (window as any).contributorStack.setContributors([
     { type: 'person', familyname: 'First', roles: [] },
@@ -116,7 +116,7 @@ test('help icons follow the first visible contributor field of each kind', async
 
 test('contact email and website use the Authors help icons', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('helpStatus', 'help-on'));
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.evaluate(() => (window as any).contributorStack.setContributors([
     { type: 'person', familyname: 'First', roles: ['Contact Person'] },
@@ -139,7 +139,7 @@ test('contact email and website use the Authors help icons', async ({ page }) =>
 });
 
 test('enabled institution contact role updates both headers', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   test.skip(await page.evaluate(() => (window as any).ELMO_FEATURES?.showContactInstitution !== true),
     'This case applies only when institution contacts are enabled.');
@@ -158,7 +158,7 @@ test('enabled institution contact role updates both headers', async ({ page }) =
 });
 
 test('dragging the handle changes contributor order and saved payload', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   const cards = page.locator('[data-contributor-card]');
   await page.evaluate(() => (window as any).contributorStack.setContributors([
@@ -180,7 +180,7 @@ test('person role picker excludes institution-only roles', async ({ page }) => {
     const names = type === 'person' ? ['Researcher'] : type === 'institution' ? ['Distributor'] : ['Data Collector'];
     return route.fulfill({ json: names.map(name => ({ name })) });
   });
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.locator('[data-contributor-add-type="institution"]').click();
   await page.locator('[data-contributor-add-type="person"]').click();
@@ -192,7 +192,7 @@ test('person role picker excludes institution-only roles', async ({ page }) => {
 });
 
 test('contact fields and editable affiliations follow the requested rows', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.locator('[data-contributor-add-type="person"]').click();
   await page.locator('[data-contributor-add-type="institution"]').click();
@@ -220,7 +220,7 @@ test('contact fields and editable affiliations follow the requested rows', async
 });
 
 test('collapsed contributor keeps only a compact summary and actions', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
   await page.evaluate(() => (window as any).contributorStack.setContributors([
     { type: 'person', familyname: 'Doe', roles: [] }

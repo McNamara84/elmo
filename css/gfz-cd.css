@@ -72,6 +72,23 @@
     --bs-btn-focus-shadow-rgb: 138, 185, 255;
 }
 
+/* Keep the GFC upload trigger aligned with primary button colors in all themes,
+   without any hover-state color shift. */
+#button-ggms-gfc-upload {
+    --bs-btn-color: #ffffff;
+    --bs-btn-bg: #00589C;
+    --bs-btn-border-color: #00589C;
+    --bs-btn-hover-color: #ffffff;
+    --bs-btn-hover-bg: #00589C;
+    --bs-btn-hover-border-color: #00589C;
+    --bs-btn-active-color: #ffffff;
+    --bs-btn-active-bg: #00589C;
+    --bs-btn-active-border-color: #00589C;
+    --bs-btn-disabled-color: #ffffff;
+    --bs-btn-disabled-bg: #00589C;
+    --bs-btn-disabled-border-color: #00589C;
+}
+
 /* Farbanpassung der aktiven Dropdown Items */
 .dropdown-item.active,
 .dropdown-item:active {
