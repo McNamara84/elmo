@@ -1687,14 +1687,27 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li>Irregular shapes - Variable shapes for land and ocean</li>
                     </ul>
                 </div>
+                <div id="help-mascon-grid-type">
+                    <h4>Grid type</h4>
+                    <p>Specify whether the product uses a regular grid or an irregular grid.</p>
+                </div>
                 <div id="help-mascon-resolution">
                     <h4>MASCON Resolution Help</h4>
-                    <p> This input field is designed for Spatial resolution provided in degrees. We collect 2 types of MASCON resolution: native resolution and product resampled resolution.</p>
+                    <p>We collect two MASCON resolution descriptors: native MASCON size and product sampling.</p>
                     <ul>
-                        <li>Native resolution: The original resolution of the MASCON data in degrees.</li>
-                        <li>Product resolution: The resolution of the MASCON data presented in the file.</li>
+                        <li>MASCON size: The native size of each MASCON cell.</li>
+                        <li>Product sampling: The resolution of the grid represented in the NetCDF file.</li>
                     </ul>
-                    <p> For instance, if a MASCON has an irregular shape, the native resolution will reflect the original data's spatial resolution, while the product resolution will indicate the resolution after any resampling of the irregular shapes to fit into the file format.</p>
+                    <p>If a MASCON has irregular shapes, the native size still reflects the equivalent spatial extent used for those cells, while product sampling reflects the output grid spacing in the published file.</p>
+                </div>
+                <div id="help-mascon-size">
+                    <h4>MASCON size</h4>
+                    <p>If Grid type = Regular grid, this variable records angular extent (in degrees) or equivalent spatial extent.</p>
+                    <p>If Grid type = Irregular grid, this variable records equivalent spatial extent.</p>
+                </div>
+                <div id="help-mascon-product-sampling">
+                    <h4>Product sampling</h4>
+                    <p>A uniform grid characterized by a fixed angular resolution (in degrees). Resolution provided in the NetCDF file.</p>
                 </div>
                 <div id="help-mascon-count">
                     <h4>Mascon count</h4>

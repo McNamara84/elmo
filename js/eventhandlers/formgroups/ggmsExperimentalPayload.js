@@ -99,8 +99,11 @@ function collectMasconsPayload() {
     scaleFactor: readVal('#input-scale-factor'),
     gad: readVal('#input-gad'),
     regularisationMethod: readVal('#input-mascon-regularisation-method'),
+    gridType: readVal('#input-mascon-grid-type'),
     shape: readVal('#input-mascon-shape'),
     spatialResolution: readVal('#input-mascon-spatial-resolution'),
+    spatialResolutionUnit: readVal('#input-mascon-size-unit'),
+    productSampling: readVal('#input-mascon-product-resolution'),
   };
 }
 
