@@ -6,6 +6,7 @@ describe('authorStack institution authors', () => {
 
   function loadAuthorStackScript() {
     Object.assign(window, require('../../js/affiliationEditor.js'));
+  Object.assign(window, require('../../js/services/affiliationActionService.js'));
     let script = fs.readFileSync(
       path.resolve(__dirname, '../../js/eventhandlers/formgroups/authorStack.js'),
       'utf8'

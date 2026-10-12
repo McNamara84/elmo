@@ -15,6 +15,7 @@ describe('combined contributor stack', () => {
     window.autocompleteAffiliations = jest.fn();
     window.applyTranslations = jest.fn();
     Object.assign(window, require('../../js/affiliationEditor.js'));
+  Object.assign(window, require('../../js/services/affiliationActionService.js'));
     let script = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/contributorStack.js'), 'utf8');
     script = script.replace(/^import.*$/gm, '');
     script = script.replace('$(document).ready(function () {', '(function () {').replace(/\n\}\);\s*$/, '\n})();');

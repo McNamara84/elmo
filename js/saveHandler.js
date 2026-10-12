@@ -1,3 +1,4 @@
+import { resolvePendingAffiliations, validateAffiliationEditors } from './services/affiliationActionService.js';
 /**
  * @description Handles saving functionality for dataset metadata
  * @requires bootstrap
@@ -111,11 +112,13 @@ class SaveHandler {
     }
 
     validateAuthorAffiliationsForSave() {
+        if (!resolvePendingAffiliations(this.$form[0])) return false;
         const validator = typeof globalThis !== 'undefined'
             ? globalThis.validateAuthorAffiliationEditors
             : null;
 
-        if (typeof validator !== 'function' || validator()) {
+        const legacyValid = typeof validator !== 'function' || validator();
+        if (validateAffiliationEditors(this.$form[0]) && legacyValid) {
             return true;
         }
 
@@ -183,6 +186,7 @@ class SaveHandler {
      * @returns {Promise<void>} Promise resolved after download or error handling completes.
      */
     async saveAndDownload(filename, format = this.currentFormat) {
+        if (!this.validateAuthorAffiliationsForSave()) return;
         const formatConfig = this.getFormatConfig(format);
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
@@ -210,6 +214,7 @@ class SaveHandler {
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
+            if (!this.validateAuthorAffiliationsForSave()) return;
             const authorsPayload = synchronizeAuthorsPayload(formEl);
             const resourceInformationPayload = synchronizeResourceInformationPayload(formEl);
             const contributorsPayload = synchronizeContributorsPayload(formEl);

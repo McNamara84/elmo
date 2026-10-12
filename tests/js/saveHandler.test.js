@@ -1,4 +1,5 @@
 const { requireFresh } = require('./utils');
+const { mountContributorStack } = require('./utils/peopleStacks');
 
 let SaveHandler;
 let $;
@@ -485,4 +486,17 @@ describe('saveHandler.js', () => {
     expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
     delete global.fetch;
   });
+  test.each(['xml', 'jsonld'])('unfinished affiliations prevent direct %s download requests', async format => {
+    mountContributorStack([{type: 'person', familyname: 'Contributor'}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.setPendingInput('Unconfirmed');
+    global.fetch = jest.fn();
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.handleSave(format);
+    await handler.saveAndDownload('dataset', format);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(editor.getAffiliations()).toEqual([]);
+    delete global.fetch;
+  });
+
 });

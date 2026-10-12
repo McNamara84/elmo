@@ -1,3 +1,4 @@
+import { resolvePendingAffiliations } from '../../services/affiliationActionService.js';
 /**
  * @description Handles the combined Authors stack for person and institution authors.
  *
@@ -1167,6 +1168,7 @@ $(document).ready(function () {
     event.preventDefault();
     const row = $(this).closest('[data-author-entry-row]');
     const isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
+    if (isExpanded && !resolvePendingAffiliations(row[0])) return;
     setExpanded(row, !isExpanded);
   });
 

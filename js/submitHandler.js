@@ -1,3 +1,4 @@
+import { resolvePendingAffiliations, validateAffiliationEditors } from './services/affiliationActionService.js';
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
 import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
 import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
@@ -394,6 +395,7 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
+        if (!resolvePendingAffiliations(this.$form[0])) return;
         if (this.autosaveService) {
             this.autosaveService.flushPending();
         }
@@ -405,7 +407,7 @@ class SubmitHandler {
             && typeof globalThis.validateAuthorAffiliationEditors === 'function'
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid) {
+        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid || !validateAffiliationEditors(this.$form[0])) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
@@ -460,10 +462,12 @@ class SubmitHandler {
      * @returns {Promise<void>} Promise resolved after handing data to the AJAX submission.
      */
     async handleModalSubmit() {
+        if (!resolvePendingAffiliations(this.$form[0]) || !validateAffiliationEditors(this.$form[0])) return;
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
         }
 
+        if (!resolvePendingAffiliations(this.$form[0]) || !validateAffiliationEditors(this.$form[0])) return;
         let authorsPayload;
         let contributorsPayload = null;
         let relatedWorksPayload = null;

@@ -1,4 +1,5 @@
 const { requireFresh } = require('./utils');
+const { mountContributorStack } = require('./utils/peopleStacks');
 
 describe('submitHandler.js', () => {
   let SubmitHandler;
@@ -1033,4 +1034,18 @@ describe('submitHandler.js', () => {
       submitSpy.mockRestore();
     });
   });
+  test('unfinished affiliations prevent both submit entry points from sending metadata', async () => {
+    mountContributorStack([{type: 'institution', institutionname: 'Lab'}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.setPendingInput('Unconfirmed');
+    global.fetch = jest.fn();
+    const send = jest.spyOn(handler, 'submitViaAjax');
+    handler.handleSubmit();
+    await handler.handleModalSubmit();
+    expect(send).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(editor.getAffiliations()).toEqual([]);
+    delete global.fetch;
+  });
+
 });
