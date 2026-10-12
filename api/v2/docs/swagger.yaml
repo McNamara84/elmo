@@ -12,7 +12,7 @@ info:
     ### Authentication
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
-    `POST /admin/cache/refresh` uses the same `X-API-KEY` header. The value must match `ELMO_API_KEY`. Cache status is not published yet. When it is, `getAllCacheStatus` returns an `AllCacheStatus` object: one entry per vocabulary, not a JSON list.
+    `POST /admin/cache/refresh` and `GET /admin/cache/status` use the same `X-API-KEY` header. The value must match `ELMO_API_KEY`. Cache status is an `AllCacheStatus` object: one entry per vocabulary, not a JSON list, returned as the `status` property of `GET /admin/cache/status`.
 
     ### Binary Data
     Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
@@ -41,6 +41,8 @@ security:
 tags:
   - name: general
     description: General operations for health checks and version
+  - name: affiliations
+    description: Server-side search of ROR affiliations
   - name: update
     description: Operations for updating the vocabularies
   - name: vocabularies
@@ -155,95 +157,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /update/vocabs/msl/labs:
-    get:
-      tags:
-        - update
-      summary: Update MSL Labs vocabulary
-      description: Fetch and update the MSL Labs vocabulary from the GitHub repository.
-      operationId: updateMslLabs
-      responses:
-        "200":
-          description: MSL Labs vocabulary successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MSLLabsUpdateResponse"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /update/vocabs/gcmd:
-    get:
-      tags:
-        - update
-      summary: Update GCMD vocabularies (Science Keywords, Instruments, and Platforms)
-      description: Updates all GCMD vocabularies (Science Keywords, Instruments, and Platforms) from NASA's GCMD repository
-      operationId: updateGcmdVocabs
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GcmdVocabularyUpdate"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /update/vocabs/cgi:
-    get:
-      tags:
-        - update
-      summary: Update CGI Simple Lithology keywords
-      description: Fetches the latest CGI Simple Lithology vocabulary and stores it as JSON.
-      operationId: updateCGIKeywords
-      responses:
-        "200":
-          description: CGI keywords successfully updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "CGI keywords successfully updated"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-19T08:45:22Z"
-                required:
-                  - message
-                  - timestamp
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /update/crossref:
     get:
       tags:
@@ -322,48 +235,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /vocabs/sciencekeywords:
+  /affiliations/search:
     get:
       tags:
-        - vocabularies
+        - affiliations
       security: []
-      summary: Get GCMD Science Keywords (for third party use)
-      description: Retrieve the controlled vocabulary of GCMD Science Keywords from NASA (already prepared for use with jsTree)
-      operationId: getGcmdScienceKeywords
+      summary: Search ROR affiliations
+      description: |-
+        Searches the local ROR affiliation list by preferred name and alternative names.
+        A query shorter than 2 characters, or an empty affiliation file, returns an empty array.
+
+        Results are ordered by exact name, name prefix, name contains, then alternative name.
+      operationId: searchAffiliations
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search text. Fewer than 2 characters returns an empty array.
+          example: Potsdam
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of matches to return. Values outside 1-100 are clamped.
       responses:
         "200":
-          description: Successful response
+          description: Matching affiliations, or an empty array
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VocabularyTree"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /vocabs/cgi:
-    get:
-      tags:
-        - vocabularies
-      security: []
-      summary: Get CGI Simple Lithology keywords
-      description: Retrieve the CGI Simple Lithology vocabulary already prepared for use with jsTree
-      operationId: getCGIKeywords
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VocabularyTree"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                type: array
+                items:
+                  $ref: "#/components/schemas/RorAffiliation"
   /vocabs/freekeywords/all:
     get:
       tags:
@@ -699,6 +608,268 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/DescriptionType"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/msl-laboratories:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get MSL laboratories
+      description: |-
+        Returns the MSL laboratories vocabulary from ERNIE, using the file cache when it is still valid.
+        The laboratory list is in `data`. `version`, `lastUpdated`, and `total` are forwarded from ERNIE.
+      operationId: getMslLaboratories
+      responses:
+        "200":
+          description: Laboratory vocabulary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MslLaboratoriesResponse"
+        "503":
+          description: ERNIE is not configured, or no laboratory data is available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/availability:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get thesaurus availability
+      description: |-
+        Tells the client which ERNIE thesauri are enabled. The response is a map keyed by thesaurus slug.
+        Availability is served from the file cache and is not stored in the local database.
+      operationId: getThesauriAvailability
+      responses:
+        "200":
+          description: Availability map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThesaurusAvailability"
+        "503":
+          description: Thesaurus availability is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-science-keywords:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Science Keywords
+      description: GCMD Science Keywords prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdScienceKeywordsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-platforms:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Platforms
+      description: GCMD Platforms prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdPlatformsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-instruments:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Instruments
+      description: GCMD Instruments prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdInstrumentsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/chronostrat-timescale:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICS Chronostratigraphy
+      description: ICS Chronostratigraphic Chart prepared for jsTree, from the ERNIE cache.
+      operationId: getChronostratTimescale
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gemet:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GEMET
+      description: GEMET thesaurus prepared for jsTree, from the ERNIE cache.
+      operationId: getGemet
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/icgemformats:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICGEM file formats
+      description: File formats stored for the ICGEM metadata form.
+      operationId: getICGEMFileFormats
+      responses:
+        "200":
+          description: File formats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/modeltypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICGEM model types
+      description: Gravity-field model types stored for the ICGEM metadata form.
+      operationId: getICGEMModelTypes
+      responses:
+        "200":
+          description: Model types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/mathreps:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get mathematical representations
+      description: Mathematical representations stored for the ICGEM metadata form.
+      operationId: getMathRepresentations
+      responses:
+        "200":
+          description: Mathematical representations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
         "500":
           description: Internal server error
           content:
@@ -1276,7 +1447,7 @@ paths:
 
         Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
 
-        Cache status is not available from this API yet. `getAllCacheStatus` will return an `AllCacheStatus` object keyed by vocabulary slug.
+        Read the written files with `GET /admin/cache/status`. That response wraps an `AllCacheStatus` object, keyed by vocabulary slug.
       operationId: refreshAllCache
       parameters:
         - name: X-API-KEY
@@ -1292,12 +1463,98 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/CacheRefreshResponse"
+              example:
+                success: true
+                message: All ERNIE caches refreshed
+                results:
+                  resourceTypes: true
+                  titleTypes: true
+                  gemet: true
         "400":
           description: ERNIE is not configured
           content:
             application/json:
               schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                required:
+                  - success
+                  - message
+              example:
+                success: false
+                message: ERNIE service is not configured
+        "401":
+          description: The X-API-KEY header is missing or does not match ELMO_API_KEY
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+              example:
+                error: Invalid or missing API key
+        "502":
+          description: One or more vocabularies could not be refreshed
+          content:
+            application/json:
+              schema:
                 $ref: "#/components/schemas/CacheRefreshResponse"
+              example:
+                success: false
+                message: Some ERNIE caches failed to refresh
+                failed:
+                  - gemet
+                results:
+                  resourceTypes: true
+                  titleTypes: true
+                  gemet: false
+  /admin/cache/status:
+    get:
+      tags:
+        - admin
+      summary: Get all ERNIE cache statuses
+      description: |-
+        Returns the file-cache status of every ERNIE vocabulary.
+
+        Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
+      operationId: getAllCacheStatus
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key. Must match the ELMO_API_KEY environment variable.
+      responses:
+        "200":
+          description: Status of every vocabulary cache
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheStatusResponse"
+        "400":
+          description: ERNIE is not configured
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: false
+                  message:
+                    type: string
+                    example: ERNIE service is not configured
+                required:
+                  - success
+                  - message
         "401":
           description: The X-API-KEY header is missing or does not match ELMO_API_KEY
           content:
@@ -1310,12 +1567,6 @@ paths:
                     example: Invalid or missing API key
                 required:
                   - error
-        "502":
-          description: One or more vocabularies could not be refreshed
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/CacheRefreshResponse"
   /doi/lookup/{doi}:
     get:
       tags:
@@ -1472,37 +1723,44 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: API key to access protected endpoints. Required for all /update/ endpoints.
+      description: API key to access protected endpoints. Required for /update/ endpoints and /admin/cache endpoints.
   schemas:
     CacheRefreshResponse:
       type: object
+      description: |-
+        Body of a refresh that contacted ERNIE. A complete refresh omits `failed`.
+        A partial refresh sets `success` to false and lists the slugs in `failed`.
       properties:
         success:
           type: boolean
           description: True only when every vocabulary cache was written.
         message:
           type: string
-          example: All ERNIE caches refreshed
         failed:
           type: array
-          description: Vocabulary slugs that failed. Present when success is false.
+          description: Vocabulary slugs that failed. Present only on a partial refresh.
           items:
             type: string
-          example:
-            - gemet
         results:
           type: object
           description: Whether each vocabulary cache was written, keyed by slug.
           additionalProperties:
             type: boolean
-          example:
-            resourceTypes: true
-            titleTypes: true
-            gemet: false
       required:
         - success
         - message
         - results
+    CacheStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          $ref: "#/components/schemas/AllCacheStatus"
+      required:
+        - success
+        - status
     ErnieCacheFileStatus:
       type: object
       description: Status of one ERNIE cache file.
@@ -1544,7 +1802,7 @@ components:
     AllCacheStatus:
       type: object
       description: |-
-        Object returned by getAllCacheStatus. This is a map, not a JSON array. Each property is a vocabulary slug and each value is that cache file's status. The status endpoint is not published yet.
+        Map returned by getAllCacheStatus. This is an object, not a JSON array. Each property is a vocabulary slug and each value is that cache file's status. `GET /admin/cache/status` wraps this object in `CacheStatusResponse`.
       properties:
         resourceTypes:
           $ref: "#/components/schemas/ErnieCacheFileStatus"
@@ -1775,40 +2033,52 @@ components:
         - name
         - label
         - description
-    MSLLabsUpdateResponse:
+    MslLaboratoriesResponse:
       type: object
+      description: ERNIE MSL laboratories vocabulary, including file metadata and the laboratory list.
       properties:
-        message:
+        version:
           type: string
-          description: Status message of the update operation
-          example: "MSL Labs vocabulary successfully updated"
-        labs:
+        lastUpdated:
+          type: string
+        total:
+          type: integer
+        data:
           type: array
-          description: List of updated labs
           items:
-            $ref: "#/components/schemas/MSLLab"
+            $ref: "#/components/schemas/MslLaboratory"
       required:
-        - message
-        - labs
-    MSLLab:
+        - data
+    MslLaboratory:
       type: object
       properties:
-        id:
+        identifier:
           type: string
-          description: Unique identifier for the lab
-          example: "lab1"
+          description: Laboratory identifier
+          example: "MSL-001"
         name:
           type: string
-          description: Name of the laboratory
-          example: "Laboratory A"
-        affiliation:
+          description: Laboratory name
+          example: "Max Planck Institute for Astronomy"
+        display_name:
           type: string
-          description: Affiliation of the laboratory
-          example: "University X"
+          description: Label shown in the laboratory select
+          example: "Max Planck Institute for Astronomy - Max Planck Society"
+        affiliation_name:
+          type: string
+          example: "Max Planck Society"
+        affiliation_ror:
+          type: string
+          example: "https://ror.org/05y42nb95"
+        scientific_domain:
+          type: string
+          example: "Astronomy"
+        country:
+          type: string
+          example: "Germany"
       required:
-        - id
-        - name
-        - affiliation
+        - identifier
+        - display_name
     RorAffiliation:
       type: object
       properties:
@@ -1843,35 +2113,6 @@ components:
           example: "An error occurred"
       required:
         - error
-    GcmdVocabularyUpdate:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Status message of the update operation
-          example: "GCMD vocabularies update completed"
-        results:
-          type: object
-          description: Results for each vocabulary type
-          properties:
-            instruments:
-              type: string
-              example: "Updated successfully"
-            sciencekeywords:
-              type: string
-              example: "Updated successfully"
-            platforms:
-              type: string
-              example: "Updated successfully"
-        timestamp:
-          type: string
-          format: date-time
-          description: Time of the update
-          example: "2024-11-17T10:51:38Z"
-      required:
-        - message
-        - results
-        - timestamp
     HealthResponse:
       type: object
       properties:
@@ -1881,6 +2122,42 @@ components:
           example: "I'm still alive..."
       required:
         - message
+    ThesaurusAvailability:
+      type: object
+      description: |-
+        Map of thesaurus slug to availability. Keys are ERNIE slugs such as science_keywords, platforms, instruments, chronostratigraphy, and gemet.
+      additionalProperties:
+        type: object
+        properties:
+          available:
+            type: boolean
+          displayName:
+            type: string
+        required:
+          - available
+          - displayName
+      example:
+        science_keywords:
+          available: true
+          displayName: GCMD Science Keywords
+        platforms:
+          available: true
+          displayName: GCMD Platforms
+    IcgemLookupEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "icgem1.0"
+        description:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
     VocabularyTree:
       type: array
       description: Hierarchical structure of vocabulary terms
