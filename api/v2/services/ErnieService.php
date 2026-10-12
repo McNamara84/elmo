@@ -208,8 +208,8 @@ class ErnieService
 
     /**
      * Checks if a cache file exists and is not expired
-     * 
-     * @param string $Path Path to the cache file
+     *
+     * @param string $cacheFilePath Path to the cache file
      * @return bool True if cache is valid
      */
     private function isCacheFileValid(string $cacheFilePath): bool
@@ -414,7 +414,14 @@ class ErnieService
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * Gets data from ERNIE with full cache fallback chain
+     * Test seam: records the memory key a cache getter is about to use.
+     */
+    protected function recordMemoryLabel(string $label): void
+    {
+    }
+
+    /**
+     * Gets data from ERNIE with full cache fallback chain.
      *
      * Priority:
      * 1. Valid cache file (not expired) — return it, do not call ERNIE
@@ -430,18 +437,11 @@ class ErnieService
      * This runs on the HTTP request that needs the vocab (e.g. GET /vocabs/relations),
      * not at container start.
      *
-     * @param string $label Human-readable label for logging, that matches the key of memory array
-     * @param callable(): array<int, mixed> $fallbackFn Function returning fallback data
+     * @param string $label Human-readable label for logging, matching the key in the memory array
+     * @param callable(): array<mixed> $fallbackFn Function returning fallback data
      * @param (callable(array<mixed>): void)|null $onFreshData Invoked only after a successful live ERNIE fetch and cache write. Not called on cache hit, stale cache, or hardcoded fallback.
      * @return array<mixed> Data from cache, ERNIE, or fallback
      */
-    /**
-     * Test seam: records the memory key a cache getter is about to use.
-     */
-    protected function recordMemoryLabel(string $label): void
-    {
-    }
-
     private function getDataWithCache(
         string $label,
         callable $fallbackFn,
