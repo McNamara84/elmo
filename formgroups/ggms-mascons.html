@@ -7,17 +7,38 @@
 		<div id="group-ggmsmascons">
 			<input type="hidden" id="mascons-payload" name="masconsPayload" value="null">
 			<div class="row">
+				<!-- Grid type -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-select form-control input-with-help input-right-no-round-corners required-on-submit" id="input-mascon-shape" name="mascon_shape">
+								<option value="" selected>Choose...</option>
+								<option value="Equal area">Regular grid</option>
+								<option value="Irregular shapes">Irregular grid</option>
+							</select>
+							<label for="input-mascon-shape">Grid type</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-shape" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>				
 				<!-- Shape of MASCON -->
 				<div class="col-12 col-md-6 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 							<select class="form-select form-control input-with-help input-right-no-round-corners required-on-submit" id="input-mascon-shape" name="mascon_shape">
 								<option value="" selected>Choose...</option>
-								<option value="Equal area">Equal area</option>
+								<option value="Equal area">Rectangle</option>
+								<option value="Equal area">Hexagon</option>
+								<option value="Equal area">Octagon</option>
+								<option value="Equal area">Polygon</option>
 								<option value="Irregular shapes">Irregular shapes</option>
 								<option value="Other">Other</option>
 							</select>
-							<label for="input-mascon-shape">Shape of MASCON</label>
+							<label for="input-mascon-shape">MASCON shape</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -26,12 +47,12 @@
 						</div>
 					</div>
 				</div>
-				<!-- Native resolution -->
+				<!-- MASCON size -->
 				<div class="col-12 col-md-6 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-spatial-resolution" name="mascon_spatial_resolution">
-							<label for="input-mascon-spatial-resolution">Native resolution (in degrees)</label>
+							<label for="input-mascon-spatial-resolution">MASCON size</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -40,12 +61,30 @@
 						</div>
 					</div>
 				</div>
+				<!-- MASCON size unit of measurement -->
+				<div class="col-12 col-md-6 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+						<div class="form-floating">
+							<select class="form-select form-control input-with-help input-right-no-round-corners required-on-submit" id="input-mascon-size-unit" name="mascon_size_unit">
+								<option value="" selected>Choose...</option>
+								<option value="Equal area">m</option>
+								<option value="Equal area">degrees</option>
+							</select>
+							<label for="input-mascon-size-unit">MASCON size unit</label></div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-resolution" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>				
 				<!-- Product resampled resolution -->
 				<div class="col-12 col-md-6 col-lg-3 p-1">
 					<div class="input-group has-validation">
 						<div class="form-floating">
 							<input type="float" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-product-resolution" name="mascon_product_resolution">
-							<label for="input-mascon-product-resolution">Product resolution (in degrees)</label>
+							<label for="input-mascon-product-resolution">Product sampling</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
