@@ -92,7 +92,7 @@ describe('shared affiliation editor', () => {
     input.val('gf').trigger('input'); await tick();
     expect(window.searchAffiliationsFromServer).not.toHaveBeenCalled();
     input.val('gfz').trigger('input'); await tick();
-    expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
+    expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20, {throwOnError: true});
     editor.element.find('[data-affiliation-result]').trigger('click');
     expect(values()).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
     expect(input.val()).toBe('');
@@ -128,5 +128,53 @@ describe('shared affiliation editor', () => {
     const badge = createAffiliationBadge({ label: '<script>text</script>', rorId: 'https://ror.org/04z8jg394' });
     expect(badge.find('script')).toHaveLength(0);
     expect(badge.text()).toBe('<script>text</script> 04z8jg394');
+  });
+  test('keeps an empty edited free-text slot stable when other entries move or are removed', () => {
+    const { editor, values } = mount(['First', 'Second', 'Third']);
+    editor.element.find('[data-affiliation-label]').first().val(' ').trigger('input');
+    expect(editor.validate()).toBe(false);
+    editor.element.find('[data-affiliation-move-up]').last().trigger('click');
+    expect(values().map(item => item.label)).toEqual(['', 'Third', 'Second']);
+    editor.element.find('[data-affiliation-remove]').last().trigger('click');
+    expect(values().map(item => item.label)).toEqual(['', 'Third']);
+    editor.render();
+    expect(editor.validate()).toBe(false);
+    editor.element.find('[data-affiliation-remove]').first().trigger('click');
+    expect(editor.validate()).toBe(true);
+    expect(values()).toEqual([{label: 'Third', rorId: ''}]);
+  });
+  test('searches in separate cards independently and handles no matches', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn(query => Promise.resolve(query === 'One' ? [{mappedValue: 'First result', affiliationIdentifier: 'https://ror.org/04z8jg394'}] : []));
+    const first = mount().editor;
+    const second = mount([], 'contributor').editor;
+    first.setPendingInput('One'); first.element.find('[data-affiliation-input]').trigger('input');
+    second.setPendingInput('Two'); second.element.find('[data-affiliation-input]').trigger('input');
+    await tick();
+    expect(first.element.find('[data-affiliation-result]').text()).toContain('First result');
+    expect(second.element.find('[data-affiliation-result]')).toHaveLength(0);
+    expect(second.element.find('[data-affiliation-status]').text()).toContain('No ROR matches');
+    second.clearPendingInput();
+    expect(first.getPendingInput()).toBe('One');
+    expect(second.getPendingInput()).toBe('');
+  });
+  test('IME composition and other keys keep the input unconfirmed', () => {
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('Lab').trigger('input');
+    input.trigger($.Event('keydown', { key: 'Enter', originalEvent: {isComposing: true} }));
+    input.trigger($.Event('keydown', { key: 'Escape' }));
+    expect(values()).toEqual([]);
+    expect(editor.getPendingInput()).toBe('Lab');
+  });
+  test('keeps free text usable when the search service is absent', async () => {
+    jest.useFakeTimers();
+    const { editor, values } = mount();
+    editor.element.find('[data-affiliation-input]').val('Lab').trigger('input'); await tick();
+    editor.element.find('[data-affiliation-add]').trigger('click');
+    expect(values()).toEqual([{label: 'Lab', rorId: ''}]);
+    expect(normalizeAffiliations(null)).toEqual([]);
+    expect(normalizeAffiliations([{name: 'Name'}, {value: 'Value'}, {label: ''}])).toEqual([{label: 'Name', rorId: ''}, {label: 'Value', rorId: ''}]);
+    expect(createAffiliationBadge({label: 'Free text'}).text()).toBe('Free text');
   });
 });

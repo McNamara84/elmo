@@ -26,7 +26,7 @@ $(document).ready(function () {
     return String(value).split(',').map(role => role.trim()).filter(Boolean);
   }
 
-  function affiliationPairs(value, rorValue) {
+  function affiliationPairs(value, rorValue, keepEmpty = false) {
     let tags = [];
     try {
       const parsed = JSON.parse(value || '[]');
@@ -38,7 +38,7 @@ $(document).ready(function () {
     return tags.map((tag, index) => ({
       label: String(tag?.label ?? tag?.value ?? tag?.name ?? tag).trim(),
       rorId: String(tag?.rorId ?? tag?.id ?? rorIds[index] ?? '').replace(/^https?:\/\/ror\.org\//, '').trim()
-    })).filter(pair => pair.label || pair.rorId);
+    })).filter(pair => keepEmpty || pair.label || pair.rorId);
   }
 
   function field(card, name) {
@@ -80,6 +80,7 @@ $(document).ready(function () {
     return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
       .map(card => {
         const entry = read(card);
+        entry.affiliations = card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getAffiliations() || entry.affiliations;
         const input = card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput() || '';
         if (input) entry._ui = { affiliationInput: input };
         return entry;
@@ -336,7 +337,7 @@ $(document).ready(function () {
       affiliation.type = 'hidden';
       const editor = createAffiliationEditor({
         card, group: 'contributor', translate: t, helpButton: help ? $(help).attr('data-contributor-affiliation-help', '') : undefined,
-        readAffiliations: () => affiliationPairs(affiliation.value, ror.value),
+        readAffiliations: () => affiliationPairs(affiliation.value, ror.value, true),
         writeAffiliations: values => {
           writeTags(affiliation, values);
           ror.value = values.map(item => item.rorId).join(',');
@@ -372,7 +373,7 @@ $(document).ready(function () {
       input._tagify.removeAllTags();
       input._tagify.addTags(tags);
     }
-    input.value = JSON.stringify(tags);
+    input.value = tags.length ? JSON.stringify(tags) : '';
   }
 
   function setContributors(entries, options = {}) {

@@ -5,6 +5,21 @@ const { migratePeopleDraft } = require('../../js/services/authorContributorDraft
 describe('unfinished affiliation drafts', () => {
   beforeEach(() => { document.body.innerHTML = '<form id="form-mde"></form>'; window.ELMO_FEATURES = {}; });
   afterEach(() => { delete window.ELMO_FEATURES; });
+  test.each(['author', 'contributor'])('%s drafts preserve an empty edited label without losing neighboring affiliations', group => {
+    const stack = group === 'author' ? mountAuthorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'First'}, {label: 'Second'}]}])
+      : mountContributorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'First'}, {label: 'Second'}]}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.element.find('[data-affiliation-label]').first().val('').trigger('input');
+    editor.element.find('[data-affiliation-remove]').last().trigger('click');
+    expect(editor.getAffiliations()).toEqual([{label: '', rorId: ''}]);
+    expect(editor.validate()).toBe(false);
+    const entries = stack.collectDraftEntries();
+    if (group === 'author') stack.setAuthors(entries, {restoreUiState: true});
+    else stack.setContributors(entries, {restoreUiState: true});
+    const restored = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    expect(restored.getAffiliations()).toEqual([{label: '', rorId: ''}]);
+    expect(restored.validate()).toBe(false);
+  });
   test('autosave preserves pending-only cards and card order without exporting UI metadata', () => {
     const authors = mountAuthorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'GFZ', rorId: '04z8jg394'}]}]);
     const contributors = mountContributorStack([]);

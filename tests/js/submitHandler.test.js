@@ -1048,4 +1048,20 @@ describe('submitHandler.js', () => {
     delete global.fetch;
   });
 
+  test('submit reveals an invalid contributor label even when native validity already fails', () => {
+    mountContributorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'Lab', rorId: '04z8jg394'}]}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    const label = editor.element.find('[data-affiliation-label]');
+    label.val('').trigger('input');
+    const toggle = document.querySelector('[data-contributor-toggle-edit]');
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(handler.$form[0].checkValidity()).toBe(false);
+    const failed = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(label[0]);
+    expect(failed).toHaveBeenCalled();
+  });
+
 });

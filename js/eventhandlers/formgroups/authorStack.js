@@ -553,7 +553,7 @@ $(document).ready(function () {
   }
 
   function writeAffiliations(row, affiliationName, rorName, affiliations) {
-    const normalizedAffiliations = normalizeAffiliations(affiliations);
+    const normalizedAffiliations = normalizeAffiliations(affiliations, { keepEmpty: true });
     const affiliationInput = row.find(`input[name="${affiliationName}"]`);
     const rorInput = row.find(`input[name="${rorName}"]`);
     const tagifyElement = affiliationInput.get(0);
@@ -748,24 +748,24 @@ $(document).ready(function () {
     }
   }
 
-  function buildAffiliations(row, affiliationName, rorName) {
+  function buildAffiliations(row, affiliationName, rorName, keepEmpty = false) {
     const affiliationInput = row.find(`input[name="${affiliationName}"]`);
     const rorIds = parseRorIds(row.find(`input[name="${rorName}"]`).val());
 
     return parseAffiliationValues(affiliationInput)
       .map(function (affiliation, index) {
-        const label = affiliation.label || affiliation.name || affiliation.value || '';
+        const label = affiliation.label ?? affiliation.name ?? affiliation.value ?? '';
         const rorId = affiliation.rorId || affiliation.id || rorIds[index] || '';
         return { label, rorId };
       })
       .filter(function (affiliation) {
-        return affiliation.label !== '' || affiliation.rorId !== '';
+        return keepEmpty || affiliation.label !== '' || affiliation.rorId !== '';
       });
   }
 
   function getRowAffiliations(row) {
     const config = getAffiliationFieldConfig(row);
-    return buildAffiliations(row, config.affiliationName, config.rorName);
+    return buildAffiliations(row, config.affiliationName, config.rorName, true);
   }
 
   function renderAffiliationEditor(row) {
@@ -914,6 +914,7 @@ $(document).ready(function () {
       const row = $(this);
       const input = row.find('[data-affiliation-editor]')[0]?.affiliationEditor.getPendingInput() || '';
       const entry = getEntryType(row) === 'person' ? readPerson(row, entries.length, true) : readInstitution(row, entries.length, true);
+      entry.affiliations = row.find('[data-affiliation-editor]')[0]?.affiliationEditor.getAffiliations() || entry.affiliations;
       if (!input.trim() && !(entry.type === 'person' ? hasPersonContent(entry) : hasInstitutionContent(entry))) return;
       if (input) entry._ui = { affiliationInput: input };
       entries.push(entry);

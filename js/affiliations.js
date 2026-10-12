@@ -9,7 +9,7 @@ var affiliationsData = [];
  * @param {number} [limit=20] - Maximum number of results
  * @returns {Promise<Array>} Array of matching affiliations
  */
-async function searchAffiliationsFromServer(query, limit = 20) {
+async function searchAffiliationsFromServer(query, limit = 20, { throwOnError = false } = {}) {
   if (!query || query.length < 2) {
     return [];
   }
@@ -21,6 +21,7 @@ async function searchAffiliationsFromServer(query, limit = 20) {
     }
     return await response.json();
   } catch (error) {
+    if (throwOnError) throw error;
     console.error('Affiliation search error:', error);
     return [];
   }

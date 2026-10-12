@@ -1,39 +1,36 @@
 /** Shared affiliation UI. Stacks own the compatible fields and ordered metadata payloads. */
 export function normalizeRorId(value) {
-    if (!value) {
-      return '';
-    }
+  if (!value) return '';
 
-    return String(value).trim().replace(/^https?:\/\/ror\.org\//, '');
-  }
+  return String(value).trim().replace(/^https?:\/\/ror\.org\//, '');
+}
 
-export function normalizeAffiliations(affiliations) {
-    if (!Array.isArray(affiliations)) {
-      return [];
-    }
+// Editor drafts keep empty slots until the user repairs or removes their labels.
+export function normalizeAffiliations(affiliations, { keepEmpty = false } = {}) {
+  if (!Array.isArray(affiliations)) return [];
 
-    return affiliations
-      .map(function (affiliation) {
-        if (typeof affiliation === 'string') {
-          return { label: affiliation, rorId: '' };
-        }
+  return affiliations
+    .map(function (affiliation) {
+      if (typeof affiliation === 'string') {
+        return { label: affiliation, rorId: '' };
+      }
 
-        const label = affiliation.label ?? affiliation.name ?? affiliation.value ?? '';
-        const rorId = normalizeRorId(affiliation.rorId || affiliation.id || affiliation.affiliationIdentifier || '');
-        return { label, rorId };
-      })
-      .filter(function (affiliation) {
-        return affiliation.label !== '' || affiliation.rorId !== '';
-      });
-  }
+      const label = affiliation.label ?? affiliation.name ?? affiliation.value ?? '';
+      const rorId = normalizeRorId(affiliation.rorId || affiliation.id || affiliation.affiliationIdentifier || '');
+      return { label, rorId };
+    })
+    .filter(function (affiliation) {
+      return keepEmpty || affiliation.label !== '' || affiliation.rorId !== '';
+    });
+}
 
 export function createAffiliationBadge(affiliation) {
-    const badge = $('<span class="badge elmo-badge border text-body-secondary"></span>');
-    const label = affiliation.label || '';
-    const rorId = normalizeRorId(affiliation.rorId || '');
-    badge.text(rorId ? `${label} ${rorId}` : label);
-    return badge;
-  }
+  const badge = $('<span class="badge elmo-badge border text-body-secondary"></span>');
+  const label = affiliation.label || '';
+  const rorId = normalizeRorId(affiliation.rorId || '');
+  badge.text(rorId ? `${label} ${rorId}` : label);
+  return badge;
+}
 
 export function createAffiliationEditor(options) {
   const row = $(options.card);
@@ -58,7 +55,7 @@ export function createAffiliationEditor(options) {
 
   function updatePayload() { options.onChange?.(); }
   function setRowAffiliations(_row, values, settings = {}) {
-    options.writeAffiliations(normalizeAffiliations(values));
+    options.writeAffiliations(normalizeAffiliations(values, { keepEmpty: true }));
     if (settings.render !== false) renderAffiliationEditor(row);
     else validateAffiliationEditor(row);
   }
@@ -170,9 +167,7 @@ export function createAffiliationEditor(options) {
         label: String(chip.find('[data-affiliation-label]').val() || '').trim(),
         rorId: normalizeRorId(chip.attr('data-affiliation-ror-id') || chip.find('[data-affiliation-ror]').text())
       };
-    }).get().filter(function (affiliation) {
-      return affiliation.label !== '' || affiliation.rorId !== '';
-    });
+    }).get();
   }
 
 
@@ -273,10 +268,10 @@ export function createAffiliationEditor(options) {
     }
 
     normalizedResults.forEach(function (affiliation) {
-      const button = $('<button type="button" class="list-group-item list-group-item-action d-flex justify-content-between gap-2" data-affiliation-result></button>')
+      const button = $('<button type="button" class="list-group-item list-group-item-action d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2" data-affiliation-result></button>')
         .attr('data-affiliation-label-value', affiliation.label)
         .attr('data-affiliation-ror-value', affiliation.rorId);
-      button.append($('<span></span>').text(affiliation.label));
+      button.append($('<span class="text-break"></span>').text(affiliation.label));
       if (affiliation.rorId) {
         button.append($('<span class="badge elmo-badge border text-body-secondary"></span>').text(affiliation.rorId));
       }
@@ -308,7 +303,7 @@ export function createAffiliationEditor(options) {
     searchStatus = 'loading';
     updateAffiliationEditorTexts(element);
     let results;
-    try { results = await searchFunction(query, 20); }
+    try { results = await searchFunction(query, 20, { throwOnError: true }); }
     catch (_error) {
       if (!destroyed && requestVersion === requestId) {
         searchStatus = 'error';
