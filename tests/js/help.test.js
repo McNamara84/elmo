@@ -176,11 +176,15 @@ describe('help.html visibility', () => {
       'help-mascon-resolution',
       'help-mascon-size',
       'help-mascon-product-sampling',
+      'help-mascon-classification-mask',
       'help-mascon-count',
       'help-land-mask',
       'help-mascon-uncertainty',
       'help-mascon-scale-factor',
       'help-mascon-gad',
+      'help-mascon-regularization',
+      'help-mascon-regularization-method',
+      'help-mascon-correlation-model',
       'help-mascon-background-models',
     ];
     ids.forEach((id) => {

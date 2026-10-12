@@ -69,7 +69,8 @@ function toggleMasconSpecificGroups() {
 function toggleMasconVariable() {
 	const switchValue = String($(this).val() || '');
 	const inputField = this.id.replace(/-switch$/, '');
-	if (switchValue.toLowerCase() === 'given') {
+	const visibleValues = ['given', 'yes', 'applied'];
+	if (visibleValues.includes(switchValue.toLowerCase())) {
 		visibilityON($('#' + inputField).closest('.col-12'));
 	} else {
 		visibilityOFF($('#' + inputField).closest('.col-12'));

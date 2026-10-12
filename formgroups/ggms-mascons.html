@@ -98,6 +98,27 @@
 			</div>
 
 			<div class="row mt-2">
+				<!-- Classification mask -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-select form-control input-with-help input-right-no-round-corners" id="input-mascon-classification-mask" name="mascon_classification_mask">
+								<option value="" selected>Choose...</option>
+								<option value="Not given">Not given</option>
+								<option value="Land/Ocean Mask">Land/Ocean Mask</option>
+								<option value="Hydrological Basins">Hydrological Basins</option>
+								<option value="Ice Sheets">Ice Sheets</option>
+								<option value="Administrative Regions">Administrative Regions</option>
+							</select>
+							<label for="input-mascon-classification-mask">Classification mask</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-classification-mask" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
 				<!-- Land mask -->
 				<!-- switch -->
 				<div class="col-12 col-md-3 col-lg-3 p-1">
@@ -133,10 +154,10 @@
 						<div class="form-floating">
 						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty-switch" name="mascon_uncertainty_switch" required>
 							<option value="" selected>Choose...</option>
-							<option value="given">Given</option>
-							<option value="not_given">Not given</option>
+							<option value="yes">Yes</option>
+							<option value="no">No</option>
 						</select>
-						<label for="input-mascon-uncertainty-switch">Uncertainty</label>
+						<label for="input-mascon-uncertainty-switch">Uncertainty information</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -151,7 +172,7 @@
 						<div class="form-floating">
 							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-uncertainty" name="uncertainty">
 							<label for="input-mascon-uncertainty">Uncertainty details</label>
-							<div class="invalid-feedback">Please provide uncertainty or choose "Not given".</div>
+							<div class="invalid-feedback">Please provide uncertainty details or select "No".</div>
 						</div>
 					</div>
 				</div>
@@ -191,10 +212,10 @@
 						<div class="form-floating">
 						<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad-switch" name="mascon_gad_switch">
 							<option value="" selected>Choose...</option>
-							<option value="given">Given</option>
-							<option value="not_given">Not given</option>
+							<option value="yes">Yes</option>
+							<option value="no">No</option>
 						</select>
-						<label for="input-mascon-gad-switch">GAD</label>
+						<label for="input-mascon-gad-switch">GAD correction</label>
 						</div>
 						<div class="input-group-append">
 							<span class="input-group-text">
@@ -207,8 +228,72 @@
 					<div class="input-group has-validation">
 						<div class="form-floating">
 							<input type="text" class="form-control input-with-help input-right-no-round-corners" id="input-mascon-gad" name="mascon_gad">
-							<label for="input-mascon-gad">GAD <span class="text-danger">*</span></label>
-							<div class="invalid-feedback">Please provide GAD.</div>
+							<label for="input-mascon-gad">GAD details</label>
+							<div class="invalid-feedback">Please provide GAD details or select "No".</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="row mt-2">
+				<!-- Regularization -->
+				<div class="col-12 col-md-3 col-lg-3 p-1">
+					<div class="input-group has-validation">
+						<div class="form-floating">
+							<select class="form-control input-with-help input-right-no-round-corners" id="input-mascon-regularization-switch" name="mascon_regularization_switch">
+								<option value="" selected>Choose...</option>
+								<option value="applied">Applied</option>
+								<option value="not_applied">Not applied</option>
+							</select>
+							<label for="input-mascon-regularization-switch">Regularization</label>
+						</div>
+						<div class="input-group-append">
+							<span class="input-group-text">
+								<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-regularization" aria-hidden="true"></i>
+							</span>
+						</div>
+					</div>
+				</div>
+				<!-- Regularization details (shown when Regularization=Applied) -->
+				<div class="col-12 col-md-9 col-lg-9 p-1" id="input-mascon-regularization">
+					<div class="row g-1">
+						<div class="col-12 col-md-6">
+							<div class="input-group has-validation">
+								<div class="form-floating">
+									<select class="form-select form-control input-with-help input-right-no-round-corners" id="input-mascon-regularization-method" name="mascon_regularization_method">
+										<option value="" selected>Choose...</option>
+										<option value="Not regularised">Not regularised</option>
+										<option value="L-Curve">L-Curve</option>
+										<option value="Variance Component Estimation (VCE)">Variance Component Estimation (VCE)</option>
+										<option value="Kaula">Kaula</option>
+										<option value="Other">Other</option>
+									</select>
+									<label for="input-mascon-regularization-method">Regularization method</label>
+								</div>
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-regularization-method" aria-hidden="true"></i>
+									</span>
+								</div>
+							</div>
+						</div>
+						<div class="col-12 col-md-6">
+							<div class="input-group has-validation">
+								<div class="form-floating">
+									<select class="form-select form-control input-with-help input-right-no-round-corners" id="input-mascon-correlation-model" name="mascon_correlation_model">
+										<option value="" selected>Choose...</option>
+										<option value="VADER Filter">VADER Filter</option>
+										<option value="Laplacian Filter">Laplacian Filter</option>
+										<option value="Gaussian Filter">Gaussian Filter</option>
+										<option value="Other">Other</option>
+									</select>
+									<label for="input-mascon-correlation-model">Correlation model / matrix (optional)</label>
+								</div>
+								<div class="input-group-append">
+									<span class="input-group-text">
+										<i class="bi bi-question-circle-fill" data-help-section-id="help-mascon-correlation-model" aria-hidden="true"></i>
+									</span>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>

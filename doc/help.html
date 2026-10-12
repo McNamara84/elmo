@@ -1709,6 +1709,10 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <h4>Product sampling</h4>
                     <p>A uniform grid characterized by a fixed angular resolution (in degrees). Resolution provided in the NetCDF file.</p>
                 </div>
+                <div id="help-mascon-classification-mask">
+                    <h4>Classification mask</h4>
+                    <p>Classification layer used with the MASCON solution, such as Land/Ocean Mask, Hydrological Basins, Ice Sheets, or Administrative Regions.</p>
+                </div>
                 <div id="help-mascon-count">
                     <h4>Mascon count</h4>
                     <p>Number of tiles/cells in the model file.</p>
@@ -1718,16 +1722,28 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <p>Whether the landmask is provided in the model file.</p>
                 </div>
                 <div id="help-mascon-uncertainty">
-                    <h4>Uncertainty</h4>
-                    <p>Whether the uncertainty estimations are provided in the model file.</p>
+                    <h4>Uncertainty information</h4>
+                    <p>Uncertainty grid provided at MASCON resolution.</p>
                 </div>
                 <div id="help-mascon-scale-factor">
                     <h4>Scale Factor</h4>
                     <p>Whether a scale factor is provided in the model file.</p>
                 </div>
                 <div id="help-mascon-gad">
-                    <h4>GAD</h4>
-                    <p>Whether the GAD information is provided in the model file.</p>
+                    <h4>GAD correction</h4>
+                    <p>Inclusion of the GRACE/GRACE-FO GAD product.</p>
+                </div>
+                <div id="help-mascon-regularization">
+                    <h4>Regularization</h4>
+                    <p>Indicates whether regularization was applied to the MASCON solution.</p>
+                </div>
+                <div id="help-mascon-regularization-method">
+                    <h4>Regularization method</h4>
+                    <p>Method used to regularize the solution, for example L-Curve, Variance Component Estimation (VCE), or Kaula, including any scaling coefficient controlling regularization strength.</p>
+                </div>
+                <div id="help-mascon-correlation-model">
+                    <h4>Correlation model / matrix</h4>
+                    <p>Optional correlation model or matrix (for example VADER, Laplacian, or Gaussian filter) applied in the regularization workflow.</p>
                 </div>
                 <div id="help-mascon-background-models">
                     <h4>Background force models</h4>
