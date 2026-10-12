@@ -177,7 +177,7 @@ function setupModelTypes() {
 
 /**
  * Restores a previously selected mathematical representation after the vocab
- * dropdown is rebuilt. Upload can set MASCON while options are still loading.
+ * dropdown is rebuilt, when that value is one of the loaded options.
  */
 function restoreMathematicalRepresentation(selectElement, value) {
     const target = (value || '').toString().trim();
@@ -199,16 +199,7 @@ function restoreMathematicalRepresentation(selectElement, value) {
 
     if (matched !== null) {
         selectElement.val(matched);
-        return;
     }
-
-    selectElement.append(
-        $("<option>", {
-            value: target,
-            text: target
-        })
-    );
-    selectElement.val(target);
 }
 
 function setupMathReps() {

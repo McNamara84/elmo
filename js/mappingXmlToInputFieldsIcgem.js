@@ -233,7 +233,7 @@ function populateIcgemDefinition(data) {
 
   if (scalars.mathematicalRepresentation) {
     const $select = $('#input-mathematical-representation');
-    if (!selectOrCreateOption($select, scalars.mathematicalRepresentation)) {
+    if (!selectOptionByText($select, scalars.mathematicalRepresentation)) {
       $select.val(scalars.mathematicalRepresentation);
     }
     $select.trigger('change');
@@ -863,7 +863,7 @@ if (typeof module !== 'undefined' && module.exports) {
     parseIcgemXml,
     leafChildren,
     selectOptionByText,
-    selectOrCreateOption,
+    
     reverseDensityType,
     groupIcgemDataSourcesForForm,
     ensureDataSourceRows,

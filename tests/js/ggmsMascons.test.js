@@ -208,7 +208,21 @@ describe('populateIcgemDefinition MASCON upload', () => {
         jest.resetModules();
     });
 
-    test('creates a MASCON option when the vocab dropdown has not loaded yet', () => {
+    test('selects MASCON when that option is already in the dropdown', () => {
+        const $select = $('#input-mathematical-representation');
+        $select.append($('<option>', { value: 'MASCON', text: 'MASCON' }));
+
+        icgemModule.populateIcgemDefinition({
+            scalars: { mathematicalRepresentation: 'MASCON' }
+        });
+
+        expect($select.find('option').filter(function () {
+            return $(this).text() === 'MASCON';
+        }).length).toBe(1);
+        expect($select.val()).toBe('MASCON');
+    });
+
+    test('does not invent a MASCON option when the vocab dropdown has not loaded', () => {
         icgemModule.populateIcgemDefinition({
             scalars: { mathematicalRepresentation: 'MASCON' }
         });
@@ -216,12 +230,7 @@ describe('populateIcgemDefinition MASCON upload', () => {
         const $select = $('#input-mathematical-representation');
         expect($select.find('option').filter(function () {
             return $(this).text() === 'MASCON';
-        }).length).toBe(1);
-        expect($select.val()).toBe('MASCON');
-    });
-
-    test('selectOrCreateOption is a no-op for empty selects', () => {
-        expect(icgemModule.selectOrCreateOption($('#missing'), 'MASCON')).toBe(false);
-        expect(icgemModule.selectOrCreateOption($('#input-mathematical-representation'), '')).toBe(false);
+        }).length).toBe(0);
+        expect($select.val()).not.toBe('MASCON');
     });
 });
