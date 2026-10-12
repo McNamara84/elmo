@@ -246,9 +246,9 @@ The following third-party dependencies are included in header.php and footer.htm
 - [jQuery 4](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
-  Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
+  Provides sortable card stacks and autocomplete helpers.
 - [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
-  Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
+  Is used for Thesaurus Keywords, contributor roles, and free keywords.
 - [jsTree 3](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
@@ -391,6 +391,11 @@ npm install
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Author(s)
+
+Authors and Contributors share an affiliation editor for both persons and institutions. ROR suggestions appear automatically after three characters. Selecting a result adds its label and ROR ID; **Add free text** or Enter adds the input without a ROR ID. The button is disabled for empty input. Confirmed affiliations can be edited, reordered, or removed, and editing a label preserves its ROR ID. Contributor card headers show ORCID identifiers for persons and affiliation labels with ROR IDs for both types.
+
+Saving, submitting, or collapsing a card requires confirming or discarding unfinished affiliation input. Autosave preserves this input in the draft so it can be restored without adding it to exported metadata. Empty edited labels must be corrected or removed before saving or submitting.
+
 #### Author Persons
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
@@ -1568,7 +1573,7 @@ If the row is completely empty, all fields remain optional.
 
 **Author institution:**
 For each Author institution row:
-If Author institution affiliation is filled (either as plain text or via Tagify tags), then:
+If an Author institution affiliation is confirmed in the affiliation editor, then:
 **Author institution name** becomes required.
 If the affiliation is empty, the institution name is not required.
 

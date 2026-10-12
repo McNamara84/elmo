@@ -100,9 +100,8 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.locator('[data-contributor-add-type="institution"]').click();
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('input[id^="input-contributor-organisationrole-"]');
-      const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
       const roleReady = !!(roleInput && (roleInput._tagify || roleInput.tagify));
-      const affiliationReady = !!(affiliationInput && (affiliationInput.tagify || affiliationInput._tagify));
+      const affiliationReady = !!(document.querySelector('[data-affiliation-editor]') as any)?.affiliationEditor;
       return roleReady && affiliationReady;
     });
 
@@ -133,9 +132,9 @@ test.describe('Contributor (Institutions) form group', () => {
     const roleHelpIcon = formGroup.locator('[data-help-section-id="help-contributorinstitutions-organisationrole"]');
     await expect(roleHelpIcon).toHaveCount(1);
 
-    const affiliationTagify = formGroup.locator('.tagify').nth(1);
-    await expect(affiliationTagify).toBeVisible();
-    await expect(affiliationTagify.locator('.tagify__input')).toHaveAttribute('data-placeholder', 'Affiliation');
+    const affiliationEditor = formGroup.locator('[data-affiliation-editor]');
+    await expect(affiliationEditor).toBeVisible();
+    await expect(affiliationEditor.locator('[data-affiliation-input]')).toHaveAttribute('placeholder', 'Affiliation');
 
     const affiliationLabel = formGroup.locator('label[for^="input-contributor-organisationaffiliation-"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
@@ -175,8 +174,9 @@ test.describe('Contributor (Institutions) form group', () => {
   test('updates hidden ROR identifier when affiliations change', async ({ page }) => {
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
-      affiliationInput._tagify.removeAllTags();
-      affiliationInput._tagify.addTags([
+      const affiliationEditor = affiliationInput.closest('[data-contributor-card]').querySelector('[data-affiliation-editor]').affiliationEditor;
+      affiliationEditor.setAffiliations([]);
+      affiliationEditor.setAffiliations([
         { value: 'Fraunhofer Institute for Open Communication Systems FOKUS', id: 'https://ror.org/019wvm592' },
         { value: 'Brown University', id: 'https://ror.org/05p8bnz29' }
       ]);
@@ -186,7 +186,8 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
-      affiliationInput._tagify.removeAllTags();
+      const affiliationEditor = affiliationInput.closest('[data-contributor-card]').querySelector('[data-affiliation-editor]').affiliationEditor;
+      affiliationEditor.setAffiliations([]);
     });
 
     await expect(page.locator('input[id^="input-contributor-organisationrorid-"]')).toHaveValue('');
@@ -201,7 +202,8 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
-      affiliationInput._tagify.addTags([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
+      const affiliationEditor = affiliationInput.closest('[data-contributor-card]').querySelector('[data-affiliation-editor]').affiliationEditor;
+      affiliationEditor.setAffiliations([{ value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27' }]);
       (window as any).validateAllMandatoryFields();
     });
 
@@ -213,7 +215,8 @@ test.describe('Contributor (Institutions) form group', () => {
 
     await page.evaluate(() => {
       const affiliationInput: any = document.querySelector('input[id^="input-contributor-organisationaffiliation-"]');
-      affiliationInput._tagify.removeAllTags();
+      const affiliationEditor = affiliationInput.closest('[data-contributor-card]').querySelector('[data-affiliation-editor]').affiliationEditor;
+      affiliationEditor.setAffiliations([]);
       (window as any).validateAllMandatoryFields();
     });
 
@@ -262,7 +265,7 @@ test.describe('Contributor (Institutions) form group', () => {
     await page.waitForFunction(() => {
       const inputs = document.querySelectorAll('input[name="OrganisationAffiliation[]"]');
       const second: any = inputs[0];
-      return !!(second && (second.tagify || second._tagify));
+      return !!second?.closest('[data-contributor-card]')?.querySelector('[data-affiliation-editor]');
     });
 
     

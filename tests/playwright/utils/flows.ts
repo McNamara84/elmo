@@ -237,7 +237,7 @@ async function addContributorPerson(
 
   // Fill affiliation using tagify
   // While for this field the title for this field is Affiliation. Without (s) 
-  const affiliationTagifyInput = contributorRow.locator('.tagify__input[title^="Affiliation"]');
+  const affiliationTagifyInput = contributorRow.locator('[data-affiliation-input]');
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');
@@ -287,7 +287,7 @@ async function addContributorInstitution(
   )).toBe(true);
 
   // Fill the affiliation into the tagify field 
-  const affiliationTagifyInput = institutionRow.locator('.tagify__input[title="Affiliation"]');
+  const affiliationTagifyInput = institutionRow.locator('[data-affiliation-input]');
   await affiliationTagifyInput.click();
   await affiliationTagifyInput.type(data.affiliation);
   await page.keyboard.press('Enter');

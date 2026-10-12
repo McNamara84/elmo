@@ -9,9 +9,6 @@ import {
 
 // ─── selectors ────────────────────────────────────────────────────────────────
 const AUTHOR_GROUP     = '#group-author';
-const AFFIL_EDIT_MODAL = '#modal-affiliation-edit';
-const AFFIL_EDIT_INPUT = '#input-affiliation-edit-value';
-const AFFIL_EDIT_SAVE  = '#button-affiliation-edit-save';
 const SAVE_ENDPOINT    = '**/save/save_data.php';
 
 // ─── helpers ──────────────────────────────────────────────────────────────────
@@ -33,7 +30,6 @@ async function selectAffiliationFromDropdown(
   const searchInput = editor.locator('[data-author-affiliation-input]');
   await searchInput.scrollIntoViewIfNeeded();
   await searchInput.fill(searchTerm);
-  await editor.locator('[data-author-affiliation-search]').click();
 
   const firstResult = editor.locator('[data-author-affiliation-result]').first();
   await expect(firstResult).toBeVisible({ timeout: 15_000 });
@@ -53,36 +49,16 @@ async function selectAffiliationFromDropdown(
 }
 
 /**
- * Injects an affiliation tag directly via the Tagify JS API without going through
- * the autocomplete UI. Useful when the ROR id is known upfront (e.g. for cancel tests).
+ * Sets a confirmed affiliation when the label and ROR ID are known upfront.
  */
-async function injectAffiliationTag(
-  page: Page,
-  row: Locator,
-  tagData: { value: string; id: string },
-) {
-  const affiliationInput = row.locator('input[id$="affiliation"], input[id$="affiliation-0"], input[id^="input-contributor-organisationaffiliation"]').first();
-
-  await expect(async () => {
-    const initialized = await affiliationInput.evaluate(
-      (el: any) => !!el._tagify,
-    );
-    expect(initialized).toBe(true);
-  }).toPass({ timeout: 10_000 });
-
-  const initialCount = await row.locator('tag').count();
-  await affiliationInput.evaluate(
-    (el: any, data: { value: string; id: string }) => el._tagify.addTags([data]),
-    tagData,
-  );
-  await expect(row.locator('tag')).toHaveCount(initialCount + 1, {
-    timeout: 5_000,
-  });
+async function injectAffiliationTag(page: Page, row: Locator, tagData: {value: string; id: string}) {
+  await row.locator('[data-affiliation-editor]').evaluate((element: any, data) => {
+    element.affiliationEditor.setAffiliations([{label: data.value, rorId: data.id}]);
+  }, tagData);
 }
 
 /**
- * Opens the pencil-icon edit modal for the tag whose `title` attribute equals
- * `currentLabel`, types `newLabel`, and confirms with the Save button.
+ * Edits the matching confirmed affiliation label inline.
  */
 async function editAffiliationLabel(
   page: Page,
@@ -271,55 +247,16 @@ test.describe('Affiliation tag label editing', () => {
     },
   );
 
-  /**
-   * Test 2 – cancel guard:
-   * Opens the edit modal for a tag that has a known ROR id, types a new value,
-   * cancels, and confirms the tag still displays the original label.
-   * No save is required because this is a purely UI-level assertion.
-   */
-  test(
-    'cancelling the affiliation edit modal leaves the original tag label unchanged',
-    async ({ page }) => {
-      test.slow();
+  test('discarding pending contributor input keeps the confirmed label and ROR ID', async ({ page }) => {
+    await completeMinimalDatasetForm(page);
+    await page.locator('[data-contributor-add-type="institution"]').click();
+    const row = page.locator('[data-contributor-type="institution"]').first();
+    await injectAffiliationTag(page, row, {value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27'});
+    await row.locator('[data-affiliation-input]').fill('Text to discard');
+    await row.locator('[data-contributor-toggle-edit]').click();
+    await row.locator('[data-affiliation-discard]').click();
+    await expect(row.locator('[data-affiliation-label]')).toHaveValue('Technical University of Berlin');
+    await expect(row.locator('[data-affiliation-ror]')).toHaveText('01bj3aw27');
+  });
 
-      await completeMinimalDatasetForm(page);
-
-      await page.locator('[data-contributor-add-type="institution"]').click();
-      const contributorInstitutionRow = page
-        .locator('[data-contributor-card][data-contributor-type="institution"]')
-        .first();
-
-      // Inject a tag with a known ROR id directly via the Tagify JS API
-      const ORIGINAL_LABEL = 'Technical University of Berlin';
-      const ORIGINAL_ROR   = 'https://ror.org/01bj3aw27';
-      await injectAffiliationTag(page, contributorInstitutionRow, {
-        value: ORIGINAL_LABEL,
-        id:    ORIGINAL_ROR,
-      });
-
-      // Open the edit dialog
-      const tag = contributorInstitutionRow.locator(`tag[title="${ORIGINAL_LABEL}"]`);
-      await tag.locator('.tagify__tag__editBtn').click();
-
-      const modal = page.locator(AFFIL_EDIT_MODAL);
-      await expect(modal).toBeVisible({ timeout: 5_000 });
-
-      // Type a replacement value – should be discarded on cancel
-      await page.locator(AFFIL_EDIT_INPUT).fill('random stuff – should be discarded');
-
-      // Cancel via the Cancel button (not the X close button)
-      await page.getByRole('button', { name: 'Cancel' }).click();
-      await expect(modal).toBeHidden({ timeout: 5_000 });
-
-      // The original tag must still be present with its original label
-      await expect(
-        contributorInstitutionRow.locator(`tag[title="${ORIGINAL_LABEL}"]`),
-      ).toBeVisible({ timeout: 5_000 });
-
-      await expect(
-        contributorInstitutionRow.locator('tags.tagify').filter({ hasText: ORIGINAL_LABEL }),
-        'Tagify container must still contain the original label',
-      ).toHaveCount(1);
-    },
-  );
 });
