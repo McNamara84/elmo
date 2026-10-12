@@ -114,6 +114,8 @@ function payload(values, name) {
     for (const key of ['familyname', 'givenname', 'institutionname', 'orcid', 'email', 'website']) {
       if (entry[key] != null && typeof entry[key] !== 'string') throw invalidPeopleDraft();
     }
+    if (entry._ui != null && (typeof entry._ui !== 'object' || Array.isArray(entry._ui) ||
+      (entry._ui.affiliationInput != null && typeof entry._ui.affiliationInput !== 'string'))) throw invalidPeopleDraft();
     if (entry.isContact != null && typeof entry.isContact !== 'boolean') throw invalidPeopleDraft();
     if (entry.roles != null && (!Array.isArray(entry.roles) || entry.roles.some(role =>
       typeof role !== 'string' && (!role || typeof role.value !== 'string')))) throw invalidPeopleDraft();

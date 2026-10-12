@@ -76,6 +76,22 @@ $(document).ready(function () {
       entry.roles.length || entry.affiliations.length || entry.email || entry.website);
   }
 
+  function collectDraftEntries() {
+    return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
+      .map(card => {
+        const entry = read(card);
+        const input = card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput() || '';
+        if (input) entry._ui = { affiliationInput: input };
+        return entry;
+      }).filter(entry => hasContent(entry) || entry._ui?.affiliationInput.trim())
+      .map((entry, order) => ({ ...entry, order }));
+  }
+
+  function setEntryAffiliations(card, values) {
+    const element = card?.jquery ? card[0] : card;
+    element?.querySelector('[data-affiliation-editor]')?.affiliationEditor.setAffiliations(values);
+  }
+
   function collectPayload() {
     return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
       .map(read).filter(hasContent).map((entry, order) => ({ ...entry, order }));
@@ -359,7 +375,7 @@ $(document).ready(function () {
     input.value = JSON.stringify(tags);
   }
 
-  function setContributors(entries) {
+  function setContributors(entries, options = {}) {
     rendering = true;
     stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.destroy());
     stack.replaceChildren();
@@ -386,7 +402,9 @@ $(document).ready(function () {
       field(card, person ? 'cbpRorIds[]' : 'hiddenOrganisationRorId[]').value = affiliations.map(item => item.rorId).join(',');
       field(card, 'cbContactEmail[]').value = entry.email || '';
       field(card, 'cbContactWebsite[]').value = entry.website || '';
-      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.render();
+      const editor = card.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      editor?.render();
+      if (options.restoreUiState) editor?.setPendingInput(entry._ui?.affiliationInput || '');
     });
     rendering = false;
     updatePayload();
@@ -450,6 +468,8 @@ $(document).ready(function () {
     addPerson: () => add('person'),
     addInstitution: () => add('institution'),
     collectPayload,
+    collectDraftEntries,
+    setEntryAffiliations,
     updatePayload,
     setContributors
   };

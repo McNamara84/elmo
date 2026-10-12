@@ -214,7 +214,13 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
 
   row.find(`input[id^="${fieldMapping.rorId}"]`).val(rorIdsArray.join(','));
 
-  row.get(0)?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
+  const card = row.closest('[data-author-card], [data-contributor-card]');
+  const stack = card.is('[data-contributor-card]') ? window.contributorStack : window.authorStack;
+  if (card.length && typeof stack?.setEntryAffiliations === 'function') {
+    stack.setEntryAffiliations(card[0], affiliationObjects);
+  } else {
+    row.get(0)?.dispatchEvent(new CustomEvent('author-affiliations:changed', { bubbles: true }));
+  }
 }
 
 /**

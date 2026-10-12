@@ -625,7 +625,7 @@ $(document).ready(function () {
     return Array.isArray(authors) ? authors : [];
   }
 
-  function setAuthors(authors) {
+  function setAuthors(authors, options = {}) {
     const normalizedAuthors = normalizeAuthorsInput(authors);
     let keptPersonAddButton = false;
     let keptInstitutionAddButton = false;
@@ -654,6 +654,7 @@ $(document).ready(function () {
 
       stack.append(row);
       initializeAffiliationAutocomplete(row);
+      if (options.restoreUiState) row.find('[data-affiliation-editor]')[0]?.affiliationEditor.setPendingInput(author._ui?.affiliationInput || '');
       initializeTooltips(row);
     });
 
@@ -878,7 +879,7 @@ $(document).ready(function () {
     return replacement;
   }
 
-  function readPerson(row, order) {
+  function readPerson(row, order, includeEmpty = false) {
     const author = {
       type: 'person',
       entryKey: row.attr('data-author-entry-key') || `author-person-${order}`,
@@ -892,10 +893,10 @@ $(document).ready(function () {
       affiliations: buildAffiliations(row, 'personAffiliation[]', 'authorPersonRorIds[]')
     };
 
-    return hasPersonContent(author) ? author : null;
+    return includeEmpty || hasPersonContent(author) ? author : null;
   }
 
-  function readInstitution(row, order) {
+  function readInstitution(row, order, includeEmpty = false) {
     const author = {
       type: 'institution',
       entryKey: row.attr('data-author-entry-key') || `author-institution-${order}`,
@@ -904,7 +905,24 @@ $(document).ready(function () {
       affiliations: buildAffiliations(row, 'institutionAffiliation[]', 'authorInstitutionRorIds[]')
     };
 
-    return hasInstitutionContent(author) ? author : null;
+    return includeEmpty || hasInstitutionContent(author) ? author : null;
+  }
+
+  function collectDraftEntries() {
+    const entries = [];
+    stack.children('[data-author-entry-row]').each(function () {
+      const row = $(this);
+      const input = row.find('[data-affiliation-editor]')[0]?.affiliationEditor.getPendingInput() || '';
+      const entry = getEntryType(row) === 'person' ? readPerson(row, entries.length, true) : readInstitution(row, entries.length, true);
+      if (!input.trim() && !(entry.type === 'person' ? hasPersonContent(entry) : hasInstitutionContent(entry))) return;
+      if (input) entry._ui = { affiliationInput: input };
+      entries.push(entry);
+    });
+    return entries;
+  }
+
+  function setEntryAffiliations(card, values) {
+    $(card).find('[data-affiliation-editor]')[0]?.affiliationEditor.setAffiliations(values);
   }
 
   function collectPayload() {
@@ -1265,6 +1283,8 @@ $(document).ready(function () {
     setAuthors,
     updatePayload,
     collectPayload,
+    collectDraftEntries,
+    setEntryAffiliations,
     validateAffiliationEditors: validateAuthorAffiliationEditors
   };
 
