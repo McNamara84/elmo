@@ -124,8 +124,9 @@ function isCurrentAffiliation(affiliation, now = new Date()) {
  * filtered by ORCID end date before they reach the UI.
  *
  * @param {Object} affiliation - The affiliation summary from ORCID.
- * @param {Set<string>} affiliationSet - Accumulator for affiliation names.
- * @param {Set<string>} rorIds - Accumulator for normalized ROR identifiers.
+ * @param {Set<string>} [affiliationSet] - Legacy accumulator for affiliation names.
+ * @param {Set<string>} [rorIds] - Legacy accumulator for normalized ROR identifiers.
+ * @returns {{label: string, rorId: string}|undefined} Matched label/ROR pair for a current affiliation.
  */
 function collectAffiliation(affiliation, affiliationSet, rorIds) {
   if (!affiliation?.organization || !isCurrentAffiliation(affiliation)) {
@@ -145,20 +146,22 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
     return;
   }
 
-  affiliationSet.add(orgName);
-  rorIds.add(normalizeRorId(rawRorId));
+  const rorId = normalizeRorId(rawRorId);
+  affiliationSet?.add(orgName);
+  rorIds?.add(rorId);
+  return { label: orgName, rorId };
 }
 
 /**
  * Extracts affiliations and ROR IDs from ORCID record data and fills the
- * corresponding row fields (name, affiliation Tagify, hidden ROR ID field).
+ * corresponding name, shared affiliation editor, and compatible hidden fields.
  *
  * @param {jQuery} row - The jQuery row element to fill.
  * @param {Object} data - The full ORCID record JSON response.
  * @param {Object} fieldMapping - Maps logical names to selectors within the row.
  * @param {string} fieldMapping.familyName - Selector for the family name input.
  * @param {string} fieldMapping.givenName - Selector for the given name input.
- * @param {string} fieldMapping.affiliation - Selector prefix for the affiliation Tagify input (id starts-with).
+ * @param {string} fieldMapping.affiliation - ID prefix for the compatible affiliation input.
  * @param {string} fieldMapping.rorId - Selector prefix for the hidden ROR ID input (id starts-with).
  */
 function fillRowFromOrcidRecord(row, data, fieldMapping) {
@@ -167,10 +170,12 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
   row.find(fieldMapping.familyName).val(familyName).trigger('input').trigger('change');
   row.find(fieldMapping.givenName).val(givenName).trigger('input').trigger('change');
 
-  // Collect affiliations and ROR IDs
-  const affiliationSet = new Set();
-  const rorIds = new Set();
-  const processAffiliation = (affiliation) => collectAffiliation(affiliation, affiliationSet, rorIds);
+  // Deduplicate complete pairs: separate sets lose IDs when names or IDs repeat.
+  const affiliationPairs = new Map();
+  const processAffiliation = (summary) => {
+    const affiliation = collectAffiliation(summary);
+    if (affiliation) affiliationPairs.set(JSON.stringify([affiliation.label, affiliation.rorId]), affiliation);
+  };
 
   // Process employment affiliations
   const employments = data['activities-summary']?.employments?.['affiliation-group'] || [];
@@ -186,19 +191,18 @@ function fillRowFromOrcidRecord(row, data, fieldMapping) {
     processAffiliation(education);
   });
 
-  const rorIdsArray = Array.from(rorIds);
-  const affiliationObjects = Array.from(affiliationSet).map((name, index) => {
-    const rorId = rorIdsArray[index] || '';
+  const affiliationObjects = Array.from(affiliationPairs.values()).map(({ label, rorId }) => {
     return {
-      value: name,
-      label: name,
+      value: label,
+      label,
       rorId,
       id: rorId
     };
   });
+  const rorIdsArray = affiliationObjects.map(affiliation => affiliation.rorId);
   const tagifyObjects = affiliationObjects.map(affiliation => ({ ...affiliation }));
 
-  // Set Tagify tags
+  // Keep legacy rows usable; current cards are synchronized through their stack below.
   const affiliationInput = row.find(`input[id^="${fieldMapping.affiliation}"]`)[0];
   if (affiliationInput?._tagify) {
     affiliationInput._tagify.removeAllTags();
@@ -254,9 +258,8 @@ var CONTRIBUTOR_FIELD_MAPPING = {
  * 4. Stores corresponding ROR IDs in a hidden field
  * 
  * @listens blur - Triggers when an ORCID input field loses focus
- * @requires Tagify - For handling the affiliations input field
+ * @requires authorStack - For synchronizing the shared affiliation editor
  * @requires jQuery - For DOM manipulation
- * @requires affiliationsData - Global array containing valid affiliations data
  * 
  * @example
  * // HTML structure expected:
@@ -301,7 +304,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
  * 4. Stores corresponding ROR IDs in a hidden field
  * 
  * @listens blur - Triggers when an ORCID input field loses focus
- * @requires Tagify - For handling the affiliations input field
+ * @requires contributorStack - For synchronizing the shared affiliation editor
  * @requires jQuery - For DOM manipulation
  * 
  * @example
@@ -309,7 +312,7 @@ $('#group-author').on('blur', 'input[name="orcids[]"]', function () {
  * // <input name="cbORCID[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
  * // <input name="cbPersonLastname[]" />
  * // <input name="cbPersonFirstname[]" />
- * // <input id="input-contributorpersons-affiliation" /> // Tagify field
+ * // <input id="input-contributorpersons-affiliation" type="hidden" />
  * // <input id="input-contributor-personrorid" />
  */
 $('#group-contributorperson').on('blur', 'input[name="cbORCID[]"]', function () {

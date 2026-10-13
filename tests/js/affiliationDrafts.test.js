@@ -68,4 +68,26 @@ describe('unfinished affiliation drafts', () => {
     }
     expect(document.querySelector('[data-contributor-summary-affiliations]').textContent).toBe('GFZ 04z8jg394');
   });
+  test.each(['author', 'contributor'])('ORCID prefill keeps %s label/ROR pairs when names or IDs repeat', group => {
+    if (group === 'author') mountAuthorStack([{type: 'person'}]);
+    else mountContributorStack([{type: 'person'}]);
+    const {fillRowFromOrcidRecord, AUTHOR_FIELD_MAPPING, CONTRIBUTOR_FIELD_MAPPING} = require('../../js/autocomplete');
+    const employment = (name, id) => ({summaries: [{'employment-summary': {organization: {
+      name, 'disambiguated-organization': {'disambiguation-source': 'ROR', 'disambiguated-organization-identifier': id}
+    }}}]});
+    const record = {person: {name: {'family-name': {value: 'Doe'}}}, 'activities-summary': {employments: {'affiliation-group': [
+      employment('Department A', '04z8jg394'), employment('Department B', '04z8jg394'),
+      employment('Department A', '012m9bp23'), employment('Department A', '04z8jg394')
+    ]}}};
+    fillRowFromOrcidRecord($(`[data-${group}-card]`), record, group === 'author' ? AUTHOR_FIELD_MAPPING : CONTRIBUTOR_FIELD_MAPPING);
+    const expected = [
+      {label: 'Department A', rorId: '04z8jg394'}, {label: 'Department B', rorId: '04z8jg394'},
+      {label: 'Department A', rorId: '012m9bp23'}
+    ];
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    expect(editor.getAffiliations()).toEqual(expected);
+    const stack = window[`${group}Stack`];
+    expect(stack.collectPayload()[0].affiliations).toEqual(expected);
+    expect(editor.element.find('[data-affiliation-chip]')).toHaveLength(3);
+  });
 });
