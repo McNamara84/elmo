@@ -244,6 +244,86 @@ describe('select.js', () => {
     expect($('input[name="rIdentifier[]"]').eq(1).attr('pattern')).toBe('^https?:\\/\\/.+$');
   });
 
+  test('updateIdentifierType uses detection patterns and validates with the validation pattern', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {
+          name:'URL',
+          pattern:'^https?:\\/\\/\\S+$',
+          detectionPatterns:[{pattern:'^https?:\\/\\/', priority:1}]
+        },
+        {
+          name:'DOI',
+          pattern:'^10\\.\\d{4,}\\/\\S+$',
+          detectionPatterns:[
+            {pattern:'^https?:\\/\\/(?:doi\\.org|dx\\.doi\\.org)\\/(.+)', priority:30},
+            {pattern:'^10\\.\\d{4,}', priority:10}
+          ]
+        }
+      ]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    const documentUrls = [
+      'https://icgem.gfz.de/docs/Foerste-et-al-EIGEN-6C4.pdf',
+      'https://example.org/reports/model.docx',
+      'http://example.org/notes/readme.txt',
+      'https://example.org/docs/README.md'
+    ];
+
+    for (const documentUrl of documentUrls) {
+      input.val(documentUrl);
+      await window.updateIdentifierType(input[0]);
+      expect(select.val()).toBe('URL');
+      expect(input.attr('pattern')).toBe('^https?:\\/\\/\\S+$');
+      expect(input[0].checkValidity()).toBe(true);
+    }
+
+    input.val('https://doi.org/10.1080/10509585.2015.1092083');
+    await window.updateIdentifierType(input[0]);
+    expect(select.val()).toBe('DOI');
+    expect(input[0].checkValidity()).toBe(true);
+  });
+
+  test('updateIdentifierType reads nested detection patterns when the flat pattern is empty', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[{
+        name:'URL',
+        pattern:'',
+        patterns:{
+          validation:[],
+          detection:[{pattern:'^https?:\\/\\/', priority:1}]
+        }
+      }]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('https://icgem.gfz.de/docs/Foerste-et-al-EIGEN-6C4.pdf');
+
+    await window.updateIdentifierType(input[0]);
+
+    expect(select.val()).toBe('URL');
+    expect(input.attr('pattern')).toBe('^https?:\\/\\/');
+  });
+
+  test('updateIdentifierType prefers a more specific http identifier over URL', async () => {
+    $.ajax.mockImplementationOnce(opts => {
+      opts.success({identifierTypes:[
+        {name:'URL', pattern:'(https:\\/\\/www\\.|http:\\/\\/www\\.|https:\\/\\/|http:\\/\\/)?[a-zA-Z0-9]{2,}(\\.[a-zA-Z0-9]{2,})?'},
+        {name:'PURL', pattern:'^https?:\\/\\/purl\\.org\\/\\S+$'}]});
+      return { fail: jest.fn() };
+    });
+    const input = $('#group-relatedwork .row:first-child input');
+    const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
+    input.val('https://purl.org/foo/bar.pdf');
+
+    await window.updateIdentifierType(input[0]);
+
+    expect(select.val()).toBe('PURL');
+  });
+
   test('debounce delays function call', () => {
     jest.useFakeTimers();
     const fn = jest.fn();

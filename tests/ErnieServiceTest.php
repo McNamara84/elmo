@@ -2638,6 +2638,35 @@ final class ErnieServiceTest extends TestCase
     /**
      * Test that hardcoded identifier type fallback patterns are valid regex
      */
+    public function testHardcodedUrlPatternAcceptsWebDocumentLinks(): void
+    {
+        $service = $this->createTestableService('', '');
+        $result = $service->getIdentifierTypesWithCache();
+        $urlType = null;
+        foreach ($result as $type) {
+            if ($type['name'] === 'URL') {
+                $urlType = $type;
+                break;
+            }
+        }
+
+        $this->assertNotNull($urlType);
+        $documents = [
+            'https://icgem.gfz.de/docs/Foerste-et-al-EIGEN-6C4.pdf',
+            'https://example.org/reports/model.docx',
+            'http://example.org/notes/readme.txt',
+            'https://example.org/docs/README.md',
+        ];
+        foreach ($documents as $document) {
+            $this->assertSame(
+                1,
+                preg_match('#' . $urlType['pattern'] . '#i', $document),
+                $document
+            );
+        }
+        $this->assertSame(0, preg_match('#' . $urlType['pattern'] . '#i', 'not-a-url'));
+    }
+
     public function testHardcodedIdentifierTypeFallbackPatternsAreValidRegex(): void
     {
         $service = $this->createTestableService('', '');

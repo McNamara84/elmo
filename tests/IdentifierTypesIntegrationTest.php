@@ -198,6 +198,60 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $this->assertEquals(1, $row['isShown'], 'DOI from ERNIE should remain visible');
     }
 
+    public function testSyncStoresValidationPatternFromNestedVocabulary(): void
+    {
+        $this->connection->query('DELETE FROM Related_Work');
+        $this->connection->query('DELETE FROM Identifier_Type');
+
+        $ernieData = [[
+            'id' => 21,
+            'name' => 'URL',
+            'description' => 'Uniform Resource Locator',
+            'patterns' => [
+                'validation' => [
+                    ['pattern' => '^https?:\\/\\/\\S+$', 'priority' => 10],
+                ],
+                'detection' => [
+                    ['pattern' => '^https?:\\/\\/', 'priority' => 1],
+                ],
+            ],
+        ]];
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+        $controller->syncIdentifierTypesToDb($ernieData);
+
+        $result = $this->connection->query("SELECT pattern FROM Identifier_Type WHERE name = 'URL'");
+        $row = $result->fetch_assoc();
+        $this->assertSame('^https?:\\/\\/\\S+$', $row['pattern']);
+    }
+
+    public function testSyncUsesDetectionPatternWhenValidationIsEmpty(): void
+    {
+        $this->connection->query('DELETE FROM Related_Work');
+        $this->connection->query('DELETE FROM Identifier_Type');
+
+        $ernieData = [[
+            'id' => 21,
+            'name' => 'URL',
+            'description' => 'Uniform Resource Locator',
+            'patterns' => [
+                'validation' => [],
+                'detection' => [
+                    ['pattern' => '^https?:\\/\\/', 'priority' => 1],
+                ],
+            ],
+        ]];
+
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $controller = new \VocabController();
+        $controller->syncIdentifierTypesToDb($ernieData);
+
+        $result = $this->connection->query("SELECT pattern FROM Identifier_Type WHERE name = 'URL'");
+        $row = $result->fetch_assoc();
+        $this->assertSame('^https?:\\/\\/', $row['pattern']);
+    }
+
     /**
      * Test that getActiveIdentifierTypes uses VocabController sync
      */
