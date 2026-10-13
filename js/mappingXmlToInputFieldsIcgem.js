@@ -454,7 +454,7 @@ function ensureDataSourceRows(count) {
   $surplus.find('.removeButton').trigger('click');
   $surplus.remove();
 
-  const $addButton = $('.addDataSource').first();
+  const $addButton = $('#button-datasource-add');
   const missing = count - $(rowSelector).length;
   for (let i = 0; i < missing; i++) {
     $addButton.trigger('click');

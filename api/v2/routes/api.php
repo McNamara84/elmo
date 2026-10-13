@@ -53,6 +53,8 @@ return [
     ['GET', '/vocabs/thesauri/gcmd-instruments', [new VocabController(), 'getGcmdInstrumentsFromErnie']],
     ['GET', '/vocabs/thesauri/chronostrat-timescale', [new VocabController(), 'getChronostratTimescale']],
     ['GET', '/vocabs/thesauri/gemet', [new VocabController(), 'getGemet']],
+    // PID4INST instruments endpoints
+    ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
 
     // Vocabulary retrieval for ICGEM implementation
     ['GET', '/vocabs/icgemformats', [new VocabController(), 'getICGEMFileFormats']],
@@ -71,10 +73,8 @@ return [
     ['GET', '/dataset/export/{id}/{scheme}/download', [new DatasetController(), 'exportResourceDownload']],
     ['GET', '/dataset/export/{id}/{scheme}', [new DatasetController(), 'exportResource']],
 
-
     // Export base xml for data mapping to the ICGEM metadatabase
     ['GET', '/dataset/icgem_export/{id}', [new ICGEMController(), 'exportICGEMxml']],
-
 
     // Draft autosave endpoints
     ['POST', '/drafts', [new DraftController(), 'create']],
@@ -84,37 +84,6 @@ return [
     ['GET', '/drafts/{id}', [new DraftController(), 'get']],
 
     // ERNIE cache management endpoints
-    ['POST', '/admin/cache/resourcetypes/refresh', [new VocabController(), 'refreshResourceTypesCache']],
-    ['GET', '/admin/cache/resourcetypes/status', [new VocabController(), 'getResourceTypesCacheStatus']],
-    ['POST', '/admin/cache/titletypes/refresh', [new VocabController(), 'refreshTitleTypesCache']],
-    ['GET', '/admin/cache/titletypes/status', [new VocabController(), 'getTitleTypesCacheStatus']],
-    ['POST', '/admin/cache/languages/refresh', [new VocabController(), 'refreshLanguagesCache']],
-    ['GET', '/admin/cache/languages/status', [new VocabController(), 'getLanguagesCacheStatus']],
-
-    // PID4INST instruments endpoints
-    ['GET', '/vocabs/pid4inst/instruments', [new VocabController(), 'getPid4instInstruments']],
-    ['POST', '/admin/cache/pid4inst/refresh', [new VocabController(), 'refreshPid4instCache']],
-    ['GET', '/admin/cache/pid4inst/status', [new VocabController(), 'getPid4instCacheStatus']],
-
-    // Contributor roles cache management endpoints
-    ['POST', '/admin/cache/roles/contributor-persons/refresh', [new VocabController(), 'refreshContributorPersonRolesCache']],
-    ['GET', '/admin/cache/roles/contributor-persons/status', [new VocabController(), 'getContributorPersonRolesCacheStatus']],
-    ['POST', '/admin/cache/roles/contributor-institutions/refresh', [new VocabController(), 'refreshContributorInstitutionRolesCache']],
-    ['GET', '/admin/cache/roles/contributor-institutions/status', [new VocabController(), 'getContributorInstitutionRolesCacheStatus']],
-
-    // Description types cache management endpoints
-    ['POST', '/admin/cache/descriptiontypes/refresh', [new VocabController(), 'refreshDescriptionTypesCache']],
-    ['GET', '/admin/cache/descriptiontypes/status', [new VocabController(), 'getDescriptionTypesCacheStatus']],
-
-    // Relation types cache management endpoints
-    ['POST', '/admin/cache/relationtypes/refresh', [new VocabController(), 'refreshRelationTypesCache']],
-    ['GET', '/admin/cache/relationtypes/status', [new VocabController(), 'getRelationTypesCacheStatus']],
-
-    // Identifier types cache management endpoints
-    ['POST', '/admin/cache/identifiertypes/refresh', [new VocabController(), 'refreshIdentifierTypesCache']],
-    ['GET', '/admin/cache/identifiertypes/status', [new VocabController(), 'getIdentifierTypesCacheStatus']],
-
-    // Thesauri availability cache management
-    ['POST', '/admin/cache/thesauri/availability/refresh', [new VocabController(), 'refreshThesauriAvailabilityCache']],
-    ['GET', '/admin/cache/thesauri/availability/status', [new VocabController(), 'getThesauriAvailabilityCacheStatus']]
-];
+    ['POST', '/admin/cache/refresh', [new VocabController(), 'handleRefreshAllCache']],
+    ['GET', '/admin/cache/status', [new VocabController(), 'handleGetAllCacheStatus']]
+    ];

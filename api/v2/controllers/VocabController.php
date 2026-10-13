@@ -13,11 +13,6 @@ if (!defined('UNIT_TESTING')) {
 }
 require_once __DIR__ . '/../services/DataCiteRelationType.php';
 
-/**
- * Class VocabController
- *
- * Handles vocabulary-related API requests.
- */
 class VocabController
 {
     /**
@@ -82,13 +77,13 @@ class VocabController
      */
     private function validateApiKey(): bool
     {
-        global $apiKeyElmo;
+        global $ELMO_API_KEY;
 
         // Get API key from header
         $providedKey = $_SERVER['HTTP_X_API_KEY'] ?? null;
 
-        // Check if key exists and matches
-        if (!$providedKey || $providedKey !== $apiKeyElmo) {
+        // Check if key exists and matches the value defined in settings.php
+        if (!is_string($ELMO_API_KEY) || $ELMO_API_KEY === '' || !is_string($providedKey) || !hash_equals($ELMO_API_KEY, $providedKey)) {
             http_response_code(401);
             header('Content-Type: application/json');
             echo json_encode(['error' => 'Invalid or missing API key']);
@@ -96,6 +91,97 @@ class VocabController
         }
 
         return true;
+    }
+    function handleGetAllCacheStatus(): void
+    {
+        error_log('[ELMO admin] GET /admin/cache/status received');
+
+        if (!$this->validateApiKey()) {
+            error_log('[ELMO admin] GET /admin/cache/status rejected: X-API-KEY does not match ELMO_API_KEY');
+            return;
+        }
+
+        $ernieService = $this->getErnieService();
+        if (!$ernieService->isConfigured()) {
+            http_response_code(400);
+            header('Content-Type: application/json');
+            echo json_encode([
+                'success' => false,
+                'message' => 'ERNIE service is not configured',
+            ]);
+            return;
+        }
+
+        $status = $ernieService->getAllCacheStatus();
+        header('Content-Type: application/json');
+        echo json_encode([
+            'success' => true,
+            'status' => $status,
+        ]);
+    }
+    /**
+     * Refreshes every ERNIE cache file.
+     *
+     * Requires the X-API-KEY header, checked against $ELMO_API_KEY from settings.php.
+     * The header value is not logged.
+     *
+     * @param array<mixed> $vars Route parameters (unused)
+     * @return void Outputs JSON directly
+     */
+    public function handleRefreshAllCache(array $vars = []): void
+    {
+        error_log('[ELMO admin] POST /admin/cache/refresh received');
+
+        if (!$this->validateApiKey()) {
+            error_log('[ELMO admin] POST /admin/cache/refresh rejected: X-API-KEY does not match ELMO_API_KEY');
+            return;
+        }
+
+        set_time_limit(300);
+        error_log('[ELMO admin] POST /admin/cache/refresh authorized; refreshing all ERNIE caches (time limit 300s)');
+
+        try {
+            $ernieService = $this->getErnieService();
+
+            if (!$ernieService->isConfigured()) {
+                http_response_code(400);
+                header('Content-Type: application/json');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'ERNIE service is not configured',
+                ]);
+                return;
+            }
+
+            $results = $ernieService->refreshAllCache();
+            $failed = array_keys(array_filter(
+                $results,
+                static fn(bool $ok): bool => !$ok
+            ));
+
+            header('Content-Type: application/json');
+            if ($failed === []) {
+                echo json_encode([
+                    'success' => true,
+                    'message' => 'All ERNIE caches refreshed',
+                    'results' => $results,
+                ]);
+                return;
+            }
+
+            http_response_code(502);
+            echo json_encode([
+                'success' => false,
+                'message' => 'Some ERNIE caches failed to refresh',
+                'failed' => $failed,
+                'results' => $results,
+            ]);
+        } catch (Exception $e) {
+            error_log('[ELMO admin] cache refresh failed: ' . $e->getMessage());
+            http_response_code(500);
+            header('Content-Type: application/json');
+            echo json_encode(['error' => 'Internal Server Error']);
+        }
     }
 
     /**
@@ -1593,39 +1679,6 @@ class VocabController
         return $result;
     }
 
-    /**
-     * Manually refreshes the ERNIE resource types cache
-     * 
-     * Requires API key authentication.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshResourceTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshCache',
-            'getCacheStatus',
-            'Resource types',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieTypes = $ernieService->getResourceTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $this->syncResourceTypesFromErnie($ernieTypes);
-                }
-            }
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE resource types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getResourceTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getCacheStatus', 'resource types');
-    }
 
     /**
      * Retrieves all languages, preferring ERNIE data with local DB fallback
@@ -1824,31 +1877,6 @@ class VocabController
         }
     }
 
-    /**
-     * Manually refreshes the ERNIE description types cache
-     * 
-     * Requires API key authentication.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshDescriptionTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshDescriptionTypesCache',
-            'getDescriptionTypesCacheStatus',
-            'Description types'
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE description types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getDescriptionTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getDescriptionTypesCacheStatus', 'description types');
-    }
 
     /**
      * Retrieves all title types, preferring ERNIE data with local DB fallback
@@ -1925,166 +1953,6 @@ class VocabController
         echo json_encode($types);
     }
 
-    /**
-     * Manually refreshes the ERNIE title types cache
-     * 
-     * Requires API key authentication.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshTitleTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshTitleTypesCache',
-            'getTitleTypesCacheStatus',
-            'Title types',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieTypes = $ernieService->getTitleTypesWithCache();
-                if (!empty($ernieTypes)) {
-                    $this->syncTitleTypesFromErnie($ernieTypes);
-                }
-            }
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE title types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getTitleTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getTitleTypesCacheStatus', 'title types');
-    }
-
-    // ==================== Generic ERNIE cache handlers ====================
-
-    /**
-     * Generic handler for ERNIE cache status endpoints
-     *
-     * @param string $cacheStatusMethod The ErnieService method to call
-     * @param string $label Human-readable label for error logging
-     * @return void Outputs JSON response directly
-     */
-    private function handleCacheStatus(string $cacheStatusMethod, string $label): void
-    {
-        try {
-            $ernieService = $this->getErnieService();
-
-            header('Content-Type: application/json');
-            echo json_encode([
-                'configured' => $ernieService->isConfigured(),
-                'cache' => $ernieService->$cacheStatusMethod()
-            ]);
-        } catch (Exception $e) {
-            error_log("Error getting $label cache status: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    /**
-     * Generic handler for ERNIE cache refresh endpoints
-     *
-     * @param string $refreshMethod ErnieService method to refresh the cache
-     * @param string $statusMethod ErnieService method to get cache status after refresh
-     * @param string $label Human-readable label for messages
-     * @param callable|null $afterRefresh Optional callback after a successful refresh (e.g. DB sync).
-     *        Needed for vocabs persisted to MariaDB: refresh already writes a valid cache,
-     *        so a following get*WithCache() is a hit and onFreshData would not run.
-     * @return void Outputs JSON response directly
-     */
-    private function handleCacheRefresh(
-        string $refreshMethod,
-        string $statusMethod,
-        string $label,
-        ?callable $afterRefresh = null
-    ): void {
-        if (!$this->validateApiKey()) {
-            return;
-        }
-
-        try {
-            $ernieService = $this->getErnieService();
-
-            if (!$ernieService->isConfigured()) {
-                http_response_code(400);
-                header('Content-Type: application/json');
-                echo json_encode([
-                    'success' => false,
-                    'message' => 'ERNIE service is not configured'
-                ]);
-                return;
-            }
-
-            $success = $ernieService->$refreshMethod();
-
-            header('Content-Type: application/json');
-
-            if ($success) {
-                if ($afterRefresh !== null) {
-                    $afterRefresh($ernieService);
-                }
-
-                $status = $ernieService->$statusMethod();
-                echo json_encode([
-                    'success' => true,
-                    'message' => "$label cache refreshed successfully",
-                    'itemCount' => $status['itemCount'],
-                    'lastUpdated' => $status['lastUpdated']
-                ]);
-            } else {
-                http_response_code(502);
-                echo json_encode([
-                    'success' => false,
-                    'message' => "Failed to fetch $label data from ERNIE"
-                ]);
-            }
-        } catch (Exception $e) {
-            error_log("Error refreshing $label cache: " . $e->getMessage());
-            http_response_code(500);
-            header('Content-Type: application/json');
-            echo json_encode(['error' => $e->getMessage()]);
-        }
-    }
-
-    // ==================== Languages cache endpoints ====================
-
-    /**
-     * Manually refreshes the ERNIE languages cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshLanguagesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshLanguagesCache',
-            'getLanguagesCacheStatus',
-            'Languages',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieLanguages = $ernieService->getLanguagesWithCache();
-                if (!empty($ernieLanguages)) {
-                    $this->syncLanguagesToDb($ernieLanguages);
-                }
-            }
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE languages cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getLanguagesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getLanguagesCacheStatus', 'languages');
-    }
-
     // ==================== PID4INST Instruments ====================
 
     /**
@@ -2135,125 +2003,6 @@ class VocabController
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
         }
-    }
-
-    /**
-     * Manually refreshes the PID4INST instruments cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshPid4instCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshPid4instCache',
-            'getPid4instCacheStatus',
-            'PID4INST instruments'
-        );
-    }
-
-    /**
-     * Gets the status of the PID4INST instruments cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getPid4instCacheStatus(): void
-    {
-        $this->handleCacheStatus('getPid4instCacheStatus', 'PID4INST');
-    }
-
-    // ==================== MSL Laboratories cache endpoints ====================
-
-    /**
-     * Refreshes the ERNIE MSL laboratories cache.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshMslLabsCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshMslLabsCache',
-            'getMslLabsCacheStatus',
-            'MSL laboratories'
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE MSL laboratories cache.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getMslLabsCacheStatus(): void
-    {
-        $this->handleCacheStatus(
-            'getMslLabsCacheStatus',
-            'MSL laboratories'
-        );
-    }
-
-    // ==================== Contributor Roles cache endpoints ====================
-
-    /**
-     * Manually refreshes the ERNIE contributor person roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshContributorPersonRolesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshContributorPersonRolesCache',
-            'getContributorPersonRolesCacheStatus',
-            'Contributor person roles',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieRoles = $ernieService->getContributorPersonRolesWithCache();
-                if (!empty($ernieRoles)) {
-                    $this->syncRolesToDb($ernieRoles, 0);
-                }
-            }
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE contributor person roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getContributorPersonRolesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getContributorPersonRolesCacheStatus', 'contributor person roles');
-    }
-
-    /**
-     * Manually refreshes the ERNIE contributor institution roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshContributorInstitutionRolesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshContributorInstitutionRolesCache',
-            'getContributorInstitutionRolesCacheStatus',
-            'Contributor institution roles',
-            function ($ernieService) {
-                // Refresh already wrote a valid cache, so get*WithCache() is a hit
-                // and onFreshData would not fire. Sync from that cache explicitly.
-                $ernieRoles = $ernieService->getContributorInstitutionRolesWithCache();
-                if (!empty($ernieRoles)) {
-                    $this->syncRolesToDb($ernieRoles, 1);
-                }
-            }
-        );
-    }
-
-    /**
-     * Gets the status of the ERNIE contributor institution roles cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getContributorInstitutionRolesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getContributorInstitutionRolesCacheStatus', 'contributor institution roles');
     }
 
     // ==================== Thesauri (ERNIE proxy) endpoints ====================
@@ -2370,120 +2119,6 @@ class VocabController
     public function getGemet(): void
     {
         $this->getThesaurusVocabulary('gemet');
-    }
-
-    /**
-     * Manually refreshes the thesauri availability cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshThesauriAvailabilityCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshThesauriAvailabilityCache',
-            'getThesauriAvailabilityCacheStatus',
-            'Thesauri availability'
-        );
-    }
-
-    /**
-     * Gets the status of the thesauri availability cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getThesauriAvailabilityCacheStatus(): void
-    {
-        $this->handleCacheStatus('getThesauriAvailabilityCacheStatus', 'thesauri availability');
-    }
-
-    // ==================== Relation Types (ERNIE) cache management ====================
-
-    /**
-     * Manually refreshes the relation types cache from ERNIE
-     * and syncs the fresh data to the local database.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshRelationTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshRelationTypesCache',
-            'getRelationTypesCacheStatus',
-            'Relation types',
-            $this->syncRelationTypesAfterRefresh(...)
-        );
-    }
-
-    /**
-     * Syncs relation types to local DB after a cache refresh
-     *
-     * Admin refresh already wrote a valid cache, so getRelationTypesWithCache()
-     * is a hit and onFreshData would not fire. Sync from that cache explicitly.
-     *
-     * @param \ErnieService $ernieService The ERNIE service instance
-     * @return void
-     */
-    private function syncRelationTypesAfterRefresh(\ErnieService $ernieService): void
-    {
-        $ernieTypes = $ernieService->getRelationTypesWithCache();
-        if (!empty($ernieTypes)) {
-            $this->syncRelationTypesFromErnie($ernieTypes);
-        }
-    }
-
-    /**
-     * Gets the status of the ERNIE relation types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getRelationTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getRelationTypesCacheStatus', 'relation types');
-    }
-
-    // ==================== Identifier Types (ERNIE) cache management ====================
-
-    /**
-     * Manually refreshes the identifier types cache from ERNIE
-     * and syncs the fresh data to the local database.
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function refreshIdentifierTypesCache(): void
-    {
-        $this->handleCacheRefresh(
-            'refreshIdentifierTypesCache',
-            'getIdentifierTypesCacheStatus',
-            'Identifier types',
-            $this->syncIdentifierTypesAfterRefresh(...)
-        );
-    }
-
-    /**
-     * Syncs identifier types to local DB after a cache refresh
-     *
-     * Admin refresh already wrote a valid cache, so getIdentifierTypesWithCache()
-     * is a hit and onFreshData would not fire. Sync from that cache explicitly.
-     *
-     * @param \ErnieService $ernieService The ERNIE service instance
-     * @return void
-     */
-    private function syncIdentifierTypesAfterRefresh(\ErnieService $ernieService): void
-    {
-        $ernieTypes = $ernieService->getIdentifierTypesWithCache();
-        if (!empty($ernieTypes)) {
-            $this->syncIdentifierTypesToDb($ernieTypes);
-        }
-    }
-
-    /**
-     * Gets the status of the ERNIE identifier types cache
-     *
-     * @return void Outputs JSON response directly
-     */
-    public function getIdentifierTypesCacheStatus(): void
-    {
-        $this->handleCacheStatus('getIdentifierTypesCacheStatus', 'identifier types');
     }
 
     /**

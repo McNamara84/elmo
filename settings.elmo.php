@@ -25,7 +25,7 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
+$ELMO_API_KEY = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // Google Maps Map ID (required for AdvancedMarkerElement)
