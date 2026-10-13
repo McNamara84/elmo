@@ -111,6 +111,10 @@ class SaveHandler {
         }
     }
 
+    /**
+     * Protect both Authors and Contributors while retaining the existing validator entry point.
+     * @returns {boolean} True when pending inputs and confirmed labels permit a save.
+     */
     validateAuthorAffiliationsForSave() {
         if (!resolvePendingAffiliations(this.$form[0])) return false;
         const validator = typeof globalThis !== 'undefined'
@@ -214,6 +218,7 @@ class SaveHandler {
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
+            // Autosave awaited above may leave new input behind; check again before building FormData.
             if (!this.validateAuthorAffiliationsForSave()) return;
             const authorsPayload = synchronizeAuthorsPayload(formEl);
             const resourceInformationPayload = synchronizeResourceInformationPayload(formEl);

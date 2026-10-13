@@ -76,6 +76,10 @@ $(document).ready(function () {
       entry.roles.length || entry.affiliations.length || entry.email || entry.website);
   }
 
+  /**
+   * Collect cards in DOM order, including pending-only cards and invalid empty label slots.
+   * @returns {Array<Object>} Draft copies with optional _ui.affiliationInput, never export payloads.
+   */
   function collectDraftEntries() {
     return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
       .map(card => {
@@ -88,6 +92,12 @@ $(document).ready(function () {
       .map((entry, order) => ({ ...entry, order }));
   }
 
+  /**
+   * Synchronize ORCID/import affiliations through the editor so fields and summaries agree.
+   * @param {HTMLElement|jQuery} card Target contributor card.
+   * @param {Array<string|Object>} values Ordered affiliation values.
+   * @returns {void}
+   */
   function setEntryAffiliations(card, values) {
     const element = card?.jquery ? card[0] : card;
     element?.querySelector('[data-affiliation-editor]')?.affiliationEditor.setAffiliations(values);
@@ -376,6 +386,13 @@ $(document).ready(function () {
     input.value = tags.length ? JSON.stringify(tags) : '';
   }
 
+  /**
+   * Replace contributor cards from an import or an autosaved draft.
+   * @param {Array<Object>} entries Structured contributor entries.
+   * @param {Object} [options={}] Restore settings.
+   * @param {boolean} [options.restoreUiState=false] Restore unconfirmed affiliation text only for autosave.
+   * @returns {void}
+   */
   function setContributors(entries, options = {}) {
     rendering = true;
     stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.destroy());

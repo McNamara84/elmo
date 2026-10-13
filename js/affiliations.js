@@ -7,7 +7,10 @@ var affiliationsData = [];
  * 
  * @param {string} query - The search query (minimum 2 characters)
  * @param {number} [limit=20] - Maximum number of results
+ * @param {Object} [options={}] - Error handling settings.
+ * @param {boolean} [options.throwOnError=false] - Let the shared editor announce search failures; legacy callers receive an empty list.
  * @returns {Promise<Array>} Array of matching affiliations
+ * @throws {Error} Search failures when options.throwOnError is enabled.
  */
 async function searchAffiliationsFromServer(query, limit = 20, { throwOnError = false } = {}) {
   if (!query || query.length < 2) {

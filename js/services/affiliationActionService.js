@@ -11,6 +11,12 @@ function reveal(element, input) {
   input?.focus();
 }
 
+/**
+ * Block a form action at the first unconfirmed input in DOM order, reveal it and focus it.
+ * This check never confirms or discards input; the caller repeats its action after a decision.
+ * @param {Document|Element} root Form or card whose editors are checked.
+ * @returns {boolean} True when the action may proceed without an input decision.
+ */
 export function resolvePendingAffiliations(root) {
   const element = editors(root).find(item => item.affiliationEditor?.getPendingInput().trim());
   if (!element) return true;
@@ -19,6 +25,13 @@ export function resolvePendingAffiliations(root) {
   return false;
 }
 
+/**
+ * Validate confirmed labels and optionally reveal the first invalid editor, including collapsed cards.
+ * @param {Document|Element} root Form or card whose editors are checked.
+ * @param {Object} [options={}] Validation settings.
+ * @param {boolean} [options.focus=true] Reveal and focus the first invalid label.
+ * @returns {boolean} True when all confirmed affiliation labels are valid.
+ */
 export function validateAffiliationEditors(root, { focus = true } = {}) {
   let firstInvalid;
   for (const element of editors(root)) {

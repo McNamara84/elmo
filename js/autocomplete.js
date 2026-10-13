@@ -163,6 +163,7 @@ function collectAffiliation(affiliation, affiliationSet, rorIds) {
  * @param {string} fieldMapping.givenName - Selector for the given name input.
  * @param {string} fieldMapping.affiliation - ID prefix for the compatible affiliation input.
  * @param {string} fieldMapping.rorId - Selector prefix for the hidden ROR ID input (id starts-with).
+ * @returns {void}
  */
 function fillRowFromOrcidRecord(row, data, fieldMapping) {
   const familyName = data.person?.name?.['family-name']?.value || '';
@@ -267,7 +268,7 @@ var CONTRIBUTOR_FIELD_MAPPING = {
  * //   <input name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
  * //   <input name="familynames[]" />
  * //   <input name="givennames[]" />
- * //   <input id="input-author-affiliation" /> // Tagify field
+ * //   <input id="input-author-affiliation" type="hidden" />
  * //   <input id="input-author-rorid" />
  * // </div>
  */

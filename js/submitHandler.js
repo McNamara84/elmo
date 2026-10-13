@@ -468,6 +468,7 @@ class SubmitHandler {
             await this.autosaveService.flushPending();
         }
 
+        // Input can change while autosave flushes, so repeat the guard before sending metadata.
         if (!resolvePendingAffiliations(this.$form[0]) || !validateAffiliationEditors(this.$form[0])) return;
         let authorsPayload;
         let contributorsPayload = null;

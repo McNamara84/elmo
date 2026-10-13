@@ -625,6 +625,13 @@ $(document).ready(function () {
     return Array.isArray(authors) ? authors : [];
   }
 
+  /**
+   * Replace author cards from an import or an autosaved draft.
+   * @param {Array<Object>|string} authors Structured or serialized author entries.
+   * @param {Object} [options={}] Restore settings.
+   * @param {boolean} [options.restoreUiState=false] Restore unconfirmed affiliation text only for autosave.
+   * @returns {Array<Object>} Confirmed metadata synchronized to the transport field.
+   */
   function setAuthors(authors, options = {}) {
     const normalizedAuthors = normalizeAuthorsInput(authors);
     let keptPersonAddButton = false;
@@ -908,6 +915,10 @@ $(document).ready(function () {
     return includeEmpty || hasInstitutionContent(author) ? author : null;
   }
 
+  /**
+   * Collect cards in DOM order, including pending-only cards and invalid empty label slots.
+   * @returns {Array<Object>} Draft copies with optional _ui.affiliationInput, never export payloads.
+   */
   function collectDraftEntries() {
     const entries = [];
     stack.children('[data-author-entry-row]').each(function () {
@@ -922,6 +933,12 @@ $(document).ready(function () {
     return entries;
   }
 
+  /**
+   * Synchronize ORCID/import affiliations through the editor so fields and summaries agree.
+   * @param {HTMLElement|jQuery} card Target author card.
+   * @param {Array<string|Object>} values Ordered affiliation values.
+   * @returns {void}
+   */
   function setEntryAffiliations(card, values) {
     $(card).find('[data-affiliation-editor]')[0]?.affiliationEditor.setAffiliations(values);
   }

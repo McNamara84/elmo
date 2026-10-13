@@ -745,6 +745,7 @@ class AutosaveService {
       values[element.name] = element.value;
     });
 
+    // Draft-only UI state belongs to these copies; the live metadata fields stay free of _ui.
     for (const [fieldName, stackName] of [['authorsPayload', 'authorStack'], ['contributorsPayload', 'contributorStack']]) {
       if (this.form.querySelector(`[name="${fieldName}"]`) && window[stackName]?.collectDraftEntries) {
         values[fieldName] = JSON.stringify(window[stackName].collectDraftEntries());

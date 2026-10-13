@@ -1,11 +1,47 @@
-/** Shared affiliation UI. Stacks own the compatible fields and ordered metadata payloads. */
+/**
+ * Shared affiliation UI; stacks own the compatible fields and metadata payloads.
+ * @module affiliationEditor
+ */
+
+/**
+ * @typedef {Object} Affiliation
+ * @property {string} label Displayed organization or department name.
+ * @property {string} rorId Short ROR identifier, or an empty string for free text.
+ */
+
+/**
+ * @typedef {Object} AffiliationEditor
+ * @property {jQuery} element Root to append to the owning card.
+ * @property {function(): void} render Refresh labels and confirmed affiliations from the stack.
+ * @property {function(): boolean} validate Check all confirmed labels.
+ * @property {function(): Array<Affiliation>} getAffiliations Read ordered pairs, including invalid empty slots.
+ * @property {function(Array<string|Object>): void} setAffiliations Replace confirmed pairs and notify the stack.
+ * @property {function(): string} getPendingInput Read unconfirmed input without trimming it.
+ * @property {function(string): void} setPendingInput Restore draft input without confirming it.
+ * @property {function(): void} clearPendingInput Discard input and invalidate its search.
+ * @property {function(): void} showPendingWarning Request a decision before a form action.
+ * @property {function(): void} focus Focus the unconfirmed input field.
+ * @property {function(): void} destroy Cancel searches and detach listeners before removing the card.
+ */
+
+/**
+ * Strip a ROR URL prefix while accepting identifiers already stored in short form.
+ * @param {*} value Raw identifier or ROR URL.
+ * @returns {string} Short ROR identifier.
+ */
 export function normalizeRorId(value) {
   if (!value) return '';
 
   return String(value).trim().replace(/^https?:\/\/ror\.org\//, '');
 }
 
-// Editor drafts keep empty slots until the user repairs or removes their labels.
+/**
+ * Normalize legacy strings and structured affiliation values without splitting labels.
+ * @param {Array<string|Object>|null|undefined} affiliations Values from a stack or import.
+ * @param {Object} [options={}] Normalization settings.
+ * @param {boolean} [options.keepEmpty=false] Preserve invalid editor slots until repaired or removed.
+ * @returns {Array<Affiliation>} Ordered label/ROR pairs.
+ */
 export function normalizeAffiliations(affiliations, { keepEmpty = false } = {}) {
   if (!Array.isArray(affiliations)) return [];
 
@@ -24,6 +60,11 @@ export function normalizeAffiliations(affiliations, { keepEmpty = false } = {}) 
     });
 }
 
+/**
+ * Render a summary badge using text so imported labels cannot become markup.
+ * @param {Affiliation} affiliation Confirmed label/ROR pair.
+ * @returns {jQuery} Summary badge.
+ */
 export function createAffiliationBadge(affiliation) {
   const badge = $('<span class="badge elmo-badge border text-body-secondary"></span>');
   const label = affiliation.label || '';
@@ -32,17 +73,30 @@ export function createAffiliationBadge(affiliation) {
   return badge;
 }
 
+/**
+ * Create one editor per card. The owner appends its root and calls destroy() on removal.
+ * Search state belongs to this instance; pending text remains separate from confirmed pairs.
+ * @param {Object} options Stack integration callbacks and labels.
+ * @param {'author'|'contributor'} [options.group='author'] Compatible selector aliases.
+ * @param {function(string, string): string} options.translate Translation callback with fallback.
+ * @param {jQuery} [options.helpButton] Help icon for the owning form group.
+ * @param {function(): Array<Affiliation>} options.readAffiliations Read compatible stack fields.
+ * @param {function(Array<Affiliation>): void} options.writeAffiliations Write compatible stack fields.
+ * @param {function(): void} [options.onChange] Update metadata and schedule autosave.
+ * @returns {AffiliationEditor} Editor API attached to the root DOM element.
+ */
 export function createAffiliationEditor(options) {
-  const row = $(options.card);
   const translate = options.translate;
   const affiliationSearchMinLength = 3;
   const affiliationSearchDebounceMs = 250;
   const affiliationSearchTimers = new WeakMap();
+  // Invalidate immediately on input, before debounce, so a slow previous response cannot reappear.
   let requestVersion = 0;
   let destroyed = false;
   let searchStatus = '';
   const element = createEditorMarkup();
 
+  // Existing stack selectors remain usable after switching to the shared editor.
   function applyAliases() {
     element.find('*').addBack().each(function () {
       Array.from(this.attributes).forEach(attribute => {
@@ -54,10 +108,14 @@ export function createAffiliationEditor(options) {
   }
 
   function updatePayload() { options.onChange?.(); }
-  function setRowAffiliations(_row, values, settings = {}) {
+  function setAffiliations(values, settings = {}) {
     options.writeAffiliations(normalizeAffiliations(values, { keepEmpty: true }));
-    if (settings.render !== false) renderAffiliationEditor(row);
-    else validateAffiliationEditor(row);
+    if (settings.render !== false) {
+      renderAffiliationEditor();
+    } else {
+      // Validate in place while typing to keep the active input and caret intact.
+      validateAffiliationEditor();
+    }
   }
   function createEditorMarkup() {
     const editor = $('<div class="col-12 mt-2" data-affiliation-editor></div>');
@@ -85,7 +143,6 @@ export function createAffiliationEditor(options) {
     return editor.append(panel);
   }
 
-
   function updateAffiliationEditorTexts(editor) {
     editor.find('[data-affiliation-title]').text(translate('affiliations.title', 'Affiliations'));
     editor.find('[data-affiliation-input]').attr({
@@ -101,7 +158,6 @@ export function createAffiliationEditor(options) {
     editor.find('[data-affiliation-add]').prop('disabled', !String(editor.find('[data-affiliation-input]').val() || '').trim());
     editor.find('[data-affiliation-status]').text(searchStatus ? translate(`affiliations.${searchStatus}`, {loading: 'Searching…', noResults: 'No ROR matches. You can add free text.', error: 'Search unavailable. Try again or add free text.'}[searchStatus]) : '');
   }
-
 
   function createAffiliationChip(affiliation, index, count) {
     const label = affiliation.label || '';
@@ -141,8 +197,7 @@ export function createAffiliationEditor(options) {
     return chip;
   }
 
-
-  function renderAffiliationEditor(row) {
+  function renderAffiliationEditor() {
     const editor = element;
     if (!editor.length) {
       return;
@@ -159,8 +214,7 @@ export function createAffiliationEditor(options) {
     applyAliases();
   }
 
-
-  function readEditorAffiliations(row) {
+  function readEditorAffiliations() {
     return element.find('[data-affiliation-chip]').map(function () {
       const chip = $(this);
       return {
@@ -170,11 +224,9 @@ export function createAffiliationEditor(options) {
     }).get();
   }
 
-
   function getAffiliationInvalidMessage() {
     return translate('affiliations.invalid', 'Please provide an affiliation.');
   }
-
 
   function validateAffiliationChip(chip) {
     const labelInput = chip.find('[data-affiliation-label]').first();
@@ -204,8 +256,7 @@ export function createAffiliationEditor(options) {
     return !isInvalid;
   }
 
-
-  function validateAffiliationEditor(row) {
+  function validateAffiliationEditor() {
     let isValid = true;
 
     element.find('[data-affiliation-chip]').each(function () {
@@ -217,11 +268,10 @@ export function createAffiliationEditor(options) {
     return isValid;
   }
 
-
-  function addAffiliation(row, affiliation) {
+  function addAffiliation(affiliation) {
     const editor = element;
     const input = editor.find('[data-affiliation-input]').first();
-    const affiliations = readEditorAffiliations(row);
+    const affiliations = readEditorAffiliations();
     const normalizedAffiliation = normalizeAffiliations([affiliation])[0];
 
     if (!normalizedAffiliation) {
@@ -229,14 +279,13 @@ export function createAffiliationEditor(options) {
     }
 
     affiliations.push(normalizedAffiliation);
-    setRowAffiliations(row, affiliations);
-    invalidateAffiliationSearch(row);
+    setAffiliations(affiliations);
+    invalidateAffiliationSearch();
     clearPendingInput();
     input.trigger('focus');
     editor.find('[data-affiliation-results]').empty().addClass('d-none');
     updatePayload();
   }
-
 
   function getAffiliationSearchFunction() {
     if (typeof window.searchAffiliationsFromServer === 'function') {
@@ -248,7 +297,6 @@ export function createAffiliationEditor(options) {
     return null;
   }
 
-
   function normalizeAffiliationSearchResult(result) {
     return normalizeAffiliations([{
       label: result.label || result.name || result.value || result.mappedValue || '',
@@ -256,8 +304,7 @@ export function createAffiliationEditor(options) {
     }])[0];
   }
 
-
-  function renderAffiliationSearchResults(row, results) {
+  function renderAffiliationSearchResults(results) {
     const editor = element;
     const resultContainer = editor.find('[data-affiliation-results]').empty();
     const normalizedResults = results.map(normalizeAffiliationSearchResult).filter(Boolean);
@@ -282,13 +329,11 @@ export function createAffiliationEditor(options) {
     applyAliases();
   }
 
-
-  function invalidateAffiliationSearch(row) {
+  function invalidateAffiliationSearch() {
     requestVersion++;
   }
 
-
-  async function searchAffiliations(row) {
+  async function searchAffiliations() {
     const editor = element;
     const input = editor.find('[data-affiliation-input]').first();
     const query = String(input.val() || '').trim();
@@ -296,7 +341,7 @@ export function createAffiliationEditor(options) {
     const requestId = ++requestVersion;
 
     if (!searchFunction || query.length < affiliationSearchMinLength) {
-      renderAffiliationSearchResults(row, []);
+      renderAffiliationSearchResults([]);
       return;
     }
 
@@ -315,12 +360,11 @@ export function createAffiliationEditor(options) {
       return;
     }
     searchStatus = Array.isArray(results) && results.length ? '' : 'noResults';
-    renderAffiliationSearchResults(row, Array.isArray(results) ? results : []);
+    renderAffiliationSearchResults(Array.isArray(results) ? results : []);
     updateAffiliationEditorTexts(element);
   }
 
-
-  function scheduleAffiliationSearch(row) {
+  function scheduleAffiliationSearch() {
     const inputElement = element.find('[data-affiliation-input]').get(0);
     if (!inputElement) {
       return;
@@ -331,32 +375,31 @@ export function createAffiliationEditor(options) {
       clearTimeout(existingTimer);
     }
 
-    invalidateAffiliationSearch(row);
+    invalidateAffiliationSearch();
     searchStatus = '';
-    renderAffiliationSearchResults(row, []);
+    renderAffiliationSearchResults([]);
     const query = String(inputElement.value || '').trim();
     if (query.length < affiliationSearchMinLength) {
-      invalidateAffiliationSearch(row);
-      renderAffiliationSearchResults(row, []);
+      invalidateAffiliationSearch();
+      renderAffiliationSearchResults([]);
       return;
     }
 
     const timer = setTimeout(function () {
       affiliationSearchTimers.delete(inputElement);
-      searchAffiliations(row).catch(function (error) {
+      searchAffiliations().catch(function (error) {
         console.error('Affiliation search error:', error);
       });
     }, affiliationSearchDebounceMs);
     affiliationSearchTimers.set(inputElement, timer);
   }
 
-
   element.on('input', '[data-affiliation-label]', function () {
-    setRowAffiliations(row, readEditorAffiliations(row), { render: false });
+    setAffiliations(readEditorAffiliations(), { render: false });
     updatePayload();
   });
   element.on('input keyup search paste', '[data-affiliation-input]', function () {
-    scheduleAffiliationSearch(row);
+    scheduleAffiliationSearch();
     updateAffiliationEditorTexts(element);
     updatePayload();
   });
@@ -368,7 +411,7 @@ export function createAffiliationEditor(options) {
   });
   element.on('click', '[data-affiliation-add]', function () {
     const label = String(element.find('[data-affiliation-input]').val() || '').trim();
-    if (label) addAffiliation(row, { label, rorId: '' });
+    if (label) addAffiliation({ label, rorId: '' });
   });
   element.on('click', '[data-affiliation-discard]', function () {
     clearPendingInput();
@@ -376,14 +419,14 @@ export function createAffiliationEditor(options) {
     api.focus();
   });
   element.on('click', '[data-affiliation-result]', function () {
-    addAffiliation(row, {
+    addAffiliation({
       label: $(this).attr('data-affiliation-label-value') || '',
       rorId: $(this).attr('data-affiliation-ror-value') || ''
     });
   });
   element.on('click', '[data-affiliation-remove], [data-affiliation-move-up], [data-affiliation-move-down]', function () {
     const button = $(this);
-    const values = readEditorAffiliations(row);
+    const values = readEditorAffiliations();
     const index = Number(button.closest('[data-affiliation-chip]').attr('data-affiliation-index'));
     if (button.is('[data-affiliation-remove]')) values.splice(index, 1);
     else {
@@ -391,38 +434,43 @@ export function createAffiliationEditor(options) {
       if (target < 0 || target >= values.length) return;
       [values[index], values[target]] = [values[target], values[index]];
     }
-    setRowAffiliations(row, values);
+    setAffiliations(values);
     updatePayload();
   });
 
   function clearPendingInput() {
-    invalidateAffiliationSearch(row);
+    invalidateAffiliationSearch();
     clearTimeout(affiliationSearchTimers.get(element.find('[data-affiliation-input]').get(0)));
     element.find('[data-affiliation-input]').val('');
-    renderAffiliationSearchResults(row, []);
+    renderAffiliationSearchResults([]);
     searchStatus = '';
     updateAffiliationEditorTexts(element);
   }
 
   const api = {
     element,
-    render: () => renderAffiliationEditor(row),
-    validate: () => validateAffiliationEditor(row),
-    getAffiliations: () => readEditorAffiliations(row),
-    setAffiliations: values => { setRowAffiliations(row, values); updatePayload(); },
+    render: () => renderAffiliationEditor(),
+    validate: () => validateAffiliationEditor(),
+    getAffiliations: () => readEditorAffiliations(),
+    setAffiliations: values => { setAffiliations(values); updatePayload(); },
     getPendingInput: () => String(element.find('[data-affiliation-input]').val() || ''),
-    setPendingInput: value => { clearPendingInput(); element.find('[data-affiliation-input]').val(value || ''); updateAffiliationEditorTexts(element); updatePayload(); },
+    setPendingInput: value => {
+      clearPendingInput();
+      element.find('[data-affiliation-input]').val(value || '');
+      updateAffiliationEditorTexts(element);
+      updatePayload();
+    },
     clearPendingInput: () => { clearPendingInput(); updatePayload(); },
     showPendingWarning: () => element.find('[data-affiliation-pending-warning]').removeClass('d-none'),
     focus: () => element.find('[data-affiliation-input]').trigger('focus'),
     destroy() {
       destroyed = true;
-      invalidateAffiliationSearch(row);
+      invalidateAffiliationSearch();
       clearTimeout(affiliationSearchTimers.get(element.find('[data-affiliation-input]').get(0)));
       element.off();
     }
   };
   element[0].affiliationEditor = api;
-  renderAffiliationEditor(row);
+  renderAffiliationEditor();
   return api;
 }
