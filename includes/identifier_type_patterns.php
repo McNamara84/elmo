@@ -37,6 +37,7 @@ function identifierTypePatternEntries(mixed $entries): array
         $normalized[] = ['pattern' => $pattern, 'priority' => $priority];
     }
 
+    // Higher priority wins. The comparison is reversed so 30 sorts before 10.
     usort(
         $normalized,
         static fn(array $left, array $right): int => $right['priority'] <=> $left['priority']
@@ -47,6 +48,10 @@ function identifierTypePatternEntries(mixed $entries): array
 
 /**
  * Joins several full-value patterns so one HTML pattern attribute accepts any of them.
+ *
+ * The browser wraps a pattern attribute as ^(?: ... )$. Each alternative is its
+ * own group because the source patterns already contain ^ and $. Without the
+ * group, ^ in a later alternative would not mean "start of the value".
  *
  * @param list<array{pattern: string, priority: int}> $entries
  */
@@ -78,12 +83,18 @@ function resolveIdentifierTypePatterns(array $type): array
     $detection = identifierTypePatternEntries(is_array($patterns) ? ($patterns['detection'] ?? []) : []);
     $legacy = trim((string) ($type['pattern'] ?? ''));
 
+    // A non-empty validation list is left alone. Detection patterns are often
+    // prefixes such as ^https?://, and the browser requires the pattern to
+    // match the whole value, so they must not replace a real validation regex.
+    // Copy detection only when validation itself is empty.
     if ($validation === [] && $detection !== []) {
         $validation = $detection;
     }
     if ($validation === [] && $legacy !== '') {
         $validation = [['pattern' => $legacy, 'priority' => 0]];
     }
+    // Detection falls back the other way, including a validation list that was
+    // just filled from the legacy field above.
     if ($detection === []) {
         $detection = $validation;
     }
