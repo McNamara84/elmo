@@ -1249,7 +1249,7 @@ class ErnieService
     {
         return [
             ['id' => 1, 'name' => 'DOI', 'description' => 'A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.', 'pattern' => '^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$'],
-            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '^https?:\\/\\/\\S+$'],
             ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => '^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$'],
             ['id' => 4, 'name' => 'URN', 'description' => 'A unique and persistent identifier of an electronic document.', 'pattern' => '^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$'],
             ['id' => 19, 'name' => 'RAiD', 'description' => 'A Research Activity Identifier used to identify and link research projects or activities.', 'pattern' => '^(?:https?:\/\/raid\.org\/)?10\.\d{4,9}\/raid\.[A-Za-z0-9._-]+$'],
