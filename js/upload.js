@@ -203,6 +203,10 @@ function normalizeJsonLdPayload(payload) {
  */
 function convertJsonLdToXmlDocument(payload) {
     const normalizedPayload = normalizeJsonLdPayload(payload);
+    if (!normalizedPayload || typeof normalizedPayload !== 'object' || Array.isArray(normalizedPayload)) {
+        throw new Error('Invalid JSON-LD file');
+    }
+
     const xmlDoc = document.implementation && typeof document.implementation.createDocument === 'function'
         ? document.implementation.createDocument(DATACITE_NAMESPACE, 'resource', null)
         : parseXmlDocument('<resource xmlns="' + DATACITE_NAMESPACE + '"></resource>');

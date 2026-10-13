@@ -46,8 +46,11 @@ describe('populateIcgemDataSources satellite platforms', () => {
           <input name="dIdentifier[]" />
           <select name="dIdentifierType[]"></select>
           <input name="dName[]" />
-          <button type="button" class="addDataSource"></button>
+          <button type="button" class="removeButton"></button>
         </div>
+      </div>
+      <div data-datasource-add-actions>
+        <button type="button" class="addDataSource" id="button-datasource-add"></button>
       </div>
     `;
     const platformInput = document.querySelector('input[name="satellite_platform[]"]');
@@ -316,9 +319,11 @@ describe('populateIcgemDataSources satellite platforms', () => {
     function buildStack(rowCount) {
       document.body.innerHTML = `
         <div id="group-datasources">${rowHtml.repeat(rowCount)}</div>
-        <button type="button" class="addDataSource"></button>
+        <div data-datasource-add-actions>
+          <button type="button" class="addDataSource" id="button-datasource-add"></button>
+        </div>
       `;
-      $('.addDataSource').on('click', () => $('#group-datasources').append(rowHtml));
+      $('#button-datasource-add').on('click', () => $('#group-datasources').append(rowHtml));
       $('#group-datasources').on('click', '.removeButton', function () {
         $(this).closest('.row').remove();
       });

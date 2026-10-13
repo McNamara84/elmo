@@ -1,5 +1,6 @@
 import { readFileSync, writeFileSync } from 'fs';
 import path from 'path';
+import { REPO_ROOT } from '../utils/constants';
 
 export type Variant = 'generic' | 'gem' | 'msl' | 'igsn';
 
@@ -59,10 +60,10 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   },
 };
 
-/** Path to settings.php, resolved from the project root via process.cwd(). */
-const SETTINGS_PHP = path.join(process.cwd(), 'settings.php');
+/** settings.php in the ELMO project root, beside this test tree. */
+const SETTINGS_PHP = path.join(REPO_ROOT, 'settings.php');
 /** Lock file applied after env overrides in settings.php / settings.elmo.php. */
-const VARIANT_LOCK_PHP = path.join(process.cwd(), 'playwright-variant-lock.php');
+const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright-variant-lock.php');
 
 const MSL_DERIVED_FLAGS = [
   'showMslLabs',
