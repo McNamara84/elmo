@@ -829,6 +829,13 @@ function updateValidationPattern(selectElement) {
     return;
   }
 
+  const vocabularyPattern = validationPatternForType(selectedType);
+  if (vocabularyPattern) {
+    identifierPatternCache.set(selectedType, vocabularyPattern);
+    applyPattern(vocabularyPattern);
+    return;
+  }
+
   if (identifierPatternCache.has(selectedType)) {
     applyPattern(identifierPatternCache.get(selectedType));
     return;
@@ -877,34 +884,114 @@ function setDetectedIdentifierType(selectElement, type) {
   }
 }
 
-function detectIdentifierType(identifier, identifierTypes) {
-  const doiType = identifierTypes.find(type => String(type.name || '').toUpperCase() === 'DOI');
-  if (doiType && DOI_IDENTIFIER_REGEX.test(String(identifier || '').trim())) {
-    return doiType;
-  }
+function compiledIdentifierPattern(pattern) {
+  return normalizeIdentifierPattern(pattern).replace(/\\{2}/g, '\\');
+}
 
-  const matchingTypes = identifierTypes.filter(type => {
+function patternEntries(entries) {
+  if (!Array.isArray(entries)) {
+    return [];
+  }
+  return entries.map(entry => {
+    if (typeof entry === 'string') {
+      return { pattern: entry, priority: 0 };
+    }
+    return {
+      pattern: entry && entry.pattern ? String(entry.pattern) : '',
+      priority: Number(entry && entry.priority) || 0,
+    };
+  }).filter(entry => entry.pattern !== '');
+}
+
+function detectionCandidates(type) {
+  const listed = patternEntries(type.detectionPatterns);
+  if (listed.length) {
+    return listed;
+  }
+  const nested = patternEntries(type.patterns && type.patterns.detection);
+  if (nested.length) {
+    return nested;
+  }
+  const legacy = compiledIdentifierPattern(type.pattern);
+  if (legacy) {
+    return [{ pattern: legacy, priority: getIdentifierPriority(type.name) }];
+  }
+  return [];
+}
+
+function validationPatternForType(typeName) {
+  const types = relatedWorkDropdownCache.identifierTypes;
+  if (!Array.isArray(types)) {
+    return '';
+  }
+  const match = types.find(type => String(type.name || '') === typeName);
+  if (!match) {
+    return '';
+  }
+  const validation = compiledIdentifierPattern(match.pattern);
+  if (validation) {
+    return validation;
+  }
+  const detection = detectionCandidates(match)
+    .slice()
+    .sort((left, right) => right.priority - left.priority);
+  return detection.length ? compiledIdentifierPattern(detection[0].pattern) : '';
+}
+
+function bestDetectionMatch(type, identifier) {
+  let best = null;
+  detectionCandidates(type).forEach(candidate => {
     try {
-      let pattern = normalizeIdentifierPattern(type.pattern);
-      if (pattern === '') {
-        return false;
+      const pattern = compiledIdentifierPattern(candidate.pattern);
+      if (pattern === '' || !new RegExp(pattern, 'i').test(identifier)) {
+        return;
       }
-      pattern = pattern.replace(/\\{2}/g, '\\');
-      return new RegExp(pattern, 'i').test(identifier);
+      const length = pattern.length;
+      if (
+        !best
+        || candidate.priority > best.priority
+        || (candidate.priority === best.priority && length > best.length)
+      ) {
+        best = { priority: candidate.priority, length };
+      }
     } catch (error) {
       console.warn(`Invalid pattern for ${type.name}:`, error);
-      return false;
+    }
+  });
+  return best;
+}
+
+function detectIdentifierType(identifier, identifierTypes) {
+  const value = String(identifier || '').trim();
+  const doiType = identifierTypes.find(type => String(type.name || '').toUpperCase() === 'DOI');
+  const matches = [];
+
+  identifierTypes.forEach(type => {
+    const match = bestDetectionMatch(type, value);
+    if (match) {
+      matches.push({ type, priority: match.priority, length: match.length });
     }
   });
 
-  matchingTypes.sort((a, b) => {
-    const priorityDifference = getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
-    if (priorityDifference !== 0) {
-      return priorityDifference;
+  if (doiType && DOI_IDENTIFIER_REGEX.test(value) && !matches.some(match => match.type === doiType)) {
+    matches.push({
+      type: doiType,
+      priority: getIdentifierPriority('DOI'),
+      length: DOI_IDENTIFIER_PATTERN.length,
+    });
+  }
+
+  matches.sort((left, right) => {
+    if (right.priority !== left.priority) {
+      return right.priority - left.priority;
     }
-    return String(b.pattern || '').length - String(a.pattern || '').length;
+    const typePriority = getIdentifierPriority(right.type.name) - getIdentifierPriority(left.type.name);
+    if (typePriority !== 0) {
+      return typePriority;
+    }
+    return right.length - left.length;
   });
-  return matchingTypes[0] || null;
+  return matches.length ? matches[0].type : null;
 }
 
 /**

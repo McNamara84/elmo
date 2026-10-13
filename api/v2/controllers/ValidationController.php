@@ -7,6 +7,7 @@
 
 // Include settings.php so that variables are available
 require_once __DIR__ . '/../../../settings.php';
+require_once __DIR__ . '/../../../includes/identifier_type_patterns.php';
 
 /**
  * Class ValidationController
@@ -61,6 +62,13 @@ class ValidationController
             return;
         }
         $result = $stmt->get_result();
+
+        $vocabularyPattern = $this->validationPatternFromVocabulary($type);
+        if ($vocabularyPattern !== null && $vocabularyPattern !== '') {
+            echo json_encode(['pattern' => $vocabularyPattern]);
+            $stmt->close();
+            exit();
+        }
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
@@ -123,10 +131,14 @@ class ValidationController
      * not on every read request. Falls back to local database if ERNIE is unavailable.
      *
      * Each result contains:
-     * - name        → the name of the identifier type
-     * - pattern     → the associated validation pattern (regex)
-     * - description → a description of the type
-     * 
+     * - name               → the name of the identifier type
+     * - pattern            → validation regex from patterns.validation
+     * - detectionPatterns  → patterns.detection, used to choose the type
+     * - description        → a description of the type
+     *
+     * When patterns.validation is empty, pattern falls back to detection and
+     * then to the legacy pattern field.
+     *
      * @return void
      */
     public function getActiveIdentifierTypes(): void
@@ -143,11 +155,15 @@ class ValidationController
                 });
 
                 if (!empty($ernieTypes)) {
-                    $identifierTypes = array_map(fn($t) => [
-                        'name' => $t['name'],
-                        'pattern' => $t['pattern'] ?? '',
-                        'description' => $t['description'] ?? '',
-                    ], $ernieTypes);
+                    $identifierTypes = array_map(static function ($type) {
+                        $resolved = resolveIdentifierTypePatterns($type);
+                        return [
+                            'name' => $type['name'] ?? '',
+                            'pattern' => $resolved['pattern'],
+                            'detectionPatterns' => $resolved['detectionPatterns'],
+                            'description' => $type['description'] ?? '',
+                        ];
+                    }, $ernieTypes);
 
                     http_response_code(200);
                     header('Content-Type: application/json');
@@ -184,9 +200,11 @@ class ValidationController
             }
             $identifierTypes = [];
             while ($row = $result->fetch_assoc()) {
+                $resolved = resolveIdentifierTypePatterns($row);
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => $resolved['pattern'],
+                    'detectionPatterns' => $resolved['detectionPatterns'],
                     'description' => $row['description'],
                 ];
             }
@@ -236,5 +254,33 @@ class ValidationController
             http_response_code(500);
             echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
         }
+    }
+
+    /**
+     * Validation regex for one identifier type from the ERNIE vocabulary cache.
+     *
+     * Returns null when ERNIE has no usable validation or detection pattern.
+     */
+    private function validationPatternFromVocabulary(string $typeName): ?string
+    {
+        try {
+            require_once __DIR__ . '/../services/ErnieService.php';
+            $ernieService = new \ErnieService();
+            if (!$ernieService->isConfigured()) {
+                return null;
+            }
+
+            foreach ($ernieService->getIdentifierTypesWithCache() as $type) {
+                if (strcasecmp((string) ($type['name'] ?? ''), $typeName) !== 0) {
+                    continue;
+                }
+                $pattern = resolveIdentifierTypePatterns($type)['pattern'];
+                return $pattern !== '' ? $pattern : null;
+            }
+        } catch (Exception $e) {
+            error_log('API Error in validationPatternFromVocabulary: ' . $e->getMessage());
+        }
+
+        return null;
     }
 }

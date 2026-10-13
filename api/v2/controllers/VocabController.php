@@ -12,6 +12,7 @@ if (!defined('UNIT_TESTING')) {
     require_once __DIR__ . '/../../../settings.php';
 }
 require_once __DIR__ . '/../services/DataCiteRelationType.php';
+require_once __DIR__ . '/../../../includes/identifier_type_patterns.php';
 
 class VocabController
 {
@@ -2153,7 +2154,8 @@ class VocabController
                 }
 
                 $desc = $type['description'] ?? null;
-                $pattern = $type['pattern'] ?? null;
+                $resolvedPattern = resolveIdentifierTypePatterns($type)['pattern'];
+                $pattern = $resolvedPattern !== '' ? $resolvedPattern : null;
 
                 $sql = "INSERT INTO `Identifier_Type` (`ernie_id`, `name`, `description`, `pattern`, `isShown`)
                         VALUES (?, ?, ?, ?, 1)
