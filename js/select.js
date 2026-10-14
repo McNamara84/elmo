@@ -670,7 +670,8 @@ $(document).ready(function () {
 
 /**
  * Function to populate the dropdown menu of identifier types.
- * @param {string} id - The ID selector of the dropdown to populate.
+ * @param {string|jQuery} id - The selector or dropdown to populate.
+ * @returns {Promise<void>} Readiness shared by imports and autocomplete.
  */
 function setupIdentifierTypesDropdown(id) {
   var select = $(id);
@@ -718,10 +719,7 @@ function setupIdentifierTypesDropdown(id) {
 }
 
 
-/**
- * Function to update the identifier type based on the entered identifier.
- * @param {HTMLElement} inputElement - The input element for the identifier.
- */
+// Each DOM input owns its timer and version; editing one row cannot cancel another.
 const identifierFieldStates = new WeakMap();
 const identifierRegistry = new identifierDetection.IdentifierDetectionService({
   request: doi => new Promise((resolve, reject) => $.ajax({
@@ -730,11 +728,21 @@ const identifierRegistry = new identifierDetection.IdentifierDetectionService({
   })),
 });
 
+/**
+ * Gets the state used to reject stale asynchronous results for this field.
+ * @param {HTMLInputElement} input Identifier field.
+ * @returns {{version: number, timer: number|null}} Field's request version and debounce timer.
+ */
 function fieldState(input) {
   if (!identifierFieldStates.has(input)) identifierFieldStates.set(input, { version: 0, timer: null });
   return identifierFieldStates.get(input);
 }
 
+/**
+ * Cancels scheduled detection and invalidates in-flight results on edits or restoration.
+ * @param {HTMLInputElement} [input] Identifier field, if still present.
+ * @returns {void}
+ */
 function invalidateIdentifierDetection(input) {
   if (!input) return;
   const state = fieldState(input);
@@ -744,6 +752,14 @@ function invalidateIdentifierDetection(input) {
   detectionStatus(input, null);
 }
 
+/**
+ * Protects an imported or autosaved choice, including an intentional empty type.
+ * GEM options may arrive after restoration; only the same field version may
+ * reapply the stored choice once its dropdown is ready.
+ * @param {HTMLInputElement} [input] Restored identifier field.
+ * @param {string|null} [restoredType] Stored choice for a dropdown still loading.
+ * @returns {void}
+ */
 function restoreIdentifierType(input, restoredType) {
   if (!input) return;
   invalidateIdentifierDetection(input);
@@ -822,6 +838,11 @@ function normalizeIdentifierPattern(pattern) {
   return identifierDetection.normalizePattern(pattern);
 }
 
+/**
+ * Applies format/checksum validity to the matching identifier without browser regex differences.
+ * @param {HTMLSelectElement} selectElement Identifier type dropdown in the same row/card.
+ * @returns {void}
+ */
 function updateValidationPattern(selectElement) {
   const select = $(selectElement);
   const selectedType = String(select.val() || '').trim();
@@ -864,6 +885,12 @@ function updateValidationPattern(selectElement) {
   });
 }
 
+/**
+ * Updates the accessible hint for a pending or unresolved lookup.
+ * @param {HTMLInputElement} input Identifier field receiving the hint.
+ * @param {'pending'|'unknown'|null} status Hint state; null hides it.
+ * @returns {void}
+ */
 function detectionStatus(input, status) {
   const field = $(input);
   let hint = field.siblings('[data-identifier-detection-status]').first();
@@ -896,12 +923,22 @@ function setDetectedIdentifierType(selectElement, type) {
   }
 }
 
+/**
+ * Returns an active type only when local syntax determines it uniquely.
+ * @param {string} identifier Entered identifier.
+ * @param {Object[]} identifierTypes Active vocabulary metadata.
+ * @returns {Object|null} Detected type, or null for ambiguous/registry-dependent input.
+ */
 function detectIdentifierType(identifier, identifierTypes) {
   const local = identifierDetection.classifyLocal(identifier, identifierTypes);
   return local.status === 'detected' ? identifierDetection.activeType(local.candidates[0], identifierTypes) : null;
 }
 
-/** Only the current field version may apply a registry result. */
+/**
+ * Resolves syntax or registry evidence without replacing later edits or manual choices.
+ * @param {HTMLInputElement} [inputElement] Related Work or GEM identifier field.
+ * @returns {Promise<void>} Completes when detection finishes or its result is discarded.
+ */
 async function updateIdentifierType(inputElement) {
   if (!inputElement) return;
   const input = $(inputElement);
@@ -910,6 +947,7 @@ async function updateIdentifierType(inputElement) {
   const state = fieldState(inputElement);
   clearTimeout(state.timer);
   const version = ++state.version;
+  // Check again after each await: imports can keep the same text while changing its type.
   const current = () => inputElement.isConnected && !inputElement.disabled && state.version === version
     && String(input.val() || '') === identifier && !hasManualIdentifierTypeSelection(select, identifier);
   if (!current()) return;
@@ -964,6 +1002,11 @@ function debounce(func, wait) {
   };
 }
 
+/**
+ * Clears a previous choice immediately and debounces only this field's new input.
+ * @param {HTMLInputElement} input Edited identifier field.
+ * @returns {void}
+ */
 function scheduleIdentifierDetection(input) {
   invalidateIdentifierDetection(input);
   clearManualIdentifierTypeSelection(identifierTypeSelectForInput(input));

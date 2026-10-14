@@ -536,6 +536,8 @@ class AutosaveService {
       element.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
+    // Stored arrays follow enabled fields in DOM order. Protect even an empty
+    // type choice while newly created GEM rows are still loading their options.
     const identifierPositions = new Map();
     this.form.querySelectorAll('input[name="rIdentifier[]"], input[name="dIdentifier[]"]').forEach(input => {
       if (input.disabled) return;

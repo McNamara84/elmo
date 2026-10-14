@@ -5,7 +5,11 @@ declare(strict_types=1);
 /** Adapts ERNIE's grouped patterns and keeps ELMO input forms compatible. */
 final class IdentifierTypePatterns
 {
-    /** @return array<string, string> */
+    /**
+     * Returns compatible input formats for known types; checksums are validated in JavaScript.
+     *
+     * @return array<string, string>
+     */
     public static function supported(): array
     {
         $doi = '10\.\d{4,9}/[^\s]+';
@@ -23,7 +27,12 @@ final class IdentifierTypePatterns
         ];
     }
 
-    /** @param array<mixed> $type */
+    /**
+     * Flattens grouped ERNIE validation alternatives for ELMO's legacy pattern field.
+     * Known types use compatible local formats; detection priorities cannot validate input.
+     *
+     * @param array<mixed> $type Identifier type metadata from ERNIE or the local database.
+     */
     public static function validationPattern(array $type): string
     {
         foreach (self::supported() as $name => $pattern) {
@@ -41,6 +50,7 @@ final class IdentifierTypePatterns
         return $patterns !== [] ? '^(?:' . implode('|', $patterns) . ')$' : self::normalize((string) ($type['pattern'] ?? ''));
     }
 
+    /** Removes legacy quotes and PCRE delimiters while preserving escaped backslashes. */
     public static function normalize(string $pattern): string
     {
         $pattern = trim($pattern);

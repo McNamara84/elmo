@@ -4,7 +4,13 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../api/v2/services/IdentifierTypePatterns.php';
 
-/** Repair patterns in place, preserving identifiers, activation and metadata. */
+/**
+ * Repairs patterns in place, preserving identifiers, activation and metadata.
+ *
+ * @param mysqli $connection Database containing the Identifier_Type lookup table.
+ * @return int Number of changed rows; subsequent runs are idempotent.
+ * @throws Throwable On an update failure, after rolling back the transaction.
+ */
 function updateIdentifierPatterns(mysqli $connection): int
 {
     $connection->begin_transaction();

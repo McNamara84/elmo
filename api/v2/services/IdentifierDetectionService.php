@@ -5,10 +5,19 @@ declare(strict_types=1);
 /** Confirms DOI subtypes using public registry records, never prefix guesses. */
 class IdentifierDetectionService
 {
+    /** @var Closure(string, float): array{status: int, body: string} */
     private Closure $transport;
+    /** @var Closure(): float */
     private Closure $clock;
     private string $cacheDirectory;
 
+    /**
+     * Allows HTTP and time to be replaced without contacting live registries.
+     *
+     * @param (callable(string, float): array{status: int, body: string})|null $transport URL and remaining timeout in seconds.
+     * @param (callable(): float)|null $clock Current Unix time in seconds.
+     * @param string|null $cacheDirectory Cache location; an empty string disables disk caching.
+     */
     public function __construct(?callable $transport = null, ?callable $clock = null, ?string $cacheDirectory = null)
     {
         $this->transport = $transport !== null ? Closure::fromCallable($transport) : $this->fetch(...);
@@ -16,7 +25,13 @@ class IdentifierDetectionService
         $this->cacheDirectory = $cacheDirectory ?? __DIR__ . '/../../../storage/cache/identifier-detection';
     }
 
-    /** @return array{identifierType: ?string, status: string, source: ?string} */
+    /**
+     * Resolves a bare DOI using the exact registry record and its owning client.
+     *
+     * @return array{identifierType: ?string, status: string, source: ?string}
+     * @throws InvalidArgumentException When the input is not a valid bare DOI.
+     * @throws RuntimeException When a registry is unavailable or the shared deadline expires.
+     */
     public function detect(string $doi): array
     {
         $doi = strtolower(trim($doi));
@@ -25,9 +40,11 @@ class IdentifierDetectionService
         }
         $cached = $this->readCache($doi);
         if ($cached !== null) return $cached;
+        // All registry requests share one budget, including the client lookup.
         $deadline = ($this->clock)() + 5;
         $record = $this->request('https://api.datacite.org/dois/' . rawurlencode($doi), $deadline);
         if ($record === null) {
+            // Only a DataCite 404 permits Crossref fallback; outages never imply DOI.
             $crossref = $this->request('https://api.crossref.org/works/' . rawurlencode($doi), $deadline);
             $result = $crossref !== null && $this->sameDoi($crossref['message']['DOI'] ?? null, $doi)
                 ? $this->result('DOI', 'crossref') : $this->result();
@@ -42,6 +59,7 @@ class IdentifierDetectionService
                 $clientType = is_array($client) && is_string($client['data']['id'] ?? null)
                     && strcasecmp($client['data']['id'], $clientId) === 0
                     ? ($client['data']['attributes']['clientType'] ?? null) : null;
+                // Prefixes and resource types overlap; the registered client type is decisive.
                 $name = match ($clientType) {
                     'igsnCatalog' => 'IGSN',
                     'raidRegistry' => 'RAiD',
@@ -66,7 +84,12 @@ class IdentifierDetectionService
         return ['identifierType' => $type, 'status' => $type !== null ? 'detected' : 'unknown', 'source' => $source];
     }
 
-    /** @return array<mixed>|null */
+    /**
+     * Reads JSON within the shared deadline; null means an explicit HTTP 404.
+     *
+     * @return array<mixed>|null
+     * @throws RuntimeException For timeouts, other HTTP errors or invalid JSON.
+     */
     private function request(string $url, float $deadline): ?array
     {
         $remaining = $deadline - ($this->clock)();
@@ -79,7 +102,13 @@ class IdentifierDetectionService
         return $data;
     }
 
-    /** @return array{status: int, body: string} */
+    /**
+     * Fetches HTTPS JSON from a fixed registry URL without following redirects.
+     *
+     * @param float $timeout Remaining lookup budget in seconds.
+     * @return array{status: int, body: string}
+     * @throws RuntimeException When the HTTP transport fails.
+     */
     private function fetch(string $url, float $timeout): array
     {
         $curl = curl_init($url);
@@ -105,7 +134,11 @@ class IdentifierDetectionService
         return $this->cacheDirectory . '/' . hash('sha256', $doi) . '.json';
     }
 
-    /** @return array{identifierType: ?string, status: string, source: ?string}|null */
+    /**
+     * Reuses only unexpired, structurally valid results from the local cache.
+     *
+     * @return array{identifierType: ?string, status: string, source: ?string}|null
+     */
     private function readCache(string $doi): ?array
     {
         if ($this->cacheDirectory === '') return null;
@@ -121,7 +154,12 @@ class IdentifierDetectionService
         return $this->result($result['identifierType'], $result['source']);
     }
 
-    /** @param array{identifierType: ?string, status: string, source: ?string} $result */
+    /**
+     * Atomically caches confirmations for six hours and unknown records for one minute.
+     * Cache I/O failures must not prevent a valid registry result from reaching the UI.
+     *
+     * @param array{identifierType: ?string, status: string, source: ?string} $result
+     */
     private function writeCache(string $doi, array $result): void
     {
         if ($this->cacheDirectory === '') return;

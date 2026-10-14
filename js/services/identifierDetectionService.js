@@ -1,10 +1,32 @@
-/** Identifier formats, ambiguity checks and confirmed DOI classification. */
+/**
+ * Identifier formats, ambiguity checks and confirmed DOI classification.
+ *
+ * @typedef {Object} IdentifierType
+ * @property {string} name Vocabulary spelling of the identifier type.
+ * @property {string} [pattern] Legacy validation expression.
+ * @property {{validation?: Array<{pattern: string}>}} [patterns] Grouped ERNIE expressions.
+ *
+ * @typedef {Object} LocalIdentifierClassification
+ * @property {'detected'|'ambiguous'|'invalid'|'unknown'|'lookupRequired'} status
+ * @property {string[]} candidates Matching formats, before filtering active types.
+ * @property {string|null} doi Bare DOI requiring registry confirmation.
+ *
+ * @typedef {Object} ConfirmedIdentifierType
+ * @property {'detected'} status
+ * @property {'DOI'|'IGSN'|'RAiD'} identifierType
+ * @property {'datacite'|'crossref'} source
+ */
 (function (root) {
   const DOI_PATTERN = '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$';
   const DOI_REGEX = new RegExp(DOI_PATTERN, 'i');
   const LEGACY_IGSN = /^(?:[A-Z]{5}[A-Z0-9]{4}|(?:AU|SSH|BGR[A-Z]?|ICDP|CSR[A-Z]?|GFZ|MBCR|ARDC)[A-Z0-9]{2,12})$/i;
   const SPECIAL_TYPES = new Set(['doi', 'igsn', 'raid', 'arxiv', 'isbn', 'ean13', 'handle', 'url']);
 
+  /**
+   * Removes legacy delimiters without decoding JSON escapes a second time.
+   * @param {string} value Vocabulary expression.
+   * @returns {string} Expression source without legacy wrappers.
+   */
   function normalizePattern(value) {
     let source = String(value || '').trim();
     if (source.startsWith('"') && source.endsWith('"')) source = source.slice(1, -1);
@@ -14,6 +36,11 @@
     return source.replace(/\$\/[iu]*$/, '$');
   }
 
+  /**
+   * Reads validation alternatives, excluding ERNIE's detection priorities.
+   * @param {IdentifierType} type Identifier type metadata.
+   * @returns {string[]} Normalized validation expressions.
+   */
   function patternsFor(type) {
     const grouped = type.patterns?.validation;
     return Array.isArray(grouped) && grouped.length
@@ -21,6 +48,12 @@
       : [normalizePattern(type.pattern)].filter(Boolean);
   }
 
+  /**
+   * Matches the entire input, including an explicit check for trailing newlines.
+   * @param {string} pattern Vocabulary expression.
+   * @param {string} identifier Input to validate.
+   * @returns {boolean} Whether the expression accepts the complete input.
+   */
   function fullMatch(pattern, identifier) {
     try {
       const match = new RegExp('(?:' + normalizePattern(pattern) + ')', 'i').exec(identifier);
@@ -31,6 +64,11 @@
     }
   }
 
+  /**
+   * Extracts a bare DOI while preserving its suffix and case for transport.
+   * @param {string} identifier Bare DOI, DOI prefix or supported resolver URL.
+   * @returns {string|null} Bare DOI, or null for unsupported syntax.
+   */
   function normalizeDoi(identifier) {
     const value = String(identifier || '').trim();
     return DOI_REGEX.test(value)
@@ -38,6 +76,11 @@
       : null;
   }
 
+  /**
+   * Checks modern and legacy numbering, including date ranges and version syntax.
+   * @param {string} value Bare identifier or arXiv-prefixed identifier.
+   * @returns {boolean} Whether the identifier follows supported arXiv numbering.
+   */
   function validArxiv(value) {
     const identifier = value.replace(/^arxiv:\s*/i, '');
     const modern = identifier.match(/^(\d{2})(\d{2})\.(\d{4,5})(?:v([1-9]\d*))?$/);
@@ -54,6 +97,11 @@
       && Number(legacy[2]) <= 12 && Number(legacy[3]) > 0;
   }
 
+  /**
+   * Validates a 13-digit EAN number using alternating weights of one and three.
+   * @param {string} value Unformatted digits, including the check digit.
+   * @returns {boolean} Whether length and checksum are valid.
+   */
   function checksum13(value) {
     if (!/^\d{13}$/.test(value)) return false;
     const sum = [...value.slice(0, 12)].reduce((total, digit, i) => total + Number(digit) * (i % 2 ? 3 : 1), 0);
@@ -66,12 +114,18 @@
     return number.replace(/[- ]/g, '').toUpperCase();
   }
 
+  /**
+   * Checks ISBN-10/13 after removing accepted prefixes and separators.
+   * @param {string} value Entered book identifier.
+   * @returns {boolean} Whether the format and check digit are valid.
+   */
   function validIsbn(value) {
     const number = isbnValue(value);
     if (!number) return false;
     if (/^\d{9}[\dX]$/.test(number)) {
       return [...number].reduce((sum, digit, i) => sum + (digit === 'X' ? 10 : Number(digit)) * (10 - i), 0) % 11 === 0;
     }
+    // Reserve the 979-0 range for ISMN music publication identifiers.
     return /^(?:978|979[1-9])\d+$/.test(number) && checksum13(number);
   }
 
@@ -82,6 +136,7 @@
     } catch { return null; }
   }
 
+  /** Exact resolver hosts distinguish identifier URLs from unrelated web links. */
   function resolverType(value) {
     const url = parsedUrl(value);
     if (!url) return null;
@@ -99,7 +154,12 @@
     return null;
   }
 
-  /** null means this type needs its vocabulary-provided validator. */
+  /**
+   * Validates a manual choice without requiring registry confirmation.
+   * @param {string} identifier Entered identifier.
+   * @param {string} name Selected vocabulary type.
+   * @returns {boolean|null} Validity, or null when a vocabulary validator is needed.
+   */
   function validateIdentifier(identifier, name) {
     const value = String(identifier || '').trim();
     switch (String(name).toLowerCase()) {
@@ -115,6 +175,14 @@
     }
   }
 
+  /**
+   * Collects all plausible formats before considering which types are enabled.
+   * Filtering first would turn ISBN/EAN13 overlaps into false certainty; DOI
+   * syntax always requires registry evidence because DOI subtypes share it.
+   * @param {string} identifier Entered identifier.
+   * @param {IdentifierType[]} [types=[]] Metadata for additional vocabulary types.
+   * @returns {LocalIdentifierClassification} Format candidates or required DOI lookup.
+   */
   function classifyLocal(identifier, types = []) {
     const value = String(identifier || '').trim();
     const result = (status, candidates = [], doi = null) => ({ status, candidates, doi });
@@ -144,11 +212,23 @@
     return parsedUrl(value) ? result('detected', ['URL']) : result('unknown');
   }
 
+  /**
+   * Finds an offered type while preserving the vocabulary's spelling.
+   * @param {string} name Detected type name.
+   * @param {IdentifierType[]} types Currently active vocabulary entries.
+   * @returns {IdentifierType|null} Offered type, or null if it is inactive.
+   */
   function activeType(name, types) {
     return types.find(type => String(type.name).toLowerCase() === String(name).toLowerCase()) || null;
   }
 
+  /** Shares pending DOI lookups and caches only successful registry confirmations. */
   class IdentifierDetectionService {
+    /**
+     * @param {Object} [options={}] Transport and clock dependencies.
+     * @param {function(string): Promise<Object>} options.request ELMO registry endpoint transport.
+     * @param {function(): number} [options.now=Date.now] Current time in milliseconds.
+     */
     constructor({ request, now = Date.now } = {}) {
       this.request = request;
       this.now = now;
@@ -156,6 +236,11 @@
       this.cache = new Map();
     }
 
+    /**
+     * Deduplicates case-insensitive requests; failed and unknown results can be retried.
+     * @param {string} doi Bare DOI already checked by the local classifier.
+     * @returns {Promise<ConfirmedIdentifierType|null>} Trusted confirmation, or null.
+     */
     lookup(doi) {
       const key = doi.toLowerCase();
       const cached = this.cache.get(key);

@@ -890,6 +890,7 @@ paths:
         - name: doi
           in: query
           required: true
+          description: Canonical bare DOI name, such as 10.60510/gf1211s-47.
           schema:
             type: string
             maxLength: 2048

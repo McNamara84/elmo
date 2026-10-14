@@ -1,9 +1,10 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import { APP_BASE_URL, registerStaticAssetRoutes } from '../utils';
 
 const names = ['DOI', 'IGSN', 'RAiD', 'arXiv', 'ISBN', 'EAN13', 'Handle', 'URL'];
 const types = names.map(name => ({ name, pattern: '.*' }));
-const markup = `<!DOCTYPE html><html><head><base href="${APP_BASE_URL}"></head><body>
+const diagnostics = new WeakMap<Page, string[]>();
+const markup = `<!DOCTYPE html><html><head><base href="${APP_BASE_URL}"><link rel="icon" href="data:,"></head><body>
   <form>${['r', 'r', 'd'].map((prefix, i) => `<div class="row" ${prefix === 'r' ? 'data-related-work-entry' : ''}>
     <label for="identifier-${i}">Identifier ${i}</label><input id="identifier-${i}" name="${prefix}Identifier[]">
     <select aria-label="Identifier type ${i}" name="${prefix}IdentifierType[]"><option value=""></option>
@@ -14,6 +15,12 @@ const markup = `<!DOCTYPE html><html><head><base href="${APP_BASE_URL}"></head><
 </body></html>`;
 
 test.beforeEach(async ({ page }) => {
+  const messages: string[] = [];
+  diagnostics.set(page, messages);
+  page.on('console', message => {
+    if (['warning', 'error'].includes(message.type())) messages.push(`${message.type()}: ${message.text()}`);
+  });
+  page.on('pageerror', error => messages.push(`pageerror: ${error.message}`));
   await registerStaticAssetRoutes(page);
   await page.route('**/api/v2/**', route => {
     const url = new URL(route.request().url());
@@ -32,6 +39,33 @@ test.beforeEach(async ({ page }) => {
   await page.waitForFunction(() => Boolean((window as any).elmo?.dropdownsReady));
   await page.evaluate(() => (window as any).elmo.dropdownsReady);
 });
+
+for (const prefix of ['r', 'd']) {
+  test(`${prefix} detection and manual choices produce no browser warnings or errors`, async ({ page }) => {
+    const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
+    const select = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();
+    for (const [value, expected] of [
+      ['https://arxiv.org/abs/2507.21532', 'arXiv'],
+      ['10.60510/gf1211s-47', 'IGSN'],
+      ['9783831048069', ''],
+    ]) {
+      await input.fill(value); await input.blur();
+      await expect(select).toHaveValue(expected);
+    }
+    await select.selectOption('EAN13');
+    await expect(select).toHaveValue('EAN13');
+
+    // An unknown registry record has a successful HTTP response and a manual-choice hint.
+    await page.route('**/api/v2/validation/identifier-type?**', route => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ status: 'unknown', identifierType: null, source: null }),
+    }));
+    await input.fill('10.9999/unconfirmed'); await input.blur();
+    await expect(input.locator('..').locator('[data-identifier-detection-status]')).toContainText('manually');
+    await expect(select).toHaveValue('');
+    expect(diagnostics.get(page)).toEqual([]);
+  });
+}
 
 for (const prefix of ['r', 'd']) {
   for (const [value, expected] of [

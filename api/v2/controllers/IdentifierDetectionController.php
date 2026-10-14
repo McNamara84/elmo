@@ -4,14 +4,20 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../services/IdentifierDetectionService.php';
 
+/** Exposes registry-confirmed DOI subtypes without caching HTTP error responses. */
 class IdentifierDetectionController
 {
+    /** @param IdentifierDetectionService|null $service Optional service for isolated tests. */
     public function __construct(private ?IdentifierDetectionService $service = null)
     {
         $this->service ??= new IdentifierDetectionService();
     }
 
-    /** @param array<mixed> $vars */
+    /**
+     * Writes a confirmed type, an unknown result, or a structured lookup error.
+     *
+     * @param array<mixed> $vars Router variables; the DOI comes from the query string.
+     */
     public function detect(array $vars = []): void
     {
         header('Content-Type: application/json; charset=utf-8');
