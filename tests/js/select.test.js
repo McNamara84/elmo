@@ -286,6 +286,131 @@ describe('select.js', () => {
     expect(input[0].checkValidity()).toBe(true);
   });
 
+  test('pattern attributes stay valid under the browser unicodeSets rules', () => {
+    const cases = [
+      {
+        pattern: '(?:^\\d{4}\\.\\d{4,5}(v\\d+)?$)|(?:^[a-z-]+/\\d{7}$)',
+        accepted: ['2401.12345', 'hep-th/9901001'],
+        rejected: ['not-an-arxiv'],
+      },
+      {
+        pattern: '^urn:lsid:[a-z0-9.-]+:[a-z0-9._-]+:[a-z0-9._-]+(?:\\:\\d+)?$',
+        accepted: ['urn:lsid:example.org:ns:123:1'],
+        rejected: ['urn:lsid'],
+      },
+      {
+        pattern: '^https?://purl\\.[a-z0-9.-]+/[a-z0-9._/-]+$',
+        accepted: ['https://purl.org/foo/bar.pdf'],
+        rejected: ['https://example.org/foo'],
+      },
+      {
+        pattern: '^(?:RRID:)?[a-z]+[_:][a-z0-9_:-]+$',
+        accepted: ['RRID:AB_123'],
+        rejected: ['RRID'],
+      },
+      {
+        pattern: '^urn:[a-z0-9][a-z0-9-]{0,31}:\\S+$',
+        accepted: ['urn:nbn:de:example'],
+        rejected: ['urn:'],
+      },
+      {
+        pattern: '^https?://w3id\\.org/[a-z0-9._/-]+(?:#[a-z0-9._-]*)?$',
+        accepted: ['https://w3id.org/example/term'],
+        rejected: ['https://example.org/term'],
+      },
+      {
+        pattern: '^https?://[^/]+(?:/[^/]+)*/ark:/?\\d{5,}/\\S+',
+        accepted: ['https://n2t.net/ark:/12345/abc'],
+        rejected: ['https://example.org/not-an-ark'],
+      },
+      {
+        pattern: '^\\d{5}\\.\\d{2}\\.[A-Za-z_][A-Za-z0-9_.~-]*\\.\\S+$',
+        accepted: ['31253.11.CSTR.example'],
+        rejected: ['not-a-cstr'],
+      },
+      {
+        pattern: '^urn:(?:ean13|gtin(?:-13)?):[\\d-]+$',
+        accepted: ['urn:ean13:4006381333931'],
+        rejected: ['urn:isbn:123'],
+      },
+      {
+        pattern: '^urn:istc:[0-9A-Ja-j-]+$',
+        accepted: ['urn:istc:A1B2C3'],
+        rejected: ['urn:istc:'],
+      },
+      {
+        pattern: '^istc\\s*(?:\\([^)]+\\))?:?\\s*[0-9A-Ja-j]{3}-?[0-9]{4}-?[0-9A-Ja-j]{4}-?[0-9A-Ja-j]{4}-?[0-9A-Ja-j]$',
+        accepted: ['istc A1B-2345-C6D7-E8F9-G', 'istc (foo): A1B-2345-C6D7-E8F9-G'],
+        rejected: ['istc'],
+      },
+      {
+        pattern: '^https?://purl\\.lib\\.[a-z0-9.-]+/[a-z0-9._/?=&-]+$',
+        accepted: ['https://purl.lib.example.edu/foo/bar?x=1'],
+        rejected: ['https://example.org/foo'],
+      },
+      {
+        pattern: '^(?:upc-?a?|gtin-?12):?\\s*(\\d[\\d\\s-]{10,14}\\d)$',
+        accepted: ['upc:012345678905'],
+        rejected: ['upc:123'],
+      },
+      {
+        pattern: '^urn:(?!isbn:|lsid:|igsn:|issn:|istc:|handle:)[a-z0-9][a-z0-9-]{0,31}:\\S+$',
+        accepted: ['urn:nbn:de:example'],
+        rejected: ['urn:isbn:123'],
+      },
+    ];
+
+    cases.forEach(({ pattern, accepted, rejected }) => {
+      const htmlPattern = window.patternForHtmlAttribute(pattern);
+      expect(htmlPattern).not.toBe('');
+      expect(() => new RegExp(htmlPattern, 'v')).not.toThrow();
+      const expression = new RegExp(htmlPattern, 'i');
+      const original = new RegExp(pattern, 'i');
+      accepted.forEach(value => {
+        expect(expression.test(value)).toBe(true);
+        expect(expression.test(value)).toBe(original.test(value));
+      });
+      rejected.forEach(value => {
+        expect(expression.test(value)).toBe(false);
+        expect(expression.test(value)).toBe(original.test(value));
+      });
+    });
+  });
+
+  test('cached identifier patterns can be used as pattern attributes', () => {
+    const cacheFile = path.join(__dirname, '../../storage/cache/ernie_identifier_types.json');
+    if (!fs.existsSync(cacheFile)) {
+      return;
+    }
+    const cached = JSON.parse(fs.readFileSync(cacheFile, 'utf8'));
+    const patterns = [];
+    const visit = (node) => {
+      if (!node || typeof node !== 'object') {
+        return;
+      }
+      if (typeof node.pattern === 'string' && node.pattern !== '') {
+        patterns.push(node.pattern);
+      }
+      Object.values(node).forEach(value => {
+        if (Array.isArray(value)) {
+          value.forEach(visit);
+        } else if (value && typeof value === 'object') {
+          visit(value);
+        }
+      });
+    };
+    visit(cached.data || cached);
+
+    expect(patterns.length).toBeGreaterThan(0);
+    patterns.forEach(pattern => {
+      const htmlPattern = window.patternForHtmlAttribute(pattern);
+      if (htmlPattern === '') {
+        throw new Error('could not rewrite ' + pattern);
+      }
+      expect(() => new RegExp(htmlPattern, 'v')).not.toThrow();
+    });
+  });
+
   test('updateIdentifierType reads nested detection patterns when the flat pattern is empty', async () => {
     $.ajax.mockImplementationOnce(opts => {
       opts.success({identifierTypes:[{

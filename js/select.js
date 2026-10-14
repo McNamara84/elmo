@@ -808,8 +808,9 @@ function updateValidationPattern(selectElement) {
     if (String(select.val() || '').trim() !== selectedType) {
       return;
     }
-    if (pattern) {
-      inputIdentifier.attr('pattern', pattern);
+    const htmlPattern = patternForHtmlAttribute(pattern);
+    if (htmlPattern) {
+      inputIdentifier.attr('pattern', htmlPattern);
     } else {
       inputIdentifier.removeAttr('pattern');
     }
@@ -886,6 +887,121 @@ function setDetectedIdentifierType(selectElement, type) {
 
 function compiledIdentifierPattern(pattern) {
   return normalizeIdentifierPattern(pattern).replace(/\\{2}/g, '\\');
+}
+
+// The pattern attribute is compiled with the v flag. In that mode a hyphen is a
+// range operator and a slash is reserved, so classes such as [a-z-] and
+// [a-z0-9._/-] are syntax errors. An unnecessary escape such as \: is also
+// rejected. The browser then reports that the field cannot be checked. Literal
+// hyphens and slashes are escaped here, and identity escapes the v flag does
+// not allow are removed. Detection still uses the original pattern.
+function patternForHtmlAttribute(pattern) {
+  const source = String(pattern || '');
+  if (source === '') {
+    return '';
+  }
+  const candidate = isUnicodeSetsPattern(source) ? source : rewritePatternForUnicodeSets(source);
+  return isUnicodeSetsPattern(candidate) ? candidate : '';
+}
+
+function isUnicodeSetsPattern(pattern) {
+  try {
+    new RegExp(pattern, 'v');
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+function rewritePatternForUnicodeSets(pattern) {
+  let result = '';
+  for (let index = 0; index < pattern.length;) {
+    if (pattern[index] === '\\') {
+      const escaped = pattern[index + 1];
+      if (escaped === undefined) {
+        result += '\\';
+        break;
+      }
+      // \: and \# are identity escapes. The v flag only allows them for syntax
+      // characters, so the backslash has to go. \d, \/, \. and the rest stay.
+      result += (isUnicodeSetsEscape(escaped) ? '\\' : '') + escaped;
+      index += 2;
+      continue;
+    }
+    if (pattern[index] === '[') {
+      const end = characterClassEnd(pattern, index);
+      result += rewriteCharacterClass(pattern.slice(index, end));
+      index = end;
+      continue;
+    }
+    result += pattern[index];
+    index += 1;
+  }
+  return result;
+}
+
+function isUnicodeSetsEscape(character) {
+  return /[\^$\\.*+?()[\]{}|/bBdDsSwWfnrtv0-9puxck]/i.test(character);
+}
+
+function characterClassEnd(pattern, start) {
+  let index = start + 1;
+  if (pattern[index] === '^') {
+    index += 1;
+  }
+  if (pattern[index] === ']') {
+    index += 1;
+  }
+  while (index < pattern.length) {
+    if (pattern[index] === '\\') {
+      index += 2;
+      continue;
+    }
+    if (pattern[index] === ']') {
+      return index + 1;
+    }
+    index += 1;
+  }
+  return pattern.length;
+}
+
+function rewriteCharacterClass(characterClass) {
+  const negated = characterClass.startsWith('[^');
+  const opening = negated ? '[^' : '[';
+  const body = characterClass.slice(opening.length, characterClass.endsWith(']') ? -1 : undefined);
+  const tokens = [];
+  for (let index = 0; index < body.length; index += 1) {
+    if (body[index] === '\\' && index + 1 < body.length) {
+      tokens.push({ type: 'escape', value: body.slice(index, index + 2) });
+      index += 1;
+      continue;
+    }
+    tokens.push({ type: body[index] === '-' ? 'hyphen' : 'char', value: body[index] });
+  }
+
+  let rewritten = opening;
+  tokens.forEach((token, index) => {
+    if (token.type === 'escape') {
+      rewritten += token.value;
+      return;
+    }
+    if (token.type === 'hyphen') {
+      const left = tokens[index - 1];
+      const right = tokens[index + 1];
+      rewritten += isRangeEndpoint(left) && isRangeEndpoint(right) ? '-' : '\\-';
+      return;
+    }
+    rewritten += needsUnicodeSetsClassEscape(token.value) ? '\\' + token.value : token.value;
+  });
+  return rewritten + (characterClass.endsWith(']') ? ']' : '');
+}
+
+function isRangeEndpoint(token) {
+  return Boolean(token) && token.type === 'char' && /^[A-Za-z0-9]$/.test(token.value);
+}
+
+function needsUnicodeSetsClassEscape(character) {
+  return /[()[\]{}|/]/.test(character);
 }
 
 function patternEntries(entries) {
@@ -1151,6 +1267,7 @@ if (typeof module !== 'undefined' && module.exports) {
     applyRelatedWorkDropdowns,
     getIdentifierPriority,
     detectIdentifierType,
+    patternForHtmlAttribute,
     updateIdentifierType,
     updateValidationPattern,
     debounce,
