@@ -1,0 +1,114 @@
+[
+  {
+    "id": 1,
+    "name": "DOI",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:https?://(?:dx\\.)?doi\\.org/|doi:\\s*)?10\\.\\d{4,9}/[^\\s]+$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 2,
+    "name": "IGSN",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:(?:https?://(?:dx\\.)?doi\\.org/|doi:\\s*)?10\\.\\d{4,9}/[^\\s]+|[A-Z]{5}[A-Z0-9]{4}|(?:AU|SSH|BGR[A-Z]?|ICDP|CSR[A-Z]?|GFZ|MBCR|ARDC)[A-Z0-9]{2,12})$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 3,
+    "name": "RAiD",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:(?:https?://(?:dx\\.)?doi\\.org/|doi:\\s*)?10\\.\\d{4,9}/[^\\s]+|https?://raid\\.org/10\\.\\d{4,9}/[A-Za-z0-9._-]+)$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 4,
+    "name": "arXiv",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:(?:arxiv:\\s*)?(?:\\d{2}(?:0[1-9]|1[0-2])\\.\\d{4,5}|[a-z-]+(?:\\.[a-z]{2})?/\\d{7})(?:v[1-9]\\d*)?|https?://(?:www\\.)?arxiv\\.org/(?:abs|pdf|html|src)/(?:\\d{2}(?:0[1-9]|1[0-2])\\.\\d{4,5}|[a-z-]+(?:\\.[a-z]{2})?/\\d{7})(?:v[1-9]\\d*)?(?:\\.pdf)?)$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 5,
+    "name": "ISBN",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:(?:urn:)?isbn(?:-1[03])?:?\\s*)?(?:(?:\\d[- ]?){9}[\\dXx]|978(?:[- ]?\\d){10}|979[- ]?[1-9](?:[- ]?\\d){9})$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 6,
+    "name": "EAN13",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^\\d{13}$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 7,
+    "name": "Handle",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^(?:hdl:|https?://hdl\\.handle\\.net/)?\\d+(?:\\.\\w+)*/[^\\s]+$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  },
+  {
+    "id": 8,
+    "name": "URL",
+    "description": "Proposed ERNIE validation contract fixture",
+    "patterns": {
+      "validation": [
+        {
+          "pattern": "^https?://[^\\s]+$",
+          "priority": 10
+        }
+      ],
+      "detection": []
+    }
+  }
+]

@@ -14,54 +14,44 @@ require_once __DIR__ . '/../api/v2/services/IdentifierTypePatterns.php';
 #[CoversClass(IdentifierTypePatterns::class)]
 final class IdentifierTypePatternsTest extends TestCase
 {
-    public static function acceptedFormats(): array
+    public static function knownTypes(): array
     {
-        return [
-            ['DOI', 'doi: 10.1234/ABC'], ['DOI', 'https://doi.org/10.1234/ABC'],
-            ['IGSN', '10.60510/gf1211s-47'], ['IGSN', 'https://doi.org/10.60510/gf1211s-47'], ['IGSN', 'GFZABC123'],
-            ['RAiD', 'https://raid.org/10.82210/162fda4d'], ['RAiD', '10.82210/162fda4d'],
-            ['arXiv', 'https://arxiv.org/abs/2507.21532'], ['arXiv', 'hep-th/9603067v2'], ['arXiv', 'arXiv:2507.21532'],
-            ['ISBN', '978-3-510-96872-5'], ['ISBN', '9783831048069'], ['ISBN', '0-8044-2957-X'], ['ISBN', '979-10-90636-07-1'],
-            ['EAN13', '9783831048069'], ['Handle', 'hdl:1234/item'], ['URL', 'https://example.org/page'],
-        ];
+        return array_map(static fn(string $name): array => [$name], ['DOI', 'IGSN', 'RAiD', 'arXiv', 'ISBN', 'EAN13', 'Handle', 'URL']);
     }
 
-    #[DataProvider('acceptedFormats')]
-    public function testKnownFormatsValidateEvenWithStaleVocabulary(string $name, string $input): void
+    #[DataProvider('knownTypes')]
+    public function testDeliveredPatternsAreAuthoritativeForEveryKnownType(string $name): void
     {
-        $pattern = IdentifierTypePatterns::validationPattern(['name' => $name, 'pattern' => '^obsolete$']);
-        self::assertSame(1, preg_match('~' . $pattern . '~iD', $input), $name . ': ' . $input);
-    }
-
-    public static function rejectedFormats(): array
-    {
-        return [['ISBN', '978--3-510-96872-5'], ['ISBN', '978383104806'], ['ISBN', '97838310480699'], ['ISBN', '979-0-060-11561-5'],
-            ['EAN13', '978-3-8310-4806-9'], ['RAiD', 'https://raid.org.evil.org/10.82210/id'], ['arXiv', 'https://arxiv.org/abs/invalid'], ['Handle', '123456']];
-    }
-
-    #[DataProvider('rejectedFormats')]
-    public function testRejectsInvalidForms(string $name, string $input): void
-    {
-        self::assertSame(0, preg_match('~' . IdentifierTypePatterns::supported()[$name] . '~iD', $input));
-    }
-
-    public function testGroupedValidationAlternativesAreCombinedWithoutDetectionRules(): void
-    {
-        $pattern = IdentifierTypePatterns::validationPattern(['name' => 'Custom', 'patterns' => [
-            'validation' => [['pattern' => '/^first$/i'], ['pattern' => '^second$/'], ['pattern' => '']],
-            'detection' => [['pattern' => '^wrong']],
+        self::assertSame('^central-only$', IdentifierTypePatterns::validationPattern(['name' => $name, 'pattern' => '^central-only$']));
+        $pattern = IdentifierTypePatterns::validationPattern(['name' => $name, 'pattern' => '^stale$', 'patterns' => [
+            'validation' => [['pattern' => '/^central-only$/i'], ['pattern' => '^changed$/']],
+            'detection' => [['pattern' => '^ignored$']],
         ]]);
-        self::assertSame(1, preg_match('~' . $pattern . '~D', 'first'));
-        self::assertSame(1, preg_match('~' . $pattern . '~D', 'second'));
-        self::assertSame(0, preg_match('~' . $pattern . '~D', 'wrong'));
-        self::assertSame(0, preg_match('~' . $pattern . '~D', 'first extra'));
+        self::assertSame(1, preg_match('~' . $pattern . '~D', 'central-only'));
+        self::assertSame(1, preg_match('~' . $pattern . '~D', 'changed'));
+        self::assertSame(0, preg_match('~' . $pattern . '~D', 'stale'));
+        self::assertSame(0, preg_match('~' . $pattern . '~D', 'ignored'));
+        self::assertSame(0, preg_match('~' . $pattern . '~D', 'changed extra'));
     }
 
-    public function testEmptyLegacyAndCaseInsensitiveNames(): void
+    public static function missingPatterns(): array
     {
-        self::assertSame('', IdentifierTypePatterns::validationPattern(['name' => 'Custom']));
+        return [[[]], [['patterns' => ['validation' => []], 'pattern' => '^stale$']],
+            [['patterns' => ['validation' => null], 'pattern' => '^stale$']],
+            [['patterns' => ['validation' => [null, [], ['pattern' => '   '], ['pattern' => 5]]]]],
+            [['pattern' => ['wrong type']]]];
+    }
+
+    #[DataProvider('missingPatterns')]
+    public function testMissingOrMalformedDefinitionsNeverInventAFormat(array $metadata): void
+    {
+        self::assertSame('', IdentifierTypePatterns::validationPattern(['name' => 'IGSN'] + $metadata));
+    }
+
+    public function testDecodedBackslashesArePreserved(): void
+    {
         self::assertSame('^test$', IdentifierTypePatterns::normalize('"^test$"'));
         self::assertSame('^test/', IdentifierTypePatterns::normalize('^test/'));
-        self::assertSame(IdentifierTypePatterns::supported()['RAiD'], IdentifierTypePatterns::validationPattern(['name' => 'raid']));
+        self::assertSame('^a\\\\b$', IdentifierTypePatterns::validationPattern(['name' => 'DOI', 'pattern' => '^a\\\\b$']));
     }
 }

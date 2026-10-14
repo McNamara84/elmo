@@ -1,8 +1,8 @@
 import { test, expect, type Page } from '@playwright/test';
 import { APP_BASE_URL, registerStaticAssetRoutes } from '../utils';
+import types from '../../fixtures/identifier-types.json';
 
 const names = ['DOI', 'IGSN', 'RAiD', 'arXiv', 'ISBN', 'EAN13', 'Handle', 'URL'];
-const types = names.map(name => ({ name, pattern: '.*' }));
 const diagnostics = new WeakMap<Page, string[]>();
 const markup = `<!DOCTYPE html><html><head><base href="${APP_BASE_URL}"><link rel="icon" href="data:,"></head><body>
   <form>${['r', 'r', 'd'].map((prefix, i) => `<div class="row" ${prefix === 'r' ? 'data-related-work-entry' : ''}>
@@ -41,6 +41,24 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const prefix of ['r', 'd']) {
+  test(`${prefix} fields follow changed ERNIE patterns after vocabulary reload`, async ({ page }) => {
+    const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
+    const dropdown = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();
+    await input.fill('https://arxiv.org/abs/2507.21532'); await input.blur();
+    await expect(dropdown).toHaveValue('arXiv');
+    const changed = types.map(type => type.name === 'arXiv'
+      ? {name: type.name, pattern: '^central-new-format$'} : type);
+    await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify({identifierTypes: changed}),
+    }));
+    await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+    await dropdown.selectOption('arXiv');
+    expect(await input.evaluate(element => (element as HTMLInputElement).validity.customError)).toBe(true);
+    await input.fill('central-new-format'); await input.blur();
+    await expect(dropdown).toHaveValue('arXiv');
+    expect(await input.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
+  });
+
   test(`${prefix} detection and manual choices produce no browser warnings or errors`, async ({ page }) => {
     const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
     const select = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();

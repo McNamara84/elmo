@@ -2,55 +2,35 @@
 
 declare(strict_types=1);
 
-/** Adapts ERNIE's grouped patterns and keeps ELMO input forms compatible. */
+/** Adapts ERNIE validation patterns without replacing their format rules. */
 final class IdentifierTypePatterns
 {
     /**
-     * Returns compatible input formats for known types; checksums are validated in JavaScript.
+     * Flattens ERNIE validation alternatives for ELMO's legacy pattern field.
+     * Every delivered type uses its own expressions. An explicit empty or invalid
+     * validation list stays empty; detection priorities do not validate input.
      *
-     * @return array<string, string>
-     */
-    public static function supported(): array
-    {
-        $doi = '10\.\d{4,9}/[^\s]+';
-        $doiInput = '(?:https?://(?:dx\.)?doi\.org/|doi:\s*)?' . $doi;
-        $arxiv = '(?:\d{2}(?:0[1-9]|1[0-2])\.\d{4,5}|[a-z-]+(?:\.[a-z]{2})?/\d{7})(?:v[1-9]\d*)?';
-        return [
-            'DOI' => '^' . $doiInput . '$',
-            'IGSN' => '^(?:' . $doiInput . '|[A-Z]{5}[A-Z0-9]{4}|(?:AU|SSH|BGR[A-Z]?|ICDP|CSR[A-Z]?|GFZ|MBCR|ARDC)[A-Z0-9]{2,12})$',
-            'RAiD' => '^(?:' . $doiInput . '|https?://raid\.org/' . $doi . ')$',
-            'arXiv' => '^(?:(?:arxiv:\s*)?' . $arxiv . '|https?://(?:www\.)?arxiv\.org/(?:abs|pdf|html|src)/' . $arxiv . '(?:\.pdf)?)$',
-            'ISBN' => '^(?:(?:urn:)?isbn(?:-1[03])?:?\s*)?(?:(?:\d[- ]?){9}[\dXx]|978(?:[- ]?\d){10}|979[- ]?[1-9](?:[- ]?\d){9})$',
-            'EAN13' => '^\d{13}$',
-            'Handle' => '^(?:hdl:|https?://hdl\.handle\.net/)?\d+(?:\.\w+)*/[^\s]+$',
-            'URL' => '^https?://[^\s]+$',
-        ];
-    }
-
-    /**
-     * Flattens grouped ERNIE validation alternatives for ELMO's legacy pattern field.
-     * Known types use compatible local formats; detection priorities cannot validate input.
-     *
-     * @param array<mixed> $type Identifier type metadata from ERNIE or the local database.
+     * @param array<mixed> $type Metadata from ERNIE or the locally synchronized database.
      */
     public static function validationPattern(array $type): string
     {
-        foreach (self::supported() as $name => $pattern) {
-            if (strcasecmp((string) ($type['name'] ?? ''), $name) === 0) return $pattern;
+        $groups = $type['patterns'] ?? null;
+        if (!is_array($groups) || !array_key_exists('validation', $groups)) {
+            return self::normalize(is_string($type['pattern'] ?? null) ? $type['pattern'] : '');
         }
-        $grouped = $type['patterns']['validation'] ?? [];
         $patterns = [];
-        if (is_array($grouped)) {
-            foreach ($grouped as $entry) {
-                if (is_array($entry) && is_string($entry['pattern'] ?? null) && $entry['pattern'] !== '') {
-                    $patterns[] = '(?:' . self::normalize($entry['pattern']) . ')';
+        if (is_array($groups['validation'])) {
+            foreach ($groups['validation'] as $entry) {
+                if (is_array($entry) && is_string($entry['pattern'] ?? null)) {
+                    $pattern = self::normalize($entry['pattern']);
+                    if ($pattern !== '') $patterns[] = '(?:' . $pattern . ')';
                 }
             }
         }
-        return $patterns !== [] ? '^(?:' . implode('|', $patterns) . ')$' : self::normalize((string) ($type['pattern'] ?? ''));
+        return $patterns !== [] ? '^(?:' . implode('|', $patterns) . ')$' : '';
     }
 
-    /** Removes legacy quotes and PCRE delimiters while preserving escaped backslashes. */
+    /** Removes legacy quotes and PCRE delimiters while preserving decoded backslashes. */
     public static function normalize(string $pattern): string
     {
         $pattern = trim($pattern);

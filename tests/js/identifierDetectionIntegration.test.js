@@ -1,4 +1,4 @@
-const types = ['DOI', 'IGSN', 'RAiD', 'arXiv', 'ISBN', 'EAN13', 'URL'].map(name => ({ name, pattern: '.*' }));
+const types = require('../fixtures/identifier-types.json');
 
 describe('identifier detection in Related Work and GEM fields', () => {
   let $, select, requests;
@@ -145,7 +145,7 @@ describe('identifier detection in Related Work and GEM fields', () => {
     expect($('[data-identifier-detection-status]').first().text()).toMatch(/manually/);
   });
   test('inactive confirmed IGSN never falls back to DOI', async () => {
-    select.populateIdentifierTypesDropdownWithData({ identifierTypes: [{ name: 'DOI' }, { name: 'URL' }] });
+    select.populateIdentifierTypesDropdownWithData({ identifierTypes: types.filter(type => ['DOI', 'URL'].includes(type.name)) });
     const { promise } = await begin('10.1234/a'); resolve(requests[0]); await promise;
     expect(type().val()).toBe('');
     expect(type().find('option[value="IGSN"]')).toHaveLength(0);
@@ -164,6 +164,32 @@ describe('identifier detection in Related Work and GEM fields', () => {
     input().val('https://arxiv.org/abs/2507.21532'); type().val('arXiv').trigger('change');
     input().val('10.60510/gf1211s-47').trigger('input');
     expect(type().val()).toBe('');
+  });
+
+  test.each(['r', 'd'])('%s fields use changed ERNIE definitions for validation and detection', async prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    field.val('https://arxiv.org/abs/2507.21532');
+    dropdown.val('arXiv').trigger('change');
+    expect(field[0].checkValidity()).toBe(true);
+    const changed = types.map(type => type.name === 'arXiv'
+      ? {name: type.name, pattern: '^central-new-format$'} : type);
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: changed});
+    dropdown.val('arXiv').trigger('change');
+    expect(field[0].validity.customError).toBe(true);
+    field.val('central-new-format').trigger('input');
+    await select.updateIdentifierType(field[0]);
+    expect(dropdown.val()).toBe('arXiv');
+    expect(field[0].checkValidity()).toBe(true);
+  });
+
+  test('a registry confirmation cannot bypass the supplied IGSN validation pattern', async () => {
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types.map(type =>
+      type.name === 'IGSN' ? {name: 'IGSN', pattern: '^legacy-only$'} : type)});
+    const {promise} = await begin('10.60510/gf1211s-47');
+    resolve(requests[0], 'IGSN'); await promise;
+    expect(type().val()).toBe('');
+    expect($('[data-identifier-detection-status]').first().text()).toMatch(/manually/);
   });
 
   test('restored types wait for delayed GEM dropdown options', async () => {

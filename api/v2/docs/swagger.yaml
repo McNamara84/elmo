@@ -987,7 +987,11 @@ paths:
         - validation
       security: []
       summary: Get active identifier types
-      description: Returns only identifier types that are currently visible (`isShown = 1`).
+      description: >-
+        Returns only identifier types that are currently visible (`isShown = 1`).
+        When ERNIE is configured, its vocabulary and validation patterns are authoritative.
+        Grouped validation alternatives are normalized into the legacy pattern field
+        without substituting local format rules. Empty patterns remain empty.
       operationId: getActiveIdentifierTypes
       responses:
         "200":

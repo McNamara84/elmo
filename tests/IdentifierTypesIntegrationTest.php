@@ -12,6 +12,24 @@ require_once __DIR__ . '/DatabaseTestCase.php';
  */
 final class IdentifierTypesIntegrationTest extends DatabaseTestCase
 {
+    public function testGroupedErnieCorrectionsReplaceStoredPatternsWithoutChangingIdentity(): void
+    {
+        require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
+        $before = $this->connection->query("SELECT identifier_type_id FROM Identifier_Type WHERE name = 'IGSN'")->fetch_assoc();
+        $controller = new \VocabController();
+        foreach (['^first-source$', '^updated-source$'] as $source) {
+            $controller->syncIdentifierTypesToDb([['id' => 987, 'name' => 'IGSN', 'patterns' => [
+                'validation' => [['pattern' => $source, 'priority' => 10]],
+                'detection' => [['pattern' => '^ignored$']],
+            ]]]);
+            $row = $this->connection->query("SELECT identifier_type_id, ernie_id, pattern FROM Identifier_Type WHERE name = 'IGSN'")->fetch_assoc();
+            self::assertSame($before['identifier_type_id'], $row['identifier_type_id']);
+            self::assertSame('987', (string) $row['ernie_id']);
+            self::assertSame(1, preg_match('~' . $row['pattern'] . '~D', substr($source, 1, -1)));
+            self::assertSame(0, preg_match('~' . $row['pattern'] . '~D', '10.60510/gf1211s-47'));
+        }
+    }
+
     /**
      * Test that syncIdentifierTypesToDb creates new identifier types
      */
@@ -75,7 +93,7 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $row = $result->fetch_assoc();
         $this->assertEquals('DOI', $row['name']);
         $this->assertEquals('Updated desc', $row['description']);
-        $this->assertEquals(\IdentifierTypePatterns::supported()['DOI'], $row['pattern']);
+        $this->assertEquals($ernieData[0]['pattern'], $row['pattern']);
         $this->assertEquals(1, $row['isShown']);
     }
 
@@ -109,7 +127,7 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $this->assertEquals($localId, $row['identifier_type_id'], 'Should keep original local ID');
         $this->assertEquals(50, $row['ernie_id'], 'Should have linked ernie_id');
         $this->assertEquals('ERNIE DOI', $row['description'], 'Should have updated description');
-        $this->assertEquals(\IdentifierTypePatterns::supported()['DOI'], $row['pattern'], 'Should have updated pattern');
+        $this->assertEquals($ernieData[0]['pattern'], $row['pattern'], 'Should have updated pattern');
     }
 
     /**

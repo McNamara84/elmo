@@ -6,8 +6,6 @@ if (!defined('ERNIE_SERVICE_TEST_MODE')) {
     require_once __DIR__ . '/../../../settings.php';
 }
 
-require_once __DIR__ . '/IdentifierTypePatterns.php';
-
 class ErnieService
 {
     /**
@@ -1250,11 +1248,11 @@ class ErnieService
     private function getHardcodedIdentifierTypeFallback(): array
     {
         return [
-            ['id' => 1, 'name' => 'DOI', 'description' => 'A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.', 'pattern' => IdentifierTypePatterns::supported()['DOI']],
-            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => IdentifierTypePatterns::supported()['URL']],
-            ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => IdentifierTypePatterns::supported()['Handle']],
+            ['id' => 1, 'name' => 'DOI', 'description' => 'A character string used to uniquely identify an object. A DOI name is divided into two parts, a prefix and a suffix, separated by a slash.', 'pattern' => '^(?:https?:\/\/(?:dx\\.)?doi\.org\/|doi:)?10\.\d{4,9}\/[\-._;()/:A-Z0-9]+$'],
+            ['id' => 2, 'name' => 'URL', 'description' => 'A specific character string that constitutes a reference to a resource.', 'pattern' => '(https:\/\/www\.|http:\/\/www\.|https:\/\/|http:\/\/)?[a-zA-Z0-9]{2,}(\.[a-zA-Z0-9]{2,})(\.[a-zA-Z0-9]{2,})?'],
+            ['id' => 3, 'name' => 'Handle', 'description' => 'An ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).', 'pattern' => '^(hdl:)?\d+(\.\d+)*(\/[^\s]+)?$'],
             ['id' => 4, 'name' => 'URN', 'description' => 'A unique and persistent identifier of an electronic document.', 'pattern' => '^urn:nbn:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+:[a-zA-Z0-9.-]+$'],
-            ['id' => 19, 'name' => 'RAiD', 'description' => 'A Research Activity Identifier used to identify and link research projects or activities.', 'pattern' => IdentifierTypePatterns::supported()['RAiD']],
+            ['id' => 19, 'name' => 'RAiD', 'description' => 'A Research Activity Identifier used to identify and link research projects or activities.', 'pattern' => '^(?:https?:\/\/raid\.org\/)?10\.\d{4,9}\/raid\.[A-Za-z0-9._-]+$'],
             ['id' => 22, 'name' => 'SWHID', 'description' => 'A persistent Software Heritage identifier for source code artifacts and revisions.', 'pattern' => '^swh:1:[a-z]{3}:[0-9a-f]{40}(;origin=.*)?$'],
         ];
     }

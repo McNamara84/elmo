@@ -157,7 +157,7 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
-  test('updateIdentifierType recognizes DOI resolver URLs when the vocabulary pattern only accepts bare DOIs', async () => {
+  test('updateIdentifierType leaves a resolver URL empty when the vocabulary only accepts bare DOIs', async () => {
     $.ajax.mockImplementationOnce(opts => {
       opts.success({identifierTypes:[
         {name:'URL', pattern:'^https?:\\/\\/.+$'},
@@ -170,7 +170,7 @@ describe('select.js', () => {
 
     await window.updateIdentifierType(input[0]);
 
-    expect(select.val()).toBe('DOI');
+    expect(select.val()).toBe('');
     expect(input.attr('pattern')).toBeUndefined();
     expect(input[0].checkValidity()).toBe(true);
   });

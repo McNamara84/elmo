@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT } from '../utils';
+import identifierTypes from '../../fixtures/identifier-types.json';
 
 type ApiRequestCounts = {
   relations: number;
@@ -41,11 +42,7 @@ const identifierTypesFixture = {
       description: 'Uniform Resource Locator',
       pattern: '/^https?:\\/\\/.+$/i'
     },
-    {
-      name: 'DOI',
-      description: 'Digital Object Identifier',
-      pattern: '/^10\\.\\d{4,9}\\/.+$/i'
-    },
+    identifierTypes.find(type => type.name === 'DOI')!,
     {
       name: 'Handle',
       description: 'Handle identifier',

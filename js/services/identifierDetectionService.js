@@ -17,116 +17,43 @@
  * @property {'datacite'|'crossref'} source
  */
 (function (root) {
-  const DOI_PATTERN = '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$';
-  const DOI_REGEX = new RegExp(DOI_PATTERN, 'i');
-  const LEGACY_IGSN = /^(?:[A-Z]{5}[A-Z0-9]{4}|(?:AU|SSH|BGR[A-Z]?|ICDP|CSR[A-Z]?|GFZ|MBCR|ARDC)[A-Z0-9]{2,12})$/i;
-  const SPECIAL_TYPES = new Set(['doi', 'igsn', 'raid', 'arxiv', 'isbn', 'ean13', 'handle', 'url']);
-
-  /**
-   * Removes legacy delimiters without decoding JSON escapes a second time.
-   * @param {string} value Vocabulary expression.
-   * @returns {string} Expression source without legacy wrappers.
-   */
+  /** Removes legacy delimiters without decoding JSON escapes a second time. */
   function normalizePattern(value) {
-    let source = String(value || '').trim();
+    if (typeof value !== 'string') return '';
+    let source = value.trim();
     if (source.startsWith('"') && source.endsWith('"')) source = source.slice(1, -1);
     const delimited = source.match(/^\/([\s\S]*)\/[iu]*$/);
-    if (delimited) return delimited[1];
-    // Old ELMO seeds used an unmatched delimiter immediately after the end anchor.
-    return source.replace(/\$\/[iu]*$/, '$');
+    return delimited ? delimited[1] : source.replace(/\$\/[iu]*$/, '$');
   }
 
   /**
-   * Reads validation alternatives, excluding ERNIE's detection priorities.
-   * @param {IdentifierType} type Identifier type metadata.
-   * @returns {string[]} Normalized validation expressions.
+   * Reads ERNIE validation alternatives; an explicit empty list stays empty.
+   * @param {IdentifierType} type Vocabulary metadata.
+   * @returns {string[]} Delivered validation expressions.
    */
   function patternsFor(type) {
-    const grouped = type.patterns?.validation;
-    return Array.isArray(grouped) && grouped.length
-      ? grouped.map(entry => normalizePattern(entry.pattern)).filter(Boolean)
-      : [normalizePattern(type.pattern)].filter(Boolean);
+    if (type.patterns && Object.hasOwn(type.patterns, 'validation')) {
+      const grouped = type.patterns.validation;
+      return Array.isArray(grouped)
+        ? grouped.map(entry => normalizePattern(entry?.pattern)).filter(Boolean) : [];
+    }
+    return [normalizePattern(type.pattern)].filter(Boolean);
   }
 
   /**
-   * Matches the entire input, including an explicit check for trailing newlines.
-   * @param {string} pattern Vocabulary expression.
+   * Matches complete input against a delivered vocabulary expression.
+   * @param {string} pattern Expression from ERNIE or its synchronized cache.
    * @param {string} identifier Input to validate.
-   * @returns {boolean} Whether the expression accepts the complete input.
+   * @returns {boolean} Whether the complete input matches.
    */
   function fullMatch(pattern, identifier) {
     try {
-      const match = new RegExp('(?:' + normalizePattern(pattern) + ')', 'i').exec(identifier);
+      const match = new RegExp('^(?:' + normalizePattern(pattern) + ')$', 'i').exec(identifier);
       return Boolean(match && match.index === 0 && match[0].length === identifier.length);
     } catch (error) {
       console.warn('Invalid identifier pattern:', error);
       return false;
     }
-  }
-
-  /**
-   * Extracts a bare DOI while preserving its suffix and case for transport.
-   * @param {string} identifier Bare DOI, DOI prefix or supported resolver URL.
-   * @returns {string|null} Bare DOI, or null for unsupported syntax.
-   */
-  function normalizeDoi(identifier) {
-    const value = String(identifier || '').trim();
-    return DOI_REGEX.test(value)
-      ? value.replace(/^(?:https?:\/\/(?:dx\.)?doi\.org\/|doi:\s*)/i, '')
-      : null;
-  }
-
-  /**
-   * Checks modern and legacy numbering, including date ranges and version syntax.
-   * @param {string} value Bare identifier or arXiv-prefixed identifier.
-   * @returns {boolean} Whether the identifier follows supported arXiv numbering.
-   */
-  function validArxiv(value) {
-    const identifier = value.replace(/^arxiv:\s*/i, '');
-    const modern = identifier.match(/^(\d{2})(\d{2})\.(\d{4,5})(?:v([1-9]\d*))?$/);
-    if (modern) {
-      const date = Number(modern[1] + modern[2]);
-      return Number(modern[2]) >= 1 && Number(modern[2]) <= 12 && date >= 704
-        && modern[3].length === (date < 1501 ? 4 : 5) && Number(modern[3]) > 0;
-    }
-    const legacy = identifier.match(/^[a-z-]+(?:\.[a-z]{2})?\/(\d{2})(\d{2})(\d{3})(?:v([1-9]\d*))?$/i);
-    if (!legacy) return false;
-    const year = Number(legacy[1]) >= 91 ? 1900 + Number(legacy[1]) : 2000 + Number(legacy[1]);
-    const date = year * 100 + Number(legacy[2]);
-    return date >= 199107 && date <= 200703 && Number(legacy[2]) >= 1
-      && Number(legacy[2]) <= 12 && Number(legacy[3]) > 0;
-  }
-
-  /**
-   * Validates a 13-digit EAN number using alternating weights of one and three.
-   * @param {string} value Unformatted digits, including the check digit.
-   * @returns {boolean} Whether length and checksum are valid.
-   */
-  function checksum13(value) {
-    if (!/^\d{13}$/.test(value)) return false;
-    const sum = [...value.slice(0, 12)].reduce((total, digit, i) => total + Number(digit) * (i % 2 ? 3 : 1), 0);
-    return Number(value[12]) === (10 - sum % 10) % 10;
-  }
-
-  function isbnValue(value) {
-    const number = value.replace(/^(?:urn:)?isbn(?:-1[03])?:?\s*/i, '');
-    if (!/^(?:\d+[- ])*[\dXx]+$/.test(number)) return null;
-    return number.replace(/[- ]/g, '').toUpperCase();
-  }
-
-  /**
-   * Checks ISBN-10/13 after removing accepted prefixes and separators.
-   * @param {string} value Entered book identifier.
-   * @returns {boolean} Whether the format and check digit are valid.
-   */
-  function validIsbn(value) {
-    const number = isbnValue(value);
-    if (!number) return false;
-    if (/^\d{9}[\dX]$/.test(number)) {
-      return [...number].reduce((sum, digit, i) => sum + (digit === 'X' ? 10 : Number(digit)) * (10 - i), 0) % 11 === 0;
-    }
-    // Reserve the 979-0 range for ISMN music publication identifiers.
-    return /^(?:978|979[1-9])\d+$/.test(number) && checksum13(number);
   }
 
   function parsedUrl(value) {
@@ -136,88 +63,124 @@
     } catch { return null; }
   }
 
-  /** Exact resolver hosts distinguish identifier URLs from unrelated web links. */
+  /**
+   * Extracts a DOI for the registry endpoint; this does not validate a field's format.
+   * Accepted input forms and a confirmed subtype still have to match ERNIE's pattern.
+   * @param {string} identifier Entered identifier.
+   * @returns {string|null} Potential bare DOI for backend verification.
+   */
+  function normalizeDoi(identifier) {
+    let value = String(identifier || '').trim();
+    if (value.toLowerCase().startsWith('doi:')) value = value.slice(4).trim();
+    const url = parsedUrl(value);
+    if (url && ['doi.org', 'dx.doi.org'].includes(url.hostname)
+      && !url.username && !url.password && !url.port && !url.search && !url.hash) {
+      value = url.pathname.slice(1);
+    }
+    return value.startsWith('10.') && value.includes('/') && !/\s/.test(value) ? value : null;
+  }
+
+  /** @returns {boolean} Whether the unformatted EAN13 check digit is correct. */
+  function checksum13(value) {
+    if (!/^\d{13}$/.test(value)) return false;
+    const sum = [...value.slice(0, 12)].reduce((total, digit, i) => total + Number(digit) * (i % 2 ? 3 : 1), 0);
+    return Number(value[12]) === (10 - sum % 10) % 10;
+  }
+
+  /**
+   * Checks ISBN arithmetic after removing common prefixes and separators.
+   * Prefix/range and separator-format restrictions are supplied by ERNIE.
+   * @param {string} value Entered ISBN.
+   * @returns {boolean} Whether the ISBN-10/13 check digit is correct.
+   */
+  function validIsbn(value) {
+    const number = value.replace(/^(?:urn:)?isbn(?:-1[03])?:?\s*/i, '').replace(/[- ]/g, '').toUpperCase();
+    if (/^\d{9}[\dX]$/.test(number)) {
+      return [...number].reduce((sum, digit, i) => sum + (digit === 'X' ? 10 : Number(digit)) * (10 - i), 0) % 11 === 0;
+    }
+    return checksum13(number);
+  }
+
+  /**
+   * Adds check digits to the vocabulary's format validation.
+   * @param {string} identifier Entered identifier.
+   * @param {string} name Vocabulary type name.
+   * @returns {boolean} Whether the additional semantic checks succeed.
+   */
+  function passesAdditionalChecks(identifier, name) {
+    const value = String(identifier || '').trim();
+    switch (String(name).toLowerCase()) {
+      case 'isbn': return validIsbn(value);
+      case 'ean13': return checksum13(value);
+      default: return true;
+    }
+  }
+
+  /**
+   * Requires a delivered format match as well as any supplementary check digits.
+   * @param {string} identifier Entered identifier.
+   * @param {IdentifierType} type ERNIE metadata for the selected type.
+   * @returns {boolean} Whether the vocabulary and semantic checks accept the input.
+   */
+  function validateIdentifier(identifier, type) {
+    const value = String(identifier || '').trim();
+    return patternsFor(type).some(pattern => fullMatch(pattern, value)) && passesAdditionalChecks(value, type.name);
+  }
+
+  // Recognized namespaces prevent a rejected specific identifier from becoming a generic URL.
+  // They do not provide format validators: ERNIE must accept the entire input.
   function resolverType(value) {
     const url = parsedUrl(value);
     if (!url) return null;
     const trusted = !url.username && !url.password && !url.port;
     if (['arxiv.org', 'www.arxiv.org'].includes(url.hostname)) {
-      const path = url.pathname.match(/^\/(?:abs|pdf|html|src)\/(.+)$/);
-      if (!path) return /^\/(?:abs|pdf|html|src)(?:\/|$)/.test(url.pathname) ? false : null;
-      return trusted && validArxiv(path[1].replace(/\.pdf$/, '')) ? 'arXiv' : false;
+      const paths = ['abs', 'pdf', 'html', 'src'];
+      if (!paths.some(path => url.pathname.startsWith('/' + path + '/') || url.pathname === '/' + path)) return null;
+      return trusted ? 'arXiv' : false;
     }
-    if (url.hostname === 'raid.org') {
-      if (url.pathname === '/') return null;
-      return trusted && /^10\.\d{4,9}\/[A-Za-z0-9._-]+$/.test(url.pathname.slice(1)) ? 'RAiD' : false;
-    }
+    if (url.hostname === 'raid.org' && url.pathname !== '/') return trusted ? 'RAiD' : false;
     if (['doi.org', 'dx.doi.org'].includes(url.hostname)) return false;
     return null;
   }
 
   /**
-   * Validates a manual choice without requiring registry confirmation.
+   * Uses ERNIE format matches, with registry evidence for DOI subtypes and semantic
+   * ambiguity safeguards for unqualified ISBN13/EAN13 numbers. No priority wins a tie.
    * @param {string} identifier Entered identifier.
-   * @param {string} name Selected vocabulary type.
-   * @returns {boolean|null} Validity, or null when a vocabulary validator is needed.
-   */
-  function validateIdentifier(identifier, name) {
-    const value = String(identifier || '').trim();
-    switch (String(name).toLowerCase()) {
-      case 'doi': return normalizeDoi(value) !== null;
-      case 'igsn': return normalizeDoi(value) !== null || LEGACY_IGSN.test(value);
-      case 'raid': return normalizeDoi(value) !== null || resolverType(value) === 'RAiD';
-      case 'arxiv': return validArxiv(value) || resolverType(value) === 'arXiv';
-      case 'isbn': return validIsbn(value);
-      case 'ean13': return checksum13(value);
-      case 'handle': return /^(?:hdl:|https?:\/\/hdl\.handle\.net\/)?\d+(?:\.\w+)*\/\S+$/i.test(value);
-      case 'url': return parsedUrl(value) !== null;
-      default: return null;
-    }
-  }
-
-  /**
-   * Collects all plausible formats before considering which types are enabled.
-   * Filtering first would turn ISBN/EAN13 overlaps into false certainty; DOI
-   * syntax always requires registry evidence because DOI subtypes share it.
-   * @param {string} identifier Entered identifier.
-   * @param {IdentifierType[]} [types=[]] Metadata for additional vocabulary types.
-   * @returns {LocalIdentifierClassification} Format candidates or required DOI lookup.
+   * @param {IdentifierType[]} [types=[]] Delivered active vocabulary metadata.
+   * @returns {LocalIdentifierClassification} Matches or required registry verification.
    */
   function classifyLocal(identifier, types = []) {
     const value = String(identifier || '').trim();
     const result = (status, candidates = [], doi = null) => ({ status, candidates, doi });
     if (!value) return result('unknown');
+    const formatMatches = types.filter(type => patternsFor(type).some(pattern => fullMatch(pattern, value)));
     const doi = normalizeDoi(value);
-    if (doi) return result('lookupRequired', ['DOI', 'IGSN', 'RAiD'], doi);
-    const resolver = resolverType(value);
-    if (resolver === false) return result('invalid');
-    if (resolver) return result('detected', [resolver]);
-
-    const candidates = [];
-    if (validArxiv(value)) candidates.push('arXiv');
-    if (LEGACY_IGSN.test(value)) candidates.push('IGSN');
-    if (validIsbn(value)) candidates.push('ISBN');
-    if (checksum13(value)) candidates.push('EAN13');
-    if (validateIdentifier(value, 'Handle')) candidates.push('Handle');
-    for (const type of types) {
-      if (!SPECIAL_TYPES.has(String(type.name).toLowerCase()) && patternsFor(type).some(pattern => fullMatch(pattern, value))) {
-        candidates.push(type.name);
-      }
+    if (doi) return formatMatches.some(type => ['doi', 'igsn', 'raid'].includes(String(type.name).toLowerCase()))
+      ? result('lookupRequired', ['DOI', 'IGSN', 'RAiD'], doi) : result('unknown');
+    const namespace = resolverType(value);
+    if (namespace === false) return result('invalid');
+    const matches = formatMatches.filter(type => passesAdditionalChecks(value, type.name)
+      && !(String(type.name).toLowerCase() === 'handle' && /^\d+$/.test(value)));
+    if (namespace) {
+      return matches.some(type => String(type.name).toLowerCase() === namespace.toLowerCase())
+        ? result('detected', [namespace]) : result('invalid');
     }
+    // Disabled EAN13/ISBN options must not turn a plain book barcode into certainty.
+    if (checksum13(value) && (value.startsWith('978') || (value.startsWith('979') && value[3] !== '0'))
+      && matches.some(type => ['isbn', 'ean13'].includes(String(type.name).toLowerCase()))) {
+      return result('ambiguous', ['ISBN', 'EAN13']);
+    }
+    const specific = matches.filter(type => String(type.name).toLowerCase() !== 'url');
+    const candidates = (specific.length ? specific : matches).map(type => type.name);
     const unique = [...new Map(candidates.map(name => [name.toLowerCase(), name])).values()];
     if (unique.length > 1) return result('ambiguous', unique);
+    if (unique.length === 1 && String(unique[0]).toLowerCase() === 'doi') return result('unknown');
     if (unique.length === 1) return result('detected', unique);
-    if (/^(?:urn:)?isbn/i.test(value) || /^[\dXx -]{10,}$/.test(value)
-      || /^arxiv:/i.test(value) || /^10\./.test(value)) return result('invalid');
-    return parsedUrl(value) ? result('detected', ['URL']) : result('unknown');
+    return result(formatMatches.length ? 'invalid' : 'unknown');
   }
 
-  /**
-   * Finds an offered type while preserving the vocabulary's spelling.
-   * @param {string} name Detected type name.
-   * @param {IdentifierType[]} types Currently active vocabulary entries.
-   * @returns {IdentifierType|null} Offered type, or null if it is inactive.
-   */
+  /** Finds an offered type while preserving ERNIE's spelling. */
   function activeType(name, types) {
     return types.find(type => String(type.name).toLowerCase() === String(name).toLowerCase()) || null;
   }
@@ -257,8 +220,8 @@
     }
   }
 
-  const api = { DOI_PATTERN, normalizePattern, patternsFor, fullMatch, normalizeDoi, validArxiv,
-    checksum13, validIsbn, validateIdentifier, classifyLocal, activeType, IdentifierDetectionService };
+  const api = { normalizePattern, patternsFor, fullMatch, normalizeDoi, checksum13, validIsbn,
+    passesAdditionalChecks, validateIdentifier, classifyLocal, activeType, IdentifierDetectionService };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   if (root) root.elmoIdentifierDetection = api;
 })(typeof window !== 'undefined' ? window : null);

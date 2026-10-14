@@ -1,4 +1,5 @@
 import path from 'path';
+import identifierTypes from '../../../fixtures/identifier-types.json';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { navigateToHome, uploadXmlIntoForm } from '../../utils';
 
@@ -45,7 +46,7 @@ test.describe('GGMs Data Sources – stable identifier fields', () => {
     }));
     await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
       contentType: 'application/json',
-      body: JSON.stringify({ identifierTypes: [{ name: 'arXiv', pattern: '.*' }, { name: 'ISBN', pattern: '.*' }] }),
+      body: JSON.stringify({ identifierTypes }),
     }));
     await navigateToHome(page);
   });

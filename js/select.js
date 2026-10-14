@@ -852,18 +852,13 @@ function updateValidationPattern(selectElement) {
   const apply = patterns => {
     if (String(select.val() || '').trim() !== selectedType) return;
     const value = String(input.val() || '');
-    const known = identifierDetection.validateIdentifier(value, selectedType);
-    const valid = !value || !selectedType || (known !== null ? known :
-      !patterns.length || patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim())));
+    const valid = !value || !selectedType || (identifierDetection.passesAdditionalChecks(value, selectedType)
+      && (!patterns.length || patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim()))));
     const message = window.elmo?.translate?.('relatedWork.identifierInvalid') || 'Please enter a valid identifier.';
     input[0].setCustomValidity(valid ? '' : message);
   };
-  if (!selectedType || identifierDetection.validateIdentifier('', selectedType) !== null) {
+  if (!selectedType) {
     apply([]);
-    return;
-  }
-  if (identifierPatternCache.has(selectedType)) {
-    apply(identifierPatternCache.get(selectedType));
     return;
   }
   // Validate with the vocabulary that populated the dropdown, before consulting legacy DB patterns.
@@ -872,6 +867,10 @@ function updateValidationPattern(selectElement) {
     const patterns = identifierDetection.patternsFor(type);
     identifierPatternCache.set(selectedType, patterns);
     apply(patterns);
+    return;
+  }
+  if (identifierPatternCache.has(selectedType)) {
+    apply(identifierPatternCache.get(selectedType));
     return;
   }
   $.ajax({
@@ -975,6 +974,8 @@ async function updateIdentifierType(inputElement) {
     const result = await identifierRegistry.lookup(local.doi);
     if (!current()) return;
     type = result ? identifierDetection.activeType(result.identifierType, types) : null;
+    // Registry identity cannot override the format supplied for this type by ERNIE.
+    if (type && !identifierDetection.validateIdentifier(identifier, type)) type = null;
   }
   // Only select options currently offered; never restore a disabled subtype as DOI/URL.
   if (type && !select.find('option').filter(function () { return String($(this).val()) === type.name; }).length) {

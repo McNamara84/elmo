@@ -1134,7 +1134,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
-                    <p>Identifier types are selected automatically only when they can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or several types fit, choose the type manually. A valid ISBN-13 may also be an EAN13, so an unqualified number can remain without an automatic selection. Your manual choice is kept until you edit the identifier.</p>
+                    <p>Identifier types and accepted formats are provided by ERNIE. A type is selected automatically only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or several types fit, choose the type manually. A valid ISBN-13 may also be an EAN13, so an unqualified number can remain without an automatic selection. Your manual choice is kept until you edit the identifier.</p>
                     <p>
                         Please enter resources related to your data. This helps connecting your data to other work
                         like articles, samples, etc. Identifiers must be globally unique.
@@ -1526,7 +1526,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <div id="help-datasources-identifiertype">
                         <h4>Identifier Type</h4>
                         <p>The type of the Related Identifier.</p>
-                        <p>The same automatic detection rules apply as in Related Work: the type is selected only when it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or the identifier is ambiguous, choose the type manually. Your manual choice is kept until you edit the identifier.</p>
+                        <p>The same automatic detection rules apply as in Related Work: identifier types and accepted formats are provided by ERNIE, and a type is selected only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or the identifier is ambiguous, choose the type manually. Your manual choice is kept until you edit the identifier.</p>
                         <ul>
                             <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
                             <!-- arXiv: Repository for scientific preprints in math, physics, astronomy, etc. -->
