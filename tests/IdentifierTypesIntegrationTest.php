@@ -75,7 +75,7 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $row = $result->fetch_assoc();
         $this->assertEquals('DOI', $row['name']);
         $this->assertEquals('Updated desc', $row['description']);
-        $this->assertEquals('^10\\.\\d+', $row['pattern']);
+        $this->assertEquals(\IdentifierTypePatterns::supported()['DOI'], $row['pattern']);
         $this->assertEquals(1, $row['isShown']);
     }
 
@@ -109,7 +109,7 @@ final class IdentifierTypesIntegrationTest extends DatabaseTestCase
         $this->assertEquals($localId, $row['identifier_type_id'], 'Should keep original local ID');
         $this->assertEquals(50, $row['ernie_id'], 'Should have linked ernie_id');
         $this->assertEquals('ERNIE DOI', $row['description'], 'Should have updated description');
-        $this->assertEquals('^10\\.\\d+', $row['pattern'], 'Should have updated pattern');
+        $this->assertEquals(\IdentifierTypePatterns::supported()['DOI'], $row['pattern'], 'Should have updated pattern');
     }
 
     /**

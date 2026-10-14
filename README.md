@@ -973,7 +973,11 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
-  - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
+  - The Identifier Type is selected automatically only when the supported format or confirmed registry metadata determines it uniquely. DOI-shaped inputs are checked through the ELMO backend against DataCite repository types (`igsnCatalog` → IGSN, `raidRegistry` → RAiD); regular DataCite records and positively confirmed Crossref records use DOI. Missing metadata or failed lookups leave the type empty for manual selection.
+  - ISBN and EAN13 checks include their check digits. An unqualified valid ISBN-13/EAN13 overlap stays empty; either type can still be selected manually. arXiv and RAiD resolver URLs are recognized by their exact supported hosts and identifier paths.
+  - The same detection and validation rules apply to GEM model data sources. A manual choice or imported type is retained until the identifier is edited, and late lookup responses cannot overwrite it.
+  - ERNIE grouped `patterns.validation` entries are combined for the local pattern contract. Format and checksum validation uses JavaScript custom validity so uppercase resolver URLs and decoded patterns behave consistently in actual browsers.
+  - Existing installations can update the affected stored patterns without resetting data or changing type visibility: `php scripts/update_identifier_patterns.php`. ERNIE vocabulary synchronization also writes the updated validation patterns.
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/#a-relatedidentifiertype)
   - Example values: `ARK` `IGSN` `LSID`

@@ -132,10 +132,6 @@ describe('select module coverage', () => {
             expect(typeof selectModule.setupIdentifierTypesDropdown).toBe('function');
         });
 
-        test('exports getIdentifierPriority function', () => {
-            expect(typeof selectModule.getIdentifierPriority).toBe('function');
-        });
-
         test('exports updateIdentifierType function', () => {
             expect(typeof selectModule.updateIdentifierType).toBe('function');
         });
@@ -206,32 +202,15 @@ describe('select module coverage', () => {
         });
     });
 
-    describe('getIdentifierPriority', () => {
-        test('returns priority for DOI', () => {
-            const priority = selectModule.getIdentifierPriority('DOI');
-            expect(typeof priority).toBe('number');
+    describe('conservative identifier detection', () => {
+        test('requires registry proof for DOI syntax', () => {
+            expect(selectModule.detectIdentifierType('10.60510/gf1211s-47', [{name:'DOI'}])).toBeNull();
         });
-
-        test('returns priority for URL', () => {
-            const priority = selectModule.getIdentifierPriority('URL');
-            expect(typeof priority).toBe('number');
+        test('does not decide an ISBN/EAN13 overlap by priority', () => {
+            expect(selectModule.detectIdentifierType('9783831048069', [{name:'ISBN'}, {name:'EAN13'}])).toBeNull();
         });
-
-        test('returns default priority for unknown type', () => {
-            const priority = selectModule.getIdentifierPriority('UnknownType');
-            expect(typeof priority).toBe('number');
-        });
-
-        test('DOI has defined priority', () => {
-            const doiPriority = selectModule.getIdentifierPriority('DOI');
-            expect(doiPriority).toBe(10);
-        });
-
-        test('URL has higher priority (lower number) than DOI', () => {
-            const doiPriority = selectModule.getIdentifierPriority('DOI');
-            const urlPriority = selectModule.getIdentifierPriority('URL');
-            // URL has priority 0, DOI has priority 10
-            expect(urlPriority).toBeLessThan(doiPriority);
+        test('does not substitute URL for an unavailable arXiv type', () => {
+            expect(selectModule.detectIdentifierType('https://arxiv.org/abs/2507.21532', [{name:'URL'}])).toBeNull();
         });
     });
 

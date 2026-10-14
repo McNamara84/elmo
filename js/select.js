@@ -1,3 +1,6 @@
+const identifierDetection = (typeof require === "function" && typeof module !== "undefined")
+  ? require("./services/identifierDetectionService.js") : window.elmoIdentifierDetection;
+
 const dropdownUtils =
   (typeof require === 'function' && typeof module !== 'undefined')
     ? require('./dropdownUtils.js')
@@ -455,6 +458,7 @@ function populateRelationsDropdownWithData(response) {
  * @param {Object} response - Response object containing identifierTypes array
  */
 function populateIdentifierTypesDropdownWithData(response) {
+  identifierPatternCache.clear();
   relatedWorkDropdownCache.identifierTypes = response && Array.isArray(response.identifierTypes)
     ? [...response.identifierTypes]
     : [];
@@ -718,13 +722,48 @@ function setupIdentifierTypesDropdown(id) {
  * Function to update the identifier type based on the entered identifier.
  * @param {HTMLElement} inputElement - The input element for the identifier.
  */
-// Priority map for identifier types when multiple patterns match
-const IDENTIFIER_TYPE_PRIORITY = {
-  DOI: 10,
-  URL: 0,
-};
-const DOI_IDENTIFIER_PATTERN = '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$';
-const DOI_IDENTIFIER_REGEX = new RegExp(DOI_IDENTIFIER_PATTERN, 'i');
+const identifierFieldStates = new WeakMap();
+const identifierRegistry = new identifierDetection.IdentifierDetectionService({
+  request: doi => new Promise((resolve, reject) => $.ajax({
+    url: 'api/v2/validation/identifier-type', data: { doi }, method: 'GET', dataType: 'json',
+    success: resolve, error: reject,
+  })),
+});
+
+function fieldState(input) {
+  if (!identifierFieldStates.has(input)) identifierFieldStates.set(input, { version: 0, timer: null });
+  return identifierFieldStates.get(input);
+}
+
+function invalidateIdentifierDetection(input) {
+  if (!input) return;
+  const state = fieldState(input);
+  state.version += 1;
+  clearTimeout(state.timer);
+  state.timer = null;
+  detectionStatus(input, null);
+}
+
+function restoreIdentifierType(input, restoredType) {
+  if (!input) return;
+  invalidateIdentifierDetection(input);
+  const select = identifierTypeSelectForInput(input);
+  markManualIdentifierTypeSelection(select);
+  updateValidationPattern(select[0]);
+  const ready = select.data('identifierTypesReady');
+  if (restoredType !== undefined && ready) {
+    const version = fieldState(input).version;
+    const identifier = String($(input).val() || '');
+    Promise.resolve(ready).then(() => {
+      if (!input.isConnected || fieldState(input).version !== version || String($(input).val() || '') !== identifier) return;
+      if (restoredType && !select.find('option').filter(function () { return $(this).val() === restoredType; }).length) {
+        select.append($('<option>', { value: restoredType, text: restoredType }));
+      }
+      select.val(restoredType).trigger('change');
+    }).catch(() => {});
+  }
+}
+
 const IDENTIFIER_TYPE_AUTO_UPDATE_KEY = 'elmoIdentifierTypeAutoUpdate';
 const IDENTIFIER_TYPE_MANUAL_SELECTION_KEY = 'elmoIdentifierTypeManualSelection';
 const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifier';
@@ -732,12 +771,6 @@ const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifie
 // A native/Chosen change after identifier input is a user decision. Bind that
 // decision to the current identifier so a pending debounced detector cannot
 // erase it. Typing a new identifier clears the marker and enables detection again.
-
-function getIdentifierPriority(name) {
-  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
-    ? IDENTIFIER_TYPE_PRIORITY[name]
-    : 5;
-}
 
 function identifierFieldScope(element) {
   const field = $(element);
@@ -786,89 +819,75 @@ function hasManualIdentifierTypeSelection(selectElement, identifier) {
 }
 
 function normalizeIdentifierPattern(pattern) {
-  let normalized = String(pattern || '').trim().replace(/^"|"$/g, '');
-  const delimitedPattern = normalized.match(/^\/(.*)\/[a-z]*$/i);
-  if (delimitedPattern) {
-    normalized = delimitedPattern[1];
-  } else {
-    normalized = normalized.replace(/\/[a-z]+$/i, '');
-  }
-  return normalized;
+  return identifierDetection.normalizePattern(pattern);
 }
 
 function updateValidationPattern(selectElement) {
   const select = $(selectElement);
   const selectedType = String(select.val() || '').trim();
-  const inputIdentifier = identifierInputForTypeSelect(selectElement);
-  if (!inputIdentifier.length) {
-    return;
-  }
-
-  const applyPattern = function (pattern) {
-    if (String(select.val() || '').trim() !== selectedType) {
-      return;
-    }
-    if (pattern) {
-      inputIdentifier.attr('pattern', pattern);
-    } else {
-      inputIdentifier.removeAttr('pattern');
-    }
+  const input = identifierInputForTypeSelect(selectElement);
+  if (!input.length) return;
+  input.removeAttr('pattern');
+  const apply = patterns => {
+    if (String(select.val() || '').trim() !== selectedType) return;
+    const value = String(input.val() || '');
+    const known = identifierDetection.validateIdentifier(value, selectedType);
+    const valid = !value || !selectedType || (known !== null ? known :
+      !patterns.length || patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim())));
+    const message = window.elmo?.translate?.('relatedWork.identifierInvalid') || 'Please enter a valid identifier.';
+    input[0].setCustomValidity(valid ? '' : message);
   };
-
-  if (selectedType === '') {
-    inputIdentifier.removeAttr('pattern');
+  if (!selectedType || identifierDetection.validateIdentifier('', selectedType) !== null) {
+    apply([]);
     return;
   }
-
-  // DOI resolver URLs are valid input and are reduced to bare DOI names on save.
-  // Keep browser validation aligned even when the vocabulary pattern only
-  // describes the canonical bare DOI representation.
-  if (selectedType.toUpperCase() === 'DOI') {
-    identifierPatternCache.set(selectedType, DOI_IDENTIFIER_PATTERN);
-    applyPattern(DOI_IDENTIFIER_PATTERN);
-    return;
-  }
-
   if (identifierPatternCache.has(selectedType)) {
-    applyPattern(identifierPatternCache.get(selectedType));
+    apply(identifierPatternCache.get(selectedType));
     return;
   }
-
+  // Validate with the vocabulary that populated the dropdown, before consulting legacy DB patterns.
+  const type = identifierDetection.activeType(selectedType, relatedWorkDropdownCache.identifierTypes || []);
+  if (type) {
+    const patterns = identifierDetection.patternsFor(type);
+    identifierPatternCache.set(selectedType, patterns);
+    apply(patterns);
+    return;
+  }
   $.ajax({
-    url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType),
-    method: 'GET',
-    dataType: 'json',
-    success: function (response) {
-      const pattern = response && response.pattern
-        ? normalizeIdentifierPattern(response.pattern)
-        : '';
-      identifierPatternCache.set(selectedType, pattern);
-      applyPattern(pattern);
+    url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType), method: 'GET', dataType: 'json',
+    success: response => {
+      const patterns = response?.pattern ? [normalizeIdentifierPattern(response.pattern)] : [];
+      identifierPatternCache.set(selectedType, patterns);
+      apply(patterns);
     },
-    error: function () {
-      identifierPatternCache.set(selectedType, '');
-      applyPattern('');
-    },
+    error: () => apply([]),
   });
+}
+
+function detectionStatus(input, status) {
+  const field = $(input);
+  let hint = field.siblings('[data-identifier-detection-status]').first();
+  if (!hint.length) {
+    hint = $('<span class="small text-body-secondary w-100" role="status" aria-live="polite" data-identifier-detection-status></span>');
+    field.after(hint);
+  }
+  const key = status === 'pending' ? 'identifierChecking' : 'identifierUncertain';
+  const fallback = status === 'pending' ? 'Checking identifier type…' : 'Choose the identifier type manually.';
+  hint.text(status ? (window.elmo?.translate?.('relatedWork.' + key) || fallback) : '').toggle(Boolean(status));
+  if (status) hint.attr('data-translate', 'relatedWork.' + key);
+  else hint.removeAttr('data-translate');
 }
 
 window.elmo = window.elmo || {};
 window.elmo.updateIdentifierValidationPattern = updateValidationPattern;
+window.elmo.invalidateIdentifierDetection = invalidateIdentifierDetection;
+window.elmo.restoreIdentifierType = restoreIdentifierType;
 
 function setDetectedIdentifierType(selectElement, type) {
   if (!selectElement.length) {
     return;
   }
   const typeName = type ? String(type.name || '') : '';
-  if (typeName !== '' && !selectElement.find('option').filter(function () {
-    return String($(this).val()) === typeName;
-  }).length) {
-    selectElement.append($('<option>', {
-      value: typeName,
-      text: typeName,
-      title: type.description,
-    }));
-  }
   selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY, true);
   try {
     selectElement.val(typeName).trigger('change');
@@ -878,88 +897,53 @@ function setDetectedIdentifierType(selectElement, type) {
 }
 
 function detectIdentifierType(identifier, identifierTypes) {
-  const doiType = identifierTypes.find(type => String(type.name || '').toUpperCase() === 'DOI');
-  if (doiType && DOI_IDENTIFIER_REGEX.test(String(identifier || '').trim())) {
-    return doiType;
-  }
-
-  const matchingTypes = identifierTypes.filter(type => {
-    try {
-      let pattern = normalizeIdentifierPattern(type.pattern);
-      if (pattern === '') {
-        return false;
-      }
-      pattern = pattern.replace(/\\{2}/g, '\\');
-      return new RegExp(pattern, 'i').test(identifier);
-    } catch (error) {
-      console.warn(`Invalid pattern for ${type.name}:`, error);
-      return false;
-    }
-  });
-
-  matchingTypes.sort((a, b) => {
-    const priorityDifference = getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
-    if (priorityDifference !== 0) {
-      return priorityDifference;
-    }
-    return String(b.pattern || '').length - String(a.pattern || '').length;
-  });
-  return matchingTypes[0] || null;
+  const local = identifierDetection.classifyLocal(identifier, identifierTypes);
+  return local.status === 'detected' ? identifierDetection.activeType(local.candidates[0], identifierTypes) : null;
 }
 
-/**
- * Detects an identifier type without overwriting a later manual selection.
- * @param {HTMLElement} inputElement - Related Work or Data Source identifier input.
- */
-function updateIdentifierType(inputElement) {
+/** Only the current field version may apply a registry result. */
+async function updateIdentifierType(inputElement) {
+  if (!inputElement) return;
   const input = $(inputElement);
   const identifier = String(input.val() || '');
-  const selectElement = identifierTypeSelectForInput(inputElement);
-
-  const applyTypes = function (types) {
-    if (
-      String(input.val() || '') !== identifier
-      || hasManualIdentifierTypeSelection(selectElement, identifier)
-    ) {
+  const select = identifierTypeSelectForInput(inputElement);
+  const state = fieldState(inputElement);
+  clearTimeout(state.timer);
+  const version = ++state.version;
+  const current = () => inputElement.isConnected && !inputElement.disabled && state.version === version
+    && String(input.val() || '') === identifier && !hasManualIdentifierTypeSelection(select, identifier);
+  if (!current()) return;
+  let types = relatedWorkDropdownCache.identifierTypes;
+  if (!Array.isArray(types)) {
+    try {
+      const response = await new Promise((resolve, reject) => $.ajax({
+        url: 'api/v2/validation/identifiertypes/active', method: 'GET', dataType: 'json',
+        success: resolve, error: reject,
+      }));
+      if (!Array.isArray(response?.identifierTypes)) throw new Error('Missing identifier types');
+      types = response.identifierTypes;
+      relatedWorkDropdownCache.identifierTypes = types;
+    } catch {
+      if (current()) { setDetectedIdentifierType(select, null); detectionStatus(inputElement, identifier.trim() ? 'unknown' : null); }
       return;
     }
-    setDetectedIdentifierType(selectElement, detectIdentifierType(identifier, types));
-  };
-  const clearType = function () {
-    if (
-      String(input.val() || '') === identifier
-      && !hasManualIdentifierTypeSelection(selectElement, identifier)
-    ) {
-      setDetectedIdentifierType(selectElement, null);
-    }
-  };
-
-  if (identifier) {
-    if (Array.isArray(relatedWorkDropdownCache.identifierTypes)) {
-      applyTypes(relatedWorkDropdownCache.identifierTypes);
-      return;
-    }
-    $.ajax({
-      url: "api/v2/validation/identifiertypes/active",
-      method: "GET",
-      dataType: "json",
-      success: function (response) {
-        if (response && Array.isArray(response.identifierTypes)) {
-          relatedWorkDropdownCache.identifierTypes = [...response.identifierTypes];
-          applyTypes(response.identifierTypes);
-        } else {
-          clearType();
-          console.warn("No identifier types found in the response");
-        }
-      },
-      error: function (xhr, status) {
-        console.error("Error retrieving identifier types:", status);
-        clearType();
-      },
-    });
-  } else {
-    clearType();
   }
+  if (!current()) return;
+  const local = identifierDetection.classifyLocal(identifier, types);
+  let type = local.status === 'detected' ? identifierDetection.activeType(local.candidates[0], types) : null;
+  if (local.status === 'lookupRequired') {
+    setDetectedIdentifierType(select, null);
+    detectionStatus(inputElement, 'pending');
+    const result = await identifierRegistry.lookup(local.doi);
+    if (!current()) return;
+    type = result ? identifierDetection.activeType(result.identifierType, types) : null;
+  }
+  // Only select options currently offered; never restore a disabled subtype as DOI/URL.
+  if (type && !select.find('option').filter(function () { return String($(this).val()) === type.name; }).length) {
+    select.append($('<option>', { value: type.name, text: type.name, title: type.description }));
+  }
+  setDetectedIdentifierType(select, type);
+  detectionStatus(inputElement, !type && identifier.trim() ? 'unknown' : null);
 }
 
 /**
@@ -980,25 +964,28 @@ function debounce(func, wait) {
   };
 }
 
-const updateRelatedWorkIdentifierTypeDebounced = debounce(function () {
-  updateIdentifierType(this);
-}, 300);
+function scheduleIdentifierDetection(input) {
+  invalidateIdentifierDetection(input);
+  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(input));
+  setDetectedIdentifierType(identifierTypeSelectForInput(input), null);
+  updateValidationPattern(identifierTypeSelectForInput(input)[0]);
+  fieldState(input).timer = setTimeout(() => updateIdentifierType(input), 300);
+}
 
-// Event listener for input in the identifier input field with debounce
-$(document).on("input", 'input[name="rIdentifier[]"]', function () {
-  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
-  updateRelatedWorkIdentifierTypeDebounced.call(this);
+$(document).on('input', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"]', function () {
+  scheduleIdentifierDetection(this);
 });
-
-// Event listener for leaving the identifier input field
-$(document).on("blur", 'input[name="rIdentifier[]"]', function () {
+$(document).on('blur', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"]', function () {
+  if ($(this).is('[name="dIdentifier[]"]')) updateDataSourceIdsAndNames();
   updateIdentifierType(this);
 });
-
 $(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
-  const selectElement = $(this);
-  if (selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY) !== true) {
-    markManualIdentifierTypeSelection(selectElement);
+  const select = $(this);
+  if (select.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY) !== true) {
+    const input = identifierInputForTypeSelect(this)[0];
+    invalidateIdentifierDetection(input);
+    markManualIdentifierTypeSelection(select);
+    if (input) detectionStatus(input, null);
   }
   updateValidationPattern(this);
 });
@@ -1023,22 +1010,6 @@ function updateDataSourceIdsAndNames() {
   });
 }
 
-const updateDataSourceIdentifierTypeDebounced = debounce(function () {
-  updateDataSourceIdsAndNames();
-  updateIdentifierType(this);
-}, 300);
-
-// Event listener for input in the data source identifier input field with debounce
-$(document).on("input", 'input[name="dIdentifier[]"]', function () {
-  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
-  updateDataSourceIdentifierTypeDebounced.call(this);
-});
-
-// Event listener for leaving the data source identifier input field
-$(document).on("blur", 'input[name="dIdentifier[]"]', function () {
-  updateIdentifierType(this);
-});
-
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
@@ -1062,7 +1033,7 @@ if (typeof module !== 'undefined' && module.exports) {
     updateDropdownPlaceholders: dropdownUtils.updateDropdownPlaceholders,
     filterDataByGEM: dropdownUtils.filterDataByGEM,
     applyRelatedWorkDropdowns,
-    getIdentifierPriority,
+    invalidateIdentifierDetection,
     detectIdentifierType,
     updateIdentifierType,
     updateValidationPattern,

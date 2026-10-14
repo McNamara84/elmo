@@ -493,6 +493,16 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Identifier types in Related Works and GEM data sources are detected only when unambiguous. DOI, IGSN and RAiD are distinguished using registry metadata; arXiv URLs and ISBN formats are recognized correctly. ISBN/EAN13 overlaps stay empty for manual selection, and pending lookups preserve manual choices."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
               ],

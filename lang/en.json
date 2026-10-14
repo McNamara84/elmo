@@ -291,6 +291,8 @@
         "identifierType": "Identifier type",
         "identifier": "Identifier",
         "identifierInvalid": "Please enter a valid identifier.",
+        "identifierChecking": "Checking identifier type…",
+        "identifierUncertain": "Choose the identifier type manually.",
         "addEntry": "Add related work",
         "dragHandle": "Drag & drop or use arrow keys to change order",
         "removeEntry": "Remove related work entry",

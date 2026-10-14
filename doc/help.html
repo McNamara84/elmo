@@ -1134,6 +1134,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
+                    <p>Identifier types are selected automatically only when they can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or several types fit, choose the type manually. A valid ISBN-13 may also be an EAN13, so an unqualified number can remain without an automatic selection. Your manual choice is kept until you edit the identifier.</p>
                     <p>
                         Please enter resources related to your data. This helps connecting your data to other work
                         like articles, samples, etc. Identifiers must be globally unique.
