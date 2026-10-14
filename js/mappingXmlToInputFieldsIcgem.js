@@ -322,9 +322,21 @@ function populateIcgemModelTypes(data) {
   if (temporalModel.temporalResolution) {
     const days = parseInt(temporalModel.temporalResolution, 10);
     if (!isNaN(days)) {
-      $('#checkbox-custom-frequency').prop('checked', true);
-      $('#custom-frequency-container').removeClass('d-none');
-      $('#input-temporal-frequency').val(days);
+      const daysToFrequency = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = daysToFrequency[days];
+      if (predefined) {
+        $('#checkbox-custom-frequency').prop('checked', false).trigger('change');
+        $('#select-release-frequency').prop('disabled', false).val(predefined);
+      } else {
+        $('#checkbox-custom-frequency').prop('checked', true).trigger('change');
+        $('#input-temporal-frequency').val(String(days));
+      }
     }
   }
 
@@ -819,6 +831,20 @@ async function loadIcgemXmlToForm(xmlDoc) {
   await populateIcgemDataSources(data);
   populateIcgemContactPersons(xmlDoc);
 
+  $(document).trigger('icgem:form-populated');
+
+  // Process DataCite keywords from <dace:subjects> elements
+  // This ensures keywords are properly ingested during ICGEM uploads
+  if (typeof window.processKeywords === 'function') {
+    // Create a resolver that maps "ns" to the DataCite namespace
+    function dataciteResolver(prefix) {
+      if (prefix === 'ns') {
+        return 'http://datacite.org/schema/kernel-4';
+      }
+      return null;
+    }
+    window.processKeywords(xmlDoc, dataciteResolver);
+  }
 }
 
 // Expose as browser module
@@ -837,6 +863,7 @@ if (typeof module !== 'undefined' && module.exports) {
     parseIcgemXml,
     leafChildren,
     selectOptionByText,
+    
     reverseDensityType,
     groupIcgemDataSourcesForForm,
     ensureDataSourceRows,

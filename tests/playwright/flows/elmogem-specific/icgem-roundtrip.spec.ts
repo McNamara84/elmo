@@ -1039,7 +1039,7 @@ for (const testCase of TEST_CASES) {
         expect(savedEnd, '[FIELD: temporalEnd]').toBe(parsedData.temporalEnd);
       }
 
-      // Temporal resolution
+      // Release frequency (exported as ICGEM temporalResolution days)
       const savedResolution = extractText(getNode(tmpNode, 'temporalResolution'));
       expect(savedResolution, '[FIELD: temporalResolution]').toBe(parsedData.temporalResolution);
 
@@ -1237,7 +1237,7 @@ for (const testCase of TEST_CASES) {
     // ── ICGEM Temporal fields ──────────────────────────────────────────────
     await expect(page.locator('#input-temporal-start'), 'temporalStart').toHaveValue('');
     await expect(page.locator('#input-temporal-end'), 'temporalEnd').toHaveValue('');
-    await expect(page.locator('#select-temporal-frequency-predef'), 'temporalFrequencyPredef').toHaveValue('');
+    await expect(page.locator('#select-release-frequency'), 'releaseFrequency').toHaveValue('');
     await expect(page.locator('#input-temporal-frequency'), 'temporalFrequency').toHaveValue('');
     await expect(page.locator('#input-temporal-institution'), 'temporalInstitution').toHaveValue('');
     await expect(page.locator('#input-release-number'), 'releaseNumber').toHaveValue('');
@@ -1443,11 +1443,28 @@ for (const testCase of TEST_CASES) {
     }
 
     if (parsedData.temporalResolution) {
-      const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
-      expect(freqChecked, 'customFrequency checkbox').toBe(true);
-      await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
-        parsedData.temporalResolution,
-      );
+      // Known day counts map to the predefined release-frequency select on import;
+      // only non-standard values keep the custom-days checkbox path.
+      const days = parseInt(parsedData.temporalResolution, 10);
+      const daysToFrequency: Record<number, string> = {
+        1: 'daily',
+        7: 'weekly',
+        30: 'monthly',
+        90: 'quarterly',
+        365: 'yearly',
+      };
+      const predefined = Number.isNaN(days) ? undefined : daysToFrequency[days];
+      if (predefined) {
+        await expect(page.locator('#select-release-frequency'), 'releaseFrequency').toHaveValue(predefined);
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(false);
+      } else {
+        const freqChecked = await page.locator('#checkbox-custom-frequency').isChecked().catch(() => false);
+        expect(freqChecked, 'customFrequency checkbox').toBe(true);
+        await expect(page.locator('#input-temporal-frequency'), 'temporalResolution (days)').toHaveValue(
+          parsedData.temporalResolution,
+        );
+      }
     }
 
     // ── ICGEM Topographic fields ───────────────────────────────────────────
@@ -1599,7 +1616,6 @@ test('GGM HTML fields missing after re-upload (warning only)', () => {
     test.info().annotations.push({ type: 'warning', description: message });
   }
 
-  // Always pass: some controls (e.g. #select-temporal-frequency-predef) cannot survive
-  // XML roundtrip because export stores days only.
-  expect("the test always passes").toBe("the test always passes");
+  // Always pass: some controls cannot survive XML roundtrip because export stores days only.
+  expect('the test always passes').toBe('the test always passes');
 });

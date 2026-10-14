@@ -81,7 +81,7 @@ test.describe('ELMO-GEM save', () => {
     await page.getByLabel('File format').selectOption('icgem2.0');
     await page.getByRole('textbox', { name: 'Model name *' }).click();
     await page.getByRole('textbox', { name: 'Model name *' }).fill('test_model_name');
-    await page.getByLabel('Release frequency / temporal').selectOption('monthly');
+    await page.locator('#select-release-frequency').selectOption('monthly');
     await page.getByRole('textbox', { name: 'Release number' }).click();
     await page.getByRole('textbox', { name: 'Release number' }).fill('3.1');
     await page.getByRole('spinbutton', { name: 'Degree *' }).click();
@@ -140,7 +140,7 @@ test.describe('ELMO-GEM save', () => {
 
   test('saves sparse form data as XML and triggers download', async ({ page }) => {
     await navigateToHome(page);
-    await page.getByLabel('Type', { exact: true }).selectOption('A');
+    await page.locator('#input-datasource-type').selectOption('A');
     await page.locator('#input-datasource-description').click();
     await page.locator('#input-datasource-description').fill('descrA');
     await page.getByLabel('File format').selectOption('icgem2.0');

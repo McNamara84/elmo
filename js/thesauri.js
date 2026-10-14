@@ -1165,6 +1165,7 @@ $(document).ready(function () {
                 if (formGroup) formGroup.style.display = '';
 
                 markThesauriReady();
+                document.dispatchEvent(new CustomEvent('keywordsReady'));
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);

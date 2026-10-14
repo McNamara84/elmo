@@ -157,6 +157,12 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-model-characteristics" data-bs-dismiss="offcanvas">Gravitational Models Properties</a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-no-model-type" data-bs-dismiss="offcanvas">Model specific variables</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#help-mascon-properties" data-bs-dismiss="offcanvas">MASCON properties</a>
+                        </li>
                         <?php endif; ?>
                     </ul>
                 </div>
@@ -1268,8 +1274,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
             </div>
             <?php endif; ?>
-            <!-- formgroup GGMs Properties -->
             <?php if ($showGGMsProperties ?? false): ?>
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1368,7 +1374,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
             </div>
 
-            <!-- formgroup GGMs Properties -->
+            <!-- [ELMOGEM] formgroup GGMs Properties -->
             <div id="help-model-characteristics" class="section-content">
                 <div id="help-model-characteristics-fg">
                     <h3>Characteristics of the model</h3>
@@ -1550,6 +1556,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>             
             </div>
             <hr>
+            <!-- [ELMOGEM] formgroup Characteristics of the model-->
             <div id="help-technical">
                 <h3>Characteristics of the model</h3>
                 <p>
@@ -1614,12 +1621,13 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     </p>
                 </div>
             </div>
-            <div id="help-no-model-type" class="help-section">
+            <hr>
+            <!-- [ELMOGEM] formgroup Model types-->
+            <div id="help-no-model-type">
                 <h3>Model specific variables</h3>
                 <p>This section is dedicated to variables specific for each model type. Please choose a model type above to start input.</p>
             </div>
-
-            <div id="help-static" class="help-section d-none">
+            <div id="help-static">
                 <h3 data-translate="help.static.title">Static Model Help</h3>
                 <p data-translate="help.static.description">This section providesdocumentation for the variables, which are relevant for static models:</p>
                 <h4 data-translate="help.static.dealiasing">Time-variable coefficients</h4>
@@ -1627,15 +1635,13 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     If some coefficients in your static models provide values for different time periods, please provide the information about it here in a free text format. 
                 </p>
             </div>
-
-            <div id="help-temporal" class="help-section d-none">
+            <div id="help-temporal">
                 <h3 data-translate="help.temporal.title">Temporal Model Help</h3>
                 <p data-translate="help.temporal.description">This section provides documentation for the variables, which are relevant for temporal models:</p>
                 <h4 data-translate="help.temporal.what-to-publish">Unit of publication</h4>
                 <p>
                     The unit of publication for temporal models is one release. The DOI number will be assigned to each release of the model. 
                 </p>
-                
                 <div id="help-temporal-time-coverage">
                     <h4 data-translate="help.temporal.time-coverage">Start/stop date</h4>
                     <p>
@@ -1650,8 +1656,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     </p>
                 </div>
             </div>
-
-            <div id="help-topographic" class="help-section d-none">
+            <div id="help-topographic">
                 <h3 data-translate="help.topographic.title">Topographic Model Help</h3>
                 <p data-translate="help.topographic.description">This section provides help for topographic models...</p>
                 <h4 data-translate="help.topographic.harmonics">Approximation</h4>
@@ -1663,6 +1668,111 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here.
                     What is more, the density information can be provided for crust and mantle separately.
                 </p>
+            </div>
+            <hr>
+            <!-- [ELMOGEM] formgroup MASCON  -->
+            <div id="help-mascon-properties">
+                <h3>MASCON properties</h3>
+                <h5>Overview</h5>
+                <p>In this section, you can provide essential properties about the MASCON. If the product you are publishing is not a MASCON, please change the Mathematical representation accordingly.</p>
+                <h5>Variables</h5>
+                <p>The variablles in this section are not mandatory. Although, it is recommended to provide them if available. If your file provides Land mask, Uncertainty, or Scale factor, please choose "Given" and fill in the corresponding fields. More detailed free text metadata can be entered in the Descriptions section.</p>
+                <h5>Background force models</h5>
+                <p>We welcome you to provide information about the force models used as a background in the calculation. To add the background models, click on the "Background force models header".</p>
+                <div id="help-mascon-shape">
+                    <h4>Shape of MASCON</h4>
+                    <p>This section allows you to specify the shape of the MASCON. For example:</p>
+                    <ul>
+                        <li> Equal area - 1° equal-area geodesic grid</li>
+                        <li>Irregular shapes - Variable shapes for land and ocean</li>
+                    </ul>
+                </div>
+                <div id="help-mascon-grid-type">
+                    <h4>Grid type</h4>
+                    <p>Specify whether the product uses a regular grid or an irregular grid.</p>
+                </div>
+                <div id="help-mascon-resolution">
+                    <h4>MASCON Resolution Help</h4>
+                    <p>We collect two MASCON resolution descriptors: native MASCON size and product sampling.</p>
+                    <ul>
+                        <li>MASCON size: The native size of each MASCON cell.</li>
+                        <li>Product sampling: The resolution of the grid represented in the NetCDF file.</li>
+                    </ul>
+                    <p>If a MASCON has irregular shapes, the native size still reflects the equivalent spatial extent used for those cells, while product sampling reflects the output grid spacing in the published file.</p>
+                </div>
+                <div id="help-mascon-size">
+                    <h4>MASCON size</h4>
+                    <p>If Grid type = Regular grid, this variable records angular extent (in degrees) or equivalent spatial extent.</p>
+                    <p>If Grid type = Irregular grid, this variable records equivalent spatial extent.</p>
+                </div>
+                <div id="help-mascon-product-sampling">
+                    <h4>Product sampling</h4>
+                    <p>A uniform grid characterized by a fixed angular resolution (in degrees). Resolution provided in the NetCDF file.</p>
+                </div>
+                <div id="help-mascon-classification-mask">
+                    <h4>Classification mask</h4>
+                    <p>Classification layer used with the MASCON solution, such as Land/Ocean Mask, Hydrological Basins, Ice Sheets, or Administrative Regions.</p>
+                </div>
+                <div id="help-mascon-count">
+                    <h4>Mascon count</h4>
+                    <p>Number of tiles/cells in the model file.</p>
+                </div>
+                <div id="help-land-mask">
+                    <h4>Land Mask</h4>
+                    <p>Whether the landmask is provided in the model file.</p>
+                </div>
+                <div id="help-mascon-uncertainty">
+                    <h4>Uncertainty information</h4>
+                    <p>Uncertainty grid provided at MASCON resolution.</p>
+                </div>
+                <div id="help-mascon-scale-factor">
+                    <h4>Scale Factor</h4>
+                    <p>Whether a scale factor is provided in the model file.</p>
+                </div>
+                <div id="help-mascon-gad">
+                    <h4>GAD correction</h4>
+                    <p>Inclusion of the GRACE/GRACE-FO GAD product.</p>
+                </div>
+                <div id="help-mascon-regularization">
+                    <h4>Regularization</h4>
+                    <p>Indicates whether regularization was applied to the MASCON solution.</p>
+                </div>
+                <div id="help-mascon-regularization-method">
+                    <h4>Regularization method</h4>
+                    <p>Method used to regularize the solution, for example L-Curve, Variance Component Estimation (VCE), or Kaula, including any scaling coefficient controlling regularization strength.</p>
+                </div>
+                <div id="help-mascon-correlation-model">
+                    <h4>Correlation model / matrix</h4>
+                    <p>Optional correlation model or matrix (for example VADER, Laplacian, or Gaussian filter) applied in the regularization workflow.</p>
+                </div>
+                <div id="help-mascon-background-models">
+                    <h4>Background force models</h4>
+                    <p>This section allows to specify the background force models. The models have the following categories:</p>
+                    <ul>
+                        <li><b>Gravity Field</b> - Example: GGM05C; GIF48 (d/o 180)</li>
+                        <li><b>Solid Earth Tides</b> - Example: IERS2010</li>
+                        <li><b>Ocean Tides</b> - Example: GOT4.7 (d/o 90); FES2014b</li>
+                        <li><b>Solid Pole Tide</b> - Example: IERS2010</li>
+                        <li><b>Ocean Pole Tide</b> - Example: Desai models, IERS2010</li>
+                        <li><b>AOD</b> - Example: ECMWF/MOG2D; AOD1B RL06</li>
+                        <li><b>Atmospheric Tides</b> - Example: AOD1B RL06</li>
+                        <li><b>Third-Body attractions</b> - Example: DE-430</li>
+                        <li><b>General relativity</b> - Example: IERS2010</li>
+                    </ul>
+                </div>
+                <div id="help-mascon-applied-corrections">
+                    <h4>Applied Corrections</h4>
+                    <p>This section allows to specify the corrections that were applied to the MASCON solution. The following correction types are available:</p>
+                    <ul>
+                        <li><b>GIA</b> - Glacial Isostatic Adjustment correction applied. Can be a free-text description or model selection.</li>
+                        <li><b>Degree-1</b> - Degree-1 (monopole) correction applied. Free-text description of the method or model used.</li>
+                        <li><b>C20 replacement</b> - Replacement of C20 (degree 2, order 0) coefficients. Free-text description of the source or method.</li>
+                        <li><b>C30 replacement</b> - Replacement of C30 (degree 3, order 0) coefficients. Free-text description of the source or method.</li>
+                        <li><b>Ellipsoidal Corrections</b> - Corrections for ellipsoidal effects (optional). Free-text description of the corrections applied.</li>
+                        <li><b>Baseline</b> - Baseline or reference data corrections applied (optional). Free-text description of the baseline used or corrections made.</li>
+                    </ul>
+                    <p>Click the "+" button to add multiple corrections, and use the "-" button to remove corrections.</p>
+                </div>
             </div>
         <?php endif; ?>
     </div>

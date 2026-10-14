@@ -215,6 +215,9 @@ describe('thesauri.js', () => {
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
     window.eval(transformThesauriScript(script));
 
+    window.__keywordsReadySpy = jest.fn();
+    document.addEventListener('keywordsReady', window.__keywordsReadySpy);
+
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
       done();
@@ -222,6 +225,10 @@ describe('thesauri.js', () => {
   });
 
   afterEach(() => {
+    if (window.__keywordsReadySpy) {
+      document.removeEventListener('keywordsReady', window.__keywordsReadySpy);
+      delete window.__keywordsReadySpy;
+    }
     jest.restoreAllMocks();
     delete global.Tagify;
     delete global.translations;
@@ -274,6 +281,10 @@ describe('thesauri.js', () => {
     expect(scienceInput._tagify.settings.placeholder).toBe('initial');
     expect(scienceInput._tagify.settings.whitelist.length).toBe(0);
     expect(scienceInput._tagify.settings.enforceWhitelist).toBe(false);
+  });
+
+  test('dispatches keywordsReady after Tagify inputs are created', () => {
+    expect(window.__keywordsReadySpy).toHaveBeenCalled();
   });
 
   test('updates placeholder on translationsLoaded', () => {
