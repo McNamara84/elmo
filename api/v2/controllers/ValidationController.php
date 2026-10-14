@@ -64,7 +64,8 @@ class ValidationController
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            echo json_encode(['pattern' => $row['pattern']]);
+            $pattern = $this->normalizePatternForType((string) $type, (string) ($row['pattern'] ?? ''));
+            echo json_encode(['pattern' => $pattern]);
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'No pattern found for the specified identifier type']);
@@ -99,9 +100,10 @@ class ValidationController
         if ($result->num_rows > 0) {
             $identifierTypes = [];
             while ($row = $result->fetch_assoc()) {
+                $pattern = $this->normalizePatternForType((string) $row['name'], (string) ($row['pattern'] ?? ''));
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => $pattern,
                     'description' => $row['description']
                 ];
             }
@@ -145,7 +147,7 @@ class ValidationController
                 if (!empty($ernieTypes)) {
                     $identifierTypes = array_map(fn($t) => [
                         'name' => $t['name'],
-                        'pattern' => $t['pattern'] ?? '',
+                        'pattern' => $this->normalizePatternForType((string) ($t['name'] ?? ''), (string) ($t['pattern'] ?? '')),
                         'description' => $t['description'] ?? '',
                     ], $ernieTypes);
 
@@ -184,9 +186,10 @@ class ValidationController
             }
             $identifierTypes = [];
             while ($row = $result->fetch_assoc()) {
+                $pattern = $this->normalizePatternForType((string) $row['name'], (string) ($row['pattern'] ?? ''));
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => $pattern,
                     'description' => $row['description'],
                 ];
             }
@@ -222,9 +225,10 @@ class ValidationController
             }
             $identifierTypes = [];
             while ($row = $result->fetch_assoc()) {
+                $pattern = $this->normalizePatternForType((string) $row['name'], (string) ($row['pattern'] ?? ''));
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => $pattern,
                     'description' => $row['description'],
                 ];
             }
@@ -236,5 +240,16 @@ class ValidationController
             http_response_code(500);
             echo json_encode(['error' => 'An error occurred while retrieving identifier types']);
         }
+    }
+
+    /**
+     * Temporary override for URL identifier validation.
+     *
+     * Forces URL pattern to accept any value starting with "http", regardless
+     * of the source pattern (including ERNIE cache).
+     */
+    private function normalizePatternForType(string $name, string $pattern): string
+    {
+        return strcasecmp(trim($name), 'URL') === 0 ? '^http.*$' : $pattern;
     }
 }
