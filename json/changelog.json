@@ -742,6 +742,16 @@
                   "number": 1234
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Data source fields keep stable IDs and working labels while entering identifiers, so editing and saving GEM forms remain reliable."
+                }
+              ],
+              "editions": ["gem"],
+              "references": [{"type": "pull", "number": 1278}]
             }
           ]
         },

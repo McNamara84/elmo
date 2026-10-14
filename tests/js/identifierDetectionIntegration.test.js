@@ -100,6 +100,37 @@ describe('identifier detection in Related Work and GEM fields', () => {
     jest.advanceTimersByTime(301); await microtasks();
     expect($('select').map((i, element) => $(element).val()).get()).toEqual(['arXiv', 'RAiD', '']);
   });
+  test.each([0, 1])('GEM row %i keeps field IDs and label associations during identifier detection', async rowIndex => {
+    jest.useFakeTimers();
+    const group = $('<div id="group-datasources"></div>').appendTo(document.body);
+    for (const suffix of ['', '-1']) {
+      group.append(`<div class="row" data-source-row>
+        <label for="input-datasource-type${suffix}">Type</label><select id="input-datasource-type${suffix}" name="datasource_type[]"></select>
+        <label for="input-datasource-details${suffix}">Details</label><select id="input-datasource-details${suffix}" name="datasource_details[]"></select>
+        <label for="input-datasource-modelname${suffix}">Model name</label><input id="input-datasource-modelname${suffix}" name="dName[]">
+        <label for="input-datasource-identifier${suffix}">Identifier</label><input id="input-datasource-identifier${suffix}" name="dIdentifier[]">
+        <label for="input-datasource-identifiertype${suffix}">Identifier type</label><select id="input-datasource-identifiertype${suffix}" name="dIdentifierType[]">
+          <option value=""></option>${types.map(t => `<option>${t.name}</option>`).join('')}
+        </select>
+      </div>`);
+    }
+    const ids = () => group.find('[id]').map((i, element) => element.id).get();
+    const originalIds = ids();
+    const row = group.children('.row').eq(rowIndex);
+    const identifier = row.find('input[name="dIdentifier[]"]');
+    const identifierType = row.find('select[name="dIdentifierType[]"]');
+    identifier.val('https://arxiv.org/abs/2507.21532').trigger('input');
+    jest.advanceTimersByTime(301); await microtasks();
+    expect(identifierType.val()).toBe('arXiv');
+    expect(ids()).toEqual(originalIds);
+    identifier.trigger('blur'); await microtasks();
+    identifierType.val('ISBN').trigger('change');
+    expect(ids()).toEqual(originalIds);
+    group.find('label').each((i, label) => {
+      expect(document.getElementById(label.htmlFor)).not.toBeNull();
+      expect(document.getElementById(label.htmlFor).closest('.row')).toBe(label.closest('.row'));
+    });
+  });
   test('editing a manual decision enables fresh automatic detection', async () => {
     type().val('ISBN').trigger('change');
     input().val('https://arxiv.org/abs/2507.21532').trigger('input');

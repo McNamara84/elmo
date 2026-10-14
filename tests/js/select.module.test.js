@@ -145,10 +145,6 @@ describe('select module coverage', () => {
             expect(typeof selectModule.debounce).toBe('function');
         });
 
-        test('exports updateDataSourceIdsAndNames function', () => {
-            expect(typeof selectModule.updateDataSourceIdsAndNames).toBe('function');
-        });
-
         test('exports updateDropdownPlaceholders function', () => {
             expect(typeof selectModule.updateDropdownPlaceholders).toBe('function');
         });
@@ -211,21 +207,6 @@ describe('select module coverage', () => {
         });
         test('does not substitute URL for an unavailable arXiv type', () => {
             expect(selectModule.detectIdentifierType('https://arxiv.org/abs/2507.21532', [{name:'URL'}])).toBeNull();
-        });
-    });
-
-    describe('updateDataSourceIdsAndNames', () => {
-        test('can be called without errors', () => {
-            expect(() => {
-                selectModule.updateDataSourceIdsAndNames();
-            }).not.toThrow();
-        });
-
-        test('updates IDs in datasource rows', () => {
-            selectModule.updateDataSourceIdsAndNames();
-            
-            const row = document.querySelector('#group-datasources .row');
-            expect(row).toBeTruthy();
         });
     });
 

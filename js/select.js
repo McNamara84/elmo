@@ -976,7 +976,6 @@ $(document).on('input', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"
   scheduleIdentifierDetection(this);
 });
 $(document).on('blur', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"]', function () {
-  if ($(this).is('[name="dIdentifier[]"]')) updateDataSourceIdsAndNames();
   updateIdentifierType(this);
 });
 $(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
@@ -989,26 +988,6 @@ $(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdenti
   }
   updateValidationPattern(this);
 });
-
-function updateDataSourceIdsAndNames() {
-  $("#group-datasources .row").each(function (index) {
-    $(this)
-      .find('select[name="datasource_type[]"]')
-      .attr("id", "input-datasource-type" + index);
-    $(this)
-      .find('select[name="datasource_details[]"]')
-      .attr("id", "input-datasource-details" + index);
-    $(this)
-      .find('input[name="dName[]"]')
-      .attr("id", "input-datasource-modelname" + index);
-    $(this)
-      .find('input[name="dIdentifier[]"]')
-      .attr("id", "input-datasource-identifier" + index);
-    $(this)
-      .find('select[name="dIdentifierType[]"]')
-      .attr("id", "input-datasource-identifiertype" + index);
-  });
-}
 
 // Export for testing (CommonJS)
 if (typeof module !== 'undefined' && module.exports) {
@@ -1038,7 +1017,6 @@ if (typeof module !== 'undefined' && module.exports) {
     updateIdentifierType,
     updateValidationPattern,
     debounce,
-    updateDataSourceIdsAndNames,
     loadFundersData,
     setCCBYasDefault,
     setBrowserTimezone,

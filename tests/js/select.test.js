@@ -266,13 +266,6 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
-  test('updateDataSourceIdsAndNames assigns ids to model fields', () => {
-    window.updateDataSourceIdsAndNames();
-    expect($('#group-datasources input[name="dName[]"]').attr('id')).toBe('input-datasource-modelname0');
-    expect($('#group-datasources input[name="dIdentifier[]"]').attr('id')).toBe('input-datasource-identifier0');
-    expect($('#group-datasources select[name="dIdentifierType[]"]').attr('id')).toBe('input-datasource-identifiertype0');
-  });
-
   test('setupTimezoneDropdownAjax fetches and selects timezone', async () => {
     const tzData = [{label:'UTC+00:00 (Europe/Berlin)'}];
     global.fetch = jest.fn(() => Promise.resolve({json: () => Promise.resolve(tzData)}));
