@@ -24,17 +24,19 @@ describe('affiliation action decisions', () => {
     contributor.querySelector('[data-affiliation-add]').click();
     expect(resolvePendingAffiliations(document)).toBe(true);
   });
-  test.each(['author', 'contributor'])('%s collapse is blocked until pending text is resolved', group => {
+  test.each(['author', 'contributor'])('%s collapse preserves pending text without blocking or confirming it', group => {
     const elements = mount();
     const editor = elements[group === 'author' ? 0 : 1].affiliationEditor;
     const card = editor.element[0].closest(`[data-${group}-card]`);
     const toggle = card.querySelector(`[data-${group}-toggle-edit]`);
     editor.setPendingInput('Pending');
     toggle.click();
-    expect(toggle.getAttribute('aria-expanded')).toBe('true');
-    editor.element.find('[data-affiliation-discard]').trigger('click');
-    toggle.click();
     expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(editor.getPendingInput()).toBe('Pending');
+    expect(editor.getAffiliations()).toEqual([]);
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(editor.getPendingInput()).toBe('Pending');
   });
   test('validation reveals invalid contributor labels in collapsed cards', () => {
     const [, element] = mount();

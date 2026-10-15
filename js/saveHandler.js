@@ -1,4 +1,4 @@
-import { resolvePendingAffiliations, validateAffiliationEditors } from './services/affiliationActionService.js';
+import { resolvePendingAffiliations } from './services/affiliationActionService.js';
 /**
  * @description Handles saving functionality for dataset metadata
  * @requires bootstrap
@@ -97,7 +97,7 @@ class SaveHandler {
     async handleSave(format = 'xml') {
         this.saveFlowStartedAt = Date.now();
         this.setCurrentFormat(format);
-        if (!this.validateAuthorAffiliationsForSave()) {
+        if (!resolvePendingAffiliations(this.$form[0])) {
             return;
         }
         this.updateSaveAsModal();
@@ -109,35 +109,6 @@ class SaveHandler {
             $('#input-saveas-filename').val(suggestedFilename);
             this.modals.saveAs.show();
         }
-    }
-
-    /**
-     * Protect both Authors and Contributors while retaining the existing validator entry point.
-     * @returns {boolean} True when pending inputs and confirmed labels permit a save.
-     */
-    validateAuthorAffiliationsForSave() {
-        if (!resolvePendingAffiliations(this.$form[0])) return false;
-        const validator = typeof globalThis !== 'undefined'
-            ? globalThis.validateAuthorAffiliationEditors
-            : null;
-
-        const legacyValid = typeof validator !== 'function' || validator();
-        if (validateAffiliationEditors(this.$form[0]) && legacyValid) {
-            return true;
-        }
-
-        const firstInvalid = this.$form.find('[data-author-affiliation-label].is-invalid').first();
-        if (firstInvalid.length > 0 && firstInvalid[0]) {
-            firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstInvalid[0].focus();
-        }
-
-        this.showNotification(
-            'danger',
-            translations.alerts.validationErrorheading || translations.alerts.errorHeading,
-            translations.alerts.validationError || translations.alerts.saveError
-        );
-        return false;
     }
 
     /**
@@ -190,7 +161,7 @@ class SaveHandler {
      * @returns {Promise<void>} Promise resolved after download or error handling completes.
      */
     async saveAndDownload(filename, format = this.currentFormat) {
-        if (!this.validateAuthorAffiliationsForSave()) return;
+        if (!resolvePendingAffiliations(this.$form[0])) return;
         const formatConfig = this.getFormatConfig(format);
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
@@ -219,7 +190,7 @@ class SaveHandler {
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
             // Autosave awaited above may leave new input behind; check again before building FormData.
-            if (!this.validateAuthorAffiliationsForSave()) return;
+            if (!resolvePendingAffiliations(this.$form[0])) return;
             const authorsPayload = synchronizeAuthorsPayload(formEl);
             const resourceInformationPayload = synchronizeResourceInformationPayload(formEl);
             const contributorsPayload = synchronizeContributorsPayload(formEl);

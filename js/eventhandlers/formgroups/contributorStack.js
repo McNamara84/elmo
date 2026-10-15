@@ -1,4 +1,3 @@
-import { resolvePendingAffiliations } from '../../services/affiliationActionService.js';
 import { createAffiliationEditor, createAffiliationBadge } from '../../affiliationEditor.js';
 
 /** Combined, ordered contributor cards. The hidden payload is only a transport field. */
@@ -441,7 +440,6 @@ $(document).ready(function () {
       shell.querySelector('[data-contributor-add-type]')?.focus();
     } else if (button.matches('[data-contributor-toggle-edit]')) {
       const panel = card.querySelector('[data-contributor-edit-panel]');
-      if (panel.classList.contains('show') && !resolvePendingAffiliations(card)) return;
       setExpanded(card, !panel.classList.contains('show'));
     } else if (button.matches('[data-contributor-move-up], [data-contributor-move-down]')) {
       const sibling = button.matches('[data-contributor-move-up]') ? card.previousElementSibling : card.nextElementSibling;

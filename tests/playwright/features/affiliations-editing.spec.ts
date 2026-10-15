@@ -212,7 +212,7 @@ test.describe('Affiliation tag label editing', () => {
   );
 
   test(
-    'empty edited author affiliation label blocks save and keeps ROR visible',
+    'empty edited author affiliation label allows the save dialog but blocks submission',
     async ({ page }) => {
       test.slow();
 
@@ -233,6 +233,12 @@ test.describe('Affiliation tag label editing', () => {
       await expect(rorSegment).toHaveText(selected.id);
 
       await page.locator('#button-form-save').click();
+      await expect(page.locator('#modal-saveas')).toBeVisible();
+      await page.locator('#modal-saveas [data-bs-dismiss="modal"]').first().click();
+      await expect(page.locator('#modal-saveas')).toBeHidden();
+      await authorRow.locator('[data-author-toggle-edit]').click();
+      await expect(labelInput).toBeHidden();
+      await page.locator('#button-form-submit').click();
 
       await expect(page.locator('#modal-saveas')).not.toBeVisible();
       await expect(labelInput).toHaveClass(/is-invalid/);
@@ -254,6 +260,8 @@ test.describe('Affiliation tag label editing', () => {
     await injectAffiliationTag(page, row, {value: 'Technical University of Berlin', id: 'https://ror.org/01bj3aw27'});
     await row.locator('[data-affiliation-input]').fill('Text to discard');
     await row.locator('[data-contributor-toggle-edit]').click();
+    await expect(row.locator('[data-affiliation-input]')).toBeHidden();
+    await page.locator('#button-form-save').click();
     await row.locator('[data-affiliation-discard]').click();
     await expect(row.locator('[data-affiliation-label]')).toHaveValue('Technical University of Berlin');
     await expect(row.locator('[data-affiliation-ror]')).toHaveText('01bj3aw27');

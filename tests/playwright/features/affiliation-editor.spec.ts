@@ -53,10 +53,12 @@ for (const group of ['author', 'contributor']) {
       await input.fill('Unconfirmed input');
       await expect(card.locator('[data-affiliation-result]').first()).toBeVisible();
       await card.locator(`[data-${group}-toggle-edit]`).click();
-      await expect(card.locator(`[data-${group}-toggle-edit]`)).toHaveAttribute('aria-expanded', 'true');
-      await expect(card.locator('[data-affiliation-pending-warning]')).toBeVisible();
+      await expect(card.locator(`[data-${group}-toggle-edit]`)).toHaveAttribute('aria-expanded', 'false');
+      await expect(input).toBeHidden();
       await page.locator('#button-form-save').click();
       await expect(page.locator('#modal-saveas')).toBeHidden();
+      await expect(card.locator(`[data-${group}-toggle-edit]`)).toHaveAttribute('aria-expanded', 'true');
+      await expect(card.locator('[data-affiliation-pending-warning]')).toBeVisible();
       await expect(input).toBeFocused();
       await card.locator('[data-affiliation-discard]').click();
       await expect(input).toBeEmpty();
