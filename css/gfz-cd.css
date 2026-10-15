@@ -289,6 +289,13 @@ label.mandatory-field::after {
     display: block;
 }
 
+#button-feedback-send:disabled:not([aria-busy="true"]) {
+    --bs-btn-disabled-color: var(--bs-body-color);
+    --bs-btn-disabled-bg: var(--elmo-readonly-bg);
+    --bs-btn-disabled-border-color: var(--elmo-control-border);
+    opacity: 1;
+}
+
 .add-button {
     width: 36px;
     margin-inline-end: 0.75rem;
