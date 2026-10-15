@@ -56,8 +56,71 @@ describe('shared affiliation editor', () => {
     const { editor, values } = mount();
     const input = editor.element.find('[data-affiliation-input]');
     input.val('GFZ').trigger('input'); await tick();
+    expect(input.attr('aria-expanded')).toBe('true');
+    expect(input.attr('aria-activedescendant')).toBeUndefined();
+    expect(editor.element.find('[aria-selected="true"]')).toHaveLength(0);
     input.trigger($.Event('keydown', { key: 'Enter' }));
     expect(values()).toEqual([{ label: 'GFZ', rorId: '' }]);
+  });
+  test('arrow keys highlight ROR suggestions and Enter confirms only the active pair', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockResolvedValue([
+      { name: 'GFZ', id: '04z8jg394' }, { name: 'Potsdam', id: '012m9bp23' }
+    ]);
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('query').trigger('input'); await tick();
+    input[0].focus();
+    const results = editor.element.find('[data-affiliation-result]');
+    expect(input.attr('aria-controls')).toBe(results.parent().attr('id'));
+    for (const key of ['ArrowDown', 'ArrowDown', 'ArrowDown', 'ArrowUp', 'ArrowUp', 'ArrowUp']) {
+      input.trigger($.Event('keydown', { key }));
+      input.trigger($.Event('keyup', { key }));
+    }
+    expect(results.first().hasClass('active')).toBe(true);
+    expect(results.first().attr('aria-selected')).toBe('true');
+    expect(input.attr('aria-activedescendant')).toBe(results.first().attr('id'));
+    input.trigger($.Event('keydown', { key: 'ArrowDown' }));
+    expect(results.last().hasClass('active')).toBe(true);
+    expect(results.first().attr('aria-selected')).toBe('false');
+    expect(document.activeElement).toBe(input[0]);
+    input.trigger($.Event('keydown', { key: 'Enter' }));
+    expect(values()).toEqual([{ label: 'Potsdam', rorId: '012m9bp23' }]);
+    expect(input.attr('aria-activedescendant')).toBeUndefined();
+    expect(input.attr('aria-expanded')).toBe('false');
+    expect(window.searchAffiliationsFromServer).toHaveBeenCalledTimes(1);
+  });
+  test('ArrowUp starts at the last suggestion; changed input clears the selection', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockResolvedValue([{ name: 'GFZ', id: '04z8jg394' }]);
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('GFZ').trigger('input'); await tick();
+    input.trigger($.Event('keydown', { key: 'ArrowUp' }));
+    expect(input.attr('aria-activedescendant')).toBe(editor.element.find('[data-affiliation-result]').attr('id'));
+    input.val('New').trigger('input');
+    expect(input.attr('aria-activedescendant')).toBeUndefined();
+    input.trigger($.Event('keydown', { key: 'ArrowDown' }));
+    input.trigger($.Event('keydown', { key: 'Enter' }));
+    expect(values()).toEqual([{ label: 'New', rorId: '' }]);
+  });
+  test('Escape dismisses suggestions and cancels pending searches without accepting input', async () => {
+    jest.useFakeTimers();
+    let resolve;
+    window.searchAffiliationsFromServer = jest.fn(() => new Promise(done => { resolve = done; }));
+    const { editor, values } = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('GFZ').trigger('input'); await tick();
+    const escape = $.Event('keydown', { key: 'Escape' });
+    input.trigger(escape);
+    resolve([{ name: 'GFZ', id: '04z8jg394' }]); await Promise.resolve();
+    expect(escape.isDefaultPrevented()).toBe(true);
+    expect(input.attr('aria-expanded')).toBe('false');
+    expect(values()).toEqual([]);
+    expect(editor.getPendingInput()).toBe('GFZ');
+    input.val('New').trigger('input');
+    input.trigger($.Event('keydown', { key: 'Escape' })); await tick();
+    expect(window.searchAffiliationsFromServer).toHaveBeenCalledTimes(1);
   });
   test('a rejected search leaves input usable and announces the failure', async () => {
     jest.useFakeTimers();
@@ -152,6 +215,7 @@ describe('shared affiliation editor', () => {
     window.searchAffiliationsFromServer = jest.fn(query => Promise.resolve(query === 'One' ? [{mappedValue: 'First result', affiliationIdentifier: 'https://ror.org/04z8jg394'}] : []));
     const first = mount().editor;
     const second = mount([], 'contributor').editor;
+    expect(first.element.find('[role="listbox"]').attr('id')).not.toBe(second.element.find('[role="listbox"]').attr('id'));
     first.setPendingInput('One'); first.element.find('[data-affiliation-input]').trigger('input');
     second.setPendingInput('Two'); second.element.find('[data-affiliation-input]').trigger('input');
     await tick();

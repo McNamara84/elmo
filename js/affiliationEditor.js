@@ -2,6 +2,7 @@
  * Shared affiliation UI; stacks own the compatible fields and metadata payloads.
  * @module affiliationEditor
  */
+let affiliationEditorCount = 0;
 
 /**
  * @typedef {Object} Affiliation
@@ -94,6 +95,8 @@ export function createAffiliationEditor(options) {
   let requestVersion = 0;
   let destroyed = false;
   let searchStatus = '';
+  let activeResultIndex = -1;
+  const resultsId = `affiliation-results-${++affiliationEditorCount}`;
   const element = createEditorMarkup();
 
   // Existing stack selectors remain usable after switching to the shared editor.
@@ -127,11 +130,13 @@ export function createAffiliationEditor(options) {
     const count = $('<span class="badge elmo-badge border" data-affiliation-count>0</span>');
     const list = $('<div class="d-grid gap-2" data-affiliation-list></div>');
     const controls = $('<div class="input-group input-group-sm mt-2"></div>');
-    const input = $('<input type="text" class="form-control" data-affiliation-input>');
+    const input = $('<input type="text" class="form-control" role="combobox" aria-autocomplete="list" aria-expanded="false" data-affiliation-input>')
+      .attr('aria-controls', resultsId);
     const addButton = $('<button type="button" class="btn btn-primary d-inline-flex align-items-center gap-1" data-affiliation-add></button>')
       .append('<i class="bi bi-plus-lg" aria-hidden="true"></i>')
       .append('<span data-affiliation-add-label></span>');
-    const results = $('<div class="list-group mt-2 d-none" data-affiliation-results></div>');
+    const results = $('<div class="list-group mt-2 d-none" role="listbox" data-affiliation-results></div>')
+      .attr('id', resultsId);
 
     titleGroup.append(title, helpButton);
     header.append(titleGroup, count);
@@ -144,6 +149,7 @@ export function createAffiliationEditor(options) {
 
   function updateAffiliationEditorTexts(editor) {
     editor.find('[data-affiliation-title]').text(translate('affiliations.title', 'Affiliations'));
+    editor.find('[data-affiliation-results]').attr('aria-label', translate('affiliations.title', 'Affiliations'));
     editor.find('[data-affiliation-input]').attr({
       placeholder: translate('affiliations.searchPlaceholder', 'Enter at least 3 characters to see suggestions'),
       'aria-label': translate('general.affiliation', 'Affiliation')
@@ -306,14 +312,19 @@ export function createAffiliationEditor(options) {
     const editor = element;
     const resultContainer = editor.find('[data-affiliation-results]').empty();
     const normalizedResults = results.map(normalizeAffiliationSearchResult).filter(Boolean);
+    activeResultIndex = -1;
+    editor.find('[data-affiliation-input]')
+      .attr('aria-expanded', String(normalizedResults.length > 0))
+      .removeAttr('aria-activedescendant');
 
     if (!normalizedResults.length) {
       resultContainer.addClass('d-none');
       return;
     }
 
-    normalizedResults.forEach(function (affiliation) {
-      const button = $('<button type="button" class="list-group-item list-group-item-action d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2" data-affiliation-result></button>')
+    normalizedResults.forEach(function (affiliation, index) {
+      const button = $('<button type="button" role="option" tabindex="-1" aria-selected="false" class="list-group-item list-group-item-action d-flex flex-column flex-sm-row align-items-start justify-content-between gap-2" data-affiliation-result></button>')
+        .attr('id', `${resultsId}-${index}`)
         .attr('data-affiliation-label-value', affiliation.label)
         .attr('data-affiliation-ror-value', affiliation.rorId);
       button.append($('<span class="text-break"></span>').text(affiliation.label));
@@ -325,6 +336,18 @@ export function createAffiliationEditor(options) {
 
     resultContainer.removeClass('d-none');
     applyAliases();
+  }
+
+  function activateSearchResult(index) {
+    const results = element.find('[data-affiliation-result]');
+    activeResultIndex = index;
+    results.each(function (resultIndex) {
+      $(this).toggleClass('active', resultIndex === index)
+        .attr('aria-selected', String(resultIndex === index));
+    });
+    const active = results.get(index);
+    element.find('[data-affiliation-input]').attr('aria-activedescendant', active.id);
+    active.scrollIntoView?.({ block: 'nearest' });
   }
 
   function invalidateAffiliationSearch() {
@@ -396,15 +419,32 @@ export function createAffiliationEditor(options) {
     setAffiliations(readEditorAffiliations(), { render: false });
     updatePayload();
   });
-  element.on('input keyup search paste', '[data-affiliation-input]', function () {
+  // The input event covers typing and paste; keyup would reset keyboard selection.
+  element.on('input search', '[data-affiliation-input]', function () {
     scheduleAffiliationSearch();
     updateAffiliationEditorTexts(element);
     updatePayload();
   });
   element.on('keydown', '[data-affiliation-input]', function (event) {
-    if (event.key === 'Enter' && !event.originalEvent?.isComposing) {
+    if (event.originalEvent?.isComposing) return;
+    const results = element.find('[data-affiliation-result]');
+    if ((event.key === 'ArrowDown' || event.key === 'ArrowUp') && results.length) {
       event.preventDefault();
-      element.find('[data-affiliation-add]').trigger('click');
+      const index = event.key === 'ArrowDown'
+        ? Math.min(activeResultIndex + 1, results.length - 1)
+        : activeResultIndex < 0 ? results.length - 1 : Math.max(activeResultIndex - 1, 0);
+      activateSearchResult(index);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      invalidateAffiliationSearch();
+      clearTimeout(affiliationSearchTimers.get(this));
+      renderAffiliationSearchResults([]);
+      searchStatus = '';
+      updateAffiliationEditorTexts(element);
+    } else if (event.key === 'Enter') {
+      event.preventDefault();
+      if (activeResultIndex >= 0) results.eq(activeResultIndex).trigger('click');
+      else element.find('[data-affiliation-add]').trigger('click');
     }
   });
   element.on('click', '[data-affiliation-add]', function () {

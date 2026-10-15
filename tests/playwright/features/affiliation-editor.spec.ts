@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { navigateToHome, runAxeAudit } from '../utils';
 
 // Keep pointer targets stable while the browser scrolls between card controls.
 test.use({reducedMotion: 'reduce'});
@@ -8,7 +8,7 @@ for (const group of ['author', 'contributor']) {
   for (const type of ['person', 'institution']) {
     test(`${group} ${type}: shared ROR, free text, summary and pending decisions`, async ({ page }) => {
       await page.route('**/api/v2/affiliations/search**', route => route.fulfill({
-        json: [{name: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394'}]
+        json: [{name: 'GFZ Helmholtz Centre for Geosciences', id: '04z8jg394'}, {name: 'University of Potsdam', id: '012m9bp23'}]
       }));
       await navigateToHome(page);
       await page.waitForFunction(() => Boolean((window as any).authorStack && (window as any).contributorStack));
@@ -21,7 +21,25 @@ for (const group of ['author', 'contributor']) {
       await expect(add).toBeDisabled();
       await expect(card.locator('[data-affiliation-search]')).toHaveCount(0);
       await input.fill('GFZ');
-      await card.locator('[data-affiliation-result]').first().click();
+      const results = card.locator('[data-affiliation-result]');
+      await expect(results).toHaveCount(2);
+      await expect(input).not.toHaveAttribute('aria-activedescendant');
+      await expect(card.locator('[data-affiliation-result].active')).toHaveCount(0);
+      await input.press('Enter');
+      await expect(card.locator('[data-affiliation-label]')).toHaveValue('GFZ');
+      await expect(card.locator('[data-affiliation-ror]')).toBeHidden();
+      await card.locator('[data-affiliation-remove]').click();
+      await input.fill('GFZ');
+      await expect(results).toHaveCount(2);
+      await input.press('ArrowDown');
+      await input.press('ArrowDown');
+      await expect(results.nth(1)).toHaveClass(/active/);
+      await input.press('ArrowUp');
+      await expect(results.first()).toHaveAttribute('aria-selected', 'true');
+      await expect(input).toHaveAttribute('aria-activedescendant', await results.first().getAttribute('id') as string);
+      await expect(input).toBeFocused();
+      if (type === 'person') await runAxeAudit(page, {configure: builder => builder.include(group === 'author' ? '#group-author' : '[data-contributor-formgroup]')});
+      await input.press('Enter');
       await expect(card.locator('[data-affiliation-ror]')).toHaveText('04z8jg394');
       await card.locator('[data-affiliation-label]').fill('GFZ, Department');
       await expect(card.locator(`[data-${group}-summary-affiliations]`)).toContainText('GFZ, Department 04z8jg394');
