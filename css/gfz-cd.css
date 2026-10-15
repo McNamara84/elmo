@@ -291,8 +291,11 @@ label.mandatory-field::after {
 
 #button-feedback-send:disabled:not([aria-busy="true"]) {
     --bs-btn-disabled-color: var(--bs-body-color);
-    --bs-btn-disabled-bg: var(--elmo-readonly-bg);
-    --bs-btn-disabled-border-color: var(--elmo-control-border);
+    --bs-btn-disabled-bg: #fdd8dd;
+    --bs-btn-disabled-border-color: #fdd8dd;
+    color: var(--bs-body-color);
+    background-color: #fdd8dd !important;
+    border-color: #fdd8dd !important;
     opacity: 1;
 }
 
