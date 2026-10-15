@@ -392,7 +392,7 @@ npm install
 
 ### Author(s)
 
-Authors and Contributors share an affiliation editor for both persons and institutions. ROR suggestions appear automatically after three characters. Selecting a result adds its label and ROR ID; **Add free text** or Enter adds the input without a ROR ID. The button is disabled for empty input. Confirmed affiliations can be edited, reordered, or removed, and editing a label preserves its ROR ID. Contributor card headers show ORCID identifiers for persons and affiliation labels with ROR IDs for both types.
+Authors and Contributors share an affiliation editor for both persons and institutions. ROR suggestions appear automatically after three characters. Selecting a result adds its label and ROR ID; **Add without a ROR** or Enter adds the input without a ROR ID. The button is disabled for empty input. Confirmed affiliations can be edited, reordered, or removed, and editing a label preserves its ROR ID. Contributor card headers show ORCID identifiers for persons and affiliation labels with ROR IDs for both types.
 
 Saving, submitting, or collapsing a card requires confirming or discarding unfinished affiliation input. Autosave preserves this input in the draft so it can be restored without adding it to exported metadata. Empty edited labels must be corrected or removed before saving or submitting.
 

@@ -136,27 +136,25 @@ export function createAffiliationEditor(options) {
     titleGroup.append(title, helpButton);
     header.append(titleGroup, count);
     controls.append(input, addButton);
-    const hint = $('<p class="small text-body-secondary mt-2 mb-0" data-affiliation-hint></p>');
     const status = $('<div class="small mt-1" role="status" aria-live="polite" data-affiliation-status></div>');
     const warning = $('<div class="alert alert-warning mt-2 mb-0 d-none" role="alert" data-affiliation-pending-warning><p class="mb-2" data-affiliation-pending-message></p><button type="button" class="btn btn-outline-secondary btn-sm" data-affiliation-discard></button></div>');
-    panel.append(header, list, controls, hint, status, results, warning);
+    panel.append(header, list, controls, status, results, warning);
     return editor.append(panel);
   }
 
   function updateAffiliationEditorTexts(editor) {
     editor.find('[data-affiliation-title]').text(translate('affiliations.title', 'Affiliations'));
     editor.find('[data-affiliation-input]').attr({
-      placeholder: translate('general.affiliation', 'Affiliation'),
+      placeholder: translate('affiliations.searchPlaceholder', 'Enter at least 3 characters to see suggestions'),
       'aria-label': translate('general.affiliation', 'Affiliation')
     });
-    editor.find('[data-affiliation-add]').attr('aria-label', translate('affiliations.addFreeText', 'Add free text'));
-    editor.find('[data-affiliation-add-label]').text(translate('affiliations.addFreeText', 'Add free text'));
-    editor.find('[data-affiliation-hint]').text(translate('affiliations.hint', 'ROR suggestions appear after three characters. Select a result or add your input as free text.'));
-    editor.find('[data-affiliation-pending-message]').text(translate('affiliations.pending', 'An affiliation input is still open. Select a ROR result, add it as free text or discard it, then repeat your action.'));
+    editor.find('[data-affiliation-add]').attr('aria-label', translate('affiliations.addFreeText', 'Add without a ROR'));
+    editor.find('[data-affiliation-add-label]').text(translate('affiliations.addFreeText', 'Add without a ROR'));
+    editor.find('[data-affiliation-pending-message]').text(translate('affiliations.pending', 'An affiliation input is still open. Select a ROR result, add it without a ROR ID or discard it, then repeat your action.'));
     editor.find('[data-affiliation-discard]').text(translate('affiliations.discard', 'Discard input'));
     if (!String(editor.find('[data-affiliation-input]').val() || '').trim()) editor.find('[data-affiliation-pending-warning]').addClass('d-none');
     editor.find('[data-affiliation-add]').prop('disabled', !String(editor.find('[data-affiliation-input]').val() || '').trim());
-    editor.find('[data-affiliation-status]').text(searchStatus ? translate(`affiliations.${searchStatus}`, {loading: 'Searching…', noResults: 'No ROR matches. You can add free text.', error: 'Search unavailable. Try again or add free text.'}[searchStatus]) : '');
+    editor.find('[data-affiliation-status]').text(searchStatus ? translate(`affiliations.${searchStatus}`, {loading: 'Searching…', noResults: 'No ROR matches. You can add your input without a ROR ID.', error: 'Search unavailable. Try again or add your input without a ROR ID.'}[searchStatus]) : '');
   }
 
   function createAffiliationChip(affiliation, index, count) {

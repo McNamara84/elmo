@@ -33,6 +33,10 @@ describe('shared affiliation editor', () => {
     const input = editor.element.find('[data-affiliation-input]');
     const add = editor.element.find('[data-affiliation-add]');
     expect(add.prop('disabled')).toBe(true);
+    expect(add.text()).toBe('Add without a ROR');
+    expect(input.attr('placeholder')).toBe('Enter at least 3 characters to see suggestions');
+    expect(input.attr('aria-label')).toBe('Affiliation');
+    expect(editor.element.find('[data-affiliation-hint]')).toHaveLength(0);
     expect(editor.element.find('[data-affiliation-search]')).toHaveLength(0);
     input.val('  ').trigger('input');
     input.trigger($.Event('keydown', { key: 'Enter' }));
