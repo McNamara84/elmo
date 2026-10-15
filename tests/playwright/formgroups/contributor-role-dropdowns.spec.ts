@@ -12,8 +12,8 @@ function roleNames(payload: unknown): string[] {
 
 /**
  * The role picker requests the type list and the shared ("both") list.
- * Persons always include Contact Person. Institutions include it only when
- * that feature is on. Names stay in API order, without duplicates.
+ * Persons always include Contact Person. Institutions now also include it.
+ * Names stay in API order, without duplicates.
  */
 function expectedDropdownNames(primary: string[], shared: string[], includeContactPerson: boolean): string[] {
   const names = [...primary, ...shared].filter(name => includeContactPerson || name !== 'Contact Person');
@@ -51,10 +51,6 @@ test('contributor role dropdowns match the roles API exactly', async ({ page }) 
 
   await page.goto('');
   await page.waitForFunction(() => Boolean((window as any).contributorStack));
-  const includeInstitutionContact = await page.evaluate(
-    () => (window as any).ELMO_FEATURES?.showContactInstitution === true
-  );
-
   await page.getByRole('button', { name: 'Add Person', exact: true }).click();
   await assertRolesForPerson(
     page.locator('#contributor-edit-0'),
@@ -70,6 +66,6 @@ test('contributor role dropdowns match the roles API exactly', async ({ page }) 
   await page.getByRole('button', { name: 'Add Institution', exact: true }).click();
   await assertRolesForInstitution(
     page.locator('#contributor-edit-2'),
-    expectedDropdownNames(institutionApiResponse, sharedRoles, includeInstitutionContact)
+    expectedDropdownNames(institutionApiResponse, sharedRoles, true)
   );
 });
