@@ -86,13 +86,39 @@ async function mockFeedbackEndpoint(
 }
 
 test.describe('Feedback modal interactions', () => {
-  test('does not call the backend when every feedback field is empty', async ({ page }) => {
+  test('keeps send pale until an answer exists and drops answers cleared during the token request', async ({ page }) => {
     const { feedbackModal } = await navigateToFeedbackModal(page);
     const sendButton = feedbackModal.locator('#button-feedback-send');
-    let feedbackPosted = false;
+    const question = feedbackModal.locator('#input-feedback-question1');
 
+    await expect(sendButton).toBeDisabled();
+    const disabledBackground = await sendButton.evaluate((element) => getComputedStyle(element).backgroundColor);
+
+    await question.fill('   ');
+    await expect(sendButton).toBeDisabled();
+
+    await question.fill('A useful answer');
+    await expect(sendButton).toBeEnabled();
+    await expect.poll(() => sendButton.evaluate((element) => getComputedStyle(element).backgroundColor)).not.toBe(disabledBackground);
+    const enabledBackground = await sendButton.evaluate((element) => getComputedStyle(element).backgroundColor);
+    expect(relativeLuminance(parseRgbString(disabledBackground))).toBeGreaterThan(
+      relativeLuminance(parseRgbString(enabledBackground))
+    );
+
+    let releaseToken: () => void = () => {};
+    const tokenGate = new Promise<void>((resolve) => {
+      releaseToken = resolve;
+    });
+    let feedbackPosted = false;
+    let postedAnswer = '';
+
+    await page.route('**/api/csrf_token.php', async (route) => {
+      await tokenGate;
+      await route.continue();
+    });
     await page.route(FEEDBACK_ENDPOINT, async (route) => {
       feedbackPosted = true;
+      postedAnswer = new URLSearchParams(route.request().postData() || '').get('feedbackQuestion1') || '';
       await route.fulfill({
         status: 200,
         contentType: 'text/plain',
@@ -100,43 +126,46 @@ test.describe('Feedback modal interactions', () => {
       });
     });
 
-    async function clickSendAndWatchForPost() {
-      const feedbackRequest = page
-        .waitForRequest((request) => request.url().includes('send_feedback_mail.php'), { timeout: 1500 })
-        .catch(() => null);
-
-      await sendButton.click();
-      return feedbackRequest;
-    }
-
-    expect(await clickSendAndWatchForPost()).toBeNull();
-    await expect(feedbackModal.locator('#form-feedback')).toBeVisible();
-    await expect(sendButton).toBeEnabled();
-    expect(feedbackPosted).toBe(false);
-
-    const fieldState = await feedbackModal.locator('#form-feedback').evaluate((form) => {
-      const fields = [...form.querySelectorAll('textarea[name^="feedbackQuestion"]')];
-      return {
-        required: fields.filter((field) => field.required).map((field) => field.id),
-        invalid: fields.filter((field) => field.classList.contains('is-invalid') || field.getAttribute('aria-invalid') === 'true').map((field) => field.id),
-        wasValidated: form.classList.contains('was-validated'),
-      };
-    });
-    expect(fieldState.required).toEqual([]);
-    expect(fieldState.invalid).toEqual([]);
-    expect(fieldState.wasValidated).toBe(false);
-
-    await feedbackModal.locator('textarea[name="feedbackQuestion3"]').fill('   ');
-    expect(await clickSendAndWatchForPost()).toBeNull();
-    expect(feedbackPosted).toBe(false);
-
-    await feedbackModal.locator('textarea[name="feedbackQuestion3"]').fill('One answer');
-    const filledRequest = page.waitForRequest((request) =>
-      request.url().includes('send_feedback_mail.php')
+    const clearedTokenResponse = page.waitForResponse((response) =>
+      response.url().includes('csrf_token.php')
     );
     await sendButton.click();
-    expect((await filledRequest)?.url()).toContain('send_feedback_mail.php');
+    await expect(sendButton).toBeDisabled();
+    await question.fill('');
+    releaseToken();
+    await clearedTokenResponse;
+    await expect(sendButton).toBeDisabled();
+    expect(feedbackPosted).toBe(false);
 
+    await question.fill('First draft');
+    await expect(sendButton).toBeEnabled();
+
+    let releaseUpdatedToken: () => void = () => {};
+    const updatedTokenGate = new Promise<void>((resolve) => {
+      releaseUpdatedToken = resolve;
+    });
+    await page.unroute('**/api/csrf_token.php');
+    await page.route('**/api/csrf_token.php', async (route) => {
+      await updatedTokenGate;
+      await route.continue();
+    });
+
+    const updatedTokenResponse = page.waitForResponse((response) =>
+      response.url().includes('csrf_token.php')
+    );
+    const feedbackResponse = page.waitForResponse((response) =>
+      response.url().includes('send_feedback_mail.php')
+    );
+    await sendButton.click();
+    await question.fill('Revised after the token request started');
+    releaseUpdatedToken();
+    await updatedTokenResponse;
+    await feedbackResponse;
+
+    expect(feedbackPosted).toBe(true);
+    expect(postedAnswer).toBe('Revised after the token request started');
+
+    await page.unroute('**/api/csrf_token.php');
     await page.unroute(FEEDBACK_ENDPOINT);
   });
 

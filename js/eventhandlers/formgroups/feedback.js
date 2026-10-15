@@ -1,5 +1,7 @@
 /**
- * @description Handles feedback form submission with AJAX.
+ * @description Sends feedback after the CSRF token is available.
+ * The token request finishes before the answers are accepted, so a form
+ * cleared during that request is not sent. Send stays disabled until an answer exists.
  *
  * @module feedback
  */
@@ -17,6 +19,8 @@ $(document).ready(function () {
   const thankYouMessage = $("#panel-feedback-message");
   const csrfTokenField = $("#input-feedback-csrf-token");
 
+  let submitInFlight = false;
+
   function applyBooleanAttribute($elements, attributeName, isActive) {
     $elements.each((_, element) => {
       if (isActive) {
@@ -29,17 +33,46 @@ $(document).ready(function () {
     return $elements;
   }
 
-  function allFieldsMissing(form) {
-    return [...form.querySelectorAll('textarea[name^="feedbackQuestion"]')]
-      .every((field) => field.value.trim() === '');
+  function hasFeedbackAnswer(formElement) {
+    return [...formElement.querySelectorAll('textarea[name^="feedbackQuestion"]')]
+      .some((field) => field.value.trim() !== "");
   }
 
-  sendButton.click(async function (event) {
-    event.preventDefault();
+  function syncSendButton() {
+    sendButton
+      .prop("disabled", !hasFeedbackAnswer(feedbackForm[0]))
+      .attr("aria-busy", "false")
+      .html(getNestedValue(translations, 'modals.feedback.sendButton'));
+  }
 
-    if (allFieldsMissing(feedbackForm[0])) {
+  feedbackForm.on("input", 'textarea[name^="feedbackQuestion"]', function () {
+    if (submitInFlight) {
       return;
     }
+
+    sendButton.prop("disabled", !hasFeedbackAnswer(feedbackForm[0]));
+  });
+
+  sendButton.on("click", async function (event) {
+    event.preventDefault();
+
+    if (submitInFlight || !hasFeedbackAnswer(feedbackForm[0])) {
+      return;
+    }
+
+    submitInFlight = true;
+    sendButton.prop("disabled", true);
+
+    const token = await fetchAndStoreCsrfToken('feedback');
+    csrfTokenField.val(token);
+
+    if (!hasFeedbackAnswer(feedbackForm[0])) {
+      submitInFlight = false;
+      syncSendButton();
+      return;
+    }
+
+    const feedbackData = feedbackForm.serialize();
 
     sendButton
       .prop("disabled", true)
@@ -53,16 +86,12 @@ $(document).ready(function () {
     applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
     applyBooleanAttribute(statusPanel, "hidden", true);
 
-    const token = await fetchAndStoreCsrfToken('feedback');
-    csrfTokenField.val(token);
-
-    const feedbackData = feedbackForm.serialize();
-
     $.ajax({
       url: "endpoints/send_feedback_mail.php",
       type: "POST",
       data: feedbackData,
       success: function () {
+        submitInFlight = false;
         feedbackForm.hide().attr("aria-hidden", "true").attr("aria-busy", "false");
         sendButton.attr("aria-busy", "false");
         applyBooleanAttribute(thankYouMessage, "hidden", false)
@@ -99,11 +128,9 @@ $(document).ready(function () {
             getNestedValue(translations, 'modals.feedback.error') + errorMessage +
             '</div>'
           );
-        sendButton
-          .prop("disabled", false)
-          .attr("aria-busy", "false")
-          .html(getNestedValue(translations, 'modals.feedback.sendButton'))
-          .trigger("focus");
+        submitInFlight = false;
+        syncSendButton();
+        sendButton.trigger("focus");
         feedbackForm.attr({ "aria-busy": "false", "aria-hidden": "false" });
         thankYouMessage.hide();
         applyBooleanAttribute(thankYouMessage, "hidden", true).attr("aria-hidden", "true");
@@ -128,10 +155,8 @@ $(document).ready(function () {
         .removeAttr("role")
         .attr("aria-live", "polite")
         .attr("aria-atomic", "true");
-      sendButton
-        .prop("disabled", false)
-        .attr("aria-busy", "false")
-        .html(getNestedValue(translations, 'modals.feedback.sendButton'));
+      submitInFlight = false;
+      syncSendButton();
     })
     .on('hidden.bs.modal', function () {
       $("#button-feedback-openmodalfooter").trigger("focus");
