@@ -71,12 +71,8 @@ describe('roles.js', () => {
     expect(input._tagify.settings.whitelist).toEqual(['Contact Person']);
   });
 
-  test('gates institution contacts with the feature flag', () => {
+  test('keeps Contact Person in institution roles when provided by API', () => {
     const input = document.getElementById('input-contributor-organisationrole');
-    window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
-    expect(input._tagify.settings.whitelist).toEqual(['Research Group']);
-
-    window.ELMO_FEATURES.showContactInstitution = true;
     window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
     expect(input._tagify.settings.whitelist).toEqual(['Research Group', 'Contact Person']);
   });

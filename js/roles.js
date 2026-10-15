@@ -122,11 +122,10 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   if (!input) return;
 
   const isPerson = input.name === 'cbPersonRoles[]';
-  const isInstitution = input.name === 'cbOrganisationRoles[]';
   const roleNames = roles.map(role =>
     typeof role === 'string' ? role : role.name
-  ).filter(name => !isInstitution || window.ELMO_FEATURES?.showContactInstitution === true || name !== 'Contact Person');
-  if (isPerson || (isInstitution && window.ELMO_FEATURES?.showContactInstitution === true)) {
+  );
+  if (isPerson) {
     roleNames.push('Contact Person');
   }
   // ERNIE and the local role table may already contain the synthetic contact role.
