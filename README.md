@@ -184,8 +184,6 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
   - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
-  - `$showContributorPersons`: Controls whether the Contributors group offers the Add Person button (true/false).
-  - `$showContributorInstitutions`: Controls whether the Contributors group offers the Add Institution button (true/false). The group is hidden when both contributor types are disabled.
   - `SHOW_CONTACT_INSTITUTION`: Allows contributor institutions to use the Contact Person role when set to `true` (default: `false`). An institution contact needs a name and valid email address to satisfy the shared contact requirement.
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
@@ -1813,4 +1811,3 @@ npx playwright show-report
 - **`browserType.launch: Executable doesn't exist`** → Run `npx playwright install` to download the required browser binaries.
 - **Tests fail with connection errors** → Ensure Docker containers are running (`docker compose ps`) and ports 8080–8083 are accessible.
 - **WebKit/Firefox tests fail locally on Linux** → Some Linux distributions require additional system libraries. Run `sudo npx playwright install-deps` or install the packages listed in the error output.
-

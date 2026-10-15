@@ -128,8 +128,6 @@ jobs:
           $maxTitles = 2;
 
           $showMslLogo = false;
-          $showContributorPersons = true;
-          $showContributorInstitutions = true;
           $showThesauri = true;
           $showFreeKeywords = true;
           $showSpatialTemporalCoverage = true;

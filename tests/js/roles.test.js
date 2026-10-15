@@ -33,8 +33,7 @@ describe('roles.js', () => {
     global.translations = { general: { roleLabel: 'Role' } };
     // Set default feature toggles (all enabled)
     window.ELMO_FEATURES = {
-      showContributorPersons: true,
-      showContributorInstitutions: true
+      showContactInstitution: false
     };
 
     const accessibilityScript = fs.readFileSync(path.resolve(__dirname, '../../js/accessibility.js'), 'utf8');
