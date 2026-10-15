@@ -435,7 +435,8 @@ label.mandatory-field::after {
 }
 
 .textarea-description {
-    height: 100px !important;
+    /* Allow native resizing to override the initial height. */
+    height: 100px;
 }
 
 .space-between-row {

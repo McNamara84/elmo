@@ -493,6 +493,23 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Description fields can now be enlarged and reduced vertically using their resize handle in all ELMO editions."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1274
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
               ],
