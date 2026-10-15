@@ -3,12 +3,12 @@ function editors(root) {
   return Array.from(root.querySelectorAll('[data-affiliation-editor]'));
 }
 
-function reveal(element, input) {
+function reveal(element, input, { focus = true } = {}) {
   const card = element.closest('[data-author-card], [data-contributor-card]');
   const toggle = card?.querySelector('[data-author-toggle-edit], [data-contributor-toggle-edit]');
   if (toggle?.getAttribute('aria-expanded') === 'false') toggle.click();
   input?.scrollIntoView?.({ behavior: 'smooth', block: 'center' });
-  input?.focus();
+  if (focus) input?.focus();
 }
 
 /**
@@ -26,10 +26,10 @@ export function resolvePendingAffiliations(root) {
 }
 
 /**
- * Validate confirmed labels and optionally reveal the first invalid editor, including collapsed cards.
+ * Validate confirmed labels and reveal the first invalid editor, including collapsed cards.
  * @param {Document|Element} root Form or card whose editors are checked.
  * @param {Object} [options={}] Validation settings.
- * @param {boolean} [options.focus=true] Reveal and focus the first invalid label.
+ * @param {boolean} [options.focus=true] Also move keyboard focus to the first invalid label.
  * @returns {boolean} True when all confirmed affiliation labels are valid.
  */
 export function validateAffiliationEditors(root, { focus = true } = {}) {
@@ -37,6 +37,6 @@ export function validateAffiliationEditors(root, { focus = true } = {}) {
   for (const element of editors(root)) {
     if (!element.affiliationEditor?.validate() && !firstInvalid) firstInvalid = element;
   }
-  if (firstInvalid && focus) reveal(firstInvalid, firstInvalid.querySelector('[data-affiliation-label].is-invalid'));
+  if (firstInvalid) reveal(firstInvalid, firstInvalid.querySelector('[data-affiliation-label].is-invalid'), { focus });
   return !firstInvalid;
 }

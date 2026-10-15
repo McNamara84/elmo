@@ -45,6 +45,23 @@ describe('affiliation action decisions', () => {
     expect(toggle.getAttribute('aria-expanded')).toBe('true');
     expect(document.activeElement).toBe(element.querySelector('[data-affiliation-label]'));
   });
+  test.each(['author', 'contributor'])('%s validation reveals and scrolls without taking focus when disabled', group => {
+    const elements = mount();
+    const element = elements[group === 'author' ? 0 : 1];
+    element.affiliationEditor.setAffiliations([{ label: '', rorId: '04z8jg394' }]);
+    const toggle = element.closest(`[data-${group}-card]`).querySelector(`[data-${group}-toggle-edit]`);
+    toggle.click();
+    const label = element.querySelector('[data-affiliation-label]');
+    label.scrollIntoView = jest.fn();
+    const focused = document.createElement('button');
+    document.body.append(focused);
+    focused.focus();
+
+    expect(validateAffiliationEditors(document, { focus: false })).toBe(false);
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(label.scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'center' });
+    expect(document.activeElement).toBe(focused);
+  });
   test('whitespace and disabled contributor feature need no decision', () => {
     mountAuthorStack([{ type: 'institution', institutionname: 'Lab' }]);
     document.querySelector('[data-affiliation-editor]').affiliationEditor.setPendingInput('  ');
