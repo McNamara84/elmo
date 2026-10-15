@@ -1,7 +1,21 @@
-import { test, expect, type Locator, type Page } from '@playwright/test';
+import { test as base, expect, type Locator, type Page } from '@playwright/test';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
 import { registerStaticAssetRoutes, REPO_ROOT } from '../utils';
+
+const test = base.extend<{ checkBrowserConsole: void }>({
+  checkBrowserConsole: [async ({ page }, use) => {
+    const problems: string[] = [];
+    page.on('console', message => {
+      if (['warning', 'error'].includes(message.type())) problems.push(`${message.type()}: ${message.text()}`);
+    });
+    page.on('pageerror', error => problems.push(`pageerror: ${error.message}`));
+
+    // Capture problems from the initial navigation through the last resize.
+    await use();
+    expect(problems, 'Description fields must not cause browser warnings or errors').toEqual([]);
+  }, { auto: true }],
+});
 
 const DESCRIPTION_TYPES = [
   { id: 1, name: 'Abstract', slug: 'Abstract' },
@@ -35,6 +49,7 @@ async function dragResize(page: Page, field: Locator, deltaX: number, deltaY: nu
   await field.scrollIntoViewIfNeeded();
   const box = await field.boundingBox();
   if (!box) throw new Error('The description field is not visible');
+  // Start just inside the bottom-right corner to grab the native resize handle.
   const x = box.x + box.width - 5;
   const y = box.y + box.height - 5;
   await page.mouse.move(x, y);
