@@ -211,13 +211,19 @@ function appendAffiliationsElement(DOMDocument $dom, DOMElement $parent, array $
     $affiliationsElement = $dom->createElement('Affiliations');
 
     foreach ($affiliations as $affiliation) {
-        if ($affiliation['label'] === '') {
+        $rorId = normalizeRorId($affiliation['rorId'] ?? null);
+        $label = $affiliation['label'];
+        // DataCite drops empty labels; use the ROR URL only in the exported representation.
+        if ($label === '' && $rorId !== null) {
+            $label = 'https://ror.org/' . $rorId;
+        }
+        if ($label === '') {
             continue;
         }
 
         $affiliationElement = $dom->createElement('Affiliation');
-        appendTextChild($dom, $affiliationElement, 'name', $affiliation['label']);
-        appendOptionalTextChild($dom, $affiliationElement, 'rorId', $affiliation['rorId'] ?? null);
+        appendTextChild($dom, $affiliationElement, 'name', $label);
+        appendOptionalTextChild($dom, $affiliationElement, 'rorId', $rorId);
         $affiliationsElement->appendChild($affiliationElement);
     }
 

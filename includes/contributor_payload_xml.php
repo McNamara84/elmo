@@ -115,9 +115,17 @@ function appendContributorAffiliations(DOMDocument $dom, DOMElement $parent, arr
 {
     $container = $dom->createElement('Affiliations');
     foreach ($affiliations as $item) {
+        $rorId = normalizeRorId($item['rorId'] ?? null);
+        $label = $item['label'];
+        // Keep incomplete saved affiliations recoverable without changing the editor or draft.
+        if ($label === '' && $rorId !== null) {
+            $label = 'https://ror.org/' . $rorId;
+        }
+        if ($label === '') continue;
+
         $affiliation = $dom->createElement('Affiliation');
-        appendTextChild($dom, $affiliation, 'name', $item['label']);
-        appendOptionalTextChild($dom, $affiliation, 'rorId', $item['rorId']);
+        appendTextChild($dom, $affiliation, 'name', $label);
+        appendOptionalTextChild($dom, $affiliation, 'rorId', $rorId);
         $container->appendChild($affiliation);
     }
     $parent->appendChild($container);

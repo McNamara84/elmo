@@ -437,7 +437,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <p>Use the affiliation editor inside each card to edit labels, reorder affiliations, or remove them.
                         Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
                         unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
-                        block saving, but their affiliations are omitted from DataCite exports. Autosaved drafts preserve them.
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries without a label or ROR ID are omitted from exports.
                         Correct or remove empty labels before submitting.</p>
                     <p>Editing an affiliation label preserves its ROR ID, so it is not analogous to adding a second
                         affiliation.</p>
@@ -648,7 +649,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         buttons to reorder or delete affiliations. The card header shows the ORCID, affiliations and ROR IDs.</p>
                     <p>Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
                         unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
-                        block saving, but their affiliations are omitted from DataCite exports. Autosaved drafts preserve them.
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries without a label or ROR ID are omitted from exports.
                         Correct or remove empty labels before submitting.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
@@ -763,7 +765,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         buttons to reorder or delete affiliations. The card header shows the affiliations and ROR IDs.</p>
                     <p>Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
                         unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
-                        block saving, but their affiliations are omitted from DataCite exports. Autosaved drafts preserve them.
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries without a label or ROR ID are omitted from exports.
                         Correct or remove empty labels before submitting.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
