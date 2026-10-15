@@ -138,6 +138,25 @@ describe('roles.js', () => {
       .not.toContain('Distributor');
   });
 
+  test('keeps institution roles when shared roles endpoint returns 404', async () => {
+    fetch.mockImplementation((url) => {
+      const type = new URL(url, 'http://localhost').searchParams.get('type');
+      if (type === 'institution') {
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([{ name: 'Hosting Institution' }]) });
+      }
+      if (type === 'both') {
+        return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({ error: 'No roles found' }) });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([]) });
+    });
+
+    window.setupRolesDropdown(['institution', 'both'], '#input-contributor-organisationrole');
+    await flushPromises();
+
+    const whitelist = document.getElementById('input-contributor-organisationrole')._tagify.settings.whitelist;
+    expect(whitelist).toContain('Hosting Institution');
+  });
+
   test('refreshRoleTagifyInstances updates placeholders for all rows', () => {
     const personInput = document.getElementById('input-contributor-personrole');
     const orgInput = document.getElementById('input-contributor-organisationrole');
