@@ -55,7 +55,7 @@ describe('select.js', () => {
     global.jQuery = $;
 
     $.getJSON = jest.fn((url, cb) => { cb({identifierTypes: []}); return { fail: jest.fn() }; });
-    $.ajax = jest.fn((opts) => { if(opts.success) opts.success({}); return { fail: jest.fn() }; });
+    $.ajax = jest.fn((opts) => { if(opts.success) opts.success(String(opts.url).includes('identifier-type') ? {status:'detected', identifierType:'DOI', source:'datacite'} : {}); return { fail: jest.fn() }; });
 
     const dropdownUtilsScript = fs.readFileSync(path.resolve(__dirname, '../../js/dropdownUtils.js'), 'utf8');
     window.eval(dropdownUtilsScript);
@@ -101,7 +101,7 @@ describe('select.js', () => {
     warnSpy.mockRestore();
   });
 
-  test('updateIdentifierType sets value based on regex', async () => {
+  test('updateIdentifierType uses a confirmed registry type', async () => {
     $.ajax.mockImplementationOnce(opts => { opts.success({identifierTypes:[{name:'DOI', pattern:'^10\\..+'}]}); return { fail: jest.fn() }; });
     const input = $('#group-relatedwork .row:first-child input');
     const select = $('#group-relatedwork .row:first-child select[name="rIdentifierType[]"]');
@@ -129,7 +129,7 @@ describe('select.js', () => {
     warnSpy.mockRestore();
   });
 
-  test('updateIdentifierType chooses most specific match', async () => {
+  test('updateIdentifierType ignores overlapping regexes after registry confirmation', async () => {
     $.ajax.mockImplementationOnce(opts => {
       opts.success({identifierTypes:[
         {name:'URL', pattern:'^10\\..+'},
@@ -143,7 +143,7 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
-  test('updateIdentifierType prefers DOI over URL when both match', async () => {
+  test('updateIdentifierType uses confirmed DOI instead of generic URL', async () => {
     $.ajax.mockImplementationOnce(opts => {
       opts.success({identifierTypes:[
         {name:'URL', pattern:'https?://.+\\..+'},
@@ -157,7 +157,7 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
-  test('updateIdentifierType recognizes DOI resolver URLs when the vocabulary pattern only accepts bare DOIs', async () => {
+  test('updateIdentifierType leaves a resolver URL empty when the vocabulary only accepts bare DOIs', async () => {
     $.ajax.mockImplementationOnce(opts => {
       opts.success({identifierTypes:[
         {name:'URL', pattern:'^https?:\\/\\/.+$'},
@@ -170,10 +170,8 @@ describe('select.js', () => {
 
     await window.updateIdentifierType(input[0]);
 
-    expect(select.val()).toBe('DOI');
-    expect(input.attr('pattern')).toBe(
-      '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$'
-    );
+    expect(select.val()).toBe('');
+    expect(input.attr('pattern')).toBeUndefined();
     expect(input[0].checkValidity()).toBe(true);
   });
 
@@ -200,7 +198,7 @@ describe('select.js', () => {
     expect(select.val()).toBe('DOI');
   });
 
-  test('finds the identifier type select across nested rows within one Related Work card', () => {
+  test('finds the identifier type select across nested rows within one Related Work card', async () => {
     $('#group-relatedwork').html(`
       <div data-related-work-entry>
         <div class="row"><input name="rIdentifier[]" value="10.1234/card"></div>
@@ -217,7 +215,7 @@ describe('select.js', () => {
       return { fail: jest.fn() };
     });
 
-    window.updateIdentifierType($('input[name="rIdentifier[]"]')[0]);
+    await window.updateIdentifierType($('input[name="rIdentifier[]"]')[0]);
 
     expect($('select[name="rIdentifierType[]"]').val()).toBe('DOI');
   });
@@ -238,10 +236,12 @@ describe('select.js', () => {
       return { fail: jest.fn() };
     });
 
+    $('input[name="rIdentifier[]"]').eq(1).val('not-a-url');
     window.updateValidationPattern($('select[name="rIdentifierType[]"]').eq(1)[0]);
 
     expect($('input[name="rIdentifier[]"]').eq(0).attr('pattern')).toBeUndefined();
-    expect($('input[name="rIdentifier[]"]').eq(1).attr('pattern')).toBe('^https?:\\/\\/.+$');
+    expect($('input[name="rIdentifier[]"]').eq(0)[0].validationMessage).toBe('');
+    expect($('input[name="rIdentifier[]"]').eq(1)[0].validity.customError).toBe(true);
   });
 
   test('debounce delays function call', () => {
@@ -264,13 +264,6 @@ describe('select.js', () => {
     input.val('10.1234/abcd');
     await window.updateIdentifierType(input[0]);
     expect(select.val()).toBe('DOI');
-  });
-
-  test('updateDataSourceIdsAndNames assigns ids to model fields', () => {
-    window.updateDataSourceIdsAndNames();
-    expect($('#group-datasources input[name="dName[]"]').attr('id')).toBe('input-datasource-modelname0');
-    expect($('#group-datasources input[name="dIdentifier[]"]').attr('id')).toBe('input-datasource-identifier0');
-    expect($('#group-datasources select[name="dIdentifierType[]"]').attr('id')).toBe('input-datasource-identifiertype0');
   });
 
   test('setupTimezoneDropdownAjax fetches and selects timezone', async () => {

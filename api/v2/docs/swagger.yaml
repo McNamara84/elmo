@@ -876,6 +876,52 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /validation/identifier-type:
+    get:
+      tags: [validation]
+      summary: Confirm the type of a DOI-shaped identifier
+      description: |-
+        Queries the exact DataCite record and its client type to distinguish IGSN,
+        RAiD and regular DOI. Only a DataCite 404 permits a Crossref lookup.
+        Unconfirmed or unsupported records return a null type. Results are cached
+        for six hours; unknown records for one minute. Registry failures are not cached.
+        The shared disk cache is limited to 1,024 identifiers. Cache accesses reclaim
+        expired entries globally; entries expiring soonest are evicted when full.
+      operationId: detectIdentifierType
+      parameters:
+        - name: doi
+          in: query
+          required: true
+          description: Canonical bare DOI name, such as 10.60510/gf1211s-47.
+          schema:
+            type: string
+            maxLength: 2048
+          example: 10.60510/gf1211s-47
+      responses:
+        "200":
+          description: Confirmed type or unknown record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "400":
+          description: Invalid DOI parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "502":
+          description: Registry unavailable or invalid response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "504":
+          description: Registry lookup timed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
   /validation/patterns/{type}:
     get:
       tags:
@@ -943,7 +989,11 @@ paths:
         - validation
       security: []
       summary: Get active identifier types
-      description: Returns only identifier types that are currently visible (`isShown = 1`).
+      description: >-
+        Returns only identifier types that are currently visible (`isShown = 1`).
+        When ERNIE is configured, its vocabulary and validation patterns are authoritative.
+        Grouped validation alternatives are normalized into the legacy pattern field
+        without substituting local format rules. Empty patterns remain empty.
       operationId: getActiveIdentifierTypes
       responses:
         "200":
@@ -1725,6 +1775,20 @@ components:
       name: X-API-Key
       description: API key to access protected endpoints. Required for /update/ endpoints and /admin/cache endpoints.
   schemas:
+    IdentifierDetection:
+      type: object
+      required: [identifierType, status, source]
+      properties:
+        identifierType:
+          type: [string, "null"]
+          enum: [DOI, IGSN, RAiD, null]
+        status:
+          type: string
+          enum: [detected, unknown, invalid, unavailable]
+        source:
+          type: [string, "null"]
+          enum: [datacite, crossref, null]
+
     CacheRefreshResponse:
       type: object
       description: |-

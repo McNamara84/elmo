@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { navigateToHome, fillGEM } from '../../utils';
+import identifierTypes from '../../../fixtures/identifier-types.json';
 
 const MODEL_TYPES_MOCK = [
   { id: 1, name: 'Static', description: 'Static model' },
@@ -96,6 +97,31 @@ test.describe('GGMs / ICGEM – clearInputFields resets all fields', () => {
     });
     await navigateToHome(page);
     await expect(page.locator('#group-ggmspropertiesessential')).toBeVisible();
+  });
+
+  test('clearing an invalid model identifier leaves the retained row valid when Model is selected again', async ({ page }) => {
+    await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify({identifierTypes}),
+    }));
+    await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+    await page.locator(DEF.modelType).selectOption('Static');
+    const row = page.locator(DS_ROW).first();
+    await row.locator('select[name="datasource_type[]"]').selectOption('M');
+    const identifier = row.locator('input[name="dIdentifier[]"]');
+    const type = row.locator('select[name="dIdentifierType[]"]');
+    await identifier.fill('not an IGSN'); await type.selectOption('IGSN');
+    expect(await identifier.evaluate(element => (element as HTMLInputElement).validity.customError)).toBe(true);
+    await page.evaluate(async () => { const clear = await (window as any).loadClearInputFields(); clear(); });
+    await expect(page.locator(DS_ROW)).toHaveCount(1);
+    await expect(identifier).toHaveValue('');
+    await page.locator(DEF.modelType).selectOption('Static');
+    await row.locator('select[name="datasource_type[]"]').selectOption('M');
+    await expect(identifier).toBeEnabled();
+    await expect(type).toHaveValue('');
+    expect(await identifier.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
+    await identifier.fill('GFZABC123'); await identifier.blur();
+    await expect(type).toHaveValue('IGSN');
+    expect(await identifier.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
   });
 
   test('fills all GGMs fields, clears, and asserts everything is empty / default', async ({ page }) => {

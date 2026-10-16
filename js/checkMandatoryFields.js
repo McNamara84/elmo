@@ -829,8 +829,11 @@ function removeGreenCheckmarks() {
       field.classList.remove("is-valid");
       field.classList.remove("is-invalid");
 
-      // Reset custom validity to clear validity state
-      field.setCustomValidity("");
+      // Identifier errors belong to their format validator; whitespace must not
+      // become valid just because this visual cleanup treats it as empty.
+      if (!field.matches('input[name="rIdentifier[]"], input[name="dIdentifier[]"]')) {
+        field.setCustomValidity("");
+      }
 
       // Remove green shadows and background image, as Bootstrap uses these
       // to visually highlight valid fields

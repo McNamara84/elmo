@@ -7,6 +7,7 @@
 
 // Include settings.php so that variables are available
 require_once __DIR__ . '/../../../settings.php';
+require_once __DIR__ . '/../services/IdentifierTypePatterns.php';
 
 /**
  * Class ValidationController
@@ -64,7 +65,7 @@ class ValidationController
 
         if ($result->num_rows > 0) {
             $row = $result->fetch_assoc();
-            echo json_encode(['pattern' => $row['pattern']]);
+            echo json_encode(['pattern' => IdentifierTypePatterns::validationPattern(['name' => $type, 'pattern' => $row['pattern']])]);
         } else {
             http_response_code(404);
             echo json_encode(['error' => 'No pattern found for the specified identifier type']);
@@ -101,7 +102,7 @@ class ValidationController
             while ($row = $result->fetch_assoc()) {
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => IdentifierTypePatterns::validationPattern($row),
                     'description' => $row['description']
                 ];
             }
@@ -145,7 +146,7 @@ class ValidationController
                 if (!empty($ernieTypes)) {
                     $identifierTypes = array_map(fn($t) => [
                         'name' => $t['name'],
-                        'pattern' => $t['pattern'] ?? '',
+                        'pattern' => IdentifierTypePatterns::validationPattern($t),
                         'description' => $t['description'] ?? '',
                     ], $ernieTypes);
 
@@ -186,7 +187,7 @@ class ValidationController
             while ($row = $result->fetch_assoc()) {
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => IdentifierTypePatterns::validationPattern($row),
                     'description' => $row['description'],
                 ];
             }
@@ -224,7 +225,7 @@ class ValidationController
             while ($row = $result->fetch_assoc()) {
                 $identifierTypes[] = [
                     'name' => $row['name'],
-                    'pattern' => $row['pattern'],
+                    'pattern' => IdentifierTypePatterns::validationPattern($row),
                     'description' => $row['description'],
                 ];
             }

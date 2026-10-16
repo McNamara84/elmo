@@ -1,4 +1,4 @@
-import { setCCBYasDefault, setBrowserTimezone } from './select.js';
+import { setCCBYasDefault, setBrowserTimezone, resetIdentifierField } from './select.js';
 
 /**
  * Clears and resets input fields and Tagify instances.
@@ -142,7 +142,9 @@ export default function clearInputFields() {
     $firstDsRow.find('select[name="datasource_type[]"]').val('S').trigger('change');
     $firstDsRow.find('select[name="datasource_details[]"]').prop('selectedIndex', 0);
     $firstDsRow.find('textarea[name="datasource_description[]"]').val('');
-    $firstDsRow.find('input[name="dIdentifier[]"]').val('');
+    $firstDsRow.find('input[name="dIdentifier[]"]').val('').each(function () {
+        resetIdentifierField(this);
+    });
     $firstDsRow.find('input[name="dName[]"]').val('');
     $firstDsRow.find('input[name="compensation_depth[]"]').val('');
 
