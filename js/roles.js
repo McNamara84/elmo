@@ -72,33 +72,40 @@ function setupRolesDropdown(roletypes, inputSelector) {
   const rolePromises = roletypes.map(type =>
     fetch(`./api/v2/vocabs/roles?type=${type}`)
       .then(response => {
+        if (response.status === 404) {
+          return [];
+        }
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
+      .then(roles => ({ type, roles }))
+      .catch(error => {
+        console.error(`Error fetching roles type ${type} for ${inputSelector}:`, error);
+        return { type, roles: [] };
+      })
   );
 
-  Promise.all(rolePromises)
-    .then(results => {
-      results.forEach((roles, index) => {
-        fetchedRoleTypes.add(roletypes[index]);
-        if (roletypes[index] === "person") {
-          personRoles = [...new Set([...personRoles, ...roles])];
-        }
-        if (roletypes[index] === "institution") {
-          organizationRoles = [...new Set([...organizationRoles, ...roles])];
-        }
-        if (roletypes[index] === "both") {
-          sharedRoles = [...new Set([...sharedRoles, ...roles])];
-        }
-      });
-
-      initializeTagifyWithRoles(inputSelector, [...new Set(results.flat())]);
-    })
-    .catch(error => {
-      console.error(`Error fetching roles for ${inputSelector}:`, error);
+  Promise.all(rolePromises).then(results => {
+    results.forEach(({ type, roles }) => {
+      fetchedRoleTypes.add(type);
+      if (type === "person") {
+        personRoles = [...new Set([...personRoles, ...roles])];
+      }
+      if (type === "institution") {
+        organizationRoles = [...new Set([...organizationRoles, ...roles])];
+      }
+      if (type === "both") {
+        sharedRoles = [...new Set([...sharedRoles, ...roles])];
+      }
     });
+
+    initializeTagifyWithRoles(
+      inputSelector,
+      [...new Set(results.flatMap(result => result.roles))]
+    );
+  });
 }
 
 /**
@@ -115,11 +122,10 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   if (!input) return;
 
   const isPerson = input.name === 'cbPersonRoles[]';
-  const isInstitution = input.name === 'cbOrganisationRoles[]';
   const roleNames = roles.map(role =>
     typeof role === 'string' ? role : role.name
-  ).filter(name => !isInstitution || window.ELMO_FEATURES?.showContactInstitution === true || name !== 'Contact Person');
-  if (isPerson || (isInstitution && window.ELMO_FEATURES?.showContactInstitution === true)) {
+  );
+  if (isPerson) {
     roleNames.push('Contact Person');
   }
   // ERNIE and the local role table may already contain the synthetic contact role.

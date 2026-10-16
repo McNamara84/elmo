@@ -234,6 +234,27 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Deprecated contributor feature toggles were removed: person and institution contributor cards are now always available in the Contributors form group."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1289
+                },
+                {
+                  "type": "issue",
+                  "number": 1288
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Resource Information now keeps fields and titles in a shared payload. Additional titles can be reordered by keyboard or drag and drop; XML, JSON-LD, and XSLT import preserve title order and textual versions."
                 }
               ],

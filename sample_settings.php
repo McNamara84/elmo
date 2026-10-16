@@ -51,10 +51,6 @@ $maxTitles = 2;
 // having the MSL logo in the header:
 $showMslLogo = false;
 
-// Show Contributor Persons form group
-$showContributorPersons = true;
-// Show Contributor Institutios form group
-$showContributorInstitutions = true;
 $showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;

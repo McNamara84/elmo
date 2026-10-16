@@ -84,18 +84,14 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
                         </li>
                         <?php endif; ?>
-                        <?php if ($showContributorPersons ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
                                 person fields</a>
                         </li>
-                        <?php endif; ?>
-                        <?php if ($showContributorInstitutions ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorinstitutions"
                                 data-bs-dismiss="offcanvas">Contributor institution fields</a>
                         </li>
-                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
@@ -500,7 +496,6 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <div class="section-divider"></div>
             <hr>            
             <?php endif; ?>
-            <?php if (($showContributorPersons ?? true) || ($showContributorInstitutions ?? true)): ?>
             <div id="help-contributors" class="section-content">
                 <div id="help-contributors-fg">
                     <h3>Contributors</h3>
@@ -511,9 +506,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
             <!-- formgroup contributor persons -->
-            <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
                     <h3>Contributor person fields</h3>
@@ -646,9 +639,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php endif; ?>
             <!-- formgroup contributor institutions -->
-            <?php if ($showContributorInstitutions ?? true): ?>  
             <div id="help-contributorinstitutions" class="section-content">
                 <div id="help-contributorinstitutions-fg">
                     <h3>Contributor institution fields</h3>
@@ -757,7 +748,6 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-descriptions" class="section-content">
                 <div id="help-descriptions-fg">

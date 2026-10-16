@@ -157,8 +157,6 @@ jobs:
         $showFreeKeywords = true;
         $showSpatialTemporalCoverage = true;
         $showRelatedWork = true;
-        $showContributorPersons = true;
-        $showContributorInstitutions = true;
         $showFundingReference = true;
         $showAuthorInstitution = true;
         $xmlSubmitAddress = 'datapub@gfz.de';
