@@ -659,9 +659,16 @@ function processContactPersons(xmlDoc) {
       contactPersons.push({ familyname, givenname, email, website });
     }
 
-    if (contactPersonNodes.snapshotLength === 0) {
-      contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
-    }
+    // ISO names that are not "Family, Given" are skipped above. DataCite
+    // ContactPerson contributors still identify which authors to check.
+    // A parsed ISO contact keeps its email; the DataCite copy has none.
+    const seen = new Set(contactPersons.map((contact) => normalizeNameKey(contact.familyname, contact.givenname)));
+    collectDataCiteContactPersons(xmlDoc).forEach((contact) => {
+      const key = normalizeNameKey(contact.familyname, contact.givenname);
+      if (seen.has(key)) return;
+      seen.add(key);
+      contactPersons.push(contact);
+    });
 
     applyContactsToAuthorStack(contactPersons, Boolean(window.contributorStack));
     return;
