@@ -21,7 +21,8 @@ import { defineConfig, devices } from '@playwright/test';
  * Test distribution:
  *   generic – features, flows (all incl. minimal-data-submission), shared formgroups
  *   gem     – features, flows (excl. minimal-data-submission), shared formgroups
- *             (excl. spatial-temporal-coverages), elmogem-specific
+ *             (excl. spatial-temporal-coverages), formgroups/elmogem-specific,
+ *             flows/elmogem-specific
  *   msl     – features, flows (excl. minimal-data-submission), shared formgroups,
  *             elmomsl-specific
  *   igsn    – features, flows (excl. minimal-data-submission), shared formgroups
@@ -73,6 +74,9 @@ export default defineConfig({
         'features/**/*.spec.ts',
         'flows/**/*.spec.ts',
         'formgroups/*.spec.ts',
+      ],
+      testIgnore: [
+        '**/elmogem-specific/**',
       ],
     },
 
@@ -128,6 +132,7 @@ export default defineConfig({
         '**/thesauri-keywords.spec.ts',
         '**/thesauri-keywords-roundtrip.spec.ts',
         '**/minimal-data-submission.spec.ts',
+        '**/elmogem-specific/**',
       ],
     },
 
@@ -152,6 +157,7 @@ export default defineConfig({
       ],
       testIgnore: [
         '**/minimal-data-submission.spec.ts',
+        '**/elmogem-specific/**',
       ],
     },
   ],

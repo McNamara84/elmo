@@ -31,11 +31,11 @@ test.describe('Header Tests', () => {
     const gfzLogo = page.locator('header img[alt="GFZ Logo"]');
     const dataServicesLogo = page.locator('header img[alt="GFZ Data Services Logo"]');
 
-    await expect(gfzLogo).toHaveAttribute('src', 'logos/GFZ-logo.svg');
+    await expect(gfzLogo).toHaveAttribute('src', 'assets/logos/gfz-logo.svg');
     await expect(gfzLogo).toHaveAttribute('width', '2048');
     await expect(gfzLogo).toHaveAttribute('height', '694');
 
-    await expect(dataServicesLogo).toHaveAttribute('src', 'logos/gfz-data-services-logo.svg');
+    await expect(dataServicesLogo).toHaveAttribute('src', 'assets/logos/gfz-data-services-logo.svg');
     await expect(dataServicesLogo).toHaveAttribute('width', '2048');
     await expect(dataServicesLogo).toHaveAttribute('height', '413');
 
@@ -57,8 +57,8 @@ test.describe('Header Tests', () => {
       expect(Math.abs(renderedRatio - intrinsicRatio)).toBeLessThan(0.02);
     }
 
-    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/GFZ-logo.svg'))).toBe(true);
-    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/gfz-data-services-logo.svg'))).toBe(true);
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/assets/logos/gfz-logo.svg'))).toBe(true);
+    expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/assets/logos/gfz-data-services-logo.svg'))).toBe(true);
     expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/GFZ-logo.png'))).toBe(false);
     expect([...requestedLogoPaths].some(pathname => pathname.endsWith('/logos/GFZ_Data_Services_logo.png'))).toBe(false);
   });

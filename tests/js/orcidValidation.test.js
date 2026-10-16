@@ -144,11 +144,16 @@ describe('formatOrcidInput', () => {
 describe('ORCID form markup', () => {
   test('does not use maxlength on ORCID inputs so profile URLs can be pasted', () => {
     const authorsHtml = fs.readFileSync(path.join(__dirname, '../../formgroups/authors.html'), 'utf8');
-    const contributorsHtml = fs.readFileSync(path.join(__dirname, '../../formgroups/contributorPersons.html'), 'utf8');
+    const contributorsHtml = fs.readFileSync(path.join(__dirname, '../../formgroups/contributors.html'), 'utf8');
     const container = document.createElement('div');
     container.innerHTML = `${authorsHtml}${contributorsHtml}`;
 
-    container.querySelectorAll('input[name="orcids[]"], input[name="cbORCID[]"]').forEach((input) => {
+    const inputs = [
+      ...container.querySelectorAll('input[name="orcids[]"]'),
+      ...container.querySelector('#contributor-person-template').content.querySelectorAll('input[name="cbORCID[]"]')
+    ];
+    expect(inputs).toHaveLength(2);
+    inputs.forEach((input) => {
       expect(input.hasAttribute('maxlength')).toBe(false);
     });
   });

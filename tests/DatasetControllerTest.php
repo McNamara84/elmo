@@ -724,6 +724,46 @@ XML;
         $this->assertEquals('DOI', $relatedWorks[0]['IdentifierType']['name']);
     }
 
+    public function testGetRelatedWorksUsesPersistedOrder(): void
+    {
+        $relationId = $this->getRelationId('IsCitedBy');
+        $identifierTypeId = $this->getIdentifierTypeId('DOI');
+        $stmt = $this->connection->prepare(
+            'INSERT INTO Related_Work (Identifier, relation_fk, identifier_type_fk) VALUES (?, ?, ?)'
+        );
+        $identifiers = ['10.1234/order-second', '10.1234/order-first'];
+        $relatedWorkIds = [];
+        foreach ($identifiers as $identifier) {
+            $stmt->bind_param('sii', $identifier, $relationId, $identifierTypeId);
+            $stmt->execute();
+            $relatedWorkIds[] = (int) $this->connection->insert_id;
+        }
+        $stmt->close();
+
+        $this->connection->query(
+            "UPDATE Resource_has_Related_Work SET sort_order = 30 "
+            . "WHERE Resource_resource_id = {$this->resourceId}"
+        );
+        $link = $this->connection->prepare(
+            'INSERT INTO Resource_has_Related_Work '
+            . '(Resource_resource_id, Related_Work_related_work_id, sort_order) VALUES (?, ?, ?)'
+        );
+        $sortOrders = [20, 10];
+        foreach ($relatedWorkIds as $index => $relatedWorkId) {
+            $sortOrder = $sortOrders[$index];
+            $link->bind_param('iii', $this->resourceId, $relatedWorkId, $sortOrder);
+            $link->execute();
+        }
+        $link->close();
+
+        $relatedWorks = $this->controller->getRelatedWorks($this->connection, $this->resourceId);
+
+        $this->assertSame(
+            ['10.1234/order-first', '10.1234/order-second', '10.1234/test'],
+            array_column($relatedWorks, 'Identifier')
+        );
+    }
+
     public function testGetFundingReferencesReturnsCorrectData(): void
     {
         $funding = $this->controller->getFundingReferences($this->connection, $this->resourceId);
@@ -784,20 +824,51 @@ XML;
         $this->assertEmpty($authors);
     }
 
-    public function testGetContributorsWithNoContributorsReturnsEmptyStructure(): void
+    public function testDataCiteTransformKeepsSingleWordTitleTypes(): void
     {
-        // Create a resource without contributors
-        $stmt = $this->connection->prepare("INSERT INTO Resource (version, Language_language_id, year) VALUES (1, 1, 2024)");
-        $stmt->execute();
-        $emptyResourceId = (int) $this->connection->insert_id;
-        $stmt->close();
+        $sourceXml = <<<'XML'
+<?xml version="1.0" encoding="UTF-8"?>
+<Resource>
+  <doi>10.5880/GFZ.TEST.TITLE.TYPES</doi>
+  <year>2025</year>
+  <dateCreated>2025-01-01</dateCreated>
+  <Titles>
+    <Title><text>main</text><type>Main Title</type></Title>
+    <Title><text>other</text><type>Other</type></Title>
+    <Title><text>sub</text><type>Subtitle</type></Title>
+    <Title><text>alt</text><type>Alternative Title</type></Title>
+  </Titles>
+  <Authors>
+    <Author><familyname>Doe</familyname><givenname>Jane</givenname></Author>
+  </Authors>
+  <ResourceType><resource_type_general>Dataset</resource_type_general></ResourceType>
+  <Language><name>English</name><code>en</code></Language>
+  <Rights><text>CC-BY-4.0</text><rightsIdentifier>CC-BY-4.0</rightsIdentifier></Rights>
+  <Descriptions>
+    <Description><type>Abstract</type><description>Abstract text</description></Description>
+  </Descriptions>
+</Resource>
+XML;
 
-        $contributors = $this->controller->getContributors($this->connection, $emptyResourceId);
+        $dataciteXml = $this->controller->transformResourceXmlString($sourceXml, 'datacite');
+        $dom = new \DOMDocument();
+        $dom->loadXML($dataciteXml);
+        $xpath = new \DOMXPath($dom);
+        $xpath->registerNamespace('dc', 'http://datacite.org/schema/kernel-4');
 
-        $this->assertIsArray($contributors);
-        $this->assertArrayHasKey('persons', $contributors);
-        $this->assertArrayHasKey('institutions', $contributors);
-        $this->assertEmpty($contributors['persons']);
-        $this->assertEmpty($contributors['institutions']);
+        $titles = $xpath->query('//dc:titles/dc:title');
+        $this->assertSame(4, $titles->length);
+
+        $this->assertSame('main', trim($titles->item(0)->textContent));
+        $this->assertFalse($titles->item(0)->hasAttribute('titleType'));
+
+        $this->assertSame('other', trim($titles->item(1)->textContent));
+        $this->assertSame('Other', $titles->item(1)->getAttribute('titleType'));
+
+        $this->assertSame('sub', trim($titles->item(2)->textContent));
+        $this->assertSame('Subtitle', $titles->item(2)->getAttribute('titleType'));
+
+        $this->assertSame('alt', trim($titles->item(3)->textContent));
+        $this->assertSame('AlternativeTitle', $titles->item(3)->getAttribute('titleType'));
     }
 }

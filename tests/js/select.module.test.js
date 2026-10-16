@@ -112,44 +112,37 @@ describe('select module coverage', () => {
     });
 
     describe('module exports', () => {
-        test('exports initializeTimezoneDropdown function', () => {
-            expect(typeof selectModule.initializeTimezoneDropdown).toBe('function');
+        test('exports setupTimezoneDropdownAjax function', () => {
+            expect(typeof selectModule.setupTimezoneDropdownAjax).toBe('function');
         });
 
-        test('exports setupResourceTypeDropdown function', () => {
-            expect(typeof selectModule.setupResourceTypeDropdown).toBe('function');
+        test('exports setupResourceTypeDropdownAjax function', () => {
+            expect(typeof selectModule.setupResourceTypeDropdownAjax).toBe('function');
         });
 
-        test('exports setupLanguageDropdown function', () => {
-            expect(typeof selectModule.setupLanguageDropdown).toBe('function');
+        test('exports setupLanguageDropdownAjax function', () => {
+            expect(typeof selectModule.setupLanguageDropdownAjax).toBe('function');
         });
 
-        test('exports setupTitleTypeDropdown function', () => {
-            expect(typeof selectModule.setupTitleTypeDropdown).toBe('function');
+        test('exports setupTitleTypeDropdownAjax function', () => {
+            expect(typeof selectModule.setupTitleTypeDropdownAjax).toBe('function');
         });
 
         test('exports setupIdentifierTypesDropdown function', () => {
             expect(typeof selectModule.setupIdentifierTypesDropdown).toBe('function');
         });
 
-        test('exports getIdentifierPriority function', () => {
-            expect(typeof selectModule.getIdentifierPriority).toBe('function');
-        });
-
         test('exports updateIdentifierType function', () => {
             expect(typeof selectModule.updateIdentifierType).toBe('function');
         });
 
+        test('exports Related Work dropdown and pattern integration functions', () => {
+            expect(typeof selectModule.applyRelatedWorkDropdowns).toBe('function');
+            expect(typeof selectModule.updateValidationPattern).toBe('function');
+        });
+
         test('exports debounce function', () => {
             expect(typeof selectModule.debounce).toBe('function');
-        });
-
-        test('exports updateIdsAndNames function', () => {
-            expect(typeof selectModule.updateIdsAndNames).toBe('function');
-        });
-
-        test('exports updateDataSourceIdsAndNames function', () => {
-            expect(typeof selectModule.updateDataSourceIdsAndNames).toBe('function');
         });
 
         test('exports updateDropdownPlaceholders function', () => {
@@ -205,62 +198,15 @@ describe('select module coverage', () => {
         });
     });
 
-    describe('getIdentifierPriority', () => {
-        test('returns priority for DOI', () => {
-            const priority = selectModule.getIdentifierPriority('DOI');
-            expect(typeof priority).toBe('number');
+    describe('conservative identifier detection', () => {
+        test('requires registry proof for DOI syntax', () => {
+            expect(selectModule.detectIdentifierType('10.60510/gf1211s-47', [{name:'DOI'}])).toBeNull();
         });
-
-        test('returns priority for URL', () => {
-            const priority = selectModule.getIdentifierPriority('URL');
-            expect(typeof priority).toBe('number');
+        test('does not decide an ISBN/EAN13 overlap by priority', () => {
+            expect(selectModule.detectIdentifierType('9783831048069', [{name:'ISBN'}, {name:'EAN13'}])).toBeNull();
         });
-
-        test('returns default priority for unknown type', () => {
-            const priority = selectModule.getIdentifierPriority('UnknownType');
-            expect(typeof priority).toBe('number');
-        });
-
-        test('DOI has defined priority', () => {
-            const doiPriority = selectModule.getIdentifierPriority('DOI');
-            expect(doiPriority).toBe(10);
-        });
-
-        test('URL has higher priority (lower number) than DOI', () => {
-            const doiPriority = selectModule.getIdentifierPriority('DOI');
-            const urlPriority = selectModule.getIdentifierPriority('URL');
-            // URL has priority 0, DOI has priority 10
-            expect(urlPriority).toBeLessThan(doiPriority);
-        });
-    });
-
-    describe('updateIdsAndNames', () => {
-        test('can be called without errors', () => {
-            expect(() => {
-                selectModule.updateIdsAndNames();
-            }).not.toThrow();
-        });
-
-        test('updates IDs in related work rows', () => {
-            selectModule.updateIdsAndNames();
-            
-            const row = document.querySelector('#group-relatedwork .row');
-            expect(row).toBeTruthy();
-        });
-    });
-
-    describe('updateDataSourceIdsAndNames', () => {
-        test('can be called without errors', () => {
-            expect(() => {
-                selectModule.updateDataSourceIdsAndNames();
-            }).not.toThrow();
-        });
-
-        test('updates IDs in datasource rows', () => {
-            selectModule.updateDataSourceIdsAndNames();
-            
-            const row = document.querySelector('#group-datasources .row');
-            expect(row).toBeTruthy();
+        test('does not substitute URL for an unavailable arXiv type', () => {
+            expect(selectModule.detectIdentifierType('https://arxiv.org/abs/2507.21532', [{name:'URL'}])).toBeNull();
         });
     });
 
@@ -306,10 +252,10 @@ describe('select module coverage', () => {
         });
     });
 
-    describe('initializeTimezoneDropdown', () => {
+    describe('setupTimezoneDropdownAjax', () => {
         test('returns early for non-existent dropdown', async () => {
             await expect(
-                selectModule.initializeTimezoneDropdown('#nonexistent', 'json/timezones.json')
+                selectModule.setupTimezoneDropdownAjax('#nonexistent', 'json/timezones.json')
             ).resolves.toBeUndefined();
         });
 
@@ -317,7 +263,7 @@ describe('select module coverage', () => {
             global.fetch.mockRejectedValueOnce(new Error('Network error'));
             
             await expect(
-                selectModule.initializeTimezoneDropdown('#input-stc-timezone', 'json/timezones.json')
+                selectModule.setupTimezoneDropdownAjax('#input-stc-timezone', 'json/timezones.json')
             ).resolves.toBeUndefined();
         });
     });

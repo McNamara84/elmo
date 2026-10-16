@@ -1,0 +1,33 @@
+name: Mirror latest release to GitLab
+
+on:
+  workflow_dispatch: # manual trigger for initial setup
+  release:
+    types: [published]
+
+jobs:
+  mirror:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository with full history
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get latest release
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG=$(gh release view --json tagName --jq .tagName)
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "Latest release: $TAG"
+
+      - name: Push tag and state to GitLab
+        env:
+          GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@git.gfz-potsdam.de/data_services/elmo.git"
+          git push gitlab "refs/tags/${TAG}:refs/tags/${TAG}"
+          git push --force gitlab "refs/tags/${TAG}^{commit}:refs/heads/main"

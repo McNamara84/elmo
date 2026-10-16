@@ -1,81 +1,12 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { REPO_ROOT } from '../utils/constants';
 import { test, expect } from '@playwright/test';
 import { APP_BASE_URL, registerStaticAssetRoutes, SELECTORS } from '../utils';
 
-const contributorGroupMarkup = String.raw`
-<div class="card mb-2">
-  <div class="card-header">
-    <b data-translate="contributorPersons.title">Contributors</b>
-    <i class="bi bi-question-circle-fill" data-help-section-id="help-contributorpersons-fg"></i>
-  </div>
-  <div class="card-body">
-    <div id="group-contributorperson">
-      <div class="row" contributor-person-row>
-        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                id="input-contributor-orcid" name="cbORCID[]"
-                pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
-              <label for="input-contributor-orcid" data-translate="general.ORCID">ORCID</label>
-              <div class="invalid-feedback" data-translate="general.orcidInvalid">Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))</div>
-            </div>
-            <div class="input-group-append">
-              <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                  data-help-section-id="help-contributorpersons-orcid"></i></span>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-lastname" pattern="[^0-9$§?!&%=_*+<>]*"
-                name="cbPersonLastname[]" />
-              <label for="input-contributor-lastname" data-translate="general.lastName">Last Name</label>
-              <div class="invalid-feedback" data-translate="general.lastNameInvalid">Please provide a lastname. Only letters are allowed.</div>
-            </div>
-          </div>
-        </div>
-        <div class="col-6 col-sm-6 col-md-4 col-lg-2 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control" id="input-contributor-firstname" pattern="[^0-9$§?!&%=_*+<>]*"
-                name="cbPersonFirstname[]" />
-              <label for="input-contributor-firstname" data-translate="general.firstName">First Name</label>
-              <div class="invalid-feedback" data-translate="general.firstNameInvalid"></div>
-            </div>
-          </div>
-        </div>
-        <div class="col-12 col-sm-12 col-md-4 col-lg-2 p-1">
-          <label for="input-contributor-personrole" class="visually-hidden" data-translate="general.roleLabel">Role</label>
-          <div class="input-group has-validation">
-            <input name="cbPersonRoles[]" id="input-contributor-personrole"
-              class="form-control tagify--custom-dropdown input-with-help input-right-no-round-corners"
-              data-translate-placeholder="general.roleLabel" />
-            <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                data-help-section-id="help-contributorpersons-role"></i></span>
-            <div class="invalid-feedback" data-translate="general.pleaseChoose">Please choose</div>
-          </div>
-        </div>
-        <div class="col-10 col-sm-10 col-md-7 col-lg-3 p-1">
-          <label for="input-contributorpersons-affiliation" class="visually-hidden">Affiliation</label>
-          <div class="input-group has-validation">
-            <input type="text" class="form-control input-with-help input-right-no-round-corners"
-              id="input-contributorpersons-affiliation" name="cbAffiliation[]" />
-            <span class="input-group-text"><i class="bi bi-question-circle-fill"
-                data-help-section-id="help-contributorinstitutions-affiliation"></i></span>
-            <input type="hidden" id="input-contributor-personrorid" name="cbpRorIds[]" />
-          </div>
-        </div>
-        <div class="col-2 col-sm-2 col-md-1 col-lg-1 d-flex justify-content-center align-items-center">
-          <button type="button" class="btn btn-primary addContributorPerson add-button" id="button-contributor-addperson"
-            data-translate="general.add">
-            +
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>`;
+// Use the same templates as the application, with both feature flags enabled.
+const contributorGroupMarkup = readFileSync(path.join(REPO_ROOT, 'formgroups/contributors.html'), 'utf8')
+  .replace(/<\?php[\s\S]*?\?>/g, '');
 
 const roleFixtures = {
   person: [
@@ -180,7 +111,7 @@ function buildTestPageMarkup() {
     <script src="js/checkMandatoryFields.js"></script>
     <script src="js/validation/orcidValidation.js"></script>
     <script src="js/autocomplete.js"></script>
-    <script type="module" src="js/eventhandlers/formgroups/contributor-person.js"></script>
+    <script type="module" src="js/eventhandlers/formgroups/contributorStack.js"></script>
   </body>
 </html>`;
 }
@@ -234,9 +165,11 @@ test.describe('Contributor (Persons) form group', () => {
     });
 
     await page.goto(`${APP_BASE_URL}test-harness`, { waitUntil: 'domcontentloaded' });
+    await page.waitForFunction(() => Boolean((window as any).contributorStack));
+    await page.locator('[data-contributor-add-type="person"]').click();
     await page.waitForFunction(() => {
-      const roleInput: any = document.querySelector('#input-contributor-personrole');
-      const affiliationInput: any = document.querySelector('#input-contributorpersons-affiliation');
+      const roleInput: any = document.querySelector('input[id^="input-contributor-personrole-"]');
+      const affiliationInput: any = document.querySelector('input[id^="input-contributorpersons-affiliation-"]');
       return roleInput?._tagify || roleInput?.tagify || (affiliationInput && affiliationInput.tagify);
     });
 
@@ -251,13 +184,13 @@ test.describe('Contributor (Persons) form group', () => {
 
   test('renders contributor person fields with accessible helpers', async ({ page }) => {
     await expect(page.locator(SELECTORS.formGroups.contributorPersons)).toBeVisible();
-    await expect(page.locator('b[data-translate="contributorPersons.title"]')).toBeVisible();
+    await expect(page.locator('b[data-translate="contributors.title"]')).toBeVisible();
 
-    await expect(page.locator('#input-contributor-orcid')).toBeVisible();
-    await expect(page.locator('#input-contributor-orcid')).toHaveAttribute('pattern', '^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$');
+    await expect(page.locator('input[id^="input-contributor-orcid-"]')).toBeVisible();
+    await expect(page.locator('input[id^="input-contributor-orcid-"]')).toHaveAttribute('pattern', '^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$');
 
-    await expect(page.locator('#input-contributor-lastname')).toBeVisible();
-    await expect(page.locator('#input-contributor-firstname')).toBeVisible();
+    await expect(page.locator('input[id^="input-contributor-lastname-"]')).toBeVisible();
+    await expect(page.locator('input[id^="input-contributor-firstname-"]')).toBeVisible();
 
     const roleTagify = page.locator(`${SELECTORS.formGroups.contributorPersons} .tagify`).first();
     await expect(roleTagify).toBeVisible();
@@ -267,7 +200,7 @@ test.describe('Contributor (Persons) form group', () => {
     await expect(page.locator('[data-help-section-id="help-contributorpersons-role"]')).toHaveCount(1);
     await expect(page.locator('[data-help-section-id="help-contributorinstitutions-affiliation"]')).toHaveCount(1);
 
-    await expect(page.locator('#input-contributor-personrorid')).toHaveAttribute('type', 'hidden');
+    await expect(page.locator('input[id^="input-contributor-personrorid-"]')).toHaveAttribute('type', 'hidden');
   });
 
   test('populates contributor details and affiliations from a valid ORCID', async ({ page }) => {
@@ -279,11 +212,11 @@ test.describe('Contributor (Persons) form group', () => {
       });
     });
 
-    await page.locator('#input-contributor-orcid').fill('0000-0003-1825-0094');
-    await page.locator('#input-contributor-lastname').click();
+    await page.locator('input[id^="input-contributor-orcid-"]').fill('0000-0003-1825-0094');
+    await page.locator('input[id^="input-contributor-lastname-"]').click();
 
-    await expect(page.locator('#input-contributor-lastname')).toHaveValue('Nguyen');
-    await expect(page.locator('#input-contributor-firstname')).toHaveValue('Linh');
+    await expect(page.locator('input[id^="input-contributor-lastname-"]')).toHaveValue('Nguyen');
+    await expect(page.locator('input[id^="input-contributor-firstname-"]')).toHaveValue('Linh');
 
     await page.waitForFunction(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
@@ -306,22 +239,22 @@ test.describe('Contributor (Persons) form group', () => {
   });
 
   test('allows adding and removing multiple contributor person rows independently', async ({ page }) => {
-    const addButton = page.locator('#button-contributor-addperson');
+    const addButton = page.locator('[data-contributor-add-type="person"]');
     await addButton.click();
 
-    const rows = page.locator(`${SELECTORS.formGroups.contributorPersons} [contributor-person-row]`);
+    const rows = page.locator('[data-contributor-card][data-contributor-type="person"]');
     await expect(rows).toHaveCount(2);
 
     const firstOrcidId = await rows.nth(0).locator('input[name="cbORCID[]"]').getAttribute('id');
     const secondOrcidId = await rows.nth(1).locator('input[name="cbORCID[]"]').getAttribute('id');
     expect(firstOrcidId).not.toBe(secondOrcidId);
 
-    await expect(rows.nth(1).locator('.removeButton')).toBeVisible();
+    await expect(page.locator('[data-contributor-card]').nth(1).locator('[data-contributor-remove]')).toBeVisible();
 
     await rows.nth(1).locator('input[name="cbPersonLastname[]"]').fill('Rivera');
     await rows.nth(1).locator('input[name="cbPersonFirstname[]"]').fill('Elena');
 
-    await rows.nth(1).locator('.removeButton').click();
+    await page.locator('[data-contributor-card]').nth(1).locator('[data-contributor-remove]').click();
     await expect(rows).toHaveCount(1);
 
     await expect(rows.nth(0).locator('input[name="cbPersonLastname[]"]').first()).not.toHaveValue('Rivera');
@@ -335,30 +268,30 @@ test.describe('Contributor (Persons) form group', () => {
       await route.fulfill({ status: 200, body: '{}' });
     });
 
-    await page.locator('#input-contributor-lastname').fill('Existing');
-    await page.locator('#input-contributor-firstname').fill('Contributor');
+    await page.locator('input[id^="input-contributor-lastname-"]').fill('Existing');
+    await page.locator('input[id^="input-contributor-firstname-"]').fill('Contributor');
 
-    await page.locator('#input-contributor-orcid').fill('1234');
-    await page.locator('#input-contributor-firstname').click();
+    await page.locator('input[id^="input-contributor-orcid-"]').fill('1234');
+    await page.locator('input[id^="input-contributor-firstname-"]').click();
 
     expect(requests).toHaveLength(0);
-    await expect(page.locator('#input-contributor-lastname')).toHaveValue('Existing');
-    await expect(page.locator('#input-contributor-firstname')).toHaveValue('Contributor');
+    await expect(page.locator('input[id^="input-contributor-lastname-"]')).toHaveValue('Existing');
+    await expect(page.locator('input[id^="input-contributor-firstname-"]')).toHaveValue('Contributor');
   });
 
   test('supports selecting multiple contributor roles via Tagify', async ({ page }) => {
     await page.waitForFunction(() => {
-      const input: any = document.querySelector('#input-contributor-personrole');
+      const input: any = document.querySelector('input[id^="input-contributor-personrole-"]');
       return !!input?._tagify && input._tagify.whitelist?.length >= 3;
     });
 
     await page.evaluate(() => {
-      const input: any = document.querySelector('#input-contributor-personrole');
+      const input: any = document.querySelector('input[id^="input-contributor-personrole-"]');
       input._tagify.removeAllTags();
       input._tagify.addTags(['Data Curator', 'Software Developer']);
     });
 
-    const roleValue = await page.locator('#input-contributor-personrole').inputValue();
+    const roleValue = await page.locator('input[id^="input-contributor-personrole-"]').inputValue();
     expect(roleValue).toContain('Data Curator');
     expect(roleValue).toContain('Software Developer');
 
@@ -373,14 +306,14 @@ test.describe('Contributor (Persons) form group', () => {
     await page.setViewportSize({ width: 375, height: 667 });
 
     // Wait for affiliation field to be initialized with Tagify
-    // Note: Tagify is stored as `element.tagify` (without underscore) in affiliations.js
+    // Cards expose their affiliation widget through the input element.
     await page.waitForFunction(() => {
-      const input: any = document.querySelector('#input-contributorpersons-affiliation');
+      const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation-"]');
       return !!input?.tagify || !!input?._tagify;
     });
 
     // Type search term to trigger server-side search and populate dropdown
-    const affiliationInput = page.locator('#input-contributorpersons-affiliation').locator('..').locator('.tagify__input');
+    const affiliationInput = page.locator('input[id^="input-contributorpersons-affiliation-"]').locator('..').locator('.tagify__input');
     await affiliationInput.click();
     await affiliationInput.fill('University');
     

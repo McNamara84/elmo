@@ -1,6 +1,8 @@
 // Global storage for roles data
 var personRoles = [];
 var organizationRoles = [];
+var sharedRoles = [];
+var fetchedRoleTypes = new Set();
 
 /**
  * Refreshes all role Tagify instances when translations are changed.
@@ -57,10 +59,12 @@ function setupRolesDropdown(roletypes, inputSelector) {
     rolesToUse = [...rolesToUse, ...organizationRoles];
   }
   if (roletypes.includes("both")) {
-    rolesToUse = [...rolesToUse, ...personRoles, ...organizationRoles];
+    rolesToUse = [...rolesToUse, ...sharedRoles];
   }
 
-  if (rolesToUse.length > 0) {
+  const allTypesFetched = roletypes.every(type => fetchedRoleTypes.has(type));
+  const hasPreloadedRoles = fetchedRoleTypes.size === 0 && rolesToUse.length > 0;
+  if (rolesToUse.length > 0 && (allTypesFetched || hasPreloadedRoles)) {
     initializeTagifyWithRoles(inputSelector, rolesToUse);
     return;
   }
@@ -68,30 +72,40 @@ function setupRolesDropdown(roletypes, inputSelector) {
   const rolePromises = roletypes.map(type =>
     fetch(`./api/v2/vocabs/roles?type=${type}`)
       .then(response => {
+        if (response.status === 404) {
+          return [];
+        }
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         return response.json();
       })
+      .then(roles => ({ type, roles }))
+      .catch(error => {
+        console.error(`Error fetching roles type ${type} for ${inputSelector}:`, error);
+        return { type, roles: [] };
+      })
   );
 
-  Promise.all(rolePromises)
-    .then(results => {
-      results.forEach((roles, index) => {
-        if (roletypes[index] === "person" || roletypes[index] === "both") {
-          personRoles = [...new Set([...personRoles, ...roles])];
-        }
-        if (roletypes[index] === "institution" || roletypes[index] === "both") {
-          organizationRoles = [...new Set([...organizationRoles, ...roles])];
-        }
-      });
-
-      const allRoles = results.flat();
-      initializeTagifyWithRoles(inputSelector, allRoles);
-    })
-    .catch(error => {
-      console.error(`Error fetching roles for ${inputSelector}:`, error);
+  Promise.all(rolePromises).then(results => {
+    results.forEach(({ type, roles }) => {
+      fetchedRoleTypes.add(type);
+      if (type === "person") {
+        personRoles = [...new Set([...personRoles, ...roles])];
+      }
+      if (type === "institution") {
+        organizationRoles = [...new Set([...organizationRoles, ...roles])];
+      }
+      if (type === "both") {
+        sharedRoles = [...new Set([...sharedRoles, ...roles])];
+      }
     });
+
+    initializeTagifyWithRoles(
+      inputSelector,
+      [...new Set(results.flatMap(result => result.roles))]
+    );
+  });
 }
 
 /**
@@ -107,12 +121,18 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   const input = document.querySelector(inputSelector);
   if (!input) return;
 
+  const isPerson = input.name === 'cbPersonRoles[]';
   const roleNames = roles.map(role =>
     typeof role === 'string' ? role : role.name
   );
+  if (isPerson) {
+    roleNames.push('Contact Person');
+  }
+  // ERNIE and the local role table may already contain the synthetic contact role.
+  const allowedRoles = [...new Set(roleNames.filter(Boolean))];
 
   const tagifyOptions = {
-    whitelist: roleNames,
+    whitelist: allowedRoles,
     enforceWhitelist: true,
     maxTags: 16,
     dropdown: {
@@ -142,24 +162,8 @@ function initializeTagifyWithRoles(inputSelector, roles) {
   }
 }
 
-// Initialize on DOM content loaded
-document.addEventListener('DOMContentLoaded', function () {
-  // Read feature toggles
-  const features = window.ELMO_FEATURES || {};
-  
-  // Set up Contributor Persons role dropdown only if feature is enabled
-  if (features.showContributorPersons !== false) {
-    setupRolesDropdown(["person", "both"], "#input-contributor-personrole");
-  }
-  
-  // Set up Contributor Institutions role dropdown only if feature is enabled  
-  if (features.showContributorInstitutions !== false) {
-    setupRolesDropdown(["institution", "both"], "#input-contributor-organisationrole");
-  }
-
-  // Add listener for translation changes
-  document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
-});
+// Cards initialize their own role fields. Keep translations in sync for all active cards.
+document.addEventListener('translationsLoaded', refreshRoleTagifyInstances);
 
 // Export for testing
 if (typeof module !== 'undefined' && module.exports) {

@@ -168,7 +168,7 @@ function buildAccordionItem(type) {
     label.attr('data-translate', translationKey);
   }
 
-  var helpSpan = $('<span>', { class: 'input-group-text' });
+  var helpSpan = $('<span>', { class: 'input-group-text', 'data-contextual-help': '' });
   var helpIconId = slug.toLowerCase() + '-help';
   var helpIcon = $('<i>', { class: 'bi bi-question-circle-fill', id: helpIconId });
   if (helpId) {

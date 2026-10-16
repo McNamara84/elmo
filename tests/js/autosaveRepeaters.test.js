@@ -71,14 +71,16 @@ describe('autosave repeatable form groups', () => {
 
   test('related work autosave expansion adds missing rows', async () => {
     document.body.innerHTML = `
-      <div id="group-relatedwork">
-        <div class="row">
-          <select name="relation[]"></select>
-          <input name="rIdentifier[]" />
-          <select name="rIdentifierType[]"></select>
-          <button type="button" id="button-relatedwork-add">+</button>
+      <form id="resource-form">
+        <div id="group-relatedwork">
+          <div class="row">
+            <select name="relation[]"></select>
+            <input name="rIdentifier[]" />
+            <select name="rIdentifierType[]"></select>
+            <button type="button" id="button-relatedwork-add">+</button>
+          </div>
         </div>
-      </div>
+      </form>
     `;
 
     await import('../../js/eventhandlers/formgroups/relatedwork.js');
@@ -91,12 +93,13 @@ describe('autosave repeatable form groups', () => {
       bubbles: true
     });
 
-    document.querySelector('[name="rIdentifier[]"]').dispatchEvent(event);
+    document.querySelector('#resource-form').dispatchEvent(event);
 
-    const rows = document.querySelectorAll('#group-relatedwork .row');
+    const rows = document.querySelectorAll('#group-relatedwork [data-related-work-entry]');
     expect(rows).toHaveLength(3);
-    const removeButtons = document.querySelectorAll('#group-relatedwork .removeButton[aria-label="Remove entry"]');
-    expect(removeButtons.length).toBeGreaterThanOrEqual(2);
+    const removeButtons = document.querySelectorAll('#group-relatedwork [data-related-work-remove]');
+    expect(removeButtons).toHaveLength(3);
+    expect(JSON.parse(document.querySelector('[name="relatedWorksPayload"]').value)).toEqual([]);
   });
 
   test('funding reference autosave expansion adds missing rows', async () => {

@@ -237,6 +237,61 @@ describe('language module coverage', () => {
         });
     });
 
+    describe('applyTranslationsTo', () => {
+        beforeEach(() => {
+            window.resizeTitle = jest.fn();
+            window.adjustButtons = jest.fn();
+            window.setTranslations({
+                general: { logoTitle: 'Test Title' },
+                test: { key: 'Übersetzter Text', title: 'Translated Title' }
+            });
+            document.body.innerHTML += `
+                <div id="scoped-row" data-translate-title="test.title">
+                    <span data-translate="test.key">Inside</span>
+                </div>
+            `;
+        });
+
+        afterEach(() => {
+            delete window.resizeTitle;
+            delete window.adjustButtons;
+        });
+
+        test('translates the given subtree including the root element', () => {
+            languageModule.applyTranslationsTo($('#scoped-row'));
+
+            expect($('#scoped-row [data-translate="test.key"]').text()).toBe('Übersetzter Text');
+            expect($('#scoped-row').attr('title')).toBe('Translated Title');
+        });
+
+        test('leaves elements outside the subtree untouched', () => {
+            languageModule.applyTranslationsTo(document.getElementById('scoped-row'));
+
+            expect($('body > [data-translate="test.key"]').text()).toBe('Original Text');
+            expect($('body > [data-translate-title="test.title"]').attr('title')).toBe('old title');
+        });
+
+        test('skips page-wide work and the translationsLoaded event', () => {
+            const eventListener = jest.fn();
+            document.addEventListener('translationsLoaded', eventListener);
+
+            languageModule.applyTranslationsTo($('#scoped-row'));
+
+            expect(eventListener).not.toHaveBeenCalled();
+            expect(window.resizeTitle).not.toHaveBeenCalled();
+            expect(window.adjustButtons).not.toHaveBeenCalled();
+            document.removeEventListener('translationsLoaded', eventListener);
+        });
+
+        test('does nothing before translations are loaded', () => {
+            window.setTranslations(null);
+
+            languageModule.applyTranslationsTo($('#scoped-row'));
+
+            expect($('#scoped-row [data-translate="test.key"]').text()).toBe('Inside');
+        });
+    });
+
     describe('loadTranslations', () => {
         beforeEach(() => {
             // Mock global functions used by applyTranslations

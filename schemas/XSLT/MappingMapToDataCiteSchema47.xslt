@@ -30,6 +30,43 @@ http://www.altova.com/mapforce
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+	<!-- Explicit compatibility mapping for known human-readable legacy relation labels. -->
+	<xsl:template name="datacite-relation-type">
+		<xsl:param name="value"/>
+		<xsl:choose>
+			<xsl:when test="$value = 'Is Cited By'">IsCitedBy</xsl:when>
+			<xsl:when test="$value = 'Is Supplement To'">IsSupplementTo</xsl:when>
+			<xsl:when test="$value = 'Is Supplemented By'">IsSupplementedBy</xsl:when>
+			<xsl:when test="$value = 'Is Continued By'">IsContinuedBy</xsl:when>
+			<xsl:when test="$value = 'Is New Version Of'">IsNewVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Previous Version Of'">IsPreviousVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Part Of'">IsPartOf</xsl:when>
+			<xsl:when test="$value = 'Has Part'">HasPart</xsl:when>
+			<xsl:when test="$value = 'Is Published In'">IsPublishedIn</xsl:when>
+			<xsl:when test="$value = 'Is Referenced By'">IsReferencedBy</xsl:when>
+			<xsl:when test="$value = 'Is Documented By'">IsDocumentedBy</xsl:when>
+			<xsl:when test="$value = 'Is Compiled By'">IsCompiledBy</xsl:when>
+			<xsl:when test="$value = 'Is Variant Form Of'">IsVariantFormOf</xsl:when>
+			<xsl:when test="$value = 'Is Original Form Of'">IsOriginalFormOf</xsl:when>
+			<xsl:when test="$value = 'Is Identical To'">IsIdenticalTo</xsl:when>
+			<xsl:when test="$value = 'Has Metadata'">HasMetadata</xsl:when>
+			<xsl:when test="$value = 'Is Metadata For'">IsMetadataFor</xsl:when>
+			<xsl:when test="$value = 'Is Reviewed By'">IsReviewedBy</xsl:when>
+			<xsl:when test="$value = 'Is Derived From'">IsDerivedFrom</xsl:when>
+			<xsl:when test="$value = 'Is Source Of'">IsSourceOf</xsl:when>
+			<xsl:when test="$value = 'Is Described By'">IsDescribedBy</xsl:when>
+			<xsl:when test="$value = 'Has Version'">HasVersion</xsl:when>
+			<xsl:when test="$value = 'Is Version Of'">IsVersionOf</xsl:when>
+			<xsl:when test="$value = 'Is Required By'">IsRequiredBy</xsl:when>
+			<xsl:when test="$value = 'Is Obsoleted By'">IsObsoletedBy</xsl:when>
+			<xsl:when test="$value = 'Is Collected By'">IsCollectedBy</xsl:when>
+			<xsl:when test="$value = 'Has Translation'">HasTranslation</xsl:when>
+			<xsl:when test="$value = 'Is Translation Of'">IsTranslationOf</xsl:when>
+			<xsl:otherwise>
+				<xsl:value-of select="$value"/>
+			</xsl:otherwise>
+		</xsl:choose>
+	</xsl:template>
 	<xsl:template match="/">
 		<xsl:variable name="var1_initial" select="."/>
 		<resource xmlns="http://datacite.org/schema/kernel-4">
@@ -180,9 +217,11 @@ http://www.altova.com/mapforce
 					<xsl:for-each select="*[local-name()='Titles' and namespace-uri()='']/*[local-name()='Title' and namespace-uri()='']">
 						<xsl:variable name="var10_cur" select="."/>
 						<title>
-							<xsl:if test="not(contains(*[local-name()='type' and namespace-uri()=''], 'Main Title'))">
+							<xsl:variable name="titleTypeCamel" select="translate(*[local-name()='type' and namespace-uri()=''], ' ', '')"/>
+							<!-- CamelCase all title types; omit titleType for Main Title. -->
+							<xsl:if test="$titleTypeCamel != 'MainTitle'">
 								<xsl:attribute name="titleType" namespace="">
-									<xsl:value-of select="concat(substring-before(*[local-name()='type' and namespace-uri()=''], ' '), substring-after(*[local-name()='type' and namespace-uri()=''], ' '))"/>
+									<xsl:value-of select="$titleTypeCamel"/>
 								</xsl:attribute>
 							</xsl:if>
 							<xsl:if test="contains(*[local-name()='type' and namespace-uri()=''], 'Main Title')">
@@ -243,6 +282,9 @@ http://www.altova.com/mapforce
 				<contributors>
 					<xsl:for-each select="*[local-name()='ContactPersons' and namespace-uri()='']/*[local-name()='ContactPerson' and namespace-uri()='']">
 						<xsl:variable name="var13_cur" select="."/>
+						<xsl:variable name="contactFamily" select="normalize-space(*[local-name()='familyname'])"/>
+						<xsl:variable name="contactEmail" select="normalize-space(*[local-name()='email'])"/>
+						<xsl:if test="not(/*/*[local-name()='Contributors']/*[local-name()='Contributor'][*[local-name()='Roles']/*[local-name()='Role']/*[local-name()='name']='Contact Person' and normalize-space(*[local-name()='familyname'])=$contactFamily and normalize-space(*[local-name()='email'])=$contactEmail])">
 						<contributor>
 							<xsl:attribute name="contributorType" namespace="">ContactPerson</xsl:attribute>
 							<contributorName>
@@ -287,7 +329,32 @@ http://www.altova.com/mapforce
 								</affiliation>
 							</xsl:for-each>
 						</contributor>
+						</xsl:if>
 					</xsl:for-each>
+					<xsl:for-each select="*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Contributor' and namespace-uri()='']">
+						<xsl:variable name="entry" select="."/>
+						<xsl:for-each select="*[local-name()='Roles']/*[local-name()='Role'] | *[local-name()='Roles'][not(*[local-name()='Role'])]">
+							<contributor>
+								<xsl:attribute name="contributorType"><xsl:choose><xsl:when test="local-name()='Role'"><xsl:value-of select="translate(*[local-name()='name'], ' ', '')"/></xsl:when><xsl:otherwise>Other</xsl:otherwise></xsl:choose></xsl:attribute>
+								<contributorName>
+									<xsl:attribute name="nameType"><xsl:choose><xsl:when test="$entry/@type='institution'">Organizational</xsl:when><xsl:otherwise>Personal</xsl:otherwise></xsl:choose></xsl:attribute>
+									<xsl:choose><xsl:when test="$entry/@type='institution'"><xsl:value-of select="$entry/*[local-name()='institutionname']"/></xsl:when><xsl:otherwise><xsl:call-template name="person-display-name"><xsl:with-param name="person" select="$entry"/></xsl:call-template></xsl:otherwise></xsl:choose>
+								</contributorName>
+								<xsl:if test="$entry/@type='person'">
+									<xsl:if test="normalize-space($entry/*[local-name()='givenname'])!=''"><givenName><xsl:value-of select="$entry/*[local-name()='givenname']"/></givenName></xsl:if>
+									<familyName><xsl:value-of select="$entry/*[local-name()='familyname']"/></familyName>
+									<xsl:if test="normalize-space($entry/*[local-name()='orcid'])!=''"><nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/"><xsl:value-of select="$entry/*[local-name()='orcid']"/></nameIdentifier></xsl:if>
+								</xsl:if>
+								<xsl:for-each select="$entry/*[local-name()='Affiliations']/*[local-name()='Affiliation']">
+									<affiliation>
+										<xsl:if test="normalize-space(*[local-name()='rorId'])!=''"><xsl:attribute name="affiliationIdentifierScheme">ROR</xsl:attribute><xsl:attribute name="schemeURI">https://ror.org</xsl:attribute><xsl:attribute name="affiliationIdentifier"><xsl:value-of select="concat('https://ror.org/', *[local-name()='rorId'])"/></xsl:attribute></xsl:if>
+										<xsl:value-of select="*[local-name()='name']"/>
+									</affiliation>
+								</xsl:for-each>
+							</contributor>
+						</xsl:for-each>
+					</xsl:for-each>
+					<xsl:if test="not(*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Contributor' and namespace-uri()=''])">
 					<xsl:for-each select="*[local-name()='Contributors' and namespace-uri()='']/*[local-name()='Persons' and namespace-uri()='']/*[local-name()='Person' and namespace-uri()='']">
 						<xsl:variable name="var17_cur" select="."/>
 						<xsl:for-each select="*[local-name()='Roles' and namespace-uri()='']/*[local-name()='Role' and namespace-uri()='']">
@@ -381,6 +448,7 @@ http://www.altova.com/mapforce
 							</contributor>
 						</xsl:for-each>
 					</xsl:for-each>
+					</xsl:if>
 					<xsl:for-each select="*[local-name()='OriginatingLaboratories' and namespace-uri()='']/*[local-name()='OriginatingLaboratory' and namespace-uri()='']">
 						<xsl:variable name="var25_cur" select="."/>
 						<contributor>
@@ -518,7 +586,9 @@ http://www.altova.com/mapforce
 									<xsl:value-of select="*[local-name()='IdentifierType' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
 								</xsl:attribute>
 								<xsl:attribute name="relationType" namespace="">
-									<xsl:value-of select="*[local-name()='Relation' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
+									<xsl:call-template name="datacite-relation-type">
+										<xsl:with-param name="value" select="*[local-name()='Relation' and namespace-uri()='']/*[local-name()='name' and namespace-uri()='']"/>
+									</xsl:call-template>
 								</xsl:attribute>
 								<xsl:value-of select="*[local-name()='Identifier' and namespace-uri()='']"/>
 							</relatedIdentifier>

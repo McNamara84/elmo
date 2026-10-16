@@ -197,75 +197,153 @@ final class ApiTest extends DatabaseTestCase
     }
 
     /**
-     * Tests the MSL vocabulary update endpoint error handling
+     * Vocabulary slugs written by POST /admin/cache/refresh and reported by GET /admin/cache/status.
      *
-     * @return void
-     * @throws Exception
+     * @var list<string>
      */
-    public function testUpdateMslVocabShouldHandleErrors(): void
+    private const ERNIE_CACHE_KEYS = [
+        'resourceTypes',
+        'titleTypes',
+        'descriptionTypes',
+        'languages',
+        'contributorPersonRoles',
+        'contributorInstitutionRoles',
+        'relationTypes',
+        'identifierTypes',
+        'pid4instInstruments',
+        'mslLabs',
+        'gcmdScienceKeywords',
+        'gcmdPlatforms',
+        'gcmdInstruments',
+        'chronostratTimescale',
+        'gemet',
+        'thesauriAvailability',
+    ];
+
+    /**
+     * Rejects cache admin calls that omit the key or send a different one.
+     */
+    public function testAdminCacheEndpointsRejectInvalidApiKey(): void
     {
-        $endpointUrl = $this->getApiUrl('update/vocabs/msl');
-        echo "\nTesting endpoint: " . $this->baseUri . $endpointUrl;
+        foreach (['GET' => 'admin/cache/status', 'POST' => 'admin/cache/refresh'] as $method => $endpoint) {
+            foreach ([null, 'not-the-key'] as $apiKey) {
+                $response = $this->request($method, $endpoint, $apiKey);
+                $data = $this->decodeJson($response);
 
-        try {
-            $response = $this->client->get($endpointUrl);
-            echo "\nResponse Status: " . $response->getStatusCode();
-            echo "\nResponse Body: " . $response->getBody();
-
-            $data = json_decode((string) $response->getBody(), true);
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                $this->fail('Failed to parse JSON response: ' . json_last_error_msg());
+                $this->assertSame(
+                    401,
+                    $response->getStatusCode(),
+                    $method . ' ' . $endpoint . ' should reject an invalid API key. Body: ' . $response->getBody()
+                );
+                $this->assertSame('Invalid or missing API key', $data['error'] ?? null);
             }
-
-            if ($response->getStatusCode() === 200) {
-                $this->assertArrayHasKey('message', $data, 'Response should contain a message');
-                $this->assertArrayHasKey('version', $data, 'Response should contain a version');
-                $this->assertArrayHasKey('timestamp', $data, 'Response should contain a timestamp');
-
-                $this->assertStringContainsString(
-                    'Successfully updated MSL vocabularies',
-                    $data['message'],
-                    'Message should indicate successful update'
-                );
-
-                $this->assertMatchesRegularExpression(
-                    '/^\d+\.\d+$/',
-                    $data['version'],
-                    'Version should be in format X.Y'
-                );
-
-                $this->assertMatchesRegularExpression(
-                    '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/',
-                    $data['timestamp'],
-                    'Timestamp should be in format YYYY-MM-DD HH:mm:ss'
-                );
-
-            } else if ($response->getStatusCode() === 500) {
-                $this->assertArrayHasKey('error', $data, 'Error response should contain an error message');
-                $this->assertNotEmpty($data['error'], 'Error message should not be empty');
-
-                $expectedErrors = [
-                    "No vocabulary version found",
-                    "Failed to download vocabulary data"
-                ];
-                $this->assertTrue(
-                    in_array($data['error'], $expectedErrors),
-                    'Error message should be one of the expected errors'
-                );
-            } else {
-                $this->fail('Unexpected response status code: ' . $response->getStatusCode());
-            }
-
-        } catch (Exception $e) {
-            echo "\nException: " . get_class($e);
-            echo "\nMessage: " . $e->getMessage();
-            if ($e instanceof \GuzzleHttp\Exception\RequestException && $e->hasResponse()) {
-                $response = $e->getResponse();
-                echo "\nResponse Status: " . $response->getStatusCode();
-                echo "\nResponse Body: " . $response->getBody();
-            }
-            throw $e;
         }
+    }
+
+    /**
+     * GET /admin/cache/status returns one entry per vocabulary, including MSL laboratories.
+     */
+    public function testGetAllCacheStatusReturnsVocabularyMap(): void
+    {
+        $response = $this->request('GET', 'admin/cache/status', self::API_KEY);
+        $data = $this->decodeJson($response);
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode === 400) {
+            $this->assertNotConfigured($data);
+            return;
+        }
+
+        $this->assertSame(200, $statusCode, 'Unexpected status body: ' . $response->getBody());
+        $this->assertTrue($data['success'] ?? false);
+        $this->assertIsArray($data['status'] ?? null);
+
+        foreach (self::ERNIE_CACHE_KEYS as $key) {
+            $this->assertArrayHasKey($key, $data['status'], "Status map should include {$key}");
+            $entry = $data['status'][$key];
+            $this->assertArrayHasKey('exists', $entry);
+            $this->assertArrayHasKey('valid', $entry);
+            $this->assertArrayHasKey('itemCount', $entry);
+            $this->assertIsBool($entry['exists']);
+            $this->assertIsBool($entry['valid']);
+            $this->assertIsInt($entry['itemCount']);
+        }
+    }
+
+    /**
+     * POST /admin/cache/refresh reports every vocabulary, including a partial failure.
+     */
+    public function testRefreshAllCacheReportsEachVocabulary(): void
+    {
+        $response = $this->request('POST', 'admin/cache/refresh', self::API_KEY);
+        $data = $this->decodeJson($response);
+        $statusCode = $response->getStatusCode();
+
+        if ($statusCode === 400) {
+            $this->assertNotConfigured($data);
+            return;
+        }
+
+        $this->assertContains(
+            $statusCode,
+            [200, 502],
+            'Unexpected refresh body: ' . $response->getBody()
+        );
+        $this->assertSame($statusCode === 200, $data['success'] ?? null);
+        $this->assertIsString($data['message'] ?? null);
+        $this->assertIsArray($data['results'] ?? null);
+
+        foreach (self::ERNIE_CACHE_KEYS as $key) {
+            $this->assertArrayHasKey($key, $data['results'], "Refresh results should include {$key}");
+            $this->assertIsBool($data['results'][$key]);
+        }
+
+        if ($statusCode === 502) {
+            $this->assertIsArray($data['failed'] ?? null);
+            $this->assertNotEmpty($data['failed']);
+            foreach ($data['failed'] as $failedKey) {
+                $this->assertContains($failedKey, self::ERNIE_CACHE_KEYS);
+                $this->assertFalse($data['results'][$failedKey]);
+            }
+        }
+    }
+
+    /**
+     * @param array<string, mixed> $data
+     */
+    private function assertNotConfigured(array $data): void
+    {
+        $this->assertFalse($data['success'] ?? true);
+        $this->assertSame('ERNIE service is not configured', $data['message'] ?? null);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function decodeJson(\Psr\Http\Message\ResponseInterface $response): array
+    {
+        $data = json_decode((string) $response->getBody(), true);
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($data)) {
+            $this->fail('Failed to parse JSON response: ' . $response->getBody());
+        }
+
+        return $data;
+    }
+
+    private function request(string $method, string $endpoint, ?string $apiKey): \Psr\Http\Message\ResponseInterface
+    {
+        $headers = ['Accept' => 'application/json'];
+        if ($apiKey !== null) {
+            $headers['X-API-KEY'] = $apiKey;
+        }
+
+        $client = new Client([
+            'base_uri' => $this->baseUri,
+            'http_errors' => false,
+            'headers' => $headers,
+        ]);
+
+        return $client->request($method, $this->getApiUrl($endpoint));
     }
 
     /**

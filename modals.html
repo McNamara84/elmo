@@ -25,6 +25,37 @@
         </div>
     </div>
 </div>
+<!-- GFC Model File Upload Modal -->
+<div class="modal fade" id="modal-ggms-gfc-upload" tabindex="-1" aria-labelledby="modal-ggms-gfc-upload-label" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modal-ggms-gfc-upload-label" data-translate="modals.gfcUpload.modalTitle">Upload model file</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label for="input-ggms-gfc-file" id="panel-ggms-gfc-dropfile"
+                    class="drop-zone mb-3 p-5 border rounded text-center d-block" style="cursor: pointer;">
+                    <p class="mb-1" data-translate="modals.gfcUpload.dropZone">Drag and drop a GFC file here</p>
+                    <p class="mb-0 text-muted" data-translate="modals.gfcUpload.selectFile">Or click to select a file</p>
+                </label>
+                <input class="visually-hidden" type="file" id="input-ggms-gfc-file" accept=".gfc,text/plain">
+                <div id="ggms-gfc-selected-filename" class="mb-3 text-muted" aria-live="polite"></div>
+                <div class="mb-3">
+                    <label for="textarea-ggms-gfc-header-text" class="form-label" data-translate="modals.gfcUpload.pasteHeaderLabel">Or paste header text:</label>
+                    <textarea class="form-control font-monospace" id="textarea-ggms-gfc-header-text" rows="8"
+                        data-translate-placeholder="modals.gfcUpload.pasteHeaderPlaceholder"
+                        placeholder="Paste GFC header lines here…"></textarea>
+                </div>
+                <div class="d-none" id="ggms-gfc-upload-status" role="alert"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" data-translate="general.cancel">Cancel</button>
+                <button type="button" class="btn btn-primary" id="button-ggms-gfc-fill-metadata" data-translate="modals.gfcUpload.fillMetadata">Fill in metadata</button>
+            </div>
+        </div>
+    </div>
+</div>
 <!-- Upload Modal -->
 <div class="modal fade" id="modal-uploadxml" tabindex="-1" aria-labelledby="modal-uploadxml-label" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -142,6 +173,7 @@
     </div>
 </div>
 <!-- Generic Confirmation Modal -->
+<!-- used for: Clear form modal -->
 <div class="modal fade" id="modal-confirm" tabindex="-1" aria-labelledby="modal-confirm-label"
     aria-describedby="modal-confirm-description" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -161,15 +193,14 @@
         </div>
     </div>
 </div>
-<!-- Changelog Modal -->
-<div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
+<!-- About Modal -->
+<div class="modal fade" id="modal-about" tabindex="-1" aria-labelledby="label-about-modal" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.aboutHeading">About ELMO - Enhanced Linked Metadata Organizer</h5>
+                <h5 class="modal-title" id="label-about-modal" data-translate="modals.about.heading">About ELMO - Enhanced Linked Metadata Organizer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <!-- Welcome Modal Overlay -->
             <div class="modal-body">
                 <h2 class="text-center" style="font-size: larger; color: inherit;" data-translate="welcome.title"></h2>
                 <p class="lead text-center fs-6">
@@ -177,13 +208,26 @@
                     <span data-translate="welcome.paragraph2"></span><br>
                     <span data-translate="welcome.paragraph3"></span>
                 </p>
-                <p class="lead text-center fs-6" data-translate="modals.changelog.aboutText"></p>
-                <hr>
-                <!-- Changelog -->
-                <h5 data-translate="modals.changelog.title">Changelog</h5>
-                <div id="panel-changelog-content">
-                    <!-- Content will be loaded from doc/changelog.html -->
-                </div>
+                <p class="lead text-center fs-6" data-translate="modals.about.text"></p>
+                <p class="text-center"><a href="https://dataservices.gfz-potsdam.de/web/publish-data/publication-instructions"
+                    target="_blank" rel="noopener noreferrer" data-translate="modals.about.metadataEditorLink">About the metadata editor</a></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Changelog Modal -->
+<div class="modal fade" id="modal-changelog" tabindex="-1" aria-labelledby="label-changelog-modal" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="label-changelog-modal" data-translate="modals.changelog.title">Changelog</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="panel-changelog-content"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -255,7 +299,8 @@
               <label for="input-submit-dataurl" class="form-label" data-translate="modals.submit.url">URL to data</label>
               <input type="url" class="form-control" id="input-submit-dataurl" placeholder="https://...">
             </div>
-            <!-- PDF upload -->
+            <?php if (!($showGGMsProperties ?? false)): ?>
+            <!-- PDF upload (not used in ELMO-GEM) -->
             <div class="mb-3">
                 <label for="input-submit-datadescription" class="form-label" data-translate="modals.submit.dataDescription">Data
                     Description (as mentioned in the Data Description Template)</label>
@@ -268,6 +313,7 @@
                 </div>
                 <small class="form-text text-muted" id="selected-file-name"></small>
             </div>
+            <?php endif; ?>
             <!-- Privacy policy checkbox -->
             <div class="mb-3 form-check">
               <input type="checkbox" class="form-check-input" id="input-submit-privacycheck" required>
@@ -385,7 +431,7 @@
                     tabindex="-1"
                     hidden=""
                     data-translate="modals.feedback.thankYou">Thank you for your feedback.</div>
-                <form id="form-feedback" method="POST" action="send_feedback_mail.php">
+                <form id="form-feedback" method="POST" action="endpoints/send_feedback_mail.php">
                     <!-- Honeypot field - hidden from humans, bots will fill it -->
                     <div style="position: absolute; left: -9999px;" aria-hidden="true">
                         <input type="text" id="input-feedback-please-fill-in-this-field" name="please-fill-in-this-field" tabindex="-1" autocomplete="off">

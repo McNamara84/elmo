@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 import path from 'node:path';
-import { REPO_ROOT, SELECTORS } from '../utils';
-import { injectScript } from '../utils/assets';
+import { readFileSync } from 'node:fs';
+import { APP_BASE_URL, REPO_ROOT, SELECTORS } from '../utils';
+import { injectClearFormDependencies, injectModuleFromApp, injectScript, registerStaticAssetRoutes } from '../utils/assets';
 
 type TagifyInputElement = HTMLInputElement & {
   _tagify?: {
@@ -23,7 +24,9 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <base href="${APP_BASE_URL}" />
     <title>Metadata form reset fixture</title>
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.min.css">
   </head>
   <body>
     <main class="container">
@@ -61,45 +64,7 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
           </div>
         </section>
 
-        <section id="authors-section">
-          <div id="group-author">
-            <div class="author-row" data-creator-row>
-              <div>
-                <label>
-                  <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" />
-                  ContactPerson?
-                </label>
-                <input type="text" id="input-author-orcid" name="orcids[]" />
-              </div>
-              <div>
-                <label for="input-author-lastname">Last Name*</label>
-                <input type="text" id="input-author-lastname" name="familynames[]" />
-              </div>
-              <div>
-                <label for="input-author-firstname">First Name*</label>
-                <input type="text" id="input-author-firstname" name="givennames[]" />
-              </div>
-              <div class="affiliation">
-                <label for="input-author-affiliation">Affiliation</label>
-                <tags>
-                  <input type="text" id="input-author-affiliation" name="personAffiliation[]" />
-                </tags>
-                <input type="hidden" id="input-author-rorid" name="authorPersonRorIds[]" />
-              </div>
-              <div>
-                <button type="button" id="button-author-add">Add Author</button>
-              </div>
-              <div class="contact-person-input">
-                <label for="input-contactperson-email">Email address*</label>
-                <input type="email" id="input-contactperson-email" name="cpEmail[]" />
-              </div>
-              <div class="contact-person-input">
-                <label for="input-contactperson-website">Website</label>
-                <input type="text" id="input-contactperson-website" name="cpOnlineResource[]" />
-              </div>
-            </div>
-          </div>
-        </section>
+        ${readFileSync(path.join(REPO_ROOT, 'formgroups/authors.html'), 'utf8').replace(/<\?php[\s\S]*?\?>/g, '')}
 
         <section id="keywords-section">
           <label for="input-freekeyword">Free Keyword</label>
@@ -177,59 +142,6 @@ const TEST_FORM_HTML = `<!DOCTYPE html>
 </html>`;
 
 const FIXTURE_SETUP_SCRIPT = `(() => {
-  function hideContactInputs(row) {
-    var nodes = row.querySelectorAll('.contact-person-input');
-    nodes.forEach(function (element) {
-      element.style.display = 'none';
-    });
-  }
-
-  function setupContactToggle(row) {
-    hideContactInputs(row);
-    var checkbox = row.querySelector("input[id^='checkbox-author-contactperson']");
-    if (!checkbox) {
-      return;
-    }
-    checkbox.addEventListener('change', function () {
-      var contactNodes = row.querySelectorAll('.contact-person-input');
-      contactNodes.forEach(function (element) {
-        if (checkbox.checked) {
-          element.style.display = '';
-        } else {
-          element.style.display = 'none';
-          element.querySelectorAll('input').forEach(function (input) {
-            input.value = '';
-          });
-        }
-      });
-    });
-  }
-
-  document.querySelectorAll('[data-creator-row]').forEach(function (row) {
-    setupContactToggle(row);
-  });
-
-  var authorAdd = document.getElementById('button-author-add');
-  if (authorAdd) {
-    authorAdd.addEventListener('click', function () {
-      var group = document.getElementById('group-author');
-      var template = group.querySelector('[data-creator-row]');
-      var clone = template.cloneNode(true);
-      clone.querySelectorAll('input').forEach(function (input) {
-        if (input.type === 'checkbox') {
-          input.checked = false;
-        } else {
-          input.value = '';
-        }
-      });
-      clone.querySelectorAll('.contact-person-input').forEach(function (element) {
-        element.style.display = 'none';
-      });
-      group.appendChild(clone);
-      setupContactToggle(clone);
-    });
-  }
-
   var fundingAdd = document.getElementById('button-fundingreference-add');
   if (fundingAdd) {
     fundingAdd.addEventListener('click', function () {
@@ -302,8 +214,10 @@ const FIXTURE_SETUP_SCRIPT = `(() => {
   var resetButton = document.getElementById('button-form-reset');
   if (resetButton) {
     resetButton.addEventListener('click', function () {
-      if (typeof window.clearInputFields === 'function') {
-        window.clearInputFields();
+      if (typeof window.loadClearInputFields === 'function') {
+        window.loadClearInputFields().then(function (clearInputFields) {
+          clearInputFields();
+        });
       }
     });
   }
@@ -311,26 +225,74 @@ const FIXTURE_SETUP_SCRIPT = `(() => {
 
 test.describe('Metadata form reset', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('about:blank');
-    await page.setContent(TEST_FORM_HTML);
+    await registerStaticAssetRoutes(page);
+    await page.route('**/clear-form-fixture', route => route.fulfill({ contentType: 'text/html', body: TEST_FORM_HTML }));
+    await page.goto(`${APP_BASE_URL}clear-form-fixture`);
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
-    await injectScript(page, 'js/clear.js');
+    await page.evaluate(() => {
+      window.elmo = window.elmo || {};
+      const originalFetch = window.fetch?.bind(window);
+      window.fetch = (input: RequestInfo | URL) => {
+        const url = String(input);
+        if (url.includes('json/timezones.json')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { label: 'UTC+00:00 (Africa/Abidjan)' },
+            { label: 'UTC+01:00 (Europe/Berlin)' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/resourcetypes')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 5, resource_type_general: 'Dataset', description: 'Dataset' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/languages')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 1, name: 'English', code: 'en' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/titletypes')) {
+          return Promise.resolve(new Response(JSON.stringify([
+            { id: 1, name: 'Main Title' },
+          ])));
+        }
+        if (url.includes('api/v2/vocabs/licenses')) {
+          return Promise.resolve(new Response(JSON.stringify([])));
+        }
+        if (originalFetch) {
+          return originalFetch(input);
+        }
+        return Promise.resolve(new Response('[]'));
+      };
+    });
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
+    await page.waitForFunction(() => Boolean((window as any).authorStack));
+    await page.locator('[data-author-add-type="person"]').click();
+    await injectClearFormDependencies(page);
+    await page.waitForFunction(() => {
+      const resourceType = document.querySelector<HTMLSelectElement>('#input-resourceinformation-resourcetype');
+      return Boolean(resourceType && !resourceType.disabled && resourceType.options.length > 0);
+    });
     await page.addScriptTag({ content: FIXTURE_SETUP_SCRIPT });
   });
 
   test('clears populated form groups and restores a pristine state', async ({ page }) => {
-    // Populate initial form with minimal required fields (old working version)
+    const defaultTimezone = await page.locator('#input-stc-timezone').evaluate((select: HTMLSelectElement) => {
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      return Array.from(select.options).find(option => option.text.includes(`(${timezone})`))?.value || '';
+    });
+    // Populate the form before clearing it.
     await page.locator('#input-resourceinformation-publicationyear').fill('2025');
     await page.locator('#input-resourceinformation-resourcetype').selectOption('5');
     await page.locator('#input-resourceinformation-language').selectOption('1');
     await page.locator('#input-resourceinformation-title').fill('A dataset');
 
-    await page.locator('#input-author-orcid').fill('0000-0002-1825-0097');
+    await page.locator('[name="orcids[]"]').fill('0000-0002-1825-0097');
     await page.locator('input[name="familynames[]"]').fill('Alice');
     await page.locator('input[name="givennames[]"]').fill('Bob');
-    await page.locator('#input-author-affiliation').fill('GFZ Helmholtz Centre for Geosciences');
+    await page.locator('[data-author-affiliation-input]').fill('GFZ Helmholtz Centre for Geosciences');
+    await page.locator('[data-author-affiliation-add]').click();
 
-    await page.locator("input[id^='checkbox-author-contactperson']").first().check();
+    await page.locator('[data-author-contact-toggle]').first().click();
 
     const emailField = page.locator('input[name="cpEmail[]"]').first();
     await expect(emailField).toBeVisible();
@@ -353,10 +315,11 @@ test.describe('Metadata form reset', () => {
     const secondAuthorRow = authorRows.nth(1);
     await secondAuthorRow.locator('input[name="familynames[]"]').fill('Doe');
     await secondAuthorRow.locator('input[name="givennames[]"]').fill('Charlie');
-    await secondAuthorRow.locator('input[name="personAffiliation[]"]').fill('Institute of Metadata');
+    await secondAuthorRow.locator('[data-author-affiliation-input]').fill('Institute of Metadata');
+    await secondAuthorRow.locator('[data-author-affiliation-add]').click();
 
     const secondContactEmail = secondAuthorRow.locator('input[name="cpEmail[]"]');
-    await secondAuthorRow.locator("input[id^='checkbox-author-contactperson']").check();
+    await secondAuthorRow.locator('[data-author-contact-toggle]').click();
     await secondContactEmail.fill('charlie@example.com');
     await secondAuthorRow.locator('input[name="cpOnlineResource[]"]').fill('https://example.com/charlie');
 
@@ -440,14 +403,8 @@ test.describe('Metadata form reset', () => {
     await expect(page.locator('#input-resourceinformation-publicationyear')).toHaveValue('');
     await expect(page.locator('#input-resourceinformation-language')).toHaveValue('');
 
-    await expect(firstContactEmail).toHaveValue('');
-    await expect(firstContactWebsite).toHaveValue('');
-    await expect(authorRows).toHaveCount(1);
-
-    const contactInputs = firstAuthorRow.locator('.contact-person-input');
-    await expect(contactInputs.nth(0)).toBeHidden();
-    await expect(contactInputs.nth(1)).toBeHidden();
-    await expect(firstAuthorRow.locator('input[name="contacts[]"]').first()).not.toBeChecked();
+    await expect(authorRows).toHaveCount(0);
+    await expect(page.locator('[name="authorsPayload"]')).toHaveValue('[]');
 
     await page.waitForFunction(() => {
       const input = document.getElementById('input-freekeyword') as TagifyInputElement | null;
@@ -468,7 +425,7 @@ test.describe('Metadata form reset', () => {
     await expect(stcRows).toHaveCount(1);
     await expect(firstStcRow.locator('input[name="tscLatitudeMin[]"]')).toHaveValue('');
     await expect(firstStcRow.locator('textarea[name="tscDescription[]"]')).toHaveValue('');
-    await expect(firstStcRow.locator('select[name="tscTimezone[]"]')).toHaveValue('');
+    await expect(firstStcRow.locator('select[name="tscTimezone[]"]')).toHaveValue(defaultTimezone);
 
     const deletedRows = await page.evaluate(() => {
       const elmoWindow = window as ElmoWindow;
@@ -491,8 +448,8 @@ test.describe('Metadata form reset', () => {
     expect(overlayState.rectangles).toBe(0);
 
     await page.locator('#button-author-add').click();
-    await expect(authorRows).toHaveCount(2);
-    await authorRows.nth(1).locator('input[name="familynames[]"]').fill('Newman');
-    await expect(authorRows.nth(1).locator('input[name="familynames[]"]')).toHaveValue('Newman');
+    await expect(authorRows).toHaveCount(1);
+    await authorRows.first().locator('input[name="familynames[]"]').fill('Newman');
+    await expect(authorRows.first().locator('input[name="familynames[]"]')).toHaveValue('Newman');
   });
 });

@@ -9,7 +9,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.db
-    pull_policy: build
     network_mode: host
     environment:
       MARIADB_ROOT_PASSWORD: ${ROOT_PASSWORD}
@@ -21,11 +20,11 @@ services:
       TZ: Europe/Berlin
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-P", "6770", "-u", "root", "-p${ROOT_PASSWORD}"]
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      start_period: 10s
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 30s
+      retries: 3
     security_opt:
       - no-new-privileges:true
 
@@ -34,7 +33,6 @@ services:
       context: .
       dockerfile: Dockerfile.web
       target: prod
-    pull_policy: build
     network_mode: host
     environment:
       DB_HOST: 127.0.0.1
@@ -53,7 +51,15 @@ services:
       SMTP_SECURE: ${SMTP_SECURE}
       SMTP_SENDER: ${SMTP_SENDER}
       FEEDBACK_ADDRESS: ${FEEDBACK_ADDRESS}
-      XML_SUBMIT_ADDRESS: ${XML_SUBMIT_ADDRESS_GEM}
+      # Data Services submission mail. Set XML_SUBMIT_ADDRESS in Portainer.
+      # XML_SUBMIT_ADDRESS is for sending to data curators. In our case, GFZ Data Services
+      # overrides it when a shared env file configures every variant.
+      XML_SUBMIT_ADDRESS: "${XML_SUBMIT_ADDRESS}"
+      # ICGEM registration mail
+      ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS}
+      # ELMO-GEM only: researcher confirmation mail and the upload link in the ICGEM mail
+      SEND_RESEARCHER_CONFIRMATION_EMAIL: ${SEND_RESEARCHER_CONFIRMATION_EMAIL:-true}
+      ICGEM_UPLOAD_URL: ${ICGEM_UPLOAD_URL:-https://icgem.gfz.de/upload}
       SIMULATE_EMAIL: "false"
       TZ: Europe/Berlin
       ELMO_API_KEY: ${ELMO_API_KEY}
@@ -72,6 +78,7 @@ services:
       SHOW_MSL_LOGO: "false"
       SHOW_GGMS_PROPERTIES: "true"
       SHOW_USED_INSTRUMENTS: "false"
+      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SHOW_THESAURI: "true"
       SHOW_FREE_KEYWORDS: "true"
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
@@ -84,6 +91,9 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    depends_on:
+      db:
+        condition: service_healthy
     volumes:
       - xml_data:/var/www/html/xml
       - storage_data:/var/www/html/storage

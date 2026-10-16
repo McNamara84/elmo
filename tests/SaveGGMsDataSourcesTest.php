@@ -364,6 +364,47 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
         $this->assertNull($dbRecord['S_value_name']);
         $this->assertNull($dbRecord['M_identifier']);
     }
+
+    /**
+     * Test: Saved isostasy compensation depth is emitted as grav:compensationDepth.
+     */
+    public function testSavedCompensationDepthIsWrittenToIcgemXml(): void
+    {
+        $resourceId = $this->createResource('test.terrain.xml', 'Test Terrain XML Export');
+        $postData = self::rowsToPostData([
+            self::satelliteRow(['GRACE']),
+            self::terrainRow(750),
+        ]);
+
+        \saveGGMsDataSources($this->connection, $postData, $resourceId);
+
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
+
+        global $connection;
+        $connection = $this->connection;
+        $controller = new \ICGEMController();
+        $dataSources = $controller->getDataSources($this->connection, $resourceId);
+
+        $terrain = array_values(array_filter(
+            $dataSources,
+            static fn(array $row): bool => $row['type'] === 'T'
+        ))[0];
+        $this->assertEquals(750, $terrain['T_Isostasy_compensation_depth']);
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+        $method = (new \ReflectionClass($controller))->getMethod('insertInputDataSources');
+        $method->invoke($controller, $xml, $dataSources);
+
+        $xmlString = $xml->asXML();
+        $this->assertNotFalse($xmlString);
+        $this->assertStringContainsString('compensationDepth', $xmlString);
+        $this->assertStringContainsString('>750</', $xmlString);
+        $this->assertStringContainsString('uom="m"', $xmlString);
+    }
     
     /**
      * Test: Save single Satellite (S) data source with one platform
