@@ -817,37 +817,101 @@ class ICGEMController extends DatasetController
         }
     }
     /**
-     * Inserts the mandatory grav:contact element (CI_Contact type) as the first child
-     * of globalGravityProduct, per the ICGEM XSD sequence.
+     * Writes grav:contact as the first child of globalGravityProduct.
      *
-     * Populates grav:address from each contact person's email (required, minOccurs=1)
-     * and grav:onlineResource from each contact person's website (optional).
-     * If no contact persons exist, an empty grav:contact element is added to satisfy
-     * the schema requirement (validation at submit time will catch missing email).
+     * Author contacts come first, in author order. Contact Person contributor
+     * cards follow, in contributor order, including people who are also authors.
+     * An institution with an address or website joins that same contributor order.
+     * Another contributor kind with stored contact details belongs in this second loop.
+     *
+     * An empty grav:contact is still written when nobody has contact details, so
+     * the XSD sequence stays valid. Submit-time validation reports a missing email.
      *
      * @param SimpleXMLElement $icgempart The globalGravityProduct element.
      * @param int $id The resource ID.
      */
     protected function insertContact(SimpleXMLElement $icgempart, int $id): void
     {
-        $contactPersons = $this->getContactPersons($this->connection, $id);
+        $contactPersons = $this->orderContactPersonsLikeAuthors(
+            $this->getContactPersons($this->connection, $id),
+            $this->getAuthors($this->connection, $id)
+        );
         $contact = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
 
         foreach ($contactPersons as $cp) {
-            if (!empty($cp['email'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':address',
-                    htmlspecialchars(trim($cp['email'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+            $this->appendIcgemContactEntry($contact, (string) ($cp['email'] ?? ''), (string) ($cp['website'] ?? ''));
+        }
+
+        $contributors = $this->getContributors($this->connection, $id);
+        foreach ($contributors['entries'] as $entry) {
+            $roleNames = array_column($entry['Roles'] ?? [], 'name');
+            $email = trim((string) ($entry['email'] ?? ''));
+            $website = trim((string) ($entry['website'] ?? ''));
+            $isContactPerson = in_array('Contact Person', $roleNames, true);
+            $institutionContact = ($entry['type'] ?? '') === 'institution' && ($email !== '' || $website !== '');
+            if (!$isContactPerson && !$institutionContact) {
+                continue;
             }
-            if (!empty($cp['website'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
-                    htmlspecialchars(trim($cp['website'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+            $this->appendIcgemContactEntry($contact, $email, $website);
+        }
+    }
+
+    /**
+     * Puts author contacts into author order. Contacts that match no author stay at the end.
+     * Match another identity by extending the name comparison.
+     *
+     * @param array<int, array<string, mixed>> $contacts
+     * @param array<int, array<string, mixed>> $authors
+     * @return array<int, array<string, mixed>>
+     */
+    private function orderContactPersonsLikeAuthors(array $contacts, array $authors): array
+    {
+        $ordered = [];
+        $unused = $contacts;
+        foreach ($authors as $author) {
+            if (($author['type'] ?? '') !== 'person') {
+                continue;
             }
+            foreach ($unused as $index => $contact) {
+                if (strcasecmp(trim((string) ($author['familyname'] ?? '')), trim((string) ($contact['familyname'] ?? ''))) === 0
+                    && strcasecmp(trim((string) ($author['givenname'] ?? '')), trim((string) ($contact['givenname'] ?? ''))) === 0) {
+                    $ordered[] = $contact;
+                    unset($unused[$index]);
+                    break;
+                }
+            }
+        }
+        foreach ($unused as $contact) {
+            $ordered[] = $contact;
+        }
+        return $ordered;
+    }
+
+    /**
+     * Appends one grav:address and, when present, one grav:onlineResource.
+     * Add another contact field as a further child here.
+     *
+     * @param SimpleXMLElement $contact The grav:contact element.
+     * @param string $email Contact address. Empty values are omitted.
+     * @param string $website Contact website. Empty values are omitted.
+     */
+    private function appendIcgemContactEntry(SimpleXMLElement $contact, string $email, string $website): void
+    {
+        $email = trim($email);
+        $website = trim($website);
+        if ($email !== '') {
+            $contact->addChild(
+                self::ICGEM_NAMESPACE_PREFIX . ':address',
+                htmlspecialchars($email),
+                self::ICGEM_NAMESPACE_URI
+            );
+        }
+        if ($website !== '') {
+            $contact->addChild(
+                self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
+                htmlspecialchars($website),
+                self::ICGEM_NAMESPACE_URI
+            );
         }
     }
 

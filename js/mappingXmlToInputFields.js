@@ -421,7 +421,13 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
     xpath = "./" + xpath;
   }
 
-  const node = xmlDoc.evaluate(xpath, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  const node = xmlDoc.evaluate(
+    xpath,
+    contextNode,
+    (prefix) => (typeof resolver === "function" ? resolver(prefix) : "") || "",
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  ).singleNodeValue;
 
   return node ? node.textContent.trim() : "";
 }
@@ -534,7 +540,7 @@ function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
 
 function collectDataCiteContactPersons(xmlDoc) {
   function dcResolver(prefix) {
-    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : "";
   }
 
   const contactPersons = [];
@@ -609,7 +615,13 @@ function processCreators(xmlDoc, resolver) {
 }
 
 /**
- * Process contact persons from XML and populate the form
+ * Marks authors as contact persons from ISO pointOfContact and DataCite ContactPerson names.
+ * Email and website come from ISO. A DataCite name with no ISO match only checks the author.
+ *
+ * Names are "Family, Given", or a single token that matches an author or DataCite
+ * contact whose given name is empty. Add another name shape in the split before
+ * the DataCite names are merged in.
+ *
  * @param {Document} xmlDoc - The parsed XML document
  */
 function processContactPersons(xmlDoc) {
@@ -619,7 +631,7 @@ function processContactPersons(xmlDoc) {
       gmd: "http://www.isotc211.org/2005/gmd",
       gco: "http://www.isotc211.org/2005/gco",
     };
-    return ns[prefix] || null;
+    return ns[prefix] || "";
   }
 
   const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -627,14 +639,11 @@ function processContactPersons(xmlDoc) {
   if (getAuthorStackController()) {
     const contactPersons = [];
 
+    const looseContacts = [];
+
     for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
       const contactPersonNode = contactPersonNodes.snapshotItem(i);
-      const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
-      const [familyname, givenname] = fullName?.split(", ");
-
-      if (!givenname || !familyname) {
-        continue;
-      }
+      const fullName = (getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver) || "").trim();
 
       let email = getNodeText(
         contactPersonNode,
@@ -656,12 +665,47 @@ function processContactPersons(xmlDoc) {
         website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
       }
 
-      contactPersons.push({ familyname, givenname, email, website });
+      if (!fullName) continue;
+
+      if (fullName.includes(",")) {
+        const parts = fullName.split(",");
+        const familyname = (parts.shift() || "").trim();
+        const givenname = parts.join(",").trim();
+        if (!familyname && !givenname) continue;
+        contactPersons.push({ familyname, givenname, email, website });
+        continue;
+      }
+
+      looseContacts.push({ name: fullName, email, website });
     }
 
-    if (contactPersonNodes.snapshotLength === 0) {
-      contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
-    }
+    const authors = getCurrentAuthorsPayload(getAuthorStackController());
+    const dataciteContacts = collectDataCiteContactPersons(xmlDoc);
+    const seen = new Set(contactPersons.map((contact) => normalizeNameKey(contact.familyname, contact.givenname)));
+    looseContacts.forEach((contact) => {
+      const key = normalizeNameKey(contact.name, "");
+      if (seen.has(key)) return;
+      const matchesAuthor = authors.some((author) => (
+        author.type === "person" && normalizeNameKey(author.familyname, author.givenname) === key
+      ));
+      const matchesDataCite = dataciteContacts.some((person) => (
+        normalizeNameKey(person.familyname, person.givenname) === key
+      ));
+      if (!matchesAuthor && !matchesDataCite) return;
+      seen.add(key);
+      contactPersons.push({
+        familyname: contact.name,
+        givenname: "",
+        email: contact.email,
+        website: contact.website
+      });
+    });
+    dataciteContacts.forEach((contact) => {
+      const key = normalizeNameKey(contact.familyname, contact.givenname);
+      if (seen.has(key)) return;
+      seen.add(key);
+      contactPersons.push(contact);
+    });
 
     applyContactsToAuthorStack(contactPersons, Boolean(window.contributorStack));
     return;
@@ -812,6 +856,15 @@ function processContributors(xmlDoc, resolver) {
   processContributorsIntoStack(xmlDoc, resolver);
 }
 
+/**
+ * Builds contributor cards from DataCite contributors, then copies email and
+ * website from ISO pointOfContact onto the matching card.
+ * A Contact Person who is already an author stays off this list.
+ * Another ISO contact field belongs in the pointOfContact loop.
+ *
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
 function processContributorsIntoStack(xmlDoc, resolver) {
   const entries = [];
   const byKey = new Map();
@@ -860,7 +913,6 @@ function processContributorsIntoStack(xmlDoc, resolver) {
     });
   }
 
-  // ISO carries email and website, which DataCite cannot encode.
   const contacts = Array.from(xmlDoc.getElementsByTagNameNS('*', 'pointOfContact'))
     .flatMap(element => Array.from(element.getElementsByTagNameNS('*', 'CI_ResponsibleParty')));
   for (const node of contacts) {
@@ -1472,7 +1524,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
       if (prefix === "ns") {
         return "http://datacite.org/schema/kernel-4";
       }
-      return null;
+      return "";
     },
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
@@ -1519,7 +1571,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     if (prefix === "ns") {
       return defaultNS;
     }
-    return null;
+    return "";
   }
 
   // Verarbeite zuerst die Standard-Mappings

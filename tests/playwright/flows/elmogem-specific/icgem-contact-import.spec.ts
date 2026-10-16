@@ -66,7 +66,7 @@ test('uploads author and contributor contacts without adding the contributor to 
   });
 
   const pageErrors: string[] = [];
-  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
 
   for (let attempt = 0; attempt < 2; attempt++) {
     // Dismiss the prior toast so a repeated import must produce fresh success feedback.
@@ -88,20 +88,34 @@ test('uploads author and contributor contacts without adding the contributor to 
     await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('https://ada.example.org');
 
     const contributor = page.locator('[data-contributor-card]');
-    await expect(contributor).toHaveCount(1);
-    await expect(contributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
-    await expect(contributor.locator('[data-contributor-contact-fields]')).toBeVisible();
-    await expect(contributor.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
-    await expect(contributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    await expect(contributor).toHaveCount(2);
+    const authorContributor = contributor.nth(0);
+    await expect(authorContributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Author');
+    await expect(authorContributor.locator('[data-contributor-contact-fields]')).toBeVisible();
+    await expect(authorContributor.locator('[name="cbContactEmail[]"]')).toHaveValue('ada@example.org');
+    await expect(authorContributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('https://ada.example.org');
+
+    const connie = contributor.nth(1);
+    await expect(connie.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
+    await expect(connie.locator('[data-contributor-contact-fields]')).toBeVisible();
+    await expect(connie.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
+    await expect(connie.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
 
     const payload = await page.evaluate(() => (window as any).contributorStack.collectPayload());
-    expect(payload).toEqual([expect.objectContaining({
-      type: 'person', familyname: 'Contact', givenname: 'Connie',
-      orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
-      roles: expect.arrayContaining(['Contact Person', 'Researcher']),
-      affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
-    })]);
-    expect(payload[0].roles).toHaveLength(2);
+    expect(payload).toEqual([
+      expect.objectContaining({
+        type: 'person', familyname: 'Author', givenname: 'Ada',
+        email: 'ada@example.org', website: 'https://ada.example.org',
+        roles: ['Contact Person'],
+      }),
+      expect.objectContaining({
+        type: 'person', familyname: 'Contact', givenname: 'Connie',
+        orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
+        roles: expect.arrayContaining(['Contact Person', 'Researcher']),
+        affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
+      }),
+    ]);
+    expect(payload[1].roles).toHaveLength(2);
   }
 
   expect(pageErrors).toEqual([]);

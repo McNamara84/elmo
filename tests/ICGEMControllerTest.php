@@ -2036,5 +2036,129 @@ XML;
         $this->assertSame('contact', $names[0], 'grav:contact must be the first child');
         $this->assertSame('harmonicCoefficientsModel', $names[1]);
     }
+
+    /**
+     * Author contacts are written first, in author order. Contact Person contributor
+     * cards follow, including the authors again and an institution.
+     */
+    public function testInsertContactWritesAuthorsBeforeContributorCards(): void
+    {
+        $queue = [
+            [
+                ['familyname' => 'Author', 'givenname' => 'Ada', 'email' => 'ada@example.org', 'website' => 'https://ada.example.org', 'contact_person_id' => 1],
+                ['familyname' => 'Smith', 'givenname' => 'Bob', 'email' => 'bob@example.org', 'website' => '', 'contact_person_id' => 2],
+            ],
+            [],
+            [],
+            [
+                ['author_id' => 10, 'familyname' => 'Smith', 'givenname' => 'Bob', 'orcid' => null, 'institutionname' => null],
+                ['author_id' => 11, 'familyname' => 'Author', 'givenname' => 'Ada', 'orcid' => null, 'institutionname' => null],
+            ],
+            [],
+            [],
+            [
+                ['familyname' => 'Contact', 'givenname' => 'Connie', 'orcid' => null, 'contact_email' => 'connie@example.org', 'contact_website' => '', 'sort_order' => 0, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 1],
+                ['familyname' => 'Smith', 'givenname' => 'Bob', 'orcid' => null, 'contact_email' => 'bob@example.org', 'contact_website' => '', 'sort_order' => 1, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 2],
+                ['familyname' => 'Author', 'givenname' => 'Ada', 'orcid' => null, 'contact_email' => 'ada@example.org', 'contact_website' => 'https://ada.example.org', 'sort_order' => 2, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 3],
+            ],
+            [
+                ['name' => 'GFZ', 'contact_email' => 'gfz@example.org', 'contact_website' => '', 'sort_order' => 3, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_institution_id' => 4],
+            ],
+        ];
+        $this->mockConnection
+            ->method('prepare')
+            ->willReturnCallback(function () use (&$queue) {
+                $rows = array_shift($queue) ?? [];
+                $statement = $this->createMock(\mysqli_stmt::class);
+                $result = $this->createMock(\mysqli_result::class);
+                $statement->method('bind_param');
+                $statement->method('execute');
+                $statement->method('get_result')->willReturn($result);
+                $index = 0;
+                $result->method('fetch_assoc')->willReturnCallback(function () use ($rows, &$index) {
+                    return $rows[$index++] ?? null;
+                });
+                return $statement;
+            });
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+        $reflection = new \ReflectionClass($this->controller);
+        $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
+
+        $addresses = [];
+        foreach ($xml->children('http://icgem.gfz.de/schema')->contact->children('http://icgem.gfz.de/schema')->address as $address) {
+            $addresses[] = (string) $address;
+        }
+        $this->assertSame([
+            'bob@example.org',
+            'ada@example.org',
+            'connie@example.org',
+            'bob@example.org',
+            'ada@example.org',
+            'gfz@example.org',
+        ], $addresses);
+    }
+
+    /**
+     * insertContact includes an institution that has an address and website and
+     * no Contact Person role, and skips a person who is not a contact.
+     */
+    public function testInsertContactKeepsInstitutionDetailsWithoutContactRole(): void
+    {
+        $queue = [
+            [],
+            [],
+            [
+                ['familyname' => 'One', 'givenname' => '', 'orcid' => null, 'contact_email' => 'cont_pers_1@mail.com', 'contact_website' => 'cont_pers_1.com', 'sort_order' => 0, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 1],
+                ['familyname' => 'Two', 'givenname' => '', 'orcid' => null, 'contact_email' => 'cont_pers_2@mail.com', 'contact_website' => 'cont_pers_2.com', 'sort_order' => 3, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 2],
+                ['familyname' => 'Researcher', 'givenname' => '', 'orcid' => null, 'contact_email' => 'not-a-contact@mail.com', 'contact_website' => 'https://no.example', 'sort_order' => 4, 'roles_json' => '["Researcher"]', 'affiliations_json' => '[]', 'contributor_person_id' => 3],
+            ],
+            [
+                ['name' => 'cont_inst_1', 'contact_email' => 'cont_inst_1@mail.com', 'contact_website' => 'cont_inst_1.com', 'sort_order' => 1, 'roles_json' => '[]', 'affiliations_json' => '[]', 'contributor_institution_id' => 4],
+                ['name' => 'cont_inst_2', 'contact_email' => 'cont_inst_2@mail.com', 'contact_website' => 'cont_inst_2.com', 'sort_order' => 2, 'roles_json' => '[]', 'affiliations_json' => '[]', 'contributor_institution_id' => 5],
+            ],
+        ];
+        $this->mockConnection
+            ->method('prepare')
+            ->willReturnCallback(function () use (&$queue) {
+                $rows = array_shift($queue) ?? [];
+                $statement = $this->createMock(\mysqli_stmt::class);
+                $result = $this->createMock(\mysqli_result::class);
+                $statement->method('bind_param');
+                $statement->method('execute');
+                $statement->method('get_result')->willReturn($result);
+                $index = 0;
+                $result->method('fetch_assoc')->willReturnCallback(function () use ($rows, &$index) {
+                    return $rows[$index++] ?? null;
+                });
+                return $statement;
+            });
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+        $reflection = new \ReflectionClass($this->controller);
+        $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
+
+        $values = [];
+        foreach ($xml->children('http://icgem.gfz.de/schema')->contact->children('http://icgem.gfz.de/schema') as $child) {
+            $values[] = $child->getName() . ':' . (string) $child;
+        }
+
+        $this->assertSame([
+            'address:cont_pers_1@mail.com',
+            'onlineResource:cont_pers_1.com',
+            'address:cont_inst_1@mail.com',
+            'onlineResource:cont_inst_1.com',
+            'address:cont_inst_2@mail.com',
+            'onlineResource:cont_inst_2.com',
+            'address:cont_pers_2@mail.com',
+            'onlineResource:cont_pers_2.com',
+        ], $values);
+    }
 }
 
