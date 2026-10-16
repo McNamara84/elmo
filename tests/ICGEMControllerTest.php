@@ -2103,8 +2103,8 @@ XML;
     }
 
     /**
-     * Institution contact details stay in grav:contact after the Contact Person
-     * role is removed. A person without that role is left out.
+     * insertContact includes an institution that has an address and website and
+     * no Contact Person role, and skips a person who is not a contact.
      */
     public function testInsertContactKeepsInstitutionDetailsWithoutContactRole(): void
     {

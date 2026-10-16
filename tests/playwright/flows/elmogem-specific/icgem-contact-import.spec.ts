@@ -66,7 +66,7 @@ test('uploads author and contributor contacts without adding the contributor to 
   });
 
   const pageErrors: string[] = [];
-  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
 
   for (let attempt = 0; attempt < 2; attempt++) {
     // Dismiss the prior toast so a repeated import must produce fresh success feedback.

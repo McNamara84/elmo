@@ -817,17 +817,15 @@ class ICGEMController extends DatasetController
         }
     }
     /**
-     * Inserts the mandatory grav:contact element (CI_Contact type) as the first child
-     * of globalGravityProduct, per the ICGEM XSD sequence.
+     * Writes grav:contact as the first child of globalGravityProduct.
      *
-     * Populates grav:address from each contact person's email (required, minOccurs=1)
-     * and grav:onlineResource from each contact person's website (optional).
-     * Author contacts come first, in author order. Every Contact Person contributor
-     * card follows, in contributor order, including people who are also authors.
-     * An institution keeps its address and website when the Contact Person role
-     * is removed because institution contacts are turned off.
-     * If no contact persons exist, an empty grav:contact element is added to satisfy
-     * the schema requirement (validation at submit time will catch missing email).
+     * Author contacts come first, in author order. Contact Person contributor
+     * cards follow, in contributor order, including people who are also authors.
+     * An institution with an address or website joins that same contributor order.
+     * Another contributor kind with stored contact details belongs in this second loop.
+     *
+     * An empty grav:contact is still written when nobody has contact details, so
+     * the XSD sequence stays valid. Submit-time validation reports a missing email.
      *
      * @param SimpleXMLElement $icgempart The globalGravityProduct element.
      * @param int $id The resource ID.
@@ -859,6 +857,9 @@ class ICGEMController extends DatasetController
     }
 
     /**
+     * Puts author contacts into author order. Contacts that match no author stay at the end.
+     * Match another identity by extending the name comparison.
+     *
      * @param array<int, array<string, mixed>> $contacts
      * @param array<int, array<string, mixed>> $authors
      * @return array<int, array<string, mixed>>
@@ -886,6 +887,14 @@ class ICGEMController extends DatasetController
         return $ordered;
     }
 
+    /**
+     * Appends one grav:address and, when present, one grav:onlineResource.
+     * Add another contact field as a further child here.
+     *
+     * @param SimpleXMLElement $contact The grav:contact element.
+     * @param string $email Contact address. Empty values are omitted.
+     * @param string $website Contact website. Empty values are omitted.
+     */
     private function appendIcgemContactEntry(SimpleXMLElement $contact, string $email, string $website): void
     {
         $email = trim($email);

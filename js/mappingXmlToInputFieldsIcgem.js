@@ -85,7 +85,7 @@ function parseIcgemXml(xmlDoc) {
   // regardless of whatever prefix the document itself uses.
   function resolver(prefix) {
     if (prefix === 'icgv') return ICGEM_NAMESPACE_URI;
-    return null;
+    return '';
   }
 
   function xpFirst(xpath, contextNode) {
@@ -552,20 +552,16 @@ async function populateIcgemDataSources(data) {
 }
 
 /**
- * Populates contact person email and website fields from the ICGEM-envelope's
- * grav:contact element (inside globalGravityProduct).
+ * Assigns nameless grav:contact entries to author and contributor cards.
  *
- * grav:contact stores address and onlineResource entries with no names. DataCite
- * ContactPerson contributors say who those people are. Authors who share a name
- * with a Contact Person contributor take the first entries, on both the author
- * card and the matching contributor card. The other Contact Person contributors,
- * including institutions, take the entries after that, in contributor order.
+ * Authors who share a name with a Contact Person take the first entries, on both
+ * cards. The remaining Contact Person contributors, including institutions, take
+ * the rest in contributor order.
  *
- * A file saved by ELMO repeats the author entries once per card. That longer list
- * is detected by length: the repeated author entries are skipped so the following
- * people keep their own entries. A shorter legacy list has one entry per person
- * and is not skipped. Names are read from element local names, not XPath, because
- * Firefox throws when a namespace resolver returns null.
+ * Two list lengths are recognised. One entry per person assigns the remainder
+ * straight through. One entry per card, with the author entries repeated, skips
+ * cards that already have an entry. Any other length gives the next entry to the
+ * next person who does not already have one. A new length rule belongs in that check.
  *
  * @param {Document} xmlDoc Parsed ICGEM envelope, including its DataCite resource.
  * @throws {Error} When a present people group has no initialized stack.

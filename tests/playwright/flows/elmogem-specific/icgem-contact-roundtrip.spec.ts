@@ -4,12 +4,7 @@ import { navigateToHome, registerGoogleMapsNoopRoute, waitForFormInteractionRead
 
 const FIXTURE = path.join(__dirname, 'testDataIcgemContactRoundtrip/elmogem_contact_info_roundtrip.xml');
 
-/**
- * grav:contact order after a GEM save: author contacts in author order, then
- * every Contact Person contributor card in contributor order. Author contacts
- * stay off the contributor list, so each person appears once.
- * cont_pers_3 reuses cont_pers_author_2's address and has no website.
- */
+/** Saved grav:contact pairs for the fixture, in author order then contributor order. */
 const EXPECTED_CONTACTS = [
   { email: 'cont_pers_author_1@mail.com', website: 'cont_pers_author_1.com' },
   { email: 'cont_pers_author_2@mail.com', website: 'cont_pers_author_2.com' },
@@ -30,7 +25,10 @@ function decodeXml(value: string): string {
     .trim();
 }
 
-/** Pair grav:address with the following grav:onlineResource, the same way upload does. */
+/**
+ * Reads a grav:contact list into address and website pairs.
+ * A new child element stays ignored until this reader and the upload parser both accept it.
+ */
 function gravContactPairs(xml: string): Array<{ email: string; website: string }> {
   const block = xml.match(/<(?:[\w.-]+:)?contact\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contact>/);
   if (!block) return [];

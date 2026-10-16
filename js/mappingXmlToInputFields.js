@@ -421,7 +421,13 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
     xpath = "./" + xpath;
   }
 
-  const node = xmlDoc.evaluate(xpath, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  const node = xmlDoc.evaluate(
+    xpath,
+    contextNode,
+    (prefix) => (typeof resolver === "function" ? resolver(prefix) : "") || "",
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  ).singleNodeValue;
 
   return node ? node.textContent.trim() : "";
 }
@@ -534,7 +540,7 @@ function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
 
 function collectDataCiteContactPersons(xmlDoc) {
   function dcResolver(prefix) {
-    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : "";
   }
 
   const contactPersons = [];
@@ -609,7 +615,13 @@ function processCreators(xmlDoc, resolver) {
 }
 
 /**
- * Process contact persons from XML and populate the form
+ * Marks authors as contact persons from ISO pointOfContact and DataCite ContactPerson names.
+ * Email and website come from ISO. A DataCite name with no ISO match only checks the author.
+ *
+ * Names are "Family, Given", or a single token that matches an author or DataCite
+ * contact whose given name is empty. Add another name shape in the split before
+ * the DataCite names are merged in.
+ *
  * @param {Document} xmlDoc - The parsed XML document
  */
 function processContactPersons(xmlDoc) {
@@ -619,7 +631,7 @@ function processContactPersons(xmlDoc) {
       gmd: "http://www.isotc211.org/2005/gmd",
       gco: "http://www.isotc211.org/2005/gco",
     };
-    return ns[prefix] || null;
+    return ns[prefix] || "";
   }
 
   const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -655,8 +667,6 @@ function processContactPersons(xmlDoc) {
 
       if (!fullName) continue;
 
-      // "Family, Given" is the usual ISO shape. A single token is a mononym
-      // and matches an author whose given name is empty.
       if (fullName.includes(",")) {
         const parts = fullName.split(",");
         const familyname = (parts.shift() || "").trim();
@@ -669,9 +679,6 @@ function processContactPersons(xmlDoc) {
       looseContacts.push({ name: fullName, email, website });
     }
 
-    // A display name that is not a mononym, such as "Erika Müller", stays
-    // unmatched here. DataCite ContactPerson names still check the author.
-    // A parsed ISO contact keeps its email; the DataCite copy has none.
     const authors = getCurrentAuthorsPayload(getAuthorStackController());
     const dataciteContacts = collectDataCiteContactPersons(xmlDoc);
     const seen = new Set(contactPersons.map((contact) => normalizeNameKey(contact.familyname, contact.givenname)));
@@ -849,6 +856,15 @@ function processContributors(xmlDoc, resolver) {
   processContributorsIntoStack(xmlDoc, resolver);
 }
 
+/**
+ * Builds contributor cards from DataCite contributors, then copies email and
+ * website from ISO pointOfContact onto the matching card.
+ * A Contact Person who is already an author stays off this list.
+ * Another ISO contact field belongs in the pointOfContact loop.
+ *
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
 function processContributorsIntoStack(xmlDoc, resolver) {
   const entries = [];
   const byKey = new Map();
@@ -897,7 +913,6 @@ function processContributorsIntoStack(xmlDoc, resolver) {
     });
   }
 
-  // ISO carries email and website, which DataCite cannot encode.
   const contacts = Array.from(xmlDoc.getElementsByTagNameNS('*', 'pointOfContact'))
     .flatMap(element => Array.from(element.getElementsByTagNameNS('*', 'CI_ResponsibleParty')));
   for (const node of contacts) {
@@ -1509,7 +1524,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
       if (prefix === "ns") {
         return "http://datacite.org/schema/kernel-4";
       }
-      return null;
+      return "";
     },
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
@@ -1556,7 +1571,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     if (prefix === "ns") {
       return defaultNS;
     }
-    return null;
+    return "";
   }
 
   // Verarbeite zuerst die Standard-Mappings
