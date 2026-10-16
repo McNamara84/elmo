@@ -134,7 +134,9 @@ test.describe('Contributor (Institutions) form group', () => {
 
     const affiliationEditor = formGroup.locator('[data-affiliation-editor]');
     await expect(affiliationEditor).toBeVisible();
-    await expect(affiliationEditor.locator('[data-affiliation-input]')).toHaveAttribute('placeholder', 'Affiliation');
+    const affiliationInput = affiliationEditor.getByRole('combobox', { name: 'Affiliation', exact: true });
+    await expect(affiliationInput).toHaveAttribute('placeholder', 'Enter at least 3 characters to see suggestions');
+    await expect(affiliationEditor.locator('[data-affiliation-add]')).toHaveAccessibleName('Add without a ROR');
 
     const affiliationLabel = formGroup.locator('label[for^="input-contributor-organisationaffiliation-"]');
     await expect(affiliationLabel).toHaveClass(/visually-hidden/);
