@@ -193,7 +193,7 @@ function buildContactPersonsElement(DOMDocument $dom, array $authors): DOMElemen
 }
 
 /**
- * Appends normalized author affiliations to an XML element.
+ * Appends export affiliations, using the ROR URL for empty labels without changing source data.
  *
  * @param DOMDocument $dom Owning XML document.
  * @param DOMElement $parent Author or contact element.

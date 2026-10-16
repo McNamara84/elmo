@@ -111,6 +111,13 @@ function buildContributorXmlElement(DOMDocument $dom, array $entry, string $node
     return $element;
 }
 
+/**
+ * Append export affiliations, replacing empty labels with their ROR URL.
+ * @param DOMDocument $dom Owning XML document.
+ * @param DOMElement $parent Contributor or contact element.
+ * @param array<array{label: string, rorId: string}> $affiliations Source pairs, left unchanged.
+ * @return void
+ */
 function appendContributorAffiliations(DOMDocument $dom, DOMElement $parent, array $affiliations): void
 {
     $container = $dom->createElement('Affiliations');
