@@ -132,8 +132,15 @@ describe('ICGEM contact person import', () => {
       orcid: '0000-0001-2345-6789', affiliations: [{ label: 'GFZ Potsdam', rorId: '03yrm5c26' }] });
     expect(contacts[1]).toMatchObject({ email: 'ben.beta@gfz.de', website: '' });
     expect(contacts[2]).toMatchObject({ email: 'gina.gamma@gfz.de', website: 'https://gina.example.org' });
-    if (group === 'authors') expect(window.contributorStack.collectPayload()).toEqual([]);
-    else expect(window.authorStack.collectPayload()).toHaveLength(1);
+    if (group === 'authors') {
+      const contributorContacts = window.contributorStack.collectPayload();
+      expect(contributorContacts).toHaveLength(3);
+      expect(contributorContacts[0]).toMatchObject({
+        email: 'ada.alpha@gfz.de',
+        website: 'https://ada.example.org',
+        roles: ['Contact Person']
+      });
+    } else expect(window.authorStack.collectPayload()).toHaveLength(1);
   });
 
   test('creates a contributor contact when no person card matches', () => {
@@ -238,5 +245,149 @@ describe('ICGEM contact person import', () => {
         website: 'https://new-contact.example.org'
       })
     ]);
+  });
+
+  test('puts the same legacy entry on the author and the matching contributor card', () => {
+    buildAuthorDom([{ familyname: 'Author', givenname: 'Ada' }]);
+    mountContributorStack([]);
+    const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
+      <grav:envelope xmlns:grav="${ICGEM_NS}" xmlns:dace="${DATACITE_NS}">
+        <dace:resource>
+          <dace:contributors>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:contributorName nameType="Personal">Author, Ada</dace:contributorName>
+              <dace:givenName>Ada</dace:givenName>
+              <dace:familyName>Author</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:contributorName nameType="Personal">Contact, Connie</dace:contributorName>
+              <dace:givenName>Connie</dace:givenName>
+              <dace:familyName>Contact</dace:familyName>
+            </dace:contributor>
+          </dace:contributors>
+        </dace:resource>
+        <grav:globalGravityProduct>
+          <grav:contact>
+            <grav:address>ada@example.org</grav:address>
+            <grav:onlineResource>https://ada.example.org</grav:onlineResource>
+            <grav:address>connie@example.org</grav:address>
+          </grav:contact>
+        </grav:globalGravityProduct>
+      </grav:envelope>`, 'application/xml');
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(window.authorStack.collectPayload()).toEqual([
+      expect.objectContaining({ familyname: 'Author', givenname: 'Ada', isContact: true,
+        email: 'ada@example.org', website: 'https://ada.example.org' })
+    ]);
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ type: 'person', familyname: 'Author', givenname: 'Ada',
+        roles: ['Contact Person'], email: 'ada@example.org', website: 'https://ada.example.org' }),
+      expect.objectContaining({ type: 'person', familyname: 'Contact', givenname: 'Connie',
+        roles: ['Contact Person'], email: 'connie@example.org', website: '' })
+    ]);
+  });
+
+  test('assigns the first entries in author order when the file lists another contact first', () => {
+    buildAuthorDom([
+      { familyname: 'Smith', givenname: 'Bob' },
+      { familyname: 'Author', givenname: 'Ada' }
+    ]);
+    mountContributorStack([
+      { type: 'person', familyname: 'Contact', givenname: 'Connie', roles: ['Contact Person'], affiliations: [] }
+    ]);
+    const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
+      <grav:envelope xmlns:grav="${ICGEM_NS}" xmlns:dace="${DATACITE_NS}">
+        <dace:resource>
+          <dace:contributors>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Connie</dace:givenName>
+              <dace:familyName>Contact</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Ada</dace:givenName>
+              <dace:familyName>Author</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Bob</dace:givenName>
+              <dace:familyName>Smith</dace:familyName>
+            </dace:contributor>
+          </dace:contributors>
+        </dace:resource>
+        <grav:globalGravityProduct>
+          <grav:contact>
+            <grav:address>bob@example.org</grav:address>
+            <grav:address>ada@example.org</grav:address>
+            <grav:address>connie@example.org</grav:address>
+          </grav:contact>
+        </grav:globalGravityProduct>
+      </grav:envelope>`, 'application/xml');
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    const authors = window.authorStack.collectPayload();
+    expect(authors[0]).toMatchObject({ familyname: 'Smith', email: 'bob@example.org', isContact: true });
+    expect(authors[1]).toMatchObject({ familyname: 'Author', email: 'ada@example.org', isContact: true });
+    const contributors = window.contributorStack.collectPayload();
+    expect(contributors.map(entry => entry.familyname)).toEqual(['Contact', 'Author', 'Smith']);
+    expect(contributors[0]).toMatchObject({ email: 'connie@example.org' });
+    expect(contributors[1]).toMatchObject({ email: 'ada@example.org' });
+    expect(contributors[2]).toMatchObject({ email: 'bob@example.org' });
+  });
+
+  test('skips repeated author entries in a saved contact list and keeps the institution entry', () => {
+    window.ELMO_FEATURES = { showContactInstitution: true };
+    buildAuthorDom([
+      { familyname: 'Smith', givenname: 'Bob' },
+      { familyname: 'Author', givenname: 'Ada' }
+    ]);
+    mountContributorStack([
+      { type: 'person', familyname: 'Contact', givenname: 'Connie', roles: ['Contact Person'], affiliations: [] },
+      { type: 'institution', institutionname: 'GFZ', roles: ['Contact Person'], affiliations: [] }
+    ]);
+    const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
+      <grav:envelope xmlns:grav="${ICGEM_NS}" xmlns:dace="${DATACITE_NS}">
+        <dace:resource>
+          <dace:contributors>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Connie</dace:givenName>
+              <dace:familyName>Contact</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Bob</dace:givenName>
+              <dace:familyName>Smith</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:givenName>Ada</dace:givenName>
+              <dace:familyName>Author</dace:familyName>
+            </dace:contributor>
+            <dace:contributor contributorType="ContactPerson">
+              <dace:contributorName nameType="Organizational">GFZ</dace:contributorName>
+            </dace:contributor>
+          </dace:contributors>
+        </dace:resource>
+        <grav:globalGravityProduct>
+          <grav:contact>
+            <grav:address>bob@example.org</grav:address>
+            <grav:address>ada@example.org</grav:address>
+            <grav:address>connie@example.org</grav:address>
+            <grav:address>bob@example.org</grav:address>
+            <grav:address>ada@example.org</grav:address>
+            <grav:address>gfz@example.org</grav:address>
+          </grav:contact>
+        </grav:globalGravityProduct>
+      </grav:envelope>`, 'application/xml');
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    const contributors = window.contributorStack.collectPayload();
+    expect(contributors.map(entry => [entry.type, entry.familyname || entry.institutionname, entry.email])).toEqual([
+      ['person', 'Contact', 'connie@example.org'],
+      ['person', 'Smith', 'bob@example.org'],
+      ['person', 'Author', 'ada@example.org'],
+      ['institution', 'GFZ', 'gfz@example.org']
+    ]);
+    delete window.ELMO_FEATURES;
   });
 });
