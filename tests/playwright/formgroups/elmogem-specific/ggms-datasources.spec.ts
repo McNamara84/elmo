@@ -1,4 +1,5 @@
 import path from 'path';
+import identifierTypes from '../../../fixtures/identifier-types.json';
 import { test, expect, type Locator, type Page } from '@playwright/test';
 import { navigateToHome, uploadXmlIntoForm } from '../../utils';
 
@@ -37,6 +38,46 @@ const MODEL_TYPES_MOCK = [
   { id: 3, name: 'Topographic', description: 'Topographic model' },
   { id: 4, name: 'Simulated', description: 'Simulated model' },
 ];
+
+test.describe('GGMs Data Sources – stable identifier fields', () => {
+  test.beforeEach(async ({ page }) => {
+    await page.route('**/api/v2/vocabs/modeltypes', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify(MODEL_TYPES_MOCK),
+    }));
+    await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ identifierTypes }),
+    }));
+    await navigateToHome(page);
+  });
+
+  for (const rowIndex of [0, 1]) {
+    test(`keeps IDs and associated labels after editing the identifier in row ${rowIndex}`, async ({ page }) => {
+      if (rowIndex === 1) await page.locator('#button-datasource-add').click();
+      const group = page.locator('#group-datasources');
+      const row = group.locator('[data-source-row]').nth(rowIndex);
+      await row.locator('select[name="datasource_type[]"]').selectOption('M');
+      const fields = group.locator('select[name="datasource_type[]"], select[name="datasource_details[]"], input[name="dName[]"], input[name="dIdentifier[]"], select[name="dIdentifierType[]"]');
+      const originalIds = await fields.evaluateAll(elements => elements.map(element => element.id));
+      const identifier = row.locator('input[name="dIdentifier[]"]');
+      const identifierType = row.locator('select[name="dIdentifierType[]"]');
+      const identifierId = await identifier.getAttribute('id');
+      const typeId = await identifierType.getAttribute('id');
+
+      await identifier.fill('https://arxiv.org/abs/2507.21532');
+      await identifier.blur();
+      await expect(identifierType).toHaveValue('arXiv');
+      expect(await fields.evaluateAll(elements => elements.map(element => element.id))).toEqual(originalIds);
+
+      expect(await row.locator(`label[for="${identifierId}"]`).evaluate(label => (label as HTMLLabelElement).control?.id)).toBe(identifierId);
+      expect(await row.locator(`label[for="${typeId}"]`).evaluate(label => (label as HTMLLabelElement).control?.id)).toBe(typeId);
+      await expect(row.getByLabel('Identifier', { exact: true })).toHaveValue('https://arxiv.org/abs/2507.21532');
+      await row.getByLabel(/^Identifier type$/i).selectOption('ISBN');
+      await expect(identifierType).toHaveValue('ISBN');
+      expect(await fields.evaluateAll(elements => elements.map(element => element.id))).toEqual(originalIds);
+    });
+  }
+});
 
 test.describe('GGMs Data Sources – satellite platform Tagify', () => {
   test.beforeEach(async ({ page }) => {

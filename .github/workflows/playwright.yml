@@ -126,7 +126,7 @@ jobs:
             }
         }
         $connection = connectDb();
-        $apiKeyElmo = '1234-1234-1234-1234';
+        $ELMO_API_KEY = '1234-1234-1234-1234';
         $apiKeyTimezone = 'test_timezone_api_key';
         $maxTitles = 2;
         $showFeedbackLink = true;
@@ -157,8 +157,6 @@ jobs:
         $showFreeKeywords = true;
         $showSpatialTemporalCoverage = true;
         $showRelatedWork = true;
-        $showContributorPersons = true;
-        $showContributorInstitutions = true;
         $showFundingReference = true;
         $showAuthorInstitution = true;
         $xmlSubmitAddress = 'datapub@gfz.de';

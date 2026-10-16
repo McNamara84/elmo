@@ -33,8 +33,7 @@ describe('roles.js', () => {
     global.translations = { general: { roleLabel: 'Role' } };
     // Set default feature toggles (all enabled)
     window.ELMO_FEATURES = {
-      showContributorPersons: true,
-      showContributorInstitutions: true
+      showContactInstitution: false
     };
 
     const accessibilityScript = fs.readFileSync(path.resolve(__dirname, '../../js/accessibility.js'), 'utf8');
@@ -71,12 +70,8 @@ describe('roles.js', () => {
     expect(input._tagify.settings.whitelist).toEqual(['Contact Person']);
   });
 
-  test('gates institution contacts with the feature flag', () => {
+  test('keeps Contact Person in institution roles when provided by API', () => {
     const input = document.getElementById('input-contributor-organisationrole');
-    window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
-    expect(input._tagify.settings.whitelist).toEqual(['Research Group']);
-
-    window.ELMO_FEATURES.showContactInstitution = true;
     window.initializeTagifyWithRoles('#input-contributor-organisationrole', ['Research Group', 'Contact Person']);
     expect(input._tagify.settings.whitelist).toEqual(['Research Group', 'Contact Person']);
   });
@@ -136,6 +131,25 @@ describe('roles.js', () => {
     window.setupRolesDropdown(['person', 'both'], '#input-contributor-personrole');
     expect(document.getElementById('input-contributor-personrole')._tagify.settings.whitelist)
       .not.toContain('Distributor');
+  });
+
+  test('keeps institution roles when shared roles endpoint returns 404', async () => {
+    fetch.mockImplementation((url) => {
+      const type = new URL(url, 'http://localhost').searchParams.get('type');
+      if (type === 'institution') {
+        return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([{ name: 'Hosting Institution' }]) });
+      }
+      if (type === 'both') {
+        return Promise.resolve({ ok: false, status: 404, json: () => Promise.resolve({ error: 'No roles found' }) });
+      }
+      return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve([]) });
+    });
+
+    window.setupRolesDropdown(['institution', 'both'], '#input-contributor-organisationrole');
+    await flushPromises();
+
+    const whitelist = document.getElementById('input-contributor-organisationrole')._tagify.settings.whitelist;
+    expect(whitelist).toContain('Hosting Institution');
   });
 
   test('refreshRoleTagifyInstances updates placeholders for all rows', () => {

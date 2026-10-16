@@ -1,5 +1,6 @@
 ﻿<?php
 include_once "../settings.php";
+$assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) . '/' . $path), 0, 12);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -8,10 +9,12 @@ include_once "../settings.php";
     <title>Guide</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script src="../js/themeInit.js?v=<?php echo $assetVersion('js/themeInit.js'); ?>"></script>
     <link href="../node_modules/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="../node_modules/bootstrap-icons/font/bootstrap-icons.min.css" />
-    <link rel="stylesheet" href="../css/help.css">
-    <link rel="stylesheet" href="../css/gfz-cd.css">
+    <link rel="stylesheet" href="../css/gfz-cd.css?v=<?php echo $assetVersion('css/gfz-cd.css'); ?>">
+    <link rel="stylesheet" href="../css/help.css?v=<?php echo $assetVersion('css/help.css'); ?>">
+    <link rel="stylesheet" href="../css/darkmode.css?v=<?php echo $assetVersion('css/darkmode.css'); ?>">
     <!-- Favicon -->
     <link rel="icon" type="image/png" href="../assets/icons/favicon-96x96.png" sizes="96x96" />
     <link rel="icon" type="image/svg+xml" href="../assets/icons/favicon.svg" />
@@ -20,7 +23,7 @@ include_once "../settings.php";
     <link rel="manifest" href="../site.webmanifest" />
 </head>
 
-<body>
+<body class="elmo-guide">
     <!-- Navbar -->
     <nav class="navbar navbar-dark fixed-top navbar-help-header">
         <div class="container-fluid">
@@ -47,11 +50,11 @@ include_once "../settings.php";
             </form>
             <a class="nav-link text-white ms-3" href="https://dataservices-cms.gfz.de/about-us/legal-notice" target="_blank"
                 rel="noopener">Legal notice</a>
-            <div class="offcanvas offcanvas-start navbar-help-header text-white" tabindex="-1" id="offcanvasNavbar"
+            <div class="offcanvas offcanvas-start" tabindex="-1" id="offcanvasNavbar"
                 aria-labelledby="offcanvasNavbarLabel">
                 <div class="offcanvas-header">
                     <h5 class="offcanvas-title" id="offcanvasNavbarLabel">Main Menu</h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas"
+                    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"
                         aria-label="Close"></button>
                 </div>
                 <div class="offcanvas-body">
@@ -81,18 +84,14 @@ include_once "../settings.php";
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
                         </li>
                         <?php endif; ?>
-                        <?php if ($showContributorPersons ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorpersons" data-bs-dismiss="offcanvas">Contributor
                                 person fields</a>
                         </li>
-                        <?php endif; ?>
-                        <?php if ($showContributorInstitutions ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-contributorinstitutions"
                                 data-bs-dismiss="offcanvas">Contributor institution fields</a>
                         </li>
-                        <?php endif; ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
@@ -169,8 +168,15 @@ include_once "../settings.php";
                 <p class="lead">Translations exist for the metadata editor in various languages. You can see whether
                     your
                     language already exists in the language selection drop-down menu at the top right. However, the
-                    form must be filled out in english. There is also
-                    a switch for changing from light mode to dark mode for better contrast ratios.</p>
+                    form must be filled out in English.</p>
+                <p>Use the <strong>Mode</strong> menu in the editor to choose <strong>Light</strong>,
+                    <strong>Dark</strong> or <strong>Auto</strong>. Auto follows your system's color preference
+                    and updates when it changes. Your choice is saved in this browser and applies to the
+                    ELMO Guide, including a Guide that is already open in another tab.</p>
+                <p>Use <strong>Help → Off</strong> to hide contextual help icons at input fields, section headings
+                    and in dialogs, including help added when you create more entries. Select <strong>Help → On</strong>
+                    to show the appropriate help again. Your choice is saved in this browser. The
+                    <strong>Help</strong> menu and <strong>Guide</strong> links remain available in both states.</p>
                 <p>Select the version number in the footer to open the changelog. Its badges identify the affected
                     ELMO editions, and linked issues and pull requests provide details about each change. You can find
                     information about the metadata editor under <strong>Help → About</strong>.</p>
@@ -494,7 +500,6 @@ include_once "../settings.php";
             <div class="section-divider"></div>
             <hr>            
             <?php endif; ?>
-            <?php if (($showContributorPersons ?? true) || ($showContributorInstitutions ?? true)): ?>
             <div id="help-contributors" class="section-content">
                 <div id="help-contributors-fg">
                     <h3>Contributors</h3>
@@ -505,9 +510,7 @@ include_once "../settings.php";
                     <?php endif; ?>
                 </div>
             </div>
-            <?php endif; ?>
             <!-- formgroup contributor persons -->
-            <?php if ($showContributorPersons ?? true): ?> 
             <div id="help-contributorpersons" class="section-content">
                 <div id="help-contributorpersons-fg">
                     <h3>Contributor person fields</h3>
@@ -640,9 +643,7 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php endif; ?>
             <!-- formgroup contributor institutions -->
-            <?php if ($showContributorInstitutions ?? true): ?>  
             <div id="help-contributorinstitutions" class="section-content">
                 <div id="help-contributorinstitutions-fg">
                     <h3>Contributor institution fields</h3>
@@ -751,7 +752,6 @@ include_once "../settings.php";
             </div>
             <div class="section-divider"></div>
             <hr>
-            <?php endif; ?>
             <!-- formgroup descriptions -->
             <div id="help-descriptions" class="section-content">
                 <div id="help-descriptions-fg">
@@ -1128,6 +1128,7 @@ include_once "../settings.php";
             <div id="help-relatedwork" class="section-content">
                 <div id="help-relatedwork-fg">
                     <h3>Related Work</h3>
+                    <p>Identifier types and accepted formats are provided by ERNIE. A type is selected automatically only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or several types fit, choose the type manually. A valid ISBN-13 may also be an EAN13, so an unqualified number can remain without an automatic selection. Your manual choice is kept until you edit the identifier.</p>
                     <p>
                         Please enter resources related to your data. This helps connecting your data to other work
                         like articles, samples, etc. Identifiers must be globally unique.
@@ -1519,6 +1520,7 @@ include_once "../settings.php";
                     <div id="help-datasources-identifiertype">
                         <h4>Identifier Type</h4>
                         <p>The type of the Related Identifier.</p>
+                        <p>The same automatic detection rules apply as in Related Work: identifier types and accepted formats are provided by ERNIE, and a type is selected only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or the identifier is ambiguous, choose the type manually. Your manual choice is kept until you edit the identifier.</p>
                         <ul>
                             <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
                             <!-- arXiv: Repository for scientific preprints in math, physics, astronomy, etc. -->

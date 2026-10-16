@@ -1,3 +1,6 @@
+const identifierDetection = (typeof require === "function" && typeof module !== "undefined")
+  ? require("./services/identifierDetectionService.js") : window.elmoIdentifierDetection;
+
 const dropdownUtils =
   (typeof require === 'function' && typeof module !== 'undefined')
     ? require('./dropdownUtils.js')
@@ -451,14 +454,36 @@ function populateRelationsDropdownWithData(response) {
 }
 
 /**
+ * Refreshes identifier choices without enabling fields hidden by GEM's row type.
+ * Selections survive only while their type is still offered by the vocabulary.
+ * @param {jQuery} select Identifier type dropdown.
+ * @param {Object[]} types Current active identifier types.
+ * @returns {void}
+ */
+function refreshIdentifierTypeSelect(select, types) {
+  const disabled = select.prop('disabled') === true;
+  populateRelatedWorkSelect(select, types, type => $('<option>', {
+    value: type.name, text: type.name, title: type.description,
+  }));
+  select.prop('disabled', disabled).trigger('chosen:updated');
+}
+
+/**
  * Populates identifier types dropdown with pre-fetched data
  * @param {Object} response - Response object containing identifierTypes array
  */
 function populateIdentifierTypesDropdownWithData(response) {
+  identifierPatternCache.clear();
   relatedWorkDropdownCache.identifierTypes = response && Array.isArray(response.identifierTypes)
     ? [...response.identifierTypes]
     : [];
   applyRelatedWorkDropdowns();
+  $('select[name="dIdentifierType[]"]').each(function () {
+    refreshIdentifierTypeSelect($(this), relatedWorkDropdownCache.identifierTypes);
+  });
+  $('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]').each(function () {
+    updateValidationPattern(this);
+  });
 }
 
 // Make parallel initialization function available globally
@@ -666,7 +691,8 @@ $(document).ready(function () {
 
 /**
  * Function to populate the dropdown menu of identifier types.
- * @param {string} id - The ID selector of the dropdown to populate.
+ * @param {string|jQuery} id - The selector or dropdown to populate.
+ * @returns {Promise<void>} Readiness shared by imports and autocomplete.
  */
 function setupIdentifierTypesDropdown(id) {
   var select = $(id);
@@ -674,6 +700,7 @@ function setupIdentifierTypesDropdown(id) {
   if (pending) {
     return pending;
   }
+  const vocabulary = relatedWorkDropdownCache.identifierTypes;
 
   // Add the "Choose..." placeholder option
   select.empty().append(
@@ -686,18 +713,11 @@ function setupIdentifierTypesDropdown(id) {
 
   const ready = new Promise((resolve, reject) => {
     $.getJSON("./api/v2/validation/identifiertypes/active", function (response) {
-      if (response && response.identifierTypes) {
-        response.identifierTypes.forEach(function (type) {
-          select.append(
-            $("<option>", {
-              value: type.name,
-              text: type.name,
-              title: type.description, // Uses the description as a tooltip
-            })
-          );
-        });
-        // Update chosen-style dropdowns if necessary
-        $(".chosen-select").trigger("chosen:updated");
+      // A reload may have superseded this request while it was in flight.
+      const current = relatedWorkDropdownCache.identifierTypes;
+      const types = current !== vocabulary && Array.isArray(current) ? current : response?.identifierTypes;
+      if (Array.isArray(types)) {
+        refreshIdentifierTypeSelect(select, types);
         resolve();
       } else {
         console.warn("No identifier types available");
@@ -714,17 +734,83 @@ function setupIdentifierTypesDropdown(id) {
 }
 
 
+// Each DOM input owns its timer and version; editing one row cannot cancel another.
+const identifierFieldStates = new WeakMap();
+const identifierRegistry = new identifierDetection.IdentifierDetectionService({
+  request: doi => new Promise((resolve, reject) => $.ajax({
+    url: 'api/v2/validation/identifier-type', data: { doi }, method: 'GET', dataType: 'json',
+    success: resolve, error: reject,
+  })),
+});
+
 /**
- * Function to update the identifier type based on the entered identifier.
- * @param {HTMLElement} inputElement - The input element for the identifier.
+ * Gets the state used to reject stale asynchronous results for this field.
+ * @param {HTMLInputElement} input Identifier field.
+ * @returns {{version: number, timer: number|null}} Field's request version and debounce timer.
  */
-// Priority map for identifier types when multiple patterns match
-const IDENTIFIER_TYPE_PRIORITY = {
-  DOI: 10,
-  URL: 0,
-};
-const DOI_IDENTIFIER_PATTERN = '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$';
-const DOI_IDENTIFIER_REGEX = new RegExp(DOI_IDENTIFIER_PATTERN, 'i');
+function fieldState(input) {
+  if (!identifierFieldStates.has(input)) identifierFieldStates.set(input, { version: 0, timer: null });
+  return identifierFieldStates.get(input);
+}
+
+/**
+ * Cancels scheduled detection and invalidates in-flight results on edits or restoration.
+ * @param {HTMLInputElement} [input] Identifier field, if still present.
+ * @returns {void}
+ */
+function invalidateIdentifierDetection(input) {
+  if (!input) return;
+  const state = fieldState(input);
+  state.version += 1;
+  clearTimeout(state.timer);
+  state.timer = null;
+  detectionStatus(input, null);
+}
+
+/**
+ * Resets a retained field after form clearing, including requests for its previous value.
+ * @param {HTMLInputElement} input Cleared Related Work or GEM identifier field.
+ * @returns {void}
+ */
+export function resetIdentifierField(input) {
+  invalidateIdentifierDetection(input);
+  const select = identifierTypeSelectForInput(input);
+  clearManualIdentifierTypeSelection(select);
+  setDetectedIdentifierType(select, null);
+  input.setCustomValidity('');
+}
+
+/**
+ * Protects an imported or autosaved choice, including an intentional empty type.
+ * GEM options may arrive after restoration; only the same field version may
+ * reapply the stored choice once its dropdown is ready.
+ * @param {HTMLInputElement} [input] Restored identifier field.
+ * @param {string|null} [restoredType] Stored choice for a dropdown still loading.
+ * @returns {void}
+ */
+function restoreIdentifierType(input, restoredType) {
+  if (!input) return;
+  invalidateIdentifierDetection(input);
+  const select = identifierTypeSelectForInput(input);
+  markManualIdentifierTypeSelection(select);
+  updateValidationPattern(select[0]);
+  const ready = select.data('identifierTypesReady');
+  if (restoredType !== undefined && ready) {
+    const vocabulary = relatedWorkDropdownCache.identifierTypes;
+    const version = fieldState(input).version;
+    const identifier = String($(input).val() || '');
+    Promise.resolve(ready).then(() => {
+      if (!input.isConnected || fieldState(input).version !== version || String($(input).val() || '') !== identifier) return;
+      if (relatedWorkDropdownCache.identifierTypes !== vocabulary && restoredType
+        && !identifierDetection.activeType(restoredType, relatedWorkDropdownCache.identifierTypes || [])) return;
+      if (restoredType && !select.find('option').filter(function () { return $(this).val() === restoredType; }).length) {
+        select.append($('<option>', { value: restoredType, text: restoredType }));
+      }
+      select.val(restoredType).trigger('change');
+    }).catch(() => {});
+  }
+}
+
 const IDENTIFIER_TYPE_AUTO_UPDATE_KEY = 'elmoIdentifierTypeAutoUpdate';
 const IDENTIFIER_TYPE_MANUAL_SELECTION_KEY = 'elmoIdentifierTypeManualSelection';
 const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifier';
@@ -732,12 +818,6 @@ const IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY = 'elmoIdentifierTypeManualIdentifie
 // A native/Chosen change after identifier input is a user decision. Bind that
 // decision to the current identifier so a pending debounced detector cannot
 // erase it. Typing a new identifier clears the marker and enables detection again.
-
-function getIdentifierPriority(name) {
-  return IDENTIFIER_TYPE_PRIORITY.hasOwnProperty(name)
-    ? IDENTIFIER_TYPE_PRIORITY[name]
-    : 5;
-}
 
 function identifierFieldScope(element) {
   const field = $(element);
@@ -785,90 +865,86 @@ function hasManualIdentifierTypeSelection(selectElement, identifier) {
     && selectElement.data(IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY) === identifier;
 }
 
-function normalizeIdentifierPattern(pattern) {
-  let normalized = String(pattern || '').trim().replace(/^"|"$/g, '');
-  const delimitedPattern = normalized.match(/^\/(.*)\/[a-z]*$/i);
-  if (delimitedPattern) {
-    normalized = delimitedPattern[1];
-  } else {
-    normalized = normalized.replace(/\/[a-z]+$/i, '');
-  }
-  return normalized;
-}
-
+/**
+ * Applies format/checksum validity to the matching identifier without browser regex differences.
+ * @param {HTMLSelectElement} selectElement Identifier type dropdown in the same row/card.
+ * @returns {void}
+ */
 function updateValidationPattern(selectElement) {
   const select = $(selectElement);
   const selectedType = String(select.val() || '').trim();
-  const inputIdentifier = identifierInputForTypeSelect(selectElement);
-  if (!inputIdentifier.length) {
-    return;
-  }
-
-  const applyPattern = function (pattern) {
-    if (String(select.val() || '').trim() !== selectedType) {
-      return;
-    }
-    if (pattern) {
-      inputIdentifier.attr('pattern', pattern);
-    } else {
-      inputIdentifier.removeAttr('pattern');
-    }
+  const vocabulary = relatedWorkDropdownCache.identifierTypes;
+  const input = identifierInputForTypeSelect(selectElement);
+  if (!input.length) return;
+  input.removeAttr('pattern');
+  const apply = patterns => {
+    if (String(select.val() || '').trim() !== selectedType || relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
+    const value = String(input.val() || '');
+    const valid = !value || !selectedType || (identifierDetection.passesAdditionalChecks(value, selectedType)
+      && patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim())));
+    const message = window.elmo?.translate?.('relatedWork.identifierInvalid') || 'Please enter a valid identifier.';
+    input[0].setCustomValidity(valid ? '' : message);
   };
-
-  if (selectedType === '') {
-    inputIdentifier.removeAttr('pattern');
+  if (!selectedType) {
+    apply([]);
     return;
   }
-
-  // DOI resolver URLs are valid input and are reduced to bare DOI names on save.
-  // Keep browser validation aligned even when the vocabulary pattern only
-  // describes the canonical bare DOI representation.
-  if (selectedType.toUpperCase() === 'DOI') {
-    identifierPatternCache.set(selectedType, DOI_IDENTIFIER_PATTERN);
-    applyPattern(DOI_IDENTIFIER_PATTERN);
+  // Validate with the vocabulary that populated the dropdown, before consulting legacy DB patterns.
+  const type = identifierDetection.activeType(selectedType, relatedWorkDropdownCache.identifierTypes || []);
+  if (type) {
+    const patterns = identifierDetection.patternsFor(type);
+    identifierPatternCache.set(selectedType, patterns);
+    apply(patterns);
     return;
   }
-
   if (identifierPatternCache.has(selectedType)) {
-    applyPattern(identifierPatternCache.get(selectedType));
+    apply(identifierPatternCache.get(selectedType));
     return;
   }
-
+  // A pending lookup cannot prove that a non-empty identifier matches this type.
+  apply([]);
   $.ajax({
-    url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType),
-    method: 'GET',
-    dataType: 'json',
-    success: function (response) {
-      const pattern = response && response.pattern
-        ? normalizeIdentifierPattern(response.pattern)
-        : '';
-      identifierPatternCache.set(selectedType, pattern);
-      applyPattern(pattern);
+    url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType), method: 'GET', dataType: 'json',
+    success: response => {
+      if (relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
+      const patterns = identifierDetection.patternsFor(response || {});
+      identifierPatternCache.set(selectedType, patterns);
+      apply(patterns);
     },
-    error: function () {
-      identifierPatternCache.set(selectedType, '');
-      applyPattern('');
-    },
+    error: () => apply([]),
   });
+}
+
+/**
+ * Updates the accessible hint for a pending or unresolved lookup.
+ * @param {HTMLInputElement} input Identifier field receiving the hint.
+ * @param {'pending'|'unknown'|null} status Hint state; null hides it.
+ * @returns {void}
+ */
+function detectionStatus(input, status) {
+  const field = $(input);
+  let hint = field.siblings('[data-identifier-detection-status]').first();
+  if (!hint.length) {
+    hint = $('<span class="small text-body-secondary w-100" role="status" aria-live="polite" data-identifier-detection-status></span>');
+    field.after(hint);
+  }
+  const key = status === 'pending' ? 'identifierChecking' : 'identifierUncertain';
+  const fallback = status === 'pending' ? 'Checking identifier type…' : 'Choose the identifier type manually.';
+  hint.text(status ? (window.elmo?.translate?.('relatedWork.' + key) || fallback) : '').toggle(Boolean(status));
+  if (status) hint.attr('data-translate', 'relatedWork.' + key);
+  else hint.removeAttr('data-translate');
 }
 
 window.elmo = window.elmo || {};
 window.elmo.updateIdentifierValidationPattern = updateValidationPattern;
+window.elmo.invalidateIdentifierDetection = invalidateIdentifierDetection;
+window.elmo.restoreIdentifierType = restoreIdentifierType;
 
 function setDetectedIdentifierType(selectElement, type) {
   if (!selectElement.length) {
     return;
   }
   const typeName = type ? String(type.name || '') : '';
-  if (typeName !== '' && !selectElement.find('option').filter(function () {
-    return String($(this).val()) === typeName;
-  }).length) {
-    selectElement.append($('<option>', {
-      value: typeName,
-      text: typeName,
-      title: type.description,
-    }));
-  }
   selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY, true);
   try {
     selectElement.val(typeName).trigger('change');
@@ -877,89 +953,67 @@ function setDetectedIdentifierType(selectElement, type) {
   }
 }
 
+/**
+ * Returns an active type only when local syntax determines it uniquely.
+ * @param {string} identifier Entered identifier.
+ * @param {Object[]} identifierTypes Active vocabulary metadata.
+ * @returns {Object|null} Detected type, or null for ambiguous/registry-dependent input.
+ */
 function detectIdentifierType(identifier, identifierTypes) {
-  const doiType = identifierTypes.find(type => String(type.name || '').toUpperCase() === 'DOI');
-  if (doiType && DOI_IDENTIFIER_REGEX.test(String(identifier || '').trim())) {
-    return doiType;
-  }
-
-  const matchingTypes = identifierTypes.filter(type => {
-    try {
-      let pattern = normalizeIdentifierPattern(type.pattern);
-      if (pattern === '') {
-        return false;
-      }
-      pattern = pattern.replace(/\\{2}/g, '\\');
-      return new RegExp(pattern, 'i').test(identifier);
-    } catch (error) {
-      console.warn(`Invalid pattern for ${type.name}:`, error);
-      return false;
-    }
-  });
-
-  matchingTypes.sort((a, b) => {
-    const priorityDifference = getIdentifierPriority(b.name) - getIdentifierPriority(a.name);
-    if (priorityDifference !== 0) {
-      return priorityDifference;
-    }
-    return String(b.pattern || '').length - String(a.pattern || '').length;
-  });
-  return matchingTypes[0] || null;
+  const local = identifierDetection.classifyLocal(identifier, identifierTypes);
+  return local.status === 'detected' ? identifierDetection.activeType(local.candidates[0], identifierTypes) : null;
 }
 
 /**
- * Detects an identifier type without overwriting a later manual selection.
- * @param {HTMLElement} inputElement - Related Work or Data Source identifier input.
+ * Resolves syntax or registry evidence without replacing later edits or manual choices.
+ * @param {HTMLInputElement} [inputElement] Related Work or GEM identifier field.
+ * @returns {Promise<void>} Completes when detection finishes or its result is discarded.
  */
-function updateIdentifierType(inputElement) {
+async function updateIdentifierType(inputElement) {
+  if (!inputElement) return;
   const input = $(inputElement);
   const identifier = String(input.val() || '');
-  const selectElement = identifierTypeSelectForInput(inputElement);
-
-  const applyTypes = function (types) {
-    if (
-      String(input.val() || '') !== identifier
-      || hasManualIdentifierTypeSelection(selectElement, identifier)
-    ) {
+  const select = identifierTypeSelectForInput(inputElement);
+  const state = fieldState(inputElement);
+  clearTimeout(state.timer);
+  const version = ++state.version;
+  // Check again after each await: imports can keep the same text while changing its type.
+  const current = () => inputElement.isConnected && !inputElement.disabled && state.version === version
+    && String(input.val() || '') === identifier && !hasManualIdentifierTypeSelection(select, identifier);
+  if (!current()) return;
+  let types = relatedWorkDropdownCache.identifierTypes;
+  if (!Array.isArray(types)) {
+    try {
+      const response = await new Promise((resolve, reject) => $.ajax({
+        url: 'api/v2/validation/identifiertypes/active', method: 'GET', dataType: 'json',
+        success: resolve, error: reject,
+      }));
+      if (!Array.isArray(response?.identifierTypes)) throw new Error('Missing identifier types');
+      types = response.identifierTypes;
+      relatedWorkDropdownCache.identifierTypes = types;
+    } catch {
+      if (current()) { setDetectedIdentifierType(select, null); detectionStatus(inputElement, identifier.trim() ? 'unknown' : null); }
       return;
     }
-    setDetectedIdentifierType(selectElement, detectIdentifierType(identifier, types));
-  };
-  const clearType = function () {
-    if (
-      String(input.val() || '') === identifier
-      && !hasManualIdentifierTypeSelection(selectElement, identifier)
-    ) {
-      setDetectedIdentifierType(selectElement, null);
-    }
-  };
-
-  if (identifier) {
-    if (Array.isArray(relatedWorkDropdownCache.identifierTypes)) {
-      applyTypes(relatedWorkDropdownCache.identifierTypes);
-      return;
-    }
-    $.ajax({
-      url: "api/v2/validation/identifiertypes/active",
-      method: "GET",
-      dataType: "json",
-      success: function (response) {
-        if (response && Array.isArray(response.identifierTypes)) {
-          relatedWorkDropdownCache.identifierTypes = [...response.identifierTypes];
-          applyTypes(response.identifierTypes);
-        } else {
-          clearType();
-          console.warn("No identifier types found in the response");
-        }
-      },
-      error: function (xhr, status) {
-        console.error("Error retrieving identifier types:", status);
-        clearType();
-      },
-    });
-  } else {
-    clearType();
   }
+  if (!current()) return;
+  const local = identifierDetection.classifyLocal(identifier, types);
+  let type = local.status === 'detected' ? identifierDetection.activeType(local.candidates[0], types) : null;
+  if (local.status === 'lookupRequired') {
+    setDetectedIdentifierType(select, null);
+    detectionStatus(inputElement, 'pending');
+    const result = await identifierRegistry.lookup(local.doi);
+    if (!current()) return;
+    type = result ? identifierDetection.activeType(result.identifierType, relatedWorkDropdownCache.identifierTypes || []) : null;
+    // Registry identity cannot override the format supplied for this type by ERNIE.
+    if (type && !identifierDetection.validateIdentifier(identifier, type)) type = null;
+  }
+  // Only select options currently offered; never restore a disabled subtype as DOI/URL.
+  if (type && !select.find('option').filter(function () { return String($(this).val()) === type.name; }).length) {
+    select.append($('<option>', { value: type.name, text: type.name, title: type.description }));
+  }
+  setDetectedIdentifierType(select, type);
+  detectionStatus(inputElement, !type && identifier.trim() ? 'unknown' : null);
 }
 
 /**
@@ -980,63 +1034,34 @@ function debounce(func, wait) {
   };
 }
 
-const updateRelatedWorkIdentifierTypeDebounced = debounce(function () {
-  updateIdentifierType(this);
-}, 300);
-
-// Event listener for input in the identifier input field with debounce
-$(document).on("input", 'input[name="rIdentifier[]"]', function () {
-  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
-  updateRelatedWorkIdentifierTypeDebounced.call(this);
-});
-
-// Event listener for leaving the identifier input field
-$(document).on("blur", 'input[name="rIdentifier[]"]', function () {
-  updateIdentifierType(this);
-});
-
-$(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
-  const selectElement = $(this);
-  if (selectElement.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY) !== true) {
-    markManualIdentifierTypeSelection(selectElement);
-  }
-  updateValidationPattern(this);
-});
-
-function updateDataSourceIdsAndNames() {
-  $("#group-datasources .row").each(function (index) {
-    $(this)
-      .find('select[name="datasource_type[]"]')
-      .attr("id", "input-datasource-type" + index);
-    $(this)
-      .find('select[name="datasource_details[]"]')
-      .attr("id", "input-datasource-details" + index);
-    $(this)
-      .find('input[name="dName[]"]')
-      .attr("id", "input-datasource-modelname" + index);
-    $(this)
-      .find('input[name="dIdentifier[]"]')
-      .attr("id", "input-datasource-identifier" + index);
-    $(this)
-      .find('select[name="dIdentifierType[]"]')
-      .attr("id", "input-datasource-identifiertype" + index);
-  });
+/**
+ * Clears a previous choice immediately and debounces only this field's new input.
+ * @param {HTMLInputElement} input Edited identifier field.
+ * @returns {void}
+ */
+function scheduleIdentifierDetection(input) {
+  invalidateIdentifierDetection(input);
+  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(input));
+  setDetectedIdentifierType(identifierTypeSelectForInput(input), null);
+  updateValidationPattern(identifierTypeSelectForInput(input)[0]);
+  fieldState(input).timer = setTimeout(() => updateIdentifierType(input), 300);
 }
 
-const updateDataSourceIdentifierTypeDebounced = debounce(function () {
-  updateDataSourceIdsAndNames();
-  updateIdentifierType(this);
-}, 300);
-
-// Event listener for input in the data source identifier input field with debounce
-$(document).on("input", 'input[name="dIdentifier[]"]', function () {
-  clearManualIdentifierTypeSelection(identifierTypeSelectForInput(this));
-  updateDataSourceIdentifierTypeDebounced.call(this);
+$(document).on('input', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"]', function () {
+  scheduleIdentifierDetection(this);
 });
-
-// Event listener for leaving the data source identifier input field
-$(document).on("blur", 'input[name="dIdentifier[]"]', function () {
+$(document).on('blur', 'input[name="rIdentifier[]"], input[name="dIdentifier[]"]', function () {
   updateIdentifierType(this);
+});
+$(document).on('change', 'select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]', function () {
+  const select = $(this);
+  if (select.data(IDENTIFIER_TYPE_AUTO_UPDATE_KEY) !== true) {
+    const input = identifierInputForTypeSelect(this)[0];
+    invalidateIdentifierDetection(input);
+    markManualIdentifierTypeSelection(select);
+    if (input) detectionStatus(input, null);
+  }
+  updateValidationPattern(this);
 });
 
 // Export for testing (CommonJS)
@@ -1062,12 +1087,12 @@ if (typeof module !== 'undefined' && module.exports) {
     updateDropdownPlaceholders: dropdownUtils.updateDropdownPlaceholders,
     filterDataByGEM: dropdownUtils.filterDataByGEM,
     applyRelatedWorkDropdowns,
-    getIdentifierPriority,
+    invalidateIdentifierDetection,
+    resetIdentifierField,
     detectIdentifierType,
     updateIdentifierType,
     updateValidationPattern,
     debounce,
-    updateDataSourceIdsAndNames,
     loadFundersData,
     setCCBYasDefault,
     setBrowserTimezone,

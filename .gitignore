@@ -27,6 +27,7 @@ tests/playwright/flows/elmogem-specific/outputDataActual/*
 storage/drafts/
 
 # ERNIE cache files
+storage/cache/identifier-detection/
 storage/cache/*.json
 !storage/cache/.gitkeep
 

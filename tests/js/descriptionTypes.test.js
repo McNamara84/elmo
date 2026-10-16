@@ -42,6 +42,7 @@ describe('descriptionTypes.js', () => {
         delete global.updateHelpStatus;
         delete window.ELMO_ACTIVE_DESCRIPTION_TYPES;
         delete window.descriptionTypesReady;
+        delete window.ELMO_FEATURES;
         jest.restoreAllMocks();
     });
 
@@ -136,10 +137,36 @@ describe('descriptionTypes.js', () => {
             expect(item.hasClass('accordion-item')).toBe(true);
             const textarea = item.find('textarea');
             expect(textarea.attr('name')).toBe('description[UnknownType]');
+            expect(item.find('[data-contextual-help]')).toHaveLength(1);
+            expect(item.find('[data-contextual-help] i')).toHaveLength(1);
         });
     });
 
     describe('initDescriptionTypes', () => {
+        test('publishes readiness without adding dynamic descriptions in GEM', async () => {
+            window.ELMO_FEATURES = { showGGMsProperties: true };
+            const ready = jest.spyOn($.fn, 'ready').mockImplementation(function (callback) {
+                callback();
+                return this;
+            });
+            requireFresh('../../js/descriptionTypes.js');
+            await expect(window.descriptionTypesReady).resolves.toEqual([]);
+            expect(window.ELMO_ACTIVE_DESCRIPTION_TYPES).toEqual([]);
+            expect($.ajax).not.toHaveBeenCalled();
+            expect($('#accordion-description .accordion-item')).toHaveLength(1);
+            ready.mockRestore();
+        });
+
+        test('renders before optional translation and help globals are available', async () => {
+            delete window.applyTranslations;
+            delete window.updateHelpStatus;
+            delete global.updateHelpStatus;
+            $.ajax.mockImplementation(options => options.success([{ id: 2, name: 'Methods', slug: 'Methods' }]));
+            await expect(module.initDescriptionTypes()).resolves.toEqual(['Methods']);
+            expect($('#input-description-Methods')).toHaveLength(1);
+            expect($('#accordion-description [data-contextual-help]')).toHaveLength(1);
+        });
+
         test('skips Abstract type and only renders dynamic types', async () => {
             $.ajax.mockImplementation(function (options) {
                 options.success([

@@ -1,6 +1,6 @@
 /**
  * @description Main entry point for initializing modular form group logic.
- * Loads all independent modules and sets up global UI interactions such as help toggles and Easter egg.
+ * Loads all independent modules and sets up global UI interactions such as the Easter egg.
  * 
  * @module buttons
  */
@@ -27,29 +27,6 @@ import { replaceHelpButtonInClonedRows, createRemoveButton, updateOverlayLabels 
  * Initializes global event handlers when the DOM is fully loaded.
  */
 $(document).ready(function () {
-  /**
-   * Reads saved preference from localStorage to show/hide help icons.
-   */
-  if (localStorage.getItem("inputGroupTextVisible") === "false") {
-    $(".input-group-text").hide();
-  }
-
-  /**
-   * Show help tooltips (question mark icons) and save preference.
-   */
-  $('#buttonHelpOn').click(() => {
-    $(".input-group-text").show();
-    localStorage.setItem("inputGroupTextVisible", "true");
-  });
-
-  /**
-   * Hide help tooltips and save preference.
-   */
-  $('#buttonHelpOff').click(() => {
-    $(".input-group-text").hide();
-    localStorage.setItem("inputGroupTextVisible", "false");
-  });
-
   /**
    * Easter Egg Hover Tracker
    * Tracks hover events on certain elements and triggers an Easter egg

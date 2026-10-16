@@ -164,11 +164,11 @@
         "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide an Institution name."
+        "InstitutionsNameInvalid": "Please provide an Institution Name."
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",
-        "name": "Author Institution name"
+        "name": "Author Institution Name"
     },
     "contactPersons": {
         "contactPersonError": "Please add a contact in Authors or Contributors with a name and valid email address.",
@@ -199,7 +199,7 @@
     },
     "contributorInstitutions": {
         "title": "Contributor: Institutions",
-        "organization": "Institution name",
+        "organization": "Institution Name",
         "organizationInvalid": "Please enter a valid organization name."
     },
     "laboratory": {
@@ -291,6 +291,8 @@
         "identifierType": "Identifier type",
         "identifier": "Identifier",
         "identifierInvalid": "Please enter a valid identifier.",
+        "identifierChecking": "Checking identifier type…",
+        "identifierUncertain": "Choose the identifier type manually.",
         "addEntry": "Add related work",
         "dragHandle": "Drag & drop or use arrow keys to change order",
         "removeEntry": "Remove related work entry",

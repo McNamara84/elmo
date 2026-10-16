@@ -96,20 +96,6 @@ $(document).ready(function () {
         });
     }
 
-    function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
-        if ($(".input-group-text").is(":visible")) {
-            // Find all span elements with the help icon
-            row.find("span.input-group-text:has(i.bi-question-circle-fill)").each(function () {
-                // Replace the span with an empty div that has fixed dimensions
-                $(this).replaceWith('<div class="input-group-text" style="visibility: hidden; width: 42px; height: 38px;"></div>');
-            });
-
-            // Remove non-rounded corners class to keep structure intact
-            row.find(".input-with-help").removeClass("input-right-no-round-corners");
-            row.find(".input-with-help").addClass(roundCornersClass);
-        }
-    }
-
     /**
      * Event handler for clicking the "Add Laboratory" button.
      * Clones the first laboratory row, resets values, updates IDs,
@@ -141,7 +127,7 @@ $(document).ready(function () {
         laboratoryGroup.append(newRow);
 
         // Replace help icons in the new row
-        replaceHelpButtonInClonedRows(newRow);
+        window.replaceHelpButtonInClonedRows(newRow);
 
         attachChangeListeners();
 

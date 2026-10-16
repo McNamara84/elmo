@@ -292,6 +292,8 @@
         "identifierType": "Type d'identifiant",
         "identifier": "Identifiant",
         "identifierInvalid": "Veuillez saisir un identifiant valide.",
+        "identifierChecking": "Vérification du type d’identifiant…",
+        "identifierUncertain": "Veuillez choisir le type d’identifiant manuellement.",
         "addEntry": "Ajouter un travail connexe",
         "dragHandle": "Réorganiser par glisser-déposer ou avec les touches fléchées",
         "removeEntry": "Supprimer l'entrée de travail connexe",

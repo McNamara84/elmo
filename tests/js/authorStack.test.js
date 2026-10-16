@@ -214,12 +214,14 @@ describe('authorStack.js', () => {
     const website = person.find('input[name="cpOnlineResource[]"]');
 
     expect(toggle.attr('aria-pressed')).toBeUndefined();
+    expect(toggle.hasClass('text-dark')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
 
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(true);
+    expect(toggle.hasClass('text-dark')).toBe(true);
     expect(toggle.attr('aria-pressed')).toBeUndefined();
     expect(email.closest('.contact-person-input').css('display')).not.toBe('none');
     expect(website.closest('.contact-person-input').css('display')).not.toBe('none');
@@ -229,6 +231,7 @@ describe('authorStack.js', () => {
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(false);
+    expect(toggle.hasClass('text-dark')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
     expect(email.val()).toBe('');

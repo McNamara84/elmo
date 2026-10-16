@@ -702,7 +702,7 @@ class SubmitHandler {
         const escapedTitle = this.escapeHtml(mainTitle);
         const titleHint = escapedTitle
             ? `<p class="mb-1"><strong>${translations.alerts.dataUploadFileNameHint}</strong></p>
-               <p class="mb-0 font-monospace bg-light rounded px-2 py-1">${escapedTitle}</p>`
+               <p class="mb-0 font-monospace bg-body-tertiary rounded px-2 py-1">${escapedTitle}</p>`
             : '';
 
         return `

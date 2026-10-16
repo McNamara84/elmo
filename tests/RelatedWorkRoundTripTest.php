@@ -20,6 +20,25 @@ require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
 
 final class RelatedWorkRoundTripTest extends TestCase
 {
+    public function testDetectedAndManuallySelectedIdentifierTypesSurviveSchemaValidRoundtrip(): void
+    {
+        $entries = [
+            ['10.60510/gf1211s-47', 'References', 'IGSN'],
+            ['https://raid.org/10.82210/162fda4d', 'References', 'RAiD'],
+            ['https://arxiv.org/abs/2507.21532', 'References', 'arXiv'],
+            ['978-3-510-96872-5', 'References', 'ISBN'],
+            ['9783831048069', 'References', 'EAN13'],
+        ];
+        $payload = json_encode(array_map(static fn(array $entry): array => [
+            'identifier' => $entry[0], 'relation' => $entry[1], 'identifierType' => $entry[2],
+        ], $this->reverseTransform($this->dataCiteXml($entries), true)), JSON_THROW_ON_ERROR);
+        $xml = applyRelatedWorksPayloadToResourceXmlString($this->resourceXmlWithInstruments(), ['relatedWorksPayload' => $payload], false);
+        $controller = (new \ReflectionClass(\DatasetController::class))->newInstanceWithoutConstructor();
+        $export = $controller->transformResourceXmlString($xml, 'datacite');
+        self::assertSame($entries, $this->reverseTransform($export, true));
+        $this->assertDataCiteSchemaValid($export);
+    }
+
     public function testDataCiteImportPayloadExportAndReimportPreserveRelatedWorksAndInstruments(): void
     {
         $uploadedDataCite = $this->dataCiteXml([
