@@ -2101,5 +2101,64 @@ XML;
             'gfz@example.org',
         ], $addresses);
     }
+
+    /**
+     * Institution contact details stay in grav:contact after the Contact Person
+     * role is removed. A person without that role is left out.
+     */
+    public function testInsertContactKeepsInstitutionDetailsWithoutContactRole(): void
+    {
+        $queue = [
+            [],
+            [],
+            [
+                ['familyname' => 'One', 'givenname' => '', 'orcid' => null, 'contact_email' => 'cont_pers_1@mail.com', 'contact_website' => 'cont_pers_1.com', 'sort_order' => 0, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 1],
+                ['familyname' => 'Two', 'givenname' => '', 'orcid' => null, 'contact_email' => 'cont_pers_2@mail.com', 'contact_website' => 'cont_pers_2.com', 'sort_order' => 3, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 2],
+                ['familyname' => 'Researcher', 'givenname' => '', 'orcid' => null, 'contact_email' => 'not-a-contact@mail.com', 'contact_website' => 'https://no.example', 'sort_order' => 4, 'roles_json' => '["Researcher"]', 'affiliations_json' => '[]', 'contributor_person_id' => 3],
+            ],
+            [
+                ['name' => 'cont_inst_1', 'contact_email' => 'cont_inst_1@mail.com', 'contact_website' => 'cont_inst_1.com', 'sort_order' => 1, 'roles_json' => '[]', 'affiliations_json' => '[]', 'contributor_institution_id' => 4],
+                ['name' => 'cont_inst_2', 'contact_email' => 'cont_inst_2@mail.com', 'contact_website' => 'cont_inst_2.com', 'sort_order' => 2, 'roles_json' => '[]', 'affiliations_json' => '[]', 'contributor_institution_id' => 5],
+            ],
+        ];
+        $this->mockConnection
+            ->method('prepare')
+            ->willReturnCallback(function () use (&$queue) {
+                $rows = array_shift($queue) ?? [];
+                $statement = $this->createMock(\mysqli_stmt::class);
+                $result = $this->createMock(\mysqli_result::class);
+                $statement->method('bind_param');
+                $statement->method('execute');
+                $statement->method('get_result')->willReturn($result);
+                $index = 0;
+                $result->method('fetch_assoc')->willReturnCallback(function () use ($rows, &$index) {
+                    return $rows[$index++] ?? null;
+                });
+                return $statement;
+            });
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+        $reflection = new \ReflectionClass($this->controller);
+        $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
+
+        $values = [];
+        foreach ($xml->children('http://icgem.gfz.de/schema')->contact->children('http://icgem.gfz.de/schema') as $child) {
+            $values[] = $child->getName() . ':' . (string) $child;
+        }
+
+        $this->assertSame([
+            'address:cont_pers_1@mail.com',
+            'onlineResource:cont_pers_1.com',
+            'address:cont_inst_1@mail.com',
+            'onlineResource:cont_inst_1.com',
+            'address:cont_inst_2@mail.com',
+            'onlineResource:cont_inst_2.com',
+            'address:cont_pers_2@mail.com',
+            'onlineResource:cont_pers_2.com',
+        ], $values);
+    }
 }
 

@@ -824,6 +824,8 @@ class ICGEMController extends DatasetController
      * and grav:onlineResource from each contact person's website (optional).
      * Author contacts come first, in author order. Every Contact Person contributor
      * card follows, in contributor order, including people who are also authors.
+     * An institution keeps its address and website when the Contact Person role
+     * is removed because institution contacts are turned off.
      * If no contact persons exist, an empty grav:contact element is added to satisfy
      * the schema requirement (validation at submit time will catch missing email).
      *
@@ -845,10 +847,14 @@ class ICGEMController extends DatasetController
         $contributors = $this->getContributors($this->connection, $id);
         foreach ($contributors['entries'] as $entry) {
             $roleNames = array_column($entry['Roles'] ?? [], 'name');
-            if (!in_array('Contact Person', $roleNames, true)) {
+            $email = trim((string) ($entry['email'] ?? ''));
+            $website = trim((string) ($entry['website'] ?? ''));
+            $isContactPerson = in_array('Contact Person', $roleNames, true);
+            $institutionContact = ($entry['type'] ?? '') === 'institution' && ($email !== '' || $website !== '');
+            if (!$isContactPerson && !$institutionContact) {
                 continue;
             }
-            $this->appendIcgemContactEntry($contact, (string) ($entry['email'] ?? ''), (string) ($entry['website'] ?? ''));
+            $this->appendIcgemContactEntry($contact, $email, $website);
         }
     }
 
