@@ -195,6 +195,62 @@ describe('identifier detection in Related Work and GEM fields', () => {
     expect($('[data-identifier-detection-status]').first().text()).toMatch(/manually/);
   });
 
+  test.each(['r', 'd'])('%s selected types require a matching ERNIE pattern even for empty definitions', prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    for (const definition of [
+      {}, {pattern: ''}, {pattern: '   '}, {pattern: null},
+      {pattern: '^.*$', patterns: {validation: []}},
+      {pattern: '^.*$', patterns: {validation: [null, {}, {pattern: ''}]}},
+    ]) {
+      select.populateIdentifierTypesDropdownWithData({identifierTypes: [{name: 'IGSN', ...definition}]});
+      for (const value of ['arbitrary-identifier', '   ']) {
+        field.val(value); dropdown.val('IGSN').trigger('change');
+        expect(field[0].validity.customError).toBe(true);
+      }
+      field.val(''); select.updateValidationPattern(dropdown[0]);
+      expect(field[0].validity.customError).toBe(false);
+      field.val('arbitrary-identifier'); dropdown.val('').trigger('change');
+      expect(field[0].validity.customError).toBe(false);
+    }
+    expect($.ajax).not.toHaveBeenCalled();
+  });
+
+  test.each(['r', 'd'])('%s missing or failed legacy pattern lookups cannot permit arbitrary values', prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: []});
+    dropdown.append('<option value="IGSN">IGSN</option>');
+    for (const response of [{}, {pattern: ''}, {pattern: '   '}, {pattern: null}, {pattern: 5}, null]) {
+      let lookup;
+      $.ajax.mockImplementation(options => { lookup = options; });
+      // Install new metadata to clear the previous response's cached empty pattern.
+      select.populateIdentifierTypesDropdownWithData({identifierTypes: []});
+      if (!dropdown.find('option[value="IGSN"]').length) dropdown.append('<option value="IGSN">IGSN</option>');
+      field.val('arbitrary-identifier'); dropdown.val('IGSN').trigger('change');
+      if (response === null) lookup.error(); else lookup.success(response);
+      expect(field[0].validity.customError).toBe(true);
+      field.val('   '); select.updateValidationPattern(dropdown[0]);
+      if (response === null) lookup.error();
+      expect(field[0].validity.customError).toBe(true);
+    }
+  });
+
+  test.each(['r', 'd'])('%s legacy lookup stays invalid until a matching pattern arrives', prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: []});
+    if (!dropdown.find('option[value="IGSN"]').length) dropdown.append('<option value="IGSN">IGSN</option>');
+    let lookup;
+    $.ajax.mockImplementation(options => { lookup = options; });
+    field.val('GFZABC123'); dropdown.val('IGSN').trigger('change');
+    expect(field[0].validity.customError).toBe(true);
+    lookup.success({pattern: '/^GFZABC123$/i'});
+    expect(field[0].checkValidity()).toBe(true);
+    field.val('arbitrary-identifier'); select.updateValidationPattern(dropdown[0]);
+    expect(field[0].validity.customError).toBe(true);
+  });
+
   test('a legacy pattern response cannot overwrite validity installed by a vocabulary reload', () => {
     select.populateIdentifierTypesDropdownWithData({identifierTypes: types.filter(type => type.name !== 'IGSN')});
     let legacy;

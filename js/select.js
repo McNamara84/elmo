@@ -850,10 +850,6 @@ function hasManualIdentifierTypeSelection(selectElement, identifier) {
     && selectElement.data(IDENTIFIER_TYPE_MANUAL_IDENTIFIER_KEY) === identifier;
 }
 
-function normalizeIdentifierPattern(pattern) {
-  return identifierDetection.normalizePattern(pattern);
-}
-
 /**
  * Applies format/checksum validity to the matching identifier without browser regex differences.
  * @param {HTMLSelectElement} selectElement Identifier type dropdown in the same row/card.
@@ -870,7 +866,7 @@ function updateValidationPattern(selectElement) {
     if (String(select.val() || '').trim() !== selectedType || relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
     const value = String(input.val() || '');
     const valid = !value || !selectedType || (identifierDetection.passesAdditionalChecks(value, selectedType)
-      && (!patterns.length || patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim()))));
+      && patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim())));
     const message = window.elmo?.translate?.('relatedWork.identifierInvalid') || 'Please enter a valid identifier.';
     input[0].setCustomValidity(valid ? '' : message);
   };
@@ -890,11 +886,13 @@ function updateValidationPattern(selectElement) {
     apply(identifierPatternCache.get(selectedType));
     return;
   }
+  // A pending lookup cannot prove that a non-empty identifier matches this type.
+  apply([]);
   $.ajax({
     url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType), method: 'GET', dataType: 'json',
     success: response => {
       if (relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
-      const patterns = response?.pattern ? [normalizeIdentifierPattern(response.pattern)] : [];
+      const patterns = identifierDetection.patternsFor(response || {});
       identifierPatternCache.set(selectedType, patterns);
       apply(patterns);
     },

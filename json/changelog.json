@@ -503,7 +503,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
+                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Manually selected types require a matching format pattern; empty definitions and missing or pending pattern lookups cannot accept arbitrary identifiers. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
                 }
               ],
               "editions": ["all"],

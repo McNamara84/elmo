@@ -42,6 +42,47 @@ test.beforeEach(async ({ page }) => {
 });
 
 for (const prefix of ['r', 'd']) {
+  for (const grouped of [false, true]) {
+    test(`${prefix} manual selection rejects ${grouped ? 'grouped' : 'flat'} empty ERNIE definitions`, async ({ page }) => {
+      const definition = grouped ? {name: 'IGSN', pattern: '^.*$', patterns: {validation: []}}
+        : {name: 'IGSN', pattern: ''};
+      await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+        contentType: 'application/json', body: JSON.stringify({identifierTypes: types.map(type => type.name === 'IGSN' ? definition : type)}),
+      }));
+      await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+      const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
+      const dropdown = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();
+      await input.fill('arbitrary-identifier'); await dropdown.selectOption('IGSN');
+      expect(await input.evaluate(element => (element as HTMLInputElement).validity.customError)).toBe(true);
+      expect(await input.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(false);
+      await page.unroute('**/api/v2/validation/identifiertypes/active');
+      await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+      await input.fill('GFZABC123'); await dropdown.selectOption('IGSN');
+      expect(await input.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
+    });
+  }
+
+  test(`${prefix} a missing legacy pattern cannot validate a manually selected type`, async ({ page }) => {
+    await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify({identifierTypes: types.filter(type => type.name !== 'IGSN')}),
+    }));
+    await page.route('**/api/v2/validation/patterns/IGSN', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify({pattern: ''}),
+    }));
+    await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+    const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
+    const dropdown = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();
+    await dropdown.evaluate(element => {
+      const select = element as HTMLSelectElement;
+      if (![...select.options].some(option => option.value === 'IGSN')) select.add(new Option('IGSN', 'IGSN'));
+    });
+    await input.fill('arbitrary-identifier');
+    const response = page.waitForResponse('**/api/v2/validation/patterns/IGSN');
+    await dropdown.selectOption('IGSN'); await response;
+    await expect.poll(() => input.evaluate(element => (element as HTMLInputElement).validity.customError)).toBe(true);
+    expect(await input.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(false);
+  });
+
   test(`${prefix} fields follow changed ERNIE patterns after vocabulary reload`, async ({ page }) => {
     const input = page.locator(`input[name="${prefix}Identifier[]"]`).first();
     const dropdown = page.locator(`select[name="${prefix}IdentifierType[]"]`).first();
