@@ -108,6 +108,11 @@ test.describe('DOI Prefill Feature', () => {
     doiResponse = structuredClone(MOCK_DOI_RESPONSE);
     contactResponse = { email: null, website: null };
     browserErrors = [];
+    page.on('console', message => {
+      if (message.type() === 'warning' || message.type() === 'error') {
+        browserErrors.push(`${message.type()}: ${message.text()}`);
+      }
+    });
     page.on('pageerror', error => browserErrors.push(error.message));
     await registerStaticAssetRoutes(page);
     // Serve our test page
@@ -196,7 +201,7 @@ test.describe('DOI Prefill Feature', () => {
   });
 
   test.afterEach(() => {
-    expect(browserErrors, 'The entire DOI import must complete without browser errors').toEqual([]);
+    expect(browserErrors, 'The entire DOI import must complete without console warnings or errors').toEqual([]);
   });
 
   test('shows prefill modal after explicit DOI lookup', async ({ page }) => {

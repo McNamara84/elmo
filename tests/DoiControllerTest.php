@@ -249,7 +249,11 @@ final class DoiControllerTest extends TestCase
     {
         // Public DataCite response, retrieved 2026-10-16 with affiliation=true:
         // https://api.datacite.org/dois/10.5880%2Fha-arbodat_ak25?affiliation=true
-        $response = json_decode(file_get_contents(__DIR__ . '/fixtures/doi-prefill/issue-1282-datacite.json'), true, flags: JSON_THROW_ON_ERROR);
+        $response = json_decode(
+            file_get_contents(__DIR__ . '/fixtures/doi-prefill/issue-1282-datacite.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
         $attributes = &$response['data']['attributes'];
         $attributes['titles'][1]['titleType'] = $titleType;
         $label = $attributes['creators'][0]['affiliation'][0]['name'];

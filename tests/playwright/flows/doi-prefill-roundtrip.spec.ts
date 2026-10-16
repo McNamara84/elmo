@@ -11,6 +11,20 @@ import {
 const SOURCE = JSON.parse(readFileSync(
   path.join(REPO_ROOT, 'tests/fixtures/doi-prefill/issue-1282-datacite.json'), 'utf8'
 )).data.attributes;
+// Baseline browser/dependency warnings reproduced on blank pages or with the
+// DOI import script from 009564e2. Record them explicitly; reject other warnings.
+const EXISTING_BROWSER_WARNINGS = new Set([
+  'XSLTProcessor and XSLT Processing Instructions have been deprecated by all browsers. '
+    + 'These features will be removed from this browser soon. '
+    + 'See https://chromestatus.com/feature/4709671889534976.',
+  'XSLT will be removed from this web browser soon. See https://github.com/mozilla/standards-positions/issues/1287',
+  'XSLT is deprecated and will be removed in a future version of WebKit.',
+  'onmozfullscreenchange is deprecated.',
+  'onmozfullscreenerror is deprecated.',
+  'This site appears to use a scroll-linked positioning effect. This may not work well with asynchronous panning; '
+    + 'see https://firefox-source-docs.mozilla.org/performance/scroll-linked_effects.html '
+    + 'for further details and to join the discussion on related tools and features!',
+]);
 
 async function importedMetadata(page: Page) {
   return page.evaluate(() => ({
@@ -27,6 +41,17 @@ test.describe('DOI prefill XML roundtrip, issue #1282', () => {
       const attributes = structuredClone(SOURCE);
       attributes.titles[1].titleType = titleType;
       const browserErrors: string[] = [];
+      page.on('console', message => {
+        if (message.type() === 'warning' || message.type() === 'error') {
+          // Firefox includes the source URL and line in its native warnings.
+          const text = message.text().match(/^\[JavaScript Warning: "(.+)" \{file: /)?.[1] || message.text();
+          if (message.type() === 'warning' && EXISTING_BROWSER_WARNINGS.has(text)) {
+            test.info().annotations.push({ type: 'existing-browser-warning', description: message.text() });
+            return;
+          }
+          browserErrors.push(`${message.type()}: ${message.text()}`);
+        }
+      });
       page.on('pageerror', error => browserErrors.push(error.message));
       await registerGoogleMapsNoopRoute(page);
       await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));

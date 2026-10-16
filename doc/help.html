@@ -207,8 +207,12 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         publications from the same project or versions of a dataset share details.</p>
                     <ul>
                         <li>Only publications with a public DataCite record can be used for metadata import.</li>
+                        <li>Imported values, including title types, follow the public DataCite record. They can differ
+                            from those shown on the publication's landing page.</li>
+                        <li>Author affiliations are also imported when they have no ROR ID.</li>
                         <li>Review the imported fields; some details may need to be changed or entered manually.</li>
-                        <li>Importing metadata does not copy the existing DOI into the submission DOI field.</li>
+                        <li>The source DOI remains visible in the search field after import. The submission DOI field
+                            stays empty.</li>
                     </ul>
                     <h4>Publisher</h4>
                     <p>Please note that the publisher will be named in the dataset citation, as requested by the
