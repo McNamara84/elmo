@@ -2,7 +2,9 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT } from '../utils/constants';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import {
+  injectScript, injectStylesheet, injectModuleFromApp, injectClearFormDependencies, registerStaticAssetRoutes,
+} from '../utils/assets';
 
 const RESOURCE_INFO_TEMPLATE = readFileSync(
   path.join(REPO_ROOT, 'formgroups/resource-information.html'),
@@ -12,6 +14,15 @@ const AUTHORS_TEMPLATE = readFileSync(
   path.join(REPO_ROOT, 'formgroups/authors.html'),
   'utf8'
 );
+const CONTRIBUTORS_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/contributors.html'), 'utf8');
+// Reduced public DataCite response retrieved 2026-10-16 with affiliation=true.
+const ISSUE_1282 = JSON.parse(readFileSync(
+  path.join(REPO_ROOT, 'tests/fixtures/doi-prefill/issue-1282-datacite.json'), 'utf8'
+));
+const TITLE_TYPES = [
+  { id: 41, name: 'Main Title' }, { id: 17, name: 'Alternative Title' },
+  { id: 83, name: 'Other' }, { id: 9, name: 'Translated Title' },
+];
 
 const TEST_ROUTE_PATH = '/doi-prefill-test';
 
@@ -27,6 +38,7 @@ const TEST_PAGE_HTML = `<!DOCTYPE html>
     <main class="container p-3">
       ${RESOURCE_INFO_TEMPLATE}
       ${AUTHORS_TEMPLATE}
+      ${CONTRIBUTORS_TEMPLATE}
       <div id="modal-doi-prefill" class="modal fade" tabindex="-1"
            aria-labelledby="modal-doi-prefill-label" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -87,9 +99,17 @@ const MOCK_DOI_RESPONSE = {
 
 test.describe('DOI Prefill Feature', () => {
   let doiLookupRequestCount = 0;
+  let doiResponse: { found: boolean; attributes: Record<string, any> };
+  let contactResponse: { email: string | null; website: string | null };
+  let browserErrors: string[] = [];
 
   test.beforeEach(async ({ page }) => {
     doiLookupRequestCount = 0;
+    doiResponse = structuredClone(MOCK_DOI_RESPONSE);
+    contactResponse = { email: null, website: null };
+    browserErrors = [];
+    page.on('pageerror', error => browserErrors.push(error.message));
+    await registerStaticAssetRoutes(page);
     // Serve our test page
     await page.route(`**${TEST_ROUTE_PATH}`, async route => {
       await route.fulfill({
@@ -107,7 +127,7 @@ test.describe('DOI Prefill Feature', () => {
         await route.fulfill({
           status: 200,
           contentType: 'application/json',
-          body: JSON.stringify(MOCK_DOI_RESPONSE),
+          body: JSON.stringify(doiResponse),
         });
       } else {
         await route.fulfill({
@@ -123,18 +143,26 @@ test.describe('DOI Prefill Feature', () => {
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify({ email: null, website: null }),
+        body: JSON.stringify(contactResponse),
       });
     });
 
     // Intercept vocab API calls
     await page.route('**/api/v2/vocabs/**', async route => {
+      const vocabs: Record<string, unknown> = {
+        titletypes: TITLE_TYPES,
+        languages: [{ id: 23, name: 'English', code: 'en' }],
+        resourcetypes: [{ id: 67, resource_type_general: 'Dataset' }],
+      };
+      const name = new URL(route.request().url()).pathname.split('/').pop()!;
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify([]),
+        body: JSON.stringify(vocabs[name] || []),
       });
     });
+    await page.route('**/api/v2/validation/identifiertypes/active', route =>
+      route.fulfill({ json: { identifierTypes: [] } }));
 
     await page.goto(TEST_ROUTE_PATH);
 
@@ -145,23 +173,30 @@ test.describe('DOI Prefill Feature', () => {
     await injectScript(page, 'node_modules/jquery-ui/dist/jquery-ui.min.js');
     await injectScript(page, 'node_modules/bootstrap/dist/js/bootstrap.bundle.min.js');
 
-    // Inject clearInputFields stub and DoiLookupService + doiPrefill + handler
+    // Initialize the actual form controllers and clearing flow: a partial import
+    // must not pass just because the year was set before an exception occurred.
     await page.addScriptTag({
       content: `
-        window.loadClearInputFields = function () {
-          return Promise.resolve(function () {});
-        };
         window.elmo = window.elmo || {};
+        window.maxTitles = 5;
       `,
     });
 
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
+    await injectScript(page, 'js/eventhandlers/formgroups/contributorStack.js');
+    await injectClearFormDependencies(page);
     await injectScript(page, 'js/services/doiLookupService.js');
     await injectScript(page, 'js/resourceTypeUtils.js');
     await injectScript(page, 'js/doiPrefill.js');
     await injectScript(page, 'js/eventhandlers/doiPrefillHandler.js');
 
-    // Trigger DOMContentLoaded to initialize the handler
-    await page.evaluate(() => document.dispatchEvent(new Event('DOMContentLoaded')));
+    await page.waitForFunction(() => (window as any).authorStack && (window as any).resourceInformation);
+    await page.evaluate(async () => { await (window as any).elmo.dropdownsReady; });
+  });
+
+  test.afterEach(() => {
+    expect(browserErrors, 'The entire DOI import must complete without browser errors').toEqual([]);
   });
 
   test('shows prefill modal after explicit DOI lookup', async ({ page }) => {
@@ -200,6 +235,8 @@ test.describe('DOI Prefill Feature', () => {
 
   test('empty metadata search keeps a neutral appearance after submit validation', async ({ page }) => {
     const sourceInput = page.locator('#input-resourceinformation-source-doi');
+    // Compare settled styles rather than an intermediate CSS transition color.
+    await sourceInput.evaluate(input => { input.style.transition = 'none'; });
     const neutral = await sourceInput.evaluate(input => getComputedStyle(input).borderTopColor);
     await page.locator('form').evaluate(form => form.classList.add('was-validated'));
     await page.locator('#button-resourceinformation-prefill-doi').click();
@@ -310,6 +347,58 @@ test.describe('DOI Prefill Feature', () => {
     const versionInput = page.locator('#input-resourceinformation-version');
     await expect(versionInput).toHaveValue('1.0');
     await expect(versionInput).toHaveClass(/prefill-highlight/);
+    await expect(page.locator('[data-author-affiliation-label]')).toHaveValue('GFZ Potsdam');
+    await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
+  });
+
+  for (const [titleType, label, id] of [['Other', 'Other', '83'], ['TranslatedTitle', 'Translated Title', '9']]) {
+    test(`imports the published ${titleType} and the issue #1282 affiliation without a ROR ID`, async ({ page }) => {
+      doiResponse = { found: true, attributes: structuredClone(ISSUE_1282.data.attributes) };
+      doiResponse.attributes.titles[1].titleType = titleType;
+      await page.locator('#input-resourceinformation-source-doi').fill(doiResponse.attributes.doi);
+      await page.locator('#button-resourceinformation-prefill-doi').click();
+      await page.locator('#button-doi-prefill-confirm').click();
+
+      const expectedAffiliation = ISSUE_1282.data.attributes.creators[0].affiliation[0].name;
+      await expect(page.locator('[data-author-affiliation-label]')).toHaveValue(expectedAffiliation);
+      await expect(page.locator('select[name="titleType[]"]').nth(1)).toHaveValue(id);
+      await expect(page.locator('select[name="titleType[]"]').nth(1).locator('option:checked')).toHaveText(label);
+      await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
+      const payload = await page.evaluate(() => ({
+        authors: JSON.parse((document.querySelector('[name="authorsPayload"]') as HTMLInputElement).value),
+        resource: JSON.parse((document.querySelector('[name="resourceInformationPayload"]') as HTMLInputElement).value),
+      }));
+      expect(payload.authors[0].affiliations).toEqual([{ label: expectedAffiliation, rorId: '' }]);
+      expect(payload.resource.titles.map((title: any) => [title.text, title.typeId])).toEqual([
+        [doiResponse.attributes.titles[0].title, '41'], [doiResponse.attributes.titles[1].title, id],
+      ]);
+      await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('');
+    });
+  }
+
+  test('keeps multiple text and ROR affiliations after a successful contact lookup', async ({ page }) => {
+    doiResponse.attributes.creators[0].affiliation = [
+      'Institute, Wiesbaden, Deutschland',
+      { name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' },
+    ];
+    contactResponse = { email: 'contact@example.org', website: 'https://example.org/' };
+    await page.locator('#input-resourceinformation-source-doi').fill(doiResponse.attributes.doi);
+    await page.locator('#button-resourceinformation-prefill-doi').click();
+    await page.locator('#button-doi-prefill-confirm').click();
+    await expect(page.locator('input[name="cpEmail[]"]')).toHaveValue(contactResponse.email!);
+    await expect(page.locator('[data-author-affiliation-label]')).toHaveCount(2);
+    await expect(page.locator('[data-author-affiliation-label]').nth(0)).toHaveValue('Institute, Wiesbaden, Deutschland');
+    await expect(page.locator('[data-author-affiliation-label]').nth(1)).toHaveValue('GFZ');
+    await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
+    expect(await page.evaluate(() => (window as any).authorStack.collectPayload()[0])).toMatchObject({
+      isContact: true,
+      email: contactResponse.email,
+      website: contactResponse.website,
+      affiliations: [
+        { label: 'Institute, Wiesbaden, Deutschland', rorId: '' },
+        { label: 'GFZ', rorId: '04z8jg394' },
+      ],
+    });
   });
 
   test('cancel button closes modal without applying data', async ({ page }) => {

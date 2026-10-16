@@ -691,6 +691,9 @@ async function prefillContactPersons(creators, lookupService) {
 async function applyDoiPrefill(attributes, lookupService) {
   const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
+  // Clearing resets both DOI fields. Keep the import source visible while the
+  // submission DOI stays empty for a new dataset.
+  $('#input-resourceinformation-source-doi').val(attributes.doi || '');
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
