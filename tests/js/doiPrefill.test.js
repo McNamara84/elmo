@@ -1,5 +1,10 @@
-const { mountAuthorStack } = require('./utils/peopleStacks');
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 const { requireFresh } = require('./utils');
+const fs = require('fs');
+const path = require('path');
+// Reduced public DataCite response retrieved 2026-10-16 with affiliation=true:
+// https://api.datacite.org/dois/10.5880%2Fha-arbodat_ak25?affiliation=true
+const issue1282 = require('../fixtures/doi-prefill/issue-1282-datacite.json');
 const {
   getDataCite47ResourceTypes,
   toSpacedResourceTypeLabel,
@@ -281,6 +286,100 @@ describe('doiPrefill.js', () => {
   });
 
   /* ── prefillCreators ────────────────────────────────────────── */
+
+  describe('issue #1282: DataCite metadata through the real form controllers', () => {
+    const titleTypes = [
+      { id: 41, name: 'Main Title' },
+      { id: 17, name: 'Alternative Title' },
+      { id: 83, name: 'Other' },
+      { id: 9, name: 'Translated Title' },
+    ];
+    let attributes;
+
+    beforeEach(() => {
+      attributes = JSON.parse(JSON.stringify(issue1282.data.attributes));
+      document.body.innerHTML = fs.readFileSync(path.resolve(__dirname, '../../formgroups/resource-information.html'), 'utf8')
+        .replace(/<\?php[\s\S]*?\?>/g, '');
+      window.maxTitles = 5;
+      window.mainTitleTypeId = '41';
+      window.alternativeTitleTypeId = '17';
+      window.titleTypeOptionsHtml = titleTypes.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
+      $('#input-resourceinformation-titletype').html(window.titleTypeOptionsHtml);
+      window.replaceHelpButtonInClonedRows = jest.fn();
+      const source = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceInformationTitle.js'), 'utf8')
+        .replace(/^import .*;\s*$/gm, '')
+        .replace('$(document).ready(function () {', '(function () {')
+        .replace(/\n\}\);\s*$/, '\n})();');
+      window.eval(source);
+      mountAuthorStack([]);
+      mountContributorStack();
+      $.getJSON.mockImplementation(url => Promise.resolve(url.endsWith('/titletypes') ? titleTypes : []));
+      window.loadClearInputFields = jest.fn().mockResolvedValue(() => {
+        window.resourceInformation.clear();
+        window.authorStack.setAuthors([]);
+        window.contributorStack.setContributors([]);
+      });
+    });
+
+    afterEach(() => {
+      $(document).off('elmo:clearTitles');
+      ['resourceInformation', 'maxTitles', 'mainTitleTypeId', 'alternativeTitleTypeId', 'titleTypeOptionsHtml',
+        'replaceHelpButtonInClonedRows', 'loadClearInputFields'].forEach(key => delete window[key]);
+    });
+
+    function expectAffiliations(expected) {
+      expect(window.authorStack.collectPayload()[0].affiliations).toEqual(expected);
+      expect(JSON.parse(document.querySelector('[name="authorsPayload"]').value)[0].affiliations).toEqual(expected);
+      expect($('[data-author-affiliation-label]').map((_, input) => input.value).get()).toEqual(expected.map(item => item.label));
+    }
+
+    test.each([
+      ['Other', '83', 'Other'],
+      ['TranslatedTitle', '9', 'Translated Title'],
+    ])('keeps the published %s type in visible fields and payload', async (type, id, label) => {
+      attributes.titles[1].titleType = type;
+      await mod.applyDoiPrefill(attributes);
+
+      const titles = window.resourceInformation.collectPayload().titles;
+      expect(titles.map(title => [title.text, title.typeId, title.position])).toEqual([
+        [attributes.titles[0].title, '41', 0], [attributes.titles[1].title, id, 1],
+      ]);
+      expect($('select[name="titleType[]"]').eq(1).find(':selected').text()).toBe(label);
+      expect(JSON.parse(document.querySelector('[name="resourceInformationPayload"]').value).titles).toEqual(titles);
+      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
+    });
+
+    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations after contact enrichment', async representation => {
+      const label = attributes.creators[0].affiliation[0].name;
+      const expected = [{ label, rorId: '' }];
+      if (representation === 'strings') attributes.creators[0].affiliation = [label];
+      if (representation === 'mixed') {
+        attributes.creators[0].affiliation.push({ name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' });
+        expected.push({ label: 'GFZ', rorId: '04z8jg394' });
+      }
+      const lookupContacts = jest.fn().mockResolvedValue({ email: 'contact@example.org', website: 'https://example.org/' });
+      await mod.applyDoiPrefill(attributes, { lookupContacts });
+
+      expectAffiliations(expected);
+      expect(window.authorStack.collectPayload()[0]).toMatchObject({
+        familyname: 'Kreuz', givenname: 'Angela', orcid: '0000-0003-2450-824X',
+        isContact: true, email: 'contact@example.org', website: 'https://example.org/',
+      });
+    });
+
+    test('keeps affiliations when the contact lookup fails', async () => {
+      await mod.applyDoiPrefill(attributes, { lookupContacts: jest.fn().mockRejectedValue(new Error('offline')) });
+      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
+    });
+
+    test('retains the imported source DOI after clearing without assigning a submission DOI', async () => {
+      $('#input-resourceinformation-source-doi').val(attributes.doi);
+      await mod.applyDoiPrefill(attributes);
+      expect($('#input-resourceinformation-source-doi').val()).toBe(attributes.doi);
+      expect(window.resourceInformation.collectPayload().doi).toBe('');
+      expect($('#input-resourceinformation-doi').prop('readOnly')).toBe(true);
+    });
+  });
 
   describe('prefillCreators', () => {
     beforeEach(() => {

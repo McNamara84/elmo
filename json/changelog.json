@@ -514,6 +514,16 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1282}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Help off now hides all contextual help, including section headings, dialogs and dynamically added fields. Help on restores the appropriate help for each entry, while the Guide and form actions remain available. Existing help preferences are preserved."
                 }
               ],
