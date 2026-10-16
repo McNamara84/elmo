@@ -425,9 +425,10 @@ $(document).ready(function () {
   }
 
   function updateHelpButtonVisibility() {
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
     stack.children('[data-related-work-entry]').each(function (index) {
       const row = $(this);
-      const showHelp = index === 0;
+      const showHelp = helpOn && index === 0;
 
       row.find('span.input-group-text').each(function () {
         const helpButton = $(this);
@@ -849,6 +850,7 @@ $(document).ready(function () {
   });
 
   document.addEventListener('relatedWorkDropdowns:updated', updatePayload);
+  document.addEventListener('helpStatus:changed', updateHelpButtonVisibility);
 
   window.relatedWorkStack = {
     addRelatedWork,

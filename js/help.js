@@ -4,31 +4,29 @@
  * initialising automatically in the browser environment.
  */
 
-import {visibilityOFF, visibilityON} from './eventhandlers/functions.js';
 function setHelpStatus(status) {
   localStorage.setItem('helpStatus', status);
   updateHelpStatus();
 }
 
 function updateHelpStatus() {
-  var status = localStorage.getItem('helpStatus') || 'help-on';
-  var helpOn = status === 'help-on';
-  $('#buttonHelpOn').toggleClass('active', helpOn);
-  $('#bd-help-icon').toggleClass('bi bi-question-square-fill', helpOn);
-  $('#buttonHelpOff').toggleClass('active', status === 'help-off');
-  $('#bd-help-icon').toggleClass('bi bi-question-square', status === 'help-off');
-  $('.input-with-help').toggleClass('input-right-no-round-corners', helpOn);
-  $('.input-with-help').toggleClass('input-right-with-round-corners', status === 'help-off');
-  if (helpOn) {
-    visibilityON('.help-icon-author-affiliation');
-  } else {
-    visibilityOFF('.help-icon-author-affiliation');
+  let status = localStorage.getItem('helpStatus');
+  if (status !== 'help-on' && status !== 'help-off') {
+    status = localStorage.getItem('inputGroupTextVisible') === 'false' ? 'help-off' : 'help-on';
   }
+  localStorage.setItem('helpStatus', status);
+  localStorage.removeItem('inputGroupTextVisible');
+  const helpOn = status === 'help-on';
 
-  // Re-apply after author type switches recreate help icons from templates.
-  $('span.input-group-text:has(i[data-help-section-id])').css('display', helpOn ? '' : 'none');
+  // CSS also covers help inserted later by API responses, clones and imports.
+  // Local form-group rules still decide which help is eligible when enabled.
+  document.documentElement.dataset.helpStatus = status;
+  $('#buttonHelpOn').toggleClass('active', helpOn);
+  $('#buttonHelpOff').toggleClass('active', !helpOn);
+  $('#bd-help > i.bi').toggleClass('bi-question-square-fill', helpOn)
+    .toggleClass('bi-question-square', !helpOn);
 
-  // Trigger author stack sync to update affiliation help button visibility
+  // Notify form groups to reapply their local first-entry visibility rules.
   document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status } }));
 }
 
@@ -130,17 +128,21 @@ function displayHelpSection(sectionId, htmlData) {
 
 function initHelp() {
   updateHelpStatus();
-  $('#buttonHelpOn').click(function (event) {
+  $('#buttonHelpOn').off('click.elmoHelp').on('click.elmoHelp', function (event) {
     event.preventDefault();
     setHelpStatus('help-on');
   });
 
-  $('#buttonHelpOff').click(function (event) {
+  $('#buttonHelpOff').off('click.elmoHelp').on('click.elmoHelp', function (event) {
     event.preventDefault();
     setHelpStatus('help-off');
   });
 
-  $(document).on('click', '[data-help-section-id]', function () {
+  $(document).off('.elmoHelp');
+  $(document).on('click.elmoHelp', '[data-help-section-id]', function (event) {
+    if (document.documentElement.dataset.helpStatus === 'help-off' || $(this).closest('.help-placeholder').length) return;
+    // Cloned wrappers can carry the same help ID as their child icon.
+    event.stopPropagation();
     var sectionId = $(this).attr('data-help-section-id');
     
     // Load HTML data and parse it here in the event handler
@@ -151,19 +153,19 @@ function initHelp() {
     });
   });
 
-  $(document).on('keydown', '[data-help-section-id][tabindex]', function (event) {
+  $(document).on('keydown.elmoHelp', '[data-help-section-id][tabindex]', function (event) {
     if (event.key !== 'Enter' && event.key !== ' ') return;
     event.preventDefault();
     $(this).trigger('click');
   });
 
-  $(document).on('change', '#input-resourceinformation-resourcetype', function () {
+  $(document).on('change.elmoHelp', '#input-resourceinformation-resourcetype', function () {
     if ($('#helpModal').hasClass('show') && $('#helpModal').data('currentSection') === 'help-rights') {
       filterHelpRightsByResourceType();
     }
   });
 
-  document.getElementById('buttonHelp').addEventListener('click', function (event) {
+  $('#buttonHelp').off('click.elmoHelp').on('click.elmoHelp', function (event) {
     event.preventDefault();
     window.open('doc/help.php', '_blank');
   });

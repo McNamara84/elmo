@@ -91,14 +91,22 @@ test.describe('Contextual help toggle', () => {
       await expectClassTokens(helpOffButton, ['active']);
       await expectClassTokens(helpOnButton, [], ['active']);
 
-      await expectClassTokens(sampleInput, ['input-right-with-round-corners'], ['input-right-no-round-corners']);
+      await expect(page.locator('html')).toHaveAttribute('data-help-status', 'help-off');
+      await expect(sampleInput).toHaveCSS('border-top-right-radius', '6px');
+      for (const help of await page.locator('[data-help-section-id], [data-contextual-help], .help-placeholder').all()) {
+        await expect(help).toBeHidden();
+      }
 
       const helpStatus = await page.evaluate(() => window.localStorage.getItem('helpStatus'));
       expect(helpStatus).toBe('help-off');
 
       await page.reload();
 
-      await expectClassTokens(sampleInput, ['input-right-with-round-corners'], ['input-right-no-round-corners']);
+      await expect(page.locator('html')).toHaveAttribute('data-help-status', 'help-off');
+      await expect(sampleInput).toHaveCSS('border-top-right-radius', '6px');
+      for (const help of await page.locator('[data-help-section-id], [data-contextual-help], .help-placeholder').all()) {
+        await expect(help).toBeHidden();
+      }
 
       const persistedStatus = await page.evaluate(() => window.localStorage.getItem('helpStatus'));
       expect(persistedStatus).toBe('help-off');
