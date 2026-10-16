@@ -142,7 +142,7 @@ for (const prefix of ['r', 'd']) {
       finish(); await response;
       await expect(input.locator('..').locator('[data-identifier-detection-status]')).toContainText('manually');
       await expect(dropdown).toHaveValue('');
-      if (change === 'disabled' && prefix === 'r') await expect(dropdown.locator('option[value="IGSN"]')).toHaveCount(0);
+      if (change === 'disabled') await expect(dropdown.locator('option[value="IGSN"]')).toHaveCount(0);
     });
   }
 
@@ -188,6 +188,72 @@ for (const prefix of ['r', 'd']) {
       if (!expected) await expect(page.locator('[data-identifier-detection-status]').first()).toContainText('manually');
     });
   }
+}
+
+test('GEM reload removes obsolete options, preserves active values and keeps hidden selects disabled', async ({ page }) => {
+  const fields = page.locator('input[name="dIdentifier[]"]');
+  const dropdowns = page.locator('select[name="dIdentifierType[]"]');
+  await fields.first().fill('GFZABC123'); await dropdowns.first().selectOption('IGSN');
+  await page.evaluate(() => {
+    const row = document.querySelector('input[name="dIdentifier[]"]')!.closest('.row')!;
+    for (const [index, value] of ['DOI', 'URL'].entries()) {
+      const clone = row.cloneNode(true) as HTMLElement;
+      clone.querySelectorAll('[id]').forEach(element => { element.id += '-clone-' + index; });
+      const field = clone.querySelector('input')!; field.value = '';
+      clone.querySelector('label')!.htmlFor = field.id;
+      const dropdown = clone.querySelector('select')!; dropdown.value = value;
+      dropdown.disabled = index === 1;
+      row.parentElement!.append(clone);
+    }
+  });
+  const changed = [...types.filter(type => type.name !== 'IGSN').map(type =>
+    type.name === 'DOI' ? {...type, description: 'Updated DOI description'} : type),
+    {name: 'AddedType', description: 'New active type', pattern: '^new$'}];
+  await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+    contentType: 'application/json', body: JSON.stringify({identifierTypes: changed}),
+  }));
+  await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+  await expect(dropdowns.nth(0)).toHaveValue('');
+  await expect(fields.first()).toHaveValue('GFZABC123');
+  await expect(dropdowns.nth(1)).toHaveValue('DOI');
+  await expect(dropdowns.nth(2)).toHaveValue('URL');
+  await expect(dropdowns.nth(2)).toBeDisabled();
+  await expect(dropdowns.first()).toBeEnabled();
+  await expect(page.locator('select[name="dIdentifierType[]"] option[value="IGSN"]')).toHaveCount(0);
+  expect(await page.evaluate(() => new FormData(document.querySelector('form')!).getAll('dIdentifierType[]'))).toEqual(['', 'DOI']);
+  await fields.first().fill('new'); await dropdowns.first().selectOption('AddedType');
+  expect(await fields.first().evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
+});
+
+for (const restore of [false, true]) {
+  test(`GEM reload prevents old ${restore ? 'restoration' : 'option responses'} from restoring an inactive type`, async ({ page }) => {
+    let finish!: () => void;
+    const waiting = new Promise<void>(resolve => { finish = resolve; });
+    await page.route('**/api/v2/validation/identifiertypes/active', async route => {
+      await waiting;
+      await route.fulfill({contentType: 'application/json', body: JSON.stringify({identifierTypes: types})});
+    });
+    const sent = page.waitForRequest('**/api/v2/validation/identifiertypes/active');
+    await page.evaluate(restoreType => {
+      const current = window as any;
+      const field = document.querySelector('input[name="dIdentifier[]"]') as HTMLInputElement;
+      field.value = 'GFZABC123';
+      current.pendingGemOptions = current.setupIdentifierTypesDropdown(current.$('select[name="dIdentifierType[]"]'));
+      if (restoreType) current.elmo.restoreIdentifierType(field, 'IGSN');
+    }, restore);
+    await sent;
+    await page.route('**/api/v2/validation/identifiertypes/active', route => route.fulfill({
+      contentType: 'application/json', body: JSON.stringify({identifierTypes: types.filter(type => type.name !== 'IGSN')}),
+    }));
+    await page.evaluate(() => (window as any).initializeAllDropdownsParallel());
+    const dropdown = page.locator('select[name="dIdentifierType[]"]');
+    if (!restore) await dropdown.selectOption('DOI');
+    finish();
+    await page.evaluate(async () => { await (window as any).pendingGemOptions; await Promise.resolve(); });
+    await expect(dropdown).toHaveValue(restore ? '' : 'DOI');
+    await expect(dropdown.locator('option[value="IGSN"]')).toHaveCount(0);
+    await expect(dropdown.locator('option')).toHaveCount(types.length);
+  });
 }
 
 test('independent rows both detect after simultaneous edits', async ({ page }) => {

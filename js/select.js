@@ -454,6 +454,21 @@ function populateRelationsDropdownWithData(response) {
 }
 
 /**
+ * Refreshes identifier choices without enabling fields hidden by GEM's row type.
+ * Selections survive only while their type is still offered by the vocabulary.
+ * @param {jQuery} select Identifier type dropdown.
+ * @param {Object[]} types Current active identifier types.
+ * @returns {void}
+ */
+function refreshIdentifierTypeSelect(select, types) {
+  const disabled = select.prop('disabled') === true;
+  populateRelatedWorkSelect(select, types, type => $('<option>', {
+    value: type.name, text: type.name, title: type.description,
+  }));
+  select.prop('disabled', disabled).trigger('chosen:updated');
+}
+
+/**
  * Populates identifier types dropdown with pre-fetched data
  * @param {Object} response - Response object containing identifierTypes array
  */
@@ -463,6 +478,9 @@ function populateIdentifierTypesDropdownWithData(response) {
     ? [...response.identifierTypes]
     : [];
   applyRelatedWorkDropdowns();
+  $('select[name="dIdentifierType[]"]').each(function () {
+    refreshIdentifierTypeSelect($(this), relatedWorkDropdownCache.identifierTypes);
+  });
   $('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]').each(function () {
     updateValidationPattern(this);
   });
@@ -682,6 +700,7 @@ function setupIdentifierTypesDropdown(id) {
   if (pending) {
     return pending;
   }
+  const vocabulary = relatedWorkDropdownCache.identifierTypes;
 
   // Add the "Choose..." placeholder option
   select.empty().append(
@@ -694,18 +713,11 @@ function setupIdentifierTypesDropdown(id) {
 
   const ready = new Promise((resolve, reject) => {
     $.getJSON("./api/v2/validation/identifiertypes/active", function (response) {
-      if (response && response.identifierTypes) {
-        response.identifierTypes.forEach(function (type) {
-          select.append(
-            $("<option>", {
-              value: type.name,
-              text: type.name,
-              title: type.description, // Uses the description as a tooltip
-            })
-          );
-        });
-        // Update chosen-style dropdowns if necessary
-        $(".chosen-select").trigger("chosen:updated");
+      // A reload may have superseded this request while it was in flight.
+      const current = relatedWorkDropdownCache.identifierTypes;
+      const types = current !== vocabulary && Array.isArray(current) ? current : response?.identifierTypes;
+      if (Array.isArray(types)) {
+        refreshIdentifierTypeSelect(select, types);
         resolve();
       } else {
         console.warn("No identifier types available");
@@ -784,10 +796,13 @@ function restoreIdentifierType(input, restoredType) {
   updateValidationPattern(select[0]);
   const ready = select.data('identifierTypesReady');
   if (restoredType !== undefined && ready) {
+    const vocabulary = relatedWorkDropdownCache.identifierTypes;
     const version = fieldState(input).version;
     const identifier = String($(input).val() || '');
     Promise.resolve(ready).then(() => {
       if (!input.isConnected || fieldState(input).version !== version || String($(input).val() || '') !== identifier) return;
+      if (relatedWorkDropdownCache.identifierTypes !== vocabulary && restoredType
+        && !identifierDetection.activeType(restoredType, relatedWorkDropdownCache.identifierTypes || [])) return;
       if (restoredType && !select.find('option').filter(function () { return $(this).val() === restoredType; }).length) {
         select.append($('<option>', { value: restoredType, text: restoredType }));
       }

@@ -16,7 +16,7 @@ describe('identifier detection in Related Work and GEM fields', () => {
     document.body.innerHTML = ['r', 'r', 'd'].map((prefix, i) => `
       <div class="row" ${prefix === 'r' ? 'data-related-work-entry' : ''}>
         <input name="${prefix}Identifier[]" id="identifier-${i}">
-        <select name="${prefix}IdentifierType[]"><option value=""></option>${types.map(t => `<option>${t.name}</option>`).join('')}</select>
+        <select name="${prefix}IdentifierType[]"><option value=""></option>${types.map(t => `<option value="${t.name}">${t.name}</option>`).join('')}</select>
       </div>`).join('');
     requests = [];
     $.getJSON = jest.fn((url, callback) => { callback({ identifierTypes: types }); return { fail: jest.fn() }; });
@@ -306,8 +306,64 @@ describe('identifier detection in Related Work and GEM fields', () => {
     const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
     const {promise} = await begin('10.60510/gf1211s-47', field[0]);
     select.populateIdentifierTypesDropdownWithData({identifierTypes: types.filter(type => type.name !== 'IGSN')});
-    dropdown.find('option[value="IGSN"]').remove();
     resolve(requests[0]); await promise;
+    expect(dropdown.val()).toBe('');
+    expect(dropdown.find('option[value="IGSN"]')).toHaveLength(0);
+  });
+
+  test('GEM reload removes inactive selections, preserves active choices and updates every row', () => {
+    const first = $('select[name="dIdentifierType[]"]').first();
+    const field = $('input[name="dIdentifier[]"]').first();
+    const second = first.closest('.row').clone().appendTo(document.body).find('select');
+    const hidden = first.closest('.row').clone().appendTo(document.body).find('select').prop('disabled', true);
+    field.val('GFZABC123'); first.val('IGSN').trigger('change');
+    second.val('DOI').trigger('change'); hidden.val('URL');
+    expect(field[0].checkValidity()).toBe(true);
+    $.ajax.mockImplementation(options => { options.success?.({pattern: '^GFZABC123$'}); });
+    const changed = types.filter(type => type.name !== 'IGSN').map(type =>
+      type.name === 'DOI' ? {...type, description: 'Updated DOI description'} : type);
+    changed.push({name: 'NewType', description: 'New active type', pattern: '^new$'});
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: changed});
+    expect(first.val()).toBe('');
+    expect(field.val()).toBe('GFZABC123');
+    expect(second.val()).toBe('DOI');
+    expect(hidden.prop('disabled')).toBe(true);
+    expect(first.prop('disabled')).toBe(false);
+    for (const dropdown of [first, second, hidden]) {
+      expect(dropdown.find('option').map((i, option) => option.value).get()).toEqual(['', ...changed.map(type => type.name)]);
+      expect(dropdown.find('option[value="DOI"]').attr('title')).toBe('Updated DOI description');
+    }
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: []});
+    for (const dropdown of [first, second, hidden]) {
+      expect(dropdown.val()).toBe('');
+      expect(dropdown.find('option')).toHaveLength(1);
+    }
+    expect(hidden.prop('disabled')).toBe(true);
+  });
+
+  test('an older GEM option response cannot reintroduce types removed by a reload', async () => {
+    const dropdown = $('select[name="dIdentifierType[]"]');
+    let complete;
+    $.getJSON.mockImplementation((url, callback) => { complete = callback; return {fail: jest.fn()}; });
+    const ready = select.setupIdentifierTypesDropdown(dropdown);
+    const changed = types.filter(type => type.name !== 'IGSN');
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: changed});
+    dropdown.val('DOI');
+    complete({identifierTypes: types}); await ready;
+    expect(dropdown.val()).toBe('DOI');
+    expect(dropdown.find('option').map((i, option) => option.value).get()).toEqual(['', ...changed.map(type => type.name)]);
+  });
+
+  test('a pending GEM restoration cannot reintroduce a type removed by a reload', async () => {
+    const field = $('input[name="dIdentifier[]"]');
+    const dropdown = $('select[name="dIdentifierType[]"]');
+    let complete;
+    $.getJSON.mockImplementation((url, callback) => { complete = callback; return {fail: jest.fn()}; });
+    const ready = select.setupIdentifierTypesDropdown(dropdown);
+    field.val('GFZABC123');
+    window.elmo.restoreIdentifierType(field[0], 'IGSN');
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types.filter(type => type.name !== 'IGSN')});
+    complete({identifierTypes: types}); await ready; await microtasks();
     expect(dropdown.val()).toBe('');
     expect(dropdown.find('option[value="IGSN"]')).toHaveLength(0);
   });
