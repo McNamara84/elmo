@@ -4,11 +4,22 @@
  * initialising automatically in the browser environment.
  */
 
+/**
+ * Saves the help preference and synchronizes the editor and its form groups.
+ * @param {'help-on'|'help-off'} status - Whether contextual help is enabled.
+ * @returns {void}
+ */
 function setHelpStatus(status) {
   localStorage.setItem('helpStatus', status);
   updateHelpStatus();
 }
 
+/**
+ * Applies the stored preference, migrating the legacy setting when necessary.
+ * A valid helpStatus takes precedence; otherwise the legacy value or help-on is
+ * used. Emits helpStatus:changed so form groups can restore their eligible help.
+ * @returns {void}
+ */
 function updateHelpStatus() {
   let status = localStorage.getItem('helpStatus');
   if (status !== 'help-on' && status !== 'help-off') {
@@ -126,6 +137,10 @@ function displayHelpSection(sectionId, htmlData) {
   }
 }
 
+/**
+ * Applies the preference and binds help controls without duplicating handlers.
+ * @returns {void}
+ */
 function initHelp() {
   updateHelpStatus();
   $('#buttonHelpOn').off('click.elmoHelp').on('click.elmoHelp', function (event) {

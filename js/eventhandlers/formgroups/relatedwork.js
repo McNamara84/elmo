@@ -424,6 +424,10 @@ $(document).ready(function () {
     });
   }
 
+  /**
+   * Shows field help only on the first card when contextual help is enabled.
+   * @returns {void}
+   */
   function updateHelpButtonVisibility() {
     const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
     stack.children('[data-related-work-entry]').each(function (index) {

@@ -905,6 +905,7 @@ header .ms-auto.d-flex {
 }
 
 /* The root state also hides help added asynchronously, including modal help.
+   Override inline display styles set by local widgets with !important.
    Keep non-help input addons and the Help/Guide navigation available. */
 html[data-help-status="help-off"] [data-help-section-id],
 html[data-help-status="help-off"] [data-contextual-help],

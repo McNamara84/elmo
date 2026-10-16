@@ -9,12 +9,35 @@ const TYPES = [
   { id: 2, name: 'Methods', slug: 'Methods' },
   { id: 99, name: 'Custom description', slug: 'CustomDescription' },
 ];
+const SCIENCE_KEYWORDS = [
+  ['8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', 'Spherical harmonic models'],
+  ['97576e51-28b5-4ae0-af33-fbb00fd5996b', 'Mass concentration models'],
+  ['b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', 'Earth science reanalyses'],
+  ['5498572c-aaed-4c08-8aad-8b297057e9c9', 'Geodetics'],
+  ['221386f6-ef9b-4990-82b3-f990b0fe39fa', 'Gravitational field'],
+  ['ad09b215-e837-4d9f-acbc-2b45e5b81825', 'Marine gravity field'],
+].map(([id, text]) => ({ id: `https://gcmd.earthdata.nasa.gov/kms/concept/${id}`, text, children: [] }));
+
+// Reproduced with the same flow and the production files from ce8bd3ab, before
+// the help fix. Exempt only these existing Firefox diagnostics; errors and other
+// warnings must still fail the test. The first two originate in unchanged Tagify.
+const EXISTING_FIREFOX_WARNINGS = [
+  /^\[JavaScript Warning: "onmozfullscreen(?:change|error) is deprecated\." \{file: "[^"]*\/node_modules\/@yaireo\/tagify\/dist\/tagify\.js"/u,
+  /^\[JavaScript Warning: "This site appears to use a scroll-linked positioning effect\.[^"]*" \{file: "[^"]*\/__help_visibility_fixture__" line: 0\}\]$/u,
+];
 
 // Use production templates, styles, modules and widgets with deterministic APIs.
 // This suite needs no PHP server or changes to the user's settings.php.
 async function mount(page: Page, baseURL: string | undefined, edition = 'generic', delayed = false) {
   const errors: string[] = [];
-  page.on('pageerror', error => errors.push(error.message));
+  page.on('pageerror', error => errors.push(`pageerror: ${error.message}`));
+  page.on('console', message => {
+    if (!['warning', 'error'].includes(message.type())) return;
+    const existingWarning = page.context().browser()?.browserType().name() === 'firefox'
+      && message.type() === 'warning'
+      && EXISTING_FIREFOX_WARNINGS.some(pattern => pattern.test(message.text()));
+    if (!existingWarning) errors.push(`${message.type()}: ${message.text()}`);
+  });
   const gem = edition === 'gem';
   const msl = edition === 'msl';
   const files = [
@@ -40,6 +63,7 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
     const data = pathname.endsWith('/descriptiontypes') ? TYPES
       : pathname.endsWith('/availability') ? { science_keywords: { available: true, displayName: 'Science keywords' } }
       : pathname.endsWith('/msl-laboratories') ? { data: [{ display_name: 'Test laboratory', scientific_domain: 'Geology' }] }
+      : pathname.endsWith('/gcmd-science-keywords') ? SCIENCE_KEYWORDS
       : [];
     await route.fulfill({ json: data });
   });
@@ -178,7 +202,7 @@ for (const edition of ['generic', 'msl', 'igsn', 'gem']) {
       await page.reload();
       await expect(page.locator('html')).toHaveAttribute('data-help-status', 'help-off');
       await expectAllHelpHidden(page);
-      expect(errors).toEqual([]);
+      expect(errors, 'Contextual help must not introduce console warnings or errors').toEqual([]);
     });
   }
 }
@@ -197,5 +221,5 @@ test('migrates a legacy preference, preserves local hiding and keeps the Guide r
   const popup = page.waitForEvent('popup');
   await page.locator('#buttonHelpheader').click();
   await expect(await popup).toHaveURL(/doc\/help\.php$/u);
-  expect(errors).toEqual([]);
+  expect(errors, 'Contextual help must not introduce console warnings or errors').toEqual([]);
 });

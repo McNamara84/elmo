@@ -51,6 +51,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
 - Light, Dark and Auto modes share the saved theme with the ELMO Guide. Auto follows the system's color preference.
+- The Help menu switches contextual help at fields, section headings and dialogs on or off, including dynamically added entries. The preference is saved in the browser; Guide links remain available.
 
 ## Installation
 
