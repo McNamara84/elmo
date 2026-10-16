@@ -822,6 +822,8 @@ class ICGEMController extends DatasetController
      *
      * Populates grav:address from each contact person's email (required, minOccurs=1)
      * and grav:onlineResource from each contact person's website (optional).
+     * Author contacts come first, in author order. Every Contact Person contributor
+     * card follows, in contributor order, including people who are also authors.
      * If no contact persons exist, an empty grav:contact element is added to satisfy
      * the schema requirement (validation at submit time will catch missing email).
      *
@@ -830,24 +832,71 @@ class ICGEMController extends DatasetController
      */
     protected function insertContact(SimpleXMLElement $icgempart, int $id): void
     {
-        $contactPersons = $this->getContactPersons($this->connection, $id);
+        $contactPersons = $this->orderContactPersonsLikeAuthors(
+            $this->getContactPersons($this->connection, $id),
+            $this->getAuthors($this->connection, $id)
+        );
         $contact = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
 
         foreach ($contactPersons as $cp) {
-            if (!empty($cp['email'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':address',
-                    htmlspecialchars(trim($cp['email'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+            $this->appendIcgemContactEntry($contact, (string) ($cp['email'] ?? ''), (string) ($cp['website'] ?? ''));
+        }
+
+        $contributors = $this->getContributors($this->connection, $id);
+        foreach ($contributors['entries'] as $entry) {
+            $roleNames = array_column($entry['Roles'] ?? [], 'name');
+            if (!in_array('Contact Person', $roleNames, true)) {
+                continue;
             }
-            if (!empty($cp['website'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
-                    htmlspecialchars(trim($cp['website'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+            $this->appendIcgemContactEntry($contact, (string) ($entry['email'] ?? ''), (string) ($entry['website'] ?? ''));
+        }
+    }
+
+    /**
+     * @param array<int, array<string, mixed>> $contacts
+     * @param array<int, array<string, mixed>> $authors
+     * @return array<int, array<string, mixed>>
+     */
+    private function orderContactPersonsLikeAuthors(array $contacts, array $authors): array
+    {
+        $ordered = [];
+        $unused = $contacts;
+        foreach ($authors as $author) {
+            if (($author['type'] ?? '') !== 'person') {
+                continue;
             }
+            foreach ($unused as $index => $contact) {
+                if (strcasecmp(trim((string) ($author['familyname'] ?? '')), trim((string) ($contact['familyname'] ?? ''))) === 0
+                    && strcasecmp(trim((string) ($author['givenname'] ?? '')), trim((string) ($contact['givenname'] ?? ''))) === 0) {
+                    $ordered[] = $contact;
+                    unset($unused[$index]);
+                    break;
+                }
+            }
+        }
+        foreach ($unused as $contact) {
+            $ordered[] = $contact;
+        }
+        return $ordered;
+    }
+
+    private function appendIcgemContactEntry(SimpleXMLElement $contact, string $email, string $website): void
+    {
+        $email = trim($email);
+        $website = trim($website);
+        if ($email !== '') {
+            $contact->addChild(
+                self::ICGEM_NAMESPACE_PREFIX . ':address',
+                htmlspecialchars($email),
+                self::ICGEM_NAMESPACE_URI
+            );
+        }
+        if ($website !== '') {
+            $contact->addChild(
+                self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
+                htmlspecialchars($website),
+                self::ICGEM_NAMESPACE_URI
+            );
         }
     }
 
