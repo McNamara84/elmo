@@ -16,6 +16,7 @@ describe('relatedwork.js card stack', () => {
   }
 
   beforeEach(() => {
+    localStorage.clear();
     document.body.innerHTML = `
       <span data-related-work-summary-count>0 entries</span>
       <input type="hidden" name="relatedWorksPayload" value="[]">
@@ -393,6 +394,31 @@ describe('relatedwork.js card stack', () => {
 
     cards.eq(0).find('[data-related-work-remove]').trigger('click');
     expect($('[data-related-work-entry]').first().find('span.input-group-text.help-placeholder')).toHaveLength(0);
+  });
+
+  test('respects help-off through imports, additions, reordering and re-enabling', () => {
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+    window.relatedWorkStack.setRelatedWorks([
+      { entryKey: 'first', identifier: 'first', relationId: '1', identifierType: 'DOI' },
+      { entryKey: 'second', identifier: 'second', relationId: '2', identifierType: 'URL' }
+    ]);
+    $('[data-related-work-add]').trigger('click');
+    let cards = $('[data-related-work-entry]');
+    expect(cards).toHaveLength(3);
+    expect(cards.find('span.input-group-text.help-placeholder')).toHaveLength(9);
+    cards.eq(1).find('[data-related-work-drag]').trigger($.Event('keydown', { key: 'ArrowUp' }));
+    expect($('[data-related-work-entry] .help-placeholder')).toHaveLength(9);
+
+    localStorage.setItem('helpStatus', 'help-on');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed'));
+    cards = $('[data-related-work-entry]');
+    expect(cards.eq(0).attr('data-related-work-entry-key')).toBe('second');
+    expect(cards.eq(0).find('span.input-group-text.help-placeholder')).toHaveLength(0);
+    expect(cards.eq(0).find('span.input-group-text').first().css('visibility')).toBe('visible');
+    expect(cards.eq(1).find('span.input-group-text.help-placeholder')).toHaveLength(3);
+    cards.eq(0).find('[data-related-work-remove]').trigger('click');
+    expect($('[data-related-work-entry]').first().find('.help-placeholder')).toHaveLength(0);
   });
 
   test('collapses, reopens, and removes cards without changing their data', () => {

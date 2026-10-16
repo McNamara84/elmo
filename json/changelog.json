@@ -514,6 +514,16 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Help off now hides all contextual help, including section headings, dialogs and dynamically added fields. Help on restores the appropriate help for each entry, while the Guide and form actions remain available. Existing help preferences are preserved."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1279}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Description fields can now be enlarged and reduced vertically using their resize handle in all ELMO editions."
                 }
               ],

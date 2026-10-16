@@ -77,6 +77,19 @@
     border-bottom-right-radius: 0.375rem !important;
 }
 
+/* Apply to new fields as well, without overwriting local first-entry rules. */
+html[data-help-status="help-off"] .input-with-help,
+html[data-help-status="help-off"] .input-group-append:has(+ .input-group-append > .input-group-text > [data-help-section-id]) > .btn {
+    border-top-right-radius: var(--bs-border-radius, 0.375rem) !important;
+    border-bottom-right-radius: var(--bs-border-radius, 0.375rem) !important;
+}
+
+/* DOI editing and ORCID search remain between the input and the right edge. */
+html[data-help-status="help-off"] .input-group:has(> .input-group-append > .btn) > .form-floating > .input-with-help {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
 /* Spacing to all sides */
 .card-body {
     padding: 1.0rem;
