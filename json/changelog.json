@@ -493,6 +493,23 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Description fields can now be enlarged and reduced vertically using their resize handle in all ELMO editions."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1274
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Identifier types in Related Works and GEM data sources are detected only when unambiguous. Format detection and validation use the patterns supplied by ERNIE, including grouped validation patterns. DOI, IGSN and RAiD are distinguished using registry metadata; ISBN and EAN13 receive additional check-digit checks. ISBN/EAN13 overlaps stay empty for manual selection, and pending lookups preserve manual choices."
                 }
               ],
