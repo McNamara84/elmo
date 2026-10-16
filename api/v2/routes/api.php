@@ -14,6 +14,7 @@ require_once __DIR__ . '/../controllers/ICGEMController.php';
 require_once __DIR__ . '/../controllers/DraftController.php';
 require_once __DIR__ . '/../controllers/AffiliationController.php';
 require_once __DIR__ . '/../controllers/DoiController.php';
+require_once __DIR__ . '/../controllers/IdentifierDetectionController.php';
 
 return [
     // DOI lookup endpoints (DataCite proxy)
@@ -62,6 +63,7 @@ return [
     ['GET', '/vocabs/mathreps', [new VocabController(), 'getMathRepresentations']],
 
     // Validation endpoints
+    ['GET', '/validation/identifier-type', [new IdentifierDetectionController(), 'detect']],
     ['GET', '/validation/patterns[/{type}]', [new ValidationController(), 'getPattern']],
     ['GET', '/validation/identifiertypes/all', [new ValidationController(), 'getIdentifierTypes']],
     ['GET', '/validation/identifiertypes/active', [new ValidationController(), 'getActiveIdentifierTypes']],

@@ -493,6 +493,26 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Identifier types in Related Works and GEM data sources are detected only when unambiguous. Format detection and validation use the patterns supplied by ERNIE, including grouped validation patterns. DOI, IGSN and RAiD are distinguished using registry metadata; ISBN and EAN13 receive additional check-digit checks. ISBN/EAN13 overlaps stay empty for manual selection, and pending lookups preserve manual choices."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Reloads also update GEM type choices, remove inactive selections and preserve active choices; delayed option loading or restoration cannot bring removed types back. Manually selected types require a matching format pattern; empty definitions and missing or pending pattern lookups cannot accept arbitrary identifiers. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}, {"type": "pull", "number": 1278}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
               ],
@@ -732,6 +752,16 @@
                   "number": 1234
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Data source fields keep stable IDs and working labels while entering identifiers, so editing and saving GEM forms remain reliable."
+                }
+              ],
+              "editions": ["gem"],
+              "references": [{"type": "pull", "number": 1278}]
             }
           ]
         },

@@ -183,6 +183,7 @@ export async function injectClearFormDependencies(page: Page): Promise<void> {
   // clear.js imports select.js; select expects dropdown helpers on window in the browser build.
   await injectScriptFromApp(page, 'js/dropdownUtils.js');
   await injectScriptFromApp(page, 'js/dropdownAjax.js');
+  await injectScriptFromApp(page, 'js/services/identifierDetectionService.js');
   await injectModuleFromApp(page, 'js/clear.js');
   await injectModuleFromApp(page, 'js/clearInputFieldsLoader.js');
 }
@@ -198,6 +199,7 @@ export async function injectProductionScript(page: Page, relativePath: string): 
     return;
   }
   if (APP_MODULE_SCRIPTS.has(relativePath)) {
+    if (relativePath === 'js/select.js') await injectScriptFromApp(page, 'js/services/identifierDetectionService.js');
     await injectModuleFromApp(page, relativePath);
     return;
   }

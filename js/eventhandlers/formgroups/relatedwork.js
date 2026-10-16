@@ -556,6 +556,7 @@ $(document).ready(function () {
     row.find('input[name="rIdentifier[]"]').val(entry.identifier || '');
     ensureSelectValue(row.find('select[name="relation[]"]'), entry.relationId || entry.relation || '', entry.relation || '');
     ensureSelectValue(row.find('select[name="rIdentifierType[]"]'), entry.identifierType || '');
+    window.elmo?.restoreIdentifierType?.(row.find('input[name="rIdentifier[]"]')[0]);
     renderEntrySummary(row);
   }
 

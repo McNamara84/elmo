@@ -2137,6 +2137,7 @@ class VocabController
      */
     public function syncIdentifierTypesToDb(array $ernieTypes): void
     {
+        require_once __DIR__ . '/../services/IdentifierTypePatterns.php';
         global $connection;
 
         $connection->begin_transaction();
@@ -2153,7 +2154,7 @@ class VocabController
                 }
 
                 $desc = $type['description'] ?? null;
-                $pattern = $type['pattern'] ?? null;
+                $pattern = IdentifierTypePatterns::validationPattern($type);
 
                 $sql = "INSERT INTO `Identifier_Type` (`ernie_id`, `name`, `description`, `pattern`, `isShown`)
                         VALUES (?, ?, ?, ?, 1)

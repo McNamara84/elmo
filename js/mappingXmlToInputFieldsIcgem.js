@@ -498,6 +498,7 @@ async function populateIcgemDataSources(data) {
   for (let i = 0; i < formDataSources.length; i++) {
     const ds = formDataSources[i];
     const $row = $rows.eq(i);
+    window.elmo?.invalidateIdentifierDetection?.($row.find('input[name="dIdentifier[]"]')[0]);
     const $typeSelect = $row.find('select[name="datasource_type[]"]');
     selectDataSourceType($typeSelect, ds.inputDataSourceType);
     $typeSelect.trigger('change');
@@ -543,6 +544,7 @@ async function populateIcgemDataSources(data) {
         if (!selectOptionByText($idTypeSelect, ds.identifierType)) {
           $idTypeSelect.val(ds.identifierType);
         }
+        window.elmo?.restoreIdentifierType?.($row.find('input[name="dIdentifier[]"]')[0]);
       }
       if (ds.name) $row.find('input[name="dName[]"]').val(ds.name);
     }

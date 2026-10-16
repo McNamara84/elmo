@@ -298,7 +298,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect(option.attr('data-relation-name')).toBe('IsReferencedBy');
   });
 
-  test('uses the cached identifier type patterns for Card auto-detection', () => {
+  test('uses cached identifier types without reloading the vocabulary', async () => {
     selectModule.populateIdentifierTypesDropdownWithData({
       identifierTypes: [{ name: 'DOI', pattern: '^10\\..+', description: 'Digital Object Identifier' }]
     });
@@ -313,7 +313,8 @@ describe('initializeAllDropdownsParallel populate integration', () => {
       options && String(options.url || '').includes('identifiertypes/active')
     ).length;
 
-    selectModule.updateIdentifierType(card.find('input')[0]);
+    $.ajax.mockImplementation(options => { options.success({status:'detected', identifierType:'DOI', source:'datacite'}); return { fail: jest.fn() }; });
+    await selectModule.updateIdentifierType(card.find('input')[0]);
 
     expect(card.find('select').val()).toBe('DOI');
     expect($.ajax.mock.calls.filter(([options]) =>
