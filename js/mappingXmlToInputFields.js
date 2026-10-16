@@ -627,14 +627,11 @@ function processContactPersons(xmlDoc) {
   if (getAuthorStackController()) {
     const contactPersons = [];
 
+    const looseContacts = [];
+
     for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
       const contactPersonNode = contactPersonNodes.snapshotItem(i);
-      const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
-      const [familyname, givenname] = fullName?.split(", ");
-
-      if (!givenname || !familyname) {
-        continue;
-      }
+      const fullName = (getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver) || "").trim();
 
       let email = getNodeText(
         contactPersonNode,
@@ -656,14 +653,47 @@ function processContactPersons(xmlDoc) {
         website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
       }
 
-      contactPersons.push({ familyname, givenname, email, website });
+      if (!fullName) continue;
+
+      // "Family, Given" is the usual ISO shape. A single token is a mononym
+      // and matches an author whose given name is empty.
+      if (fullName.includes(",")) {
+        const parts = fullName.split(",");
+        const familyname = (parts.shift() || "").trim();
+        const givenname = parts.join(",").trim();
+        if (!familyname && !givenname) continue;
+        contactPersons.push({ familyname, givenname, email, website });
+        continue;
+      }
+
+      looseContacts.push({ name: fullName, email, website });
     }
 
-    // ISO names that are not "Family, Given" are skipped above. DataCite
-    // ContactPerson contributors still identify which authors to check.
+    // A display name that is not a mononym, such as "Erika Müller", stays
+    // unmatched here. DataCite ContactPerson names still check the author.
     // A parsed ISO contact keeps its email; the DataCite copy has none.
+    const authors = getCurrentAuthorsPayload(getAuthorStackController());
+    const dataciteContacts = collectDataCiteContactPersons(xmlDoc);
     const seen = new Set(contactPersons.map((contact) => normalizeNameKey(contact.familyname, contact.givenname)));
-    collectDataCiteContactPersons(xmlDoc).forEach((contact) => {
+    looseContacts.forEach((contact) => {
+      const key = normalizeNameKey(contact.name, "");
+      if (seen.has(key)) return;
+      const matchesAuthor = authors.some((author) => (
+        author.type === "person" && normalizeNameKey(author.familyname, author.givenname) === key
+      ));
+      const matchesDataCite = dataciteContacts.some((person) => (
+        normalizeNameKey(person.familyname, person.givenname) === key
+      ));
+      if (!matchesAuthor && !matchesDataCite) return;
+      seen.add(key);
+      contactPersons.push({
+        familyname: contact.name,
+        givenname: "",
+        email: contact.email,
+        website: contact.website
+      });
+    });
+    dataciteContacts.forEach((contact) => {
       const key = normalizeNameKey(contact.familyname, contact.givenname);
       if (seen.has(key)) return;
       seen.add(key);
