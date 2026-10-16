@@ -67,7 +67,8 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
       : [];
     await route.fulfill({ json: data });
   });
-  await page.route('**/doc/help.php', route => route.fulfill({
+  // Context routing also covers the first navigation of the Guide popup.
+  await page.context().route('**/doc/help.php', route => route.fulfill({
     contentType: 'text/html', body: '<section id="help-resourceinformation-fg">Resource Information help</section>',
   }));
   const url = new URL('__help_visibility_fixture__', baseURL ?? 'http://localhost:8080/');
@@ -89,6 +90,7 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
       <script src="node_modules/jquery/dist/jquery.min.js"></script>
       <script src="node_modules/jquery-ui/dist/jquery-ui.min.js"></script>
       <script src="node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+      <script src="js/footerLayout.js"></script>
       <script src="node_modules/@yaireo/tagify/dist/tagify.js"></script>
       <script src="node_modules/jstree/dist/jstree.min.js"></script>
       <script type="module" src="js/help.js"></script>
@@ -107,16 +109,36 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
   await page.goto(url.href);
   await expect(page.locator('html')).toHaveAttribute('data-help-status', /help-(on|off)/u);
   await page.waitForFunction(() => Boolean((window as any).authorStack && (window as any).relatedWorkStack));
+  // The real editor measures its fixed footer, which can wrap after fonts load.
+  // Keep that production behavior in the fixture so mobile controls stay usable.
+  await page.evaluate(async () => { await document.fonts.ready; });
+  await expect.poll(() => page.evaluate(() => {
+    const footer = document.querySelector('footer.fixed-bottom')!;
+    return parseFloat(getComputedStyle(document.body).paddingBottom) - footer.getBoundingClientRect().height;
+  }), { message: 'The page must reserve space above the measured fixed footer' }).toBeGreaterThanOrEqual(16);
   return { release, errors };
 }
 
 async function toggle(page: Page, on: boolean) {
   if (await page.locator('.navbar-toggler').isVisible() && !(await page.locator('#bd-help').isVisible())) {
     await page.locator('.navbar-toggler').click();
+    await expect(page.locator('#headerMenuContent')).toHaveClass(/\bshow\b/u);
   }
   await page.locator('#bd-help').click();
   await page.locator(on ? '#buttonHelpOn' : '#buttonHelpOff').click();
   await expect(page.locator('html')).toHaveAttribute('data-help-status', on ? 'help-on' : 'help-off');
+}
+
+async function transitionModal(page: Page, selector: string, eventName: 'shown.bs.modal' | 'hidden.bs.modal', activate: () => Promise<void>) {
+  const modal = page.locator(selector);
+  // Visibility changes before Bootstrap finishes animating. During that time
+  // dismiss clicks can be ignored, so wait for the public lifecycle event.
+  await modal.evaluate((element, name) => {
+    element.removeAttribute('data-help-test-modal-event');
+    element.addEventListener(name, () => element.setAttribute('data-help-test-modal-event', name), { once: true });
+  }, eventName);
+  await activate();
+  await expect(modal).toHaveAttribute('data-help-test-modal-event', eventName);
 }
 
 async function expectAllHelpHidden(page: Page) {
@@ -156,8 +178,10 @@ for (const edition of ['generic', 'msl', 'igsn', 'gem']) {
         await page.locator('select[name="datasource_type[]"]').first().selectOption('M');
       } else {
         await page.locator('[data-description-slug="Methods"] .accordion-button').click();
+        await expect(page.locator('#collapse-description-Methods')).toHaveClass(/\bshow\b/u);
         await expect(page.locator('#input-description-Methods')).toBeVisible();
         await page.locator('[data-description-slug="CustomDescription"] .accordion-button').click();
+        await expect(page.locator('#collapse-description-CustomDescription')).toHaveClass(/\bshow\b/u);
         await expect(page.locator('[data-description-slug="CustomDescription"] [data-contextual-help]')).toBeHidden();
       }
       await expectAllHelpHidden(page);
@@ -169,15 +193,16 @@ for (const edition of ['generic', 'msl', 'igsn', 'gem']) {
       const orcidSearch = page.locator('.orcid-search-btn').first();
       await expect(orcidSearch).toBeVisible();
       await expect(orcidSearch).toHaveCSS('border-top-right-radius', '6px');
-      await orcidSearch.click();
+      // Exercise keyboard access to a form action while contextual help is off.
+      await transitionModal(page, '#modal-orcid-search', 'shown.bs.modal', () => orcidSearch.press('Enter'));
       await expect(page.locator('#modal-orcid-search')).toBeVisible();
-      await page.locator('#modal-orcid-search [data-bs-dismiss="modal"]').first().click();
+      await transitionModal(page, '#modal-orcid-search', 'hidden.bs.modal', () => page.locator('#modal-orcid-search [data-bs-dismiss="modal"]').first().click());
       await expect(page.locator('#modal-orcid-search')).toBeHidden();
-      await page.locator('#button-science_keywords-open').click();
+      await transitionModal(page, '#modal-sciencekeyword', 'shown.bs.modal', () => page.locator('#button-science_keywords-open').click());
       await expect(page.locator('#modal-sciencekeyword')).toBeVisible();
       await expectAllHelpHidden(page);
       await page.locator('#input-sciencekeyword-thesaurussearch').fill('rock');
-      await page.locator('#modal-sciencekeyword [data-bs-dismiss="modal"]').click();
+      await transitionModal(page, '#modal-sciencekeyword', 'hidden.bs.modal', () => page.locator('#modal-sciencekeyword [data-bs-dismiss="modal"]').click());
       await expect(page.locator('#modal-sciencekeyword')).toBeHidden();
 
       // A hidden focusable field-help icon must not remain in keyboard navigation.
@@ -193,10 +218,10 @@ for (const edition of ['generic', 'msl', 'igsn', 'gem']) {
       await expect(relatedCards.first().locator('i[data-help-section-id]').first()).toBeVisible();
       // CSS must not have forced cloned title and laboratory placeholders visible.
       for (const placeholder of await page.locator('.help-placeholder').all()) await expect(placeholder).toBeHidden();
-      await sectionHelp.click();
+      await transitionModal(page, '#helpModal', 'shown.bs.modal', () => sectionHelp.click());
       await expect(page.locator('#helpModal')).toBeVisible();
       await expect(page.locator('#helpModal .modal-body')).toContainText('Resource Information help');
-      await page.locator('#helpModal [data-bs-dismiss="modal"]').first().click();
+      await transitionModal(page, '#helpModal', 'hidden.bs.modal', () => page.locator('#helpModal [data-bs-dismiss="modal"]').first().click());
       await expect(page.locator('#helpModal')).toBeHidden();
       await toggle(page, false);
       await page.reload();
