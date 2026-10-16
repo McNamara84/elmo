@@ -1,4 +1,20 @@
 {
+    "affiliations": {
+        "title": "Affiliations",
+        "addFreeText": "Add without a ROR",
+        "searchPlaceholder": "Enter at least 3 characters to see suggestions",
+        "edit": "Edit affiliation",
+        "moveUp": "Move affiliation up",
+        "moveDown": "Move affiliation down",
+        "rorId": "ROR ID",
+        "remove": "Remove affiliation",
+        "invalid": "Please provide an affiliation.",
+        "loading": "Searching…",
+        "noResults": "No ROR matches. You can add your input without a ROR ID.",
+        "error": "Search unavailable. Try again or add your input without a ROR ID.",
+        "pending": "An affiliation input is still open. Select a ROR result, add it without a ROR ID or discard it, then repeat your action.",
+        "discard": "Discard input"
+    },
     "header": {
         "help": "Help",
         "on": "On",

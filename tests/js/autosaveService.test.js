@@ -431,7 +431,7 @@ describe('autosaveService', () => {
       'contacts[]': ['on']
     });
 
-    expect(window.authorStack.setAuthors).toHaveBeenCalledWith(JSON.parse(payload));
+    expect(window.authorStack.setAuthors).toHaveBeenCalledWith(JSON.parse(payload), { restoreUiState: true });
     expect(form.querySelector('input[name="title"]').value).toBe('Recovered dataset');
     expect(form.querySelector('input[name="familynames[]"]').value).toBe('');
     expect(form.querySelector('input[name="contacts[]"]').checked).toBe(false);
@@ -470,7 +470,7 @@ describe('autosaveService', () => {
     expect(window.authorStack.setAuthors.mock.calls[0][0].map(author => author.familyname)).toEqual(['Doe', 'Roe']);
     expect(window.contributorStack.setContributors).toHaveBeenCalledWith([
       expect.objectContaining({ type: 'institution', institutionname: 'Archive' })
-    ]);
+    ], { restoreUiState: true });
     expect(form.querySelector('[name="title"]').value).toBe('Restored');
     expect(form.querySelector('[name="familynames[]"]').value).toBe('');
   });
@@ -563,10 +563,10 @@ describe('autosaveService', () => {
     ]), 'cbPersonLastname[]': ['Legacy'] });
     expect(window.contributorStack.setContributors).toHaveBeenCalledWith([
       { type: 'institution', institutionname: 'Institute', roles: [] }
-    ]);
+    ], { restoreUiState: true });
     expect(form.querySelector('[name="cbPersonLastname[]"]').value).toBe('');
     service.applyDraftValues({ contributorsPayload: '[]', 'cbPersonLastname[]': ['Legacy'] });
-    expect(window.contributorStack.setContributors).toHaveBeenLastCalledWith([]);
+    expect(window.contributorStack.setContributors).toHaveBeenLastCalledWith([], { restoreUiState: true });
   });
 
   test('applyDraftValues restores relatedWorksPayload through the stack before legacy arrays', () => {

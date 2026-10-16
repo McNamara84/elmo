@@ -430,9 +430,16 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-author-affiliation">
                     <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of a person or institution author.</p>
-                    <p>Use the affiliation editor inside each author card to search for ROR-based affiliations, add the
-                        selected result, edit the displayed label, reorder affiliations, or remove them. If the required
-                        affiliation is not among the available options, it can be entered manually as free text.</p>
+                    <p>ROR suggestions appear automatically after three characters. Select a result to add it with its
+                        ROR ID. Use the Down/Up arrow keys to highlight a suggestion and Enter to select it. Without a highlighted
+                        suggestion, Enter adds your typed input without a ROR ID, just like “Add without a ROR”.
+                        Escape closes the suggestions without changing your input.</p>
+                    <p>Use the affiliation editor inside each card to edit labels, reorder affiliations, or remove them.
+                        Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
+                        unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries with neither a label nor a ROR ID are omitted from exports.
+                        Correct or remove empty labels before submitting.</p>
                     <p>Editing an affiliation label preserves its ROR ID, so it is not analogous to adding a second
                         affiliation.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
@@ -634,8 +641,17 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-contributorpersons-affiliation">
                     <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the person/s.</p>
-                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
-                        among the available options, it can be entered manually.</p>
+                    <p>ROR suggestions appear automatically after three characters. Select a result to add it with its
+                        ROR ID. Use the Down/Up arrow keys to highlight a suggestion and Enter to select it. Without a highlighted
+                        suggestion, Enter adds your typed input without a ROR ID, just like “Add without a ROR”.
+                        Escape closes the suggestions without changing your input.</p>
+                    <p>Edit confirmed labels directly in the card; their ROR IDs are retained. Use the arrow and remove
+                        buttons to reorder or delete affiliations. The card header shows the ORCID, affiliations and ROR IDs.</p>
+                    <p>Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
+                        unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries with neither a label nor a ROR ID are omitted from exports.
+                        Correct or remove empty labels before submitting.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
@@ -741,12 +757,17 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-contributorinstitutions-affiliation">
                     <h4>Affiliation</h4>
                     <p>The organisational or institutional affiliation of the Institution.</p>
-                    <p>It is recommended to select the affiliation from the list. If the required affiliation is not
-                        among the available options, it can be entered manually.</p>
-                    <p>You can edit the label of an affiliation by clicking on the edit icon on the right side of it.
-                        Please note that editing the label of one institution preserves its ROR ID, so it is not
-                        analogous to adding a second affiliation. To add a new affiliation, just type in the
-                        white free space near the input field.</p>
+                    <p>ROR suggestions appear automatically after three characters. Select a result to add it with its
+                        ROR ID. Use the Down/Up arrow keys to highlight a suggestion and Enter to select it. Without a highlighted
+                        suggestion, Enter adds your typed input without a ROR ID, just like “Add without a ROR”.
+                        Escape closes the suggestions without changing your input.</p>
+                    <p>Edit confirmed labels directly in the card; their ROR IDs are retained. Use the arrow and remove
+                        buttons to reorder or delete affiliations. The card header shows the affiliations and ROR IDs.</p>
+                    <p>Before saving or submitting, confirm or discard any unfinished input. You can always collapse the card;
+                        unfinished input remains available when reopened and in autosaved drafts. Empty confirmed labels do not
+                        block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
+                        autosaved draft keep the empty label. Entries with neither a label nor a ROR ID are omitted from exports.
+                        Correct or remove empty labels before submitting.</p>
                     <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear

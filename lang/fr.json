@@ -1,4 +1,20 @@
 {
+    "affiliations": {
+        "title": "Affiliations",
+        "addFreeText": "Ajouter sans identifiant ROR",
+        "searchPlaceholder": "Saisissez au moins 3 caractères pour voir les suggestions",
+        "edit": "Modifier l’affiliation",
+        "moveUp": "Déplacer l’affiliation vers le haut",
+        "moveDown": "Déplacer l’affiliation vers le bas",
+        "rorId": "Identifiant ROR",
+        "remove": "Supprimer l’affiliation",
+        "invalid": "Veuillez indiquer une affiliation.",
+        "loading": "Recherche en cours…",
+        "noResults": "Aucun résultat ROR. Vous pouvez ajouter votre saisie sans identifiant ROR.",
+        "error": "Recherche indisponible. Réessayez ou ajoutez votre saisie sans identifiant ROR.",
+        "pending": "Une saisie d’affiliation est en attente. Sélectionnez un résultat ROR, ajoutez la saisie sans identifiant ROR ou abandonnez-la, puis répétez votre action.",
+        "discard": "Abandonner la saisie"
+    },
     "header": {
         "help": "Aide",
         "on": "Actif",

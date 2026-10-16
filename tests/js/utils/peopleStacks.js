@@ -11,6 +11,8 @@ afterEach(() => {
 });
 
 function loadStack(name) {
+  Object.assign(window, require('../../../js/affiliationEditor.js'));
+  Object.assign(window, require('../../../js/services/affiliationActionService.js'));
   const add = document.addEventListener;
   document.addEventListener = function (...args) {
     listeners.push(args);
