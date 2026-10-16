@@ -202,6 +202,102 @@ final class IdentifierDetectionServiceTest extends TestCase
         } finally { unlink($file); }
     }
 
+    public function testUnknownIdentifiersCannotGrowTheCacheBeyondCapacity(): void
+    {
+        $directory = sys_get_temp_dir() . '/elmo-identifiers-' . bin2hex(random_bytes(6));
+        $now = 0.0; $calls = 0;
+        $service = new IdentifierDetectionService(function () use (&$calls): array {
+            $calls++;
+            return $this->response([], 404);
+        }, static function () use (&$now): float { return $now; }, $directory, 3);
+        try {
+            for ($i = 0; $i < 8; $i++) {
+                $now++;
+                self::assertSame('unknown', $service->detect('10.1234/unknown-' . $i)['status']);
+                self::assertLessThanOrEqual(3, count(glob($directory . '/*.json')));
+            }
+            $service->detect('10.1234/unknown-7');
+            self::assertSame(16, $calls, 'The newest entry should remain cached');
+            $service->detect('10.1234/unknown-0');
+            self::assertSame(18, $calls, 'The oldest entry should have been evicted');
+            self::assertLessThanOrEqual(3, count(glob($directory . '/*.json')));
+        } finally {
+            foreach (glob($directory . '/*') ?: [] as $file) unlink($file);
+            if (is_dir($directory)) rmdir($directory);
+        }
+    }
+
+    public function testCacheHitsReclaimExpiredIdentifiersThatAreNeverRequestedAgain(): void
+    {
+        $directory = sys_get_temp_dir() . '/elmo-identifiers-' . bin2hex(random_bytes(6));
+        $now = 0.0;
+        $clock = static function () use (&$now): float { return $now; };
+        $urls = [];
+        $known = new IdentifierDetectionService(function (string $url) use (&$urls): array {
+            $urls[] = $url;
+            return str_contains($url, '/clients/')
+                ? $this->response(['data' => ['id' => 'gfz.samples', 'attributes' => ['clientType' => 'igsnCatalog']]])
+                : $this->response($this->record());
+        }, $clock, $directory);
+        $unknown = new IdentifierDetectionService(fn(): array => $this->response([], 404), $clock, $directory);
+        try {
+            $known->detect($this->doi);
+            $unknown->detect('10.1234/not-requested-again');
+            $abandoned = $directory . '/lookup-abandoned';
+            $malformed = $directory . '/malformed.json';
+            file_put_contents($abandoned, 'partial write');
+            file_put_contents($malformed, 'not json');
+            $expired = $directory . '/' . hash('sha256', '10.1234/not-requested-again') . '.json';
+            self::assertFileExists($expired);
+            $now = 61;
+            self::assertSame('IGSN', $known->detect($this->doi)['identifierType']);
+            self::assertCount(2, $urls, 'Cleanup should also run on a valid cache hit');
+            self::assertFileDoesNotExist($expired);
+            self::assertFileDoesNotExist($abandoned);
+            self::assertFileDoesNotExist($malformed);
+        } finally {
+            foreach (glob($directory . '/*') ?: [] as $file) unlink($file);
+            if (is_dir($directory)) rmdir($directory);
+        }
+    }
+
+    public function testConcurrentWorkersShareTheSameCacheCapacity(): void
+    {
+        $directory = sys_get_temp_dir() . '/elmo-identifiers-' . bin2hex(random_bytes(6));
+        $workers = [];
+        $script = <<<'PHP'
+require $argv[1];
+$service = new IdentifierDetectionService(static fn(): array => ['status' => 404, 'body' => '{}'], null, $argv[2], 3);
+for ($i = 0; $i < 8; $i++) $service->detect('10.1234/worker-' . $argv[3] . '-' . $i);
+PHP;
+        try {
+            for ($i = 0; $i < 4; $i++) {
+                $process = proc_open([PHP_BINARY, '-r', $script, __DIR__ . '/../api/v2/services/IdentifierDetectionService.php', $directory, (string) $i],
+                    [0 => ['pipe', 'r'], 1 => ['pipe', 'w'], 2 => ['pipe', 'w']], $pipes);
+                self::assertIsResource($process);
+                fclose($pipes[0]);
+                $workers[] = [$process, $pipes];
+            }
+            foreach ($workers as [$process, $pipes]) {
+                self::assertSame('', stream_get_contents($pipes[1]));
+                self::assertSame('', stream_get_contents($pipes[2]));
+                fclose($pipes[1]); fclose($pipes[2]);
+                self::assertSame(0, proc_close($process));
+            }
+            $files = glob($directory . '/*.json');
+            self::assertCount(3, $files);
+            foreach ($files as $file) self::assertSame('unknown', json_decode(file_get_contents($file), true)['result']['status']);
+            self::assertSame([], glob($directory . '/lookup-*'));
+        } finally {
+            foreach ($workers as [$process, $pipes]) {
+                foreach ($pipes as $pipe) if (is_resource($pipe)) fclose($pipe);
+                if (is_resource($process)) { proc_terminate($process); proc_close($process); }
+            }
+            foreach (glob($directory . '/*') ?: [] as $file) unlink($file);
+            if (is_dir($directory)) rmdir($directory);
+        }
+    }
+
     public function testUnavailableRegistryIsRetriedWithoutCachingAnError(): void
     {
         $calls = 0;

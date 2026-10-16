@@ -75,7 +75,10 @@
     const url = parsedUrl(value);
     if (url && ['doi.org', 'dx.doi.org'].includes(url.hostname)
       && !url.username && !url.password && !url.port && !url.search && !url.hash) {
-      value = url.pathname.slice(1);
+      // URL.pathname retains escapes. Decode the resolver path exactly once;
+      // bare DOI suffixes may contain literal percent sequences and stay untouched.
+      try { value = decodeURIComponent(url.pathname.slice(1)); }
+      catch { return null; }
     }
     return value.startsWith('10.') && value.includes('/') && !/\s/.test(value) ? value : null;
   }

@@ -503,6 +503,16 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}, {"type": "pull", "number": 1278}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
               ],

@@ -463,6 +463,9 @@ function populateIdentifierTypesDropdownWithData(response) {
     ? [...response.identifierTypes]
     : [];
   applyRelatedWorkDropdowns();
+  $('select[name="rIdentifierType[]"], select[name="dIdentifierType[]"]').each(function () {
+    updateValidationPattern(this);
+  });
 }
 
 // Make parallel initialization function available globally
@@ -753,6 +756,19 @@ function invalidateIdentifierDetection(input) {
 }
 
 /**
+ * Resets a retained field after form clearing, including requests for its previous value.
+ * @param {HTMLInputElement} input Cleared Related Work or GEM identifier field.
+ * @returns {void}
+ */
+export function resetIdentifierField(input) {
+  invalidateIdentifierDetection(input);
+  const select = identifierTypeSelectForInput(input);
+  clearManualIdentifierTypeSelection(select);
+  setDetectedIdentifierType(select, null);
+  input.setCustomValidity('');
+}
+
+/**
  * Protects an imported or autosaved choice, including an intentional empty type.
  * GEM options may arrive after restoration; only the same field version may
  * reapply the stored choice once its dropdown is ready.
@@ -846,11 +862,12 @@ function normalizeIdentifierPattern(pattern) {
 function updateValidationPattern(selectElement) {
   const select = $(selectElement);
   const selectedType = String(select.val() || '').trim();
+  const vocabulary = relatedWorkDropdownCache.identifierTypes;
   const input = identifierInputForTypeSelect(selectElement);
   if (!input.length) return;
   input.removeAttr('pattern');
   const apply = patterns => {
-    if (String(select.val() || '').trim() !== selectedType) return;
+    if (String(select.val() || '').trim() !== selectedType || relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
     const value = String(input.val() || '');
     const valid = !value || !selectedType || (identifierDetection.passesAdditionalChecks(value, selectedType)
       && (!patterns.length || patterns.some(pattern => identifierDetection.fullMatch(pattern, value.trim()))));
@@ -876,6 +893,7 @@ function updateValidationPattern(selectElement) {
   $.ajax({
     url: 'api/v2/validation/patterns/' + encodeURIComponent(selectedType), method: 'GET', dataType: 'json',
     success: response => {
+      if (relatedWorkDropdownCache.identifierTypes !== vocabulary) return;
       const patterns = response?.pattern ? [normalizeIdentifierPattern(response.pattern)] : [];
       identifierPatternCache.set(selectedType, patterns);
       apply(patterns);
@@ -973,7 +991,7 @@ async function updateIdentifierType(inputElement) {
     detectionStatus(inputElement, 'pending');
     const result = await identifierRegistry.lookup(local.doi);
     if (!current()) return;
-    type = result ? identifierDetection.activeType(result.identifierType, types) : null;
+    type = result ? identifierDetection.activeType(result.identifierType, relatedWorkDropdownCache.identifierTypes || []) : null;
     // Registry identity cannot override the format supplied for this type by ERNIE.
     if (type && !identifierDetection.validateIdentifier(identifier, type)) type = null;
   }
@@ -1057,6 +1075,7 @@ if (typeof module !== 'undefined' && module.exports) {
     filterDataByGEM: dropdownUtils.filterDataByGEM,
     applyRelatedWorkDropdowns,
     invalidateIdentifierDetection,
+    resetIdentifierField,
     detectIdentifierType,
     updateIdentifierType,
     updateValidationPattern,

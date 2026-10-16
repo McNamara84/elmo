@@ -10,6 +10,7 @@ class IdentifierDetectionService
     /** @var Closure(): float */
     private Closure $clock;
     private string $cacheDirectory;
+    private int $cacheCapacity;
 
     /**
      * Allows HTTP and time to be replaced without contacting live registries.
@@ -17,12 +18,14 @@ class IdentifierDetectionService
      * @param (callable(string, float): array{status: int, body: string})|null $transport URL and remaining timeout in seconds.
      * @param (callable(): float)|null $clock Current Unix time in seconds.
      * @param string|null $cacheDirectory Cache location; an empty string disables disk caching.
+     * @param int $cacheCapacity Maximum cached identifiers, clamped to at least one.
      */
-    public function __construct(?callable $transport = null, ?callable $clock = null, ?string $cacheDirectory = null)
+    public function __construct(?callable $transport = null, ?callable $clock = null, ?string $cacheDirectory = null, int $cacheCapacity = 1024)
     {
         $this->transport = $transport !== null ? Closure::fromCallable($transport) : $this->fetch(...);
         $this->clock = $clock !== null ? Closure::fromCallable($clock) : static fn(): float => microtime(true);
         $this->cacheDirectory = $cacheDirectory ?? __DIR__ . '/../../../storage/cache/identifier-detection';
+        $this->cacheCapacity = max(1, $cacheCapacity);
     }
 
     /**
@@ -141,33 +144,103 @@ class IdentifierDetectionService
      */
     private function readCache(string $doi): ?array
     {
-        if ($this->cacheDirectory === '') return null;
-        $body = @file_get_contents($this->cachePath($doi));
+        $lock = $this->lockCache();
+        if ($lock === false) return null;
+        try {
+            // Sweep on cache hits too, so expired identifiers need never be requested again.
+            $this->pruneCache($this->cacheCapacity);
+            return $this->readCacheEntry($this->cachePath($doi))['result'] ?? null;
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
+    }
+
+    /** @return array{expires: float, result: array{identifierType: ?string, status: string, source: ?string}}|null */
+    private function readCacheEntry(string $path): ?array
+    {
+        $body = @file_get_contents($path);
         $entry = is_string($body) ? json_decode($body, true) : null;
         if (!is_array($entry) || !is_numeric($entry['expires'] ?? null) || $entry['expires'] <= ($this->clock)()) return null;
         $result = $entry['result'] ?? null;
         if (!is_array($result)) return null;
-        if ($result === $this->result()) return $this->result();
-        if (!in_array($result['identifierType'] ?? null, ['DOI', 'IGSN', 'RAiD'], true)
+        if ($result !== $this->result() && (!in_array($result['identifierType'] ?? null, ['DOI', 'IGSN', 'RAiD'], true)
             || !in_array($result['source'] ?? null, ['datacite', 'crossref'], true)
-            || ($result['status'] ?? null) !== 'detected') return null;
-        return $this->result($result['identifierType'], $result['source']);
+            || ($result['status'] ?? null) !== 'detected')) return null;
+        return ['expires' => (float) $entry['expires'], 'result' => $result === $this->result()
+            ? $this->result() : $this->result($result['identifierType'], $result['source'])];
     }
 
     /**
-     * Atomically caches confirmations for six hours and unknown records for one minute.
+     * Serializes eviction and atomic writes across PHP workers. The lock is never
+     * held during registry HTTP requests, and an unavailable cache stays optional.
+     * @return resource|false
+     */
+    private function lockCache()
+    {
+        if ($this->cacheDirectory === '') return false;
+        if (!is_dir($this->cacheDirectory) && !@mkdir($this->cacheDirectory, 0775, true) && !is_dir($this->cacheDirectory)) return false;
+        $lock = @fopen($this->cacheDirectory . '/cache.lock', 'c');
+        if ($lock === false) return false;
+        if (@flock($lock, LOCK_EX)) return $lock;
+        fclose($lock);
+        return false;
+    }
+
+    /**
+     * Removes expired/malformed results and abandoned temporary files, then evicts
+     * entries expiring soonest until capacity is met. Call only with the cache lock.
+     * @return bool Whether there is enough room; failed deletion must not allow growth.
+     */
+    private function pruneCache(int $capacity): bool
+    {
+        try { $files = new DirectoryIterator($this->cacheDirectory); }
+        catch (UnexpectedValueException) { return false; }
+        $entries = [];
+        foreach ($files as $file) {
+            if (!$file->isFile()) continue;
+            $path = $file->getPathname();
+            if (str_starts_with($file->getFilename(), 'lookup-')) {
+                if (!@unlink($path)) return false;
+                continue;
+            }
+            if (!str_ends_with($file->getFilename(), '.json')) continue;
+            $entry = $this->readCacheEntry($path);
+            if ($entry === null && @unlink($path)) continue;
+            $entries[$path] = $entry['expires'] ?? 0;
+        }
+        asort($entries, SORT_NUMERIC);
+        foreach ($entries as $path => $expires) {
+            if (count($entries) <= $capacity) break;
+            if (@unlink($path)) unset($entries[$path]);
+        }
+        return count($entries) <= $capacity;
+    }
+
+    /**
+     * Atomically caches confirmations for six hours and unknown records for one minute,
+     * within a capacity shared by all workers.
      * Cache I/O failures must not prevent a valid registry result from reaching the UI.
      *
      * @param array{identifierType: ?string, status: string, source: ?string} $result
      */
     private function writeCache(string $doi, array $result): void
     {
-        if ($this->cacheDirectory === '') return;
-        if (!is_dir($this->cacheDirectory) && !@mkdir($this->cacheDirectory, 0775, true) && !is_dir($this->cacheDirectory)) return;
-        $temporary = @tempnam($this->cacheDirectory, 'lookup-');
-        if ($temporary === false) return;
-        $body = json_encode(['expires' => ($this->clock)() + ($result['status'] === 'detected' ? 21600 : 60), 'result' => $result]);
-        if (@file_put_contents($temporary, $body, LOCK_EX) !== false) @rename($temporary, $this->cachePath($doi));
-        if (is_file($temporary)) @unlink($temporary);
+        $lock = $this->lockCache();
+        if ($lock === false) return;
+        try {
+            if (!$this->pruneCache($this->cacheCapacity - 1)) return;
+            $temporary = @tempnam($this->cacheDirectory, 'lookup-');
+            if ($temporary === false) return;
+            try {
+                $body = json_encode(['expires' => ($this->clock)() + ($result['status'] === 'detected' ? 21600 : 60), 'result' => $result]);
+                if (@file_put_contents($temporary, $body, LOCK_EX) !== false) @rename($temporary, $this->cachePath($doi));
+            } finally {
+                if (is_file($temporary)) @unlink($temporary);
+            }
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 }

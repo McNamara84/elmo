@@ -175,8 +175,11 @@ describe('identifier detection in Related Work and GEM fields', () => {
     const changed = types.map(type => type.name === 'arXiv'
       ? {name: type.name, pattern: '^central-new-format$'} : type);
     select.populateIdentifierTypesDropdownWithData({identifierTypes: changed});
-    dropdown.val('arXiv').trigger('change');
+    expect(dropdown.val()).toBe('arXiv');
     expect(field[0].validity.customError).toBe(true);
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types});
+    expect(field[0].validity.customError).toBe(false);
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: changed});
     field.val('central-new-format').trigger('input');
     await select.updateIdentifierType(field[0]);
     expect(dropdown.val()).toBe('arXiv');
@@ -190,6 +193,19 @@ describe('identifier detection in Related Work and GEM fields', () => {
     resolve(requests[0], 'IGSN'); await promise;
     expect(type().val()).toBe('');
     expect($('[data-identifier-detection-status]').first().text()).toMatch(/manually/);
+  });
+
+  test('a legacy pattern response cannot overwrite validity installed by a vocabulary reload', () => {
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types.filter(type => type.name !== 'IGSN')});
+    let legacy;
+    $.ajax.mockImplementation(options => { legacy = options; });
+    type().append('<option value="IGSN">IGSN</option>');
+    input().val('central-current'); type().val('IGSN').trigger('change');
+    expect(legacy.url).toBe('api/v2/validation/patterns/IGSN');
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: [{name: 'IGSN', pattern: '^central-current$'}]});
+    expect(input()[0].checkValidity()).toBe(true);
+    legacy.success({pattern: '^obsolete$'});
+    expect(input()[0].checkValidity()).toBe(true);
   });
 
   test('restored types wait for delayed GEM dropdown options', async () => {
@@ -215,5 +231,64 @@ describe('identifier detection in Related Work and GEM fields', () => {
   test('whitespace does not satisfy a manually chosen identifier format', () => {
     input().val('   '); type().val('IGSN').trigger('change');
     expect(input()[0].validity.customError).toBe(true);
+  });
+
+  test.each(['r', 'd'])('%s whitespace errors survive mandatory-field cleanup triggered by another field', prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    field.prop('required', true).val('   '); dropdown.val('IGSN').trigger('change');
+    expect(field[0].validity.customError).toBe(true);
+    const mandatory = require('../../js/checkMandatoryFields.js');
+    $('<input name="title[]">').appendTo(document.body).trigger('blur');
+    mandatory.validateAllMandatoryFields();
+    expect(field[0].validity.customError).toBe(true);
+    expect(field[0].checkValidity()).toBe(false);
+  });
+
+  test.each(['r', 'd'])('%s late registry responses cannot restore a type removed by vocabulary reload', async prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    const {promise} = await begin('10.60510/gf1211s-47', field[0]);
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types.filter(type => type.name !== 'IGSN')});
+    dropdown.find('option[value="IGSN"]').remove();
+    resolve(requests[0]); await promise;
+    expect(dropdown.val()).toBe('');
+    expect(dropdown.find('option[value="IGSN"]')).toHaveLength(0);
+  });
+
+  test.each(['r', 'd'])('%s late registry responses use a newly narrowed type pattern', async prefix => {
+    const field = $('input[name="' + prefix + 'Identifier[]"]').first();
+    const dropdown = $('select[name="' + prefix + 'IdentifierType[]"]').first();
+    const {promise} = await begin('10.60510/gf1211s-47', field[0]);
+    select.populateIdentifierTypesDropdownWithData({identifierTypes: types.map(type =>
+      type.name === 'IGSN' ? {name: 'IGSN', pattern: '^legacy-only$'} : type)});
+    resolve(requests[0]); await promise;
+    expect(dropdown.val()).toBe('');
+  });
+
+  test('percent-encoded resolver paths reach the registry as a decoded DOI', async () => {
+    const {promise} = await begin('https://doi.org/10.60510/gf1211s%2D47');
+    expect(requests[0].data.doi).toBe('10.60510/gf1211s-47');
+    resolve(requests[0]); await promise;
+    expect(type().val()).toBe('IGSN');
+  });
+
+  test('clearing the retained GEM row resets validity, manual state and pending lookups', async () => {
+    const row = $('input[name="dIdentifier[]"]').closest('.row').attr('data-source-row', '').wrap('<div id="group-datasources"></div>');
+    const field = row.find('input'); const dropdown = row.find('select');
+    const {promise} = await begin('10.60510/gf1211s-47', field[0]);
+    dropdown.val('ISBN').trigger('change');
+    expect(field[0].validity.customError).toBe(true);
+    require('../../js/clear.js').clearInputFields();
+    expect(field.val()).toBe('');
+    expect(field[0].validity.customError).toBe(false);
+    expect(dropdown.val()).toBe('');
+    expect(field.siblings('[data-identifier-detection-status]').text()).toBe('');
+    field.val('10.60510/gf1211s-47');
+    resolve(requests[0]); await promise;
+    expect(dropdown.val()).toBe('');
+    await select.updateIdentifierType(field[0]);
+    expect(dropdown.val()).toBe('IGSN');
+    expect(field[0].checkValidity()).toBe(true);
   });
 });

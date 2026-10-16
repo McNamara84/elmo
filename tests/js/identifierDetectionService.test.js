@@ -67,6 +67,18 @@ describe('identifier formats and ambiguity', () => {
   test.each(['10.1234/ABC', 'https://doi.org/10.1234/ABC', 'https://dx.doi.org/10.1234/ABC', 'doi: 10.1234/ABC'])('normalizes DOI %s', value => {
     expect(detection.normalizeDoi(value)).toBe('10.1234/ABC');
   });
+  test.each([
+    ['https://doi.org/10.60510/gf1211s%2D47', '10.60510/gf1211s-47'],
+    ['https://dx.doi.org/10.60510%2Fgf1211s%2d47', '10.60510/gf1211s-47'],
+    ['https://doi.org/10.1234/a%252Db', '10.1234/a%2Db'],
+    ['10.1234/a%2Db', '10.1234/a%2Db'],
+  ])('decodes only the resolver path once: %s', (value, expected) => {
+    expect(detection.normalizeDoi(value)).toBe(expected);
+  });
+  test.each(['%', '%2', '%GG', '%C3%28', '%20', '%0A'])('rejects malformed or whitespace resolver escapes %s', suffix => {
+    expect(detection.normalizeDoi('https://doi.org/10.1234/test' + suffix)).toBeNull();
+    expect(detection.classifyLocal('https://doi.org/10.1234/test' + suffix, types).status).toBe('invalid');
+  });
   test('does not interpret text in a DOI suffix as an arXiv identifier', () => {
     expect(detection.classifyLocal('10.48550/arXiv.2507.21532', types).status).toBe('lookupRequired');
   });

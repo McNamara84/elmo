@@ -885,6 +885,8 @@ paths:
         RAiD and regular DOI. Only a DataCite 404 permits a Crossref lookup.
         Unconfirmed or unsupported records return a null type. Results are cached
         for six hours; unknown records for one minute. Registry failures are not cached.
+        The shared disk cache is limited to 1,024 identifiers. Cache accesses reclaim
+        expired entries globally; entries expiring soonest are evicted when full.
       operationId: detectIdentifierType
       parameters:
         - name: doi
