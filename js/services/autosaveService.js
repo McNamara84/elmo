@@ -484,7 +484,7 @@ class AutosaveService {
     ]) {
       const input = this.form.querySelector(`[name="${fieldName}"]`);
       if (people[group] === null && !input) continue;
-      if (people[group] !== null && input) window[group === 'authors' ? 'authorStack' : 'contributorStack'][method](people[group]);
+      if (people[group] !== null && input) window[group === 'authors' ? 'authorStack' : 'contributorStack'][method](people[group], { restoreUiState: true });
       names.forEach(name => skippedPayloadNames.add(name));
     }
     if (this.restoreRelatedWorksPayload(values)) {
@@ -757,6 +757,12 @@ class AutosaveService {
       values[element.name] = element.value;
     });
 
+    // Draft-only UI state belongs to these copies; the live metadata fields stay free of _ui.
+    for (const [fieldName, stackName] of [['authorsPayload', 'authorStack'], ['contributorsPayload', 'contributorStack']]) {
+      if (this.form.querySelector(`[name="${fieldName}"]`) && window[stackName]?.collectDraftEntries) {
+        values[fieldName] = JSON.stringify(window[stackName].collectDraftEntries());
+      }
+    }
     return values;
   }
 

@@ -169,8 +169,7 @@ test.describe('Contributor (Persons) form group', () => {
     await page.locator('[data-contributor-add-type="person"]').click();
     await page.waitForFunction(() => {
       const roleInput: any = document.querySelector('input[id^="input-contributor-personrole-"]');
-      const affiliationInput: any = document.querySelector('input[id^="input-contributorpersons-affiliation-"]');
-      return roleInput?._tagify || roleInput?.tagify || (affiliationInput && affiliationInput.tagify);
+      return !!(roleInput?._tagify || roleInput?.tagify) && !!(document.querySelector('[data-affiliation-editor]') as any)?.affiliationEditor;
     });
 
     await page.evaluate(() => {
@@ -218,14 +217,10 @@ test.describe('Contributor (Persons) form group', () => {
     await expect(page.locator('input[id^="input-contributor-lastname-"]')).toHaveValue('Nguyen');
     await expect(page.locator('input[id^="input-contributor-firstname-"]')).toHaveValue('Linh');
 
-    await page.waitForFunction(() => {
-      const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input?._tagify?.value?.length === 2;
-    });
+    await expect(page.locator('[data-affiliation-label]')).toHaveCount(2);
 
     const affiliationValues = await page.evaluate(() => {
-      const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation"]');
-      return input._tagify.value.map((tag: { value: string }) => tag.value);
+      return Array.from(document.querySelectorAll<HTMLInputElement>('[data-affiliation-label]')).map(input => input.value);
     });
 
     expect(affiliationValues).toEqual([
@@ -234,8 +229,11 @@ test.describe('Contributor (Persons) form group', () => {
     ]);
 
     await expect(page.locator('input[id^="input-contributor-personrorid"]')).toHaveValue(
-      'https://ror.org/019wvm592,https://ror.org/01bj3aw27'
+      '019wvm592,01bj3aw27'
     );
+    await expect(page.locator('[data-contributor-summary-orcid]')).toHaveText('ORCID 0000-0003-1825-0094');
+    await expect(page.locator('[data-contributor-summary-affiliations]')).toContainText('019wvm592');
+    await expect(page.locator('[data-contributor-summary-affiliations]')).toContainText('01bj3aw27');
   });
 
   test('allows adding and removing multiple contributor person rows independently', async ({ page }) => {
@@ -305,38 +303,38 @@ test.describe('Contributor (Persons) form group', () => {
     // Set viewport to mobile size (narrow screen) to test the issue scenario
     await page.setViewportSize({ width: 375, height: 667 });
 
-    // Wait for affiliation field to be initialized with Tagify
-    // Cards expose their affiliation widget through the input element.
+    // Wait for the shared affiliation editor on the card.
     await page.waitForFunction(() => {
       const input: any = document.querySelector('input[id^="input-contributorpersons-affiliation-"]');
-      return !!input?.tagify || !!input?._tagify;
+      return !!input?.closest('[data-contributor-card]')?.querySelector('[data-affiliation-editor]');
     });
 
     // Type search term to trigger server-side search and populate dropdown
-    const affiliationInput = page.locator('input[id^="input-contributorpersons-affiliation-"]').locator('..').locator('.tagify__input');
+    const affiliationInput = page.locator('[data-affiliation-input]');
     await affiliationInput.click();
     await affiliationInput.fill('University');
     
     // Wait for dropdown to appear after server search
     
     // Wait for dropdown to appear
-    const dropdown = page.locator('.tagify__dropdown.affiliation');
+    const dropdown = page.locator('[data-affiliation-results]');
     await expect(dropdown).toBeVisible({ timeout: 3000 });
 
-    // Verify dropdown wrapper has reasonable minimum width (prevents items being too narrow)
-    const dropdownWrapper = dropdown.locator('.tagify__dropdown__wrapper');
+    // Results must fit the narrow editor without overflowing the viewport.
+    const dropdownWrapper = dropdown;
     await expect(dropdownWrapper).toBeVisible();
     
     const wrapperBox = await dropdownWrapper.boundingBox();
     expect(wrapperBox).not.toBeNull();
     if (wrapperBox) {
-      // On mobile (375px viewport), dropdown should have at least 200px width (per CSS)
-      expect(wrapperBox.width).toBeGreaterThanOrEqual(200);
+      expect(wrapperBox.width).toBeGreaterThan(0);
+      expect(wrapperBox.x).toBeGreaterThanOrEqual(0);
+      expect(wrapperBox.x + wrapperBox.width).toBeLessThanOrEqual(375);
     }
 
     // Check that dropdown items are visible and rendered
     // We need at least 2 items to test for overlap (hence "University" search term - returns many results)
-    const dropdownItems = dropdown.locator('.tagify__dropdown__item');
+    const dropdownItems = dropdown.locator('[data-affiliation-result]');
     const itemCount = await dropdownItems.count();
     expect(itemCount).toBeGreaterThan(1);
     await expect(dropdownItems.first()).toBeVisible();

@@ -12,6 +12,19 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Authors and Contributors share an affiliation editor with automatic ROR suggestions, explicit free-text entry, inline label editing, and reordering. Contributor headers show ORCID and affiliation labels with their ROR IDs. Unfinished inputs require confirmation or discarding before saving, submitting, or collapsing a card and are preserved in autosaved drafts."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1266 },
+                { "type": "issue", "number": 1269 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Help buttons are shown consistently: exactly once for each input field in the authors formgroup"
                 }
               ],

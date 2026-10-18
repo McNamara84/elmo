@@ -1,4 +1,20 @@
 {
+    "affiliations": {
+        "title": "Affiliations",
+        "addFreeText": "Ajouter sans identifiant ROR",
+        "searchPlaceholder": "Saisissez au moins 3 caractères pour voir les suggestions",
+        "edit": "Modifier l’affiliation",
+        "moveUp": "Déplacer l’affiliation vers le haut",
+        "moveDown": "Déplacer l’affiliation vers le bas",
+        "rorId": "Identifiant ROR",
+        "remove": "Supprimer l’affiliation",
+        "invalid": "Veuillez indiquer une affiliation.",
+        "loading": "Recherche en cours…",
+        "noResults": "Aucun résultat ROR. Vous pouvez ajouter votre saisie sans identifiant ROR.",
+        "error": "Recherche indisponible. Réessayez ou ajoutez votre saisie sans identifiant ROR.",
+        "pending": "Une saisie d’affiliation est en attente. Sélectionnez un résultat ROR, ajoutez la saisie sans identifiant ROR ou abandonnez-la, puis répétez votre action.",
+        "discard": "Abandonner la saisie"
+    },
     "header": {
         "help": "Aide",
         "on": "Actif",
@@ -133,7 +149,7 @@
         "person": "Personne",
         "institution": "Institution",
         "typeSwitcherLabel": "Type d'auteur",
-        "typeSwitchLocked": "Le type ne peut être modifié que tant que cette entrée est vide.",
+        "typeSwitchLocked": "Effacez le nom, l’ORCID et les coordonnées pour changer de type. Les affiliations seront conservées.",
         "addPerson": "Ajouter une personne",
         "addInstitution": "Ajouter une institution",
         "dragHandle": "Modifier l'ordre par glisser-déposer",

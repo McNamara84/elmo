@@ -318,6 +318,10 @@ describe('affiliations.js', () => {
     const result = await searchAffiliationsFromServer('Test');
     expect(result).toEqual([]);
   });
+  test('lets the shared editor announce unavailable ROR searches', async () => {
+    global.fetch = jest.fn().mockResolvedValue({ok: false, status: 503});
+    await expect(searchAffiliationsFromServer('Test', 20, {throwOnError: true})).rejects.toThrow('Search failed with status 503');
+  });
 
   /**
    * Ensures refreshTagifyInstances updates placeholder and keeps tags.

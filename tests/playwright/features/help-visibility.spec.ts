@@ -95,7 +95,7 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
       <script src="node_modules/jstree/dist/jstree.min.js"></script>
       <script type="module" src="js/help.js"></script>
       <script type="module" src="js/eventhandlers/formgroups/authorStack.js"></script>
-      <script src="js/eventhandlers/formgroups/contributorStack.js"></script>
+      <script type="module" src="js/eventhandlers/formgroups/contributorStack.js"></script>
       <script type="module" src="js/eventhandlers/formgroups/relatedwork.js"></script>
       <script type="module" src="js/eventhandlers/formgroups/resourceInformationTitle.js"></script>
       <script type="module" src="js/thesauri.js"></script>
@@ -108,7 +108,7 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
   }));
   await page.goto(url.href);
   await expect(page.locator('html')).toHaveAttribute('data-help-status', /help-(on|off)/u);
-  await page.waitForFunction(() => Boolean((window as any).authorStack && (window as any).relatedWorkStack));
+  await page.waitForFunction(() => Boolean((window as any).authorStack && (window as any).contributorStack && (window as any).relatedWorkStack));
   // The real editor measures its fixed footer, which can wrap after fonts load.
   // Keep that production behavior in the fixture so mobile controls stay usable.
   await page.evaluate(async () => { await document.fonts.ready; });

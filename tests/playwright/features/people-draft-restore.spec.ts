@@ -113,17 +113,17 @@ test('restores ROR-only affiliations and equal labels without losing their ident
   await page.locator('#button-restore-apply').click();
   await expect(page.locator('#modal-restore-draft')).toBeHidden();
   const card = page.locator('[data-contributor-card]');
-  await expect(card.locator('.tagify__tag-text')).toHaveText(['04z8jg394', 'Shared label', 'Shared label']);
+  const labels = card.locator('[data-affiliation-label]');
+  await expect(labels).toHaveCount(3);
+  for (const [index, affiliation] of affiliations.entries()) {
+    await expect(labels.nth(index)).toHaveValue(affiliation.label);
+    await expect(card.locator('[data-affiliation-ror]').nth(index)).toHaveText(affiliation.rorId);
+  }
+  await expect(labels.first()).toHaveAttribute('aria-invalid', 'true');
   expect(await page.evaluate(() => (window as any).contributorStack.collectPayload()[0].affiliations)).toEqual(affiliations);
 
-  const editButton = card.locator('.tagify__tag__editBtn').first();
-  await editButton.evaluate(element => element.scrollIntoView({ block: 'center' }));
-  await editButton.click();
-  await expect(page.locator('#modal-affiliation-edit')).toBeVisible();
-  await expect(page.locator('#input-affiliation-edit-value')).toHaveValue('');
-  await page.locator('#input-affiliation-edit-value').fill('Recovered label');
-  await page.locator('#button-affiliation-edit-save').click();
-  await expect(page.locator('#modal-affiliation-edit')).toBeHidden();
+  await labels.first().fill('Recovered label');
+  await expect(labels.first()).not.toHaveAttribute('aria-invalid', 'true');
   const expected = [{ label: 'Recovered label', rorId: '04z8jg394' }, ...affiliations.slice(1)];
   await expect.poll(() => writes.length, { timeout: 20000 }).toBeGreaterThan(0);
   expect(JSON.parse(writes.at(-1)!.contributorsPayload)[0].affiliations).toEqual(expected);

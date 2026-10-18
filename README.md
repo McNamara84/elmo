@@ -245,9 +245,9 @@ The following third-party dependencies are included in header.php and footer.htm
 - [jQuery 4](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
-  Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
+  Provides sortable card stacks and autocomplete helpers.
 - [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
-  Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
+  Is used for Thesaurus Keywords, contributor roles, and free keywords.
 - [jsTree 3](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
@@ -390,6 +390,13 @@ npm install
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Author(s)
+
+Authors and Contributors share an affiliation editor for both persons and institutions. Up to seven ROR suggestions appear automatically after three characters. Selecting a result adds its label and ROR ID. Arrow Down/Up highlights a suggestion, which Enter then accepts. Without a highlighted suggestion, Enter adds the typed input without a ROR ID, just like **Add without a ROR**. Escape dismisses suggestions without changing the input. The button is disabled for empty input. Confirmed affiliations can be edited, reordered, or removed, and editing a label preserves its ROR ID. Contributor card headers show ORCID identifiers for persons and affiliation labels with ROR IDs for both types.
+
+Saving or submitting requires confirming or discarding unfinished affiliation input. Cards can always be collapsed; their unfinished input remains available when reopened. Autosave preserves this input in the draft so it can be restored without adding it to exported metadata. Empty confirmed labels no longer block saving, but must be corrected or removed before submitting. If a confirmed label is empty and has a ROR ID, XML and JSON-LD exports use its ROR URL as replacement text to preserve the identifier. The editor and autosaved draft keep the empty label for later correction. Entries with neither a label nor a ROR ID are omitted from exports.
+
+Cards containing only affiliation data can switch between person and institution while retaining confirmed labels, ROR IDs and unfinished input. Names, ORCID and contact information lock the selected type to protect those fields; contributor roles also lock the type.
+
 #### Author Persons
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
@@ -1573,7 +1580,7 @@ If the row is completely empty, all fields remain optional.
 
 **Author institution:**
 For each Author institution row:
-If Author institution affiliation is filled (either as plain text or via Tagify tags), then:
+If an Author institution affiliation is confirmed in the affiliation editor, then:
 **Author institution name** becomes required.
 If the affiliation is empty, the institution name is not required.
 

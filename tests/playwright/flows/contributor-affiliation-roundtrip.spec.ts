@@ -113,10 +113,10 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     await expect(firstPerson.locator('input[name="cbPersonLastname[]"]')).toHaveValue('Schmidt');
     await expect(firstPerson.locator('input[name="cbPersonFirstname[]"]')).toHaveValue('Hans');
 
-    // Check first contributor affiliation via Tagify tag on the affiliation input
-    const firstAffTags = firstPerson.locator('input[name="cbAffiliation[]"]').locator('..').locator('tags.tagify tag');
+    // Check the first contributor's confirmed affiliation label.
+    const firstAffTags = firstPerson.locator('[data-affiliation-label]');
     await expect(firstAffTags.first()).toBeVisible({ timeout: 10_000 });
-    await expect(firstAffTags.first()).toContainText('Helmholtz-Zentrum Potsdam');
+    await expect(firstAffTags.first()).toHaveValue(/Helmholtz-Zentrum Potsdam/);
 
     // Verify second contributor person
     const secondPerson = personCards.nth(1);
@@ -124,9 +124,9 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     await expect(secondPerson.locator('input[name="cbPersonFirstname[]"]')).toHaveValue('Erika');
 
     // THIS IS THE BUG: second contributor's affiliation must also be loaded
-    const secondAffTags = secondPerson.locator('input[name="cbAffiliation[]"]').locator('..').locator('tags.tagify tag');
+    const secondAffTags = secondPerson.locator('[data-affiliation-label]');
     await expect(secondAffTags.first()).toBeVisible({ timeout: 10_000 });
-    await expect(secondAffTags.first()).toContainText('Technical University of Berlin');
+    await expect(secondAffTags.first()).toHaveValue('Technical University of Berlin');
 
     // Verify ROR IDs are set for both contributors
     await expect(firstPerson.locator('input[name="cbpRorIds[]"]')).toHaveValue('04z8jg394');
@@ -153,9 +153,9 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     );
 
     // Check the affiliation tags inside the first institution card.
-    const firstAffTags = firstOrg.locator('input[name="OrganisationAffiliation[]"]').locator('..').locator('tags.tagify tag');
+    const firstAffTags = firstOrg.locator('[data-affiliation-label]');
     await expect(firstAffTags.first()).toBeVisible({ timeout: 10_000 });
-    await expect(firstAffTags.first()).toContainText('Helmholtz-Zentrum Potsdam');
+    await expect(firstAffTags.first()).toHaveValue(/Helmholtz-Zentrum Potsdam/);
 
     // Verify second organisation
     const secondOrg = orgCards.nth(1);
@@ -164,9 +164,9 @@ test.describe('Contributor Affiliation Roundtrip (Issue #1047)', () => {
     );
 
     // THIS IS THE BUG: second org's affiliation must also be loaded
-    const secondAffTags = secondOrg.locator('input[name="OrganisationAffiliation[]"]').locator('..').locator('tags.tagify tag');
+    const secondAffTags = secondOrg.locator('[data-affiliation-label]');
     await expect(secondAffTags.first()).toBeVisible({ timeout: 10_000 });
-    await expect(secondAffTags.first()).toContainText('TU Berlin');
+    await expect(secondAffTags.first()).toHaveValue('TU Berlin');
 
     // Verify ROR IDs
     await expect(firstOrg.locator('input[name="hiddenOrganisationRorId[]"]')).toHaveValue('04z8jg394');

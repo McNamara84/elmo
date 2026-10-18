@@ -64,7 +64,7 @@ async function setContactPerson(row: Locator, enabled: boolean) {
 async function expectAffiliationHelp(row: Locator, visible: boolean) {
   const icon = row.locator('[data-author-affiliation-help]');
   await expect(icon).toHaveCount(1);
-  await expect(icon).toHaveAttribute('data-help-section-id', 'help-contributorinstitutions-affiliation');
+  await expect(icon).toHaveAttribute('data-help-section-id', 'help-author-affiliation');
   await expect(icon).toHaveClass(/help-icon-author-affiliation/);
   if (visible) {
     await expect(icon).toBeVisible();
