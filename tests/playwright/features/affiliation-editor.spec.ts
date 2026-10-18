@@ -99,6 +99,31 @@ for (const group of ['author', 'contributor']) {
   }
 }
 
+for (const group of ['author', 'contributor']) {
+  test(`${group}: ROR search requests and shows at most seven suggestions`, async ({page}) => {
+    let limit: string | null = null;
+    await page.route('**/api/v2/affiliations/search**', route => {
+      limit = new URL(route.request().url()).searchParams.get('limit');
+      // Deliberately return more than requested to check the editor's display limit too.
+      return route.fulfill({json: Array.from({length: 20}, (_, index) => ({name: `GFZ, Department ${index + 1}`, id: '04z8jg394'}))});
+    });
+    await navigateToHome(page);
+    await page.waitForFunction(group => Boolean((window as any)[`${group}Stack`]), group);
+    await page.locator(`[data-${group}-add-type="person"]`).click();
+    const card = page.locator(`[data-${group}-card]`).last();
+    const input = card.locator('[data-affiliation-input]');
+    await input.fill('GFZ');
+    const results = card.locator('[data-affiliation-result]');
+    await expect(results).toHaveCount(7);
+    expect(limit).toBe('7');
+    await input.press('ArrowUp');
+    await expect(results.last()).toHaveAttribute('aria-selected', 'true');
+    await input.press('Enter');
+    await expect(card.locator('[data-affiliation-label]')).toHaveValue('GFZ, Department 7');
+    await expect(card.locator('[data-affiliation-ror]')).toHaveText('04z8jg394');
+  });
+}
+
 test('failed ROR search keeps explicit free-text entry available', async ({ page }) => {
   await page.route('**/api/v2/affiliations/search**', route => route.fulfill({status: 503, json: {error: 'Unavailable'}}));
   await navigateToHome(page);

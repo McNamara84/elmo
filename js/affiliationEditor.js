@@ -90,6 +90,7 @@ export function createAffiliationEditor(options) {
   const translate = options.translate;
   const affiliationSearchMinLength = 3;
   const affiliationSearchDebounceMs = 250;
+  const affiliationSearchLimit = 7;
   const affiliationSearchTimers = new WeakMap();
   // Invalidate immediately on input, before debounce, so a slow previous response cannot reappear.
   let requestVersion = 0;
@@ -311,7 +312,7 @@ export function createAffiliationEditor(options) {
   function renderAffiliationSearchResults(results) {
     const editor = element;
     const resultContainer = editor.find('[data-affiliation-results]').empty();
-    const normalizedResults = results.map(normalizeAffiliationSearchResult).filter(Boolean);
+    const normalizedResults = results.map(normalizeAffiliationSearchResult).filter(Boolean).slice(0, affiliationSearchLimit);
     activeResultIndex = -1;
     editor.find('[data-affiliation-input]')
       .attr('aria-expanded', String(normalizedResults.length > 0))
@@ -369,7 +370,7 @@ export function createAffiliationEditor(options) {
     searchStatus = 'loading';
     updateAffiliationEditorTexts(element);
     let results;
-    try { results = await searchFunction(query, 20, { throwOnError: true }); }
+    try { results = await searchFunction(query, affiliationSearchLimit, { throwOnError: true }); }
     catch (_error) {
       if (!destroyed && requestVersion === requestId) {
         searchStatus = 'error';

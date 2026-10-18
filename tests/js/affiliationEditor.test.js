@@ -159,10 +159,28 @@ describe('shared affiliation editor', () => {
     input.val('gf').trigger('input'); await tick();
     expect(window.searchAffiliationsFromServer).not.toHaveBeenCalled();
     input.val('gfz').trigger('input'); await tick();
-    expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20, {throwOnError: true});
+    expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 7, {throwOnError: true});
     editor.element.find('[data-affiliation-result]').trigger('click');
     expect(values()).toEqual([{ label: 'GFZ', rorId: '04z8jg394' }]);
     expect(input.val()).toBe('');
+  });
+  test('limits suggestions to seven and keyboard selection stays within the visible results', async () => {
+    jest.useFakeTimers();
+    window.searchAffiliationsFromServer = jest.fn().mockResolvedValue([
+      {name: '', id: ''},
+      ...Array.from({length: 20}, (_, index) => ({name: `Department ${index + 1}`, id: '04z8jg394'}))
+    ]);
+    const {editor, values} = mount();
+    const input = editor.element.find('[data-affiliation-input]');
+    input.val('Department').trigger('input'); await tick();
+    const results = editor.element.find('[data-affiliation-result]');
+    expect(results).toHaveLength(7);
+    expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('Department', 7, {throwOnError: true});
+    expect(results.last().attr('data-affiliation-label-value')).toBe('Department 7');
+    input.trigger($.Event('keydown', {key: 'ArrowUp'}));
+    expect(input.attr('aria-activedescendant')).toBe(results.last().attr('id'));
+    input.trigger($.Event('keydown', {key: 'Enter'}));
+    expect(values()).toEqual([{label: 'Department 7', rorId: '04z8jg394'}]);
   });
   test('invalidates old results as soon as text changes before the next debounce', async () => {
     jest.useFakeTimers();
