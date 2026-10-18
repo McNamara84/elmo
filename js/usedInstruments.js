@@ -117,6 +117,44 @@ function initUsedInstrumentsModule() {
         });
     }
 
+    /** Normalizes search text like Tagify's case-insensitive, accented search. */
+    function normalizeInstrumentSearch(value) {
+        return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    }
+
+    /** Ranks exact names, name prefixes, other name matches, then type-dependent matches. */
+    function getInstrumentSearchRank(item, query, words) {
+        var name = normalizeInstrumentSearch(item.name || item.value);
+        if (name === query) return 0;
+        if (name.startsWith(query)) return 1;
+        if (words.every(function (word) { return name.includes(word); })) return 2;
+        return 3;
+    }
+
+    /**
+     * Sorts Tagify's filtered candidates before applying the suggestion limit.
+     * Tagify calls this with the dropdown settings as `this` and does not apply
+     * maxItems itself when a custom sortby callback is provided.
+     */
+    function sortInstrumentSuggestions(items, searchText) {
+        var query = normalizeInstrumentSearch(searchText);
+        var words = query.split(' ');
+        var sortedItems = items.slice();
+
+        if (query) {
+            sortedItems = items.map(function (item, index) {
+                return { item: item, index: index, rank: getInstrumentSearchRank(item, query, words) };
+            }).sort(function (a, b) {
+                return a.rank - b.rank || a.index - b.index;
+            }).map(function (entry) {
+                return entry.item;
+            });
+        }
+
+        var limit = this.maxItems >= 0 ? this.maxItems : Infinity;
+        return sortedItems.slice(0, limit);
+    }
+
     /**
      * Updates hidden input fields to reflect the currently selected instruments.
      * Creates hidden inputs for instrumentPid[] and instrumentPidType[] for each tag.
@@ -163,7 +201,8 @@ function initUsedInstrumentsModule() {
                 closeOnSelect: true,
                 highlightFirst: true,
                 enabled: 1,
-                searchKeys: ['value', 'name']
+                searchKeys: ['value', 'name'],
+                sortby: sortInstrumentSuggestions
             },
             editTags: false,
             // Custom template for dropdown suggestions
