@@ -424,10 +424,15 @@ $(document).ready(function () {
     });
   }
 
+  /**
+   * Shows field help only on the first card when contextual help is enabled.
+   * @returns {void}
+   */
   function updateHelpButtonVisibility() {
+    const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
     stack.children('[data-related-work-entry]').each(function (index) {
       const row = $(this);
-      const showHelp = index === 0;
+      const showHelp = helpOn && index === 0;
 
       row.find('span.input-group-text').each(function () {
         const helpButton = $(this);
@@ -556,6 +561,7 @@ $(document).ready(function () {
     row.find('input[name="rIdentifier[]"]').val(entry.identifier || '');
     ensureSelectValue(row.find('select[name="relation[]"]'), entry.relationId || entry.relation || '', entry.relation || '');
     ensureSelectValue(row.find('select[name="rIdentifierType[]"]'), entry.identifierType || '');
+    window.elmo?.restoreIdentifierType?.(row.find('input[name="rIdentifier[]"]')[0]);
     renderEntrySummary(row);
   }
 
@@ -848,6 +854,7 @@ $(document).ready(function () {
   });
 
   document.addEventListener('relatedWorkDropdowns:updated', updatePayload);
+  document.addEventListener('helpStatus:changed', updateHelpButtonVisibility);
 
   window.relatedWorkStack = {
     addRelatedWork,

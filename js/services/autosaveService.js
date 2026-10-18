@@ -536,6 +536,18 @@ class AutosaveService {
       element.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
+    // Stored arrays follow enabled fields in DOM order. Protect even an empty
+    // type choice while newly created GEM rows are still loading their options.
+    const identifierPositions = new Map();
+    this.form.querySelectorAll('input[name="rIdentifier[]"], input[name="dIdentifier[]"]').forEach(input => {
+      if (input.disabled) return;
+      const typeName = input.name === 'dIdentifier[]' ? 'dIdentifierType[]' : 'rIdentifierType[]';
+      const position = identifierPositions.get(typeName) || 0;
+      identifierPositions.set(typeName, position + 1);
+      const stored = values[typeName];
+      window.elmo?.restoreIdentifierType?.(input, Array.isArray(stored) ? stored[position] : undefined);
+    });
+
     // Uncheck checkboxes or radios that were not part of the saved values
     elements.forEach((element) => {
       if (!element.name || element.disabled) {

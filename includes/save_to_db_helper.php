@@ -67,7 +67,7 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
  * @throws Exception When a form-group save or transaction operation fails.
  */
 function saveALL(array $postData): int {
-    global $connection, $showMslMode, $showContributorPersons, $showContributorInstitutions;
+    global $connection, $showMslMode;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
 
@@ -87,8 +87,8 @@ function saveALL(array $postData): int {
             $allowContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: ($GLOBALS['showContactInstitution'] ?? false), FILTER_VALIDATE_BOOLEAN);
             executeSaveFunction('saveContributorsPayload', $connection, $postData, $resource_id, $allowContactInstitution);
         } else {
-            if ($showContributorPersons) executeSaveFunction('saveContributorPersons', $connection, $postData, $resource_id);
-            if ($showContributorInstitutions) executeSaveFunction('saveContributorInstitutions', $connection, $postData, $resource_id);
+            executeSaveFunction('saveContributorPersons', $connection, $postData, $resource_id);
+            executeSaveFunction('saveContributorInstitutions', $connection, $postData, $resource_id);
         }
         executeSaveFunction('saveDescriptions', $connection, $postData, $resource_id);
         if ($showThesauri) {

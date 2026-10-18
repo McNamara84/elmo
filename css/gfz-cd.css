@@ -435,7 +435,8 @@ label.mandatory-field::after {
 }
 
 .textarea-description {
-    height: 100px !important;
+    /* Allow native resizing to override the initial height. */
+    height: 100px;
 }
 
 .space-between-row {
@@ -901,6 +902,19 @@ header .ms-auto.d-flex {
 .was-validated #input-resourceinformation-source-doi:focus {
     border-color: #86b7fe;
     box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* The root state also hides help added asynchronously, including modal help.
+   Override inline display styles set by local widgets with !important.
+   Keep non-help input addons and the Help/Guide navigation available. */
+html[data-help-status="help-off"] [data-help-section-id],
+html[data-help-status="help-off"] [data-contextual-help],
+html[data-help-status="help-off"] .help-placeholder,
+html[data-help-status="help-off"] .input-group-text:has([data-help-section-id]),
+html[data-help-status="help-off"] .input-group-append:has(> .input-group-text:only-child > [data-help-section-id]),
+html[data-help-status="help-off"] .input-group-append:has(> [data-contextual-help]:only-child),
+html[data-help-status="help-off"] .input-group-append:has(> .help-placeholder:only-child) {
+    display: none !important;
 }
 
 .resource-doi-search {

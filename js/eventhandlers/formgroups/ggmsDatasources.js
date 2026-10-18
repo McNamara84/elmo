@@ -350,18 +350,21 @@ $(document).ready(function () {
     // --- EVENT HANDLERS  ---
 
     // Add new data source entry. The add button sits below the entry stack.
-    datasourceGroup.parent().find(".addDataSource").on("click", function () {
+    $('#button-datasource-add').on('click', function () {
         const newRow = originalDataSourceRow.clone();
 
-        newRow.find("input, textarea, select").val("").removeAttr("required");
+        newRow.find('input, textarea, select').val('').removeAttr('required');
 
-        // Generate unique IDs for all elements and update their corresponding labels
+        // Generate unique IDs for all elements and update their corresponding labels.
+        // Keep the first row unnumbered for backwards compatibility, but number the
+        // first added row when the stack is empty so it stays unique and stable.
         const rowCount = datasourceGroup.children('.row').length;
         newRow.find('[id]').each(function() {
             const oldId = $(this).attr('id');
             if (!oldId) return;
 
-            const newId = `${oldId}-${rowCount}`;
+            const suffix = rowCount === 0 ? '0' : String(rowCount);
+            const newId = `${oldId}-${suffix}`;
             $(this).attr('id', newId);
 
             // Find any label associated with the old ID and update its 'for' attribute

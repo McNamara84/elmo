@@ -10,25 +10,17 @@ final class PeopleTemplatesTest extends TestCase
     public static function featureFlags(): iterable
     {
         foreach ([false, true] as $authors) {
-            foreach ([false, true] as $persons) {
-                foreach ([false, true] as $institutions) {
-                    yield [ $authors, $persons, $institutions ];
-                }
-            }
+            yield [$authors];
         }
     }
 
     #[DataProvider('featureFlags')]
     public function testTemplatesRespectFeatureFlagsAndHaveUniqueIds(
-        bool $showAuthorInstitution,
-        bool $showContributorPersons,
-        bool $showContributorInstitutions
+        bool $showAuthorInstitution
     ): void {
         ob_start();
         include __DIR__ . '/../formgroups/authors.html';
-        if ($showContributorPersons || $showContributorInstitutions) {
-            include __DIR__ . '/../formgroups/contributors.html';
-        }
+        include __DIR__ . '/../formgroups/contributors.html';
         $html = (string) ob_get_clean();
         $document = new DOMDocument();
         @$document->loadHTML($html);
@@ -40,10 +32,9 @@ final class PeopleTemplatesTest extends TestCase
             $ids[] = $id;
         }
         self::assertSame($showAuthorInstitution, $xpath->query('//*[@data-authorinstitution-row]')->length === 1);
-        self::assertSame($showContributorPersons, $document->getElementById('contributor-person-template') !== null);
-        self::assertSame($showContributorInstitutions, $document->getElementById('contributor-institution-template') !== null);
-        self::assertSame($showContributorPersons || $showContributorInstitutions,
-            $document->getElementById('contributors-payload') !== null);
+        self::assertNotNull($document->getElementById('contributor-person-template'));
+        self::assertNotNull($document->getElementById('contributor-institution-template'));
+        self::assertNotNull($document->getElementById('contributors-payload'));
         foreach ($xpath->query('//label[@for]') as $label) {
             self::assertContains($label->getAttribute('for'), $ids);
         }

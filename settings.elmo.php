@@ -25,7 +25,7 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
+$ELMO_API_KEY = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // Google Maps Map ID (required for AdvancedMarkerElement)
@@ -50,10 +50,6 @@ $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 $maxTitles = 2;
 
 
-// Show Contributor Persons form group
-$showContributorPersons = true;
-// Show Contributor Institutios form group
-$showContributorInstitutions = true;
 $showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;

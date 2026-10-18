@@ -12,6 +12,8 @@ info:
     ### Authentication
     All `/update/` endpoints require authentication using an API key. Contact the administrator to obtain an API key.
 
+    `POST /admin/cache/refresh` and `GET /admin/cache/status` use the same `X-API-KEY` header. The value must match `ELMO_API_KEY`. Cache status is an `AllCacheStatus` object: one entry per vocabulary, not a JSON list, returned as the `status` property of `GET /admin/cache/status`.
+
     ### Binary Data
     Some endpoints return downloadable XML or JSON-LD files. These responses use `application/xml`
     or `application/ld+json` depending on the selected export scheme.
@@ -39,6 +41,8 @@ security:
 tags:
   - name: general
     description: General operations for health checks and version
+  - name: affiliations
+    description: Server-side search of ROR affiliations
   - name: update
     description: Operations for updating the vocabularies
   - name: vocabularies
@@ -153,95 +157,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /update/vocabs/msl/labs:
-    get:
-      tags:
-        - update
-      summary: Update MSL Labs vocabulary
-      description: Fetch and update the MSL Labs vocabulary from the GitHub repository.
-      operationId: updateMslLabs
-      responses:
-        "200":
-          description: MSL Labs vocabulary successfully updated
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/MSLLabsUpdateResponse"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /update/vocabs/gcmd:
-    get:
-      tags:
-        - update
-      summary: Update GCMD vocabularies (Science Keywords, Instruments, and Platforms)
-      description: Updates all GCMD vocabularies (Science Keywords, Instruments, and Platforms) from NASA's GCMD repository
-      operationId: updateGcmdVocabs
-      responses:
-        "200":
-          description: Successful operation
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/GcmdVocabularyUpdate"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /update/vocabs/cgi:
-    get:
-      tags:
-        - update
-      summary: Update CGI Simple Lithology keywords
-      description: Fetches the latest CGI Simple Lithology vocabulary and stores it as JSON.
-      operationId: updateCGIKeywords
-      responses:
-        "200":
-          description: CGI keywords successfully updated
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "CGI keywords successfully updated"
-                  timestamp:
-                    type: string
-                    format: date-time
-                    example: "2025-01-19T08:45:22Z"
-                required:
-                  - message
-                  - timestamp
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /update/crossref:
     get:
       tags:
@@ -320,48 +235,44 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /vocabs/sciencekeywords:
+  /affiliations/search:
     get:
       tags:
-        - vocabularies
+        - affiliations
       security: []
-      summary: Get GCMD Science Keywords (for third party use)
-      description: Retrieve the controlled vocabulary of GCMD Science Keywords from NASA (already prepared for use with jsTree)
-      operationId: getGcmdScienceKeywords
+      summary: Search ROR affiliations
+      description: |-
+        Searches the local ROR affiliation list by preferred name and alternative names.
+        A query shorter than 2 characters, or an empty affiliation file, returns an empty array.
+
+        Results are ordered by exact name, name prefix, name contains, then alternative name.
+      operationId: searchAffiliations
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Search text. Fewer than 2 characters returns an empty array.
+          example: Potsdam
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+          description: Maximum number of matches to return. Values outside 1-100 are clamped.
       responses:
         "200":
-          description: Successful response
+          description: Matching affiliations, or an empty array
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/VocabularyTree"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /vocabs/cgi:
-    get:
-      tags:
-        - vocabularies
-      security: []
-      summary: Get CGI Simple Lithology keywords
-      description: Retrieve the CGI Simple Lithology vocabulary already prepared for use with jsTree
-      operationId: getCGIKeywords
-      responses:
-        "200":
-          description: Successful response
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/VocabularyTree"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                type: array
+                items:
+                  $ref: "#/components/schemas/RorAffiliation"
   /vocabs/freekeywords/all:
     get:
       tags:
@@ -593,75 +504,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /admin/cache/pid4inst/refresh:
-    post:
-      tags:
-        - update
-      summary: Refresh PID4INST instruments cache
-      description: Forces a refresh of the cached PID4INST instrument data from the ERNIE API. Requires API key authentication.
-      operationId: refreshPid4instCache
-      parameters:
-        - name: X-API-KEY
-          in: header
-          required: true
-          schema:
-            type: string
-          description: API key for authentication
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: "PID4INST instruments cache refreshed successfully."
-        "401":
-          description: Unauthorized - Invalid or missing API key
-        "500":
-          description: Failed to refresh cache
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/pid4inst/status:
-    get:
-      tags:
-        - update
-      summary: Get PID4INST cache status
-      description: Returns the current status of the PID4INST instruments cache including validity, age, and entry count. Requires API key authentication.
-      operationId: getPid4instCacheStatus
-      parameters:
-        - name: X-API-KEY
-          in: header
-          required: true
-          schema:
-            type: string
-          description: API key for authentication
-      responses:
-        "200":
-          description: Cache status retrieved successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  exists:
-                    type: boolean
-                  valid:
-                    type: boolean
-                  age_seconds:
-                    type: integer
-                    nullable: true
-                  ttl_seconds:
-                    type: integer
-                  entry_count:
-                    type: integer
-                    nullable: true
-        "401":
-          description: Unauthorized - Invalid or missing API key
   /vocabs/resourcetypes:
     get:
       tags:
@@ -772,6 +614,314 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
+  /vocabs/msl-laboratories:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get MSL laboratories
+      description: |-
+        Returns the MSL laboratories vocabulary from ERNIE, using the file cache when it is still valid.
+        The laboratory list is in `data`. `version`, `lastUpdated`, and `total` are forwarded from ERNIE.
+      operationId: getMslLaboratories
+      responses:
+        "200":
+          description: Laboratory vocabulary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MslLaboratoriesResponse"
+        "503":
+          description: ERNIE is not configured, or no laboratory data is available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/availability:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get thesaurus availability
+      description: |-
+        Tells the client which ERNIE thesauri are enabled. The response is a map keyed by thesaurus slug.
+        Availability is served from the file cache and is not stored in the local database.
+      operationId: getThesauriAvailability
+      responses:
+        "200":
+          description: Availability map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ThesaurusAvailability"
+        "503":
+          description: Thesaurus availability is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-science-keywords:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Science Keywords
+      description: GCMD Science Keywords prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdScienceKeywordsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-platforms:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Platforms
+      description: GCMD Platforms prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdPlatformsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gcmd-instruments:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GCMD Instruments
+      description: GCMD Instruments prepared for jsTree, from the ERNIE cache.
+      operationId: getGcmdInstrumentsFromErnie
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/chronostrat-timescale:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICS Chronostratigraphy
+      description: ICS Chronostratigraphic Chart prepared for jsTree, from the ERNIE cache.
+      operationId: getChronostratTimescale
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/thesauri/gemet:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get GEMET
+      description: GEMET thesaurus prepared for jsTree, from the ERNIE cache.
+      operationId: getGemet
+      responses:
+        "200":
+          description: Thesaurus tree
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VocabularyTree"
+        "503":
+          description: Thesaurus vocabulary is currently unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/icgemformats:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICGEM file formats
+      description: File formats stored for the ICGEM metadata form.
+      operationId: getICGEMFileFormats
+      responses:
+        "200":
+          description: File formats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/modeltypes:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get ICGEM model types
+      description: Gravity-field model types stored for the ICGEM metadata form.
+      operationId: getICGEMModelTypes
+      responses:
+        "200":
+          description: Model types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /vocabs/mathreps:
+    get:
+      tags:
+        - vocabularies
+      security: []
+      summary: Get mathematical representations
+      description: Mathematical representations stored for the ICGEM metadata form.
+      operationId: getMathRepresentations
+      responses:
+        "200":
+          description: Mathematical representations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/IcgemLookupEntry"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /validation/identifier-type:
+    get:
+      tags: [validation]
+      summary: Confirm the type of a DOI-shaped identifier
+      description: |-
+        Queries the exact DataCite record and its client type to distinguish IGSN,
+        RAiD and regular DOI. Only a DataCite 404 permits a Crossref lookup.
+        Unconfirmed or unsupported records return a null type. Results are cached
+        for six hours; unknown records for one minute. Registry failures are not cached.
+        The shared disk cache is limited to 1,024 identifiers. Cache accesses reclaim
+        expired entries globally; entries expiring soonest are evicted when full.
+      operationId: detectIdentifierType
+      parameters:
+        - name: doi
+          in: query
+          required: true
+          description: Canonical bare DOI name, such as 10.60510/gf1211s-47.
+          schema:
+            type: string
+            maxLength: 2048
+          example: 10.60510/gf1211s-47
+      responses:
+        "200":
+          description: Confirmed type or unknown record
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "400":
+          description: Invalid DOI parameter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "502":
+          description: Registry unavailable or invalid response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
+        "504":
+          description: Registry lookup timed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IdentifierDetection"
   /validation/patterns/{type}:
     get:
       tags:
@@ -839,7 +989,11 @@ paths:
         - validation
       security: []
       summary: Get active identifier types
-      description: Returns only identifier types that are currently visible (`isShown = 1`).
+      description: >-
+        Returns only identifier types that are currently visible (`isShown = 1`).
+        When ERNIE is configured, its vocabulary and validation patterns are authoritative.
+        Grouped validation alternatives are normalized into the legacy pattern field
+        without substituting local format rules. Empty patterns remain empty.
       operationId: getActiveIdentifierTypes
       responses:
         "200":
@@ -1333,16 +1487,41 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /admin/cache/titletypes/refresh:
+  /admin/cache/refresh:
     post:
       tags:
         - admin
-      summary: Refresh title types cache
-      description: Forces a refresh of the ERNIE title types cache and syncs the data to the local database. Requires API key authentication. This endpoint is typically triggered by ERNIE after title type configuration changes.
-      operationId: refreshTitleTypesCache
+      summary: Refresh all ERNIE caches
+      description: |-
+        Fetches every ERNIE vocabulary and writes its cache file. The request runs for at most 300 seconds.
+
+        Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
+
+        Read the written files with `GET /admin/cache/status`. That response wraps an `AllCacheStatus` object, keyed by vocabulary slug.
+      operationId: refreshAllCache
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key. Must match the ELMO_API_KEY environment variable.
       responses:
         "200":
-          description: Cache refreshed successfully
+          description: Every cache file was refreshed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheRefreshResponse"
+              example:
+                success: true
+                message: All ERNIE caches refreshed
+                results:
+                  resourceTypes: true
+                  titleTypes: true
+                  gemet: true
+        "400":
+          description: ERNIE is not configured
           content:
             application/json:
               schema:
@@ -1350,103 +1529,68 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
                   message:
                     type: string
-                    example: "Title types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 5
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-02-27T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                required:
+                  - success
+                  - message
+              example:
+                success: false
+                message: ERNIE service is not configured
         "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/titletypes/status:
-    get:
-      tags:
-        - admin
-      summary: Get title types cache status
-      description: Returns the current status of the ERNIE title types cache including validity, age, and item count.
-      operationId: getTitleTypesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
+          description: The X-API-KEY header is missing or does not match ELMO_API_KEY
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-02-27T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 5
-        "500":
-          description: Internal server error
+                  error:
+                    type: string
+                required:
+                  - error
+              example:
+                error: Invalid or missing API key
+        "502":
+          description: One or more vocabularies could not be refreshed
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/descriptiontypes/refresh:
-    post:
+                $ref: "#/components/schemas/CacheRefreshResponse"
+              example:
+                success: false
+                message: Some ERNIE caches failed to refresh
+                failed:
+                  - gemet
+                results:
+                  resourceTypes: true
+                  titleTypes: true
+                  gemet: false
+  /admin/cache/status:
+    get:
       tags:
         - admin
-      summary: Refresh description types cache
-      description: Forces a refresh of the ERNIE description types cache. Requires API key authentication. This endpoint is typically triggered by ERNIE after description type configuration changes.
-      operationId: refreshDescriptionTypesCache
+      summary: Get all ERNIE cache statuses
+      description: |-
+        Returns the file-cache status of every ERNIE vocabulary.
+
+        Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
+      operationId: getAllCacheStatus
+      parameters:
+        - name: X-API-KEY
+          in: header
+          required: true
+          schema:
+            type: string
+          description: API key. Must match the ELMO_API_KEY environment variable.
       responses:
         "200":
-          description: Cache refreshed successfully
+          description: Status of every vocabulary cache
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CacheStatusResponse"
+        "400":
+          description: ERNIE is not configured
           content:
             application/json:
               schema:
@@ -1454,509 +1598,25 @@ paths:
                 properties:
                   success:
                     type: boolean
-                    example: true
+                    example: false
                   message:
                     type: string
-                    example: "Description types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 6
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-16T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                    example: ERNIE service is not configured
+                required:
+                  - success
+                  - message
         "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/descriptiontypes/status:
-    get:
-      tags:
-        - admin
-      summary: Get description types cache status
-      description: Returns the current status of the ERNIE description types cache including validity, age, and item count.
-      operationId: getDescriptionTypesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
+          description: The X-API-KEY header is missing or does not match ELMO_API_KEY
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-03-16T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 6
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-persons/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh contributor person roles cache
-      description: Forces a refresh of the ERNIE contributor person roles cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshContributorPersonRolesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
+                  error:
                     type: string
-                    example: "Contributor person roles cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 16
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-persons/status:
-    get:
-      tags:
-        - admin
-      summary: Get contributor person roles cache status
-      description: Returns the current status of the ERNIE contributor person roles cache including validity, age, and item count.
-      operationId: getContributorPersonRolesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-03-08T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 16
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-institutions/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh contributor institution roles cache
-      description: Forces a refresh of the ERNIE contributor institution roles cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshContributorInstitutionRolesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Contributor institution roles cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 13
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/roles/contributor-institutions/status:
-    get:
-      tags:
-        - admin
-      summary: Get contributor institution roles cache status
-      description: Returns the current status of the ERNIE contributor institution roles cache including validity, age, and item count.
-      operationId: getContributorInstitutionRolesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-03-08T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 13
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/relationtypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh relation types cache
-      description: Forces a refresh of the ERNIE relation types cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshRelationTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Relation types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 36
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/relationtypes/status:
-    get:
-      tags:
-        - admin
-      summary: Get relation types cache status
-      description: Returns the current status of the ERNIE relation types cache including validity, age, and item count.
-      operationId: getRelationTypesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-03-08T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 36
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/identifiertypes/refresh:
-    post:
-      tags:
-        - admin
-      summary: Refresh identifier types cache
-      description: Forces a refresh of the ERNIE identifier types cache and syncs the data to the local database. Requires API key authentication.
-      operationId: refreshIdentifierTypesCache
-      responses:
-        "200":
-          description: Cache refreshed successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Identifier types cache refreshed successfully"
-                  itemCount:
-                    type: integer
-                    example: 8
-                  lastUpdated:
-                    type: string
-                    format: date-time
-                    example: "2026-03-08T10:30:00+00:00"
-        "400":
-          description: ERNIE service is not configured
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "401":
-          description: Unauthorized - Invalid or missing API key
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "502":
-          description: Failed to fetch data from ERNIE
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-  /admin/cache/identifiertypes/status:
-    get:
-      tags:
-        - admin
-      summary: Get identifier types cache status
-      description: Returns the current status of the ERNIE identifier types cache including validity, age, and item count.
-      operationId: getIdentifierTypesCacheStatus
-      responses:
-        "200":
-          description: Cache status returned successfully
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  configured:
-                    type: boolean
-                    description: Whether ERNIE service is configured
-                    example: true
-                  cache:
-                    type: object
-                    properties:
-                      exists:
-                        type: boolean
-                        example: true
-                      valid:
-                        type: boolean
-                        example: true
-                      lastUpdated:
-                        type: string
-                        format: date-time
-                        example: "2026-03-08T10:30:00+00:00"
-                      age:
-                        type: integer
-                        description: Cache age in seconds
-                        example: 3600
-                      ageFormatted:
-                        type: string
-                        example: "1 hour 0 minutes"
-                      ttl:
-                        type: integer
-                        description: Cache TTL in seconds
-                        example: 21600
-                      itemCount:
-                        type: integer
-                        example: 8
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                    example: Invalid or missing API key
+                required:
+                  - error
   /doi/lookup/{doi}:
     get:
       tags:
@@ -2113,8 +1773,150 @@ components:
       type: apiKey
       in: header
       name: X-API-Key
-      description: API key to access protected endpoints. Required for all /update/ endpoints.
+      description: API key to access protected endpoints. Required for /update/ endpoints and /admin/cache endpoints.
   schemas:
+    IdentifierDetection:
+      type: object
+      required: [identifierType, status, source]
+      properties:
+        identifierType:
+          type: [string, "null"]
+          enum: [DOI, IGSN, RAiD, null]
+        status:
+          type: string
+          enum: [detected, unknown, invalid, unavailable]
+        source:
+          type: [string, "null"]
+          enum: [datacite, crossref, null]
+
+    CacheRefreshResponse:
+      type: object
+      description: |-
+        Body of a refresh that contacted ERNIE. A complete refresh omits `failed`.
+        A partial refresh sets `success` to false and lists the slugs in `failed`.
+      properties:
+        success:
+          type: boolean
+          description: True only when every vocabulary cache was written.
+        message:
+          type: string
+        failed:
+          type: array
+          description: Vocabulary slugs that failed. Present only on a partial refresh.
+          items:
+            type: string
+        results:
+          type: object
+          description: Whether each vocabulary cache was written, keyed by slug.
+          additionalProperties:
+            type: boolean
+      required:
+        - success
+        - message
+        - results
+    CacheStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        status:
+          $ref: "#/components/schemas/AllCacheStatus"
+      required:
+        - success
+        - status
+    ErnieCacheFileStatus:
+      type: object
+      description: Status of one ERNIE cache file.
+      properties:
+        exists:
+          type: boolean
+        valid:
+          type: boolean
+          description: True when the file exists and is younger than the cache TTL.
+        lastUpdated:
+          type: string
+          nullable: true
+          example: "2026-10-10 23:21:11"
+        age:
+          type: integer
+          nullable: true
+          description: Age of the cache file in seconds.
+        ageFormatted:
+          type: string
+          nullable: true
+          description: Human-readable age. Omitted when the file has no timestamp.
+          example: 2 hours
+        ttl:
+          type: integer
+          description: Cache time-to-live in seconds. Omitted when the file is missing or unreadable.
+          example: 21600
+        itemCount:
+          type: integer
+        error:
+          type: string
+          description: Present when the file exists but cannot be read.
+          example: Unable to read cache file
+      required:
+        - exists
+        - valid
+        - lastUpdated
+        - age
+        - itemCount
+    AllCacheStatus:
+      type: object
+      description: |-
+        Map returned by getAllCacheStatus. This is an object, not a JSON array. Each property is a vocabulary slug and each value is that cache file's status. `GET /admin/cache/status` wraps this object in `CacheStatusResponse`.
+      properties:
+        resourceTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        titleTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        descriptionTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        languages:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        contributorPersonRoles:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        contributorInstitutionRoles:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        relationTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        identifierTypes:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        pid4instInstruments:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        mslLabs:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdScienceKeywords:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdPlatforms:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gcmdInstruments:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        chronostratTimescale:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        gemet:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+        thesauriAvailability:
+          $ref: "#/components/schemas/ErnieCacheFileStatus"
+      required:
+        - resourceTypes
+        - titleTypes
+        - descriptionTypes
+        - languages
+        - contributorPersonRoles
+        - contributorInstitutionRoles
+        - relationTypes
+        - identifierTypes
+        - pid4instInstruments
+        - mslLabs
+        - gcmdScienceKeywords
+        - gcmdPlatforms
+        - gcmdInstruments
+        - chronostratTimescale
+        - gemet
+        - thesauriAvailability
     License:
       type: object
       properties:
@@ -2295,40 +2097,52 @@ components:
         - name
         - label
         - description
-    MSLLabsUpdateResponse:
+    MslLaboratoriesResponse:
       type: object
+      description: ERNIE MSL laboratories vocabulary, including file metadata and the laboratory list.
       properties:
-        message:
+        version:
           type: string
-          description: Status message of the update operation
-          example: "MSL Labs vocabulary successfully updated"
-        labs:
+        lastUpdated:
+          type: string
+        total:
+          type: integer
+        data:
           type: array
-          description: List of updated labs
           items:
-            $ref: "#/components/schemas/MSLLab"
+            $ref: "#/components/schemas/MslLaboratory"
       required:
-        - message
-        - labs
-    MSLLab:
+        - data
+    MslLaboratory:
       type: object
       properties:
-        id:
+        identifier:
           type: string
-          description: Unique identifier for the lab
-          example: "lab1"
+          description: Laboratory identifier
+          example: "MSL-001"
         name:
           type: string
-          description: Name of the laboratory
-          example: "Laboratory A"
-        affiliation:
+          description: Laboratory name
+          example: "Max Planck Institute for Astronomy"
+        display_name:
           type: string
-          description: Affiliation of the laboratory
-          example: "University X"
+          description: Label shown in the laboratory select
+          example: "Max Planck Institute for Astronomy - Max Planck Society"
+        affiliation_name:
+          type: string
+          example: "Max Planck Society"
+        affiliation_ror:
+          type: string
+          example: "https://ror.org/05y42nb95"
+        scientific_domain:
+          type: string
+          example: "Astronomy"
+        country:
+          type: string
+          example: "Germany"
       required:
-        - id
-        - name
-        - affiliation
+        - identifier
+        - display_name
     RorAffiliation:
       type: object
       properties:
@@ -2363,35 +2177,6 @@ components:
           example: "An error occurred"
       required:
         - error
-    GcmdVocabularyUpdate:
-      type: object
-      properties:
-        message:
-          type: string
-          description: Status message of the update operation
-          example: "GCMD vocabularies update completed"
-        results:
-          type: object
-          description: Results for each vocabulary type
-          properties:
-            instruments:
-              type: string
-              example: "Updated successfully"
-            sciencekeywords:
-              type: string
-              example: "Updated successfully"
-            platforms:
-              type: string
-              example: "Updated successfully"
-        timestamp:
-          type: string
-          format: date-time
-          description: Time of the update
-          example: "2024-11-17T10:51:38Z"
-      required:
-        - message
-        - results
-        - timestamp
     HealthResponse:
       type: object
       properties:
@@ -2401,6 +2186,42 @@ components:
           example: "I'm still alive..."
       required:
         - message
+    ThesaurusAvailability:
+      type: object
+      description: |-
+        Map of thesaurus slug to availability. Keys are ERNIE slugs such as science_keywords, platforms, instruments, chronostratigraphy, and gemet.
+      additionalProperties:
+        type: object
+        properties:
+          available:
+            type: boolean
+          displayName:
+            type: string
+        required:
+          - available
+          - displayName
+      example:
+        science_keywords:
+          available: true
+          displayName: GCMD Science Keywords
+        platforms:
+          available: true
+          displayName: GCMD Platforms
+    IcgemLookupEntry:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        name:
+          type: string
+          example: "icgem1.0"
+        description:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
     VocabularyTree:
       type: array
       description: Hierarchical structure of vocabulary terms

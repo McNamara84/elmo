@@ -63,30 +63,17 @@ describe('buttons.js', () => {
     return window.showConfirmationModal.mock.calls[0][4];
   }
 
-  test('shows help icons by default', () => {
-    loadScript();
-    expect($('.input-group-text').first().css('display')).not.toBe('none');
-  });
-
-  test('initializes help icons based on localStorage', () => {
+  test('leaves help preferences and non-help addons to their owning modules', () => {
     localStorage.setItem('inputGroupTextVisible', 'false');
-    loadScript();
-    expect($('.input-group-text').first().css('display')).toBe('none');
-  });
-
-  test('buttonHelpOn shows help icons and stores preference', () => {
-    localStorage.setItem('inputGroupTextVisible', 'false');
+    localStorage.setItem('helpStatus', 'help-off');
+    $('.input-group-text').last().hide();
     loadScript();
     $('#buttonHelpOn').trigger('click');
-    expect($('.input-group-text').first().css('display')).not.toBe('none');
-    expect(localStorage.getItem('inputGroupTextVisible')).toBe('true');
-  });
-
-  test('buttonHelpOff hides help icons and stores preference', () => {
-    loadScript();
     $('#buttonHelpOff').trigger('click');
-    expect($('.input-group-text').first().css('display')).toBe('none');
+    expect($('.input-group-text').first().css('display')).not.toBe('none');
+    expect($('.input-group-text').last().css('display')).toBe('none');
     expect(localStorage.getItem('inputGroupTextVisible')).toBe('false');
+    expect(localStorage.getItem('helpStatus')).toBe('help-off');
   });
 
   test('hovering 30 times opens Easter egg', () => {

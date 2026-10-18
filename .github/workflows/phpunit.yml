@@ -115,7 +115,7 @@ jobs:
               $connection = connectDb();
           }
 
-          $apiKeyElmo = '1234-1234-1234-1234';
+          $ELMO_API_KEY = '1234-1234-1234-1234';
           $apiKeyGoogleMaps = 'test_api_key';
           $apiKeyTimezone = 'test_timezone_api_key';
 
@@ -128,8 +128,6 @@ jobs:
           $maxTitles = 2;
 
           $showMslLogo = false;
-          $showContributorPersons = true;
-          $showContributorInstitutions = true;
           $showThesauri = true;
           $showFreeKeywords = true;
           $showSpatialTemporalCoverage = true;

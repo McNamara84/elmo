@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, registerStaticAssetRoutes, REPO_ROOT } from '../utils';
+import identifierTypes from '../../fixtures/identifier-types.json';
 
 type ApiRequestCounts = {
   relations: number;
@@ -41,11 +42,7 @@ const identifierTypesFixture = {
       description: 'Uniform Resource Locator',
       pattern: '/^https?:\\/\\/.+$/i'
     },
-    {
-      name: 'DOI',
-      description: 'Digital Object Identifier',
-      pattern: '/^10\\.\\d{4,9}\\/.+$/i'
-    },
+    identifierTypes.find(type => type.name === 'DOI')!,
     {
       name: 'Handle',
       description: 'Handle identifier',
@@ -119,6 +116,7 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
     <script src="js/checkMandatoryFields.js"></script>
     <script src="js/dropdownUtils.js"></script>
     <script src="js/dropdownAjax.js"></script>
+    <script src="js/services/identifierDetectionService.js"></script>
     <script type="module" src="js/clearInputFieldsLoader.js"></script>
     <script type="module" src="js/select.js"></script>
     <script src="js/resourceTypeUtils.js"></script>
@@ -180,6 +178,11 @@ test.describe('Related work form group', () => {
         body: JSON.stringify(identifierTypesFixture)
       });
     });
+
+    await page.route('**/api/v2/validation/identifier-type?**', route => route.fulfill({
+      status: 200, contentType: 'application/json',
+      body: JSON.stringify({ status: 'detected', identifierType: 'DOI', source: 'datacite' })
+    }));
 
     await page.route('**/api/v2/validation/patterns/**', async route => {
       counts.patterns += 1;
@@ -361,10 +364,7 @@ test.describe('Related work form group', () => {
     await identifier.fill('10.5555/zenodo.1234567');
     await identifier.blur();
     await expect(identifierType).toHaveValue('DOI');
-    await expect(identifier).toHaveAttribute(
-      'pattern',
-      '^(?:https?:\\/\\/(?:dx\\.)?doi\\.org\\/|doi:\\s*)?10\\.\\d{4,9}\\/[^\\s]+$'
-    );
+    expect(await identifier.evaluate(element => (element as HTMLInputElement).checkValidity())).toBe(true);
 
     await identifier.fill('https://doi.org/10.1080/10509585.2015.1092083');
     await identifier.blur();

@@ -308,6 +308,8 @@
         "identifierType": "Identifikatortyp",
         "identifier": "Identifikator",
         "identifierInvalid": "Bitte geben Sie einen gültigen Identifikator ein.",
+        "identifierChecking": "Identifier-Typ wird geprüft…",
+        "identifierUncertain": "Bitte wähle den Identifier-Typ manuell.",
         "addEntry": "Verwandtes Werk hinzufügen",
         "dragHandle": "Per Drag & Drop oder mit den Pfeiltasten neu anordnen",
         "removeEntry": "Eintrag für verwandtes Werk entfernen",

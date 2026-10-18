@@ -52,70 +52,15 @@ class TestableErnieService extends \ErnieService
         $this->customDescriptionTypesCacheFile = $descriptionTypesCacheFile;
         $this->customRelationTypesCacheFile = $relationTypesCacheFile;
         $this->customIdentifierTypesCacheFile = $identifierTypesCacheFile;
-    }
 
-    /**
-     * Override getCacheFile to use custom path
-     */
-    protected function getCacheFile(): string
-    {
-        return $this->customCacheFile;
-    }
-
-    /**
-     * Override getTitleTypesCacheFile to use custom path
-     */
-    protected function getTitleTypesCacheFile(): string
-    {
-        return $this->customTitleTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getLanguagesCacheFile to use custom path
-     */
-    protected function getLanguagesCacheFile(): string
-    {
-        return $this->customLanguagesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getContributorPersonRolesCacheFile to use custom path
-     */
-    protected function getContributorPersonRolesCacheFile(): string
-    {
-        return $this->customContributorPersonRolesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getContributorInstitutionRolesCacheFile to use custom path
-     */
-    protected function getContributorInstitutionRolesCacheFile(): string
-    {
-        return $this->customContributorInstitutionRolesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getDescriptionTypesCacheFile to use custom path
-     */
-    protected function getDescriptionTypesCacheFile(): string
-    {
-        return $this->customDescriptionTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getRelationTypesCacheFile to use custom path
-     */
-    protected function getRelationTypesCacheFile(): string
-    {
-        return $this->customRelationTypesCacheFile ?: $this->customCacheFile;
-    }
-
-    /**
-     * Override getIdentifierTypesCacheFile to use custom path
-     */
-    protected function getIdentifierTypesCacheFile(): string
-    {
-        return $this->customIdentifierTypesCacheFile ?: $this->customCacheFile;
+        $this->memory['resourceTypes']['cacheFile'] = $cacheFile;
+        $this->memory['titleTypes']['cacheFile'] = $titleTypesCacheFile !== '' ? $titleTypesCacheFile : $cacheFile;
+        $this->memory['languages']['cacheFile'] = $languagesCacheFile !== '' ? $languagesCacheFile : $cacheFile;
+        $this->memory['contributorPersonRoles']['cacheFile'] = $contributorPersonRolesCacheFile !== '' ? $contributorPersonRolesCacheFile : $cacheFile;
+        $this->memory['contributorInstitutionRoles']['cacheFile'] = $contributorInstitutionRolesCacheFile !== '' ? $contributorInstitutionRolesCacheFile : $cacheFile;
+        $this->memory['descriptionTypes']['cacheFile'] = $descriptionTypesCacheFile !== '' ? $descriptionTypesCacheFile : $cacheFile;
+        $this->memory['relationTypes']['cacheFile'] = $relationTypesCacheFile !== '' ? $relationTypesCacheFile : $cacheFile;
+        $this->memory['identifierTypes']['cacheFile'] = $identifierTypesCacheFile !== '' ? $identifierTypesCacheFile : $cacheFile;
     }
 
     /**
@@ -124,6 +69,38 @@ class TestableErnieService extends \ErnieService
     public function callWriteCacheFile(string $cacheFilePath, array $data): bool
     {
         return $this->writeCacheFile($cacheFilePath, $data);
+    }
+}
+
+/**
+ * Records the memory label each cache getter passes to getDataWithCache.
+ */
+class MemoryLabelSpy extends \ErnieService
+{
+    /** @var list<string> */
+    public array $labelsPassedToGetDataWithCache = [];
+
+    protected function recordMemoryLabel(string $label): void
+    {
+        $this->labelsPassedToGetDataWithCache[] = $label;
+    }
+
+    public function clearRecordedLabels(): void
+    {
+        $this->labelsPassedToGetDataWithCache = [];
+    }
+
+    /**
+     * @return array<string, array{cacheFile: string, ernieEndpoint: string}>
+     */
+    public function memoryMap(): array
+    {
+        return $this->memory;
+    }
+
+    public function pointCacheFile(string $key, string $cacheFile): void
+    {
+        $this->memory[$key]['cacheFile'] = $cacheFile;
     }
 }
 
@@ -422,7 +399,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -443,7 +420,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -467,7 +444,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -535,54 +512,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertSame('Collection', $result[0]['name']);
     }
 
-    // ==================== fetchResourceTypes() Tests ====================
-
-    /**
-     * Test fetchResourceTypes returns null when not configured
-     */
-    public function testFetchResourceTypesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchResourceTypes();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchResourceTypes returns null on invalid URL
-     */
-    public function testFetchResourceTypesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchResourceTypes();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== refreshCache() Tests ====================
-
-    /**
-     * Test refreshCache returns false when not configured
-     */
-    public function testRefreshCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshCache returns false when ERNIE unavailable
-     */
-    public function testRefreshCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshCache();
-
-        $this->assertFalse($result);
-    }
-
     // ==================== formatAge() Tests (via getCacheStatus) ====================
 
     /**
@@ -596,7 +525,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData, $recentTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertStringContainsString('seconds', $status['ageFormatted']);
     }
@@ -612,7 +541,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData, $fiveMinutesAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertStringContainsString('minute', $status['ageFormatted']);
     }
@@ -628,7 +557,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData, $twoHoursAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertStringContainsString('hour', $status['ageFormatted']);
     }
@@ -644,7 +573,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTestCache($testData, $oneMinuteAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         // Should be "1 minute" not "1 minutes"
         $this->assertMatchesRegularExpression('/1 minute[^s]/', $status['ageFormatted'] . ' ');
@@ -694,7 +623,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         // Cache exists but is invalid due to missing lastUpdated
         $this->assertTrue($status['exists']);
@@ -715,13 +644,13 @@ final class ErnieServiceTest extends TestCase
 
         // Use 1 hour TTL - cache should be valid
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertTrue($status['valid']);
 
         // Use 10 minute TTL - cache should be invalid
         $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
-        $status2 = $service2->getCacheStatus();
+        $status2 = $service2->getAllCacheStatus()['resourceTypes'];
 
         $this->assertFalse($status2['valid']);
     }
@@ -797,7 +726,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetTitleTypesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -818,7 +747,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTitleTypesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -841,7 +770,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTitleTypesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -905,54 +834,6 @@ final class ErnieServiceTest extends TestCase
         // Should return stale cache data
         $this->assertCount(1, $result);
         $this->assertSame('Subtitle', $result[0]['name']);
-    }
-
-    // ==================== Title Types: fetchTitleTypes() Tests ====================
-
-    /**
-     * Test fetchTitleTypes returns null when not configured
-     */
-    public function testFetchTitleTypesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchTitleTypes();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchTitleTypes returns null on invalid URL
-     */
-    public function testFetchTitleTypesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchTitleTypes();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Title Types: refreshTitleTypesCache() Tests ====================
-
-    /**
-     * Test refreshTitleTypesCache returns false when not configured
-     */
-    public function testRefreshTitleTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshTitleTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshTitleTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshTitleTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshTitleTypesCache();
-
-        $this->assertFalse($result);
     }
 
     // ==================== Title Types: Hardcoded Fallback Tests ====================
@@ -1044,11 +925,11 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
         // Resource types cache should exist
-        $resourceStatus = $service->getCacheStatus();
+        $resourceStatus = $service->getAllCacheStatus()['resourceTypes'];
         $this->assertTrue($resourceStatus['exists']);
 
         // Title types cache should NOT exist
-        $titleStatus = $service->getTitleTypesCacheStatus();
+        $titleStatus = $service->getAllCacheStatus()['titleTypes'];
         $this->assertFalse($titleStatus['exists']);
     }
 
@@ -1092,7 +973,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         // Cache exists but should be invalid due to unparseable timestamp
         $this->assertTrue($status['exists']);
@@ -1182,7 +1063,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1203,7 +1084,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testTitleTypesCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1224,12 +1105,12 @@ final class ErnieServiceTest extends TestCase
 
         // Use 1 hour TTL - cache should be valid
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
         $this->assertTrue($status['valid']);
 
         // Use 10 minute TTL - cache should be invalid
         $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
-        $status2 = $service2->getTitleTypesCacheStatus();
+        $status2 = $service2->getAllCacheStatus()['titleTypes'];
         $this->assertFalse($status2['valid']);
     }
 
@@ -1277,7 +1158,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTitleTypesTestCache($testData, $twoHoursAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertStringContainsString('hour', $status['ageFormatted']);
     }
@@ -1292,7 +1173,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeTitleTypesTestCache($testData, $recent);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getTitleTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['titleTypes'];
 
         $this->assertStringContainsString('seconds', $status['ageFormatted']);
     }
@@ -1317,7 +1198,7 @@ final class ErnieServiceTest extends TestCase
         $threeHoursAgo = date('c', strtotime('-3 hours'));
         $this->writeTestCache($testData, $threeHoursAgo);
 
-        $status = $service->getCacheStatus();
+        $status = $service->getAllCacheStatus()['resourceTypes'];
         // With 2 hour TTL, 3 hour old cache should be invalid
         $this->assertFalse($status['valid']);
 
@@ -1334,7 +1215,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetLanguagesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getLanguagesCacheStatus();
+        $status = $service->getAllCacheStatus()['languages'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1355,7 +1236,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeLanguagesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getLanguagesCacheStatus();
+        $status = $service->getAllCacheStatus()['languages'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1378,7 +1259,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeLanguagesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getLanguagesCacheStatus();
+        $status = $service->getAllCacheStatus()['languages'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1438,54 +1319,6 @@ final class ErnieServiceTest extends TestCase
 
         $this->assertCount(1, $result);
         $this->assertSame('Spanish', $result[0]['name']);
-    }
-
-    // ==================== Languages: fetchLanguages() Tests ====================
-
-    /**
-     * Test fetchLanguages returns null when not configured
-     */
-    public function testFetchLanguagesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchLanguages();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchLanguages returns null on invalid URL
-     */
-    public function testFetchLanguagesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchLanguages();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Languages: refreshLanguagesCache() Tests ====================
-
-    /**
-     * Test refreshLanguagesCache returns false when not configured
-     */
-    public function testRefreshLanguagesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshLanguagesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshLanguagesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshLanguagesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshLanguagesCache();
-
-        $this->assertFalse($result);
     }
 
     // ==================== Languages: Hardcoded Fallback Tests ====================
@@ -1581,11 +1414,11 @@ final class ErnieServiceTest extends TestCase
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
         // Resource types cache should exist
-        $resourceStatus = $service->getCacheStatus();
+        $resourceStatus = $service->getAllCacheStatus()['resourceTypes'];
         $this->assertTrue($resourceStatus['exists']);
 
         // Languages cache should NOT exist
-        $languagesStatus = $service->getLanguagesCacheStatus();
+        $languagesStatus = $service->getAllCacheStatus()['languages'];
         $this->assertFalse($languagesStatus['exists']);
     }
 
@@ -1602,12 +1435,12 @@ final class ErnieServiceTest extends TestCase
 
         // Use 1 hour TTL - cache should be valid
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
-        $status = $service->getLanguagesCacheStatus();
+        $status = $service->getAllCacheStatus()['languages'];
         $this->assertTrue($status['valid']);
 
         // Use 10 minute TTL - cache should be invalid
         $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
-        $status2 = $service2->getLanguagesCacheStatus();
+        $status2 = $service2->getAllCacheStatus()['languages'];
         $this->assertFalse($status2['valid']);
     }
 
@@ -1654,7 +1487,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testLanguagesCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getLanguagesCacheStatus();
+        $status = $service->getAllCacheStatus()['languages'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1669,7 +1502,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetContributorPersonRolesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorPersonRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorPersonRoles'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1690,7 +1523,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorPersonRolesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorPersonRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorPersonRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1713,7 +1546,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorPersonRolesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorPersonRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorPersonRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1779,54 +1612,6 @@ final class ErnieServiceTest extends TestCase
         $this->assertSame('Editor', $result[0]['name']);
     }
 
-    // ==================== Contributor Person Roles: fetch Tests ====================
-
-    /**
-     * Test fetchContributorPersonRoles returns null when not configured
-     */
-    public function testFetchContributorPersonRolesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchContributorPersonRoles();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchContributorPersonRoles returns null on invalid URL
-     */
-    public function testFetchContributorPersonRolesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchContributorPersonRoles();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Contributor Person Roles: refresh Tests ====================
-
-    /**
-     * Test refreshContributorPersonRolesCache returns false when not configured
-     */
-    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshContributorPersonRolesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshContributorPersonRolesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshContributorPersonRolesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshContributorPersonRolesCache();
-
-        $this->assertFalse($result);
-    }
-
     // ==================== Contributor Person Roles: Hardcoded Fallback Tests ====================
 
     /**
@@ -1878,7 +1663,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetContributorInstitutionRolesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorInstitutionRoles'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1899,7 +1684,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorInstitutionRolesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorInstitutionRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -1922,7 +1707,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorInstitutionRolesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorInstitutionRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -1985,54 +1770,6 @@ final class ErnieServiceTest extends TestCase
 
         $this->assertCount(1, $result);
         $this->assertSame('Registration Agency', $result[0]['name']);
-    }
-
-    // ==================== Contributor Institution Roles: fetch Tests ====================
-
-    /**
-     * Test fetchContributorInstitutionRoles returns null when not configured
-     */
-    public function testFetchContributorInstitutionRolesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchContributorInstitutionRoles();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchContributorInstitutionRoles returns null on invalid URL
-     */
-    public function testFetchContributorInstitutionRolesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchContributorInstitutionRoles();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Contributor Institution Roles: refresh Tests ====================
-
-    /**
-     * Test refreshContributorInstitutionRolesCache returns false when not configured
-     */
-    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshContributorInstitutionRolesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshContributorInstitutionRolesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshContributorInstitutionRolesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshContributorInstitutionRolesCache();
-
-        $this->assertFalse($result);
     }
 
     // ==================== Contributor Institution Roles: Hardcoded Fallback Tests ====================
@@ -2122,10 +1859,10 @@ final class ErnieServiceTest extends TestCase
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
-        $personStatus = $service->getContributorPersonRolesCacheStatus();
+        $personStatus = $service->getAllCacheStatus()['contributorPersonRoles'];
         $this->assertTrue($personStatus['exists']);
 
-        $institutionStatus = $service->getContributorInstitutionRolesCacheStatus();
+        $institutionStatus = $service->getAllCacheStatus()['contributorInstitutionRoles'];
         $this->assertFalse($institutionStatus['exists']);
     }
 
@@ -2141,13 +1878,13 @@ final class ErnieServiceTest extends TestCase
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
-        $resourceStatus = $service->getCacheStatus();
+        $resourceStatus = $service->getAllCacheStatus()['resourceTypes'];
         $this->assertTrue($resourceStatus['exists']);
 
-        $personStatus = $service->getContributorPersonRolesCacheStatus();
+        $personStatus = $service->getAllCacheStatus()['contributorPersonRoles'];
         $this->assertFalse($personStatus['exists']);
 
-        $institutionStatus = $service->getContributorInstitutionRolesCacheStatus();
+        $institutionStatus = $service->getAllCacheStatus()['contributorInstitutionRoles'];
         $this->assertFalse($institutionStatus['exists']);
     }
 
@@ -2163,11 +1900,11 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorPersonRolesTestCache($testData, $thirtyMinutesAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
-        $status = $service->getContributorPersonRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorPersonRoles'];
         $this->assertTrue($status['valid']);
 
         $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
-        $status2 = $service2->getContributorPersonRolesCacheStatus();
+        $status2 = $service2->getAllCacheStatus()['contributorPersonRoles'];
         $this->assertFalse($status2['valid']);
     }
 
@@ -2181,11 +1918,11 @@ final class ErnieServiceTest extends TestCase
         $this->writeContributorInstitutionRolesTestCache($testData, $thirtyMinutesAgo);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key', 3600);
-        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorInstitutionRoles'];
         $this->assertTrue($status['valid']);
 
         $service2 = $this->createTestableService('https://ernie.example.com/', 'test-key', 600);
-        $status2 = $service2->getContributorInstitutionRolesCacheStatus();
+        $status2 = $service2->getAllCacheStatus()['contributorInstitutionRoles'];
         $this->assertFalse($status2['valid']);
     }
 
@@ -2231,7 +1968,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testContributorPersonRolesCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorPersonRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorPersonRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -2252,7 +1989,7 @@ final class ErnieServiceTest extends TestCase
         file_put_contents($this->testContributorInstitutionRolesCacheFile, json_encode($cache));
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getContributorInstitutionRolesCacheStatus();
+        $status = $service->getAllCacheStatus()['contributorInstitutionRoles'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -2395,7 +2132,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetDescriptionTypesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getDescriptionTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['descriptionTypes'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -2416,7 +2153,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeDescriptionTypesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getDescriptionTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['descriptionTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -2439,7 +2176,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeDescriptionTypesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getDescriptionTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['descriptionTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -2505,54 +2242,6 @@ final class ErnieServiceTest extends TestCase
 
         $this->assertCount(1, $result);
         $this->assertSame('Other', $result[0]['name']);
-    }
-
-    // ==================== Description Types: fetchDescriptionTypes() Tests ====================
-
-    /**
-     * Test fetchDescriptionTypes returns null when not configured
-     */
-    public function testFetchDescriptionTypesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchDescriptionTypes();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchDescriptionTypes returns null on invalid URL
-     */
-    public function testFetchDescriptionTypesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchDescriptionTypes();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Description Types: refreshDescriptionTypesCache() Tests ====================
-
-    /**
-     * Test refreshDescriptionTypesCache returns false when not configured
-     */
-    public function testRefreshDescriptionTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshDescriptionTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshDescriptionTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshDescriptionTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshDescriptionTypesCache();
-
-        $this->assertFalse($result);
     }
 
     // ==================== Description Types: Hardcoded Fallback Tests ====================
@@ -2632,7 +2321,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetRelationTypesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getRelationTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['relationTypes'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -2653,7 +2342,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeRelationTypesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getRelationTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['relationTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -2676,7 +2365,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeRelationTypesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getRelationTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['relationTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -2773,54 +2462,6 @@ final class ErnieServiceTest extends TestCase
         }
     }
 
-    // ==================== Relation Types: fetchRelationTypes Tests ====================
-
-    /**
-     * Test fetchRelationTypes returns null when not configured
-     */
-    public function testFetchRelationTypesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchRelationTypes();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchRelationTypes returns null on invalid URL
-     */
-    public function testFetchRelationTypesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchRelationTypes();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Relation Types: refreshRelationTypesCache Tests ====================
-
-    /**
-     * Test refreshRelationTypesCache returns false when not configured
-     */
-    public function testRefreshRelationTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshRelationTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshRelationTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshRelationTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshRelationTypesCache();
-
-        $this->assertFalse($result);
-    }
-
     // ==================== Relation Types: Cache Independence Tests ====================
 
     /**
@@ -2835,10 +2476,10 @@ final class ErnieServiceTest extends TestCase
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
-        $resourceStatus = $service->getCacheStatus();
+        $resourceStatus = $service->getAllCacheStatus()['resourceTypes'];
         $this->assertTrue($resourceStatus['exists']);
 
-        $relationStatus = $service->getRelationTypesCacheStatus();
+        $relationStatus = $service->getAllCacheStatus()['relationTypes'];
         $this->assertFalse($relationStatus['exists']);
     }
 
@@ -2850,7 +2491,7 @@ final class ErnieServiceTest extends TestCase
     public function testGetIdentifierTypesCacheStatusWhenCacheDoesNotExist(): void
     {
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getIdentifierTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['identifierTypes'];
 
         $this->assertFalse($status['exists']);
         $this->assertFalse($status['valid']);
@@ -2871,7 +2512,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeIdentifierTypesTestCache($testData);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getIdentifierTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['identifierTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertTrue($status['valid']);
@@ -2894,7 +2535,7 @@ final class ErnieServiceTest extends TestCase
         $this->writeIdentifierTypesTestCache($testData, $expiredTime);
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
-        $status = $service->getIdentifierTypesCacheStatus();
+        $status = $service->getAllCacheStatus()['identifierTypes'];
 
         $this->assertTrue($status['exists']);
         $this->assertFalse($status['valid']);
@@ -3011,54 +2652,6 @@ final class ErnieServiceTest extends TestCase
         }
     }
 
-    // ==================== Identifier Types: fetchIdentifierTypes Tests ====================
-
-    /**
-     * Test fetchIdentifierTypes returns null when not configured
-     */
-    public function testFetchIdentifierTypesReturnsNullWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->fetchIdentifierTypes();
-
-        $this->assertNull($result);
-    }
-
-    /**
-     * Test fetchIdentifierTypes returns null on invalid URL
-     */
-    public function testFetchIdentifierTypesReturnsNullOnInvalidUrl(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->fetchIdentifierTypes();
-
-        $this->assertNull($result);
-    }
-
-    // ==================== Identifier Types: refreshIdentifierTypesCache Tests ====================
-
-    /**
-     * Test refreshIdentifierTypesCache returns false when not configured
-     */
-    public function testRefreshIdentifierTypesCacheReturnsFalseWhenNotConfigured(): void
-    {
-        $service = $this->createTestableService('', '');
-        $result = $service->refreshIdentifierTypesCache();
-
-        $this->assertFalse($result);
-    }
-
-    /**
-     * Test refreshIdentifierTypesCache returns false when ERNIE unavailable
-     */
-    public function testRefreshIdentifierTypesCacheReturnsFalseWhenErnieUnavailable(): void
-    {
-        $service = $this->createTestableService('https://invalid-url-12345.local/', 'test-key');
-        $result = $service->refreshIdentifierTypesCache();
-
-        $this->assertFalse($result);
-    }
-
     // ==================== Identifier Types: Cache Independence Tests ====================
 
     /**
@@ -3078,13 +2671,13 @@ final class ErnieServiceTest extends TestCase
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
-        $resourceStatus = $service->getCacheStatus();
+        $resourceStatus = $service->getAllCacheStatus()['resourceTypes'];
         $this->assertTrue($resourceStatus['exists']);
 
-        $relationStatus = $service->getRelationTypesCacheStatus();
+        $relationStatus = $service->getAllCacheStatus()['relationTypes'];
         $this->assertTrue($relationStatus['exists']);
 
-        $identifierStatus = $service->getIdentifierTypesCacheStatus();
+        $identifierStatus = $service->getAllCacheStatus()['identifierTypes'];
         $this->assertFalse($identifierStatus['exists']);
     }
 
@@ -3100,11 +2693,11 @@ final class ErnieServiceTest extends TestCase
 
         $service = $this->createTestableService('https://ernie.example.com/', 'test-key');
 
-        $relationStatus = $service->getRelationTypesCacheStatus();
+        $relationStatus = $service->getAllCacheStatus()['relationTypes'];
         $this->assertTrue($relationStatus['exists']);
         $this->assertSame(1, $relationStatus['itemCount']);
 
-        $identifierStatus = $service->getIdentifierTypesCacheStatus();
+        $identifierStatus = $service->getAllCacheStatus()['identifierTypes'];
         $this->assertFalse($identifierStatus['exists']);
 
         // Now write identifier types cache
@@ -3114,13 +2707,149 @@ final class ErnieServiceTest extends TestCase
         ];
         $this->writeIdentifierTypesTestCache($identifierData);
 
-        $identifierStatus2 = $service->getIdentifierTypesCacheStatus();
+        $identifierStatus2 = $service->getAllCacheStatus()['identifierTypes'];
         $this->assertTrue($identifierStatus2['exists']);
         $this->assertSame(2, $identifierStatus2['itemCount']);
 
         // Relation types cache should still be intact
-        $relationStatus2 = $service->getRelationTypesCacheStatus();
+        $relationStatus2 = $service->getAllCacheStatus()['relationTypes'];
         $this->assertTrue($relationStatus2['exists']);
         $this->assertSame(1, $relationStatus2['itemCount']);
+    }
+
+    /**
+     * Every memory entry must be reached by a public cache getter.
+     *
+     * A getter uses an entry when it passes that key to getDataWithCache
+     * (getResourceTypesWithCache -> resourceTypes). Thesaurus vocabularies share
+     * getThesaurusVocabularyWithCache and are used when that call passes their key.
+     * Thesauri availability reads its memory entry directly, because its fetch
+     * tries two endpoints, so a cache round-trip counts as used.
+     */
+    public function testEveryMemoryEntryIsUsedByACacheGetter(): void
+    {
+        $this->setGlobalConfig('', '');
+        $spy = new MemoryLabelSpy();
+        $memory = $spy->memoryMap();
+
+        foreach (array_keys($memory) as $key) {
+            $spy->pointCacheFile($key, $this->testCacheDir . '/' . $key . '.json');
+        }
+
+        $used = [];
+        $unknownLabels = [];
+        foreach ($this->zeroArgCacheGetterNames() as $method) {
+            $spy->clearRecordedLabels();
+            $spy->{$method}();
+            $labels = $spy->labelsPassedToGetDataWithCache;
+            foreach ($labels as $label) {
+                if (!isset($memory[$label])) {
+                    $unknownLabels[] = $method . ' -> ' . $label;
+                }
+            }
+
+            $expected = lcfirst(substr($method, 3, -strlen('WithCache')));
+            if (!isset($memory[$expected])) {
+                continue;
+            }
+            if (in_array($expected, $labels, true)) {
+                $used[] = $expected;
+                continue;
+            }
+
+            $this->assertTrue(
+                $this->cacheGetterReturnsMemorySentinel($spy, $method, $expected),
+                "$method neither passes '$expected' to getDataWithCache nor reads that memory cache entry"
+            );
+            $used[] = $expected;
+        }
+
+        $vocabularyPrefix = '/api/v1/vocabularies/';
+        foreach ($memory as $key => $entry) {
+            if (in_array($key, $used, true)) {
+                continue;
+            }
+            if (!str_starts_with($entry['ernieEndpoint'], $vocabularyPrefix)) {
+                continue;
+            }
+
+            $slug = substr($entry['ernieEndpoint'], strlen($vocabularyPrefix));
+            $spy->clearRecordedLabels();
+            $spy->getThesaurusVocabularyWithCache($slug);
+            $labels = $spy->labelsPassedToGetDataWithCache;
+            $this->assertContains(
+                $key,
+                $labels,
+                "getThesaurusVocabularyWithCache('$slug') must pass memory label '$key' to getDataWithCache"
+            );
+            foreach ($labels as $label) {
+                if (!isset($memory[$label])) {
+                    $unknownLabels[] = "getThesaurusVocabularyWithCache($slug) -> $label";
+                }
+            }
+            $used[] = $key;
+        }
+
+        $unused = array_values(array_diff(array_keys($memory), $used));
+        $this->assertSame([], $unused, 'Memory entries not used by a cache getter: ' . implode(', ', $unused));
+        $this->assertSame([], $unknownLabels, 'getDataWithCache received labels that are not memory keys: ' . implode(', ', $unknownLabels));
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function zeroArgCacheGetterNames(): array
+    {
+        $names = [];
+        foreach ((new \ReflectionClass(\ErnieService::class))->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+            if (!str_ends_with($method->getName(), 'WithCache')) {
+                continue;
+            }
+            if ($method->getNumberOfRequiredParameters() > 0) {
+                continue;
+            }
+            $names[] = $method->getName();
+        }
+
+        return $names;
+    }
+
+    private function cacheGetterReturnsMemorySentinel(MemoryLabelSpy $spy, string $method, string $key): bool
+    {
+        $cacheFile = $this->testCacheDir . '/memory-use-' . $key . '.json';
+        $marker = 'memory-entry-' . $key;
+        file_put_contents($cacheFile, json_encode([
+            'lastUpdated' => date('c'),
+            'ttl' => 21600,
+            'source' => 'ernie',
+            'data' => [['memoryMarker' => $marker]],
+        ]));
+        $spy->pointCacheFile($key, $cacheFile);
+
+        try {
+            $result = $spy->{$method}();
+            return $this->arrayContainsMarker($result, $marker);
+        } finally {
+            if (file_exists($cacheFile)) {
+                unlink($cacheFile);
+            }
+        }
+    }
+
+    private function arrayContainsMarker(mixed $value, string $marker): bool
+    {
+        if ($value === $marker) {
+            return true;
+        }
+        if (!is_array($value)) {
+            return false;
+        }
+        foreach ($value as $item) {
+            if ($this->arrayContainsMarker($item, $marker)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -150,7 +150,7 @@ test.describe('ELMO-GEM save', () => {
     await page.locator('#input-datasource-type-1').selectOption({ label: 'Reference Model' });
     await page.locator('#input-datasource-identifier-1').dblclick();
     await page.locator('#input-datasource-identifier-1').fill('identifier');
-    await page.locator('#input-datasource-identifiertype1').selectOption('');
+    await page.locator('#input-datasource-identifiertype-1').selectOption('');
     await page.getByLabel('Errors *').selectOption('calibrated');
     await page.getByRole('button', { name: 'Other' }).click();
     await page.getByRole('textbox', { name: 'Other' }).click();

@@ -51,6 +51,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
 - Optional input fields with form groups that can be hidden.
 - Autosave functionality
 - Light, Dark and Auto modes share the saved theme with the ELMO Guide. Auto follows the system's color preference.
+- The Help menu switches contextual help at fields, section headings and dialogs on or off, including dynamically added entries. The preference is saved in the browser; Guide links remain available.
 
 ## Installation
 
@@ -171,7 +172,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$password`: Password of database user.
   - `$database`: Name of the database created.
   - `$maxTitles`: Defines the maximum number of titles that users can enter in the editor.
-  - `$apiKeyElmo`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
+  - `$ELMO_API_KEY`: A self-defined security key to connect cron jobs with api calls to `/update/` for refreshing the vocabularies.
   - `$showFeedbackLink`: true-> feedback function switched on, false-> feedback function switched off
   - `$smtpHost`: URL to the SMTP mail server
   - `$smtpPort`: Port of the mail server
@@ -184,8 +185,6 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$sendResearcherConfirmationEmail`: ELMO-GEM only (`$showGGMsProperties`). Configured via `SEND_RESEARCHER_CONFIRMATION_EMAIL` (default `true`). When `true`, contact persons receive the usual confirmation email. When `false`, those emails are not sent. Other ELMO variants ignore this variable and always send confirmation emails.
   - `$icgemDatabaseUrl`: ELMO-GEM only (`$showGGMsProperties`). Configured via `ICGEM_UPLOAD_URL`. This is the upload interface linked from the ICGEM registration mail. When unset, the mail uses `https://icgem.gfz.de/upload`.
   - `DATACITE_JSONLD_CONTEXT_URL`: Optional environment variable for overriding the `@context` URL used in JSON-LD exports. If unset, ELMO falls back to the DataCite stage linked-data context.
-  - `$showContributorPersons`: Controls whether the Contributors group offers the Add Person button (true/false).
-  - `$showContributorInstitutions`: Controls whether the Contributors group offers the Add Institution button (true/false). The group is hidden when both contributor types are disabled.
   - `SHOW_CONTACT_INSTITUTION`: Allows contributor institutions to use the Contact Person role when set to `true` (default: `false`). An institution contact needs a name and valid email address to satisfy the shared contact requirement.
   - `$showMslLabs`: Specifies whether the form group Originating Laboratory should be displayed (true/false).
   - `$showMslVocabs`: Specifies whether the form group EPOS Multi-Scale Laboratories Keywords should be displayed (true/false).
@@ -217,10 +216,10 @@ If you encounter problems with the installation, feel free to leave an entry in 
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/relationtypes/refresh
   ├─ ERNIE POSTs: POST /api/v2/admin/cache/identifiertypes/refresh
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
-  └─ ELMO verifies against $apiKeyElmo in ELMO's .env
+  └─ ELMO verifies against $ELMO_API_KEY in ELMO's .env
   ```
 
-  - `$apiKeyElmo`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
+  - `$ELMO_API_KEY`: API key that external services (including ERNIE) use to authenticate with ELMO's admin endpoints. **Direction: ERNIE → ELMO**
   - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types, title types, relation types, identifier types, and other vocabularies are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
   - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
@@ -980,7 +979,13 @@ This is mapped to `<relatedIdentifier>` in the DataCite scheme and to `<gmd:aggr
   - Data type: String
   - Occurrence: 0-1
   - The corresponding field in the database where the value is stored is called: `identifier_type_fk` in the `Related_Work` table
-  - if possible, the Identifier Type is automatically selected based on the structure of Identifier (see `function updateIdentifierType`) 
+  - The Identifier Type is selected automatically only when an ERNIE validation pattern accepts the complete input and its type is unambiguous. DOI-shaped inputs are checked through the ELMO backend against DataCite repository types (`igsnCatalog` → IGSN, `raidRegistry` → RAiD); regular DataCite records and positively confirmed Crossref records use DOI. Missing metadata or failed lookups leave the type empty for manual selection.
+  - ISBN and EAN13 checks include their check digits. An unqualified valid ISBN-13/EAN13 overlap stays empty; either type can still be selected manually. arXiv and RAiD resolver URLs are recognized when their ERNIE patterns accept the complete input; resolver namespaces prevent rejected identifiers from becoming generic URLs.
+  - The same detection and validation rules apply to GEM model data sources. A manual choice or imported type is retained until the identifier is edited, and late lookup responses cannot overwrite it.
+  - ERNIE supplies the identifier types and authoritative format patterns. Grouped `patterns.validation` entries are combined for ELMO's existing pattern field without replacing their format rules. Browser validation uses these same patterns and adds check-digit checks through JavaScript custom validity. Empty patterns do not trigger automatic selection. With a selected type, non-empty input requires a matching pattern even after manual selection; empty definitions, missing patterns and pending or failed legacy lookups cannot bypass validation. Registry confirmation cannot bypass the selected type's pattern.
+  - Vocabulary reloads refresh Related Work and GEM identifier-type choices before revalidating them. Only still-active selections are retained; hidden GEM fields stay disabled. Pending registry, option-loading and restoration responses cannot restore a type removed by a reload. Clearing the form resets identifier validity and pending detection state. Official DOI resolver paths are percent-decoded once for registry requests; the entered value is preserved.
+  - The registry-result disk cache holds at most 1,024 identifiers by default. Every cache access removes expired or malformed entries, including identifiers that are never requested again; writes evict entries expiring soonest when full. A shared file lock keeps eviction and writes within that limit across PHP workers. Registry failures are not cached.
+  - Format corrections belong in ERNIE. After deployment, use the existing authenticated `POST /api/v2/admin/cache/refresh` endpoint to fetch and synchronize the delivered patterns, then reload the form. Existing offline seeds and the last-resort outage fallback do not override available ERNIE metadata.
   - Restrictions: Must be selected, if related work is specified
   - must be chosen from a controlled List: [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/relatedidentifier/#a-relatedidentifiertype)
   - Example values: `ARK` `IGSN` `LSID`
@@ -1820,4 +1825,3 @@ npx playwright show-report
 - **`browserType.launch: Executable doesn't exist`** → Run `npx playwright install` to download the required browser binaries.
 - **Tests fail with connection errors** → Ensure Docker containers are running (`docker compose ps`) and ports 8080–8083 are accessible.
 - **WebKit/Firefox tests fail locally on Linux** → Some Linux distributions require additional system libraries. Run `sudo npx playwright install-deps` or install the packages listed in the error output.
-

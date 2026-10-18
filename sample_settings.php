@@ -24,7 +24,7 @@ function connectDb()
 $connection = connectDb();
 
 // ELMO API Key
-$apiKeyElmo = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
+$ELMO_API_KEY = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
 // Google Maps API Key
 $apiKeyGoogleMaps = 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
 // Google Maps Map ID (required for AdvancedMarkerElement)
@@ -51,10 +51,6 @@ $maxTitles = 2;
 // having the MSL logo in the header:
 $showMslLogo = false;
 
-// Show Contributor Persons form group
-$showContributorPersons = true;
-// Show Contributor Institutios form group
-$showContributorInstitutions = true;
 $showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;

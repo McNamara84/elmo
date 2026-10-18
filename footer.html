@@ -99,8 +99,6 @@ window.ELMO_FEATURES = {
     showMslLabs: <?php echo json_encode($showMslLabs ?? false); ?>,
     showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
     showAuthorInstitution: <?php echo json_encode($showAuthorInstitution ?? true); ?>,
-    showContributorPersons: <?php echo json_encode($showContributorPersons ?? true); ?>,
-    showContributorInstitutions: <?php echo json_encode($showContributorInstitutions ?? true); ?>,
     showContactInstitution: <?php echo json_encode($showContactInstitution ?? false); ?>,
     showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
     showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
@@ -188,6 +186,7 @@ window.ELMO_FEATURES = {
 <script src="js/resourceTypeDescriptions.js"></script>
 <script src="js/dropdownUtils.js"></script>
 <script src="js/dropdownAjax.js"></script>
+<script src="js/services/identifierDetectionService.js"></script>
 <!-- select-Funktionen laden -->
 <script type="module" src="js/select.js"></script>
 <!--Tagify-->

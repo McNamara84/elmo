@@ -247,6 +247,27 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Deprecated contributor feature toggles were removed: person and institution contributor cards are now always available in the Contributors form group."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1289
+                },
+                {
+                  "type": "issue",
+                  "number": 1288
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Resource Information now keeps fields and titles in a shared payload. Additional titles can be reordered by keyboard or drag and drop; XML, JSON-LD, and XSLT import preserve title order and textual versions."
                 }
               ],
@@ -506,6 +527,53 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Help off now hides all contextual help, including section headings, dialogs and dynamically added fields. Help on restores the appropriate help for each entry, while the Guide and form actions remain available. Existing help preferences are preserved."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1279}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Description fields can now be enlarged and reduced vertically using their resize handle in all ELMO editions."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1274
+                }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Identifier types in Related Works and GEM data sources are detected only when unambiguous. Format detection and validation use the patterns supplied by ERNIE, including grouped validation patterns. DOI, IGSN and RAiD are distinguished using registry metadata; ISBN and EAN13 receive additional check-digit checks. ISBN/EAN13 overlaps stay empty for manual selection, and pending lookups preserve manual choices."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Reloads also update GEM type choices, remove inactive selections and preserve active choices; delayed option loading or restoration cannot bring removed types back. Manually selected types require a matching format pattern; empty definitions and missing or pending pattern lookups cannot accept arbitrary identifiers. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1267}, {"type": "pull", "number": 1278}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
                 }
               ],
@@ -745,6 +813,16 @@
                   "number": 1234
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Data source fields keep stable IDs and working labels while entering identifiers, so editing and saving GEM forms remain reliable."
+                }
+              ],
+              "editions": ["gem"],
+              "references": [{"type": "pull", "number": 1278}]
             }
           ]
         },
