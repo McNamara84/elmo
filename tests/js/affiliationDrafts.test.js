@@ -5,6 +5,48 @@ const { migratePeopleDraft } = require('../../js/services/authorContributorDraft
 describe('unfinished affiliation drafts', () => {
   beforeEach(() => { document.body.innerHTML = '<form id="form-mde"></form>'; window.ELMO_FEATURES = {}; });
   afterEach(() => { delete window.ELMO_FEATURES; });
+  test.each([
+    ['author', 'person'], ['author', 'institution'],
+    ['contributor', 'person'], ['contributor', 'institution']
+  ])('%s %s switches type with affiliation data and preserves the draft and card order', (group, type) => {
+    const entries = [
+      {type: 'person', familyname: 'Before'}, {type},
+      {type: 'institution', institutionname: 'After'}
+    ];
+    const stack = group === 'author' ? mountAuthorStack(entries) : mountContributorStack(entries);
+    const cards = () => Array.from(document.querySelectorAll(`[data-${group}-card]`));
+    const editor = card => card.querySelector('[data-affiliation-editor]').affiliationEditor;
+    const affiliations = [
+      {label: 'GFZ, Department', rorId: '04z8jg394'}, {label: 'Working group', rorId: ''},
+      {label: '', rorId: '012m9bp23'}, {label: '', rorId: ''}
+    ];
+    const original = editor(cards()[1]);
+    original.setAffiliations(affiliations);
+    original.setPendingInput('  Unconfirmed lab  ');
+    const destroy = jest.spyOn(original, 'destroy');
+    const opposite = type === 'person' ? 'institution' : 'person';
+    for (const target of [opposite, type]) {
+      const button = cards()[1].querySelector(`[data-${group}-type-option="${target}"]`);
+      expect(button.disabled).toBe(false);
+      button.click();
+      expect(cards()).toHaveLength(3);
+      expect(stack.collectDraftEntries().map(entry => entry.type)).toEqual(['person', target, 'institution']);
+      expect(editor(cards()[1]).getAffiliations()).toEqual(affiliations);
+      expect(editor(cards()[1]).getPendingInput()).toBe('  Unconfirmed lab  ');
+      expect(stack.collectDraftEntries()[1]).toMatchObject({affiliations, _ui: {affiliationInput: '  Unconfirmed lab  '}});
+      expect(stack.collectPayload()[1]).not.toHaveProperty('_ui');
+    }
+    expect(destroy).toHaveBeenCalledTimes(1);
+  });
+  test.each(['author', 'contributor'])('%s can switch with only pending affiliation input without confirming it', group => {
+    const stack = group === 'author' ? mountAuthorStack([{type: 'person'}]) : mountContributorStack([{type: 'person'}]);
+    document.querySelector('[data-affiliation-editor]').affiliationEditor.setPendingInput('Pending lab');
+    const button = document.querySelector(`[data-${group}-type-option="institution"]`);
+    expect(button.disabled).toBe(false);
+    button.click();
+    expect(stack.collectPayload()).toEqual([]);
+    expect(stack.collectDraftEntries()[0]).toMatchObject({type: 'institution', _ui: {affiliationInput: 'Pending lab'}});
+  });
   test.each(['author', 'contributor'])('%s drafts preserve an empty edited label without losing neighboring affiliations', group => {
     const stack = group === 'author' ? mountAuthorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'First'}, {label: 'Second'}]}])
       : mountContributorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'First'}, {label: 'Second'}]}]);

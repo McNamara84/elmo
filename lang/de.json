@@ -149,7 +149,7 @@
         "person": "Person",
         "institution": "Institution",
         "typeSwitcherLabel": "Autorentyp",
-        "typeSwitchLocked": "Der Typ kann nur geändert werden, solange dieser Eintrag leer ist.",
+        "typeSwitchLocked": "Entfernen Sie Namen, ORCID und Kontaktangaben, um den Typ zu ändern. Affiliations bleiben erhalten.",
         "addPerson": "Person hinzufügen",
         "addInstitution": "Institution hinzufügen",
         "dragHandle": "Reihenfolge per Drag & Drop ändern",

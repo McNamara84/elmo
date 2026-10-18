@@ -67,6 +67,35 @@ for (const group of ['author', 'contributor']) {
       const affiliations = await page.evaluate(group => (window as any)[`${group}Stack`].collectPayload().at(-1).affiliations, group);
       expect(affiliations).toEqual([{label: 'GFZ, Department', rorId: '04z8jg394'}]);
     });
+    test(`${group} ${type}: affiliation data survives switching person and institution`, async ({page}) => {
+      await page.route('**/api/v2/drafts**', route => route.fulfill({status: 204, body: ''}));
+      await page.route('**/api/v2/affiliations/search**', route => route.fulfill({json: []}));
+      await navigateToHome(page);
+      await page.waitForFunction(group => Boolean((window as any)[`${group}Stack`]), group);
+      const opposite = type === 'person' ? 'institution' : 'person';
+      const supported = await page.evaluate(({group, type, opposite}) => {
+        const stack = (window as any)[`${group}Stack`];
+        return stack.supportsType(type) && stack.supportsType(opposite);
+      }, {group, type, opposite});
+      test.skip(!supported, 'Both card types must be enabled');
+      await page.locator(`[data-${group}-add-type="${type}"]`).click();
+      const card = page.locator(`[data-${group}-card]`).last();
+      const affiliations = [{label: 'GFZ, Department', rorId: '04z8jg394'}, {label: 'Working group', rorId: ''}];
+      await card.locator('[data-affiliation-editor]').evaluate((element: any, values) => element.affiliationEditor.setAffiliations(values), affiliations);
+      await card.locator('[data-affiliation-input]').fill('  Unconfirmed lab  ');
+      for (const target of [opposite, type]) {
+        await expect(card.locator(`[data-${group}-type-option="${target}"]`)).toBeEnabled();
+        await card.locator(`[data-${group}-type-option="${target}"]`).click();
+        await expect(card.locator(`[data-${group}-type-option="${target}"]`)).toHaveAttribute('aria-pressed', 'true');
+        await expect(card.locator('[data-affiliation-label]')).toHaveCount(2);
+        await expect(card.locator('[data-affiliation-label]').first()).toHaveValue('GFZ, Department');
+        await expect(card.locator('[data-affiliation-label]').last()).toHaveValue('Working group');
+        await expect(card.locator('[data-affiliation-ror]').first()).toHaveText('04z8jg394');
+        await expect(card.locator('[data-affiliation-input]')).toHaveValue('  Unconfirmed lab  ');
+        const draft = await page.evaluate(group => (window as any)[`${group}Stack`].collectDraftEntries().at(-1), group);
+        expect(draft).toMatchObject({type: target, affiliations, _ui: {affiliationInput: '  Unconfirmed lab  '}});
+      }
+    });
   }
 }
 

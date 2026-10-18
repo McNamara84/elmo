@@ -403,8 +403,9 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         ORCID profile when available. Institution authors use the institution name field and can be
                         added to the same ordered list.</p>
                     <p>Use the add person and add institution buttons to create more cards. Each card can be expanded
-                        or collapsed with the edit button. Empty cards can be switched between person and institution;
-                        once author data has been entered, the selected type is locked to protect the existing fields.</p>
+                        or collapsed with the edit button. Cards can be switched between person and institution while only
+                        affiliation data is entered. Confirmed affiliations, ROR IDs and unfinished input are kept.
+                        Names, ORCID and contact information lock the selected type to protect those fields.</p>
                     <p>The order of person and institution authors can be changed together using drag & drop or the
                         move up and move down buttons. This order is used for saving and XML export.</p>
                     <p><strong>Please provide at least one contact in Authors or Contributors.</strong> A person author
@@ -512,6 +513,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-contributors-fg">
                     <h3>Contributors</h3>
                     <p>Use Add Person or Add Institution to add contributors in the order they should appear in the metadata. You can reorder, edit or remove each card. The section starts empty and is optional.</p>
+                    <p>Cards containing only affiliation data can switch between person and institution. Confirmed affiliations,
+                        ROR IDs and unfinished input are kept. Names, ORCID, contact information and roles lock the selected type.</p>
                     <p>Choose the Contact Person role for a contributor person to make them a contact. A contact needs a name and valid email address before submission. The contact requirement is shared with Authors.</p>
                     <?php if ($showContactInstitution ?? false): ?>
                     <p>Contributor institutions may also have the Contact Person role when this feature is enabled.</p>

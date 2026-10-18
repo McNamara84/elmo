@@ -148,7 +148,7 @@
         "person": "Person",
         "institution": "Institution",
         "typeSwitcherLabel": "Author type",
-        "typeSwitchLocked": "Type can only be changed while this entry is empty.",
+        "typeSwitchLocked": "Clear the name, ORCID and contact details to change the type. Affiliations will be kept.",
         "addPerson": "Add person",
         "addInstitution": "Add institution",
         "dragHandle": "Drag & drop to change order",

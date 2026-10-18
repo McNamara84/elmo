@@ -75,6 +75,10 @@ $(document).ready(function () {
       entry.roles.length || entry.affiliations.length || entry.email || entry.website);
   }
 
+  function hasTypeSpecificContent(entry) {
+    return hasContent({...entry, affiliations: []});
+  }
+
   /**
    * Collect cards in DOM order, including pending-only cards and invalid empty label slots.
    * @returns {Array<Object>} Draft copies with optional _ui.affiliationInput, never export payloads.
@@ -132,7 +136,7 @@ $(document).ready(function () {
         const active = button.dataset.contributorTypeOption === entry.type;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
-        button.disabled = !active && (hasContent(entry) || Boolean(card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput().trim()));
+        button.disabled = !active && hasTypeSpecificContent(entry);
       });
     }
   }
@@ -449,12 +453,21 @@ $(document).ready(function () {
         button.focus();
       }
     } else if (button.matches('[data-contributor-type-option]')) {
-      if (button.disabled || hasContent(read(card)) || card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput().trim()) return;
-      const replacement = buildCard(button.dataset.contributorTypeOption);
+      const targetType = button.dataset.contributorTypeOption;
+      if (button.disabled || targetType === typeOf(card) || hasTypeSpecificContent(read(card))) return;
+      const editor = card.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      const affiliations = editor?.getAffiliations() || read(card).affiliations;
+      const pendingInput = editor?.getPendingInput() || '';
+      const expanded = card.querySelector('[data-contributor-edit-panel]').classList.contains('show');
+      const replacement = buildCard(targetType);
       if (!replacement) return;
-      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.destroy();
+      editor?.destroy();
       card.replaceWith(replacement);
       initializeWidgets(replacement);
+      setExpanded(replacement, expanded);
+      const replacementEditor = replacement.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      if (affiliations.length) replacementEditor?.setAffiliations(affiliations);
+      if (pendingInput) replacementEditor?.setPendingInput(pendingInput);
       updatePayload();
       replacement.querySelector('input:not([type="hidden"])')?.focus();
     }

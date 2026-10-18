@@ -815,6 +815,15 @@ $(document).ready(function () {
       ? readInstitution(row, 0) !== null
       : readPerson(row, 0) !== null;
   }
+
+  // Affiliations belong to both card types; only type-specific fields prevent a safe switch.
+  function rowHasTypeSpecificContent(row) {
+    const institution = getEntryType(row) === 'institution';
+    const author = institution ? readInstitution(row, 0, true) : readPerson(row, 0, true);
+    author.affiliations = [];
+    return institution ? hasInstitutionContent(author) : hasPersonContent(author);
+  }
+
   function updateTypeSwitcher(row) {
     const switcher = row.find('[data-author-type-switcher]').first();
     if (!switcher.length) {
@@ -822,8 +831,8 @@ $(document).ready(function () {
     }
 
     const currentType = getEntryType(row);
-    const isLocked = rowHasContent(row);
-    const lockText = translate('authors.typeSwitchLocked', 'Type can only be changed while this entry is empty.');
+    const isLocked = rowHasTypeSpecificContent(row);
+    const lockText = translate('authors.typeSwitchLocked', 'Clear the name, ORCID and contact details to change the type. Affiliations will be kept.');
 
     switcher.find('[role="group"]').attr('aria-label', translate('authors.typeSwitcherLabel', 'Author type'));
     switcher.find('[data-author-type-option]').each(function () {
@@ -856,12 +865,15 @@ $(document).ready(function () {
       return row;
     }
 
-    if (rowHasContent(row)) {
+    if (rowHasTypeSpecificContent(row)) {
       updateTypeSwitcher(row);
       return row;
     }
 
     const entryKey = getEntryKey(row);
+    const editor = row.find('[data-affiliation-editor]')[0]?.affiliationEditor;
+    const affiliations = editor?.getAffiliations() || getRowAffiliations(row);
+    const pendingInput = editor?.getPendingInput() || '';
     const isExpanded = row.find('[data-author-edit-panel]').first().hasClass('show');
     const template = targetType === 'institution' ? institutionTemplate : personTemplate;
     const replacement = prepareClone(template, targetType);
@@ -870,11 +882,14 @@ $(document).ready(function () {
       return row;
     }
 
-    row.find('[data-affiliation-editor]')[0]?.affiliationEditor?.destroy();
+    editor?.destroy();
     row.replaceWith(replacement);
     authorUiState.delete(entryKey);
     setExpanded(replacement, isExpanded);
     initializeAffiliationAutocomplete(replacement);
+    const replacementEditor = replacement.find('[data-affiliation-editor]')[0]?.affiliationEditor;
+    if (affiliations.length) replacementEditor?.setAffiliations(affiliations);
+    if (pendingInput) replacementEditor?.setPendingInput(pendingInput);
     initializeTooltips(replacement);
     if (typeof stack.sortable === 'function') {
       stack.sortable('refresh');
