@@ -29,7 +29,7 @@ jobs:
     
     services:
       mysql:
-        image: mysql:9.7.2
+        image: mysql:9.7.2@sha256:c7cb87a9822f499375287930cbff71d6d3b201e346b45108b1115b435ee2df13
         env:
           MYSQL_ROOT_PASSWORD: root_password
           MYSQL_DATABASE: mde2-msl-test
