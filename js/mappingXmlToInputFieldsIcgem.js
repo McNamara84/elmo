@@ -552,19 +552,19 @@ async function populateIcgemDataSources(data) {
 }
 
 /**
- * Assigns nameless grav:contact entries to author and contributor cards.
+ * Copies ICGEM contact details onto contributor cards.
  *
- * Authors who share a name with a Contact Person take the first entries, on both
- * cards. The remaining Contact Person contributors, including institutions, take
- * the rest in contributor order.
+ * A grav:contacts/grav:contact entry carries its own name and identifier, so it
+ * matches a contributor by ORCID or ROR and then by name. A missing card is added
+ * with the Contact Person role. An older grav:contact list has no names: its
+ * addresses follow the DataCite ContactPerson contributors in document order, or
+ * the contributor cards that already have that role when those names are absent.
  *
- * Two list lengths are recognised. One entry per person assigns the remainder
- * straight through. One entry per card, with the author entries repeated, skips
- * cards that already have an entry. Any other length gives the next entry to the
- * next person who does not already have one. A new length rule belongs in that check.
+ * Author cards are left unchanged. Add another contact field in readNamedContact
+ * and applyDetail.
  *
  * @param {Document} xmlDoc Parsed ICGEM envelope, including its DataCite resource.
- * @throws {Error} When a present people group has no initialized stack.
+ * @throws {Error} When the contributors group is present but not initialized.
  */
 function populateIcgemContactPersons(xmlDoc) {
   const dataciteNs = 'http://datacite.org/schema/kernel-4';
@@ -644,22 +644,6 @@ function populateIcgemContactPersons(xmlDoc) {
 
     return details;
   }
-  const ggpNode = descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
-  if (!ggpNode) return;
-
-  const contactNode = childElementsByLocalName(ggpNode, 'contact')[0];
-  if (!contactNode) return;
-
-  const contactDetails = collectContactDetails(contactNode);
-  if (contactDetails.length === 0) return;
-
-  let contributorNodes = typeof xmlDoc.getElementsByTagNameNS === 'function'
-    ? listedElements(xmlDoc.getElementsByTagNameNS(dataciteNs, 'contributor'))
-    : [];
-  if (contributorNodes.length === 0) {
-    contributorNodes = descendantElementsByLocalName(xmlDoc, 'contributor')
-      .filter((node) => node.parentElement?.localName === 'contributors');
-  }
 
   function personNameKey(familyName, givenName) {
     return `${String(familyName || '').trim().toLowerCase()}\0${String(givenName || '').trim().toLowerCase()}`;
@@ -668,6 +652,53 @@ function populateIcgemContactPersons(xmlDoc) {
   function childText(node, localName) {
     const child = childElementsByLocalName(node, localName)[0];
     return child ? child.textContent.trim() : '';
+  }
+
+  function readNamedContact(node) {
+    const type = childText(node, 'type');
+    const name = childText(node, 'name');
+    const identifierType = childText(node, 'identifierType').toUpperCase();
+    const identifier = childText(node, 'identifier');
+    const personal = type !== 'institutional';
+    let familyName = '';
+    let givenName = '';
+    if (personal && name.includes(',')) {
+      const parts = name.split(',');
+      familyName = (parts.shift() || '').trim();
+      givenName = parts.join(',').trim();
+    } else if (personal) {
+      familyName = name;
+    }
+    return {
+      person: personal,
+      familyName,
+      givenName,
+      institutionname: personal ? '' : name,
+      orcid: identifierType === 'ORCID' ? normalizeOrcid(identifier) : '',
+      rorId: identifierType === 'ROR' ? normalizeRorId(identifier) : '',
+      affiliations: [],
+      email: childText(node, 'address'),
+      website: childText(node, 'onlineResource')
+    };
+  }
+
+  const ggpNode = descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
+  if (!ggpNode) return;
+
+  const namedContacts = childElementsByLocalName(childElementsByLocalName(ggpNode, 'contacts')[0], 'contact')
+    .map(readNamedContact)
+    .filter((contact) => contact.email || contact.website || contact.familyName || contact.institutionname);
+  const legacyDetails = namedContacts.length
+    ? []
+    : collectContactDetails(childElementsByLocalName(ggpNode, 'contact')[0]);
+  if (namedContacts.length === 0 && legacyDetails.length === 0) return;
+
+  let contributorNodes = typeof xmlDoc.getElementsByTagNameNS === 'function'
+    ? listedElements(xmlDoc.getElementsByTagNameNS(dataciteNs, 'contributor'))
+    : [];
+  if (contributorNodes.length === 0) {
+    contributorNodes = descendantElementsByLocalName(xmlDoc, 'contributor')
+      .filter((node) => node.parentElement?.localName === 'contributors');
   }
 
   function readIdentity(node) {
@@ -709,15 +740,7 @@ function populateIcgemContactPersons(xmlDoc) {
     identities.push(identity);
   });
 
-  if (!identities.some((identity) => identity.contactPerson)) {
-    console.warn("couldn't determine the contact person from metadata");
-    return;
-  }
-
-  const authorStack = window.authorStack;
-  if (typeof authorStack?.collectPayload !== 'function' || typeof authorStack?.setAuthors !== 'function') {
-    throw new Error('Authors form is not initialized.');
-  }
+  const contactIdentities = identities.filter((identity) => identity.contactPerson);
   const contributorStack = window.contributorStack;
   const contributorsReady = typeof contributorStack?.collectPayload === 'function'
     && typeof contributorStack?.setContributors === 'function';
@@ -725,53 +748,77 @@ function populateIcgemContactPersons(xmlDoc) {
     throw new Error('Contributors form is not initialized.');
   }
 
-  const authors = authorStack.collectPayload().map((author) => ({ ...author }));
-  const contributors = contributorsReady && contributorStack.supportsType?.('person') !== false
-    ? contributorStack.collectPayload().map((contributor) => ({
+  function cloneContributors() {
+    return contributorStack.collectPayload().map((contributor) => ({
       ...contributor,
       roles: Array.isArray(contributor.roles) ? [...contributor.roles] : [],
       affiliations: Array.isArray(contributor.affiliations)
         ? contributor.affiliations.map((item) => ({ ...item }))
         : []
-    }))
-    : null;
+    }));
+  }
 
-  function findCard(cards, identity) {
+  if (namedContacts.length === 0 && contactIdentities.length === 0) {
+    if (!contributorsReady) {
+      console.warn("couldn't determine the contact person from metadata");
+      return;
+    }
+    const contributors = cloneContributors();
+    const cards = contributors.filter((card) => card.roles.includes('Contact Person'));
+    if (cards.length === 0) {
+      console.warn("couldn't determine the contact person from metadata");
+      return;
+    }
+    legacyDetails.forEach((detail, index) => {
+      if (!cards[index]) return;
+      cards[index].email = detail.email || cards[index].email || '';
+      cards[index].website = detail.website || cards[index].website || '';
+    });
+    contributorStack.setContributors(contributors);
+    return;
+  }
+
+  if (!contributorsReady) return;
+
+  const supports = (type) => contributorStack.supportsType?.(type) !== false;
+  const contributors = cloneContributors();
+
+  function findCard(identity) {
     if (identity.orcid) {
-      const byOrcid = cards.find((card) => (
+      const byOrcid = contributors.find((card) => (
         card.type === 'person' && normalizeOrcid(card.orcid) === identity.orcid
       ));
       if (byOrcid) return byOrcid;
     }
+    if (identity.rorId) {
+      const byRor = contributors.find((card) => (
+        card.type === 'institution'
+        && (card.affiliations || []).some((item) => normalizeRorId(item.rorId) === identity.rorId)
+      ));
+      if (byRor) return byRor;
+    }
     if (identity.person) {
       const key = personNameKey(identity.familyName, identity.givenName);
-      return cards.find((card) => (
+      return contributors.find((card) => (
         card.type === 'person' && personNameKey(card.familyname, card.givenname) === key
       ));
     }
-    const institutionName = identity.institutionname.trim().toLowerCase();
-    return cards.find((card) => (
+    const institutionName = String(identity.institutionname || '').trim().toLowerCase();
+    return contributors.find((card) => (
       card.type === 'institution'
       && String(card.institutionname || '').trim().toLowerCase() === institutionName
     ));
   }
 
-  function mergeIdentity(card, identity) {
-    if (!card) return;
-    if (identity.role && !card.roles.includes(identity.role)) card.roles.push(identity.role);
-    if (identity.orcid) card.orcid = identity.orcid;
-    if (identity.affiliations.length) card.affiliations = identity.affiliations;
-  }
-
   function newCard(identity) {
     return {
       type: identity.person ? 'person' : 'institution',
-      familyname: identity.familyName,
-      givenname: identity.givenName,
-      orcid: identity.orcid,
-      institutionname: identity.institutionname,
-      roles: identity.role ? [identity.role] : [],
-      affiliations: identity.affiliations.slice(),
+      familyname: identity.familyName || '',
+      givenname: identity.givenName || '',
+      orcid: identity.orcid || '',
+      institutionname: identity.institutionname || '',
+      roles: ['Contact Person'],
+      affiliations: (identity.affiliations || []).map((item) => ({ ...item })),
       email: '',
       website: ''
     };
@@ -780,81 +827,36 @@ function populateIcgemContactPersons(xmlDoc) {
   function applyDetail(target, detail) {
     target.email = detail.email || target.email || '';
     target.website = detail.website || target.website || '';
-    if (target.orcid === undefined) target.orcid = '';
   }
 
-  if (contributors) {
-    const seen = new Set();
-    let cursor = 0;
-    identities.forEach((identity) => {
-      if (seen.has(identity.key)) {
-        mergeIdentity(findCard(contributors, identity), identity);
-        return;
-      }
-      seen.add(identity.key);
-      const index = contributors.findIndex((card) => findCard([card], identity));
-      if (index >= 0) {
-        mergeIdentity(contributors[index], identity);
-        cursor = index + 1;
-        return;
-      }
-      if (!identity.contactPerson) return;
-      contributors.splice(cursor, 0, newCard(identity));
-      cursor += 1;
+  let changed = false;
+  function place(identity, detail) {
+    const type = identity.person ? 'person' : 'institution';
+    if (!supports(type)) return;
+    let card = findCard(identity);
+    if (!card) {
+      card = newCard(identity);
+      contributors.push(card);
+    }
+    if (!card.roles.includes('Contact Person')) card.roles.push('Contact Person');
+    if (identity.orcid && !card.orcid) card.orcid = identity.orcid;
+    if ((!card.affiliations || card.affiliations.length === 0) && identity.affiliations?.length) {
+      card.affiliations = identity.affiliations.map((item) => ({ ...item }));
+    }
+    if (detail) applyDetail(card, detail);
+    changed = true;
+  }
+
+  if (namedContacts.length) {
+    namedContacts.forEach((contact) => place(contact, contact));
+  } else {
+    contactIdentities.forEach((identity, index) => {
+      if (!legacyDetails[index]) return;
+      place(identity, legacyDetails[index]);
     });
   }
 
-  const contactCards = contributors
-    ? contributors.filter((card) => card.roles.includes('Contact Person'))
-    : identities.filter((identity) => identity.contactPerson).map(newCard);
-  const authorContacts = [];
-  let authorsChanged = false;
-  authors.forEach((author) => {
-    if (author.type !== 'person') return;
-    const key = personNameKey(author.familyname, author.givenname);
-    const card = contactCards.find((candidate) => (
-      candidate.type === 'person' && personNameKey(candidate.familyname, candidate.givenname) === key
-      && !authorContacts.some((pair) => pair.card === candidate)
-    ));
-    if (card) authorContacts.push({ author, card });
-  });
-
-  authorContacts.forEach((pair, index) => {
-    const detail = contactDetails[index];
-    if (!detail) return;
-    pair.author.isContact = true;
-    applyDetail(pair.author, detail);
-    if (pair.card.orcid) pair.author.orcid = pair.card.orcid;
-    if (pair.card.affiliations?.length) pair.author.affiliations = pair.card.affiliations;
-    applyDetail(pair.card, detail);
-    if (!pair.card.roles.includes('Contact Person')) pair.card.roles.push('Contact Person');
-    authorsChanged = true;
-  });
-
-  const filled = new Set(authorContacts.filter((pair) => contactDetails[authorContacts.indexOf(pair)]).map((pair) => pair.card));
-  const others = contactCards.filter((card) => !authorContacts.some((pair) => pair.card === card));
-  const savedLength = authorContacts.length + contactCards.length;
-  const legacyLength = authorContacts.length + others.length;
-  const savedShape = contactDetails.length === savedLength && savedLength !== legacyLength;
-  let cursor = Math.min(authorContacts.length, contactDetails.length);
-  const queue = savedShape ? contactCards : others;
-  queue.forEach((card) => {
-    if (cursor >= contactDetails.length) return;
-    if (savedShape && filled.has(card)) {
-      cursor += 1;
-      return;
-    }
-    if (!contributors && !authors.includes(card)) {
-      card.isContact = true;
-      authors.push(card);
-      authorsChanged = true;
-    }
-    applyDetail(card, contactDetails[cursor]);
-    cursor += 1;
-  });
-
-  if (authorsChanged) authorStack.setAuthors(authors);
-  if (contributors) contributorStack.setContributors(contributors);
+  if (changed) contributorStack.setContributors(contributors);
 }
 
 /**
