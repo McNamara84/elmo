@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 import type { Page } from '@playwright/test';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { waitForHomepageReady } from '../utils';
+import { REPO_ROOT, waitForHomepageReady } from '../utils';
 
 const KEY_SECTIONS = [
   'header[role="banner"]',
@@ -16,8 +16,8 @@ const KEY_SECTIONS = [
 
 const MEASUREMENT_RUNS = process.env.CI ? 1 : 3;
 const HEADER_LOGO_ASSETS = [
-  'logos/GFZ-logo.svg',
-  'logos/gfz-data-services-logo.svg',
+  'assets/logos/gfz-logo.svg',
+  'assets/logos/gfz-data-services-logo.svg',
 ];
 const LEGACY_HEADER_LOGO_ASSETS = [
   'logos/GFZ-logo.png',
@@ -76,14 +76,14 @@ const collectNavigationTiming = async (page: Page): Promise<NavigationTiming> =>
 test.describe('Homepage performance', () => {
   test('keeps optimized header assets within the initial-load budget', async () => {
     const assetStats = await Promise.all(
-      HEADER_LOGO_ASSETS.map(asset => fs.stat(path.join(process.cwd(), asset))),
+      HEADER_LOGO_ASSETS.map(asset => fs.stat(path.join(REPO_ROOT, asset))),
     );
     const totalBytes = assetStats.reduce((sum, stats) => sum + stats.size, 0);
 
     expect(totalBytes).toBeLessThanOrEqual(HEADER_LOGO_BUDGET_BYTES);
 
     for (const legacyAsset of LEGACY_HEADER_LOGO_ASSETS) {
-      const legacyAssetExists = await fs.access(path.join(process.cwd(), legacyAsset))
+      const legacyAssetExists = await fs.access(path.join(REPO_ROOT, legacyAsset))
         .then(() => true)
         .catch(() => false);
       expect(legacyAssetExists, `${legacyAsset} should be removed`).toBe(false);

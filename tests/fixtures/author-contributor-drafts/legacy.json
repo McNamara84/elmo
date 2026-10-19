@@ -1,0 +1,18 @@
+{
+  "familynames[]": ["First", "", "Last"],
+  "givennames[]": ["Ada", "", ""],
+  "orcids[]": ["https://orcid.org/0000-0002-1825-0097"],
+  "personAffiliation[]": ["[{\"value\":\"Institute, Berlin\"},{\"value\":\"Lab\"}]"],
+  "authorPersonRorIds[]": [",https://ror.org/04z8jg394"],
+  "contacts[]": ["on"],
+  "cpEmail[]": ["", "", "last@example.org"],
+  "cpOnlineResource[]": ["", "", "https://example.org"],
+  "authorinstitutionName[]": ["Research Centre"],
+  "institutionAffiliation[]": ["Visiting institute, Potsdam"],
+  "cbPersonLastname[]": ["Contributor", "", "Contributor"],
+  "cbPersonFirstname[]": ["A", "", "B"],
+  "cbPersonRoles[]": ["[{\"value\":\"Researcher\"},{\"value\":\"Data Collector\"}]", "", "Producer"],
+  "cbAffiliation[]": ["[{\"value\":\"University\",\"id\":\"https://ror.org/04z8jg394\"}]"],
+  "cbOrganisationName[]": ["Archive"],
+  "cbOrganisationRoles[]": ["Hosting Institution,Distributor"]
+}

@@ -1,4 +1,5 @@
 const { requireFresh } = require('./utils');
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 
 let SaveHandler;
 let $;
@@ -46,6 +47,7 @@ describe('saveHandler.js', () => {
         <input id="input-please-fill-in-this-field" name="please-fill-in-this-field">
         <div class="embargo-invalid"></div>
         <div id="group-author">
+          <input type="hidden" name="authorsPayload" value="[]">
           <input type="checkbox" name="contacts[]" value="1">
           <input type="checkbox" name="contacts[]" value="2">
         </div>
@@ -102,12 +104,20 @@ describe('saveHandler.js', () => {
         }
       }
     };
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        const payloadInput = document.querySelector('input[name="authorsPayload"]');
+        return payloadInput ? JSON.parse(payloadInput.value) : [];
+      })
+    };
     loadScript();
   });
 
   afterEach(() => {
     jest.useRealTimers();
     delete global.validateAuthorAffiliationEditors;
+    delete window.authorStack;
+    delete window.relatedWorkStack;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -157,18 +167,38 @@ describe('saveHandler.js', () => {
     expect(modalInstances[0].show).toHaveBeenCalled();
   });
 
-  test('handleSave blocks download flow when author affiliation labels are invalid', async () => {
+  test.each(['xml', 'jsonld'])('handleSave opens the %s dialog despite incomplete confirmed labels', async format => {
     global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
     const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
     jest.spyOn(handler, 'generateFilename').mockResolvedValue('dataset_20240530_123456');
     jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
 
-    await handler.handleSave('xml');
+    await handler.handleSave(format);
 
-    expect(global.validateAuthorAffiliationEditors).toHaveBeenCalled();
-    expect(handler.generateFilename).not.toHaveBeenCalled();
-    expect(handler.showNotification).toHaveBeenCalledWith('danger', 'vh', 've');
-    expect(modalInstances[0].show).not.toHaveBeenCalled();
+    expect(global.validateAuthorAffiliationEditors).not.toHaveBeenCalled();
+    expect(handler.generateFilename).toHaveBeenCalled();
+    expect(modalInstances[0].show).toHaveBeenCalled();
+  });
+
+  test.each(['xml', 'jsonld'])('%s downloads retain confirmed ROR IDs with empty labels in both groups', async format => {
+    const affiliation = {label: '', rorId: '04z8jg394'};
+    mountAuthorStack([{type: 'person', familyname: 'Author', affiliations: [affiliation]}]);
+    mountContributorStack([{type: 'institution', institutionname: 'Contributor', affiliations: [affiliation]}]);
+    global.fetch = createSaveHandlerFetchMock();
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    window.URL.revokeObjectURL = jest.fn();
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('incomplete', format);
+
+    const request = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(request).toBeDefined();
+    for (const group of ['authors', 'contributors']) {
+      expect(JSON.parse(request[1].body.get(`${group}Payload`))[0].affiliations).toEqual([affiliation]);
+    }
+    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    delete global.fetch;
   });
 
   test('showNotification updates modal and hides on actions', () => {
@@ -213,6 +243,34 @@ describe('saveHandler.js', () => {
 
     window.URL.createObjectURL = originalCreate;
     window.URL.revokeObjectURL = originalRevoke;
+    delete global.fetch;
+  });
+
+  test('saveAndDownload posts Tagify platforms from chip state when the original input is empty', async () => {
+    const platformsInput = document.createElement('input');
+    platformsInput.name = 'platforms';
+    document.getElementById('form-mde').appendChild(platformsInput);
+    const graceFo = {
+      value: 'Platforms > Space-based Platforms > Earth Observation Satellites > GRACE-FO',
+      id: 'https://gcmd.earthdata.nasa.gov/kms/concept/f75e34e2-ebe7-4a6c-8bf6-da596a36b632',
+    };
+    platformsInput._tagify = {
+      value: [graceFo],
+      update: jest.fn(),
+    };
+
+    global.fetch = createSaveHandlerFetchMock({
+      blob: new Blob(['<xml/>'], { type: 'application/xml' })
+    });
+    window.URL.createObjectURL = jest.fn(() => 'blob:mock');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(saveCall[1].body.get('platforms')).toContain('GRACE-FO');
+
     delete global.fetch;
   });
 
@@ -284,6 +342,16 @@ describe('saveHandler.js', () => {
   });
 
   test('saveAndDownload sends jsonld format', async () => {
+    const currentAuthorsPayload = [
+      { type: 'person', familyname: 'Payload', givenname: 'Jane', affiliations: [] }
+    ];
+    const currentAuthors = JSON.stringify(currentAuthorsPayload);
+    window.authorStack = {
+      updatePayload: jest.fn(() => {
+        document.querySelector('input[name="authorsPayload"]').value = currentAuthors;
+        return currentAuthorsPayload;
+      })
+    };
     global.fetch = createSaveHandlerFetchMock({
       saveFilename: 'dataset.jsonld',
       blob: new Blob([], { type: 'application/ld+json' })
@@ -297,7 +365,80 @@ describe('saveHandler.js', () => {
     // Find the save/download fetch call
     const saveCall = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
     expect(saveCall).toBeDefined();
+    expect(window.authorStack.updatePayload).toHaveBeenCalledTimes(1);
+    expect(saveCall[1].body.get('authorsPayload')).toBe(currentAuthors);
     expect(saveCall[1].body.get('download_format')).toBe('jsonld');
+    delete window.authorStack;
+    delete global.fetch;
+  });
+
+  test('saveAndDownload refreshes and sends the Related Works payload', async () => {
+    const freshPayload = [
+      {
+        relation: 'IsReferencedBy',
+        relationId: '7',
+        identifier: '10.1234/current',
+        identifierType: 'DOI',
+        order: 0
+      }
+    ];
+    document.getElementById('form-mde').insertAdjacentHTML(
+      'beforeend',
+      '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+    );
+    window.relatedWorkStack = {
+      updatePayload: jest.fn().mockReturnValue(freshPayload)
+    };
+    global.fetch = createSaveHandlerFetchMock();
+    window.URL.createObjectURL = jest.fn(() => 'blob:related-work');
+    window.URL.revokeObjectURL = jest.fn();
+
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.saveAndDownload('dataset');
+
+    const saveCall = global.fetch.mock.calls.find((call) => call[0] === 'save/save_data.php');
+    expect(window.relatedWorkStack.updatePayload).toHaveBeenCalledWith({ notify: false });
+    expect(saveCall[1].body.get('relatedWorksPayload')).toBe(JSON.stringify(freshPayload));
+
+    delete global.fetch;
+  });
+
+  test('saveAndDownload aborts visibly when the Related Works payload cannot be synchronized', async () => {
+    document.getElementById('form-mde').insertAdjacentHTML(
+      'beforeend',
+      '<div id="group-relatedwork"><input type="hidden" name="relatedWorksPayload" value="[]"></div>'
+    );
+    window.relatedWorkStack = {
+      updatePayload: jest.fn().mockReturnValue(null)
+    };
+    global.fetch = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset');
+
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+
+    consoleSpy.mockRestore();
+    delete global.fetch;
+  });
+
+  test('saveAndDownload aborts visibly when the Authors payload field is missing', async () => {
+    document.querySelector('input[name="authorsPayload"]').remove();
+    global.fetch = jest.fn();
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('dataset', 'jsonld');
+
+    expect(window.authorStack.updatePayload).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
+
+    consoleSpy.mockRestore();
     delete global.fetch;
   });
 
@@ -365,4 +506,17 @@ describe('saveHandler.js', () => {
     expect(handler.showNotification).toHaveBeenLastCalledWith('danger', 'eh', 'se');
     delete global.fetch;
   });
+  test.each(['xml', 'jsonld'])('unfinished affiliations prevent direct %s download requests', async format => {
+    mountContributorStack([{type: 'person', familyname: 'Contributor'}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.setPendingInput('Unconfirmed');
+    global.fetch = jest.fn();
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    await handler.handleSave(format);
+    await handler.saveAndDownload('dataset', format);
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(editor.getAffiliations()).toEqual([]);
+    delete global.fetch;
+  });
+
 });

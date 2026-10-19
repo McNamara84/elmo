@@ -1,4 +1,10 @@
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 const { requireFresh } = require('./utils');
+const fs = require('fs');
+const path = require('path');
+// Reduced public DataCite response retrieved 2026-10-16 with affiliation=true:
+// https://api.datacite.org/dois/10.5880%2Fha-arbodat_ak25?affiliation=true
+const issue1282 = require('../fixtures/doi-prefill/issue-1282-datacite.json');
 const {
   getDataCite47ResourceTypes,
   toSpacedResourceTypeLabel,
@@ -32,6 +38,21 @@ function loadModule() {
 }
 
 describe('doiPrefill.js', () => {
+  test('prefills mixed contributor cards in DOI order', () => {
+    const setContributors = jest.fn();
+    window.contributorStack = { setContributors };
+    window.authorStack = { setAuthors: jest.fn(), collectPayload: () => [] };
+    mod.prefillContributors([
+      { contributorType: 'HostingInstitution', nameType: 'Organizational', name: 'Institute' },
+      { contributorType: 'ContactPerson', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+      { contributorType: 'DataCollector', nameType: 'Personal', givenName: 'Jane', familyName: 'Doe' },
+    ]);
+    expect(setContributors.mock.calls[0][0].map(entry => entry.type)).toEqual(['institution', 'person']);
+    expect(setContributors.mock.calls[0][0][1].roles).toEqual(['Contact Person', 'Data Collector']);
+    delete window.contributorStack;
+    delete window.authorStack;
+  });
+
   beforeEach(() => {
     // Minimal jQuery / DOM setup
     const $ = require('jquery');
@@ -50,6 +71,9 @@ describe('doiPrefill.js', () => {
   afterEach(() => {
     document.body.innerHTML = '';
     delete window.authorStack;
+    delete window.relatedWorkStack;
+    delete window.usedInstrumentsModule;
+    delete window.ELMO_FEATURES;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -140,6 +164,11 @@ describe('doiPrefill.js', () => {
     test('falls back to default for unknown type', () => {
       expect(mod.mapTitleTypeFromJson('UnknownType', mapping)).toBe('1');
     });
+
+    test('falls back to empty string when mapping has no default', () => {
+      expect(mod.mapTitleTypeFromJson('UnknownType', {})).toBe('');
+      expect(mod.mapTitleTypeFromJson('', {})).toBe('');
+    });
   });
 
   /* ── prefillResourceInfo ────────────────────────────────────── */
@@ -157,14 +186,14 @@ describe('doiPrefill.js', () => {
       `;
     });
 
-    test('fills DOI, year, and version fields', () => {
+    test('fills year and version without copying the source DOI', () => {
       mod.prefillResourceInfo({
         doi: '10.14454/qdd3-ps68',
         publicationYear: 2024,
         version: '2.0',
       });
 
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('#input-resourceinformation-publicationyear').val()).toBe('2024');
       expect($('#input-resourceinformation-version').val()).toBe('2.0');
     });
@@ -258,29 +287,104 @@ describe('doiPrefill.js', () => {
 
   /* ── prefillCreators ────────────────────────────────────────── */
 
+  describe('issue #1282: DataCite metadata through the real form controllers', () => {
+    const titleTypes = [
+      { id: 41, name: 'Main Title' },
+      { id: 17, name: 'Alternative Title' },
+      { id: 83, name: 'Other' },
+      { id: 9, name: 'Translated Title' },
+    ];
+    let attributes;
+
+    beforeEach(() => {
+      attributes = JSON.parse(JSON.stringify(issue1282.data.attributes));
+      document.body.innerHTML = fs.readFileSync(path.resolve(__dirname, '../../formgroups/resource-information.html'), 'utf8')
+        .replace(/<\?php[\s\S]*?\?>/g, '');
+      window.maxTitles = 5;
+      window.mainTitleTypeId = '41';
+      window.alternativeTitleTypeId = '17';
+      window.titleTypeOptionsHtml = titleTypes.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
+      $('#input-resourceinformation-titletype').html(window.titleTypeOptionsHtml);
+      window.replaceHelpButtonInClonedRows = jest.fn();
+      const source = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceInformationTitle.js'), 'utf8')
+        .replace(/^import .*;\s*$/gm, '')
+        .replace('$(document).ready(function () {', '(function () {')
+        .replace(/\n\}\);\s*$/, '\n})();');
+      window.eval(source);
+      mountAuthorStack([]);
+      mountContributorStack();
+      $.getJSON.mockImplementation(url => Promise.resolve(url.endsWith('/titletypes') ? titleTypes : []));
+      window.loadClearInputFields = jest.fn().mockResolvedValue(() => {
+        window.resourceInformation.clear();
+        window.authorStack.setAuthors([]);
+        window.contributorStack.setContributors([]);
+      });
+    });
+
+    afterEach(() => {
+      $(document).off('elmo:clearTitles');
+      ['resourceInformation', 'maxTitles', 'mainTitleTypeId', 'alternativeTitleTypeId', 'titleTypeOptionsHtml',
+        'replaceHelpButtonInClonedRows', 'loadClearInputFields'].forEach(key => delete window[key]);
+    });
+
+    function expectAffiliations(expected) {
+      expect(window.authorStack.collectPayload()[0].affiliations).toEqual(expected);
+      expect(JSON.parse(document.querySelector('[name="authorsPayload"]').value)[0].affiliations).toEqual(expected);
+      expect($('[data-author-affiliation-label]').map((_, input) => input.value).get()).toEqual(expected.map(item => item.label));
+    }
+
+    test.each([
+      ['Other', '83', 'Other'],
+      ['TranslatedTitle', '9', 'Translated Title'],
+    ])('keeps the published %s type in visible fields and payload', async (type, id, label) => {
+      attributes.titles[1].titleType = type;
+      await mod.applyDoiPrefill(attributes);
+
+      const titles = window.resourceInformation.collectPayload().titles;
+      expect(titles.map(title => [title.text, title.typeId, title.position])).toEqual([
+        [attributes.titles[0].title, '41', 0], [attributes.titles[1].title, id, 1],
+      ]);
+      expect($('select[name="titleType[]"]').eq(1).find(':selected').text()).toBe(label);
+      expect(JSON.parse(document.querySelector('[name="resourceInformationPayload"]').value).titles).toEqual(titles);
+      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
+    });
+
+    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations after contact enrichment', async representation => {
+      const label = attributes.creators[0].affiliation[0].name;
+      const expected = [{ label, rorId: '' }];
+      if (representation === 'strings') attributes.creators[0].affiliation = [label];
+      if (representation === 'mixed') {
+        attributes.creators[0].affiliation.push({ name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' });
+        expected.push({ label: 'GFZ', rorId: '04z8jg394' });
+      }
+      const lookupContacts = jest.fn().mockResolvedValue({ email: 'contact@example.org', website: 'https://example.org/' });
+      await mod.applyDoiPrefill(attributes, { lookupContacts });
+
+      expectAffiliations(expected);
+      expect(window.authorStack.collectPayload()[0]).toMatchObject({
+        familyname: 'Kreuz', givenname: 'Angela', orcid: '0000-0003-2450-824X',
+        isContact: true, email: 'contact@example.org', website: 'https://example.org/',
+      });
+    });
+
+    test('keeps affiliations when the contact lookup fails', async () => {
+      await mod.applyDoiPrefill(attributes, { lookupContacts: jest.fn().mockRejectedValue(new Error('offline')) });
+      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
+    });
+
+    test('retains the imported source DOI after clearing without assigning a submission DOI', async () => {
+      $('#input-resourceinformation-source-doi').val(attributes.doi);
+      await mod.applyDoiPrefill(attributes);
+      expect($('#input-resourceinformation-source-doi').val()).toBe(attributes.doi);
+      expect(window.resourceInformation.collectPayload().doi).toBe('');
+      expect($('#input-resourceinformation-doi').prop('readOnly')).toBe(true);
+    });
+  });
+
   describe('prefillCreators', () => {
     beforeEach(() => {
-      document.body.innerHTML = `
-        <div data-creator-row>
-          <input name="orcids[]" />
-          <input name="familynames[]" />
-          <input name="givennames[]" />
-          <input name="personAffiliation[]" />
-          <input name="authorPersonRorIds[]" />
-          <input name="contacts[]" type="checkbox" />
-          <div class="contact-person-input" style="display:none;">
-            <input name="cpEmail[]" />
-            <input name="cpOnlineResource[]" />
-          </div>
-        </div>
-        <button id="button-author-add"></button>
-        <div data-authorinstitution-row>
-          <input name="authorinstitutionName[]" value="" />
-          <input name="institutionAffiliation[]" />
-          <input name="authorInstitutionRorIds[]" />
-        </div>
-        <button id="button-authorinstitution-add"></button>
-      `;
+      document.body.innerHTML = '';
+      mountAuthorStack();
     });
 
     test('fills person creator fields', () => {
@@ -355,7 +459,7 @@ describe('doiPrefill.js', () => {
     test('handles empty/null input gracefully', () => {
       mod.prefillCreators(null);
       mod.prefillCreators([]);
-      expect($('input[name="familynames[]"]').val()).toBe('');
+      expect(window.authorStack.collectPayload()).toEqual([]);
     });
   });
 
@@ -488,7 +592,7 @@ describe('doiPrefill.js', () => {
       expect($('input[name="tscLatitudeMax[]"]').val()).toBe('52.7');
     });
 
-    test('fills point as equal min/max coordinates', () => {
+    test('fills a point in the min fields and leaves max empty', () => {
       mod.prefillGeoLocations([
         {
           geoLocationPoint: { pointLatitude: 48.8566, pointLongitude: 2.3522 },
@@ -496,9 +600,9 @@ describe('doiPrefill.js', () => {
       ]);
 
       expect($('input[name="tscLatitudeMin[]"]').val()).toBe('48.8566');
-      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('48.8566');
+      expect($('input[name="tscLatitudeMax[]"]').val()).toBe('');
       expect($('input[name="tscLongitudeMin[]"]').val()).toBe('2.3522');
-      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('2.3522');
+      expect($('input[name="tscLongitudeMax[]"]').val()).toBe('');
     });
   });
 
@@ -707,6 +811,83 @@ describe('doiPrefill.js', () => {
       mod.prefillRelatedWorks([]);
       expect($('input[name="rIdentifier[]"]').val()).toBe('');
     });
+
+    test('passes all Related Works to the stack in one call', () => {
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://example.org/documentation',
+          relatedIdentifierType: 'URL',
+          relationType: 'IsDocumentedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+        {
+          identifier: 'https://example.org/documentation',
+          identifierType: 'URL',
+          relation: 'IsDocumentedBy',
+          relationId: '',
+        },
+      ]);
+    });
+
+    test('keeps IsCollectedBy out of the Related Work stack when Used Instruments are enabled', () => {
+      jest.useFakeTimers();
+      window.ELMO_FEATURES = { showUsedInstruments: true };
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+      window.usedInstrumentsModule = {
+        loadInstrumentsFromAPI: jest.fn(),
+        addInstrumentsByData: jest.fn(),
+      };
+
+      mod.prefillRelatedWorks([
+        {
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        },
+        {
+          relatedIdentifier: 'https://hdl.handle.net/1234/instrument',
+          relatedIdentifierType: 'Handle',
+          relationType: 'IsCollectedBy',
+        },
+      ]);
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledWith([
+        {
+          identifier: '10.1234/related',
+          identifierType: 'DOI',
+          relation: 'IsReferencedBy',
+          relationId: '',
+        },
+      ]);
+      expect(window.usedInstrumentsModule.loadInstrumentsFromAPI).toHaveBeenCalledTimes(1);
+
+      jest.runAllTimers();
+      expect(window.usedInstrumentsModule.addInstrumentsByData).toHaveBeenCalledWith([
+        {
+          pid: 'https://hdl.handle.net/1234/instrument',
+          pidType: 'Handle',
+          name: 'https://hdl.handle.net/1234/instrument',
+          instrumentTypes: [],
+        },
+      ]);
+      jest.useRealTimers();
+    });
   });
 
   /* ── prefillRights ──────────────────────────────────────────── */
@@ -831,10 +1012,11 @@ describe('doiPrefill.js', () => {
         <input id="input-rights-license" />
       `;
 
+      mountAuthorStack();
       attachTagify('#input-freekeyword');
 
-      // Mock clearInputFields
-      global.clearInputFields = jest.fn();
+      window.__clearInputFieldsSpy = jest.fn();
+      window.loadClearInputFields = jest.fn().mockResolvedValue(window.__clearInputFieldsSpy);
     });
 
     test('applies all attributes to form fields', async () => {
@@ -854,11 +1036,45 @@ describe('doiPrefill.js', () => {
         rightsList: [],
       });
 
-      expect(global.clearInputFields).toHaveBeenCalled();
-      expect($('#input-resourceinformation-doi').val()).toBe('10.14454/qdd3-ps68');
+      expect(window.loadClearInputFields).toHaveBeenCalled();
+      expect(window.__clearInputFieldsSpy).toHaveBeenCalled();
+      expect($('#input-resourceinformation-doi').val()).toBe('');
       expect($('input[name="familynames[]"]').val()).toBe('Doe');
       expect($('#input-abstract').val()).toBe('Test abstract');
       expect($('input[name="dateCreated"]').val()).toBe('2024-01-15');
+    });
+
+    test('waits for Related Work dropdowns before populating the stack', async () => {
+      let resolveDropdowns;
+      window.elmo.dropdownsReady = new Promise((resolve) => {
+        resolveDropdowns = resolve;
+      });
+      window.relatedWorkStack = { setRelatedWorks: jest.fn() };
+
+      const applying = mod.applyDoiPrefill({
+        creators: [],
+        contributors: [],
+        descriptions: [],
+        dates: [],
+        geoLocations: [],
+        subjects: [],
+        relatedIdentifiers: [{
+          relatedIdentifier: '10.1234/related',
+          relatedIdentifierType: 'DOI',
+          relationType: 'IsReferencedBy',
+        }],
+        fundingReferences: [],
+        titles: [],
+        rightsList: [],
+      });
+
+      await Promise.resolve();
+      expect(window.relatedWorkStack.setRelatedWorks).not.toHaveBeenCalled();
+
+      resolveDropdowns();
+      await applying;
+
+      expect(window.relatedWorkStack.setRelatedWorks).toHaveBeenCalledTimes(1);
     });
   });
 });

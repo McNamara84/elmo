@@ -1,3 +1,5 @@
+const { mountAuthorStack } = require('./utils/peopleStacks');
+
 /**
  * @jest-environment jsdom
  *
@@ -16,54 +18,7 @@ describe('processContactPersons (ISO)', () => {
     window.$ = $;
     window.jQuery = $;
 
-    document.body.innerHTML = `
-      <div id="group-author">
-        <div class="row" data-creator-row>
-          <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" />
-          <input type="text" name="familynames[]" value="Doe" />
-          <input type="text" name="givennames[]" value="Jane" />
-          <input type="text" name="orcids[]" value="0000-0002-1825-0097" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-        <div class="row" data-creator-row>
-          <input type="checkbox" id="checkbox-author-contactperson-1" name="contacts[]" />
-          <input type="text" name="familynames[]" value="Smith" />
-          <input type="text" name="givennames[]" value="John" />
-          <input type="text" name="orcids[]" value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-        <button type="button" id="button-author-add"></button>
-      </div>
-    `;
-
-    // Wire up click handler to simulate adding a new author row
-    $('#button-author-add').on('click', function () {
-      const $newRow = $(`
-        <div class="row" data-creator-row>
-          <input type="checkbox" name="contacts[]" />
-          <input type="text" name="familynames[]" value="" />
-          <input type="text" name="givennames[]" value="" />
-          <input type="text" name="orcids[]" value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      `);
-      $('#group-author').append($newRow);
-    });
+    mountAuthorStack([{"type": "person", "familyname": "Doe", "givenname": "Jane"}, {"type": "person", "familyname": "Smith", "givenname": "John"}]);
 
     global.Tagify = jest.fn().mockImplementation(() => ({
       addTags: jest.fn(),
@@ -71,6 +26,7 @@ describe('processContactPersons (ISO)', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');
@@ -358,40 +314,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     window.$ = $;
     window.jQuery = $;
 
-    document.body.innerHTML = `
-      <div id="group-author">
-        <div class="row" data-creator-row>
-          <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" />
-          <input type="text" name="familynames[]" value="Müller" />
-          <input type="text" name="givennames[]" value="Erika" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-        <button type="button" id="button-author-add"></button>
-      </div>
-    `;
-
-    // Wire up click handler to simulate adding a new author row
-    $('#button-author-add').on('click', function () {
-      const $newRow = $(`
-        <div class="row" data-creator-row>
-          <input type="checkbox" name="contacts[]" />
-          <input type="text" name="familynames[]" value="" />
-          <input type="text" name="givennames[]" value="" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      `);
-      $('#group-author').append($newRow);
-    });
+    mountAuthorStack([{"type": "person", "familyname": "Müller", "givenname": "Erika"}]);
 
     global.Tagify = jest.fn().mockImplementation(() => ({
       addTags: jest.fn(),
@@ -399,6 +322,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');
@@ -532,7 +456,7 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
     });
   });
 
-  test('skips DataCite contributor when familyName is missing', () => {
+  test('loads a mononymous DataCite contact when familyName is missing', () => {
     const xmlDoc = new DOMParser().parseFromString(
       `<?xml version="1.0" encoding="UTF-8"?>
        <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
@@ -548,9 +472,26 @@ describe('processContactPersonsFromDataCite (fallback)', () => {
 
     expect(() => mappingModule.processContactPersonsFromDataCite(xmlDoc)).not.toThrow();
 
-    $('div[data-creator-row]').each(function () {
-      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+    const $rows = $('div[data-creator-row]');
+    expect($rows).toHaveLength(2);
+    expect($rows.eq(1).find('input[name="familynames[]"]').val()).toBe('');
+    expect($rows.eq(1).find('input[name="givennames[]"]').val()).toBe('Erika');
+    expect($rows.eq(1).find('input[name="contacts[]"]').prop('checked')).toBe(true);
+  });
+
+  test('loads a mononymous DataCite contact when givenName is missing', () => {
+    const xmlDoc = makeDataCiteXml({
+      familyName: 'Sukarno',
+      givenName: '',
     });
+
+    mappingModule.processContactPersonsFromDataCite(xmlDoc);
+
+    const $rows = $('div[data-creator-row]');
+    expect($rows).toHaveLength(2);
+    expect($rows.eq(1).find('input[name="familynames[]"]').val()).toBe('Sukarno');
+    expect($rows.eq(1).find('input[name="givennames[]"]').val()).toBe('');
+    expect($rows.eq(1).find('input[name="contacts[]"]').prop('checked')).toBe(true);
   });
 });
 
@@ -565,21 +506,7 @@ describe('processContactPersons ISO→DataCite fallback integration', () => {
     window.$ = $;
     window.jQuery = $;
 
-    document.body.innerHTML = `
-      <div id="group-author">
-        <div class="row" data-creator-row>
-          <input type="checkbox" id="checkbox-author-contactperson" name="contacts[]" />
-          <input type="text" name="familynames[]" value="Müller" />
-          <input type="text" name="givennames[]" value="Erika" />
-          <div class="contact-person-input" style="display: none;">
-            <input type="email" name="cpEmail[]" value="" />
-          </div>
-          <div class="contact-person-input" style="display: none;">
-            <input type="text" name="cpOnlineResource[]" value="" />
-          </div>
-        </div>
-      </div>
-    `;
+    mountAuthorStack([{"type": "person", "familyname": "Müller", "givenname": "Erika"}]);
 
     global.Tagify = jest.fn().mockImplementation(() => ({
       addTags: jest.fn(),
@@ -587,6 +514,7 @@ describe('processContactPersons ISO→DataCite fallback integration', () => {
     }));
     global.translations = {};
     window.updateMapOverlay = jest.fn();
+    window.loadClearInputFields = () => Promise.resolve(() => {});
 
     jest.resetModules();
     mappingModule = require('../../js/mappingXmlToInputFields.js');

@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:9.7.2@sha256:c7cb87a9822f499375287930cbff71d6d3b201e346b45108b1115b435ee2df13
         env:
           MYSQL_ROOT_PASSWORD: root_password
           MYSQL_DATABASE: mde2-msl-test
@@ -29,10 +29,12 @@ jobs:
           --health-retries 3
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
 
       - name: Set up PHP
-        uses: shivammathur/setup-php@v2
+        uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.5'
           extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
@@ -43,7 +45,7 @@ jobs:
         run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
 
       - name: Cache Composer dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ${{ steps.composer-cache.outputs.dir }}
           key: ${{ runner.os }}-php-8.5-composer-${{ hashFiles('**/composer.lock') }}
@@ -52,9 +54,9 @@ jobs:
             ${{ runner.os }}-php-composer-
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '24'
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install PHP dependencies
@@ -64,6 +66,11 @@ jobs:
 
       - name: Validate composer.json and composer.lock
         run: composer validate --strict
+
+      - name: Check file-name conventions
+        env:
+          FILE_NAME_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: composer check:file-names -- --base="$FILE_NAME_BASE"
 
       - name: Install JS dependencies
         run: npm ci
@@ -108,7 +115,7 @@ jobs:
               $connection = connectDb();
           }
 
-          $apiKeyElmo = '1234-1234-1234-1234';
+          $ELMO_API_KEY = '1234-1234-1234-1234';
           $apiKeyGoogleMaps = 'test_api_key';
           $apiKeyTimezone = 'test_timezone_api_key';
 
@@ -121,9 +128,7 @@ jobs:
           $maxTitles = 2;
 
           $showMslLogo = false;
-          $showContributorPersons = true;
-          $showContributorInstitutions = true;
-          $showGcmdThesauri = true;
+          $showThesauri = true;
           $showFreeKeywords = true;
           $showSpatialTemporalCoverage = true;
           $showRelatedWork = true;
@@ -132,7 +137,6 @@ jobs:
           $showLicense = true;
           $defaultLicense = 'CC-BY-4.0';
           $showMslLabs = false;
-          $mslLabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/labs/laboratories.json';
           $showMslVocabs = false;
           $mslVocabsUrl = '';
           $showUsedInstruments = false;
@@ -179,7 +183,7 @@ jobs:
           PHP
 
       - name: Initialize database structure and lookup data
-        run: php -r "require 'install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
+        run: php -r "require 'scripts/install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
       - name: Start PHP built-in web server
         run: |
@@ -256,7 +260,7 @@ jobs:
 
       - name: Upload coverage to Codecov
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./clover.xml

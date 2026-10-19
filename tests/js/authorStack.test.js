@@ -5,6 +5,8 @@ describe('authorStack.js', () => {
   let $;
 
   function loadAuthorStackScript() {
+    Object.assign(window, require('../../js/affiliationEditor.js'));
+  Object.assign(window, require('../../js/services/affiliationActionService.js'));
     let script = fs.readFileSync(
       path.resolve(__dirname, '../../js/eventhandlers/formgroups/authorStack.js'),
       'utf8'
@@ -27,6 +29,9 @@ describe('authorStack.js', () => {
             <label for="checkbox-author-contactperson">Contact Person</label>
             <input id="input-author-orcid" name="orcids[]">
             <label for="input-author-orcid">ORCID</label>
+            <span class="input-group-text orcid-help-icon">
+              <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
+            </span>
             <input id="input-author-lastname" name="familynames[]">
             <label for="input-author-lastname">Last Name</label>
             <input id="input-author-firstname" name="givennames[]">
@@ -38,10 +43,16 @@ describe('authorStack.js', () => {
             <div class="contact-person-input">
               <input id="input-contactperson-email" name="cpEmail[]">
               <label for="input-contactperson-email">Email</label>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" data-help-section-id="help-contactperson-email"></i>
+              </span>
             </div>
             <div class="contact-person-input">
               <input id="input-contactperson-website" name="cpOnlineResource[]">
               <label for="input-contactperson-website">Website</label>
+              <span class="input-group-text">
+                <i class="bi bi-question-circle-fill" data-help-section-id="help-contactperson-website"></i>
+              </span>
             </div>
           </div>
           <div class="row" data-author-entry-row data-author-entry-type="institution" data-author-entry-key="author-institution-0" data-authorinstitution-row>
@@ -83,6 +94,53 @@ describe('authorStack.js', () => {
 
   function payload() {
     return JSON.parse(document.querySelector('input[name="authorsPayload"]').value);
+  }
+
+  function useRealHelpCloneHelper() {
+    window.replaceHelpButtonInClonedRows = require('../../js/eventhandlers/functions.js').replaceHelpButtonInClonedRows;
+    localStorage.setItem('helpStatus', 'help-on');
+  }
+
+  function authorEntries() {
+    return $('[data-author-entry-row]');
+  }
+
+  function setContactPerson(row, enabled) {
+    const checkbox = row.find('input[name="contacts[]"]');
+    if (checkbox.prop('checked') === enabled) {
+      return;
+    }
+    row.find('[data-author-contact-toggle]').trigger('click');
+  }
+
+  function expectIconHidden(row, sectionId, hidden) {
+    expect(row.find(`i[data-help-section-id="${sectionId}"]`).length).toBe(1);
+    expect(row.find(`i[data-help-section-id="${sectionId}"]`).hasClass('d-none')).toBe(hidden);
+  }
+
+  function expectPersonHelpHidden(row, hidden) {
+    const visibility = typeof hidden === 'boolean'
+      ? { orcid: hidden, contact: hidden }
+      : hidden;
+    setContactPerson(row, true);
+    expectIconHidden(row, 'help-author-orcid', visibility.orcid);
+    expectIconHidden(row, 'help-contactperson-email', visibility.contact);
+    expectIconHidden(row, 'help-contactperson-website', visibility.contact);
+    setContactPerson(row, false);
+  }
+
+  function expectPersonFieldHelpHidden(row, hidden) {
+    expectPersonHelpHidden(row, hidden);
+  }
+
+  function expectAffiliationHelpHidden(row, hidden) {
+    expect(row.find('[data-author-affiliation-help]').length).toBe(1);
+    expect(row.find('[data-author-affiliation-help]').hasClass('d-none')).toBe(hidden);
+  }
+
+  function switchRowType(row, type) {
+    setContactPerson(row, false);
+    row.find(`[data-author-type-option="${type}"]`).trigger('click');
   }
 
   test('initializes the combined sortable stack and empty summary', () => {
@@ -158,12 +216,14 @@ describe('authorStack.js', () => {
     const website = person.find('input[name="cpOnlineResource[]"]');
 
     expect(toggle.attr('aria-pressed')).toBeUndefined();
+    expect(toggle.hasClass('text-dark')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
 
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(true);
+    expect(toggle.hasClass('text-dark')).toBe(true);
     expect(toggle.attr('aria-pressed')).toBeUndefined();
     expect(email.closest('.contact-person-input').css('display')).not.toBe('none');
     expect(website.closest('.contact-person-input').css('display')).not.toBe('none');
@@ -173,6 +233,7 @@ describe('authorStack.js', () => {
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(false);
+    expect(toggle.hasClass('text-dark')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
     expect(email.val()).toBe('');
@@ -204,7 +265,7 @@ describe('authorStack.js', () => {
         'authors.entriesSummary': '{count} {label}',
         'authors.contactsSummary': '{count} {label}',
         'authors.affiliations': 'Affiliations',
-        'authors.affiliationAdd': 'Affiliation hinzufügen',
+        'affiliations.addFreeText': 'Freitext hinzufügen',
         'authors.affiliationEdit': 'Affiliation bearbeiten',
         'authors.affiliationSearch': 'Affiliation in ROR suchen',
         'authors.affiliationMoveUp': 'Affiliation nach oben verschieben',
@@ -225,8 +286,8 @@ describe('authorStack.js', () => {
     expect($('[data-author-remove]').first().attr('aria-label')).toBe('Autoreneintrag entfernen');
     expect($('[data-author-move-down]').first().attr('aria-label')).toBe('Autoreneintrag nach unten verschieben');
     expect($('[data-author-type-switcher] [role="group"]').first().attr('aria-label')).toBe('Autorentyp');
-    expect($('[data-author-affiliation-search]').first().attr('aria-label')).toBe('Affiliation in ROR suchen');
-    expect($('[data-author-affiliation-add-label]').first().text()).toBe('Affiliation hinzufügen');
+    expect($('[data-author-affiliation-search]')).toHaveLength(0);
+    expect($('[data-author-affiliation-add-label]').first().text()).toBe('Freitext hinzufügen');
 
     const person = $('[data-creator-row]').first();
     person.find('input[name="familynames[]"]').val('Doe').trigger('input');
@@ -416,6 +477,122 @@ describe('authorStack.js', () => {
     expect(document.activeElement).toBe(newCard.find('input[name="familynames[]"]').get(0));
   });
 
+  test('clears cloned display:none on first-of-kind help icons when help is on', () => {
+    useRealHelpCloneHelper();
+    $('#button-author-add').trigger('click');
+
+    const wrapper = authorEntries().first()
+      .find('span.input-group-text:has(i[data-help-section-id="help-author-orcid"])');
+    wrapper.css('display', 'none');
+
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-on' } }));
+
+    expect(wrapper.css('display')).not.toBe('none');
+    expect(authorEntries().first().find('i[data-help-section-id="help-author-orcid"]').hasClass('d-none')).toBe(false);
+  });
+
+  test('keeps a single person help icon per section and shows it on the new first author', () => {
+    useRealHelpCloneHelper();
+
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    const rows = authorEntries();
+    expect(rows.length).toBe(2);
+    expectPersonFieldHelpHidden(rows.eq(0), false);
+    expectPersonHelpHidden(rows.eq(1), { orcid: true, contact: false });
+
+    rows.eq(0).find('.removeButton').trigger('click');
+
+    const remaining = authorEntries();
+    expect(remaining.length).toBe(1);
+    expectPersonFieldHelpHidden(remaining, false);
+  });
+
+  test('shows the first help icon of each kind, not every icon on the first row', () => {
+    useRealHelpCloneHelper();
+
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+    expect(authorEntries().length).toBe(2);
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonHelpHidden(authorEntries().eq(1), { orcid: true, contact: false });
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(0), 'institution');
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    localStorage.setItem('helpStatus', 'help-off');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-off' } }));
+    expectAffiliationHelpHidden(authorEntries().eq(0), true);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), true);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    localStorage.setItem('helpStatus', 'help-on');
+    document.dispatchEvent(new CustomEvent('helpStatus:changed', { detail: { status: 'help-on' } }));
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(0), 'person');
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonHelpHidden(authorEntries().eq(1), { orcid: true, contact: false });
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(1), 'institution');
+    expectPersonFieldHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    authorEntries().eq(1).find('[data-author-move-up]').trigger('click');
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expect(authorEntries().eq(1).attr('data-author-entry-type')).toBe('person');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    switchRowType(authorEntries().eq(1), 'institution');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+
+    authorEntries().eq(0).find('.removeButton').trigger('click');
+    expect(authorEntries().length).toBe(1);
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+  });
+
+  test('shows person help on the first person when an institution is added first', () => {
+    useRealHelpCloneHelper();
+
+    $('#button-authorinstitution-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    expect(authorEntries().eq(0).attr('data-author-entry-type')).toBe('institution');
+    expect(authorEntries().eq(1).attr('data-author-entry-type')).toBe('person');
+    expectAffiliationHelpHidden(authorEntries().eq(0), false);
+    expectPersonFieldHelpHidden(authorEntries().eq(1), false);
+    expectAffiliationHelpHidden(authorEntries().eq(1), true);
+  });
+
+  test('shows contact help on the first person whose contact fields are shown', () => {
+    useRealHelpCloneHelper();
+    $('#button-author-add').trigger('click');
+    $('#button-author-add').trigger('click');
+
+    setContactPerson(authorEntries().eq(1), true);
+
+    expectIconHidden(authorEntries().eq(0), 'help-author-orcid', false);
+    expectIconHidden(authorEntries().eq(0), 'help-contactperson-email', true);
+    expectIconHidden(authorEntries().eq(0), 'help-contactperson-website', true);
+    expectIconHidden(authorEntries().eq(1), 'help-author-orcid', true);
+    expectIconHidden(authorEntries().eq(1), 'help-contactperson-email', false);
+    expectIconHidden(authorEntries().eq(1), 'help-contactperson-website', false);
+  });
+
   test('moves focus to the next card or add button after removing a card', () => {
     window.authorStack.setAuthors([
       { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
@@ -534,7 +711,7 @@ describe('authorStack.js', () => {
       input.val('gfz').trigger('input');
       await jest.advanceTimersByTimeAsync(300);
 
-      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
+      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 7, {throwOnError: true});
       expect(editor.find('[data-author-affiliation-result]').length).toBe(1);
       expect(editor.find('[data-author-affiliation-result]').text()).toContain('GFZ Helmholtz Centre for Geosciences');
     } finally {
@@ -567,7 +744,7 @@ describe('authorStack.js', () => {
       input.val('gfz').trigger('input');
       jest.advanceTimersByTime(300);
       await Promise.resolve();
-      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 20);
+      expect(window.searchAffiliationsFromServer).toHaveBeenCalledWith('gfz', 7, {throwOnError: true});
 
       input.val('').trigger('input');
       deferredSearches.gfz.resolve([{ label: 'GFZ Helmholtz Centre for Geosciences', rorId: '04z8jg394' }]);
@@ -580,7 +757,7 @@ describe('authorStack.js', () => {
       input.val('pot').trigger('input');
       jest.advanceTimersByTime(300);
       await Promise.resolve();
-      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 20);
+      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 7, {throwOnError: true});
 
       deferredSearches.pot.resolve([{ label: 'University of Potsdam', rorId: '03bnmw459' }]);
       await deferredSearches.pot.promise;
@@ -618,7 +795,7 @@ describe('authorStack.js', () => {
       input.val('pot').trigger('input');
       await jest.advanceTimersByTimeAsync(300);
 
-      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 20);
+      expect(window.searchAffiliationsFromServer).toHaveBeenLastCalledWith('pot', 7, {throwOnError: true});
       expect(editor.find('[data-author-affiliation-result]').text()).toContain('University of Potsdam');
     } finally {
       delete window.searchAffiliationsFromServer;

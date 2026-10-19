@@ -16,7 +16,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
     // Click Add Title to get a visible dropdown
     await page.locator('#button-resourceinformation-addtitle').click();
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
 
     // Get all option values
@@ -35,7 +35,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
     // Click Add Title to get a visible dropdown
     await page.locator('#button-resourceinformation-addtitle').click();
-    const titleTypeSelect = page.locator('#input-resourceinformation-titletype').nth(1);
+    const titleTypeSelect = page.locator('select[name="titleType[]"]').nth(1);
     await expect(titleTypeSelect).toBeVisible();
 
     const optionTexts = await titleTypeSelect.locator('option').allTextContents();
@@ -66,7 +66,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
   test('Title Type API endpoint returns valid data', async ({ page }) => {
     // Directly test the API endpoint
-    const response = await page.request.get('/api/v2/vocabs/titletypes');
+    const response = await page.request.get('api/v2/vocabs/titletypes');
 
     expect(response.ok()).toBe(true);
     expect(response.status()).toBe(200);
@@ -87,7 +87,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
   });
 
   test('Title Type API response does not expose ernie_id', async ({ page }) => {
-    const response = await page.request.get('/api/v2/vocabs/titletypes');
+    const response = await page.request.get('api/v2/vocabs/titletypes');
 
     expect(response.ok()).toBe(true);
     const data = await response.json();
@@ -102,7 +102,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
   });
 
   test('Title Type API response contains Main Title', async ({ page }) => {
-    const response = await page.request.get('/api/v2/vocabs/titletypes');
+    const response = await page.request.get('api/v2/vocabs/titletypes');
 
     expect(response.ok()).toBe(true);
     const data = await response.json();
@@ -114,7 +114,7 @@ test.describe('Title Type Dropdown - ERNIE Integration', () => {
 
 test.describe('Title Type ERNIE Cache Admin Endpoints', () => {
   test('Cache status endpoint returns configuration info', async ({ page }) => {
-    const response = await page.request.get('/api/v2/admin/cache/titletypes/status');
+    const response = await page.request.get('api/v2/admin/cache/titletypes/status');
 
     // This endpoint may require auth in production
     if (response.ok()) {

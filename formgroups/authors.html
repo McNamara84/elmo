@@ -17,66 +17,70 @@
     <div id="group-author" data-author-stack-shell>
       <div id="group-author-stack" class="d-grid gap-2" data-author-stack>
         <div class="row g-1 border rounded p-2 bg-body" data-author-card data-author-entry-row data-author-entry-type="person" data-author-entry-key="author-person-0" data-creator-row>
-        <!-- Input field ORCID Author mit Contact Person Toggle -->
-        <div class="col-12 col-lg-4 p-1">
-          <div class="input-group has-validation">
-            <!-- Toggle-Checkbox als Button (Bootstrap Toggle Button) -->
-            <div class="input-group-append">
-              <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
-              <label class="btn btn-outline-primary lh-sm round-corners-left con-reduce input-right-no-round-corners" for="checkbox-author-contactperson"
-                data-translate="contactPersons.toggleCheckbox">
-                Contact<br>Person
-              </label>
-            </div>
-            <!-- ORCID Input Field -->
-            <div class="form-floating flex-grow-1">
-              <input type="text" class="form-control input-right-no-round-corners"
-                id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
-              <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
-              <div class="invalid-feedback" data-translate="general.orcidInvalid">
-                Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
+        <div class="col-12 p-1 person-identity-fields">
+          <!-- Input field ORCID Author mit Contact Person Toggle -->
+          <div class="person-orcid-field">
+            <div class="input-group has-validation">
+              <!-- Toggle-Checkbox als Button (Bootstrap Toggle Button) -->
+              <div class="input-group-append person-orcid-contact">
+                <input type="checkbox" class="btn-check" id="checkbox-author-contactperson" name="contacts[]" autocomplete="off">
+                <label class="btn btn-outline-primary lh-sm round-corners-left con-reduce input-right-no-round-corners" for="checkbox-author-contactperson"
+                  data-translate="contactPersons.toggleCheckbox">
+                  Contact<br>Person
+                </label>
               </div>
-            </div>
-            <!-- ORCID Search Button -->
-            <div class="input-group-append">
-              <button type="button" class="btn btn-outline-secondary orcid-search-btn input-with-help input-left-no-round-corners"
-                data-bs-toggle="modal" data-bs-target="#modal-orcid-search"
-                data-translate-title="orcidSearch.searchButtonTitle" title="Search ORCID by name"
-                aria-label="Search ORCID by name">
-                <i class="bi bi-search" aria-hidden="true"></i>
-              </button>
-            </div>
-            <!-- Help Icon -->
-            <div class="input-group-append">
-              <span class="input-group-text orcid-help-icon">
-                <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
-              </span>
-            </div>
-          </div>
-        </div>
-        <!-- Input field Lastname Author -->
-        <div class="col-12 col-md-6 col-lg-4 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control js-required-on-submit" id="input-author-lastname" name="familynames[]" 
-              pattern="[^0-9$§?!&%=_*+<>]*"  required />
-              <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
-                  class="red-star">*</span></label>
-              <div class="invalid-feedback" data-translate="general.lastNameInvalid">
-                Please provide a lastname. Only letters are allowed.
+              <!-- ORCID Input Field -->
+              <div class="form-floating flex-grow-1">
+                <input type="text" class="form-control input-right-no-round-corners"
+                  id="input-author-orcid" name="orcids[]" pattern="^[0-9]{4}-[0-9]{4}-[0-9]{4}-([0-9]{4}|[0-9]{3}X)$" />
+                <label for="input-author-orcid" data-translate="general.ORCID">ORCID</label>
+                <div class="invalid-feedback" data-translate="general.orcidInvalid">
+                  Please enter a valid ORCID (XXXX-XXXX-XXXX-XXX(X))
+                </div>
+              </div>
+              <!-- ORCID Search Button -->
+              <div class="input-group-append">
+                <button type="button" class="btn btn-outline-secondary orcid-search-btn input-with-help input-left-no-round-corners"
+                  data-bs-toggle="modal" data-bs-target="#modal-orcid-search"
+                  data-translate-title="orcidSearch.searchButtonTitle" title="Search ORCID by name"
+                  aria-label="Search ORCID by name">
+                  <i class="bi bi-search" aria-hidden="true"></i>
+                </button>
+              </div>
+              <!-- Help Icon -->
+              <div class="input-group-append">
+                <span class="input-group-text orcid-help-icon">
+                  <i class="bi bi-question-circle-fill" data-help-section-id="help-author-orcid"></i>
+                </span>
               </div>
             </div>
           </div>
-        </div>
-        <!-- Input field Firstname Author -->
-        <div class="col-12 col-md-6 col-lg-4 p-1">
-          <div class="input-group has-validation">
-            <div class="form-floating">
-              <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
-              pattern="[^0-9$§?!&%=_*+<>]*" />
-              <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span></label>
-              <div class="invalid-feedback" data-translate="general.firstNameInvalid">
-                Please provide a firstname. Only letters are allowed.
+          <div class="person-name-fields">
+            <!-- Input field Lastname Author -->
+            <div class="person-name-field">
+              <div class="input-group has-validation">
+                <div class="form-floating">
+                  <input type="text" class="form-control js-required-on-submit" id="input-author-lastname" name="familynames[]"
+                  pattern="[^0-9$§?!&%=_*+<>]*"  required />
+                  <label for="input-author-lastname"><span data-translate="general.lastName">Last Name</span><span
+                      class="red-star">*</span></label>
+                  <div class="invalid-feedback" data-translate="general.lastNameInvalid">
+                    Please provide a lastname. Only letters are allowed.
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- Input field Firstname Author -->
+            <div class="person-name-field">
+              <div class="input-group has-validation">
+                <div class="form-floating">
+                  <input type="text" class="form-control" id="input-author-firstname" name="givennames[]"
+                  pattern="[^0-9$§?!&%=_*+<>]*" />
+                  <label for="input-author-firstname"><span data-translate="general.firstName">First Name</span></label>
+                  <div class="invalid-feedback" data-translate="general.firstNameInvalid">
+                    Please provide a firstname. Only letters are allowed.
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -154,7 +158,7 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" class="form-control" id="input-authorinstitution-name" name="authorinstitutionName[]">
-                <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author Institution name</label>
+                <label for="input-authorinstitution-name" data-translate="authorsInstitutions.name">Author Institution Name</label>
                 <div class="invalid-feedback" data-translate="authors.InstitutionsNameInvalid"></div>
               </div>
             </div>

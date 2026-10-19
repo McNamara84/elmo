@@ -279,24 +279,37 @@ describe('originatingLaboratories.js', () => {
         });
     });
 
-    describe('replaceHelpButtonInClonedRows', () => {
-        function replaceHelpButtonInClonedRows(row, roundCornersClass = "input-right-with-round-corners") {
-            // Check if input-group-text elements are visible
-            const helpSpans = row.find("span.input-group-text:has(i.bi-question-circle-fill)");
-            helpSpans.each(function () {
-                $(this).replaceWith('<div class="input-group-text" style="visibility: hidden; width: 42px; height: 38px;"></div>');
+    describe('production laboratory cloning', () => {
+        test.each(['help-on', 'help-off'])('keeps marked placeholders when cloning with %s', status => {
+            const fs = require('fs');
+            const path = require('path');
+            document.body.innerHTML = fs.readFileSync(path.join(__dirname, '../../formgroups/originatingLaboratory.html'), 'utf8');
+            document.documentElement.dataset.helpStatus = status;
+            localStorage.setItem('helpStatus', status);
+            window.ELMO_FEATURES = { showMslLabs: true };
+            window.replaceHelpButtonInClonedRows = require('../../js/eventhandlers/functions.js').replaceHelpButtonInClonedRows;
+            $.getJSON = jest.fn((url, callback) => {
+                callback({ data: [{ display_name: 'Test laboratory', scientific_domain: 'Geology' }] });
+                return { fail: jest.fn() };
             });
-            row.find(".input-with-help").removeClass("input-right-no-round-corners");
-            row.find(".input-with-help").addClass(roundCornersClass);
-        }
-
-        test('replaces help span with hidden div', () => {
-            const row = $('#group-originatinglaboratory .row:first');
-            
-            replaceHelpButtonInClonedRows(row);
-            
-            // The span should be replaced with a div
-            expect(row.find('div.input-group-text').length).toBeGreaterThanOrEqual(1);
+            let script = fs.readFileSync(path.join(__dirname, '../../js/originatingLaboratories.js'), 'utf8');
+            script = script.replace('$(document).ready(function () {', '(function () {');
+            script = script.replace(/\n\s*\}\);\s*$/, '\n})();');
+            window.eval(script);
+            $('#button-originatinglaboratory-add').trigger('click');
+            const rows = $('#group-originatinglaboratory > .row');
+            expect(rows).toHaveLength(2);
+            expect(rows.first().find('.help-placeholder')).toHaveLength(0);
+            const placeholder = rows.last().find('.help-placeholder');
+            expect(placeholder).toHaveLength(1);
+            expect(placeholder.attr('data-help-section-id')).toBe('help-originatinglaboratory-name');
+            expect(placeholder.find('i[data-help-section-id]')).toHaveLength(1);
+            expect(placeholder.css('visibility')).toBe('hidden');
+            rows.last().find('.removeButton').trigger('click');
+            expect($('#group-originatinglaboratory > .row')).toHaveLength(1);
+            document.documentElement.removeAttribute('data-help-status');
+            localStorage.clear();
+            delete window.ELMO_FEATURES;
         });
     });
 });

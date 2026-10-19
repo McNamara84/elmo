@@ -110,67 +110,55 @@ test.describe('Issue #962 – affiliation controls stay initialized after reorde
     ).toBe(false);
   });
 
-  test('contributor persons: tagify initialized in new rows after first row moved to end', async ({ page }) => {
-    const contribGroup = page.locator(SELECTORS.formGroups.contributorPersons);
-    const addButton = page.locator('#button-contributor-addperson');
+  test('contributor persons: role picker and affiliation editor initialized after reorder', async ({ page }) => {
+    const rows = page.locator('[data-contributor-card][data-contributor-type="person"]');
+    const addButton = page.locator('[data-contributor-add-type="person"]');
 
     // Add a second row, then reorder
     await addButton.click();
-    await expect(contribGroup.locator('[contributor-person-row]')).toHaveCount(2);
-
-    // Move first row to the end
-    await page.evaluate(() => {
-      const group = document.querySelector('#group-contributorperson');
-      const firstRow = group?.querySelector('[contributor-person-row]');
-      if (group && firstRow) {
-        group.appendChild(firstRow);
-      }
-    });
+    await addButton.click();
+    await expect(rows).toHaveCount(2);
+    await rows.first().locator('[data-contributor-move-down]').click();
 
     // Add a new row after reorder
     await addButton.click();
-    const rows = contribGroup.locator('[contributor-person-row]');
     await expect(rows).toHaveCount(3);
 
-    // The newest row should have affiliation tagify (wait for async init)
+    // The new row keeps its role picker and shared affiliation editor.
     const newRow = rows.nth(2);
     const tagifyWrappers = newRow.locator('.tagify');
-    // Contributor persons have 2 tagify instances: role + affiliation
+    // Contributor roles use Tagify.
     await expect.poll(() => tagifyWrappers.count(), { timeout: 5000 }).toBeGreaterThanOrEqual(1);
 
     await expect.poll(
       () => newRow.locator('input[name="cbAffiliation[]"]').evaluate(
-        (el: HTMLInputElement) => !!(el as any)._tagify
+        (el: HTMLInputElement) => !!el.closest('[data-contributor-card]')?.querySelector('[data-affiliation-editor]')
       ),
       { timeout: 5000 }
     ).toBe(true);
   });
 
-  test('contributor organisations: tagify initialized in new rows after first row moved to end', async ({ page }) => {
-    const contribGroup = page.locator(SELECTORS.formGroups.contributorInstitutions);
-    const addButton = page.locator('#button-contributor-addorganisation');
+  test('contributor organisations: role picker and affiliation editor initialized after reorder', async ({ page }) => {
+    const rows = page.locator('[data-contributor-card][data-contributor-type="institution"]');
+    const addButton = page.locator('[data-contributor-add-type="institution"]');
 
     // Add a second row, then reorder
     await addButton.click();
-    await expect(contribGroup.locator('[contributors-row]')).toHaveCount(2);
-
-    // Move first row to the end
-    await page.evaluate(() => {
-      const group = document.querySelector('#group-contributororganisation');
-      const firstRow = group?.querySelector('[contributors-row]');
-      if (group && firstRow) {
-        group.appendChild(firstRow);
-      }
-    });
+    await addButton.click();
+    await expect(rows).toHaveCount(2);
+    await rows.first().locator('[data-contributor-move-down]').click();
 
     // Add a new row after reorder
     await addButton.click();
-    const rows = contribGroup.locator('[contributors-row]');
     await expect(rows).toHaveCount(3);
 
-    // The newest row should have affiliation tagify (wait for async init)
+    // The new row keeps its role picker and shared affiliation editor.
     const newRow = rows.nth(2);
     const tagifyWrappers = newRow.locator('.tagify');
     await expect.poll(() => tagifyWrappers.count(), { timeout: 5000 }).toBeGreaterThanOrEqual(1);
+    await expect(newRow.locator('[data-affiliation-editor]')).toBeVisible();
+    await newRow.locator('[data-affiliation-input]').fill('New institution affiliation');
+    await newRow.locator('[data-affiliation-add]').click();
+    await expect(newRow.locator('[data-affiliation-label]')).toHaveValue('New institution affiliation');
   });
 });

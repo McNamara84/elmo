@@ -360,8 +360,8 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->assertEquals('spherical', $record['approximation']);
         $this->assertEquals('layer-specific', $record['density_information']);
         $this->assertEquals('Crustal densities from CRUST1.0, mantle from PREM', $record['density_information_details']);
-        $this->assertNull($record['crust_density_value']);
-        $this->assertNull($record['mantle_density_value']);
+        $this->assertNull($record['crust_density_information']);
+        $this->assertNull($record['mantle_density_information']);
 
         // Verify linking
         $sql = "SELECT * FROM `Resource_has_Topographic_Model_Properties` 
@@ -466,8 +466,8 @@ final class SaveGGMsModelTypesTest extends DatabaseTestCase
         $this->assertNull($record['layer_approach']);
         $this->assertNull($record['forward_modelling_domain']);
         $this->assertNull($record['approximation']);
-        $this->assertNull($record['crust_density_value']);
-        $this->assertNull($record['mantle_density_value']);
+        $this->assertNull($record['crust_density_information']);
+        $this->assertNull($record['mantle_density_information']);
     }
 
     // ============================================================================

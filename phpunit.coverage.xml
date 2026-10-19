@@ -20,9 +20,8 @@
             <directory suffix=".php">./save</directory>
             <directory suffix=".php">./includes</directory>
             <directory suffix=".php">./api/v2</directory>
-            <file>./api_functions.php</file>
-            <file>./send_xml_file.php</file>
-            <file>./log_page_event.php</file>
+            <directory suffix=".php">./endpoints</directory>
+            <directory suffix=".php">./scripts</directory>
         </include>
         <exclude>
             <file>./save/save_data.php</file>

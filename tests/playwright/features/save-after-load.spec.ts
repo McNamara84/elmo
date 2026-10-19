@@ -11,19 +11,28 @@ const BENIGN_CONSOLE_PATTERNS = [
   /favicon\.ico/,
   /third-party cookie/i,
   /API key not found/i,
-  /thesauri availability/i,
   /503 \(Service Unavailable\)/,
 ];
+
+function isUnexpectedConsoleError(text: string): boolean {
+  if (/thesaur/i.test(text)) {
+    return true;
+  }
+  return !BENIGN_CONSOLE_PATTERNS.some(p => p.test(text));
+}
 
 test.describe('Save after Load – Issue #1043', () => {
   test('can save again after loading a previously saved XML file', async ({ page }) => {
     await registerGoogleMapsNoopRoute(page);
+    await page.route('**/api/v2/vocabs/thesauri/availability', route =>
+      route.fulfill({ status: 200, contentType: 'application/json', body: '{}' }),
+    );
     // Collect unexpected console errors for assertion at end of test
     const consoleErrors: string[] = [];
     page.on('console', msg => {
       if (msg.type() === 'error') {
         const text = msg.text();
-        if (!BENIGN_CONSOLE_PATTERNS.some(p => p.test(text))) {
+        if (isUnexpectedConsoleError(text)) {
           consoleErrors.push(text);
         }
       }

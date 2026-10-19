@@ -33,9 +33,6 @@ describe('buttons.js', () => {
       <button id="button-form-save"></button>
       <button id="button-form-submit"></button>
       <div id="modal-uploadxml"></div>
-      <a id="button-changelog-show" href="#"></a>
-      <div id="panel-changelog-content"></div>
-      <div id="modal-changelog"></div>
       <div data-bs-toggle="tooltip" id="tooltip-target"></div>
     `;
     $ = require('jquery');
@@ -43,7 +40,6 @@ describe('buttons.js', () => {
     window.$ = $;
     window.jQuery = $;
     $.fn.modal = jest.fn();
-    $.fn.load = jest.fn(function (url, cb) { if (cb) cb(); return this; });
     $.fn.tooltip = jest.fn();
     window.clearInputFields = jest.fn();
     window.showConfirmationModal = jest.fn();
@@ -63,30 +59,21 @@ describe('buttons.js', () => {
     jest.clearAllTimers();
   });
 
-  test('shows help icons by default', () => {
-    loadScript();
-    expect($('.input-group-text').first().css('display')).not.toBe('none');
-  });
+  function getClearConfirmationCallback() {
+    return window.showConfirmationModal.mock.calls[0][4];
+  }
 
-  test('initializes help icons based on localStorage', () => {
+  test('leaves help preferences and non-help addons to their owning modules', () => {
     localStorage.setItem('inputGroupTextVisible', 'false');
-    loadScript();
-    expect($('.input-group-text').first().css('display')).toBe('none');
-  });
-
-  test('buttonHelpOn shows help icons and stores preference', () => {
-    localStorage.setItem('inputGroupTextVisible', 'false');
+    localStorage.setItem('helpStatus', 'help-off');
+    $('.input-group-text').last().hide();
     loadScript();
     $('#buttonHelpOn').trigger('click');
-    expect($('.input-group-text').first().css('display')).not.toBe('none');
-    expect(localStorage.getItem('inputGroupTextVisible')).toBe('true');
-  });
-
-  test('buttonHelpOff hides help icons and stores preference', () => {
-    loadScript();
     $('#buttonHelpOff').trigger('click');
-    expect($('.input-group-text').first().css('display')).toBe('none');
+    expect($('.input-group-text').first().css('display')).not.toBe('none');
+    expect($('.input-group-text').last().css('display')).toBe('none');
     expect(localStorage.getItem('inputGroupTextVisible')).toBe('false');
+    expect(localStorage.getItem('helpStatus')).toBe('help-off');
   });
 
   test('hovering 30 times opens Easter egg', () => {
@@ -121,7 +108,7 @@ describe('buttons.js', () => {
       'confirmations.clear.message',
       'confirmations.clear.cancel',
       'confirmations.clear.confirm',
-      window.clearInputFields
+      expect.any(Function)
     );
   });
 
@@ -131,18 +118,26 @@ describe('buttons.js', () => {
     expect(window.clearInputFields).not.toHaveBeenCalled();
   });
 
+  test('confirmed reset clears the form before announcing a user clear', () => {
+    const callOrder = [];
+    window.clearInputFields.mockImplementation(() => callOrder.push('clear'));
+    document.addEventListener(
+      'elmo:formClearedByUser',
+      () => callOrder.push('event'),
+      { once: true }
+    );
+
+    loadScript();
+    $('#button-form-reset').trigger('click');
+    getClearConfirmationCallback()();
+
+    expect(window.clearInputFields).toHaveBeenCalledTimes(1);
+    expect(callOrder).toEqual(['clear', 'event']);
+  });
+
   test('load button shows upload modal', () => {
     loadScript();
     $('#button-form-load').trigger('click');
-    expect($.fn.modal).toHaveBeenCalledWith('show');
-  });
-
-  test('changelog button loads content and shows modal', () => {
-    loadScript();
-    const event = new MouseEvent('click', { bubbles: true, cancelable: true });
-    document.getElementById('button-changelog-show').dispatchEvent(event);
-    expect(event.defaultPrevented).toBe(true);
-    expect($.fn.load).toHaveBeenCalledWith('doc/changelog.html', expect.any(Function));
     expect($.fn.modal).toHaveBeenCalledWith('show');
   });
 
@@ -194,6 +189,7 @@ describe('buttons.js', () => {
     // Validators must run on Submit
     expect(window.validateFundingReferenceRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateRelatedWorkRequirements).toHaveBeenCalledTimes(1);
+    expect(window.validateRelatedWorkRequirements).toHaveBeenCalledWith({ revealIncomplete: true });
     expect(window.validateSpatialTemporalCoverageRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorOrganisationRequirements).toHaveBeenCalledTimes(1);
     expect(window.validateContributorPersonRequirements).toHaveBeenCalledTimes(1);

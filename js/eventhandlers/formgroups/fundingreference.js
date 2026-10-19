@@ -47,8 +47,8 @@ $(document).ready(function () {
   });
 
   function initialiseAutocomplete(input) {
-    if (typeof setUpAutocompleteFunder === 'function' && input) {
-      setUpAutocompleteFunder(input);
+    if (typeof window.setUpAutocompleteFunder === 'function' && input) {
+      window.setUpAutocompleteFunder(input);
     }
   }
 

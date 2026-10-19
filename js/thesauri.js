@@ -1,3 +1,11 @@
+import {
+    stampFullKeywords,
+    getNodeFullKeyword,
+    whitelistValueFromNode,
+    upgradeExistingTagsToFullKeywords,
+    findNodeByPath
+} from './thesauriHelpers.js';
+
 /**
  * Recursively searches a jsTree data array for a specific node ID.
  * Returns the node (and its children) if found, otherwise returns the original data.
@@ -96,6 +104,7 @@ export const THESAURUS_CONFIG = {
 export let currentActiveInput = null;
 
 const loadedConfigs = new Map();
+const readinessByConfig = new Map();
 const sharedState = {};
 let keywordConfigurations = [];
 
@@ -126,6 +135,73 @@ function hideLoadingSpinner(jsTreeId) {
 }
 
 /**
+ * Expands jsTree nodes after the datasource platforms thesaurus loads.
+ * Opens the configured root subtree first, then any initialOpenNodeTexts entries.
+ * Uses chained open_node callbacks because jsTree expands asynchronously.
+ *
+ * @param {Object} config - Thesaurus configuration.
+ */
+function expandInitialTreeNodes(config) {
+    const hasInitialOpenTexts = config.initialOpenNodeTexts && config.initialOpenNodeTexts.length > 0;
+    if (!config.rootNodeId && !hasInitialOpenTexts) return;
+
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree || typeof tree.open_node !== 'function') return;
+
+    const nodesToOpen = [];
+
+    if (config.rootNodeId) {
+        nodesToOpen.push(config.rootNodeId);
+    }
+
+    (config.initialOpenNodeTexts || []).forEach(function (text) {
+        const node = tree.get_json('#', { flat: true }).find(function (n) {
+            return n.text === text;
+        });
+        if (node && !nodesToOpen.includes(node.id)) {
+            nodesToOpen.push(node.id);
+        }
+    });
+
+    function openNext(index) {
+        if (index >= nodesToOpen.length) return;
+        tree.open_node(nodesToOpen[index], function () {
+            openNext(index + 1);
+        });
+    }
+
+    openNext(0);
+}
+
+/**
+ * Decides what activating a tree row does, so broader terms can be browsed by clicking
+ * the row instead of aiming for the small expander arrow.
+ *
+ * Rows that have narrower terms open or close, rows without children keep jsTree's
+ * default selection. Clicking the checkbox or holding Ctrl/Cmd always selects, so
+ * broader terms stay selectable as keywords.
+ *
+ * Invoked by the conditionalselect plugin with the jsTree instance as `this`.
+ *
+ * @param {Object} node - The activated jsTree node.
+ * @param {Object} [event] - Event that triggered the activation.
+ * @returns {boolean} True when jsTree should apply its default selection.
+ */
+function handleTreeNodeActivation(node, event) {
+    const selectsExplicitly = !event
+        || event.ctrlKey
+        || event.metaKey
+        || $(event.target).hasClass('jstree-checkbox');
+
+    if (selectsExplicitly || !this.is_parent(node)) {
+        return true;
+    }
+
+    this.toggle_node(node);
+    return false;
+}
+
+/**
  * Loads thesaurus vocabulary data on demand.
  * Triggered when a modal is opened for the first time OR when
  * a Tagify input field receives focus.
@@ -138,15 +214,27 @@ function loadThesaurusOnDemand(config) {
     if (currentState === 'loading' || currentState === 'loaded') return;
 
     loadedConfigs.set(config.jsTreeId, 'loading');
+    resetThesaurusReadiness(config);
     showLoadingSpinner(config.jsTreeId);
 
     $.getJSON(config.apiEndpoint, function (data) {
-        loadKeywordsForConfig(config, data);
+        if (!loadKeywordsForConfig(config, data)) {
+            loadedConfigs.set(config.jsTreeId, 'error');
+            hideLoadingSpinner(config.jsTreeId);
+            $(config.jsTreeId).html(`
+                <div class="alert alert-danger m-2">
+                    ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
+                </div>
+            `);
+            return;
+        }
         loadedConfigs.set(config.jsTreeId, 'loaded');
         hideLoadingSpinner(config.jsTreeId);
     }).fail(function (jqxhr, textStatus, error) {
         console.error('Failed to load thesaurus:', config.apiEndpoint, textStatus, error);
         loadedConfigs.set(config.jsTreeId, 'error');
+        resetThesaurusReadiness(config);
+        hideLoadingSpinner(config.jsTreeId);
         $(config.jsTreeId).html(`
             <div class="alert alert-danger m-2">
                 ${translations?.keywords?.thesaurus?.unavailable || 'Error loading thesaurus data.'}
@@ -156,14 +244,186 @@ function loadThesaurusOnDemand(config) {
 }
 
 /**
+ * Ensures a thesaurus config is loaded, resolving a config key when needed.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ */
+export function ensureThesaurusLoaded(configKeyOrConfig) {
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (config) {
+        loadThesaurusOnDemand(config);
+    }
+}
+
+const THESAURUS_VOCAB_WAIT_MS = 25000;
+
+/**
+ * Live keywordConfigurations entry for a THESAURUS_CONFIG key, if the UI
+ * has already registered one. That copy has `#` selectors and any GGM
+ * rootNodes applied at init; the static THESAURUS_CONFIG row does not.
+ */
+function resolveThesaurusConfig(keyOrConfig) {
+    if (!keyOrConfig) return null;
+    if (typeof keyOrConfig !== 'string') return keyOrConfig;
+
+    const registered = keywordConfigurations.find(function (entry) {
+        return entry.key === keyOrConfig || entry.stateKey === keyOrConfig;
+    });
+    if (registered) return registered;
+
+    return ensureConfigRegistered(keyOrConfig) || THESAURUS_CONFIG[keyOrConfig] || null;
+}
+
+function ensureThesaurusReadiness(config) {
+    const readinessKey = config.jsTreeId;
+    if (!readinessByConfig.has(readinessKey)) {
+        readinessByConfig.set(readinessKey, {
+            whitelistApplied: false,
+            treeReady: false
+        });
+    }
+    return readinessByConfig.get(readinessKey);
+}
+
+function resetThesaurusReadiness(config) {
+    const readiness = ensureThesaurusReadiness(config);
+    readiness.whitelistApplied = false;
+    readiness.treeReady = false;
+}
+
+function synchronizeTreeWithTagify(config, state) {
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree) return false;
+
+    const activeTagify = getActiveTagifyForState(state);
+    const tagValues = activeTagify && Array.isArray(activeTagify.value)
+        ? activeTagify.value.map(function (tag) {
+            return tag && tag.value ? tag.value : '';
+        }).filter(Boolean)
+        : [];
+
+    state.isSyncingTree = true;
+    clearTreeSelection(tree);
+    state.selectedPaths = new Set(tagValues);
+
+    let allMatched = true;
+    tagValues.forEach(function (value) {
+        const node = findNodeByPath(tree, value);
+        if (!node) {
+            allMatched = false;
+            return;
+        }
+        if (typeof tree.select_node === 'function') {
+            tree.select_node(node.id);
+        }
+    });
+
+    state.isSyncingTree = false;
+    updateSelectedKeywordsList(config.selectedKeywordsListId || config.selectedListId, state);
+    return allMatched;
+}
+
+function finalizeThesaurusTreeReady(config, state) {
+    const tree = $(config.jsTreeId).jstree(true);
+    if (!tree) return false;
+
+    expandInitialTreeNodes(config);
+    const synchronized = synchronizeTreeWithTagify(config, state);
+    ensureThesaurusReadiness(config).treeReady = synchronized;
+    return synchronized;
+}
+
+function isThesaurusConsumerReady(config) {
+    const state = ensureSharedState(config);
+    const readiness = ensureThesaurusReadiness(config);
+    const tree = $(config.jsTreeId).jstree(true);
+
+    if (!readiness.whitelistApplied || !readiness.treeReady || !tree) {
+        return false;
+    }
+    if (!state.tagifyInstances || state.tagifyInstances.size === 0) {
+        return false;
+    }
+
+    let ready = true;
+    state.tagifyInstances.forEach(function (tagifyInstance) {
+        if (!tagifyInstance || !tagifyInstance.settings || tagifyInstance.settings.whitelist !== state.whitelist) {
+            ready = false;
+            return;
+        }
+
+        const tagValues = Array.isArray(tagifyInstance.value)
+            ? tagifyInstance.value.map(function (tag) {
+                return tag && tag.value ? tag.value : '';
+            }).filter(Boolean)
+            : [];
+
+        if (!tagValues.every(function (value) {
+            return Boolean(findNodeByPath(tree, value));
+        })) {
+            ready = false;
+        }
+    });
+
+    return ready;
+}
+
+/**
+ * Loads a thesaurus vocabulary if needed and resolves when its consumer-facing
+ * state is ready: whitelist applied to Tagify and jsTree initialized/synced.
+ *
+ * XML import must not call Tagify addTags before Tagify and jsTree are both
+ * available and synchronized for the same thesaurus state.
+ *
+ * @param {string|Object} configKeyOrConfig - THESAURUS_CONFIG key or config object.
+ * @param {number} [timeoutMs]
+ * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>}
+ */
+export function waitForThesaurusVocabulary(configKeyOrConfig, timeoutMs) {
+    timeoutMs = typeof timeoutMs === 'number' ? timeoutMs : THESAURUS_VOCAB_WAIT_MS;
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (!config || !config.apiEndpoint) {
+        return Promise.resolve('missing');
+    }
+
+    loadThesaurusOnDemand(config);
+
+    return new Promise(function (resolve) {
+        const started = Date.now();
+        function poll() {
+            const state = loadedConfigs.get(config.jsTreeId);
+            if (state === 'error') {
+                resolve('error');
+                return;
+            }
+            if (state === 'loaded' && isThesaurusConsumerReady(config)) {
+                resolve('loaded');
+                return;
+            }
+            if (Date.now() - started >= timeoutMs) {
+                resolve('timeout');
+                return;
+            }
+            setTimeout(poll, 50);
+        }
+        poll();
+    });
+}
+
+if (typeof window !== 'undefined') {
+    window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
+}
+
+/**
  * Loads and processes keyword data, initializing jsTree.
- * Called when modal is opened for the first time (lazy loading).
+ * Called when a thesaurus is first requested (init, modal, or Tagify focus).
  *
  * @param {Object} config - Configuration object for the keyword input field.
  * @param {Array<Object>|Object} response - The keyword data from the API / JSON file.
  */
 function loadKeywordsForConfig(config, response) {
     const state = ensureSharedState(config);
+    const readiness = ensureThesaurusReadiness(config);
 
     const data = response.data ? response.data : response;
     var filteredData = data;
@@ -176,6 +436,11 @@ function loadKeywordsForConfig(config, response) {
     }
 
     var availableNodes = ensureArray(data);
+
+    // Stamp every node with its unfiltered GCMD breadcrumb (including scheme-root)
+    // before cutting GGM / rootNodeId subtrees, so filtered UI nodes still know
+    // Science Keywords > … / Platforms > … even when those ancestors are not shown.
+    stampFullKeywords(availableNodes);
 
     // If rootNodes/rootNodeId exist, load only those subtrees (e.g., MSL general/domain)
     if (config.rootNodes || config.rootNodeId) {
@@ -201,7 +466,7 @@ function loadKeywordsForConfig(config, response) {
             });
             if (collected.length === 0) {
                 console.error('No valid rootNodes found in', config.apiEndpoint);
-                return;
+                return false;
             }
 
             // Remove any collected node that is already reachable as a descendant of
@@ -229,7 +494,7 @@ function loadKeywordsForConfig(config, response) {
             if (sel) filteredData = [sel];
             else {
                 console.error('Root node with ID', config.rootNodeId, 'not found in', config.apiEndpoint);
-                return;
+                return false;
             }
         }
     }
@@ -242,11 +507,14 @@ function loadKeywordsForConfig(config, response) {
                 node.children = processNodes(node.children);
             }
             node.a_attr = node.a_attr || { title: node.description || "" };
-            node.original = node.original || {
+            node.original = Object.assign({
                 scheme: node.scheme || "",
                 schemeURI: node.schemeURI || "",
                 language: node.language || ""
-            };
+            }, node.original || {});
+            if (node.fullKeyword && !node.original.fullKeyword) {
+                node.original.fullKeyword = node.fullKeyword;
+            }
             return node;
         });
     }
@@ -258,7 +526,7 @@ function loadKeywordsForConfig(config, response) {
         if (!Array.isArray(nodes)) return;
         nodes.forEach(function (item) {
             if (!item) return;
-            var textToAdd = parentPath.concat(item.text).join(' > ');
+            var textToAdd = whitelistValueFromNode(item, parentPath);
             suggestedKeywords.push({
                 value: textToAdd,
                 id: item.id,
@@ -285,13 +553,27 @@ function loadKeywordsForConfig(config, response) {
 
     state.tagifyInstances.forEach(function (tagifyInstance) {
         tagifyInstance.settings.whitelist = state.whitelist;
-        tagifyInstance.settings.enforceWhitelist = true;
+        // Rewrite tags already in the field to the whitelist fullKeyword (exact,
+        // then valueURI/id, then suffix) so save persists that string. Does not
+        // insert extra whitelist entries — a miss means the concept is absent.
+        upgradeExistingTagsToFullKeywords(tagifyInstance, state.whitelist);
+        // Only enforce once there is something to enforce against. An empty
+        // payload (failed/empty ERNIE response) must not lock the field, or
+        // XML import of previously saved thesaurus keywords is dropped.
+        tagifyInstance.settings.enforceWhitelist = state.whitelist.length > 0;
+    });
+    readiness.whitelistApplied = true;
+
+    $(config.jsTreeId).one('ready.jstree', function () {
+        finalizeThesaurusTreeReady(config, state);
     });
 
     // Initialize jsTree
     $(config.jsTreeId).jstree({
         core: {
             data: processedData,
+            // A single click already opens and closes broader terms.
+            dblclick_toggle: false,
             themes: {
                 icons: false,
                 dots: false
@@ -301,7 +583,8 @@ function loadKeywordsForConfig(config, response) {
             keep_selected_style: true,
             three_state: false
         },
-        plugins: ['search', 'checkbox'],
+        conditionalselect: handleTreeNodeActivation,
+        plugins: ['search', 'checkbox', 'conditionalselect'],
         search: {
             show_only_matches: true,
             search_callback: function (str, node) {
@@ -326,7 +609,9 @@ function loadKeywordsForConfig(config, response) {
             if (!tree) return;
             var nodes = tree.get_selected(true);
             nodes.forEach(function (n) {
-                var p = tree.get_path(n, " > ");
+                // Prefer stamped fullKeyword, not the cut-subtree get_path, so a
+                // click on SPHERICAL HARMONIC MODELS saves the Science Keywords > … path.
+                var p = getNodeFullKeyword(tree, n) || tree.get_path(n, " > ");
                 if (p) newCentralSet.add(p);
             });
         });
@@ -344,26 +629,8 @@ function loadKeywordsForConfig(config, response) {
         }
     });
 
-    // Initial sync: if the active input already has tags, select corresponding nodes
-    $(config.jsTreeId).one("ready.jstree", function () {
-        const activeTagify = getActiveTagifyForState(state);
-        if (!activeTagify || !activeTagify.value || !activeTagify.value.length) return;
-
-        // Sync jsTree selection from current Tagify values (store paths as a Set)
-        state.selectedPaths = new Set(activeTagify.value.map(v => v.value));
-
-        const tree = $(config.jsTreeId).jstree(true);
-        if (!tree) return;
-
-        activeTagify.value.forEach(function (tag) {
-            const node = findNodeByPath(tree, tag.value);
-            if (node) {
-                tree.select_node(node.id);
-            }
-        });
-
-        updateSelectedKeywordsList(config.selectedListId || config.selectedKeywordsListId, state);
-    });
+    finalizeThesaurusTreeReady(config, state);
+    return true;
 }
 
 /** Returns the shared state key for a thesaurus config. */
@@ -408,8 +675,10 @@ function ensureConfigRegistered(configKey) {
     if (existing) return existing;
 
     const registeredConfig = {
+        key: configKey,
         apiEndpoint: config.apiEndpoint,
         rootNodeId: config.rootNodeId,
+        initialOpenNodeTexts: config.initialOpenNodeTexts,
         modalId: config.modalId,
         jsTreeId: config.jsTreeId,
         searchInputId: config.searchInputId,
@@ -487,20 +756,6 @@ function updateSelectedKeywordsList(listId, state) {
 
         listItem.appendChild(removeButton);
         selectedKeywordsList.appendChild(listItem);
-    });
-}
-
-/**
- * Finds a jsTree node by its rendered breadcrumb path.
- *
- * @param {Object} jsTreeInstance - Active jsTree instance.
- * @param {string} path - Full breadcrumb path using ` > ` separators.
- * @returns {Object|null} Matching jsTree node, or null when no match exists.
- */
-function findNodeByPath(jsTreeInstance, path) {
-    if (!jsTreeInstance) return null;
-    return jsTreeInstance.get_json("#", { flat: true }).find(function (n) {
-        return jsTreeInstance.get_path(n, " > ") === path;
     });
 }
 
@@ -657,7 +912,6 @@ export function initTagifyForInput(inputElement, configKey) {
         state.jsTreeIds.push(config.jsTreeId);
     }
 
-    // Initialize Tagify if it hasn't been already
     if (!inputElement._tagify) {
         inputElement._tagify = new Tagify(inputElement, {
             whitelist: state.whitelist,
@@ -682,6 +936,19 @@ export function initTagifyForInput(inputElement, configKey) {
         }
     }
     state.tagifyInstances.add(inputElement._tagify);
+
+    if (!inputElement.dataset.tagifyValidationBound && inputElement._tagify) {
+        inputElement.dataset.tagifyValidationBound = 'true';
+        inputElement._tagify.on('add', function () {
+            inputElement.setCustomValidity('');
+            inputElement.classList.remove('is-invalid', 'is-valid');
+            // Tagify keeps the original input as a sibling of <tags class="tagify">.
+            const tagifyWrapper = inputElement._tagify?.DOM?.scope
+                || inputElement.closest('.tagify')
+                || inputElement.parentElement?.querySelector('.tagify');
+            tagifyWrapper?.classList.remove('is-invalid', 'is-valid');
+        });
+    }
 
     if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
         window.applyTagifyAccessibilityAttributes(inputElement._tagify, inputElement, {
@@ -735,12 +1002,13 @@ export function initTagifyForInput(inputElement, configKey) {
  * Flow:
  * 1. Check master toggle (ELMO_FEATURES.showThesauri)
  * 2. Fetch thesauri availability from ELMO API (ERNIE proxy)
- * 3. For each available thesaurus: generate input section + modal HTML, init Tagify, register lazy loading
- * 4. Show form group if at least one thesaurus is available
+ * 3. For each available thesaurus: generate input section + modal HTML, init Tagify
+ * 4. Build the inputs first; XML upload then waits only for the thesauri
+ *    actually referenced in the uploaded subjects
  *
  * Also handles MSL keywords (static config, separate feature toggle).
  *
- * P1-1: Lazy Loading — vocabulary data is loaded only when the modal is opened for the first time.
+ * Modal/focus handlers call loadThesaurusOnDemand on first use.
  */
 $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
@@ -748,6 +1016,17 @@ $(document).ready(function () {
     const hiddenThesauri = new Set(Array.isArray(features.hiddenThesauri) ? features.hiddenThesauri : []);
     const showMslVocabs = features.showMslVocabs === true;
     const showGGMsProperties = features.showGGMsProperties === true;
+
+    let resolveThesauriReady;
+    window.thesauriReady = new Promise((resolve) => {
+        resolveThesauriReady = resolve;
+    });
+    function markThesauriReady() {
+        if (typeof resolveThesauriReady === 'function') {
+            resolveThesauriReady();
+            resolveThesauriReady = null;
+        }
+    }
 
     /**
      * GGMs-specific root node constraints that narrow each thesaurus tree
@@ -757,12 +1036,12 @@ $(document).ready(function () {
      */
     const GGM_THESAURUS_ROOT_NODES = {
         science_keywords: [
-            'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // EARTH SCIENCE > SOLID EARTH > GEODETICS
-            'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
-            'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
+            'https://gcmd.earthdata.nasa.gov/kms/concept/8fb5ea8a-96ba-47cf-91cd-c7b64fbcd54a', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > SPHERICAL HARMONIC MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/97576e51-28b5-4ae0-af33-fbb00fd5996b', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > MASS CONCENTRATION (MASCON) MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/b8615aad-d2eb-45a3-98a7-4adac5bdf5a5', // Science Keywords > EARTH SCIENCE SERVICES > MODELS > EARTH SCIENCE REANALYSES/ASSIMILATION MODELS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/5498572c-aaed-4c08-8aad-8b297057e9c9', // Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS
+            'https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', // Science Keywords > EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD
+            'https://gcmd.earthdata.nasa.gov/kms/concept/ad09b215-e837-4d9f-acbc-2b45e5b81825'  // Science Keywords > EARTH SCIENCE > OCEANS > MARINE GEOPHYSICS > MARINE GRAVITY FIELD
         ]
         // platforms: null,
         // instruments: null,
@@ -788,28 +1067,48 @@ $(document).ready(function () {
 
     ensureConfigRegistered('satellitePlatforms');
 
-    // Wait for translations, then initialize everything
-    document.addEventListener('translationsLoaded', function () {
+    // Wait for translations, then initialize the input scaffolding. If
+    // translationsLoaded already fired before this module's document.ready ran
+    // (Firefox is prone to that with deferred modules), start immediately so
+    // Tagify inputs exist before XML upload calls processKeywords().
+    let thesauriInitStarted = false;
+    function startThesauriUi() {
+        if (thesauriInitStarted) return;
+        thesauriInitStarted = true;
         initThesauri();
         initMslKeywords();
-    }, { once: true });
+    }
+    document.addEventListener('translationsLoaded', startThesauriUi, { once: true });
+    const existingTranslations = window.elmo?.translations || window.translations;
+    if (existingTranslations && (existingTranslations.general || existingTranslations.keywords)) {
+        startThesauriUi();
+    }
 
     /**
-     * Main initialization for ERNIE-based thesauri.
-     * Fetches availability, generates HTML, and sets up Tagify + lazy loading.
+    * Main initialization for ERNIE-based thesauri.
+    * Fetches availability, generates HTML, and initializes Tagify inputs.
      */
     function initThesauri() {
-        if (!showThesauri) return;
+        if (!showThesauri) {
+            markThesauriReady();
+            return;
+        }
 
         $.getJSON('api/v2/vocabs/thesauri/availability')
             .done(function (availability) {
                 const availableThesauri = filterAvailableThesauri(availability);
 
-                if (availableThesauri.length === 0) return;
+                if (availableThesauri.length === 0) {
+                    markThesauriReady();
+                    return;
+                }
 
                 const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
                 const modalContainer = document.getElementById('thesaurusModalsContainer');
-                if (!thesaurusContainer || !modalContainer) return;
+                if (!thesaurusContainer || !modalContainer) {
+                    markThesauriReady();
+                    return;
+                }
 
                 availableThesauri.forEach(function (item) {
                     const config = THESAURUS_CONFIG[item.key];
@@ -826,6 +1125,7 @@ $(document).ready(function () {
                         : undefined;
 
                     const entry = {
+                        key: item.key,
                         inputId: '#' + config.inputId,
                         apiEndpoint: config.apiEndpoint,
                         jsTreeId: '#' + config.jsTreeId,
@@ -858,16 +1158,17 @@ $(document).ready(function () {
                     }
                 });
 
-                // Setup lazy loading for modals and input fields
                 setupLazyLoadingForModals();
                 setupLazyLoadingForInputs();
 
-                // Show the form group
                 const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
                 if (formGroup) formGroup.style.display = '';
+
+                markThesauriReady();
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);
+                markThesauriReady();
             });
     }
 

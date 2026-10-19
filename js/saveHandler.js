@@ -1,3 +1,4 @@
+import { resolvePendingAffiliations } from './services/affiliationActionService.js';
 /**
  * @description Handles saving functionality for dataset metadata
  * @requires bootstrap
@@ -5,6 +6,11 @@
  */
 
 import { fetchAndStoreCsrfToken } from './services/csrfTokenService.js';
+import { synchronizeAuthorsPayload } from './services/authorPayloadService.js';
+import { synchronizeContributorsPayload } from './services/contributorPayloadService.js';
+import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
+import { synchronizeResourceInformationPayload } from './services/resourceInformationPayloadService.js';
+import { synchronizeTagifyInputs } from './thesauriHelpers.js';
 
 const SAVE_FORMATS = {
     xml: {
@@ -91,7 +97,7 @@ class SaveHandler {
     async handleSave(format = 'xml') {
         this.saveFlowStartedAt = Date.now();
         this.setCurrentFormat(format);
-        if (!this.validateAuthorAffiliationsForSave()) {
+        if (!resolvePendingAffiliations(this.$form[0])) {
             return;
         }
         this.updateSaveAsModal();
@@ -103,29 +109,6 @@ class SaveHandler {
             $('#input-saveas-filename').val(suggestedFilename);
             this.modals.saveAs.show();
         }
-    }
-
-    validateAuthorAffiliationsForSave() {
-        const validator = typeof globalThis !== 'undefined'
-            ? globalThis.validateAuthorAffiliationEditors
-            : null;
-
-        if (typeof validator !== 'function' || validator()) {
-            return true;
-        }
-
-        const firstInvalid = this.$form.find('[data-author-affiliation-label].is-invalid').first();
-        if (firstInvalid.length > 0 && firstInvalid[0]) {
-            firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            firstInvalid[0].focus();
-        }
-
-        this.showNotification(
-            'danger',
-            translations.alerts.validationErrorheading || translations.alerts.errorHeading,
-            translations.alerts.validationError || translations.alerts.saveError
-        );
-        return false;
     }
 
     /**
@@ -165,11 +148,20 @@ class SaveHandler {
     }
 
     /**
-     * Save data and trigger download
-     * @param {string} filename - Chosen filename
-     * @param {string} [format=this.currentFormat] - Download format
+     * Saves the current form state and triggers the generated file download.
+     *
+     * Before `FormData` is created, the structured Authors and enabled Related
+     * Works payloads are rebuilt from their live stacks. A missing payload field,
+     * an uninitialized stack, or an invalid generated payload aborts the request
+     * and is reported through the standard error notification; stale structured
+     * data is never sent through legacy form fields as a silent fallback.
+     *
+     * @param {string} filename - Chosen filename.
+     * @param {string} [format=this.currentFormat] - Download format.
+     * @returns {Promise<void>} Promise resolved after download or error handling completes.
      */
     async saveAndDownload(filename, format = this.currentFormat) {
+        if (!resolvePendingAffiliations(this.$form[0])) return;
         const formatConfig = this.getFormatConfig(format);
         if (this.autosaveService) {
             await this.autosaveService.flushPending();
@@ -197,14 +189,26 @@ class SaveHandler {
 
             $(formEl).find('.tagify').removeClass('is-invalid is-valid');
 
-            if (window.authorStack && typeof window.authorStack.updatePayload === 'function') {
-                window.authorStack.updatePayload();
+            // Autosave awaited above may leave new input behind; check again before building FormData.
+            if (!resolvePendingAffiliations(this.$form[0])) return;
+            const authorsPayload = synchronizeAuthorsPayload(formEl);
+            const resourceInformationPayload = synchronizeResourceInformationPayload(formEl);
+            const contributorsPayload = synchronizeContributorsPayload(formEl);
+            const hasRelatedWorks = formEl.querySelector(
+                'input[name="relatedWorksPayload"], [data-related-work-stack], #group-relatedwork'
+            );
+            const relatedWorksPayload = hasRelatedWorks
+                ? synchronizeRelatedWorksPayload(formEl)
+                : null;
+            synchronizeTagifyInputs(formEl);
+            const formData = new FormData(formEl);
+            if (resourceInformationPayload) formData.set('resourceInformationPayload', JSON.stringify(resourceInformationPayload));
+            formData.set('authorsPayload', JSON.stringify(authorsPayload));
+            if (Array.isArray(contributorsPayload)) {
+                formData.set('contributorsPayload', JSON.stringify(contributorsPayload));
             }
-
-            const formData = new FormData(this.$form[0]);
-            const authorsPayloadInput = formEl.querySelector('input[name="authorsPayload"]');
-            if (authorsPayloadInput) {
-                formData.set('authorsPayload', authorsPayloadInput.value);
+            if (Array.isArray(relatedWorksPayload)) {
+                formData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
             }
             formData.append('filename', filename);
 

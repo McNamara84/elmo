@@ -7,9 +7,12 @@ var affiliationsData = [];
  * 
  * @param {string} query - The search query (minimum 2 characters)
  * @param {number} [limit=20] - Maximum number of results
+ * @param {Object} [options={}] - Error handling settings.
+ * @param {boolean} [options.throwOnError=false] - Let the shared editor announce search failures; legacy callers receive an empty list.
  * @returns {Promise<Array>} Array of matching affiliations
+ * @throws {Error} Search failures when options.throwOnError is enabled.
  */
-async function searchAffiliationsFromServer(query, limit = 20) {
+async function searchAffiliationsFromServer(query, limit = 20, { throwOnError = false } = {}) {
   if (!query || query.length < 2) {
     return [];
   }
@@ -21,6 +24,7 @@ async function searchAffiliationsFromServer(query, limit = 20) {
     }
     return await response.json();
   } catch (error) {
+    if (throwOnError) throw error;
     console.error('Affiliation search error:', error);
     return [];
   }
@@ -49,8 +53,8 @@ function refreshTagifyInstances() {
   ];
 
   allPairs.forEach(pair => {
-    const inputElement = document.getElementById(pair.input);
-    if (!inputElement || !inputElement._tagify) return;
+    document.querySelectorAll(`input[id^="${pair.input}"]`).forEach(inputElement => {
+    if (!inputElement._tagify) return;
 
     // Save current values
     const currentValues = [...inputElement._tagify.value]; // Create a copy
@@ -73,16 +77,14 @@ function refreshTagifyInstances() {
     // Restore previously selected values
     inputElement._tagify.removeAllTags();
     inputElement._tagify.addTags(currentValues);
+    });
   });
 }
 
 /**
- * Initialize Tagify for affiliation fields when the document is ready.
- * Uses server-side search instead of loading the full JSON file.
+ * Cards initialize their affiliation widgets. Keep their translations in sync.
  */
 $(document).ready(function () {
-  autocompleteAffiliations("input-contributorpersons-affiliation", "input-contributor-personrorid");
-  autocompleteAffiliations("input-contributor-organisationaffiliation", "input-contributor-organisationrorid");
   document.addEventListener('translationsLoaded', refreshTagifyInstances);
 });
 
@@ -197,7 +199,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   const tagify = new Tagify(inputElement[0], {
     enforceWhitelist: false,
-    duplicates: false,
+    // Equal labels can represent different ROR records in restored drafts.
+    duplicates: true,
     placeholder: placeholderValue,
     whitelist: [], // Start with empty whitelist - will be populated via server search
     dropdown: {
@@ -320,7 +323,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
   }
 
   function getTagLabel(tag) {
-    return String(tag.value || tag.label || tag.name || tag.mappedValue || '').trim();
+    return String(tag.label ?? tag.value ?? tag.name ?? tag.mappedValue ?? '').trim();
   }
 
   function findWhitelistRorId(label) {
@@ -338,7 +341,9 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     const label = getTagLabel(tag);
     const rorId = normalizeRorId(tag.rorId || tag.id) || normalizeRorId(fallbackRorId) || findWhitelistRorId(label);
 
-    tag.value = label;
+    // Tagify requires a nonempty value. Display the ROR ID for an incomplete
+    // affiliation while retaining its empty label in the structured data.
+    tag.value = label || rorId;
     tag.label = label;
     tag.rorId = rorId;
     tag.id = rorId;
@@ -391,7 +396,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     tagElm._tagify_updateHiddenField = syncStructuredAffiliations;
 
     const valueInput = document.getElementById('input-affiliation-edit-value');
-    valueInput.value = tagData.value;
+    valueInput.value = getTagLabel(tagData);
 
     const bsModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     bsModal.show();
@@ -405,7 +410,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
 
   /**
    * Save handler for the affiliation edit modal.
-   * Clones the original tag data, replaces only the `value`, then calls
+   * Clones the original tag data, updates its label and value, then calls
    * tagify.replaceTag() so the ROR id is preserved in the background.
    * The handler is registered only once (on the first autocompleteAffiliations call).
    */
@@ -423,7 +428,7 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
       if (!newValue) return;
 
       // Preserve all original properties (especially `id` / ROR URI) but update value
-      const newTagData = Object.assign({}, originalData, { value: newValue });
+      const newTagData = Object.assign({}, originalData, { value: newValue, label: newValue });
 
       tagElm._tagify_originalTagify.replaceTag(tagElm, newTagData);
 
@@ -523,7 +528,8 @@ function autocompleteAffiliations(inputFieldId, hiddenFieldId) {
     }
   });
 
-  tagify.on("edit:updated", function () {
+  tagify.on("edit:updated", function (event) {
+    if (event.detail?.data) event.detail.data.label = event.detail.data.value;
     syncStructuredAffiliations({ preserveExistingRorIds: true });
     scheduleRequirementSync();
     syncAuthorInstitutionRequirement();

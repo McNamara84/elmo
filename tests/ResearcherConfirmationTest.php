@@ -7,11 +7,16 @@ namespace Tests;
 use PHPUnit\Framework\Attributes\CoversFunction;
 use PHPUnit\Framework\TestCase;
 
-define('PHPUNIT_RUNNING', true);
-require_once __DIR__ . '/../send_xml_file.php';
+if (!defined('PHPUNIT_RUNNING')) {
+    define('PHPUNIT_RUNNING', true);
+}
+require_once __DIR__ . '/../includes/send_file_helper.php';
+require_once __DIR__ . '/../includes/mail_helper.php';
 
 #[CoversFunction('collectResearcherConfirmationDataFromXml')]
+#[CoversFunction('generateResearcherConfirmationText')]
 #[CoversFunction('sendResearcherConfirmationEmails')]
+#[CoversFunction('shouldSendResearcherConfirmationEmails')]
 final class ResearcherConfirmationTest extends TestCase
 {
     /**
@@ -117,7 +122,7 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(1, $result['sent']);
         $this->assertSame([], $result['failed']);
@@ -138,10 +143,118 @@ final class ResearcherConfirmationTest extends TestCase
             ],
         ];
 
-        $result = sendResearcherConfirmationEmails($data, true);
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
 
         $this->assertSame(0, $result['sent']);
         $this->assertCount(1, $result['failed']);
-        $this->assertSame('invalid email address', $result['failed'][0]['error']);
+        $this->assertSame('John Doe', $result['failed'][0]['fullName']);
+        $this->assertSame('invalid-email', $result['failed'][0]['email']);
+        $this->assertStringContainsString('Invalid recipient address', $result['failed'][0]['error']);
+    }
+
+    /**
+     * Tests that extraction-time invalid contacts are reported as send failures.
+     */
+    public function testSendResearcherConfirmationEmailsReportsInvalidContacts(): void
+    {
+        $data = [
+            'title' => 'My Dataset',
+            'contacts' => [
+                [
+                    'fullName' => 'John Doe',
+                    'email' => 'john@example.com',
+                ],
+            ],
+            'invalidContacts' => [
+                [
+                    'fullName' => 'Jane Doe',
+                    'email' => 'not-an-email',
+                ],
+            ],
+        ];
+
+        $result = sendResearcherConfirmationEmails($data, ['simulateEmail' => true]);
+
+        $this->assertSame(1, $result['sent']);
+        $this->assertCount(1, $result['failed']);
+        $this->assertSame('Jane Doe', $result['failed'][0]['fullName']);
+        $this->assertStringContainsString('Invalid recipient address', $result['failed'][0]['error']);
+    }
+
+    /**
+     * Tests that the confirmation body includes the dataset title.
+     */
+    public function testGenerateResearcherConfirmationTextIncludesTitle(): void
+    {
+        $text = generateResearcherConfirmationText(
+            ['fullName' => 'Josiah Carberry', 'email' => 'author@example.com'],
+            'EIGEN-6C4'
+        );
+
+        $this->assertSame('Confirmation of your data submission to ELMO', $text['subject']);
+        $this->assertStringContainsString('Josiah Carberry', $text['html']);
+        $this->assertStringContainsString('EIGEN-6C4', $text['html']);
+        $this->assertStringContainsString('titled "EIGEN-6C4"', $text['text']);
+    }
+
+    /**
+     * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>}
+     */
+    private function oneContact(): array
+    {
+        return [
+            'title' => 'EIGEN-6C4',
+            'contacts' => [
+                [
+                    'fullName' => 'Josiah Carberry',
+                    'email' => 'author@example.com',
+                ],
+            ],
+        ];
+    }
+
+    public function testGemSkipsResearcherMailWhenTheSwitchIsOff(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => false,
+        ]);
+
+        $this->assertTrue($result['skipped']);
+        $this->assertSame(0, $result['sent']);
+        $this->assertSame([], $result['failed']);
+    }
+
+    public function testGemSendsResearcherMailWhenTheSwitchIsOn(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => true,
+        ]);
+
+        $this->assertFalse($result['skipped']);
+        $this->assertSame(1, $result['sent']);
+    }
+
+    public function testGemTreatsStringFalseAsOff(): void
+    {
+        $this->assertFalse(shouldSendResearcherConfirmationEmails([
+            'showGGMsProperties' => true,
+            'sendResearcherConfirmationEmail' => 'false',
+        ]));
+    }
+
+    public function testNonGemStillSendsResearcherMailWhenTheSwitchIsOff(): void
+    {
+        $result = sendResearcherConfirmationEmails($this->oneContact(), [
+            'simulateEmail' => true,
+            'showGGMsProperties' => false,
+            'sendResearcherConfirmationEmail' => false,
+        ]);
+
+        $this->assertFalse($result['skipped']);
+        $this->assertSame(1, $result['sent']);
     }
 }

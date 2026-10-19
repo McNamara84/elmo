@@ -7,7 +7,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
-  workers: process.env.CI ? 2 : undefined,
+  workers: process.env.CI ? 4 : undefined,
   reporter: [
     ['html', { outputFolder: 'playwright-report' }],
     ['json', { outputFile: 'test-results.json' }]
@@ -27,13 +27,17 @@ export default defineConfig({
         'flows/**/!(icgem-roundtrip).spec.ts',
         'formgroups/*.spec.ts',
       ],
+      testIgnore: [
+        '**/elmogem-specific/**',
+      ],
     },
     {
       name: 'firefox-gem',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
-        'flows/icgem-roundtrip.spec.ts',
+        'flows/elmogem-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
       ],
     },
@@ -41,6 +45,7 @@ export default defineConfig({
       name: 'firefox-igsn',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8002/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmoisgn-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
       ],
@@ -49,8 +54,10 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'], baseURL: 'http://localhost:8003/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmomsl-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
+        'smoke/**/*.spec.ts',
       ],
     },
   ],

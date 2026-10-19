@@ -1,7 +1,7 @@
 import { test, expect, type Page } from '@playwright/test';
 import { completeMinimalDatasetForm, navigateToHome, SELECTORS } from '../utils';
 
-const SUBMISSION_ENDPOINT = '**/send_xml_file.php';
+const SUBMISSION_ENDPOINT = '**/endpoints/send_xml_file.php';
 const MOCK_DATA_DESCRIPTION_FILE = {
   name: 'data-description.txt',
   mimeType: 'text/plain',

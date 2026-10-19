@@ -81,7 +81,7 @@ test.describe('Clear form confirmation dialog', () => {
     await expect(page.locator('#modal-confirm-label')).toContainText(/Reset Form/i);
     await expect(page.locator('#modal-confirm-description')).toContainText(/Are you sure/i);
     await expect(page.locator('#button-confirm-cancel')).toContainText(/Cancel/i);
-    await expect(page.locator('#button-confirm-action')).toContainText(/Reset/i);
+    await expect(page.locator('#button-confirm-action')).toContainText(/Clear/i);
   });
 
   test('modal displays correct French translations', async ({ page }) => {

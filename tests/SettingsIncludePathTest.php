@@ -29,8 +29,9 @@ final class SettingsIncludePathTest extends TestCase
     {
         return [
             'index.php include_once' => ['index.php', '/include_once\s+__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;/'],
-            'install.php require_once' => ['install.php', '/\$settingsPath\s*=\s*__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;[\s\S]*require_once\s+\$settingsPath\s*;/'],
-            'send_feedback_mail.php include' => ['send_feedback_mail.php', '/include\s+__DIR__\s*\.\s*[\'\"]\/settings\\.php[\'\"]\s*;/'],
+            'CLI installer require_once' => ['scripts/install.php', '/\$settingsPath\s*=\s*dirname\(__DIR__\)\s*\.\s*[\'"]\/settings\.php[\'"]\s*;[\s\S]*require_once\s+\$settingsPath\s*;/'],
+            'feedback endpoint include' => ['endpoints/send_feedback_mail.php', '/include\s+\$projectRoot\s*\.\s*[\'"]\/settings\.php[\'"]\s*;/'],
+            'submit endpoint require_once' => ['endpoints/send_xml_file.php', '/require_once\s+\$projectRoot\s*\.\s*[\'"]\/settings\.php[\'"]\s*;/'],
         ];
     }
 }

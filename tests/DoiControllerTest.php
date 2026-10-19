@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\AllowMockObjectsWithoutExpectations;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 
 if (!defined('UNIT_TESTING')) {
@@ -15,6 +17,7 @@ require_once __DIR__ . '/../api/v2/controllers/DoiController.php';
 /**
  * Tests for DoiController — DOI lookup and contact person resolution.
  */
+#[AllowMockObjectsWithoutExpectations]
 #[CoversClass(\DoiController::class)]
 final class DoiControllerTest extends TestCase
 {
@@ -229,6 +232,55 @@ final class DoiControllerTest extends TestCase
         foreach ($expectedKeys as $key) {
             $this->assertArrayHasKey($key, $attrs, "Missing key: $key");
         }
+    }
+
+    /** @return iterable<string, array{string, string}> */
+    public static function metadataRepresentations(): iterable
+    {
+        foreach (['Other', 'TranslatedTitle'] as $titleType) {
+            foreach (['objects', 'strings', 'mixed'] as $affiliations) {
+                yield "$titleType / $affiliations" => [$titleType, $affiliations];
+            }
+        }
+    }
+
+    #[DataProvider('metadataRepresentations')]
+    public function testLookupPreservesPublishedTitlesAndAffiliations(string $titleType, string $representation): void
+    {
+        // Public DataCite response, retrieved 2026-10-16 with affiliation=true:
+        // https://api.datacite.org/dois/10.5880%2Fha-arbodat_ak25?affiliation=true
+        $response = json_decode(
+            file_get_contents(__DIR__ . '/fixtures/doi-prefill/issue-1282-datacite.json'),
+            true,
+            flags: JSON_THROW_ON_ERROR
+        );
+        $attributes = &$response['data']['attributes'];
+        $attributes['titles'][1]['titleType'] = $titleType;
+        $label = $attributes['creators'][0]['affiliation'][0]['name'];
+        if ($representation === 'strings') {
+            $attributes['creators'][0]['affiliation'] = [$label];
+        } elseif ($representation === 'mixed') {
+            $attributes['creators'][0]['affiliation'][] = [
+                'name' => 'GFZ Helmholtz Centre for Geosciences',
+                'affiliationIdentifier' => 'https://ror.org/04z8jg394',
+                'affiliationIdentifierScheme' => 'ROR',
+                'schemeUri' => 'https://ror.org/',
+            ];
+        }
+
+        $controller = $this->getMockBuilder(\DoiController::class)
+            ->onlyMethods(['fetchFromDataCite'])
+            ->getMock();
+        $controller->expects($this->once())->method('fetchFromDataCite')
+            ->with('https://api.datacite.org/dois/10.5880%2Fha-arbodat_ak25?affiliation=true')
+            ->willReturn(['httpCode' => 200, 'body' => json_encode($response, JSON_THROW_ON_ERROR)]);
+
+        $actual = $controller->lookupPublicDoi($attributes['doi']);
+
+        $this->assertTrue($actual['found']);
+        $this->assertSame($attributes, $actual['attributes']);
+        $this->assertArrayNotHasKey('titleType', $actual['attributes']['titles'][0]);
+        $this->assertSame($titleType, $actual['attributes']['titles'][1]['titleType']);
     }
 
     /* ----- contacts() tests ----- */

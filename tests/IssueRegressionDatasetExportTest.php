@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tests;
 
 require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+require_once __DIR__ . '/../includes/send_file_helper.php';
 
 final class IssueRegressionDatasetExportTest extends DatabaseTestCase
 {
@@ -14,6 +15,43 @@ final class IssueRegressionDatasetExportTest extends DatabaseTestCase
     {
         parent::setUp();
         $this->controller = new \DatasetController();
+    }
+
+    public function testResourceInformationVersionAndTitleOrderSurviveDataCiteExport(): void
+    {
+        $source = str_replace(
+            '<Titles><Title><text>Issue Regression Dataset</text><type>Main Title</type></Title></Titles>',
+            '<version>3.0</version><Titles>'
+            . '<Title><text>Main</text><type>Main Title</type></Title>'
+            . '<Title><text>Second</text><type>Alternative Title</type></Title>'
+            . '<Title><text>First</text><type>Translated Title</type></Title></Titles>',
+            $this->resourceXmlWithCoverage()
+        );
+        $xml = $this->controller->transformResourceXmlString($source, 'datacite');
+        $xpath = $this->dataCiteXPath($xml);
+        self::assertSame('3.0', $xpath->evaluate('string(//dc:version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($xpath->query('//dc:titles/dc:title'))
+        ));
+
+        $exported = new \DOMDocument();
+        self::assertTrue($exported->loadXML($xml, LIBXML_NONET));
+        $stylesheet = new \DOMDocument();
+        self::assertTrue($stylesheet->load(
+            dirname(__DIR__) . '/schemas/XSLT/MappingDataCiteResourceInformationToMap.xslt', LIBXML_NONET
+        ));
+        $import = new \XSLTProcessor();
+        self::assertTrue($import->importStylesheet($stylesheet));
+        $mapped = $import->transformToDoc($exported);
+        self::assertInstanceOf(\DOMDocument::class, $mapped);
+        $mappedXPath = new \DOMXPath($mapped);
+        self::assertSame('Dataset', $mappedXPath->evaluate('string(/ResourceInformation/ResourceType)'));
+        self::assertSame('3.0', $mappedXPath->evaluate('string(/ResourceInformation/Version)'));
+        self::assertSame(['Main', 'Second', 'First'], array_map(
+            static fn (\DOMNode $node) => trim($node->textContent),
+            iterator_to_array($mappedXPath->query('/ResourceInformation/Titles/Title'))
+        ));
     }
 
     public function testDataCiteTransformPreservesAwardUriWithoutGrantNumberForIssue1147(): void
@@ -130,16 +168,7 @@ XML);
 
     public function testDataCiteEnvelopeCanBeMarkedSubmittedForSubmitFlowForIssue929(): void
     {
-        $this->assertTrue(
-            method_exists($this->controller, 'markDataCiteEnvelopeAsSubmitted'),
-            'DatasetController should expose a submit-flow helper that adds dateType="Submitted" after normal export generation.'
-        );
-
-        if (!method_exists($this->controller, 'markDataCiteEnvelopeAsSubmitted')) {
-            return;
-        }
-
-        $submittedXml = $this->controller->markDataCiteEnvelopeAsSubmitted(
+        $submittedXml = \markDataCiteEnvelopeAsSubmitted(
             $this->dataCiteEnvelopeXml(),
             '2026-06-25'
         );

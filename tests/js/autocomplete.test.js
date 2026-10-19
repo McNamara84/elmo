@@ -85,10 +85,12 @@ describe('autocomplete.js', () => {
         </div>
       </div>
       <div id="group-contributorperson">
+        <div data-contributor-card data-contributor-type="person">
         <div contributor-person-row>
           <input name="cbORCID[]" />
           <input name="cbPersonLastname[]" />
           <input name="cbPersonFirstname[]" />
+        </div>
           <input id="input-contributorpersons-affiliation" />
           <input id="input-contributor-personrorid" />
         </div>
@@ -540,7 +542,7 @@ describe('autocomplete.js', () => {
     const affInput = document.getElementById('input-contributorpersons-affiliation');
     affInput._tagify = new MockTagify(affInput, {});
 
-    const row = $('#group-contributorperson [contributor-person-row]');
+    const row = $('#group-contributorperson [data-contributor-card]');
     window.fillRowFromOrcidRecord(row, data, window.CONTRIBUTOR_FIELD_MAPPING);
 
     expect($('#group-contributorperson input[name="cbPersonLastname[]"]').val()).toBe('Curie');

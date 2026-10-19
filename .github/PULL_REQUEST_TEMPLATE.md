@@ -25,7 +25,7 @@ If this is a feature or documentation branch, I have pulled the latest changes f
 - [ ] If needed, the ELMO Guide ('./doc/help.html') has been updated.
 - [ ] If needed, the README has been updated.
 - [ ] If needed, the API documentation ('./api/v2/docs') has been updated.
-- [ ] If a new feature was added or a bug fixed, the changelog ('./doc/changelog.html') has been updated.
+- [ ] If a new feature was added or a bug fixed, the changelog ('./json/changelog.json'; see 'docs/changelog-maintenance.md') has been updated.
 
 ### Testing
 - [ ] If needed, Playwright tests have been updated or added.
