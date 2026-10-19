@@ -249,11 +249,22 @@ test('opens ORCID search for the correct card on narrow screens', async ({ page 
   await page.setViewportSize({ width: 375, height: 1000 });
   const modal = page.locator('#modal-orcid-search');
   for (const group of ['author', 'contributor']) {
-    await page.locator(`[data-${group}-card] .orcid-search-btn`).click();
+    // Visibility changes before Bootstrap finishes its modal/backdrop transitions.
+    await Promise.all([
+      modal.evaluate(element => new Promise<void>(resolve => {
+        element.addEventListener('shown.bs.modal', () => resolve(), { once: true });
+      })),
+      page.locator(`[data-${group}-card] .orcid-search-btn`).click(),
+    ]);
     await expect(modal).toBeVisible();
     await expect(page.locator('#orcid-search-context-group')).toHaveValue(group);
     await expect(page.locator('#orcid-search-context-row-index')).toHaveValue('0');
-    await modal.locator('.btn-close').click();
+    await Promise.all([
+      modal.evaluate(element => new Promise<void>(resolve => {
+        element.addEventListener('hidden.bs.modal', () => resolve(), { once: true });
+      })),
+      modal.locator('.btn-close').click(),
+    ]);
     await expect(modal).toBeHidden();
   }
   await expectNoPageOverflow(page);
