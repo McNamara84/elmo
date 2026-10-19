@@ -79,7 +79,7 @@ async function downloadIcgemXml(page: Page): Promise<string> {
   return capturedBody;
 }
 
-test('uploads the contact round-trip file and keeps every email and website in the ICGEM download', async ({ page }) => {
+test('uploads the contact round-trip file, reloads the download, and keeps every card', async ({ page }) => {
   await registerGoogleMapsNoopRoute(page);
   await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));
   await page.route('**/api/v2/vocabs/titletypes', route => route.fulfill({
@@ -119,6 +119,58 @@ test('uploads the contact round-trip file and keeps every email and website in t
   for (const contact of EXPECTED_CONTACTS) {
     expect(downloaded).toContain(contact.email);
     if (contact.website) expect(downloaded).toContain(contact.website);
+  }
+
+  await page.locator('#button-form-reset').click({ force: true });
+  await expect(page.locator('#modal-confirm')).toBeVisible();
+  await page.locator('#button-confirm-action').click();
+  await expect(page.locator('#modal-confirm')).toBeHidden();
+  await expect(page.locator('[data-author-card]')).toHaveCount(0);
+  await expect(page.locator('[data-contributor-card]')).toHaveCount(0);
+
+  const toastClose = page.locator('#toast-upload-feedback .btn-close');
+  if (await toastClose.isVisible()) await toastClose.click();
+  await page.locator('#button-form-load').click();
+  await expect(page.locator('#modal-uploadxml')).toBeVisible();
+  await page.locator('#input-uploadxml-file').setInputFiles({
+    name: 'elmogem-contact-info-roundtrip.xml',
+    mimeType: 'application/xml',
+    buffer: Buffer.from(downloaded),
+  });
+  await expect(page.locator('#toast-upload-feedback')).toHaveClass(/text-bg-success/);
+  await expect(page.locator('#modal-uploadxml')).toBeHidden();
+
+  const authorCards = await page.locator('[data-author-card]').evaluateAll((nodes) => nodes.map((node) => ({
+    familyname: (node.querySelector('[name="familynames[]"]') as HTMLInputElement | null)?.value || '',
+    email: (node.querySelector('[name="cpEmail[]"]') as HTMLInputElement | null)?.value || '',
+    website: (node.querySelector('[name="cpOnlineResource[]"]') as HTMLInputElement | null)?.value || '',
+  })));
+  expect(authorCards.map((author) => author.familyname)).toEqual([
+    'cont_pers_author_1',
+    'cont_pers_author_2',
+  ]);
+  for (const author of authorCards) {
+    if (!author.email) continue;
+    const own = EXPECTED_CONTACTS.find((contact) => contact.name === author.familyname);
+    expect(author.email, author.familyname).toBe(own?.email);
+    expect(author.website === '' || author.website === (own?.website || ''), author.familyname).toBe(true);
+  }
+
+  const contributorCards = await page.locator('[data-contributor-card]').evaluateAll((nodes) => nodes.map((node) => ({
+    name: (node.querySelector('[name="cbPersonLastname[]"]') as HTMLInputElement | null)?.value
+      || (node.querySelector('[name="cbOrganisationName[]"]') as HTMLInputElement | null)?.value
+      || '',
+    email: (node.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value || '',
+    website: (node.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
+  })));
+  expect(contributorCards.map((card) => card.name).sort()).toEqual(EXPECTED_CONTACTS.map((contact) => contact.name).sort());
+  for (const contact of EXPECTED_CONTACTS) {
+    const card = contributorCards.find((entry) => entry.name === contact.name);
+    expect(card, contact.name).toEqual({
+      name: contact.name,
+      email: contact.email,
+      website: contact.website,
+    });
   }
   expect(pageErrors).toEqual([]);
 });
