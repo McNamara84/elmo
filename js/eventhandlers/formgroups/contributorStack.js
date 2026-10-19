@@ -284,12 +284,11 @@ $(document).ready(function () {
       ?.closest('[class^="col-"], [class*=" col-"]');
     if (affiliationColumn) affiliationColumn.className = 'col-12 p-1';
     fields.querySelectorAll(':scope > [class^="col-"], :scope > [class*=" col-"]').forEach(column => {
-      if (column === affiliationColumn) return;
-      column.className = type === 'person'
-        ? 'col-12 col-md-6 col-lg-3 p-1'
-        : column.querySelector('[name="cbOrganisationName[]"]')
-          ? 'col-12 col-lg-8 p-1'
-          : 'col-12 col-lg-4 p-1';
+      // Person templates own the shared ORCID/name layout, including its wrappers.
+      if (type === 'person' || column === affiliationColumn) return;
+      column.className = column.querySelector('[name="cbOrganisationName[]"]')
+        ? 'col-12 col-lg-8 p-1'
+        : 'col-12 col-lg-4 p-1';
     });
     panel.append(fields);
     addContactFields(panel, id);
