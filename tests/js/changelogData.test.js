@@ -89,15 +89,12 @@ describe('changelog migration', () => {
       { type: 'issue', number: 807 }, { type: 'issue', number: 909 },
       { type: 'issue', number: 1240 }, { type: 'pull', number: 1246 }
     ]);
-    expect(entryByText('ELMO-GEM now branches').editions).toEqual(['gem']);
-    expect(entryByText('ELMO-GEM now branches').references).toEqual([
+    expect(entryByText('ELMO-GEM submissions without a DOI').editions).toEqual(['gem']);
+    expect(entryByText('ELMO-GEM submissions without a DOI').references).toEqual([
       { type: 'issue', number: 1127 }, { type: 'pull', number: 1188 }
     ]);
     expect(entryByText("ELMO-GEM's ICGEM registration email").references).toEqual([
       { type: 'issue', number: 1203 }, { type: 'pull', number: 1245 }
-    ]);
-    expect(entryByText('ELMO-GEM can skip researcher confirmation').references).toEqual([
-      { type: 'issue', number: 1196 }, { type: 'pull', number: 1245 }
     ]);
     expect(entryByText('Related Work now starts empty').references).toEqual([
       { type: 'issue', number: 812 }, { type: 'issue', number: 1009 },

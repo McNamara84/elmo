@@ -109,7 +109,7 @@ test.describe('Changelog access and rendering', () => {
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
     const latestEntries = changelog.locator('.accordion-item').first()
       .locator('.accordion-body > ul > li > ul > li');
-    const doiEntry = latestEntries.filter({ hasText: 'ELMO-GEM now branches on the DOI field at submit' });
+    const doiEntry = latestEntries.filter({ hasText: 'ELMO-GEM submissions without a DOI' });
     const relatedWorkEntry = latestEntries.filter({ hasText: 'Related Work now starts empty' });
     await expect(doiEntry.getByRole('link', { name: 'Issue #1127' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1127');
