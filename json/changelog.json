@@ -741,6 +741,16 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Used Instruments search now prioritizes exact names and name prefixes, followed by other name matches and then instrument-type matches. Relevant names remain visible when there are many matches, and suggestions refresh when the instrument catalogue finishes loading."
+                }
+              ],
+              "editions": ["elmo", "msl", "igsn"],
+              "references": [{"type": "issue", "number": 1285}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "For Standard, MSL, and IGSN submissions, an existing 10.5880 DOI is verified with DataCite and given the next major version for manual curation. External, unknown, and unverifiable DOIs are blocked before saving or mailing."
                 }
               ],
