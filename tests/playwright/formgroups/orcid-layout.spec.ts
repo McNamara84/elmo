@@ -1,7 +1,30 @@
-import { test, expect, type Locator, type Page, type TestInfo } from '@playwright/test';
+import { test as base, expect, type Locator, type Page, type TestInfo } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { REPO_ROOT } from '../utils/constants';
+
+const test = base.extend({
+  page: async ({ page, browserName }, use) => {
+    const browserMessages: string[] = [];
+    // Listen before navigation so initialization and later card interactions are checked.
+    page.on('console', message => {
+      if (message.type() === 'warning' || message.type() === 'error') {
+        const text = message.text();
+        // Tagify emits these two Firefox deprecations on the unmodified base (4d722649) too.
+        const existingTagifyWarning = browserName === 'firefox' && message.type() === 'warning'
+          && text.includes('/node_modules/@yaireo/tagify/dist/tagify.js')
+          && ['onmozfullscreenchange is deprecated.', 'onmozfullscreenerror is deprecated.']
+            .some(warning => text.includes(warning));
+        if (!existingTagifyWarning) browserMessages.push(`${message.type()}: ${text}`);
+      }
+    });
+    page.on('pageerror', error => browserMessages.push(`pageerror: ${error.message}`));
+
+    await use(page);
+
+    expect(browserMessages, 'ORCID interactions must not produce new browser warnings or errors').toEqual([]);
+  },
+});
 
 const FIXTURE_PATH = '__orcid_layout_fixture__';
 const ORCID = '0000-0003-2450-824X';
