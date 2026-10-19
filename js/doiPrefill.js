@@ -684,13 +684,19 @@ async function prefillContactPersons(creators, lookupService) {
 
 /**
  * Applies all DOI prefill data to the form (called after user confirms in modal).
+ * Clears previous input and retains the source DOI in the metadata search field.
+ * The separate submission DOI remains empty after importing metadata.
  *
  * @param {Object} attributes - The DataCite `data.attributes` object.
  * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
+ * @returns {Promise<void>} Resolves after mapping metadata and completing the optional contact lookup.
  */
 async function applyDoiPrefill(attributes, lookupService) {
   const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
+  // Clearing resets both DOI fields. Keep the import source visible while the
+  // submission DOI stays empty for a new dataset.
+  $('#input-resourceinformation-source-doi').val(attributes.doi || '');
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
