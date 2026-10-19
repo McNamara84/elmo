@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { APP_BASE_URL, REPO_ROOT } from '../utils';
@@ -24,6 +24,36 @@ const instrumentsFixture = [
         instrumentTypes: ['GNSS Receiver']
     }
 ];
+
+const instrumentApiRoute = '**/api/v2/vocabs/pid4inst/instruments';
+type InstrumentFixture = typeof instrumentsFixture[number];
+
+// Deliberately put type and substring matches before the desired name prefixes.
+const searchFixture: InstrumentFixture[] = [
+    { pid: '21/moses', pidType: 'Handle', name: 'MOSES 2026 WaddenSea', instrumentTypes: ['FTIR gas analyzer'] },
+    { pid: '21/gasmet', pidType: 'Handle', name: 'GASMET - DX4000', instrumentTypes: ['FTIR gas analyzer'] },
+    { pid: '21/agra', pidType: 'Handle', name: 'AGRA-Bewässerungsmenge', instrumentTypes: ['Flowmeter'] },
+    { pid: '10.1234/sm-02', pidType: 'DOI', name: 'SM-02', instrumentTypes: [] },
+    { pid: '21/sm-01', pidType: 'Handle', name: 'SM-01', instrumentTypes: [] },
+    { pid: '21/sm', pidType: 'Handle', name: 'SM', instrumentTypes: [] },
+    { pid: '21/station', pidType: 'Handle', name: 'Station GA-03', instrumentTypes: [] }
+];
+
+async function loadInstrumentFixture(page: Page, instruments = searchFixture) {
+    await page.route(instrumentApiRoute, route => route.fulfill({ json: instruments }));
+    const result = await page.evaluate(() => (window as any).usedInstrumentsModule.loadInstrumentsFromAPI());
+    expect(result).toEqual({ success: true, dataLoaded: true });
+}
+
+async function deferInstrumentResponse(page: Page) {
+    let release!: () => void;
+    const pending = new Promise<void>(resolve => { release = resolve; });
+    await page.route(instrumentApiRoute, async route => {
+        await pending;
+        await route.fulfill({ json: searchFixture });
+    });
+    return release;
+}
 
 const usedInstrumentsTemplate = readFileSync(
     path.join(REPO_ROOT, 'formgroups/usedInstruments.html'),
@@ -59,9 +89,28 @@ async function waitForUsedInstrumentsInit(page: import('@playwright/test').Page)
 }
 
 test.describe('Used Instruments form group', () => {
+    let browserIssues: string[];
+
     test.beforeEach(async ({ page }) => {
+        browserIssues = [];
+        page.on('console', message => {
+            if (message.type() === 'warning' || message.type() === 'error') {
+                browserIssues.push(`${message.type()}: ${message.text()} (${message.location().url})`);
+            }
+        });
+        page.on('pageerror', error => browserIssues.push(`pageerror: ${error.message}`));
+
+        // Injected CSS resolves font URLs relative to the harness page.
+        await page.route('**/fonts/bootstrap-icons.woff*', route => {
+            const fontPath = new URL(route.request().url()).pathname;
+            return route.fulfill({
+                path: path.join(REPO_ROOT, 'node_modules/bootstrap-icons/font/fonts', path.basename(fontPath)),
+                contentType: fontPath.endsWith('.woff2') ? 'font/woff2' : 'font/woff'
+            });
+        });
+
         // Mock PID4INST API
-        await page.route('**/api/v2/vocabs/pid4inst/instruments', async route => {
+        await page.route(instrumentApiRoute, async route => {
             await route.fulfill({
                 status: 200,
                 contentType: 'application/json',
@@ -186,5 +235,204 @@ test.describe('Used Instruments form group', () => {
 
         const pidTypeValue = await page.locator('input[name="instrumentPidType[]"]').first().inputValue();
         expect(pidTypeValue).toBe('Handle');
+    });
+
+    test('ranks exact names and stable name prefixes before other SM matches', async ({ page }) => {
+        await loadInstrumentFixture(page);
+        await page.locator('.tagify__input').fill('SM');
+
+        await expect(page.locator('.tagify__dropdown__item strong')).toHaveText([
+            'SM', 'SM-02', 'SM-01', 'GASMET - DX4000', 'AGRA-Bewässerungsmenge'
+        ]);
+    });
+
+    test('ranks name prefixes and name substrings before GA type matches', async ({ page }) => {
+        await loadInstrumentFixture(page);
+        await page.locator('.tagify__input').fill('GA');
+
+        await expect(page.locator('.tagify__dropdown__item strong')).toHaveText([
+            'GASMET - DX4000', 'Station GA-03', 'MOSES 2026 WaddenSea'
+        ]);
+    });
+
+    for (const { query, expected } of [
+        { query: 'gas analyzer', expected: ['MOSES 2026 WaddenSea', 'GASMET - DX4000'] },
+        { query: 'DX4000 GASMET', expected: ['GASMET - DX4000'] },
+        { query: 'MOSES gas', expected: ['MOSES 2026 WaddenSea'] }
+    ]) {
+        test(`keeps type and multiword searches working: ${query}`, async ({ page }) => {
+            await loadInstrumentFixture(page);
+            await page.locator('.tagify__input').fill(query);
+
+            await expect(page.locator('.tagify__dropdown__item strong')).toHaveText(expected);
+        });
+    }
+
+    test('uses the same case and accent normalization for filtering and ranking', async ({ page }) => {
+        await loadInstrumentFixture(page, [
+            { ...searchFixture[0], name: 'xSM', instrumentTypes: [] },
+            { ...searchFixture[1], name: 'ŚM-02', instrumentTypes: [] },
+            { ...searchFixture[2], name: 'S\u0301M', instrumentTypes: [] }
+        ]);
+        await page.locator('.tagify__input').fill('sm');
+
+        await expect(page.locator('.tagify__dropdown__item strong')).toHaveText(['S\u0301M', 'ŚM-02', 'xSM']);
+    });
+
+    test('sorts a name prefix into the visible 50 suggestions', async ({ page }) => {
+        const weakerMatches = Array.from({ length: 50 }, (_, index) => ({
+            ...searchFixture[1], pid: `21/weak-${index}`, name: `GASMET-${index}`
+        }));
+        await loadInstrumentFixture(page, [...weakerMatches, searchFixture[4]]);
+        await page.locator('.tagify__input').fill('SM');
+
+        const names = page.locator('.tagify__dropdown__item strong');
+        await expect(names).toHaveCount(50);
+        await expect(names.first()).toHaveText('SM-01');
+        await expect(names.nth(1)).toHaveText('GASMET-0');
+    });
+
+    test('hides suggestions for an unmatched or cleared query', async ({ page }) => {
+        await loadInstrumentFixture(page);
+        const input = page.locator('.tagify__input');
+        await input.fill('SM');
+        await expect(page.locator('.tagify__dropdown')).toBeVisible();
+
+        await input.fill('no-such-instrument');
+        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+        await input.fill('SM');
+        await expect(page.locator('.tagify__dropdown')).toBeVisible();
+        await input.fill('');
+        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+    });
+
+    for (const method of ['mouse', 'keyboard'] as const) {
+        test(`selects the correct instrument and PID type using the ${method}`, async ({ page }) => {
+            await loadInstrumentFixture(page);
+            const input = page.locator('.tagify__input');
+            await input.fill('SM');
+            await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('SM');
+
+            if (method === 'mouse') {
+                await page.locator('.tagify__dropdown__item').filter({ hasText: /^SM-02$/ }).click();
+            } else {
+                await input.press('ArrowDown');
+                await input.press('Enter');
+            }
+
+            await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('10.1234/sm-02');
+            await expect(page.locator('input[name="instrumentPidType[]"]')).toHaveValue('DOI');
+            await input.fill('SM');
+            await expect(page.locator('.tagify__dropdown__item strong')).toHaveText([
+                'SM', 'SM-01', 'GASMET - DX4000', 'AGRA-Bewässerungsmenge'
+            ]);
+        });
+    }
+
+    test('shows the latest query after a delayed first response without more typing', async ({ page }) => {
+        const release = await deferInstrumentResponse(page);
+        try {
+            const requested = page.waitForRequest(instrumentApiRoute);
+            const input = page.locator('.tagify__input');
+            await input.click();
+            await requested;
+            await input.fill('SM');
+            await input.fill('GA');
+            await expect(page.locator('.tagify')).toHaveClass(/tagify--loading/);
+            release();
+
+            await expect(page.locator('.tagify__dropdown__item strong')).toHaveText([
+                'GASMET - DX4000', 'Station GA-03', 'MOSES 2026 WaddenSea'
+            ]);
+            await expect(page.locator('.tagify')).not.toHaveClass(/tagify--loading/);
+            // The refreshed first option must also be selected correctly with Enter.
+            await input.press('Enter');
+            await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/gasmet');
+        } finally {
+            release();
+        }
+    });
+
+    for (const action of ['blur', 'clear'] as const) {
+        test(`does not reopen suggestions after ${action} during loading`, async ({ page }) => {
+            const release = await deferInstrumentResponse(page);
+            try {
+                const requested = page.waitForRequest(instrumentApiRoute);
+                const input = page.locator('.tagify__input');
+                await input.click();
+                await requested;
+                await input.fill('SM');
+                if (action === 'blur') {
+                    await page.locator('.card-header b').click();
+                } else {
+                    await input.fill('');
+                }
+
+                const response = page.waitForResponse(instrumentApiRoute);
+                release();
+                await response;
+                await page.waitForFunction(() => {
+                    const input: any = document.querySelector('#input-usedinstruments');
+                    return input._tagify.whitelist.length > 0 && !input._tagify.state.isLoading;
+                });
+                await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+            } finally {
+                release();
+            }
+        });
+    }
+
+    test('retries a failed first request when the field is focused again', async ({ page }) => {
+        let requests = 0;
+        await page.route(instrumentApiRoute, route => {
+            requests++;
+            return requests === 1
+                ? route.fulfill({ status: 503, json: { error: 'Temporarily unavailable' } })
+                : route.fulfill({ json: searchFixture });
+        });
+        const response = page.waitForResponse(instrumentApiRoute);
+        const input = page.locator('.tagify__input');
+        await input.fill('GA');
+        await response;
+        await expect(page.locator('.tagify')).not.toHaveClass(/tagify--loading/);
+        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+
+        await page.locator('.card-header b').click();
+        await input.fill('GA');
+
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('GASMET - DX4000');
+        expect(requests).toBe(2);
+    });
+
+    test('keeps an imported PID fallback selected when instrument data loads', async ({ page }) => {
+        await page.evaluate(() => {
+            (window as any).usedInstrumentsModule.addInstrumentsByPid([
+                { pid: '21/imported-unknown', pidType: 'Handle' }
+            ]);
+        });
+        await loadInstrumentFixture(page);
+
+        await expect(page.locator('.tagify__tag-text')).toHaveText('21/imported-unknown');
+        await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/imported-unknown');
+        await page.locator('.tagify__input').fill('SM');
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('SM');
+    });
+
+    test('initializes, searches and selects without browser console warnings or errors', async ({ page }) => {
+        await loadInstrumentFixture(page);
+        const input = page.locator('.tagify__input');
+        await input.fill('SM');
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('SM');
+        await input.press('Enter');
+        await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/sm');
+
+        await input.fill('GA');
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('GASMET - DX4000');
+        await page.evaluate(() => document.dispatchEvent(new Event('translationsLoaded')));
+        await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/sm');
+        await input.fill('');
+        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+
+        expect(browserIssues).toEqual([]);
     });
 });
