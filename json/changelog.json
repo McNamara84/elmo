@@ -527,6 +527,28 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "ORCID fields in Authors and Contributors show the complete identifier, including its validation icon. Both name fields share the remaining width, and the fields wrap on narrower screens."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1283 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Translated tooltips update without interrupting pending animations, preventing JavaScript errors during repeated metadata imports."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "pull", "number": 1297}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID. Map initialization is skipped when spatial coverage is disabled."
                 }
               ],
