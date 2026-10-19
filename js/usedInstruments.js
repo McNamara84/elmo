@@ -13,6 +13,15 @@
  */
 
 /**
+ * @typedef {Object} InstrumentSuggestion
+ * @property {string} value Display label including instrument types.
+ * @property {string} [name] Instrument name, without appended types.
+ * @property {string[]} [instrumentTypes] Instrument classifications.
+ * @property {string} [pid] Persistent identifier retained when selected.
+ * @property {string} [pidType] Identifier type retained when selected.
+ */
+
+/**
  * Main initialization function for the Used Instruments module.
  * Extracted from DOMContentLoaded listener to support both regular page load
  * and scenarios where the script loads after DOMContentLoaded has already fired
@@ -117,12 +126,24 @@ function initUsedInstrumentsModule() {
         });
     }
 
-    /** Normalizes search text like Tagify's case-insensitive, accented search. */
+    /**
+     * Normalizes search text like Tagify's case-insensitive, accented search.
+     *
+     * @param {string|null|undefined} value Search text or a missing name.
+     * @returns {string} Trimmed, lowercase text without combining accents.
+     */
     function normalizeInstrumentSearch(value) {
         return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
     }
 
-    /** Ranks exact names, name prefixes, other name matches, then type-dependent matches. */
+    /**
+     * Ranks exact names, name prefixes, other name matches, then type-dependent matches.
+     *
+     * @param {InstrumentSuggestion} item A candidate already filtered by Tagify.
+     * @param {string} query Normalized, non-empty search text.
+     * @param {string[]} words Normalized query words, in the same form Tagify matches.
+     * @returns {number} Relevance rank from 0 (exact name) to 3 (requires a type).
+     */
     function getInstrumentSearchRank(item, query, words) {
         var name = normalizeInstrumentSearch(item.name || item.value);
         if (name === query) return 0;
@@ -135,6 +156,11 @@ function initUsedInstrumentsModule() {
      * Sorts Tagify's filtered candidates before applying the suggestion limit.
      * Tagify calls this with the dropdown settings as `this` and does not apply
      * maxItems itself when a custom sortby callback is provided.
+     *
+     * @this {{maxItems: number}}
+     * @param {InstrumentSuggestion[]} items All filtered candidates before limiting.
+     * @param {string} [searchText] Current query; omitted when showing all candidates.
+     * @returns {InstrumentSuggestion[]} Ranked, limited candidates with their original metadata.
      */
     function sortInstrumentSuggestions(items, searchText) {
         var query = normalizeInstrumentSearch(searchText);

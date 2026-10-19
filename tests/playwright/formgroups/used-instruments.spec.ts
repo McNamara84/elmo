@@ -89,7 +89,26 @@ async function waitForUsedInstrumentsInit(page: import('@playwright/test').Page)
 }
 
 test.describe('Used Instruments form group', () => {
+    let browserIssues: string[];
+
     test.beforeEach(async ({ page }) => {
+        browserIssues = [];
+        page.on('console', message => {
+            if (message.type() === 'warning' || message.type() === 'error') {
+                browserIssues.push(`${message.type()}: ${message.text()} (${message.location().url})`);
+            }
+        });
+        page.on('pageerror', error => browserIssues.push(`pageerror: ${error.message}`));
+
+        // Injected CSS resolves font URLs relative to the harness page.
+        await page.route('**/fonts/bootstrap-icons.woff*', route => {
+            const fontPath = new URL(route.request().url()).pathname;
+            return route.fulfill({
+                path: path.join(REPO_ROOT, 'node_modules/bootstrap-icons/font/fonts', path.basename(fontPath)),
+                contentType: fontPath.endsWith('.woff2') ? 'font/woff2' : 'font/woff'
+            });
+        });
+
         // Mock PID4INST API
         await page.route(instrumentApiRoute, async route => {
             await route.fulfill({
@@ -397,5 +416,23 @@ test.describe('Used Instruments form group', () => {
         await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/imported-unknown');
         await page.locator('.tagify__input').fill('SM');
         await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('SM');
+    });
+
+    test('initializes, searches and selects without browser console warnings or errors', async ({ page }) => {
+        await loadInstrumentFixture(page);
+        const input = page.locator('.tagify__input');
+        await input.fill('SM');
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('SM');
+        await input.press('Enter');
+        await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/sm');
+
+        await input.fill('GA');
+        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('GASMET - DX4000');
+        await page.evaluate(() => document.dispatchEvent(new Event('translationsLoaded')));
+        await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/sm');
+        await input.fill('');
+        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
+
+        expect(browserIssues).toEqual([]);
     });
 });
