@@ -189,14 +189,17 @@ test.describe('DOI Prefill Feature', () => {
 
     await injectModuleFromApp(page, 'js/eventhandlers/formgroups/resourceInformationTitle.js');
     await injectModuleFromApp(page, 'js/eventhandlers/formgroups/authorStack.js');
-    await injectScript(page, 'js/eventhandlers/formgroups/contributorStack.js');
+    await injectModuleFromApp(page, 'js/eventhandlers/formgroups/contributorStack.js');
     await injectClearFormDependencies(page);
     await injectScript(page, 'js/services/doiLookupService.js');
     await injectScript(page, 'js/resourceTypeUtils.js');
     await injectScript(page, 'js/doiPrefill.js');
     await injectScript(page, 'js/eventhandlers/doiPrefillHandler.js');
 
-    await page.waitForFunction(() => (window as any).authorStack && (window as any).resourceInformation);
+    await page.waitForFunction(() => {
+      const app = window as any;
+      return app.authorStack && app.contributorStack && app.resourceInformation;
+    });
     await page.evaluate(async () => { await (window as any).elmo.dropdownsReady; });
   });
 
