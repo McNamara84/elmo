@@ -514,7 +514,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID."
+                  "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID. Map initialization is skipped when spatial coverage is disabled."
                 }
               ],
               "editions": ["all"],
