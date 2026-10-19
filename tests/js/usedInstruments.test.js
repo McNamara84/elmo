@@ -1,8 +1,6 @@
 /**
  * @jest-environment jsdom
  */
-const { requireFresh } = require('./utils');
-
 class MockTagify {
     constructor(el, settings) {
         this.el = el;
@@ -233,6 +231,205 @@ describe('usedInstruments.js', () => {
 
         const input = document.getElementById('input-usedinstruments');
         expect(input._tagify.value[0].value).toBe('SimpleInstrument');
+    });
+
+    describe('instrument search relevance', () => {
+        let dropdown;
+
+        beforeEach(() => {
+            loadScript();
+            dropdown = document.getElementById('input-usedinstruments')._tagify.settings.dropdown;
+        });
+
+        function suggestion(name, instrumentTypes = []) {
+            return { name, instrumentTypes, value: `${name} (${instrumentTypes.join(', ')})` };
+        }
+
+        function rankedNames(items, query) {
+            return dropdown.sortby(items, query).map(item => item.name);
+        }
+
+        test('ranks exact names and stable name prefixes ahead of other name matches', () => {
+            const items = [
+                suggestion('GASMET'),
+                suggestion('AGRA-Bewässerungsmenge'),
+                suggestion('SM-02'),
+                suggestion('SM-01'),
+                suggestion('SM')
+            ];
+
+            expect(rankedNames(items, 'SM')).toEqual([
+                'SM', 'SM-02', 'SM-01', 'GASMET', 'AGRA-Bewässerungsmenge'
+            ]);
+        });
+
+        test('ranks every name match ahead of type-only matches', () => {
+            const items = [
+                suggestion('MOSES', ['FTIR gas analyzer']),
+                suggestion('Station GA-03'),
+                suggestion('GASMET', ['FTIR gas analyzer'])
+            ];
+
+            expect(rankedNames(items, 'GA')).toEqual(['GASMET', 'Station GA-03', 'MOSES']);
+        });
+
+        test('ranks all-word name matches ahead of matches requiring a name and a type', () => {
+            const items = [
+                suggestion('GASMET', ['Flowmeter']),
+                suggestion('Flow station GASMET')
+            ];
+
+            expect(rankedNames(items, 'gas flow')).toEqual(['Flow station GASMET', 'GASMET']);
+        });
+
+        test('normalizes case, surrounding spaces and combining accents', () => {
+            const items = [suggestion('xSM'), suggestion('ŚM-02'), suggestion('S\u0301M')];
+
+            expect(rankedNames(items, ' sM ')).toEqual(['S\u0301M', 'ŚM-02', 'xSM']);
+        });
+
+        test('limits only after ranking all candidates', () => {
+            const items = Array.from({ length: 50 }, (_, index) => suggestion(`GASMET-${index}`));
+            items.push(suggestion('SM-01'));
+
+            const results = dropdown.sortby(items, 'SM');
+
+            expect(results).toHaveLength(50);
+            expect(results[0].name).toBe('SM-01');
+            expect(results[1].name).toBe('GASMET-0');
+        });
+
+        test.each([undefined, '', '   '])('preserves order and limit for empty query %p', query => {
+            const items = [suggestion('Third'), suggestion('First'), suggestion('Second')];
+            dropdown.maxItems = 2;
+
+            expect(dropdown.sortby(items, query)).toEqual(items.slice(0, 2));
+        });
+
+        test.each([[0, 0], [1, 1], [-1, 3]])('respects maxItems %i', (limit, count) => {
+            dropdown.maxItems = limit;
+
+            expect(dropdown.sortby([
+                suggestion('GASMET'), suggestion('SM-01'), suggestion('SM')
+            ], 'SM')).toHaveLength(count);
+        });
+
+        test('preserves candidate objects and leaves the whitelist order untouched', () => {
+            const partial = Object.freeze({ ...suggestion('GASMET'), pid: '21/partial', pidType: 'Handle' });
+            const prefix = Object.freeze({ ...suggestion('SM-01'), pid: '10.1234/sm', pidType: 'DOI' });
+            const items = Object.freeze([partial, prefix]);
+
+            const results = dropdown.sortby(items, 'SM');
+
+            expect(results[0]).toBe(prefix);
+            expect(results[1]).toBe(partial);
+            expect(items).toEqual([partial, prefix]);
+        });
+
+        test('handles PID fallback entries without a name and empty candidate lists', () => {
+            const fallback = { value: '21.11157/unknown', pid: '21.11157/unknown', pidType: 'Handle' };
+            const partial = suggestion('Station 21.11157');
+
+            expect(dropdown.sortby([partial, fallback], '21.11157')).toEqual([fallback, partial]);
+            expect(dropdown.sortby([], 'SM')).toEqual([]);
+        });
+    });
+
+    describe('suggestions after lazy loading', () => {
+        const apiData = [
+            { pid: '21/ga', pidType: 'Handle', name: 'GASMET', instrumentTypes: ['FTIR gas analyzer'] }
+        ];
+
+        function pendingLoad() {
+            loadScript();
+            const deferred = $.Deferred();
+            $.ajax = jest.fn(() => deferred.promise());
+            const tagify = document.getElementById('input-usedinstruments')._tagify;
+            const promise = window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            return { deferred, tagify, promise };
+        }
+
+        test('uses the latest input and clears loading before showing suggestions', async () => {
+            const { deferred, tagify, promise } = pendingLoad();
+            expect(tagify.state.isLoading).toBe(true);
+            tagify.state.hasFocus = true;
+            tagify.state.inputText = 'SM';
+            tagify.dropdown.show.mockImplementation(() => {
+                expect(tagify.state.isLoading).toBe(false);
+            });
+
+            tagify.state.inputText = 'GA';
+            deferred.resolve(apiData);
+
+            await expect(promise).resolves.toEqual({ success: true, dataLoaded: true });
+            expect(tagify.dropdown.show).toHaveBeenCalledWith('GA');
+        });
+
+        test.each([
+            ['blurred', false, 'GA', 1],
+            ['cleared', true, '', 1],
+            ['whitespace only', true, '   ', 1],
+            ['below threshold', true, 'G', 2],
+            ['disabled', true, 'GA', false]
+        ])('does not open suggestions when %s', async (_, focused, query, enabled) => {
+            const { deferred, tagify, promise } = pendingLoad();
+            tagify.state.hasFocus = focused;
+            tagify.state.inputText = query;
+            tagify.settings.dropdown.enabled = enabled;
+
+            deferred.resolve(apiData);
+            await promise;
+
+            expect(tagify.state.isLoading).toBe(false);
+            expect(tagify.dropdown.show).not.toHaveBeenCalled();
+        });
+
+        test('refreshes an already visible dropdown with the current input', async () => {
+            const { deferred, tagify, promise } = pendingLoad();
+            tagify.state.hasFocus = true;
+            tagify.state.dropdown.visible = 'SM';
+            tagify.state.inputText = 'GA';
+
+            deferred.resolve(apiData);
+            await promise;
+
+            expect(tagify.dropdown.show).toHaveBeenCalledWith('GA');
+        });
+
+        test('allows refocusing to retry a failed request', async () => {
+            const { deferred, tagify, promise } = pendingLoad();
+            jest.spyOn(console, 'warn').mockImplementation(() => {});
+            tagify.state.hasFocus = true;
+            tagify.state.inputText = 'GA';
+            deferred.reject({ status: 503, statusText: 'Unavailable' }, 'error', 'Unavailable');
+
+            await expect(promise).resolves.toEqual({ success: false, dataLoaded: false });
+            expect(tagify.state.isLoading).toBe(false);
+            expect(tagify.dropdown.show).not.toHaveBeenCalled();
+
+            const retry = $.Deferred();
+            $.ajax.mockImplementation(() => retry.promise());
+            tagify._callbacks.focus[0]();
+            const retryPromise = window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            expect($.ajax).toHaveBeenCalledTimes(2);
+            retry.resolve(apiData);
+
+            await expect(retryPromise).resolves.toEqual({ success: true, dataLoaded: true });
+            expect(tagify.dropdown.show).toHaveBeenCalledWith('GA');
+        });
+
+        test('preserves imported PID fallback tags when the catalogue arrives', async () => {
+            const { deferred, tagify, promise } = pendingLoad();
+            window.usedInstrumentsModule.addInstrumentsByPid([{ pid: '21/unknown', pidType: 'Handle' }]);
+            const imported = tagify.value[0];
+
+            deferred.resolve(apiData);
+            await promise;
+
+            expect(tagify.value[0]).toBe(imported);
+            expect(tagify.whitelist).toContain(imported);
+            expect(document.querySelector('input[name="instrumentPid[]"]').value).toBe('21/unknown');
+        });
     });
 
     describe('loadInstrumentsFromAPI', () => {
