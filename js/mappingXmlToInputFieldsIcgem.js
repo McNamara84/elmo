@@ -554,11 +554,12 @@ async function populateIcgemDataSources(data) {
 /**
  * Copies ICGEM contact details onto contributor cards.
  *
- * A grav:contacts/grav:contact entry carries its own name and identifier, so it
- * matches a contributor by ORCID or ROR and then by name. A missing card is added
- * with the Contact Person role. An older grav:contact list has no names: its
- * addresses follow the DataCite ContactPerson contributors in document order, or
- * the contributor cards that already have that role when those names are absent.
+ * A grav:contacts/grav:contact entry carries its own name and identifier. An ORCID
+ * matches only that ORCID, so two people with the same name stay separate.
+ * A missing card is added with the Contact Person role. An older grav:contact
+ * list has no names. Each person takes one address. A repeated author does not
+ * take a second one. An institution without the Contact Person role keeps its
+ * address when the list has a slot for it.
  *
  * Author cards are left unchanged. Add another contact field in readNamedContact
  * and applyDetail.
@@ -799,9 +800,12 @@ function populateIcgemContactPersons(xmlDoc) {
     }
     if (identity.person) {
       const key = personNameKey(identity.familyName, identity.givenName);
+      // A card that already has a different ORCID is a different person.
       return contributors.find((card) => (
-        card.type === 'person' && personNameKey(card.familyname, card.givenname) === key
-      ));
+        card.type === 'person'
+        && personNameKey(card.familyname, card.givenname) === key
+        && (!identity.orcid || !normalizeOrcid(card.orcid) || normalizeOrcid(card.orcid) === identity.orcid)
+      )) || null;
     }
     const institutionName = String(identity.institutionname || '').trim().toLowerCase();
     return contributors.find((card) => (
@@ -839,7 +843,7 @@ function populateIcgemContactPersons(xmlDoc) {
       contributors.push(card);
     }
     if (!card.roles.includes('Contact Person')) card.roles.push('Contact Person');
-    if (identity.orcid && !card.orcid) card.orcid = identity.orcid;
+    if (identity.orcid && !normalizeOrcid(card.orcid)) card.orcid = identity.orcid;
     if ((!card.affiliations || card.affiliations.length === 0) && identity.affiliations?.length) {
       card.affiliations = identity.affiliations.map((item) => ({ ...item }));
     }
@@ -847,10 +851,36 @@ function populateIcgemContactPersons(xmlDoc) {
     changed = true;
   }
 
+  function dedupeIdentities(list) {
+    const seen = new Set();
+    return list.filter((identity) => {
+      const key = identity.person
+        ? `person:${identity.orcid || personNameKey(identity.familyName, identity.givenName)}`
+        : `institution:${String(identity.institutionname || '').trim().toLowerCase()}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
   if (namedContacts.length) {
     namedContacts.forEach((contact) => place(contact, contact));
   } else {
-    contactIdentities.forEach((identity, index) => {
+    // One address per person. An author who is already a contributor contact
+    // does not take a second address, or the next person's email moves.
+    // An institution without the Contact Person role stays in the sequence
+    // when the address list has a slot for it, because export writes that slot.
+    const people = dedupeIdentities(contactIdentities);
+    const institutions = dedupeIdentities(identities.filter((identity) => (
+      !identity.person && !identity.contactPerson
+    )));
+    const withInstitutions = dedupeIdentities(identities.filter((identity) => (
+      identity.contactPerson || !identity.person
+    )));
+    const sequence = institutions.length && legacyDetails.length === people.length + institutions.length
+      ? withInstitutions
+      : people;
+    sequence.forEach((identity, index) => {
       if (!legacyDetails[index]) return;
       place(identity, legacyDetails[index]);
     });
