@@ -123,7 +123,7 @@ async function expectControlsFit(card: Locator) {
   // Capture all rectangles together; focus can still be smoothly scrolling the page.
   const { bounds, controls } = await card.evaluate(element => ({
     bounds: element.getBoundingClientRect().toJSON(),
-    controls: Array.from(element.querySelectorAll('.person-orcid-field input[type="text"], .person-orcid-field .orcid-search-btn, .person-orcid-field .input-group-text, [data-author-contact-toggle]'))
+    controls: Array.from(element.querySelectorAll('.person-orcid-field input[type="text"], .person-orcid-field .orcid-search-btn, .person-orcid-field .input-group-text, [data-author-contact-toggle], .drag-handle, [data-author-actions] button, [data-contributor-actions] button'))
       .filter(node => node.getClientRects().length && getComputedStyle(node).visibility !== 'hidden')
       .map(node => ({ ...node.getBoundingClientRect().toJSON(), label: node.outerHTML.slice(0, 160) })),
   }));

@@ -242,6 +242,7 @@ $(document).ready(function () {
 
     const dragZone = document.createElement('div');
     dragZone.className = 'd-flex align-items-center px-2 border-end bg-body-tertiary';
+    dragZone.dataset.contributorDragZone = '';
     const drag = makeButton('data-contributor-drag', 'bi-grip-vertical', t('contributors.dragHandle', 'Drag to change order'));
     drag.classList.add('drag-handle');
     dragZone.append(drag);
@@ -303,6 +304,7 @@ $(document).ready(function () {
 
     const actions = document.createElement('div');
     actions.className = 'd-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary';
+    actions.dataset.contributorActions = '';
     const toggle = makeButton('data-contributor-toggle-edit', 'bi-chevron-up', t('contributors.collapseEntry', 'Collapse contributor entry'));
     toggle.setAttribute('aria-controls', panelId);
     toggle.setAttribute('aria-expanded', 'true');
