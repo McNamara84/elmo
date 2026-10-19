@@ -1,14 +1,11 @@
-const { mountAuthorStack } = require('./utils/peopleStacks');
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 
 /**
  * @jest-environment jsdom
  *
  * Unit tests for populateIcgemContactPersons().
- * Verifies that when an ICGEM XML envelope is uploaded, the contact person
- * email and website are read from dace:nameIdentifier elements inside
- * grav:globalGravityProduct, the contact-person checkbox is checked, the
- * hidden .contact-person-input fields are made visible, and the values are
- * written into the correct form inputs.
+ * A named grav:contacts entry is matched to a contributor. An older grav:contact
+ * list follows DataCite ContactPerson order. Author rows are left unchanged.
  */
 
 describe('populateIcgemContactPersons', () => {
@@ -17,9 +14,18 @@ describe('populateIcgemContactPersons', () => {
 
   // ─── DOM helpers ──────────────────────────────────────────────────────────
 
-  /** Build the author-group DOM. Each entry in `authors` is { familyname, givenname }. */
   function buildAuthorDom(authors) {
     mountAuthorStack(authors.map(author => ({ type: 'person', ...author })));
+  }
+
+  function buildPeople(authors) {
+    buildAuthorDom(authors);
+    mountContributorStack(authors.map(author => ({
+      type: 'person',
+      ...author,
+      roles: ['Contact Person'],
+      affiliations: []
+    })));
   }
 
   // ─── XML helpers ──────────────────────────────────────────────────────────
@@ -101,18 +107,30 @@ describe('populateIcgemContactPersons', () => {
 
   // ─── Tests ────────────────────────────────────────────────────────────────
 
-  test('populates email for matching author row', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+  function expectAuthorsUntouched() {
+    $('div[data-creator-row]').each(function () {
+      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
+      expect($(this).find('input[name="cpEmail[]"]').val()).toBe('');
+      expect($(this).find('input[name="cpOnlineResource[]"]').val()).toBe('');
+    });
+  }
+
+  function contributorCard(index) {
+    return $('[data-contributor-card]').eq(index);
+  }
+
+  test('populates email for the matching contributor and leaves the author unchanged', () => {
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('jane@example.com');
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('jane@example.com');
+    expectAuthorsUntouched();
   });
 
-  test('populates website for matching author row', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+  test('populates website for the matching contributor', () => {
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{
       familyName: 'Doe', givenName: 'Jane',
       email: 'jane@example.com', website: 'https://jane.example.com'
@@ -120,80 +138,62 @@ describe('populateIcgemContactPersons', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpOnlineResource[]"]').val()).toBe('https://jane.example.com');
+    expect(contributorCard(0).find('input[name="cbContactWebsite[]"]').val()).toBe('https://jane.example.com');
+    expectAuthorsUntouched();
   });
 
-  test('checks the contact-person checkbox', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+  test('does not check the author contact checkbox', () => {
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expectAuthorsUntouched();
+    expect(contributorCard(0).find('[data-contributor-contact-fields]').hasClass('d-none')).toBe(false);
   });
 
-  test('makes .contact-person-input visible', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
-    const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com' }]);
-
-    icgemModule.populateIcgemContactPersons(xmlDoc);
-
-    const $row = $('div[data-creator-row]').eq(0);
-    $row.find('.contact-person-input').each(function () {
-      expect($(this).css('display')).not.toBe('none');
-    });
-  });
-
-  test('does not touch non-matching author rows', () => {
-    buildAuthorDom([
-      { familyname: 'Doe',   givenname: 'Jane' },
+  test('does not give the email to a different contributor', () => {
+    buildPeople([
+      { familyname: 'Doe', givenname: 'Jane' },
       { familyname: 'Smith', givenname: 'John' },
     ]);
     const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $second = $('div[data-creator-row]').eq(1);
-    expect($second.find('input[name="contacts[]"]').prop('checked')).toBe(false);
-    expect($second.find('input[name="cpEmail[]"]').val()).toBe('');
+    expect(contributorCard(1).find('input[name="cbContactEmail[]"]').val()).toBe('');
+    expectAuthorsUntouched();
   });
 
   test('matches names case-insensitively', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{ familyName: 'DOE', givenName: 'JANE', email: 'jane@example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('jane@example.com');
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('jane@example.com');
   });
 
   test('handles multiple contact persons in the same XML', () => {
-    buildAuthorDom([
-      { familyname: 'Doe',   givenname: 'Jane' },
+    buildPeople([
+      { familyname: 'Doe', givenname: 'Jane' },
       { familyname: 'Smith', givenname: 'John' },
     ]);
     const xmlDoc = makeIcgemXml([
-      { familyName: 'Doe',   givenName: 'Jane', email: 'jane@example.com', website: 'https://jane.example.com' },
+      { familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com', website: 'https://jane.example.com' },
       { familyName: 'Smith', givenName: 'John', email: 'john@example.com' },
     ]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $jane = $('div[data-creator-row]').eq(0);
-    expect($jane.find('input[name="cpEmail[]"]').val()).toBe('jane@example.com');
-    expect($jane.find('input[name="cpOnlineResource[]"]').val()).toBe('https://jane.example.com');
-
-    const $john = $('div[data-creator-row]').eq(1);
-    expect($john.find('input[name="cpEmail[]"]').val()).toBe('john@example.com');
-    expect($john.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('jane@example.com');
+    expect(contributorCard(0).find('input[name="cbContactWebsite[]"]').val()).toBe('https://jane.example.com');
+    expect(contributorCard(1).find('input[name="cbContactEmail[]"]').val()).toBe('john@example.com');
+    expectAuthorsUntouched();
   });
 
-  test('skips contributor with no email and no website', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
-    // icgv:contact is present but empty — no icgv:address or icgv:onlineResource
+  test('skips an empty contact element', () => {
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <icgv:envelope xmlns:icgv="${ICGEM_NS}" xmlns:dc="${DACE_NS}">
         <dc:resource>
@@ -211,14 +211,12 @@ describe('populateIcgemContactPersons', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    // Contributor was skipped — checkbox stays unchecked, email stays empty
-    expect($row.find('input[name="contacts[]"]').prop('checked')).toBe(false);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('');
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('');
+    expectAuthorsUntouched();
   });
 
   test('does nothing when globalGravityProduct is absent', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = new DOMParser().parseFromString(`<?xml version="1.0" encoding="UTF-8"?>
       <dc:resource xmlns:dc="${DACE_NS}">
         <dc:contributors>
@@ -231,32 +229,29 @@ describe('populateIcgemContactPersons', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    // No globalGravityProduct → nothing populated
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('');
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('');
+    expectAuthorsUntouched();
   });
 
   test('only populates email when website is absent', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', email: 'jane@example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('jane@example.com');
-    expect($row.find('input[name="cpOnlineResource[]"]').val()).toBe('');
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('jane@example.com');
+    expect(contributorCard(0).find('input[name="cbContactWebsite[]"]').val()).toBe('');
   });
 
   test('only populates website when email is absent', () => {
-    buildAuthorDom([{ familyname: 'Doe', givenname: 'Jane' }]);
+    buildPeople([{ familyname: 'Doe', givenname: 'Jane' }]);
     const xmlDoc = makeIcgemXml([{ familyName: 'Doe', givenName: 'Jane', website: 'https://jane.example.com' }]);
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const $row = $('div[data-creator-row]').eq(0);
-    expect($row.find('input[name="cpEmail[]"]').val()).toBe('');
-    expect($row.find('input[name="cpOnlineResource[]"]').val()).toBe('https://jane.example.com');
-    expect($row.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect(contributorCard(0).find('input[name="cbContactEmail[]"]').val()).toBe('');
+    expect(contributorCard(0).find('input[name="cbContactWebsite[]"]').val()).toBe('https://jane.example.com');
+    expectAuthorsUntouched();
   });
 
   test('warns and leaves authors untouched when grav:contact has no ContactPerson contributor', () => {
@@ -293,10 +288,7 @@ describe('populateIcgemContactPersons', () => {
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
     expect(warn).toHaveBeenCalledWith("couldn't determine the contact person from metadata");
-    $('div[data-creator-row]').each(function () {
-      expect($(this).find('input[name="cpEmail[]"]').val()).toBe('');
-      expect($(this).find('input[name="contacts[]"]').prop('checked')).toBe(false);
-    });
+    expectAuthorsUntouched();
     warn.mockRestore();
   });
 });

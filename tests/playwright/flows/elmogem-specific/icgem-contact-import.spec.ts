@@ -83,39 +83,42 @@ test('uploads author and contributor contacts without adding the contributor to 
     const author = page.locator('[data-author-card]');
     await expect(author).toHaveCount(1);
     await expect(author.locator('[name="familynames[]"]')).toHaveValue('Author');
-    await expect(author.locator('[name="contacts[]"]')).toBeChecked();
-    await expect(author.locator('[name="cpEmail[]"]')).toHaveValue('ada@example.org');
-    await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('https://ada.example.org');
+    await expect(author.locator('[name="cpEmail[]"]')).toHaveValue('');
+    await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 
     const contributor = page.locator('[data-contributor-card]');
     await expect(contributor).toHaveCount(2);
-    const authorContributor = contributor.nth(0);
-    await expect(authorContributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Author');
-    await expect(authorContributor.locator('[data-contributor-contact-fields]')).toBeVisible();
-    await expect(authorContributor.locator('[name="cbContactEmail[]"]')).toHaveValue('ada@example.org');
-    await expect(authorContributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('https://ada.example.org');
-
-    const connie = contributor.nth(1);
-    await expect(connie.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
-    await expect(connie.locator('[data-contributor-contact-fields]')).toBeVisible();
-    await expect(connie.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
-    await expect(connie.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    const cards = await contributor.evaluateAll((nodes) => nodes.map((node) => ({
+      familyname: (node.querySelector('[name="cbPersonLastname[]"]') as HTMLInputElement | null)?.value || '',
+      email: (node.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value || '',
+      website: (node.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
+      contactVisible: !node.querySelector('[data-contributor-contact-fields]')?.classList.contains('d-none'),
+    })));
+    expect(cards).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        familyname: 'Author', email: 'ada@example.org', website: 'https://ada.example.org', contactVisible: true,
+      }),
+      expect.objectContaining({
+        familyname: 'Contact', email: 'connie@example.org', website: '', contactVisible: true,
+      }),
+    ]));
+    expect(cards).toHaveLength(2);
 
     const payload = await page.evaluate(() => (window as any).contributorStack.collectPayload());
-    expect(payload).toEqual([
-      expect.objectContaining({
-        type: 'person', familyname: 'Author', givenname: 'Ada',
-        email: 'ada@example.org', website: 'https://ada.example.org',
-        roles: ['Contact Person'],
-      }),
-      expect.objectContaining({
-        type: 'person', familyname: 'Contact', givenname: 'Connie',
-        orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
-        roles: expect.arrayContaining(['Contact Person', 'Researcher']),
-        affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
-      }),
-    ]);
-    expect(payload[1].roles).toHaveLength(2);
+    const ada = payload.find((entry: { familyname?: string }) => entry.familyname === 'Author');
+    const connie = payload.find((entry: { familyname?: string }) => entry.familyname === 'Contact');
+    expect(ada).toEqual(expect.objectContaining({
+      type: 'person', familyname: 'Author', givenname: 'Ada',
+      email: 'ada@example.org', website: 'https://ada.example.org',
+      roles: ['Contact Person'],
+    }));
+    expect(connie).toEqual(expect.objectContaining({
+      type: 'person', familyname: 'Contact', givenname: 'Connie',
+      orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
+      affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
+    }));
+    expect(connie.roles).toEqual(expect.arrayContaining(['Contact Person', 'Researcher']));
+    expect(connie.roles).toHaveLength(2);
   }
 
   expect(pageErrors).toEqual([]);

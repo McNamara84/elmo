@@ -126,21 +126,20 @@ describe('ICGEM contact person import', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    const contacts = group === 'authors' ? window.authorStack.collectPayload() : window.contributorStack.collectPayload();
-    expect(contacts).toHaveLength(3);
-    expect(contacts[0]).toMatchObject({ email: 'ada.alpha@gfz.de', website: 'https://ada.example.org',
-      orcid: '0000-0001-2345-6789', affiliations: [{ label: 'GFZ Potsdam', rorId: '03yrm5c26' }] });
-    expect(contacts[1]).toMatchObject({ email: 'ben.beta@gfz.de', website: '' });
-    expect(contacts[2]).toMatchObject({ email: 'gina.gamma@gfz.de', website: 'https://gina.example.org' });
+    const contributors = window.contributorStack.collectPayload();
+    expect(contributors).toHaveLength(3);
+    expect(contributors[0]).toMatchObject({ email: 'ada.alpha@gfz.de', website: 'https://ada.example.org',
+      orcid: '0000-0001-2345-6789', affiliations: [{ label: 'GFZ Potsdam', rorId: '03yrm5c26' }],
+      roles: ['Contact Person'] });
+    expect(contributors[1]).toMatchObject({ email: 'ben.beta@gfz.de', website: '' });
+    expect(contributors[2]).toMatchObject({ email: 'gina.gamma@gfz.de', website: 'https://gina.example.org' });
+    const authors = window.authorStack.collectPayload();
     if (group === 'authors') {
-      const contributorContacts = window.contributorStack.collectPayload();
-      expect(contributorContacts).toHaveLength(3);
-      expect(contributorContacts[0]).toMatchObject({
-        email: 'ada.alpha@gfz.de',
-        website: 'https://ada.example.org',
-        roles: ['Contact Person']
-      });
-    } else expect(window.authorStack.collectPayload()).toHaveLength(1);
+      expect(authors).toHaveLength(3);
+      authors.forEach((author) => expect(author.email || '').toBe(''));
+    } else {
+      expect(authors).toHaveLength(1);
+    }
   });
 
   test('creates a contributor contact when no person card matches', () => {
@@ -190,8 +189,8 @@ describe('ICGEM contact person import', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    expect(window.authorStack.collectPayload()).toHaveLength(2);
-    expect(window.authorStack.collectPayload()[1]).toMatchObject({ isContact: true, email: 'new@example.org' });
+    expect(window.authorStack.collectPayload()).toHaveLength(1);
+    expect(window.authorStack.collectPayload()[0].email || '').toBe('');
     expect(window.contributorStack.collectPayload()).toEqual(contributorsBefore);
   });
 
@@ -230,21 +229,7 @@ describe('ICGEM contact person import', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    expect(window.authorStack.setAuthors).toHaveBeenCalledTimes(1);
-    expect(window.authorStack.setAuthors).toHaveBeenCalledWith([
-      expect.objectContaining({
-        familyname: 'Existing',
-        givenname: 'Author',
-        isContact: false
-      }),
-      expect.objectContaining({
-        familyname: 'Contact',
-        givenname: 'New',
-        isContact: true,
-        email: 'new.contact@gfz.de',
-        website: 'https://new-contact.example.org'
-      })
-    ]);
+    expect(window.authorStack.setAuthors).not.toHaveBeenCalled();
   });
 
   test('puts the same legacy entry on the author and the matching contributor card', () => {
@@ -278,8 +263,7 @@ describe('ICGEM contact person import', () => {
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
     expect(window.authorStack.collectPayload()).toEqual([
-      expect.objectContaining({ familyname: 'Author', givenname: 'Ada', isContact: true,
-        email: 'ada@example.org', website: 'https://ada.example.org' })
+      expect.objectContaining({ familyname: 'Author', givenname: 'Ada', isContact: false, email: '' })
     ]);
     expect(window.contributorStack.collectPayload()).toEqual([
       expect.objectContaining({ type: 'person', familyname: 'Author', givenname: 'Ada',
@@ -327,13 +311,13 @@ describe('ICGEM contact person import', () => {
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
     const authors = window.authorStack.collectPayload();
-    expect(authors[0]).toMatchObject({ familyname: 'Smith', email: 'bob@example.org', isContact: true });
-    expect(authors[1]).toMatchObject({ familyname: 'Author', email: 'ada@example.org', isContact: true });
+    expect(authors[0]).toMatchObject({ familyname: 'Smith', email: '', isContact: false });
+    expect(authors[1]).toMatchObject({ familyname: 'Author', email: '', isContact: false });
     const contributors = window.contributorStack.collectPayload();
     expect(contributors.map(entry => entry.familyname)).toEqual(['Contact', 'Author', 'Smith']);
-    expect(contributors[0]).toMatchObject({ email: 'connie@example.org' });
+    expect(contributors[0]).toMatchObject({ email: 'bob@example.org' });
     expect(contributors[1]).toMatchObject({ email: 'ada@example.org' });
-    expect(contributors[2]).toMatchObject({ email: 'bob@example.org' });
+    expect(contributors[2]).toMatchObject({ email: 'connie@example.org' });
   });
 
   test('skips repeated author entries in a saved contact list and keeps the institution entry', () => {
@@ -368,14 +352,28 @@ describe('ICGEM contact person import', () => {
           </dace:contributors>
         </dace:resource>
         <grav:globalGravityProduct>
-          <grav:contact>
-            <grav:address>bob@example.org</grav:address>
-            <grav:address>ada@example.org</grav:address>
-            <grav:address>connie@example.org</grav:address>
-            <grav:address>bob@example.org</grav:address>
-            <grav:address>ada@example.org</grav:address>
-            <grav:address>gfz@example.org</grav:address>
-          </grav:contact>
+          <grav:contacts>
+            <grav:contact>
+              <grav:type>personal</grav:type>
+              <grav:name>Contact, Connie</grav:name>
+              <grav:address>connie@example.org</grav:address>
+            </grav:contact>
+            <grav:contact>
+              <grav:type>personal</grav:type>
+              <grav:name>Smith, Bob</grav:name>
+              <grav:address>bob@example.org</grav:address>
+            </grav:contact>
+            <grav:contact>
+              <grav:type>personal</grav:type>
+              <grav:name>Author, Ada</grav:name>
+              <grav:address>ada@example.org</grav:address>
+            </grav:contact>
+            <grav:contact>
+              <grav:type>institutional</grav:type>
+              <grav:name>GFZ</grav:name>
+              <grav:address>gfz@example.org</grav:address>
+            </grav:contact>
+          </grav:contacts>
         </grav:globalGravityProduct>
       </grav:envelope>`, 'application/xml');
 
@@ -384,10 +382,11 @@ describe('ICGEM contact person import', () => {
     const contributors = window.contributorStack.collectPayload();
     expect(contributors.map(entry => [entry.type, entry.familyname || entry.institutionname, entry.email])).toEqual([
       ['person', 'Contact', 'connie@example.org'],
+      ['institution', 'GFZ', 'gfz@example.org'],
       ['person', 'Smith', 'bob@example.org'],
-      ['person', 'Author', 'ada@example.org'],
-      ['institution', 'GFZ', 'gfz@example.org']
+      ['person', 'Author', 'ada@example.org']
     ]);
+    expect(window.authorStack.collectPayload().map(author => author.email || '')).toEqual(['', '']);
     delete window.ELMO_FEATURES;
   });
 });

@@ -4,15 +4,15 @@ import { navigateToHome, registerGoogleMapsNoopRoute, waitForFormInteractionRead
 
 const FIXTURE = path.join(__dirname, 'testDataIcgemContactRoundtrip/elmogem_contact_info_roundtrip.xml');
 
-/** Saved grav:contact pairs for the fixture, in author order then contributor order. */
+/** Saved contacts for the fixture: contributor cards, then author contacts that are not contributors. */
 const EXPECTED_CONTACTS = [
-  { email: 'cont_pers_author_1@mail.com', website: 'cont_pers_author_1.com' },
-  { email: 'cont_pers_author_2@mail.com', website: 'cont_pers_author_2.com' },
-  { email: 'cont_pers_1@mail.com', website: 'cont_pers_1.com' },
-  { email: 'cont_inst_1@mail.com', website: 'cont_inst_1.com' },
-  { email: 'cont_inst_2@mail.com', website: 'cont_inst_2.com' },
-  { email: 'cont_pers_2@mail.com', website: 'cont_pers_2.com' },
-  { email: 'cont_pers_author_2@mail.com', website: '' },
+  { type: 'personal', name: 'cont_pers_1', email: 'cont_pers_1@mail.com', website: 'cont_pers_1.com' },
+  { type: 'institutional', name: 'cont_inst_1', email: 'cont_inst_1@mail.com', website: 'cont_inst_1.com' },
+  { type: 'institutional', name: 'cont_inst_2', email: 'cont_inst_2@mail.com', website: 'cont_inst_2.com' },
+  { type: 'personal', name: 'cont_pers_2', email: 'cont_pers_2@mail.com', website: 'cont_pers_2.com' },
+  { type: 'personal', name: 'cont_pers_3', email: 'cont_pers_author_2@mail.com', website: '' },
+  { type: 'personal', name: 'cont_pers_author_1', email: 'cont_pers_author_1@mail.com', website: 'cont_pers_author_1.com' },
+  { type: 'personal', name: 'cont_pers_author_2', email: 'cont_pers_author_2@mail.com', website: 'cont_pers_author_2.com' },
 ];
 
 function decodeXml(value: string): string {
@@ -26,33 +26,29 @@ function decodeXml(value: string): string {
 }
 
 /**
- * Reads a grav:contact list into address and website pairs.
+ * Reads grav:contacts/grav:contact entries.
  * A new child element stays ignored until this reader and the upload parser both accept it.
  */
-function gravContactPairs(xml: string): Array<{ email: string; website: string }> {
-  const block = xml.match(/<(?:[\w.-]+:)?contact\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contact>/);
-  if (!block) return [];
+function gravContactPairs(xml: string): Array<{ type: string; name: string; email: string; website: string }> {
+  const wrapper = xml.match(/<(?:[\w.-]+:)?contacts\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contacts>/);
+  if (!wrapper) return [];
 
-  const pairs: Array<{ email: string; website: string }> = [];
-  let current: { email: string; website: string } | null = null;
-  const token = /<(?:[\w.-]+:)?(address|onlineResource)\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?\1>/g;
+  const contacts: Array<{ type: string; name: string; email: string; website: string }> = [];
+  const block = /<(?:[\w.-]+:)?contact\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contact>/g;
   let found: RegExpExecArray | null;
-  while ((found = token.exec(block[1])) !== null) {
-    const value = decodeXml(found[2]);
-    if (!value) continue;
-    if (found[1] === 'address') {
-      current = { email: value, website: '' };
-      pairs.push(current);
-      continue;
-    }
-    if (!current || current.website) {
-      current = { email: '', website: value };
-      pairs.push(current);
-      continue;
-    }
-    current.website = value;
+  while ((found = block.exec(wrapper[1])) !== null) {
+    const text = (tag: string) => {
+      const match = found?.[1].match(new RegExp(`<(?:[\\w.-]+:)?${tag}\\b[^>]*>([\\s\\S]*?)<\\/(?:[\\w.-]+:)?${tag}>`));
+      return match ? decodeXml(match[1]) : '';
+    };
+    contacts.push({
+      type: text('type'),
+      name: text('name'),
+      email: text('address'),
+      website: text('onlineResource'),
+    });
   }
-  return pairs;
+  return contacts;
 }
 
 async function downloadIcgemXml(page: Page): Promise<string> {
