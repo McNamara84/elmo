@@ -67,4 +67,32 @@ describe('language.js accessibility integration', () => {
       expect(options.container).toBe(document.getElementById('main-content'));
     });
   });
+
+  test.each(['data-translate-tooltip', 'data-translate-title'])(
+    'updates %s while an existing tooltip is fading out', attribute => {
+      jest.useFakeTimers();
+      const Tooltip = require('bootstrap/js/dist/tooltip');
+      window.bootstrap = { Tooltip };
+      const button = document.createElement('button');
+      button.title = 'Old tooltip';
+      button.setAttribute(attribute, 'general.help');
+      document.getElementById('main-content').append(button);
+      const tooltip = new Tooltip(button, { animation: true });
+
+      try {
+        tooltip.show();
+        jest.runOnlyPendingTimers();
+        tooltip.hide();
+        window.applyTranslationsTo(button);
+
+        expect(() => jest.runOnlyPendingTimers()).not.toThrow();
+        Tooltip.getInstance(button).show();
+        jest.runOnlyPendingTimers();
+        expect(document.querySelector('.tooltip-inner').textContent).toBe('Help');
+      } finally {
+        Tooltip.getInstance(button)?.dispose();
+        jest.useRealTimers();
+      }
+    }
+  );
 });
