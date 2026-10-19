@@ -90,7 +90,7 @@ function orcidInputs(page: Page) {
   ];
 }
 
-async function expectIdentifierFits(input: Locator) {
+async function expectIdentifierFits(input: Locator, expectedFontSize = 16) {
   await expect(input).toBeVisible();
   const metrics = await input.evaluate((element: HTMLInputElement) => {
     const style = getComputedStyle(element);
@@ -109,7 +109,7 @@ async function expectIdentifierFits(input: Locator) {
     };
   });
   expect(metrics.available, JSON.stringify(metrics)).toBeGreaterThanOrEqual(metrics.required - 0.5);
-  expect(metrics.fontSize).toBe(16);
+  expect(metrics.fontSize).toBe(expectedFontSize);
   expect(metrics.contained).toBe(true);
 }
 
@@ -257,6 +257,29 @@ test('opens ORCID search for the correct card on narrow screens', async ({ page 
     await expect(modal).toBeHidden();
   }
   await expectNoPageOverflow(page);
+});
+
+test('keeps ORCID readable in both themes and with enlarged text', async ({ page }, testInfo) => {
+  await openFixture(page, testInfo, 'fr');
+  for (const input of orcidInputs(page)) {
+    await input.fill(ORCID);
+    await input.blur();
+  }
+  for (const theme of ['light', 'dark']) {
+    await page.evaluate(value => { document.documentElement.dataset.bsTheme = value; }, theme);
+    for (const width of [1440, 375]) {
+      await page.setViewportSize({ width, height: 1000 });
+      for (const input of orcidInputs(page)) await expectIdentifierFits(input);
+      for (const card of await page.locator('[data-author-card], [data-contributor-card]').all()) await expectControlsFit(card);
+      await expectNoPageOverflow(page);
+    }
+    await page.setViewportSize({ width: 1440, height: 1000 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+    for (const input of orcidInputs(page)) await expectIdentifierFits(input, 32);
+    for (const card of await page.locator('[data-author-card], [data-contributor-card]').all()) await expectControlsFit(card);
+    await expectNoPageOverflow(page);
+    await page.evaluate(() => { document.documentElement.style.fontSize = ''; });
+  }
 });
 
 test('retains readable person fields after switching from institution and back', async ({ page }, testInfo) => {
