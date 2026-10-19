@@ -97,7 +97,9 @@ async function expectIdentifierFits(input: Locator) {
     const card = element.closest('[data-author-card], [data-contributor-card]')!.getBoundingClientRect();
     return {
       name: element.name,
-      available: element.clientWidth - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
+      // Firefox input.clientWidth excludes the padding; measure the visible border box instead.
+      available: bounds.width - parseFloat(style.borderLeftWidth) - parseFloat(style.borderRightWidth)
+        - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight),
       required: context.measureText(element.value).width,
       fontSize: parseFloat(style.fontSize),
       contained: bounds.left >= card.left && bounds.right <= card.right,
