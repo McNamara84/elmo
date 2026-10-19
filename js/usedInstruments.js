@@ -335,9 +335,17 @@ function initUsedInstrumentsModule() {
                             instrumentsTagify.settings.whitelist = whitelist;
                             instrumentsTagify.whitelist = whitelist;
 
-                            // If the dropdown is open, refilter
-                            if (instrumentsTagify.dropdown.visible) {
-                                instrumentsTagify.dropdown.refilter.call(instrumentsTagify);
+                            // Tagify blocks suggestions while loading. Use the latest
+                            // input after loading, including text typed during the request.
+                            instrumentsTagify.loading(false);
+                            var state = instrumentsTagify.state;
+                            var searchText = state.inputText || '';
+                            var dropdownSettings = instrumentsTagify.settings.dropdown;
+                            if (state.hasFocus && searchText.trim() &&
+                                dropdownSettings.enabled !== false && searchText.length >= dropdownSettings.enabled) {
+                                // show() also refreshes an already visible dropdown and
+                                // updates its first highlighted option for keyboard selection.
+                                instrumentsTagify.dropdown.show(searchText);
                             }
                         }
                         resolve({ success: true, dataLoaded: true });

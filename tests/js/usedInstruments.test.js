@@ -10,7 +10,8 @@ class MockTagify {
         this.value = [];
         this._callbacks = {};
         this.whitelist = settings?.whitelist || [];
-        this.dropdown = { visible: false, refilter: jest.fn() };
+        this.state = { inputText: '', hasFocus: false, dropdown: { visible: false } };
+        this.dropdown = { show: jest.fn(), refilter: jest.fn() };
         // Attach to element like real Tagify does
         el._tagify = this;
     }
@@ -42,6 +43,7 @@ class MockTagify {
     }
     loading(state) {
         this._loading = state;
+        this.state.isLoading = state;
     }
     getAttributes() {
         return '';
