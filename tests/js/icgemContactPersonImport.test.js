@@ -331,14 +331,14 @@ describe('ICGEM contact person import', () => {
         <grav:globalGravityProduct>
           <grav:contacts>
             <grav:contact>
-              <grav:type>personal</grav:type>
+              <grav:nameType>Personal</grav:nameType>
               <grav:name>Smith, Ann</grav:name>
               <grav:identifier>0000-0002-0000-0002</grav:identifier>
               <grav:identifierType>ORCID</grav:identifierType>
               <grav:address>ann.two@example.org</grav:address>
             </grav:contact>
             <grav:contact>
-              <grav:type>personal</grav:type>
+              <grav:nameType>Personal</grav:nameType>
               <grav:name>Smith, Ann</grav:name>
               <grav:identifier>0000-0001-0000-0001</grav:identifier>
               <grav:identifierType>ORCID</grav:identifierType>
@@ -439,22 +439,22 @@ describe('ICGEM contact person import', () => {
         <grav:globalGravityProduct>
           <grav:contacts>
             <grav:contact>
-              <grav:type>personal</grav:type>
+              <grav:nameType>Personal</grav:nameType>
               <grav:name>Contact, Connie</grav:name>
               <grav:address>connie@example.org</grav:address>
             </grav:contact>
             <grav:contact>
-              <grav:type>personal</grav:type>
+              <grav:nameType>Personal</grav:nameType>
               <grav:name>Smith, Bob</grav:name>
               <grav:address>bob@example.org</grav:address>
             </grav:contact>
             <grav:contact>
-              <grav:type>personal</grav:type>
+              <grav:nameType>Personal</grav:nameType>
               <grav:name>Author, Ada</grav:name>
               <grav:address>ada@example.org</grav:address>
             </grav:contact>
             <grav:contact>
-              <grav:type>institutional</grav:type>
+              <grav:nameType>Organizational</grav:nameType>
               <grav:name>GFZ</grav:name>
               <grav:address>gfz@example.org</grav:address>
             </grav:contact>

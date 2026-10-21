@@ -1799,7 +1799,7 @@ XML;
         foreach ($product->contacts->children($ns)->contact as $contact) {
             $children = $contact->children($ns);
             $entries[] = [
-                'type' => (string) $children->type,
+                'nameType' => (string) $children->nameType,
                 'name' => (string) $children->name,
                 'identifier' => (string) $children->identifier,
                 'identifierType' => (string) $children->identifierType,
@@ -1839,7 +1839,7 @@ XML;
         $ns = 'http://icgem.gfz.de/schema';
         $this->assertSame([
             [
-                'type' => 'personal',
+                'nameType' => 'Personal',
                 'name' => 'Doe, Jane',
                 'identifier' => '',
                 'identifierType' => '',
@@ -1878,7 +1878,7 @@ XML;
 
         $this->assertSame([
             [
-                'type' => 'personal',
+                'nameType' => 'Personal',
                 'name' => 'Smith, John',
                 'identifier' => '0000-0002-1825-0097',
                 'identifierType' => 'ORCID',
@@ -1925,7 +1925,7 @@ XML;
 
         $this->assertSame([
             [
-                'type' => 'personal',
+                'nameType' => 'Personal',
                 'name' => 'Doe, Jane',
                 'identifier' => '',
                 'identifierType' => '',
@@ -1933,7 +1933,7 @@ XML;
                 'onlineResource' => 'https://jane.example.com',
             ],
             [
-                'type' => 'personal',
+                'nameType' => 'Personal',
                 'name' => 'Doe, Bob',
                 'identifier' => '',
                 'identifierType' => '',
@@ -2005,7 +2005,7 @@ XML;
 
         $this->assertSame([
             [
-                'type' => 'personal',
+                'nameType' => 'Personal',
                 'name' => 'Real, User',
                 'identifier' => '',
                 'identifierType' => '',
@@ -2105,11 +2105,11 @@ XML;
         $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
 
         $this->assertSame([
-            ['type' => 'personal', 'name' => 'Contact, Connie', 'identifier' => '', 'identifierType' => '', 'address' => 'connie@example.org', 'onlineResource' => ''],
-            ['type' => 'personal', 'name' => 'Smith, Bob', 'identifier' => '', 'identifierType' => '', 'address' => 'bob@example.org', 'onlineResource' => ''],
-            ['type' => 'personal', 'name' => 'Author, Ada', 'identifier' => '0000-0001-2345-6789', 'identifierType' => 'ORCID', 'address' => 'ada@example.org', 'onlineResource' => 'https://ada.example.org'],
-            ['type' => 'institutional', 'name' => 'GFZ', 'identifier' => '04z8jg394', 'identifierType' => 'ROR', 'address' => 'gfz@example.org', 'onlineResource' => ''],
-            ['type' => 'personal', 'name' => 'Legacy, Lee', 'identifier' => '', 'identifierType' => '', 'address' => 'lee@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Contact, Connie', 'identifier' => '', 'identifierType' => '', 'address' => 'connie@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Smith, Bob', 'identifier' => '', 'identifierType' => '', 'address' => 'bob@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Author, Ada', 'identifier' => '0000-0001-2345-6789', 'identifierType' => 'ORCID', 'address' => 'ada@example.org', 'onlineResource' => 'https://ada.example.org'],
+            ['nameType' => 'Organizational', 'name' => 'GFZ', 'identifier' => '04z8jg394', 'identifierType' => 'ROR', 'address' => 'gfz@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Legacy, Lee', 'identifier' => '', 'identifierType' => '', 'address' => 'lee@example.org', 'onlineResource' => ''],
         ], $this->contactEntries($xml));
     }
 
@@ -2157,10 +2157,10 @@ XML;
         $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
 
         $this->assertSame([
-            ['type' => 'personal', 'name' => 'One', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_pers_1@mail.com', 'onlineResource' => 'cont_pers_1.com'],
-            ['type' => 'institutional', 'name' => 'cont_inst_1', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_inst_1@mail.com', 'onlineResource' => 'cont_inst_1.com'],
-            ['type' => 'institutional', 'name' => 'cont_inst_2', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_inst_2@mail.com', 'onlineResource' => 'cont_inst_2.com'],
-            ['type' => 'personal', 'name' => 'Two', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_pers_2@mail.com', 'onlineResource' => 'cont_pers_2.com'],
+            ['nameType' => 'Personal', 'name' => 'One', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_pers_1@mail.com', 'onlineResource' => 'cont_pers_1.com'],
+            ['nameType' => 'Organizational', 'name' => 'cont_inst_1', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_inst_1@mail.com', 'onlineResource' => 'cont_inst_1.com'],
+            ['nameType' => 'Organizational', 'name' => 'cont_inst_2', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_inst_2@mail.com', 'onlineResource' => 'cont_inst_2.com'],
+            ['nameType' => 'Personal', 'name' => 'Two', 'identifier' => '', 'identifierType' => '', 'address' => 'cont_pers_2@mail.com', 'onlineResource' => 'cont_pers_2.com'],
         ], $this->contactEntries($xml));
     }
 }

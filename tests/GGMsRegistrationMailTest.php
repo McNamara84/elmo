@@ -234,7 +234,7 @@ final class GGMsRegistrationMailTest extends TestCase
                 <grav:globalGravityProduct>
                     <grav:contacts>
                         <grav:contact>
-                            <grav:type>personal</grav:type>
+                            <grav:nameType>Personal</grav:nameType>
                             <grav:name>Carberry, Josiah</grav:name>
                             <grav:address>author@example.com</grav:address>
                         </grav:contact>

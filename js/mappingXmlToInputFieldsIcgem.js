@@ -656,11 +656,11 @@ function populateIcgemContactPersons(xmlDoc) {
   }
 
   function readNamedContact(node) {
-    const type = childText(node, 'type');
+    const nameType = (childText(node, 'nameType') || childText(node, 'type')).toLowerCase();
     const name = childText(node, 'name');
     const identifierType = childText(node, 'identifierType').toUpperCase();
     const identifier = childText(node, 'identifier');
-    const personal = type !== 'institutional';
+    const personal = nameType !== 'organizational' && nameType !== 'institutional';
     let familyName = '';
     let givenName = '';
     if (personal && name.includes(',')) {

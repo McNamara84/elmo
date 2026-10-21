@@ -849,7 +849,7 @@ class ICGEMController extends DatasetController
      * Builds one self-describing contact per stored address.
      *
      * @param int $id The resource ID.
-     * @return array<int, array{type: string, name: string, identifier: string, identifierType: string, email: string, website: string}>
+     * @return array<int, array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}>
      */
     private function collectIcgemContactEntries(int $id): array
     {
@@ -881,7 +881,7 @@ class ICGEMController extends DatasetController
 
     /**
      * @param array<string, mixed> $contributor
-     * @return array{type: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
+     * @return array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
      */
     private function contactEntryFromContributor(array $contributor): ?array
     {
@@ -911,7 +911,7 @@ class ICGEMController extends DatasetController
             }
 
             return [
-                'type' => 'institutional',
+                'nameType' => 'Organizational',
                 'name' => $name,
                 'identifier' => $ror,
                 'identifierType' => $ror !== '' ? 'ROR' : '',
@@ -929,7 +929,7 @@ class ICGEMController extends DatasetController
         $orcid = $this->normalizeIcgemIdentifier((string) ($contributor['orcid'] ?? ''));
 
         return [
-            'type' => 'personal',
+            'nameType' => 'Personal',
             'name' => $name,
             'identifier' => $orcid,
             'identifierType' => $orcid !== '' ? 'ORCID' : '',
@@ -940,7 +940,7 @@ class ICGEMController extends DatasetController
 
     /**
      * @param array<string, mixed> $person
-     * @return array{type: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
+     * @return array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
      */
     private function contactEntryFromContactPerson(array $person): ?array
     {
@@ -955,7 +955,7 @@ class ICGEMController extends DatasetController
         $orcid = $this->normalizeIcgemIdentifier((string) ($person['orcid'] ?? ''));
 
         return [
-            'type' => 'personal',
+            'nameType' => 'Personal',
             'name' => $name,
             'identifier' => $orcid,
             'identifierType' => $orcid !== '' ? 'ORCID' : '',
@@ -1012,12 +1012,12 @@ class ICGEMController extends DatasetController
      * Appends one grav:contact. Add another contact field as a further child here.
      *
      * @param SimpleXMLElement $contacts The grav:contacts element.
-     * @param array{type: string, name: string, identifier: string, identifierType: string, email: string, website: string} $entry
+     * @param array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string} $entry
      */
     private function appendIcgemContactEntry(SimpleXMLElement $contacts, array $entry): void
     {
         $contact = $contacts->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
-        $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':type', $entry['type'], self::ICGEM_NAMESPACE_URI);
+        $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':nameType', $entry['nameType'], self::ICGEM_NAMESPACE_URI);
         $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', $entry['name'], self::ICGEM_NAMESPACE_URI);
         if ($entry['identifier'] !== '' && $entry['identifierType'] !== '') {
             $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $entry['identifier'], self::ICGEM_NAMESPACE_URI);

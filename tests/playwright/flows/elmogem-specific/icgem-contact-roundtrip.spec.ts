@@ -6,13 +6,13 @@ const FIXTURE = path.join(__dirname, 'testDataIcgemContactRoundtrip/elmogem_cont
 
 /** Saved contacts for the fixture: contributor cards, then author contacts that are not contributors. */
 const EXPECTED_CONTACTS = [
-  { type: 'personal', name: 'cont_pers_1', email: 'cont_pers_1@mail.com', website: 'cont_pers_1.com' },
-  { type: 'institutional', name: 'cont_inst_1', email: 'cont_inst_1@mail.com', website: 'cont_inst_1.com' },
-  { type: 'institutional', name: 'cont_inst_2', email: 'cont_inst_2@mail.com', website: 'cont_inst_2.com' },
-  { type: 'personal', name: 'cont_pers_2', email: 'cont_pers_2@mail.com', website: 'cont_pers_2.com' },
-  { type: 'personal', name: 'cont_pers_3', email: 'cont_pers_author_2@mail.com', website: '' },
-  { type: 'personal', name: 'cont_pers_author_1', email: 'cont_pers_author_1@mail.com', website: 'cont_pers_author_1.com' },
-  { type: 'personal', name: 'cont_pers_author_2', email: 'cont_pers_author_2@mail.com', website: 'cont_pers_author_2.com' },
+  { nameType: 'Personal', name: 'cont_pers_1', email: 'cont_pers_1@mail.com', website: 'cont_pers_1.com' },
+  { nameType: 'Organizational', name: 'cont_inst_1', email: 'cont_inst_1@mail.com', website: 'cont_inst_1.com' },
+  { nameType: 'Organizational', name: 'cont_inst_2', email: 'cont_inst_2@mail.com', website: 'cont_inst_2.com' },
+  { nameType: 'Personal', name: 'cont_pers_2', email: 'cont_pers_2@mail.com', website: 'cont_pers_2.com' },
+  { nameType: 'Personal', name: 'cont_pers_3', email: 'cont_pers_author_2@mail.com', website: '' },
+  { nameType: 'Personal', name: 'cont_pers_author_1', email: 'cont_pers_author_1@mail.com', website: 'cont_pers_author_1.com' },
+  { nameType: 'Personal', name: 'cont_pers_author_2', email: 'cont_pers_author_2@mail.com', website: 'cont_pers_author_2.com' },
 ];
 
 function decodeXml(value: string): string {
@@ -29,11 +29,11 @@ function decodeXml(value: string): string {
  * Reads grav:contacts/grav:contact entries.
  * A new child element stays ignored until this reader and the upload parser both accept it.
  */
-function gravContactPairs(xml: string): Array<{ type: string; name: string; email: string; website: string }> {
+function gravContactPairs(xml: string): Array<{ nameType: string; name: string; email: string; website: string }> {
   const wrapper = xml.match(/<(?:[\w.-]+:)?contacts\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contacts>/);
   if (!wrapper) return [];
 
-  const contacts: Array<{ type: string; name: string; email: string; website: string }> = [];
+  const contacts: Array<{ nameType: string; name: string; email: string; website: string }> = [];
   const block = /<(?:[\w.-]+:)?contact\b[^>]*>([\s\S]*?)<\/(?:[\w.-]+:)?contact>/g;
   let found: RegExpExecArray | null;
   while ((found = block.exec(wrapper[1])) !== null) {
@@ -42,7 +42,7 @@ function gravContactPairs(xml: string): Array<{ type: string; name: string; emai
       return match ? decodeXml(match[1]) : '';
     };
     contacts.push({
-      type: text('type'),
+      nameType: text('nameType'),
       name: text('name'),
       email: text('address'),
       website: text('onlineResource'),
