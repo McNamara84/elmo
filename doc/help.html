@@ -210,6 +210,12 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li>Imported values, including title types, follow the public DataCite record. They can differ
                             from those shown on the publication's landing page.</li>
                         <li>Author affiliations are also imported when they have no ROR ID.</li>
+                        <li>Contact persons listed in the imported record are marked automatically. If a contact
+                            can be matched unambiguously to an author, that author's card is marked; otherwise,
+                            the contact appears in Contributors.</li>
+                        <li>Email and website are added for these contacts when available from ELMO's existing
+                            records. A contact can remain marked even when these fields are empty. Review any
+                            imported contact details and complete a missing email address before submission.</li>
                         <li>Review the imported fields; some details may need to be changed or entered manually.</li>
                         <li>The source DOI remains visible in the search field after import. The submission DOI field
                             stays empty.</li>
@@ -475,6 +481,9 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <p>Mark a person author with the contact button, or choose the Contact Person role on a contributor
                         card. Contributor institutions can have this role when the feature is enabled. A contact needs
                         a name and valid email address before submission. A website is optional.</p>
+                    <p>When you re-use metadata from a DOI, ELMO also imports the published contact roles.
+                        A marked contact may still need an email address; check and complete the contact details
+                        before submission.</p>
                     <h5>Email</h5>
                     <p>Please provide a valid email address (e.g. name@institution.org). This address
                         may be used by others to contact the responsible person for questions about the dataset.</p>

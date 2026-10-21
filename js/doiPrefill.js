@@ -41,6 +41,11 @@ function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
 
+/**
+ * Read a normalized ORCID from a DataCite creator or contributor.
+ * @param {Object} creator DataCite person with optional nameIdentifiers.
+ * @returns {string} Bare ORCID, or an empty string when none is supplied.
+ */
 function extractCreatorOrcid(creator) {
   if (!Array.isArray(creator.nameIdentifiers)) {
     return '';
@@ -50,11 +55,21 @@ function extractCreatorOrcid(creator) {
   return normalizeOrcid(orcidEntry?.nameIdentifier);
 }
 
+/**
+ * Normalize identifier representation for comparison without checking its checksum.
+ * @param {string|null|undefined} value Bare identifier or ORCID URL.
+ * @returns {string} Trimmed identifier with an uppercase check character.
+ */
 function normalizeOrcid(value) {
   return String(value || '').trim().replace(/^https?:\/\/orcid\.org\//i, '').toUpperCase();
 }
 
-/** Preserve personal display names when DataCite omits structured names. */
+/**
+ * Preserve personal display names when DataCite omits structured names.
+ * Only the explicit "family, given" format supplies missing name components.
+ * @param {Object} person DataCite creator or contributor.
+ * @returns {{familyname: string, givenname: string}} Names in their original spelling.
+ */
 function extractPersonNames(person) {
   let givenname = person.givenName || '';
   let familyname = person.familyName || '';
@@ -90,6 +105,11 @@ function extractAffiliationsPayload(creator) {
     .filter(affiliation => affiliation.label !== '' || affiliation.rorId !== '');
 }
 
+/**
+ * Build ordered author entries; explicit contributor roles are applied separately.
+ * @param {Object[]} creators DataCite creators in publication order.
+ * @returns {Object[]} Personal and institutional author payloads.
+ */
 function buildAuthorsPayloadFromCreators(creators) {
   return creators
     .map(creator => {
@@ -124,12 +144,41 @@ function buildAuthorsPayloadFromCreators(creators) {
     .filter(Boolean);
 }
 
+/**
+ * Build an exact name key tolerant of Unicode encoding, case and whitespace.
+ * Keep accents and name boundaries to avoid merging distinct people.
+ * @param {string|undefined} familyName Family name.
+ * @param {string|undefined} givenName Given name.
+ * @returns {string} Comparison key, not a display name.
+ */
 function normalizeDoiPersonNameKey(familyName, givenName) {
   const normalize = value => String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
   return `${normalize(familyName)}\u0000${normalize(givenName)}`;
 }
 
-/** Resolve only an unambiguous person, with ORCID taking precedence over names. */
+/**
+ * Identity used to match an imported contact and query local contact details.
+ * @typedef {Object} DoiContactIdentity
+ * @property {string} orcid Normalized ORCID, or an empty string.
+ * @property {string} familyname Family name, possibly empty.
+ * @property {string} givenname Given name, possibly empty.
+ */
+
+/**
+ * Contact destination established while mapping roles, before asynchronous lookup.
+ * @typedef {Object} DoiContactTarget
+ * @property {'authors'|'contributors'} group Destination payload group.
+ * @property {number} index Index of the imported entry in that group's payload.
+ * @property {DoiContactIdentity} identity Identity from the contact, with the author's ORCID as fallback.
+ */
+
+/**
+ * Resolve only an unambiguous person, with ORCID taking precedence over names.
+ * An ambiguous ORCID must not fall through to a weaker name match.
+ * @param {Object[]} authors Current ordered author payload.
+ * @param {DoiContactIdentity} identity Normalized contact identity.
+ * @returns {number} Author index, or -1 for missing, conflicting or ambiguous matches.
+ */
 function findContactAuthorIndex(authors, identity) {
   const people = authors.map((author, index) => ({ author, index })).filter(({ author }) => author.type === 'person');
   if (identity.orcid) {
@@ -339,6 +388,9 @@ async function prefillTitles(titles) {
 
 /**
  * Maps creators (authors) — both persons and institutions.
+ * @param {Object[]|null|undefined} creators DataCite creators.
+ * @returns {void}
+ * @throws {Error} When authors are supplied before the author form is initialized.
  */
 function prefillCreators(creators) {
   if (!Array.isArray(creators) || creators.length === 0) return;
@@ -355,7 +407,9 @@ function prefillCreators(creators) {
 
 /**
  * Maps contributor roles, transferring explicit personal contacts to matching authors.
- * @returns {Array<{group: string, index: number, identity: Object}>} Personal contact lookup targets.
+ * @param {Object[]|null|undefined} contributors DataCite contributors with their roles.
+ * @returns {DoiContactTarget[]} Deduplicated personal contact lookup targets.
+ * @throws {Error} When a required form controller has not been initialized.
  */
 function prefillContributors(contributors) {
   if (!Array.isArray(contributors) || contributors.length === 0) return [];
@@ -368,6 +422,7 @@ function prefillContributors(contributors) {
   const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
   let authorsChanged = false;
   const addTarget = (group, index, identity) => {
+    // Repeated ContactPerson entries share one lookup; prefer an available ORCID.
     const key = `${group}:${index}`;
     const previous = targets.get(key);
     if (!previous || (!previous.identity.orcid && identity.orcid)) targets.set(key, { group, index, identity });
@@ -378,6 +433,7 @@ function prefillContributors(contributors) {
     const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
     const orcid = extractCreatorOrcid(c);
     const identity = { orcid, familyname, givenname };
+    // Author contact roles also apply when the Contributors form group is disabled.
     if (role === 'Contact Person' && person) {
       const index = findContactAuthorIndex(authors, identity);
       if (index !== -1) {
@@ -389,6 +445,7 @@ function prefillContributors(contributors) {
     }
     if (!contributorStack?.setContributors) return;
     const institutionname = c.name || '';
+    // A nameless entry has no safe deduplication key; keep it separate for correction.
     const key = person
       ? (orcid || familyname || givenname ? `person:${orcid || normalizeDoiPersonNameKey(familyname, givenname)}` : Symbol())
       : `institution:${institutionname.trim().toLowerCase()}`;
@@ -682,8 +739,9 @@ async function prefillRights(rightsList) {
 /**
  * Enrich only explicit imported personal contacts, without changing their roles.
  *
- * @param {Array} targets - Contact targets returned by prefillContributors.
- * @param {DoiLookupService} lookupService - The DOI lookup service instance.
+ * @param {DoiContactTarget[]|null|undefined} targets Targets returned by prefillContributors.
+ * @param {DoiLookupService|null} [lookupService] Optional local contact lookup service.
+ * @returns {Promise<void>} Resolves after enrichment; individual lookup failures are ignored.
  */
 async function prefillContactPersons(targets, lookupService) {
   if (!Array.isArray(targets) || targets.length === 0 || !lookupService) return;
@@ -691,6 +749,7 @@ async function prefillContactPersons(targets, lookupService) {
   const payloads = Object.fromEntries(Object.entries(stacks).map(([group, stack]) =>
     [group, (stack?.collectPayload?.() || []).map(entry => ({ ...entry }))]));
   const changed = new Set();
+  // Use the resolved target, never the first same-named person, for each response.
   await Promise.all(targets.map(async ({ group, index, identity }) => {
     const entry = payloads[group]?.[index];
     const selected = entry?.type === 'person'
