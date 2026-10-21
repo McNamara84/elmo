@@ -1637,7 +1637,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
-  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  // The contributor cards are on the page now. ICGEM contact import reads them.
   if (isIcgem) {
     await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
