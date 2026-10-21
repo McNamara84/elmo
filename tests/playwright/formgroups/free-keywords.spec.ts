@@ -11,7 +11,7 @@ const CURATED_KEYWORDS = [
   { free_keyword: 'Crustal Deformation Analysis' },
 ];
 
-const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/freeKeywords.html'), 'utf8');
+const FREE_KEYWORDS_TEMPLATE = readFileSync(path.join(REPO_ROOT, 'formgroups/free-keywords.html'), 'utf8');
 const TEST_ROUTE_PATH = '/free-keywords-test';
 const TEST_PAGE_HTML = `<!DOCTYPE html>
 <html lang="en">
