@@ -5,12 +5,16 @@
   <identifier identifierType="DOI"/>
   <creators>
     <creator>
-      <creatorName nameType="Personal">cont_pers_author_1</creatorName>
-      <familyName>cont_pers_author_1</familyName>
+      <creatorName nameType="Personal">Reißland, Sven</creatorName>
+      <givenName>Sven</givenName>
+      <familyName>Reißland</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</nameIdentifier>
     </creator>
     <creator>
-      <creatorName nameType="Personal">cont_pers_author_2</creatorName>
-      <familyName>cont_pers_author_2</familyName>
+      <creatorName nameType="Personal">Schmidt, Jürgen</creatorName>
+      <givenName>Jürgen</givenName>
+      <familyName>Schmidt</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1117-8766</nameIdentifier>
     </creator>
   </creators>
   <titles/>
@@ -20,30 +24,44 @@
   <subjects/>
   <contributors>
     <contributor contributorType="ContactPerson">
-      <contributorName>cont_pers_author_1</contributorName>
-      <familyName>cont_pers_author_1</familyName>
+      <contributorName>Reißland, Sven</contributorName>
+      <givenName>Sven</givenName>
+      <familyName>Reißland</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0001-6293-5336</nameIdentifier>
     </contributor>
     <contributor contributorType="ContactPerson">
-      <contributorName>cont_pers_author_2</contributorName>
-      <familyName>cont_pers_author_2</familyName>
-    </contributor>
-    <contributor contributorType="ContactPerson">
-      <contributorName nameType="Personal">cont_pers_1</contributorName>
-      <familyName>cont_pers_1</familyName>
+      <contributorName>Schmidt, Jürgen</contributorName>
+      <givenName>Jürgen</givenName>
+      <familyName>Schmidt</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-1117-8766</nameIdentifier>
     </contributor>
     <contributor contributorType="ContactPerson">
       <contributorName nameType="Organizational">cont_inst_1</contributorName>
     </contributor>
     <contributor contributorType="ContactPerson">
+      <contributorName nameType="Personal">Torkhov, Aleksandr</contributorName>
+      <givenName>Aleksandr</givenName>
+      <familyName>Torkhov</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0009-0006-3313-7304</nameIdentifier>
+      <affiliation affiliationIdentifierScheme="ROR" schemeURI="https://ror.org" affiliationIdentifier="https://ror.org/04z8jg394">Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</affiliation>
+    </contributor>
+    <contributor contributorType="ContactPerson">
+      <contributorName nameType="Organizational">cont_inst_2</contributorName>
+    </contributor>
+    <contributor contributorType="RegistrationAgency">
       <contributorName nameType="Organizational">cont_inst_2</contributorName>
     </contributor>
     <contributor contributorType="ContactPerson">
-      <contributorName nameType="Personal">cont_pers_2</contributorName>
-      <familyName>cont_pers_2</familyName>
+      <contributorName nameType="Personal">Ince, E. Sinem</contributorName>
+      <givenName>E. Sinem</givenName>
+      <familyName>Ince</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</nameIdentifier>
     </contributor>
-    <contributor contributorType="ContactPerson">
-      <contributorName nameType="Personal">cont_pers_3</contributorName>
-      <familyName>cont_pers_3</familyName>
+    <contributor contributorType="Producer">
+      <contributorName nameType="Personal">Ince, E. Sinem</contributorName>
+      <givenName>E. Sinem</givenName>
+      <familyName>Ince</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">0000-0002-3393-1392</nameIdentifier>
     </contributor>
   </contributors>
   <dates>
@@ -110,7 +128,7 @@
     </CI_ResponsibleParty>
   </contact>
   <dateStamp>
-    <gco:Date>2026-10-16</gco:Date>
+    <gco:Date>2026-10-21</gco:Date>
   </dateStamp>
   <referenceSystemInfo>
     <MD_ReferenceSystem>
@@ -129,20 +147,20 @@
         <CI_Citation>
           <title/>
           
-          <citedResponsibleParty>
+          <citedResponsibleParty xlink:href="http://orcid.org/0000-0001-6293-5336">
             <CI_ResponsibleParty>
               <individualName>
-                <gco:CharacterString>cont_pers_author_1</gco:CharacterString>
+                <gco:CharacterString>Reißland, Sven</gco:CharacterString>
               </individualName>
               <role>
                 <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="author">author</CI_RoleCode>
               </role>
             </CI_ResponsibleParty>
           </citedResponsibleParty>
-          <citedResponsibleParty>
+          <citedResponsibleParty xlink:href="http://orcid.org/0000-0002-1117-8766">
             <CI_ResponsibleParty>
               <individualName>
-                <gco:CharacterString>cont_pers_author_2</gco:CharacterString>
+                <gco:CharacterString>Schmidt, Jürgen</gco:CharacterString>
               </individualName>
               <role>
                 <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="author">author</CI_RoleCode>
@@ -155,21 +173,45 @@
       <pointOfContact>
         <CI_ResponsibleParty>
           <individualName>
-            <gco:CharacterString>cont_pers_author_1</gco:CharacterString>
+            <gco:CharacterString>Torkhov, Aleksandr</gco:CharacterString>
+          </individualName>
+          <organisationName>
+            <gco:CharacterString>Helmholtz Centre Potsdam - GFZ German Research Centre for Geosciences</gco:CharacterString>
+          </organisationName>
+          <contactInfo>
+            <CI_Contact>
+              <address>
+                <CI_Address>
+                  <electronicMailAddress>
+                    <gco:CharacterString/>
+                  </electronicMailAddress>
+                </CI_Address>
+              </address>
+            </CI_Contact>
+          </contactInfo>
+          <role>
+            <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact">pointOfContact</CI_RoleCode>
+          </role>
+        </CI_ResponsibleParty>
+      </pointOfContact>
+      <pointOfContact>
+        <CI_ResponsibleParty>
+          <individualName>
+            <gco:CharacterString>Reißland, Sven</gco:CharacterString>
           </individualName>
           <contactInfo>
             <CI_Contact>
               <address>
                 <CI_Address>
                   <electronicMailAddress>
-                    <gco:CharacterString>cont_pers_author_1@mail.com</gco:CharacterString>
+                    <gco:CharacterString>sven@email.com</gco:CharacterString>
                   </electronicMailAddress>
                 </CI_Address>
               </address>
               <onlineResource>
                 <CI_OnlineResource>
                   <linkage>
-                    <URL>cont_pers_author_1.com</URL>
+                    <URL>https://sven.com</URL>
                   </linkage>
                 </CI_OnlineResource>
               </onlineResource>
@@ -183,21 +225,21 @@
       <pointOfContact>
         <CI_ResponsibleParty>
           <individualName>
-            <gco:CharacterString>cont_pers_author_2</gco:CharacterString>
+            <gco:CharacterString>Schmidt, Jürgen</gco:CharacterString>
           </individualName>
           <contactInfo>
             <CI_Contact>
               <address>
                 <CI_Address>
                   <electronicMailAddress>
-                    <gco:CharacterString>cont_pers_author_2@mail.com</gco:CharacterString>
+                    <gco:CharacterString>Schmidt@mail.de</gco:CharacterString>
                   </electronicMailAddress>
                 </CI_Address>
               </address>
               <onlineResource>
                 <CI_OnlineResource>
                   <linkage>
-                    <URL>cont_pers_author_2.com</URL>
+                    <URL>https://jürgen.com</URL>
                   </linkage>
                 </CI_OnlineResource>
               </onlineResource>
@@ -211,76 +253,22 @@
       <pointOfContact>
         <CI_ResponsibleParty>
           <individualName>
-            <gco:CharacterString>cont_pers_1</gco:CharacterString>
+            <gco:CharacterString>Ince, E. Sinem</gco:CharacterString>
           </individualName>
           <contactInfo>
             <CI_Contact>
               <address>
                 <CI_Address>
                   <electronicMailAddress>
-                    <gco:CharacterString>cont_pers_1@mail.com</gco:CharacterString>
+                    <gco:CharacterString>sinem@mail.de</gco:CharacterString>
                   </electronicMailAddress>
                 </CI_Address>
               </address>
               <onlineResource>
                 <CI_OnlineResource>
                   <linkage>
-                    <URL>cont_pers_1.com</URL>
+                    <URL>http://sinem.com</URL>
                   </linkage>
-                </CI_OnlineResource>
-              </onlineResource>
-            </CI_Contact>
-          </contactInfo>
-          <role>
-            <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact">pointOfContact</CI_RoleCode>
-          </role>
-        </CI_ResponsibleParty>
-      </pointOfContact>
-      <pointOfContact>
-        <CI_ResponsibleParty>
-          <individualName>
-            <gco:CharacterString>cont_pers_2</gco:CharacterString>
-          </individualName>
-          <contactInfo>
-            <CI_Contact>
-              <address>
-                <CI_Address>
-                  <electronicMailAddress>
-                    <gco:CharacterString>cont_pers_2@mail.com</gco:CharacterString>
-                  </electronicMailAddress>
-                </CI_Address>
-              </address>
-              <onlineResource>
-                <CI_OnlineResource>
-                  <linkage>
-                    <URL>cont_pers_2.com</URL>
-                  </linkage>
-                </CI_OnlineResource>
-              </onlineResource>
-            </CI_Contact>
-          </contactInfo>
-          <role>
-            <CI_RoleCode codeList="http://www.isotc211.org/2005/resources/Codelist/gmxCodelists.xml#CI_RoleCode" codeListValue="pointOfContact">pointOfContact</CI_RoleCode>
-          </role>
-        </CI_ResponsibleParty>
-      </pointOfContact>
-      <pointOfContact>
-        <CI_ResponsibleParty>
-          <individualName>
-            <gco:CharacterString>cont_pers_3</gco:CharacterString>
-          </individualName>
-          <contactInfo>
-            <CI_Contact>
-              <address>
-                <CI_Address>
-                  <electronicMailAddress>
-                    <gco:CharacterString>cont_pers_author_2@mail.com</gco:CharacterString>
-                  </electronicMailAddress>
-                </CI_Address>
-              </address>
-              <onlineResource>
-                <CI_OnlineResource>
-                  <linkage/>
                 </CI_OnlineResource>
               </onlineResource>
             </CI_Contact>
@@ -300,17 +288,10 @@
               <address>
                 <CI_Address>
                   <electronicMailAddress>
-                    <gco:CharacterString>cont_inst_1@mail.com</gco:CharacterString>
+                    <gco:CharacterString>cont_inst_1@gmail.com</gco:CharacterString>
                   </electronicMailAddress>
                 </CI_Address>
               </address>
-              <onlineResource>
-                <CI_OnlineResource>
-                  <linkage>
-                    <URL>cont_inst_1.com</URL>
-                  </linkage>
-                </CI_OnlineResource>
-              </onlineResource>
             </CI_Contact>
           </contactInfo>
           <role>
@@ -328,14 +309,14 @@
               <address>
                 <CI_Address>
                   <electronicMailAddress>
-                    <gco:CharacterString>cont_inst_2@mail.com</gco:CharacterString>
+                    <gco:CharacterString>cont_inst_2@gmx.de</gco:CharacterString>
                   </electronicMailAddress>
                 </CI_Address>
               </address>
               <onlineResource>
                 <CI_OnlineResource>
                   <linkage>
-                    <URL>cont_inst_2.com</URL>
+                    <URL>https://cont_inst_2.com</URL>
                   </linkage>
                 </CI_OnlineResource>
               </onlineResource>
