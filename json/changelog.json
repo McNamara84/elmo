@@ -1,6 +1,29 @@
 {
-  "currentVersion": "2.2.0",
+  "currentVersion": "2.2.1dev",
   "releases": [
+    {
+      "version": "2.2.1dev",
+      "date": "2026-10-20",
+      "sections": [
+        {
+          "title": "Bug fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID, ROR, and DOI logos are displayed again in contextual help."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1306 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     {
       "version": "2.2.0",
       "date": "2026-10-19",
