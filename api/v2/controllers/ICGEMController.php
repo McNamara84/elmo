@@ -965,13 +965,13 @@ class ICGEMController extends DatasetController
     }
 
     /**
-     * @param array{identifier: string, name: string} $entry
+     * @param array{identifier: string, identifierType: string, name: string} $entry
      * @param array<string, true> $seenOrcids
      * @param array<string, true> $seenNames
      */
     private function rememberIcgemContactIdentity(array $entry, array &$seenOrcids, array &$seenNames): void
     {
-        if ($entry['identifier'] !== '' && ($entry['identifierType'] ?? '') === 'ORCID') {
+        if ($entry['identifier'] !== '' && $entry['identifierType'] === 'ORCID') {
             $seenOrcids[strtolower($entry['identifier'])] = true;
         }
         $seenNames[strtolower($entry['name'])] = true;
