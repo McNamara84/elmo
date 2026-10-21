@@ -591,6 +591,20 @@ function personNameKey(familyName, givenName) {
   return `${String(familyName || '').trim().toLowerCase()}\0${String(givenName || '').trim().toLowerCase()}`;
 }
 
+/*
+prepared for XML structure like:
+<xs:complexType name="CI_Contact">
+  <xs:sequence>
+    <xs:element name="nameType" type="dace:nameType" minOccurs="1" maxOccurs="1"/>
+    <xs:element name="name" type="xs:string" minOccurs="1" maxOccurs="1"/>
+    <xs:element name="identifier" type="xs:string" minOccurs="0" maxOccurs="1"/>
+    <xs:element name="identifierType" type="xs:string" minOccurs="0" maxOccurs="1"/>
+    <xs:element name="address" type="xs:string" minOccurs="1" maxOccurs="unbounded"/>
+    <xs:element name="onlineResource" type="xs:string" minOccurs="0" maxOccurs="unbounded"/>
+    <xs:element name="contactInstructions" type="xs:string" minOccurs="0"/>
+  </xs:sequence>
+</xs:complexType>
+*/
 function readGravContacts(xmlDoc) {
   const product = descendantElementsByLocalName(xmlDoc, 'globalGravityProduct')[0];
   const wrapper = childElementsByLocalName(product, 'contacts')[0];
@@ -607,6 +621,7 @@ function readGravContacts(xmlDoc) {
     } else if (nameType === 'Personal') {
       familyName = name;
     }
+    // prepare data in a certain form
     return {
       nameType,
       name,
@@ -633,7 +648,7 @@ function prepareContactDetailsOrganizational(contacts) {
   return contacts.filter((contact) => contact.nameType === 'Organizational');
 }
 
-function ingest(card, contact) {
+function ingestContactInfo(card, contact) {
   if (contact.email) card.email = contact.email;
   if (contact.website) card.website = contact.website;
 }
@@ -642,14 +657,16 @@ function ingestContactDetailsPersonal(contributors, contacts) {
   const cards = findContributorCards(contributors, 'person');
   const used = new Set();
   contacts.forEach((contact) => {
+    // first try matching by ORCID
     const byOrcid = contact.orcid
       ? cards.find((card) => !used.has(card) && normalizeOrcid(card.orcid) === contact.orcid)
       : null;
     if (byOrcid) {
-      ingest(byOrcid, contact);
+      ingestContactInfo(byOrcid, contact);
       used.add(byOrcid);
       return;
     }
+    // second, try to match by name
     const wanted = personNameKey(contact.familyName, contact.givenName);
     const byName = cards.find((card) => (
       !used.has(card)
@@ -657,10 +674,11 @@ function ingestContactDetailsPersonal(contributors, contacts) {
       && (!contact.orcid || !normalizeOrcid(card.orcid) || normalizeOrcid(card.orcid) === contact.orcid)
     ));
     if (byName) {
-      ingest(byName, contact);
+      ingestContactInfo(byName, contact);
       used.add(byName);
       return;
     }
+    // if no match was found, log a warning
     console.warn('no contributor found for contact', contact.name);
   });
 }
@@ -674,7 +692,7 @@ function ingestContactDetailsOrganizational(contributors, contacts) {
       !used.has(card) && String(card.institutionname || '').trim().toLowerCase() === wanted
     ));
     if (byName) {
-      ingest(byName, contact);
+      ingestContactInfo(byName, contact);
       used.add(byName);
       return;
     }
