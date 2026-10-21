@@ -47,7 +47,28 @@ function extractCreatorOrcid(creator) {
   }
 
   const orcidEntry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-  return orcidEntry ? (orcidEntry.nameIdentifier || '').replace('https://orcid.org/', '') : '';
+  return normalizeOrcid(orcidEntry?.nameIdentifier);
+}
+
+function normalizeOrcid(value) {
+  return String(value || '').trim().replace(/^https?:\/\/orcid\.org\//i, '').toUpperCase();
+}
+
+/** Preserve personal display names when DataCite omits structured names. */
+function extractPersonNames(person) {
+  let givenname = person.givenName || '';
+  let familyname = person.familyName || '';
+  if (person.nameType === 'Personal') {
+    const parts = String(person.name || '').split(',').map(part => part.trim());
+    if (parts.length === 2 && parts.every(Boolean)) {
+      familyname ||= parts[0];
+      givenname ||= parts[1];
+    } else if (!givenname && !familyname) {
+      // Keep an unstructured name intact for manual correction; never guess its order.
+      familyname = person.name || '';
+    }
+  }
+  return { familyname, givenname };
 }
 
 function extractAffiliationsPayload(creator) {
@@ -72,8 +93,7 @@ function extractAffiliationsPayload(creator) {
 function buildAuthorsPayloadFromCreators(creators) {
   return creators
     .map(creator => {
-      const givenname = creator.givenName || '';
-      const familyname = creator.familyName || '';
+      const { givenname, familyname } = extractPersonNames(creator);
       const nameType = creator.nameType || '';
       const creatorName = creator.name || '';
       const affiliations = extractAffiliationsPayload(creator);
@@ -104,8 +124,26 @@ function buildAuthorsPayloadFromCreators(creators) {
     .filter(Boolean);
 }
 
-function normalizeNameKey(familyName, givenName) {
-  return `${String(familyName || '').trim().toLowerCase()}\u0000${String(givenName || '').trim().toLowerCase()}`;
+function normalizeDoiPersonNameKey(familyName, givenName) {
+  const normalize = value => String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+  return `${normalize(familyName)}\u0000${normalize(givenName)}`;
+}
+
+/** Resolve only an unambiguous person, with ORCID taking precedence over names. */
+function findContactAuthorIndex(authors, identity) {
+  const people = authors.map((author, index) => ({ author, index })).filter(({ author }) => author.type === 'person');
+  if (identity.orcid) {
+    const matches = people.filter(({ author }) => normalizeOrcid(author.orcid) === identity.orcid);
+    if (matches.length) return matches.length === 1 ? matches[0].index : -1;
+  }
+  if (!identity.familyname.trim() || !identity.givenname.trim()) return -1;
+  const key = normalizeDoiPersonNameKey(identity.familyname, identity.givenname);
+  const matches = people.filter(({ author }) => {
+    const orcid = normalizeOrcid(author.orcid);
+    return !(identity.orcid && orcid && identity.orcid !== orcid)
+      && normalizeDoiPersonNameKey(author.familyname, author.givenname) === key;
+  });
+  return matches.length === 1 ? matches[0].index : -1;
 }
 
 function getCurrentAuthorsPayload(authorStack) {
@@ -316,49 +354,68 @@ function prefillCreators(creators) {
 }
 
 /**
- * Maps contributors (persons and institutions) with role deduplication.
+ * Maps contributor roles, transferring explicit personal contacts to matching authors.
+ * @returns {Array<{group: string, index: number, identity: Object}>} Personal contact lookup targets.
  */
 function prefillContributors(contributors) {
-  if (!Array.isArray(contributors) || contributors.length === 0) return;
+  if (!Array.isArray(contributors) || contributors.length === 0) return [];
 
-  if (window.contributorStack?.setContributors) {
-    const entries = [];
-    const byKey = new Map();
-    const authors = getCurrentAuthorsPayload(getAuthorStackController());
-    contributors.forEach(c => {
-      const role = normalizeRole(c.contributorType || 'Other');
-      const givenname = c.givenName || '';
-      const familyname = c.familyName || '';
-      const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
-      if (role === 'Contact Person' && person && authors.some(author =>
-        author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname))) return;
-      const orcid = (c.nameIdentifiers || []).find(item => item.nameIdentifierScheme === 'ORCID')?.nameIdentifier?.replace(/^https?:\/\/orcid\.org\//, '') || '';
-      const institutionname = c.name || '';
-      const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${institutionname.trim().toLowerCase()}`;
-      const affiliations = (c.affiliation || []).map(item => ({
-        label: typeof item === 'string' ? item : (item.name || ''),
-        rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
-      })).filter(item => item.label);
-      let entry = byKey.get(key);
-      if (!entry) {
-        entry = person
-          ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
-          : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
-        byKey.set(key, entry);
-        entries.push(entry);
+  const authorStack = getAuthorStackController();
+  const contributorStack = window.contributorStack;
+  const entries = [];
+  const byKey = new Map();
+  const targets = new Map();
+  const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
+  let authorsChanged = false;
+  const addTarget = (group, index, identity) => {
+    const key = `${group}:${index}`;
+    const previous = targets.get(key);
+    if (!previous || (!previous.identity.orcid && identity.orcid)) targets.set(key, { group, index, identity });
+  };
+  contributors.forEach(c => {
+    const role = normalizeRole(c.contributorType || 'Other');
+    const { givenname, familyname } = extractPersonNames(c);
+    const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
+    const orcid = extractCreatorOrcid(c);
+    const identity = { orcid, familyname, givenname };
+    if (role === 'Contact Person' && person) {
+      const index = findContactAuthorIndex(authors, identity);
+      if (index !== -1) {
+        authors[index].isContact = true;
+        authorsChanged = true;
+        addTarget('authors', index, { ...identity, orcid: orcid || normalizeOrcid(authors[index].orcid) });
+        return;
       }
-      if (!entry.roles.includes(role)) entry.roles.push(role);
-      affiliations.forEach(item => {
-        const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
-        if (!existing) entry.affiliations.push(item);
-        else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
-      });
+    }
+    if (!contributorStack?.setContributors) return;
+    const institutionname = c.name || '';
+    const key = person
+      ? (orcid || familyname || givenname ? `person:${orcid || normalizeDoiPersonNameKey(familyname, givenname)}` : Symbol())
+      : `institution:${institutionname.trim().toLowerCase()}`;
+    const affiliations = (c.affiliation || []).map(item => ({
+      label: typeof item === 'string' ? item : (item.name || ''),
+      rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
+    })).filter(item => item.label);
+    let entry = byKey.get(key);
+    if (!entry) {
+      entry = person
+        ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
+        : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
+      byKey.set(key, entry);
+      entries.push(entry);
+    }
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    if (person && role === 'Contact Person') addTarget('contributors', entries.indexOf(entry), identity);
+    affiliations.forEach(item => {
+      const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
+      if (!existing) entry.affiliations.push(item);
+      else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
     });
-    window.contributorStack.setContributors(entries);
-    return;
-  }
-
-  if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
+  });
+  if (authorsChanged) authorStack.setAuthors(authors);
+  if (contributorStack?.setContributors) contributorStack.setContributors(entries);
+  else if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
+  return Array.from(targets.values());
 }
 
 /**
@@ -623,59 +680,32 @@ async function prefillRights(rightsList) {
 /* ================================================================== */
 
 /**
- * For each prefilled author, tries to find email/website in the local database
- * and populates the contact person fields.
+ * Enrich only explicit imported personal contacts, without changing their roles.
  *
- * @param {Array} creators - The creators array from DataCite attributes.
+ * @param {Array} targets - Contact targets returned by prefillContributors.
  * @param {DoiLookupService} lookupService - The DOI lookup service instance.
  */
-async function prefillContactPersons(creators, lookupService) {
-  if (!Array.isArray(creators) || !lookupService) return;
-
-  const authorStack = getAuthorStackController();
-  if (authorStack) {
-    const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
-    let changed = false;
-
-    const promises = creators.map(creator => {
-      const givenName = creator.givenName || '';
-      const familyName = creator.familyName || '';
-      if (!givenName && !familyName) return Promise.resolve();
-
-      const orcid = extractCreatorOrcid(creator);
-
-      return lookupService.lookupContacts({ orcid, familyname: familyName, givenname: givenName })
-        .then(contact => {
-          if (!contact || (!contact.email && !contact.website)) {
-            return;
-          }
-
-          const creatorKey = normalizeNameKey(familyName, givenName);
-          const author = authors.find(candidate => (
-            candidate.type === 'person' && normalizeNameKey(candidate.familyname, candidate.givenname) === creatorKey
-          ));
-
-          if (!author) {
-            return;
-          }
-
-          author.isContact = true;
-          if (contact.email) author.email = contact.email;
-          if (contact.website) author.website = contact.website;
-          changed = true;
-        })
-        .catch(() => { /* best-effort: silently ignore lookup failures */ });
-    });
-
-    await Promise.all(promises);
-
-    if (changed) {
-      authorStack.setAuthors(authors);
-    }
-    return;
-  }
-
-  throw new Error('Authors form is not initialized.');
+async function prefillContactPersons(targets, lookupService) {
+  if (!Array.isArray(targets) || targets.length === 0 || !lookupService) return;
+  const stacks = { authors: getAuthorStackController(), contributors: window.contributorStack };
+  const payloads = Object.fromEntries(Object.entries(stacks).map(([group, stack]) =>
+    [group, (stack?.collectPayload?.() || []).map(entry => ({ ...entry }))]));
+  const changed = new Set();
+  await Promise.all(targets.map(async ({ group, index, identity }) => {
+    const entry = payloads[group]?.[index];
+    const selected = entry?.type === 'person'
+      && (group === 'authors' ? entry.isContact === true : entry.roles.includes('Contact Person'));
+    if (!selected || (!identity.orcid && !(identity.familyname.trim() && identity.givenname.trim()))) return;
+    try {
+      const contact = await lookupService.lookupContacts(identity);
+      if (!contact || (!contact.email && !contact.website)) return;
+      if (contact.email) entry.email = contact.email;
+      if (contact.website) entry.website = contact.website;
+      changed.add(group);
+    } catch { /* Best-effort: the imported contact role is independent of this lookup. */ }
+  }));
+  if (changed.has('authors')) stacks.authors.setAuthors(payloads.authors);
+  if (changed.has('contributors')) stacks.contributors.setContributors(payloads.contributors);
 }
 
 /* ================================================================== */
@@ -709,7 +739,7 @@ async function applyDoiPrefill(attributes, lookupService) {
   // Synchronous prefills
   prefillResourceInfo(attributes);
   prefillCreators(attributes.creators);
-  prefillContributors(attributes.contributors);
+  const contactTargets = prefillContributors(attributes.contributors);
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
@@ -723,9 +753,7 @@ async function applyDoiPrefill(attributes, lookupService) {
   await prefillRights(attributes.rightsList);
 
   // Post-prefill: look up contact person email/website from local DB
-  if (lookupService && Array.isArray(attributes.creators)) {
-    await prefillContactPersons(attributes.creators, lookupService);
-  }
+  await prefillContactPersons(contactTargets, lookupService);
 }
 
 /* ================================================================== */

@@ -104,7 +104,9 @@ test.describe('Changelog access and rendering', () => {
     await expect(changelog).toBeVisible();
     await expect(changelog.locator('.accordion-item')).toHaveCount(changelogData.releases.length);
     await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toHaveClass(/show/u);
-    await expect(changelog.locator('.accordion-item').first().getByText('All ELMOs', { exact: true })).toBeVisible();
+    await expect(changelog.locator('.accordion-item').first().getByText('All ELMOs', { exact: true }).first()).toBeVisible();
+    await expect(changelog.getByRole('link', { name: 'Issue #1300', exact: true }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1300');
     await expect(changelog.getByRole('link', { name: 'Issue #1306' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1306');
     const migratedRelease = changelog.locator('.accordion-item').filter({

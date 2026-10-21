@@ -12,6 +12,18 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons even when no email or website is available. Local contact details are added only for people identified as contacts in the imported metadata."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1300 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "ORCID, ROR, and DOI logos are displayed again in contextual help."
                 }
               ],

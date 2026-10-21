@@ -468,7 +468,7 @@ describe('doiPrefill.js', () => {
       const setAuthors = jest.fn();
       window.authorStack = {
         collectPayload: jest.fn(() => [
-          { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
+          { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [], isContact: true },
           { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
         ]),
         setAuthors,
@@ -481,7 +481,7 @@ describe('doiPrefill.js', () => {
       };
 
       await mod.prefillContactPersons([
-        { familyName: 'Doe', givenName: 'Jane', nameIdentifiers: [] },
+        { group: 'authors', index: 0, identity: { familyname: 'Doe', givenname: 'Jane', orcid: '' } },
       ], lookupService);
 
       expect(lookupService.lookupContacts).toHaveBeenCalledWith({
