@@ -35,6 +35,7 @@ export default defineConfig({
       name: 'firefox-gem',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
         'flows/elmogem-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
@@ -44,6 +45,7 @@ export default defineConfig({
       name: 'firefox-igsn',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8002/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmoisgn-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
       ],
@@ -52,6 +54,7 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'], baseURL: 'http://localhost:8003/' },
       testMatch: [
+        'formgroups/orcid-layout.spec.ts',
         'formgroups/elmomsl-specific/**/*.spec.ts',
         'features/elmo-performance.spec.ts',
         'smoke/**/*.spec.ts',

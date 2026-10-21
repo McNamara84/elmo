@@ -1,0 +1,79 @@
+{
+  "data": {
+    "attributes": {
+      "doi": "10.5880/ha-arbodat_ak25",
+      "titles": [
+        {
+          "title": "AK25 Archäobotanische Funde des römischen Lagerdorfes (Vicus) des 2. Jh. AD in Echzell (Wetteraukreis, Hessen)"
+        },
+        {
+          "title": "AK25 Archaeobotanical finds from the Roman vicus of the 2. century AD Echzell (Wetteraukreis, Hessen)",
+          "titleType": "Other"
+        }
+      ],
+      "creators": [
+        {
+          "name": "Kreuz, Angela",
+          "nameType": "Personal",
+          "givenName": "Angela",
+          "familyName": "Kreuz",
+          "affiliation": [
+            {
+              "name": "LfDH, Landesamt für Denkmalpflege Hessen, hessenARCHÄOLOGIE, Archäobotanik, Wiesbaden, Deutschland"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0000-0003-2450-824X",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "contributors": [
+        {
+          "name": "hessenARCHÄOLOGIE-Archäobotanik",
+          "nameType": "Organizational",
+          "affiliation": [
+            {
+              "name": "Landesamt für Denkmalpflege Hessen, LfDH, Wiesbaden, Germany"
+            }
+          ],
+          "contributorType": "HostingInstitution",
+          "nameIdentifiers": []
+        },
+        {
+          "name": "Kreuz, Angela",
+          "nameType": "Personal",
+          "givenName": "Angela",
+          "familyName": "Kreuz",
+          "affiliation": [
+            {
+              "name": "Landesamt für Denkmalpflege Hessen, Departement hessenARCHÄOLOGIE, Archäobotanik, Wiesbaden, Germany"
+            }
+          ],
+          "contributorType": "ContactPerson",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0000-0003-2450-824X",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "publicationYear": 2022,
+      "types": {
+        "ris": "DATA",
+        "bibtex": "misc",
+        "citeproc": "dataset",
+        "schemaOrg": "Dataset",
+        "resourceType": "Dataset",
+        "resourceTypeGeneral": "Dataset"
+      },
+      "language": null,
+      "version": null
+    }
+  }
+}

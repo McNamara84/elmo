@@ -1,3 +1,5 @@
+import { createAffiliationEditor, createAffiliationBadge } from '../../affiliationEditor.js';
+
 /** Combined, ordered contributor cards. The hidden payload is only a transport field. */
 $(document).ready(function () {
   const shell = document.querySelector('[data-contributor-shell]');
@@ -23,7 +25,7 @@ $(document).ready(function () {
     return String(value).split(',').map(role => role.trim()).filter(Boolean);
   }
 
-  function affiliationPairs(value, rorValue) {
+  function affiliationPairs(value, rorValue, keepEmpty = false) {
     let tags = [];
     try {
       const parsed = JSON.parse(value || '[]');
@@ -35,7 +37,7 @@ $(document).ready(function () {
     return tags.map((tag, index) => ({
       label: String(tag?.label ?? tag?.value ?? tag?.name ?? tag).trim(),
       rorId: String(tag?.rorId ?? tag?.id ?? rorIds[index] ?? '').replace(/^https?:\/\/ror\.org\//, '').trim()
-    })).filter(pair => pair.label || pair.rorId);
+    })).filter(pair => keepEmpty || pair.label || pair.rorId);
   }
 
   function field(card, name) {
@@ -73,6 +75,37 @@ $(document).ready(function () {
       entry.roles.length || entry.affiliations.length || entry.email || entry.website);
   }
 
+  function hasTypeSpecificContent(entry) {
+    return hasContent({...entry, affiliations: []});
+  }
+
+  /**
+   * Collect cards in DOM order, including pending-only cards and invalid empty label slots.
+   * @returns {Array<Object>} Draft copies with optional _ui.affiliationInput, never export payloads.
+   */
+  function collectDraftEntries() {
+    return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
+      .map(card => {
+        const entry = read(card);
+        entry.affiliations = card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getAffiliations() || entry.affiliations;
+        const input = card.querySelector('[data-affiliation-editor]')?.affiliationEditor.getPendingInput() || '';
+        if (input) entry._ui = { affiliationInput: input };
+        return entry;
+      }).filter(entry => hasContent(entry) || entry._ui?.affiliationInput.trim())
+      .map((entry, order) => ({ ...entry, order }));
+  }
+
+  /**
+   * Synchronize ORCID/import affiliations through the editor so fields and summaries agree.
+   * @param {HTMLElement|jQuery} card Target contributor card.
+   * @param {Array<string|Object>} values Ordered affiliation values.
+   * @returns {void}
+   */
+  function setEntryAffiliations(card, values) {
+    const element = card?.jquery ? card[0] : card;
+    element?.querySelector('[data-affiliation-editor]')?.affiliationEditor.setAffiliations(values);
+  }
+
   function collectPayload() {
     return Array.from(stack.children).filter(card => card.matches('[data-contributor-card]'))
       .map(read).filter(hasContent).map((entry, order) => ({ ...entry, order }));
@@ -90,6 +123,9 @@ $(document).ready(function () {
     avatar.querySelector('i').className = `bi ${person ? 'bi-person' : 'bi-building'}`;
     const roleSummary = card.querySelector('[data-contributor-roles]');
     roleSummary.textContent = entry.roles.join(', ');
+    card.querySelector('[data-contributor-summary-orcid]').textContent = person && entry.orcid ? `ORCID ${entry.orcid}` : '';
+    const affiliations = card.querySelector('[data-contributor-summary-affiliations]');
+    affiliations.replaceChildren(...entry.affiliations.map(item => createAffiliationBadge(item)[0]));
     const contact = entry.roles.includes('Contact Person') && (person || window.ELMO_FEATURES?.showContactInstitution === true);
     const contactFields = card.querySelector('[data-contributor-contact-fields]');
     contactFields.classList.toggle('d-none', !contact);
@@ -100,7 +136,7 @@ $(document).ready(function () {
         const active = button.dataset.contributorTypeOption === entry.type;
         button.classList.toggle('active', active);
         button.setAttribute('aria-pressed', String(active));
-        button.disabled = !active && hasContent(entry);
+        button.disabled = !active && hasTypeSpecificContent(entry);
       });
     }
   }
@@ -151,7 +187,7 @@ $(document).ready(function () {
     const helpOn = (localStorage.getItem('helpStatus') || 'help-on') === 'help-on';
     const firstShownFields = new Set();
     stack.querySelectorAll('i[data-help-section-id]').forEach(icon => {
-      const field = icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
+      const field = icon.closest('[data-affiliation-editor]')?.querySelector('[data-affiliation-input]') || icon.closest('.input-group')?.querySelector('input[name]:not([type="hidden"])');
       const key = icon.dataset.helpSectionId || field?.name;
       const fieldShown = isHelpFieldShown(field);
       const show = helpOn && fieldShown && !firstShownFields.has(key);
@@ -206,6 +242,7 @@ $(document).ready(function () {
 
     const dragZone = document.createElement('div');
     dragZone.className = 'd-flex align-items-center px-2 border-end bg-body-tertiary';
+    dragZone.dataset.contributorDragZone = '';
     const drag = makeButton('data-contributor-drag', 'bi-grip-vertical', t('contributors.dragHandle', 'Drag to change order'));
     drag.classList.add('drag-handle');
     dragZone.append(drag);
@@ -215,7 +252,7 @@ $(document).ready(function () {
     const summary = document.createElement('div');
     summary.className = 'd-flex flex-wrap align-items-center gap-2 p-2';
     summary.id = summaryId;
-    summary.innerHTML = '<span class="d-inline-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-dark text-white" style="width: 2rem; height: 2rem;" role="img" data-contributor-avatar><i class="bi" aria-hidden="true"></i></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span>';
+    summary.innerHTML = '<span class="d-inline-flex flex-shrink-0 align-items-center justify-content-center rounded-circle bg-dark text-white" style="width: 2rem; height: 2rem;" role="img" data-contributor-avatar><i class="bi" aria-hidden="true"></i></span><strong data-contributor-name></strong><span class="text-body-secondary" data-contributor-roles></span><span class="small text-body-secondary" data-contributor-summary-orcid></span><span class="d-flex flex-wrap gap-1" data-contributor-summary-affiliations></span>';
     const panel = document.createElement('div');
     panel.className = 'collapse show border-top p-2';
     panel.id = panelId;
@@ -248,12 +285,11 @@ $(document).ready(function () {
       ?.closest('[class^="col-"], [class*=" col-"]');
     if (affiliationColumn) affiliationColumn.className = 'col-12 p-1';
     fields.querySelectorAll(':scope > [class^="col-"], :scope > [class*=" col-"]').forEach(column => {
-      if (column === affiliationColumn) return;
-      column.className = type === 'person'
-        ? 'col-12 col-md-6 col-lg-3 p-1'
-        : column.querySelector('[name="cbOrganisationName[]"]')
-          ? 'col-12 col-lg-8 p-1'
-          : 'col-12 col-lg-4 p-1';
+      // Person templates own the shared ORCID/name layout, including its wrappers.
+      if (type === 'person' || column === affiliationColumn) return;
+      column.className = column.querySelector('[name="cbOrganisationName[]"]')
+        ? 'col-12 col-lg-8 p-1'
+        : 'col-12 col-lg-4 p-1';
     });
     panel.append(fields);
     addContactFields(panel, id);
@@ -268,6 +304,7 @@ $(document).ready(function () {
 
     const actions = document.createElement('div');
     actions.className = 'd-flex flex-column flex-sm-row align-items-center justify-content-center gap-1 p-2 border-start bg-body-tertiary';
+    actions.dataset.contributorActions = '';
     const toggle = makeButton('data-contributor-toggle-edit', 'bi-chevron-up', t('contributors.collapseEntry', 'Collapse contributor entry'));
     toggle.setAttribute('aria-controls', panelId);
     toggle.setAttribute('aria-expanded', 'true');
@@ -306,8 +343,23 @@ $(document).ready(function () {
     if (typeof window.setupRolesDropdown === 'function' && role) {
       window.setupRolesDropdown(person ? ['person', 'both'] : ['institution', 'both'], `#${role.id}`);
     }
-    if (typeof window.autocompleteAffiliations === 'function' && affiliation && ror) {
-      window.autocompleteAffiliations(affiliation.id, ror.id);
+    if (affiliation && ror) {
+      const group = affiliation.closest('.input-group');
+      const help = group.querySelector('i[data-help-section-id]');
+      help?.remove();
+      group.classList.add('d-none');
+      affiliation.type = 'hidden';
+      const editor = createAffiliationEditor({
+        card, group: 'contributor', translate: t, helpButton: help ? $(help).attr('data-contributor-affiliation-help', '') : undefined,
+        readAffiliations: () => affiliationPairs(affiliation.value, ror.value, true),
+        writeAffiliations: values => {
+          writeTags(affiliation, values);
+          ror.value = values.map(item => item.rorId).join(',');
+          affiliation.dispatchEvent(new Event('change', { bubbles: true }));
+        },
+        onChange: updatePayload
+      });
+      group.parentElement.append(editor.element[0]);
     }
     if (typeof window.applyTranslations === 'function') window.applyTranslations();
   }
@@ -335,11 +387,19 @@ $(document).ready(function () {
       input._tagify.removeAllTags();
       input._tagify.addTags(tags);
     }
-    input.value = JSON.stringify(tags);
+    input.value = tags.length ? JSON.stringify(tags) : '';
   }
 
-  function setContributors(entries) {
+  /**
+   * Replace contributor cards from an import or an autosaved draft.
+   * @param {Array<Object>} entries Structured contributor entries.
+   * @param {Object} [options={}] Restore settings.
+   * @param {boolean} [options.restoreUiState=false] Restore unconfirmed affiliation text only for autosave.
+   * @returns {void}
+   */
+  function setContributors(entries, options = {}) {
     rendering = true;
+    stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.destroy());
     stack.replaceChildren();
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const type = entry?.type === 'institution' ? 'institution' : 'person';
@@ -364,6 +424,9 @@ $(document).ready(function () {
       field(card, person ? 'cbpRorIds[]' : 'hiddenOrganisationRorId[]').value = affiliations.map(item => item.rorId).join(',');
       field(card, 'cbContactEmail[]').value = entry.email || '';
       field(card, 'cbContactWebsite[]').value = entry.website || '';
+      const editor = card.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      editor?.render();
+      if (options.restoreUiState) editor?.setPendingInput(entry._ui?.affiliationInput || '');
     });
     rendering = false;
     updatePayload();
@@ -376,6 +439,7 @@ $(document).ready(function () {
     const card = button?.closest('[data-contributor-card]');
     if (!card) return;
     if (button.matches('[data-contributor-remove]')) {
+      card.querySelector('[data-affiliation-editor]')?.affiliationEditor.destroy();
       card.remove();
       updatePayload();
       shell.querySelector('[data-contributor-add-type]')?.focus();
@@ -390,11 +454,21 @@ $(document).ready(function () {
         button.focus();
       }
     } else if (button.matches('[data-contributor-type-option]')) {
-      if (button.disabled || hasContent(read(card))) return;
-      const replacement = buildCard(button.dataset.contributorTypeOption);
+      const targetType = button.dataset.contributorTypeOption;
+      if (button.disabled || targetType === typeOf(card) || hasTypeSpecificContent(read(card))) return;
+      const editor = card.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      const affiliations = editor?.getAffiliations() || read(card).affiliations;
+      const pendingInput = editor?.getPendingInput() || '';
+      const expanded = card.querySelector('[data-contributor-edit-panel]').classList.contains('show');
+      const replacement = buildCard(targetType);
       if (!replacement) return;
+      editor?.destroy();
       card.replaceWith(replacement);
       initializeWidgets(replacement);
+      setExpanded(replacement, expanded);
+      const replacementEditor = replacement.querySelector('[data-affiliation-editor]')?.affiliationEditor;
+      if (affiliations.length) replacementEditor?.setAffiliations(affiliations);
+      if (pendingInput) replacementEditor?.setPendingInput(pendingInput);
       updatePayload();
       replacement.querySelector('input:not([type="hidden"])')?.focus();
     }
@@ -402,6 +476,7 @@ $(document).ready(function () {
   stack.addEventListener('input', updatePayload);
   stack.addEventListener('change', updatePayload);
   document.addEventListener('translationsLoaded', () => {
+    stack.querySelectorAll('[data-affiliation-editor]').forEach(element => element.affiliationEditor.render());
     Array.from(stack.children).forEach(renderCard);
     updatePayload();
   });
@@ -423,6 +498,8 @@ $(document).ready(function () {
     addPerson: () => add('person'),
     addInstitution: () => add('institution'),
     collectPayload,
+    collectDraftEntries,
+    setEntryAffiliations,
     updatePayload,
     setContributors
   };

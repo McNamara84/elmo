@@ -32,6 +32,9 @@ require_once __DIR__ . '/../includes/send_file_helper.php';
 #[CoversFunction('markDataCiteEnvelopeAsSubmitted')]
 final class SendFileHelperFileGenerationTest extends TestCase
 {
+    private string $originalErrorLog;
+    private ?string $errorLogFile = null;
+
     /**
      * Mock payload data returned by generateDatasetPayloadByResourceId.
      */
@@ -67,6 +70,16 @@ final class SendFileHelperFileGenerationTest extends TestCase
 
     protected function setUp(): void
     {
+        parent::setUp();
+
+        // PHPUnit treats STDERR from isolated processes as a test error.
+        // Capture helper diagnostics per test, preserving PHP error reporting.
+        $this->originalErrorLog = (string) ini_get('error_log');
+        $errorLogFile = tempnam(sys_get_temp_dir(), 'elmo_file_generation_');
+        $this->assertNotFalse($errorLogFile);
+        $this->errorLogFile = $errorLogFile;
+        $this->assertNotFalse(ini_set('error_log', $this->errorLogFile));
+
         // Mock generateDatasetPayloadByResourceId to return test payloads
         if (!function_exists('generateDatasetPayloadByResourceId')) {
             $this->mockGenerateDatasetPayloadByResourceId();
@@ -96,6 +109,18 @@ final class SendFileHelperFileGenerationTest extends TestCase
         if (!function_exists('buildGGMsDataServicesNote')) {
             $this->mockBuildGGMsDataServicesNote();
         }
+    }
+
+    protected function tearDown(): void
+    {
+        if (isset($this->originalErrorLog)) {
+            ini_set('error_log', $this->originalErrorLog);
+        }
+        if ($this->errorLogFile !== null && is_file($this->errorLogFile)) {
+            unlink($this->errorLogFile);
+        }
+
+        parent::tearDown();
     }
 
     private function mockGenerateDatasetPayloadByResourceId(): void

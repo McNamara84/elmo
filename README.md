@@ -1,5 +1,5 @@
 ![PHP 8.5](https://img.shields.io/badge/php-8.5-blue?logo=php)
-![MySQL 8.4](https://img.shields.io/badge/mysql-8.4-orange?logo=mysql&logoColor=white)
+![MySQL 9.7](https://img.shields.io/badge/mysql-9.7-orange?logo=mysql&logoColor=white)
 ![jQuery 4.0](https://img.shields.io/badge/jquery-4.0-0769ad?logo=jquery)
 ![Bootstrap 5.3](https://img.shields.io/badge/bootstrap-5.3-563d7c?logo=bootstrap)
 ![OpenAPI 3.1](https://img.shields.io/badge/openapi-3.1-6BA539?logo=openapiinitiative)
@@ -62,7 +62,7 @@ Following conditions are required for installation:
 - PHP ≥ 8.3 and ≤ 8.5
 	- incl. a webserver able to perform PHP operations (such as Apache or Nginx)
 	- extensions needed: XSL, ZIP
-- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/8.0/en/installing-and-configuration.html)) or MariaDB
+- MySQL (for further requirements, see: [MySQL Documentation](https://dev.mysql.com/doc/refman/9.7/en/installing-and-configuration.html)) or MariaDB
 
 ### Quick installation guide
 
@@ -245,9 +245,9 @@ The following third-party dependencies are included in header.php and footer.htm
 - [jQuery 4](https://github.com/jquery/jquery/releases)<br>
   For the event handlers in JavaScript and to simplify the JavaScript code.
 - [jQuery UI 1](https://github.com/jquery/jquery-ui/releases)<br>
-  Extends jQuery with the autocomplete function that we currently use for the affiliation fields.
+  Provides sortable card stacks and autocomplete helpers.
 - [Tagify 4](https://github.com/yairEO/tagify/releases)<br>
-  Is used for the Thesaurus Keywords field, the entry of multiple affiliations and free keywords.
+  Is used for Thesaurus Keywords, contributor roles, and free keywords.
 - [jsTree 3](https://github.com/vakata/jstree/releases)<br>
   Is used to display the thesauri as a hierarchical tree structure.
 - [Swagger UI 5](https://github.com/swagger-api/swagger-ui/releases)<br>
@@ -266,6 +266,18 @@ npm audit fix
 #### Installing the newest versions:
 npm outdated 
 npm install
+
+### Dependency and container baseline (2026-10-19)
+
+The lockfiles contain the latest stable direct npm and Composer dependencies verified against npm and Packagist. Install them with `npm ci` and `composer install`; `npm update` and `composer update --with-all-dependencies` deliberately refresh the lockfiles.
+
+Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.0 (`.nvmrc` and NodeSource 24), MariaDB 12.3.3, and MySQL 9.7.2 in CI. Newer Current/Innovation releases (Node.js 26, MariaDB 13.0, and MySQL 26.7) are excluded from this baseline. PHP uses stable 8.5.11 on Debian 13 (Trixie), Composer uses 2.10.3, and the Playwright image matches the locked test runner at 1.64.1. Container references and CI actions are pinned to immutable digests or commit IDs; update these together with their version labels during maintenance.
+
+The PHP image builds also install available Debian security updates (including Apache 2.4.69). Production omits npm development packages, compilers, and Linux development headers. Trivy still reports upstream vulnerabilities in Debian's MariaDB client and libxml2 packages without available distribution fixes, and in the Go runtime embedded in the official database images' `gosu` helper. The image update therefore does not establish a zero-vulnerability container baseline; review these findings again before deployment.
+
+The targeted `@istanbuljs/load-nyc-config` override reuses the direct `js-yaml` 5 dependency. This removes its old YAML/argparse dependency chain and the vulnerable `sprintf-js` package ([GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)). Retest YAML configuration loading and Jest coverage when changing this override. Swagger UI is served from the locked local npm package, including in the API documentation.
+
+Before deploying the MariaDB 11 to 12.3 upgrade, back up the database and rehearse the supported [MariaDB upgrade procedure](https://mariadb.com/docs/server/server-management/install-and-upgrade-mariadb/upgrading) on a copy of the existing data. The application entrypoint runs a schema-recreating installer, so review that startup behavior before attaching an existing database. Keep the original database volume and backup available for recovery; do not use `docker compose down -v` on data that must be retained.
 
 </details>
 
@@ -292,6 +304,7 @@ npm install
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
   - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI starts read-only; Edit unlocks it, and XML import may populate and unlock it. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs remain visible and block submission until corrected or removed. The ICGEM DOI mail flow retains its own rules.
+  - Metadata reuse follows the public DataCite record, including its title types, which can differ from the publication's landing page. Author affiliations are imported with or without a ROR ID. The source DOI remains visible in the search field after import.
 
 - Publication Year
 
@@ -390,6 +403,13 @@ npm install
   This field specifies if the license is used for software (forSoftware=1) or not (forSoftware=0). The controlled list changes for users based on this parameter when resource type Software is chosen.
 
 ### Author(s)
+
+Authors and Contributors share an affiliation editor for both persons and institutions. Up to seven ROR suggestions appear automatically after three characters. Selecting a result adds its label and ROR ID. Arrow Down/Up highlights a suggestion, which Enter then accepts. Without a highlighted suggestion, Enter adds the typed input without a ROR ID, just like **Add without a ROR**. Escape dismisses suggestions without changing the input. The button is disabled for empty input. Confirmed affiliations can be edited, reordered, or removed, and editing a label preserves its ROR ID. Contributor card headers show ORCID identifiers for persons and affiliation labels with ROR IDs for both types.
+
+Saving or submitting requires confirming or discarding unfinished affiliation input. Cards can always be collapsed; their unfinished input remains available when reopened. Autosave preserves this input in the draft so it can be restored without adding it to exported metadata. Empty confirmed labels no longer block saving, but must be corrected or removed before submitting. If a confirmed label is empty and has a ROR ID, XML and JSON-LD exports use its ROR URL as replacement text to preserve the identifier. The editor and autosaved draft keep the empty label for later correction. Entries with neither a label nor a ROR ID are omitted from exports.
+
+Cards containing only affiliation data can switch between person and institution while retaining confirmed labels, ROR IDs and unfinished input. Names, ORCID and contact information lock the selected type to protect those fields; contributor roles also lock the type.
+
 #### Author Persons
 Author information mapped to `<creator>` element in the datacite scheme and to `<citedResponsibleParty>` in the ISO scheme.
 Occurrence is: 1-n
@@ -1573,7 +1593,7 @@ If the row is completely empty, all fields remain optional.
 
 **Author institution:**
 For each Author institution row:
-If Author institution affiliation is filled (either as plain text or via Tagify tags), then:
+If an Author institution affiliation is confirmed in the affiliation editor, then:
 **Author institution name** becomes required.
 If the affiliation is empty, the institution name is not required.
 

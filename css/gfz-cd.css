@@ -953,6 +953,93 @@ html[data-help-status="help-off"] .input-group-append:has(> .help-placeholder:on
     }
 }
 
+/* Reserve room for the full identifier before sharing the remaining width equally between names. */
+.person-identity-fields,
+.person-name-fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-inline-size: 0;
+}
+
+.person-orcid-field {
+    flex: 1 1 max-content;
+    min-inline-size: 0;
+    max-inline-size: 100%;
+}
+
+.person-name-fields {
+    flex: 2 1 24rem;
+}
+
+.person-name-field {
+    flex: 1 1 11.5rem;
+    min-inline-size: 0;
+}
+
+.person-role-field {
+    flex: 1 1 12rem;
+    min-inline-size: 0;
+}
+
+.person-orcid-field .form-floating {
+    /* Include Bootstrap's padding for the validation icon at the normal font size. */
+    flex: 1 1 calc(19ch + 3rem);
+    inline-size: calc(19ch + 3rem);
+    min-inline-size: min(100%, calc(19ch + 3rem));
+}
+
+.person-orcid-field .input-group {
+    row-gap: 0.25rem;
+}
+
+.person-orcid-field .input-group > .input-group-append,
+.person-orcid-field .input-group > .orcid-search-btn {
+    flex-shrink: 0;
+}
+
+@media (max-width: 575.98px) {
+    /* Side controls otherwise leave too little space for ORCIDs in wider system fonts. */
+    [data-author-card][data-author-entry-type="person"],
+    [data-contributor-card][data-contributor-type="person"] {
+        flex-direction: column;
+    }
+
+    [data-author-entry-type="person"] > [data-author-drag-zone],
+    [data-contributor-type="person"] > [data-contributor-drag-zone] {
+        justify-content: center;
+        border-inline-end: 0 !important;
+        border-block-end: var(--bs-border-width) solid var(--bs-border-color);
+    }
+
+    [data-author-entry-type="person"] > [data-author-actions],
+    [data-contributor-type="person"] > [data-contributor-actions] {
+        flex-direction: row !important;
+        border-inline-start: 0 !important;
+        border-block-start: var(--bs-border-width) solid var(--bs-border-color);
+    }
+
+    .person-orcid-field .input-group {
+        gap: 0.25rem;
+    }
+
+    .person-orcid-field .person-orcid-contact,
+    .person-orcid-field .form-floating {
+        flex-basis: 100%;
+    }
+
+    .person-orcid-field .input-group > :not(:first-child) {
+        margin-inline-start: 0;
+    }
+
+    /* Wrapped controls have their own borders instead of sharing a single input edge. */
+    .person-orcid-field .form-control,
+    .person-orcid-field .btn,
+    .person-orcid-field .input-group-text {
+        border-radius: var(--bs-border-radius) !important;
+    }
+}
+
 /* Keep ORCID buttons aligned with the input height */
 #checkbox-author-contactperson+label,
 .orcid-search-btn,

@@ -1,15 +1,17 @@
-# syntax=docker/dockerfile:1.24.0
+# syntax=docker/dockerfile:1.28.0@sha256:bb22d9815c728170f72750f4e5b0d672e06176142e1d602c7e66c050100b7e5b
 
 # ====== Stage 1: Base ======
-FROM php:8.5-apache-bookworm AS base
+FROM php:8.5.11-apache-trixie@sha256:974e3a920309308e1690ed607e6cc3061d6906f90cc8d30fe519daa48bccf101 AS base
 
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Install build dependencies (update+install together for caching)
 RUN apt-get update && \
+    apt-get upgrade -y --no-install-recommends && \
     apt-get install -y --no-install-recommends \
         ca-certificates \
         curl \
+        libonig-dev \
         libxml2-dev \
         libxslt-dev \
         libzip-dev \
@@ -20,6 +22,7 @@ RUN rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install -j"$(nproc)" \
+    mbstring \
     mysqli \
     pdo_mysql \
     xsl \
@@ -60,12 +63,12 @@ RUN apt-get update && \
 RUN rm -rf /var/lib/apt/lists/*
 
 # Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+COPY --from=composer:2.10.3@sha256:af98f42dfff7c68ba8d53c2164fd9fde1087b7d449514baa38c418b1f6bc4bac /usr/bin/composer /usr/local/bin/composer
 
 # Install project dependencies
 COPY composer.json composer.lock package.json package-lock.json ./
 RUN composer install --prefer-dist --no-interaction --no-scripts
-RUN npm install
+RUN npm ci
 
 # Copy application code (can be overridden by a volume mount in local dev)
 COPY . .
@@ -80,6 +83,7 @@ CMD ["apache2-foreground"]
 FROM dev AS builder
 
 RUN composer install --no-dev --prefer-dist --optimize-autoloader --no-interaction --no-scripts
+RUN npm ci --omit=dev
 # npm build for production assets can be done here.
 
 # ====== Stage 4: Prod ======
@@ -89,11 +93,12 @@ FROM base AS prod
 ARG DEBIAN_FRONTEND=noninteractive
 
 # Package management
-RUN apt-get update
-RUN apt-get purge -y libxml2-dev libxslt-dev libzip-dev
-RUN apt-get install -y --no-install-recommends libxml2 libxslt1.1 libzip4
-RUN apt-get autoremove -y --purge
-RUN rm -rf /var/lib/apt/lists/*
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends libonig5 libxml2 libxslt1.1 libzip5 && \
+    apt-mark manual libonig5 libxml2 libxslt1.1 libzip5 && \
+    apt-get purge -y libonig-dev libxml2-dev libxslt-dev libzip-dev linux-libc-dev $PHPIZE_DEPS && \
+    apt-get autoremove -y --purge && \
+    rm -rf /var/lib/apt/lists/*
 
 # User and directory setup
 RUN useradd -r -u 1000 -g www-data appuser
