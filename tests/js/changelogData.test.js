@@ -41,7 +41,7 @@ describe('changelog migration', () => {
       .toBeGreaterThan(0);
 
     for (const release of changelog.releases) {
-      expect(release.version).toMatch(/^\d+\.\d+\.\d+(?:RC\d+)?$/);
+      expect(release.version).toMatch(/^\d+\.\d+\.\d+(?:RC\d+|dev)?$/);
       for (const section of release.sections) {
         expect(section.title).toEqual(expect.any(String));
         for (const entry of allEntries(section.entries)) {

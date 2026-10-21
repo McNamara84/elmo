@@ -104,13 +104,19 @@ test.describe('Changelog access and rendering', () => {
     await expect(changelog).toBeVisible();
     await expect(changelog.locator('.accordion-item')).toHaveCount(changelogData.releases.length);
     await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toHaveClass(/show/u);
+    await expect(changelog.locator('.accordion-item').first().getByText('All ELMOs', { exact: true })).toBeVisible();
+    await expect(changelog.getByRole('link', { name: 'Issue #1306' }))
+      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1306');
+    const migratedRelease = changelog.locator('.accordion-item').filter({
+      has: page.getByRole('button', { name: /^Version 2\.2\.0 -/u }),
+    });
+    await migratedRelease.locator('.accordion-button').click();
     await expect(changelog.getByText('ELMO-GEM', { exact: true }).first()).toBeVisible();
     await expect(changelog.getByRole('link', { name: 'PR #1188' }).first())
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
-    const latestEntries = changelog.locator('.accordion-item').first()
-      .locator('.accordion-body > ul > li > ul > li');
-    const doiEntry = latestEntries.filter({ hasText: 'ELMO-GEM submissions without a DOI' });
-    const relatedWorkEntry = latestEntries.filter({ hasText: 'Related Work now starts empty' });
+    const releaseEntries = migratedRelease.locator('.accordion-body > ul > li > ul > li');
+    const doiEntry = releaseEntries.filter({ hasText: 'ELMO-GEM submissions without a DOI' });
+    const relatedWorkEntry = releaseEntries.filter({ hasText: 'Related Work now starts empty' });
     await expect(doiEntry.getByRole('link', { name: 'Issue #1127' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1127');
     await expect(doiEntry.getByRole('link', { name: 'PR #1188' }))
@@ -121,7 +127,7 @@ test.describe('Changelog access and rendering', () => {
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1009');
     await expect(relatedWorkEntry.getByRole('link', { name: 'PR #1229' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1229');
-    const changelogEntry = latestEntries.filter({ hasText: 'The footer version opens a separate changelog' });
+    const changelogEntry = releaseEntries.filter({ hasText: 'The footer version opens a separate changelog' });
     await expect(changelogEntry.getByRole('link', { name: 'Issue #807' }))
       .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/807');
     await expect(changelogEntry.getByRole('link', { name: 'Issue #909' }))
@@ -136,7 +142,10 @@ test.describe('Changelog access and rendering', () => {
           .map(badge => badge.textContent?.trim())
       ));
     expect(groups).toEqual(editionGroups(changelogData));
-    await expect(changelog.locator('.accordion-item').nth(1).locator('.badge')).toHaveCount(0);
+    const historicalRelease = changelog.locator('.accordion-item').filter({
+      has: page.getByRole('button', { name: /^Version 2\.1\.2 -/u }),
+    });
+    await expect(historicalRelease.locator('.badge')).toHaveCount(0);
   });
 
   test('shows a recoverable error when the JSON request fails', async ({ page }) => {
@@ -160,6 +169,10 @@ test.describe('Changelog access and rendering', () => {
 
   test('refreshes cached changelog data when the modal is opened again', async ({ page }) => {
     const current = JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8'));
+    const issueNumber = current.releases[0].sections
+      .flatMap((section: { entries: { references?: { type: string; number: number }[] }[] }) => section.entries)
+      .flatMap((entry: { references?: { type: string; number: number }[] }) => entry.references ?? [])
+      .find((reference: { type: string }) => reference.type === 'issue').number;
     const outdated = structuredClone(current);
     for (const section of outdated.releases[0].sections) {
       for (const entry of section.entries) {
@@ -179,20 +192,21 @@ test.describe('Changelog access and rendering', () => {
 
     await page.locator('#button-changelog-show').click();
     const changelog = page.locator('#modal-changelog');
-    await expect(changelog.getByRole('link', { name: 'PR #1188' }).first()).toBeVisible();
-    await expect(changelog.getByRole('link', { name: 'Issue #1127' })).toHaveCount(0);
+    await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toBeVisible();
+    await expect(changelog.getByRole('link', { name: `Issue #${issueNumber}`, exact: true })).toHaveCount(0);
     await changelog.locator('.btn-close').click();
     await page.locator('#button-changelog-show').click();
-    await expect(changelog.getByRole('link', { name: 'Issue #1127' }).first()).toBeVisible();
+    await expect(changelog.getByRole('link', { name: `Issue #${issueNumber}`, exact: true }).first()).toBeVisible();
     expect(requests).toBe(2);
   });
 
   test('aligns all five edition badges without clipping ELMO-IGSN', async ({ page }) => {
     const data = JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8'));
     const editions = ['all', 'elmo', 'msl', 'gem', 'igsn'];
-    data.releases[0].sections[0].entries.slice(0, 5).forEach((entry: { editions: string[] }, index: number) => {
-      entry.editions = [editions[index]];
-    });
+    const template = data.releases[0].sections[0].entries[0];
+    data.releases[0].sections[0].entries = editions.map(edition => ({
+      ...template, editions: [edition],
+    }));
     await page.route(CHANGELOG_PATH, route => route.fulfill({
       status: 200,
       contentType: 'application/json',
