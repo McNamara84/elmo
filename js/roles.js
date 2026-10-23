@@ -90,20 +90,21 @@ function setupRolesDropdown(roletypes, inputSelector) {
   Promise.all(rolePromises).then(results => {
     results.forEach(({ type, roles }) => {
       fetchedRoleTypes.add(type);
+      const roleList = Array.isArray(roles) ? roles : [];
       if (type === "person") {
-        personRoles = [...new Set([...personRoles, ...roles])];
+        personRoles = [...new Set([...personRoles, ...roleList])];
       }
       if (type === "institution") {
-        organizationRoles = [...new Set([...organizationRoles, ...roles])];
+        organizationRoles = [...new Set([...organizationRoles, ...roleList])];
       }
       if (type === "both") {
-        sharedRoles = [...new Set([...sharedRoles, ...roles])];
+        sharedRoles = [...new Set([...sharedRoles, ...roleList])];
       }
     });
 
     initializeTagifyWithRoles(
       inputSelector,
-      [...new Set(results.flatMap(result => result.roles))]
+      [...new Set(results.flatMap(result => Array.isArray(result.roles) ? result.roles : []))]
     );
   });
 }

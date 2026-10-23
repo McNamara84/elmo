@@ -37,11 +37,21 @@ const CONTACT_XML = `<?xml version="1.0" encoding="UTF-8"?>
     </dace:contributors>
   </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>ada@example.org</grav:address>
-      <grav:onlineResource>https://ada.example.org</grav:onlineResource>
-      <grav:address>connie@example.org</grav:address>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Author, Ada</grav:name>
+        <grav:address>ada@example.org</grav:address>
+        <grav:onlineResource>https://ada.example.org</grav:onlineResource>
+      </grav:contact>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Contact, Connie</grav:name>
+        <grav:identifier>0000-0002-1825-0097</grav:identifier>
+        <grav:identifierType>ORCID</grav:identifierType>
+        <grav:address>connie@example.org</grav:address>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Contact import regression</grav:modelName>
       <grav:modelType>Static</grav:modelType>
@@ -66,7 +76,7 @@ test('uploads author and contributor contacts without adding the contributor to 
   });
 
   const pageErrors: string[] = [];
-  page.on('pageerror', error => pageErrors.push(error.message));
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
 
   for (let attempt = 0; attempt < 2; attempt++) {
     // Dismiss the prior toast so a repeated import must produce fresh success feedback.
@@ -83,25 +93,35 @@ test('uploads author and contributor contacts without adding the contributor to 
     const author = page.locator('[data-author-card]');
     await expect(author).toHaveCount(1);
     await expect(author.locator('[name="familynames[]"]')).toHaveValue('Author');
-    await expect(author.locator('[name="contacts[]"]')).toBeChecked();
-    await expect(author.locator('[name="cpEmail[]"]')).toHaveValue('ada@example.org');
-    await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('https://ada.example.org');
+    await expect(author.locator('[name="cpEmail[]"]')).toHaveValue('');
+    await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 
+    // Connie comes from DataCite. Ada is an author, so her card comes from the ICGEM contact.
     const contributor = page.locator('[data-contributor-card]');
-    await expect(contributor).toHaveCount(1);
-    await expect(contributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
-    await expect(contributor.locator('[data-contributor-contact-fields]')).toBeVisible();
-    await expect(contributor.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
-    await expect(contributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    await expect(contributor).toHaveCount(2);
+    await expect(contributor.nth(0).locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
+    await expect(contributor.nth(0).locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
+    await expect(contributor.nth(0).locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    await expect(contributor.nth(1).locator('[name="cbPersonLastname[]"]')).toHaveValue('Author');
+    await expect(contributor.nth(1).locator('[name="cbContactEmail[]"]')).toHaveValue('ada@example.org');
+    await expect(contributor.nth(1).locator('[name="cbContactWebsite[]"]')).toHaveValue('https://ada.example.org');
+    await expect(contributor.nth(1).locator('[data-contributor-contact-fields]')).toBeVisible();
 
     const payload = await page.evaluate(() => (window as any).contributorStack.collectPayload());
-    expect(payload).toEqual([expect.objectContaining({
+    const ada = payload.find((entry: { familyname?: string }) => entry.familyname === 'Author');
+    const connie = payload.find((entry: { familyname?: string }) => entry.familyname === 'Contact');
+    expect(ada).toEqual(expect.objectContaining({
+      type: 'person', familyname: 'Author', givenname: 'Ada',
+      email: 'ada@example.org', website: 'https://ada.example.org',
+      roles: ['Contact Person'],
+    }));
+    expect(connie).toEqual(expect.objectContaining({
       type: 'person', familyname: 'Contact', givenname: 'Connie',
       orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
-      roles: expect.arrayContaining(['Contact Person', 'Researcher']),
       affiliations: [{ label: 'GFZ', rorId: '04z8jg394' }],
-    })]);
-    expect(payload[0].roles).toHaveLength(2);
+    }));
+    expect(connie.roles).toEqual(expect.arrayContaining(['Contact Person', 'Researcher']));
+    expect(connie.roles).toHaveLength(2);
   }
 
   expect(pageErrors).toEqual([]);

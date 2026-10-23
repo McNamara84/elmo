@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://icgem.gfz.de/schema http://icgem.gfz.de/schema/icgemSchemaBase.xsd">
+  <dace:resource>
+    <dace:identifier identifierType="DOI"/>
+    <dace:creators>
+      <dace:creator>
+        <dace:creatorName nameType="Personal">author_1</dace:creatorName>
+        <dace:familyName>author_1</dace:familyName>
+      </dace:creator>
+      <dace:creator>
+        <dace:creatorName nameType="Personal">cont_pers_1</dace:creatorName>
+        <dace:familyName>cont_pers_1</dace:familyName>
+      </dace:creator>
+    </dace:creators>
+    <dace:titles/>
+    <dace:publisher xml:lang="en">GFZ Data Services</dace:publisher>
+    <dace:publicationYear/>
+    <dace:resourceType resourceTypeGeneral=""/>
+    <dace:subjects/>
+    <dace:contributors>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName>cont_pers_1</dace:contributorName>
+        <dace:familyName>cont_pers_1</dace:familyName>
+      </dace:contributor>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName nameType="Organizational">cont_inst_1</dace:contributorName>
+      </dace:contributor>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName nameType="Organizational">cont_inst_2</dace:contributorName>
+      </dace:contributor>
+      <dace:contributor contributorType="ContactPerson">
+        <dace:contributorName nameType="Personal">cont_pers_2</dace:contributorName>
+        <dace:familyName>cont_pers_2</dace:familyName>
+      </dace:contributor>
+      <dace:contributor contributorType="Editor">
+        <dace:contributorName nameType="Personal">cont_pers_2</dace:contributorName>
+        <dace:familyName>cont_pers_2</dace:familyName>
+      </dace:contributor>
+      <dace:contributor contributorType="Other">
+        <dace:contributorName nameType="Personal">cont_pers_2</dace:contributorName>
+        <dace:familyName>cont_pers_2</dace:familyName>
+      </dace:contributor>
+    </dace:contributors>
+    <dace:dates>
+    
+  </dace:dates>
+    <dace:language>en</dace:language>
+    <dace:rightsList>
+      <dace:rights rightsURI="https://creativecommons.org/licenses/by/4.0/legalcode" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/" xml:lang="en">Creative Commons Attribution 4.0 International</dace:rights>
+    </dace:rightsList>
+    <dace:descriptions/>
+    <dace:geoLocations/>
+  </dace:resource>
+  <grav:globalGravityProduct>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Organizational</grav:nameType>
+        <grav:name>cont_inst_1</grav:name>
+        <grav:address>cont_inst_1@mail.com</grav:address>
+        <grav:onlineResource>cont_inst_1.com</grav:onlineResource>
+      </grav:contact>
+      <grav:contact>
+        <grav:nameType>Organizational</grav:nameType>
+        <grav:name>cont_inst_2</grav:name>
+        <grav:address>cont_inst_2@mail.com</grav:address>
+        <grav:onlineResource>cont_inst_2.com</grav:onlineResource>
+      </grav:contact>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>cont_pers_2</grav:name>
+        <grav:address>cont_pers_2@mail.com</grav:address>
+        <grav:onlineResource>cont_pers_2.com</grav:onlineResource>
+      </grav:contact>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>cont_pers_1</grav:name>
+        <grav:address>cont_pers_1@mail.com</grav:address>
+        <grav:onlineResource>cont_pers_1.com</grav:onlineResource>
+      </grav:contact>
+    </grav:contacts>
+    <grav:harmonicCoefficientsModel>
+      <grav:celestialBody>Earth</grav:celestialBody>
+    </grav:harmonicCoefficientsModel>
+    <grav:inputDataSource type="Satellite">
+      <grav:description/>
+    </grav:inputDataSource>
+  </grav:globalGravityProduct>
+</grav:envelope>

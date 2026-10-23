@@ -48,10 +48,14 @@ Specific features of the resulting gravity field are the reduced striping artefa
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>static.contact@gfz.de</grav:address>
-      <grav:onlineResource>icgem.gfz.de/static-model</grav:onlineResource>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Ince, Elmas Sinem</grav:name>
+        <grav:address>static.contact@gfz.de</grav:address>
+        <grav:onlineResource>icgem.gfz.de/static-model</grav:onlineResource>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Test_Static_TimeVariable</grav:modelName>
       <grav:publicationYear>2024</grav:publicationYear>
