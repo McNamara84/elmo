@@ -2057,10 +2057,10 @@ XML;
     }
 
     /**
-     * Contributor Contact Person cards are written in contributor order.
-     * A Contact_Person row with the same name is not written again.
+     * Author contacts are written first. A contributor is left out only when
+     * that exact contact was already written from the author.
      */
-    public function testInsertContactWritesContributorsThenUnmatchedAuthorContacts(): void
+    public function testInsertContactWritesAuthorsThenSkipsDuplicateContributors(): void
     {
         $this->mockConnection
             ->method('prepare')
@@ -2105,11 +2105,57 @@ XML;
         $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
 
         $this->assertSame([
-            ['nameType' => 'Personal', 'name' => 'Contact, Connie', 'identifier' => '', 'identifierType' => '', 'address' => 'connie@example.org', 'onlineResource' => ''],
-            ['nameType' => 'Personal', 'name' => 'Smith, Bob', 'identifier' => '', 'identifierType' => '', 'address' => 'bob@example.org', 'onlineResource' => ''],
             ['nameType' => 'Personal', 'name' => 'Author, Ada', 'identifier' => '0000-0001-2345-6789', 'identifierType' => 'ORCID', 'address' => 'ada@example.org', 'onlineResource' => 'https://ada.example.org'],
-            ['nameType' => 'Organizational', 'name' => 'GFZ', 'identifier' => '04z8jg394', 'identifierType' => 'ROR', 'address' => 'gfz@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Smith, Bob', 'identifier' => '', 'identifierType' => '', 'address' => 'bob@example.org', 'onlineResource' => ''],
             ['nameType' => 'Personal', 'name' => 'Legacy, Lee', 'identifier' => '', 'identifierType' => '', 'address' => 'lee@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Contact, Connie', 'identifier' => '', 'identifierType' => '', 'address' => 'connie@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Organizational', 'name' => 'GFZ', 'identifier' => '04z8jg394', 'identifierType' => 'ROR', 'address' => 'gfz@example.org', 'onlineResource' => ''],
+        ], $this->contactEntries($xml));
+    }
+
+    /**
+     * A contributor who shares an author's name but has another ORCID is a
+     * different contact and is written as well.
+     */
+    public function testInsertContactKeepsContributorWithSameNameAndDifferentOrcid(): void
+    {
+        $this->mockConnection
+            ->method('prepare')
+            ->willReturnCallback(function ($sql) {
+                $sql = (string) $sql;
+                if (str_contains($sql, 'FROM Contributor_Person')) {
+                    $rows = [
+                        ['familyname' => 'Smith', 'givenname' => 'Ann', 'orcid' => '0000-0002-2222-2222', 'contact_email' => 'ann@example.org', 'contact_website' => '', 'sort_order' => 0, 'roles_json' => '["Contact Person"]', 'affiliations_json' => '[]', 'contributor_person_id' => 1],
+                    ];
+                } elseif (str_contains($sql, 'FROM Contact_Person cp')) {
+                    $rows = [
+                        ['familyname' => 'Smith', 'givenname' => 'Ann', 'email' => 'ann@example.org', 'website' => '', 'orcid' => 'https://orcid.org/0000-0001-1111-1111', 'contact_person_id' => 1],
+                    ];
+                } else {
+                    $rows = [];
+                }
+                $statement = $this->createMock(\mysqli_stmt::class);
+                $result = $this->createMock(\mysqli_result::class);
+                $statement->method('bind_param');
+                $statement->method('execute');
+                $statement->method('get_result')->willReturn($result);
+                $index = 0;
+                $result->method('fetch_assoc')->willReturnCallback(function () use ($rows, &$index) {
+                    return $rows[$index++] ?? null;
+                });
+                return $statement;
+            });
+
+        $xml = new \SimpleXMLElement(
+            '<?xml version="1.0" encoding="UTF-8"?>' .
+            '<grav:globalGravityProduct xmlns:grav="http://icgem.gfz.de/schema"/>'
+        );
+        $reflection = new \ReflectionClass($this->controller);
+        $reflection->getMethod('insertContact')->invoke($this->controller, $xml, 1);
+
+        $this->assertSame([
+            ['nameType' => 'Personal', 'name' => 'Smith, Ann', 'identifier' => '0000-0001-1111-1111', 'identifierType' => 'ORCID', 'address' => 'ann@example.org', 'onlineResource' => ''],
+            ['nameType' => 'Personal', 'name' => 'Smith, Ann', 'identifier' => '0000-0002-2222-2222', 'identifierType' => 'ORCID', 'address' => 'ann@example.org', 'onlineResource' => ''],
         ], $this->contactEntries($xml));
     }
 

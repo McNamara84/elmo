@@ -819,11 +819,10 @@ class ICGEMController extends DatasetController
     /**
      * Writes grav:contacts as the first child of globalGravityProduct.
      *
-     * Each grav:contact names one person or institution. Contributor cards come
-     * first, in contributor order: a Contact Person role, or an institution that
-     * already stores an address. A Contact_Person row is added after those cards
-     * when no contributor already has that ORCID or name, so an older author
-     * contact is still exported.
+     * Author contacts and contributor contacts are written from their own rows.
+     * Authors come first. A contributor is skipped only when an author contact
+     * already has the same name, identifier, address and website. The same name
+     * with a different ORCID is kept.
      *
      * The wrapper is omitted when nobody has an address. The contact type requires
      * one address, so a website with no address is left out. Add another contact
@@ -854,26 +853,15 @@ class ICGEMController extends DatasetController
     private function collectIcgemContactEntries(int $id): array
     {
         $entries = [];
-        $seenOrcids = [];
-        $seenNames = [];
+        $seen = [];
+
+        foreach ($this->getContactPersons($this->connection, $id) as $person) {
+            $this->keepIcgemContactEntry($entries, $seen, $this->contactEntryFromContactPerson($person));
+        }
 
         $contributors = $this->getContributors($this->connection, $id);
         foreach ($contributors['entries'] as $contributor) {
-            $entry = $this->contactEntryFromContributor($contributor);
-            if ($entry === null) {
-                continue;
-            }
-            $entries[] = $entry;
-            $this->rememberIcgemContactIdentity($entry, $seenOrcids, $seenNames);
-        }
-
-        foreach ($this->getContactPersons($this->connection, $id) as $person) {
-            $entry = $this->contactEntryFromContactPerson($person);
-            if ($entry === null || $this->icgemContactAlreadyExported($entry, $seenOrcids, $seenNames)) {
-                continue;
-            }
-            $entries[] = $entry;
-            $this->rememberIcgemContactIdentity($entry, $seenOrcids, $seenNames);
+            $this->keepIcgemContactEntry($entries, $seen, $this->contactEntryFromContributor($contributor));
         }
 
         return $entries;
@@ -965,31 +953,31 @@ class ICGEMController extends DatasetController
     }
 
     /**
-     * @param array{identifier: string, identifierType: string, name: string} $entry
-     * @param array<string, true> $seenOrcids
-     * @param array<string, true> $seenNames
+     * Keeps the first copy of a contact. A later entry is skipped only when
+     * every written field matches one already kept.
+     *
+     * @param array<int, array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}> $entries
+     * @param array<string, true> $seen
+     * @param array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null $entry
      */
-    private function rememberIcgemContactIdentity(array $entry, array &$seenOrcids, array &$seenNames): void
+    private function keepIcgemContactEntry(array &$entries, array &$seen, ?array $entry): void
     {
-        if ($entry['identifier'] !== '' && $entry['identifierType'] === 'ORCID') {
-            $seenOrcids[strtolower($entry['identifier'])] = true;
+        if ($entry === null) {
+            return;
         }
-        $seenNames[strtolower($entry['name'])] = true;
-    }
-
-    /**
-     * @param array{identifier: string, identifierType?: string, name: string} $entry
-     * @param array<string, true> $seenOrcids
-     * @param array<string, true> $seenNames
-     */
-    private function icgemContactAlreadyExported(array $entry, array $seenOrcids, array $seenNames): bool
-    {
-        $orcid = strtolower($entry['identifier']);
-        if ($orcid !== '' && ($entry['identifierType'] ?? '') === 'ORCID' && isset($seenOrcids[$orcid])) {
-            return true;
+        $key = strtolower(implode("\0", [
+            $entry['nameType'],
+            $entry['name'],
+            $entry['identifier'],
+            $entry['identifierType'],
+            $entry['email'],
+            $entry['website'],
+        ]));
+        if (isset($seen[$key])) {
+            return;
         }
-
-        return isset($seenNames[strtolower($entry['name'])]);
+        $seen[$key] = true;
+        $entries[] = $entry;
     }
 
     private function formatIcgemPersonalName(string $family, string $given): string
