@@ -189,6 +189,8 @@ function findContactAuthorIndex(authors, identity) {
   const key = normalizeDoiPersonNameKey(identity.familyname, identity.givenname);
   const matches = people.filter(({ author }) => {
     const orcid = normalizeOrcid(author.orcid);
+    // A name match is allowed only when at least one ORCID is missing.
+    // Two different ORCIDs must keep people separate, even if their names match.
     return !(identity.orcid && orcid && identity.orcid !== orcid)
       && normalizeDoiPersonNameKey(author.familyname, author.givenname) === key;
   });
