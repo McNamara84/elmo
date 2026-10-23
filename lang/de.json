@@ -181,7 +181,8 @@
         "affiliationRorId": "ROR-ID",
         "affiliationRemove": "Affiliation entfernen",
         "affiliationInvalid": "Bitte geben Sie eine Zugehörigkeit an.",
-        "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an."
+        "InstitutionsNameInvalid": "Bitte geben Sie den Namen der Institution an.",
+        "validationError": "Bitte füge mindestens einen Autor hinzu und fülle alle Pflichtfelder aus."
     },
     "authorsInstitutions": {
         "title": "Autor: Institutionen",

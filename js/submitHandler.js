@@ -408,7 +408,8 @@ class SubmitHandler {
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
         const affiliationsValid = validateAffiliationEditors(this.$form[0]);
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
+        const authorsValid = window.validateAuthorsGroup();
+        if (!this.$form[0].checkValidity() || !authorsValid || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
