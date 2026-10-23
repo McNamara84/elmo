@@ -331,7 +331,7 @@ describe('ICGEM contact person import', () => {
     });
   });
 
-  test('leaves an institution without the Contact Person role empty', () => {
+  test('keeps an institution email when the Contact Person role is not on the card', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
     mountContributorStack([
@@ -369,10 +369,10 @@ describe('ICGEM contact person import', () => {
       entry.email || ''
     ])).toEqual([
       ['Alpha', 'ann@example.org'],
-      ['GFZ', ''],
+      ['GFZ', 'gfz@example.org'],
       ['Beta', 'ben@example.org']
     ]);
-    expect(warn).toHaveBeenCalledWith('no contributor found for contact', 'GFZ');
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
 

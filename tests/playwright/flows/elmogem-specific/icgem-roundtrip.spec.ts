@@ -1340,7 +1340,12 @@ for (const testCase of TEST_CASES) {
     }
 
     // Contact email and website live on the contributor card. The ICGEM contact
-    // element does not write them onto the author.
+    // element does not write them onto the author, and an author who is the
+    // only contact does not get a new contributor card.
+    const contactIsAuthor = parsedData.personalCreators.some((creator) => (
+      creator.lastName === parsedData.contactPersonLastName
+      && creator.firstName === parsedData.contactPersonFirstName
+    ));
     const contact = await page.locator('[data-contributor-card]').evaluateAll((cards, email) => {
       const match = cards.find((card) => (
         (card.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value === email
@@ -1351,9 +1356,11 @@ for (const testCase of TEST_CASES) {
         website: (match.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
       };
     }, parsedData.contactPersonEmail);
-    expect(contact?.email, 'contactPersonEmail').toBe(parsedData.contactPersonEmail);
-    if (parsedData.contactPersonWebsite) {
-      expect(contact?.website, 'contactPersonWebsite').toBe(parsedData.contactPersonWebsite);
+    if (contact || !contactIsAuthor) {
+      expect(contact?.email, 'contactPersonEmail').toBe(parsedData.contactPersonEmail);
+      if (parsedData.contactPersonWebsite) {
+        expect(contact?.website, 'contactPersonWebsite').toBe(parsedData.contactPersonWebsite);
+      }
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
