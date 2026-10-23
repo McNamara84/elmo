@@ -105,14 +105,12 @@ const MOCK_DOI_RESPONSE = {
 test.describe('DOI Prefill Feature', () => {
   let doiLookupRequestCount = 0;
   let doiResponse: { found: boolean; attributes: Record<string, any> };
-  let contactResponse: { email: string | null; website: string | null };
-  let contactRequests: Record<string, string>[];
+  let contactRequests: Record<string, string>[] = [];
   let browserErrors: string[] = [];
 
   test.beforeEach(async ({ page }) => {
     doiLookupRequestCount = 0;
     doiResponse = structuredClone(MOCK_DOI_RESPONSE);
-    contactResponse = { email: null, website: null };
     contactRequests = [];
     browserErrors = [];
     page.on('console', message => {
@@ -150,13 +148,13 @@ test.describe('DOI Prefill Feature', () => {
       }
     });
 
-    // Intercept contact lookup API
+    // Trap the removed endpoint: any request is a privacy regression, even if it returns data.
     await page.route('**/api/v2/doi/contacts**', async route => {
       contactRequests.push(Object.fromEntries(new URL(route.request().url()).searchParams));
       await route.fulfill({
         status: 200,
         contentType: 'application/json',
-        body: JSON.stringify(contactResponse),
+        body: JSON.stringify({ email: 'another-publication@example.org', website: 'https://example.org/private' }),
       });
     });
 
@@ -220,6 +218,7 @@ test.describe('DOI Prefill Feature', () => {
 
   test.afterEach(() => {
     expect(browserErrors, 'The entire DOI import must complete without console warnings or errors').toEqual([]);
+    expect(contactRequests, 'DOI import must not query stored contact details').toEqual([]);
   });
 
   test('shows prefill modal after explicit DOI lookup', async ({ page }) => {
@@ -399,25 +398,25 @@ test.describe('DOI Prefill Feature', () => {
     });
   }
 
-  test('keeps multiple text and ROR affiliations after a successful contact lookup', async ({ page }) => {
+  test('keeps multiple text and ROR affiliations when importing a contact role', async ({ page }) => {
     doiResponse.attributes.contributors = [{ ...doiResponse.attributes.creators[0], contributorType: 'ContactPerson' }];
     doiResponse.attributes.creators[0].affiliation = [
       'Institute, Wiesbaden, Deutschland',
       { name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' },
     ];
-    contactResponse = { email: 'contact@example.org', website: 'https://example.org/' };
     await page.locator('#input-resourceinformation-source-doi').fill(doiResponse.attributes.doi);
     await page.locator('#button-resourceinformation-prefill-doi').click();
     await page.locator('#button-doi-prefill-confirm').click();
-    await expect(page.locator('input[name="cpEmail[]"]')).toHaveValue(contactResponse.email!);
+    await expect(page.locator('input[name="contacts[]"]')).toBeChecked();
+    await expect(page.locator('input[name="cpEmail[]"]')).toHaveValue('');
     await expect(page.locator('[data-author-affiliation-label]')).toHaveCount(2);
     await expect(page.locator('[data-author-affiliation-label]').nth(0)).toHaveValue('Institute, Wiesbaden, Deutschland');
     await expect(page.locator('[data-author-affiliation-label]').nth(1)).toHaveValue('GFZ');
     await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
     expect(await page.evaluate(() => (window as any).authorStack.collectPayload()[0])).toMatchObject({
       isContact: true,
-      email: contactResponse.email,
-      website: contactResponse.website,
+      email: '',
+      website: '',
       affiliations: [
         { label: 'Institute, Wiesbaden, Deutschland', rorId: '' },
         { label: 'GFZ', rorId: '04z8jg394' },
@@ -452,7 +451,6 @@ test.describe('DOI Prefill Feature', () => {
       expect(payload.authors.filter((author: any) => author.isContact).map((author: any) => author.familyname).sort()).toEqual(expectedNames);
       expect(payload.authors.every((author: any) => author.email === '' && author.website === '')).toBe(true);
       expect(payload.contributors.some((entry: any) => entry.roles.includes('Contact Person'))).toBe(false);
-      expect(contactRequests).toHaveLength(expectedNames.length);
       for (const checkbox of await page.locator('input[name="contacts[]"]:checked').all()) {
         const card = checkbox.locator('xpath=ancestor::*[@data-author-entry-row]');
         if (!(await card.locator('[data-author-edit-panel]').isVisible())) await card.locator('[data-author-toggle-edit]').click();
@@ -464,7 +462,6 @@ test.describe('DOI Prefill Feature', () => {
   }
 
   test('does not mark or enrich authors without a published contact role', async ({ page }) => {
-    contactResponse = { email: 'unrelated@example.org', website: 'https://example.org/' };
     doiResponse.attributes.contributors = [];
     await importCurrentDoi(page);
     await expect(page.locator('input[name="contacts[]"]:checked')).toHaveCount(0);
@@ -472,42 +469,40 @@ test.describe('DOI Prefill Feature', () => {
     expect(await page.evaluate(() => (window as any).authorStack.collectPayload()[0])).toMatchObject({ isContact: false, email: '', website: '' });
   });
 
-  test('uses ORCID to enrich the correct same-named author and preserves another contributor role', async ({ page }) => {
+  test('uses ORCID to mark the correct same-named author and preserves another contributor role', async ({ page }) => {
     const creator = doiResponse.attributes.creators[0];
     const second = { ...structuredClone(creator), nameIdentifiers: [{ nameIdentifierScheme: 'ORCID', nameIdentifier: '0000-0002-0000-0002' }] };
     doiResponse.attributes.creators.push(second);
     doiResponse.attributes.contributors = [
       { ...second, contributorType: 'ContactPerson' }, { ...second, contributorType: 'DataCollector' },
     ];
-    contactResponse.email = 'second@example.org';
     await importCurrentDoi(page);
     const payload = await page.evaluate(() => ({
       authors: (window as any).authorStack.collectPayload(), contributors: (window as any).contributorStack.collectPayload(),
     }));
     expect(payload.authors[0]).toMatchObject({ isContact: false, email: '' });
-    expect(payload.authors[1]).toMatchObject({ isContact: true, email: 'second@example.org' });
+    expect(payload.authors[1]).toMatchObject({ isContact: true, email: '', website: '' });
     expect(payload.contributors[0].roles).toEqual(['Data Collector']);
-    expect(contactRequests).toEqual([expect.objectContaining({ orcid: '0000-0002-0000-0002' })]);
   });
 
-  test('keeps and enriches an unmatched contact contributor', async ({ page }) => {
+  test('keeps an unmatched contact contributor with empty contact fields', async ({ page }) => {
     doiResponse.attributes.contributors = [{ nameType: 'Personal', familyName: 'External', givenName: 'Contact', contributorType: 'ContactPerson' }];
-    contactResponse = { email: 'external@example.org', website: 'https://example.org/contact' };
     await importCurrentDoi(page);
     await expect(page.locator('input[name="contacts[]"]:checked')).toHaveCount(0);
     expect(await page.evaluate(() => (window as any).contributorStack.collectPayload()[0])).toMatchObject({
-      familyname: 'External', roles: ['Contact Person'], ...contactResponse,
+      familyname: 'External', roles: ['Contact Person'], email: '', website: '',
     });
     await expect(page.locator('[data-contributor-roles]')).toHaveText('Contact Person');
   });
 
-  test('a second DOI import clears contact marks and enriched fields', async ({ page }) => {
+  test('a second DOI import clears contact marks and manually entered details', async ({ page }) => {
     doiResponse.attributes.contributors = [{ ...doiResponse.attributes.creators[0], contributorType: 'ContactPerson' }];
-    contactResponse.email = 'first@example.org';
     await importCurrentDoi(page);
     await expect(page.locator('input[name="contacts[]"]:checked')).toHaveCount(1);
+    if (!(await page.locator('[data-author-edit-panel]').isVisible())) await page.locator('[data-author-toggle-edit]').click();
+    await page.locator('input[name="cpEmail[]"]').fill('first@example.org');
+    await page.locator('input[name="cpOnlineResource[]"]').fill('https://example.org/first');
     doiResponse.attributes.contributors = [];
-    contactRequests = [];
     await importCurrentDoi(page);
     await expect(page.locator('input[name="contacts[]"]:checked')).toHaveCount(0);
     expect(await page.evaluate(() => (window as any).authorStack.collectPayload()[0])).toMatchObject({ isContact: false, email: '', website: '' });

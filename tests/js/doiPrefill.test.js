@@ -349,7 +349,7 @@ describe('doiPrefill.js', () => {
       expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
     });
 
-    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations after contact enrichment', async representation => {
+    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations while importing the contact role', async representation => {
       const label = attributes.creators[0].affiliation[0].name;
       const expected = [{ label, rorId: '' }];
       if (representation === 'strings') attributes.creators[0].affiliation = [label];
@@ -357,19 +357,13 @@ describe('doiPrefill.js', () => {
         attributes.creators[0].affiliation.push({ name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' });
         expected.push({ label: 'GFZ', rorId: '04z8jg394' });
       }
-      const lookupContacts = jest.fn().mockResolvedValue({ email: 'contact@example.org', website: 'https://example.org/' });
-      await mod.applyDoiPrefill(attributes, { lookupContacts });
+      await mod.applyDoiPrefill(attributes);
 
       expectAffiliations(expected);
       expect(window.authorStack.collectPayload()[0]).toMatchObject({
         familyname: 'Kreuz', givenname: 'Angela', orcid: '0000-0003-2450-824X',
-        isContact: true, email: 'contact@example.org', website: 'https://example.org/',
+        isContact: true, email: '', website: '',
       });
-    });
-
-    test('keeps affiliations when the contact lookup fails', async () => {
-      await mod.applyDoiPrefill(attributes, { lookupContacts: jest.fn().mockRejectedValue(new Error('offline')) });
-      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
     });
 
     test('retains the imported source DOI after clearing without assigning a submission DOI', async () => {
@@ -460,46 +454,6 @@ describe('doiPrefill.js', () => {
       mod.prefillCreators(null);
       mod.prefillCreators([]);
       expect(window.authorStack.collectPayload()).toEqual([]);
-    });
-  });
-
-  describe('prefillContactPersons', () => {
-    test('updates matching person payload from lookup results when authorStack is available', async () => {
-      const setAuthors = jest.fn();
-      window.authorStack = {
-        collectPayload: jest.fn(() => [
-          { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [], isContact: true },
-          { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
-        ]),
-        setAuthors,
-      };
-      const lookupService = {
-        lookupContacts: jest.fn().mockResolvedValue({
-          email: 'jane@example.org',
-          website: 'https://example.org/jane',
-        }),
-      };
-
-      await mod.prefillContactPersons([
-        { group: 'authors', index: 0, identity: { familyname: 'Doe', givenname: 'Jane', orcid: '' } },
-      ], lookupService);
-
-      expect(lookupService.lookupContacts).toHaveBeenCalledWith({
-        orcid: '',
-        familyname: 'Doe',
-        givenname: 'Jane',
-      });
-      expect(setAuthors).toHaveBeenCalledWith([
-        expect.objectContaining({
-          type: 'person',
-          familyname: 'Doe',
-          givenname: 'Jane',
-          isContact: true,
-          email: 'jane@example.org',
-          website: 'https://example.org/jane',
-        }),
-        { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
-      ]);
     });
   });
 

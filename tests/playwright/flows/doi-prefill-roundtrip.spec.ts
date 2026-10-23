@@ -36,6 +36,19 @@ async function importedMetadata(page: Page) {
 }
 
 test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
+  test('does not expose stored contact details by ORCID or name', async ({ request }) => {
+    const queries: Record<string, string>[] = [
+      { orcid: '0000-0003-2450-824X' },
+      { familyname: 'Kreuz', givenname: 'Angela' },
+      {},
+    ];
+    for (const params of queries) {
+      const response = await request.get('/api/v2/doi/contacts', { params });
+      expect(response.status()).toBe(404);
+      expect(await response.json()).toEqual({ error: 'Not Found' });
+    }
+  });
+
   for (const [titleType, titleLabel] of [['Other', 'Other'], ['TranslatedTitle', 'Translated Title']]) {
     test(`preserves DataCite ${titleType} and an affiliation without ROR through save and reload`, async ({ page }) => {
       test.slow();
@@ -43,7 +56,6 @@ test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
       attributes.titles[1].titleType = titleType;
       // Add a second role for the author/contact without changing the published fixture.
       attributes.contributors.push({ ...structuredClone(attributes.creators[0]), contributorType: 'DataCollector' });
-      const enrichContact = titleType === 'Other';
       const browserErrors: string[] = [];
       page.on('console', message => {
         if (message.type() === 'warning' || message.type() === 'error') {
@@ -67,8 +79,6 @@ test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
       await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));
       await page.route('**/api/v2/doi/lookup/**', route =>
         route.fulfill({ json: { found: true, attributes } }));
-      await page.route('**/api/v2/doi/contacts**', route =>
-        route.fulfill({ json: { email: enrichContact ? 'contact@example.org' : null, website: null } }));
 
       await navigateToHome(page);
       await waitForHomepageReady(page);
@@ -87,17 +97,15 @@ test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
       const label = attributes.creators[0].affiliation[0].name;
       await expect(page.locator('[data-author-affiliation-label]')).toHaveValue(label);
       await expect(page.locator('input[name="contacts[]"]')).toBeChecked();
-      await expect(page.locator('input[name="cpEmail[]"]')).toHaveValue(enrichContact ? 'contact@example.org' : '');
+      await expect(page.locator('input[name="cpEmail[]"]')).toHaveValue('');
       await expect(page.locator('select[name="titleType[]"]').nth(1).locator('option:checked')).toHaveText(titleLabel);
       await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
       await expect(page.locator('#input-resourceinformation-source-doi')).toHaveValue(attributes.doi);
       await expect(page.locator('#input-resourceinformation-doi')).toHaveValue('');
 
       // Supply only missing required values, preserving all imported fields.
-      if (!enrichContact) {
-        if (!(await page.locator('[data-author-edit-panel]').isVisible())) await page.locator('[data-author-toggle-edit]').click();
-        await page.locator('input[name="cpEmail[]"]').fill('contact@example.org');
-      }
+      if (!(await page.locator('[data-author-edit-panel]').isVisible())) await page.locator('[data-author-toggle-edit]').click();
+      await page.locator('input[name="cpEmail[]"]').fill('contact@example.org');
       await page.locator('#input-resourceinformation-language').selectOption({ label: 'English' });
       await page.locator('#input-abstract').fill('Synthetic abstract for the DOI import roundtrip.');
       await page.locator('#input-date-created').fill('2026-10-16');

@@ -156,23 +156,15 @@ function normalizeDoiPersonNameKey(familyName, givenName) {
   return `${normalize(familyName)}\u0000${normalize(givenName)}`;
 }
 
-// Shared JSDoc object types for the annotations below. Standalone @typedef
-// blocks describe data structures; they do not need a function declaration.
+// Shared JSDoc object type for the annotations below. A standalone @typedef
+// describes a data structure; it does not need a function declaration.
 
 /**
- * Identity used to match an imported contact and query local contact details.
+ * Identity used to match an imported contact to an author.
  * @typedef {Object} DoiContactIdentity
  * @property {string} orcid Normalized ORCID, or an empty string.
  * @property {string} familyname Family name, possibly empty.
  * @property {string} givenname Given name, possibly empty.
- */
-
-/**
- * Contact destination established while mapping roles, before asynchronous lookup.
- * @typedef {Object} DoiContactTarget
- * @property {'authors'|'contributors'} group Destination payload group.
- * @property {number} index Index of the imported entry in that group's payload.
- * @property {DoiContactIdentity} identity Identity from the contact, with the author's ORCID as fallback.
  */
 
 /**
@@ -413,25 +405,18 @@ function prefillCreators(creators) {
 /**
  * Maps contributor roles, transferring explicit personal contacts to matching authors.
  * @param {Object[]|null|undefined} contributors DataCite contributors with their roles.
- * @returns {DoiContactTarget[]} Deduplicated personal contact lookup targets.
+ * @returns {void}
  * @throws {Error} When a required form controller has not been initialized.
  */
 function prefillContributors(contributors) {
-  if (!Array.isArray(contributors) || contributors.length === 0) return [];
+  if (!Array.isArray(contributors) || contributors.length === 0) return;
 
   const authorStack = getAuthorStackController();
   const contributorStack = window.contributorStack;
   const entries = [];
   const byKey = new Map();
-  const targets = new Map();
   const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
   let authorsChanged = false;
-  const addTarget = (group, index, identity) => {
-    // Repeated ContactPerson entries share one lookup; prefer an available ORCID.
-    const key = `${group}:${index}`;
-    const previous = targets.get(key);
-    if (!previous || (!previous.identity.orcid && identity.orcid)) targets.set(key, { group, index, identity });
-  };
   contributors.forEach(c => {
     const role = normalizeRole(c.contributorType || 'Other');
     const { givenname, familyname } = extractPersonNames(c);
@@ -444,7 +429,6 @@ function prefillContributors(contributors) {
       if (index !== -1) {
         authors[index].isContact = true;
         authorsChanged = true;
-        addTarget('authors', index, { ...identity, orcid: orcid || normalizeOrcid(authors[index].orcid) });
         return;
       }
     }
@@ -467,7 +451,6 @@ function prefillContributors(contributors) {
       entries.push(entry);
     }
     if (!entry.roles.includes(role)) entry.roles.push(role);
-    if (person && role === 'Contact Person') addTarget('contributors', entries.indexOf(entry), identity);
     affiliations.forEach(item => {
       const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
       if (!existing) entry.affiliations.push(item);
@@ -477,7 +460,6 @@ function prefillContributors(contributors) {
   if (authorsChanged) authorStack.setAuthors(authors);
   if (contributorStack?.setContributors) contributorStack.setContributors(entries);
   else if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
-  return Array.from(targets.values());
 }
 
 /**
@@ -738,41 +720,6 @@ async function prefillRights(rightsList) {
 }
 
 /* ================================================================== */
-/*  Contact person email/website lookup (post-prefill)                */
-/* ================================================================== */
-
-/**
- * Enrich only explicit imported personal contacts, without changing their roles.
- *
- * @param {DoiContactTarget[]|null|undefined} targets Targets returned by prefillContributors.
- * @param {DoiLookupService|null} [lookupService] Optional local contact lookup service.
- * @returns {Promise<void>} Resolves after enrichment; individual lookup failures are ignored.
- */
-async function prefillContactPersons(targets, lookupService) {
-  if (!Array.isArray(targets) || targets.length === 0 || !lookupService) return;
-  const stacks = { authors: getAuthorStackController(), contributors: window.contributorStack };
-  const payloads = Object.fromEntries(Object.entries(stacks).map(([group, stack]) =>
-    [group, (stack?.collectPayload?.() || []).map(entry => ({ ...entry }))]));
-  const changed = new Set();
-  // Use the resolved target, never the first same-named person, for each response.
-  await Promise.all(targets.map(async ({ group, index, identity }) => {
-    const entry = payloads[group]?.[index];
-    const selected = entry?.type === 'person'
-      && (group === 'authors' ? entry.isContact === true : entry.roles.includes('Contact Person'));
-    if (!selected || (!identity.orcid && !(identity.familyname.trim() && identity.givenname.trim()))) return;
-    try {
-      const contact = await lookupService.lookupContacts(identity);
-      if (!contact || (!contact.email && !contact.website)) return;
-      if (contact.email) entry.email = contact.email;
-      if (contact.website) entry.website = contact.website;
-      changed.add(group);
-    } catch { /* Best-effort: the imported contact role is independent of this lookup. */ }
-  }));
-  if (changed.has('authors')) stacks.authors.setAuthors(payloads.authors);
-  if (changed.has('contributors')) stacks.contributors.setContributors(payloads.contributors);
-}
-
-/* ================================================================== */
 /*  Main entry point                                                  */
 /* ================================================================== */
 
@@ -782,10 +729,9 @@ async function prefillContactPersons(targets, lookupService) {
  * The separate submission DOI remains empty after importing metadata.
  *
  * @param {Object} attributes - The DataCite `data.attributes` object.
- * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
- * @returns {Promise<void>} Resolves after mapping metadata and completing the optional contact lookup.
+ * @returns {Promise<void>} Resolves after mapping the public DataCite metadata.
  */
-async function applyDoiPrefill(attributes, lookupService) {
+async function applyDoiPrefill(attributes) {
   const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
   // Clearing resets both DOI fields. Keep the import source visible while the
@@ -803,7 +749,7 @@ async function applyDoiPrefill(attributes, lookupService) {
   // Synchronous prefills
   prefillResourceInfo(attributes);
   prefillCreators(attributes.creators);
-  const contactTargets = prefillContributors(attributes.contributors);
+  prefillContributors(attributes.contributors);
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
@@ -815,9 +761,6 @@ async function applyDoiPrefill(attributes, lookupService) {
   await prefillLanguage(attributes);
   await prefillTitles(attributes.titles);
   await prefillRights(attributes.rightsList);
-
-  // Post-prefill: look up contact person email/website from local DB
-  await prefillContactPersons(contactTargets, lookupService);
 }
 
 /* ================================================================== */
@@ -906,7 +849,6 @@ if (typeof module !== 'undefined' && module.exports) {
     prefillRelatedWorks,
     prefillFunding,
     prefillRights,
-    prefillContactPersons,
     applyDoiPrefill,
     buildPrefillPreview,
     escapeHtml,

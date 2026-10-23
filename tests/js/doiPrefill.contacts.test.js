@@ -18,7 +18,6 @@ const identifiers = value => [{ nameIdentifierScheme: 'ORCID', nameIdentifier: v
 const ORCID = '0000-0001-2345-6789';
 const SECOND_ORCID = '0000-0002-3456-789X';
 let mod;
-let lookupContacts;
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -30,7 +29,6 @@ beforeEach(() => {
     window.authorStack.setAuthors([]);
     window.contributorStack?.setContributors([]);
   });
-  lookupContacts = jest.fn().mockResolvedValue({ email: null, website: null });
   mod = requireFresh('../../js/doiPrefill');
 });
 
@@ -40,8 +38,8 @@ afterEach(() => {
   delete window.ELMO_FEATURES;
 });
 
-async function apply(creators, contributors, service = { lookupContacts }) {
-  await mod.applyDoiPrefill({ creators, contributors }, service);
+async function apply(creators, contributors) {
+  await mod.applyDoiPrefill({ creators, contributors });
   return {
     authors: window.authorStack.collectPayload(),
     contributors: window.contributorStack?.collectPayload() || [],
@@ -49,21 +47,29 @@ async function apply(creators, contributors, service = { lookupContacts }) {
 }
 
 test.each(examples)('issue #1300: imports published contacts for %s without local contact data', async (_name, attributes, names) => {
-  await mod.applyDoiPrefill(copy(attributes), { lookupContacts });
+  await mod.applyDoiPrefill(copy(attributes));
   const authors = window.authorStack.collectPayload();
   expect(authors.filter(author => author.isContact).map(author => author.familyname)).toEqual(names);
   expect(window.contributorStack.collectPayload().some(entry => entry.roles.includes('Contact Person'))).toBe(false);
-  expect(lookupContacts).toHaveBeenCalledTimes(names.length);
   expect(JSON.parse(document.querySelector('[name="authorsPayload"]').value)).toEqual(authors);
   expect($('input[name="contacts[]"]:checked')).toHaveLength(names.length);
   expect(authors.every(author => author.email === '' && author.website === '')).toBe(true);
 });
 
-test('does not query or mark authors without an explicit contact role', async () => {
-  lookupContacts.mockResolvedValue({ email: 'unrelated@example.org', website: 'https://example.org/' });
+test('does not mark authors without an explicit contact role', async () => {
   const { authors } = await apply([person()], [person({ contributorType: 'DataCollector' })]);
-  expect(lookupContacts).not.toHaveBeenCalled();
   expect(authors[0]).toMatchObject({ isContact: false, email: '', website: '' });
+});
+
+test('imports author and contributor contact roles without querying stored contact details', async () => {
+  // A legacy caller may still pass the old service argument; it must stay unused.
+  const lookupContacts = jest.fn().mockResolvedValue({ email: 'another-publication@example.org', website: 'https://example.org/' });
+  await mod.applyDoiPrefill({ creators: [person()], contributors: [contact(), contact({ familyName: 'Smith' })] }, { lookupContacts });
+  const authors = window.authorStack.collectPayload();
+  const contributors = window.contributorStack.collectPayload();
+  expect(lookupContacts).not.toHaveBeenCalled();
+  expect(authors[0]).toMatchObject({ isContact: true, email: '', website: '' });
+  expect(contributors[0]).toMatchObject({ roles: ['Contact Person'], email: '', website: '' });
 });
 
 describe('contact identity', () => {
@@ -80,7 +86,6 @@ describe('contact identity', () => {
     expect(authors.map(author => author.isContact)).toEqual([true, false]);
     expect(authors[0]).toMatchObject({ familyname: 'Doe', givenname: 'Jane', orcid: ORCID, affiliations: [{ label: 'Original affiliation', rorId: '' }] });
     expect(contributors).toEqual([]);
-    expect(lookupContacts).toHaveBeenCalledWith({ orcid: ORCID, familyname: 'Changed', givenname: 'Name' });
   });
 
   test.each([
@@ -91,7 +96,6 @@ describe('contact identity', () => {
     const { authors, contributors } = await apply([person({ nameIdentifiers: creatorIds })], [contact({ nameIdentifiers: contactIds })]);
     expect(authors[0].isContact).toBe(true);
     expect(contributors).toEqual([]);
-    expect(lookupContacts.mock.calls[0][0].orcid).toBe(creatorIds.length || contactIds.length ? ORCID : '');
   });
 
   test('normalizes case, Unicode and whitespace in names', async () => {
@@ -116,14 +120,13 @@ describe('contact identity', () => {
     expect(contributors[0].roles).toEqual(['Contact Person']);
   });
 
-  test('ORCID disambiguates authors with identical names and binds enrichment to the correct author', async () => {
-    lookupContacts.mockResolvedValue({ email: 'second@example.org' });
+  test('ORCID disambiguates authors with identical names and marks only the correct author', async () => {
     const { authors } = await apply([
       person({ nameIdentifiers: identifiers(ORCID) }),
       person({ nameIdentifiers: identifiers(SECOND_ORCID) }),
     ], [contact({ nameIdentifiers: identifiers(SECOND_ORCID.toLowerCase()) })]);
     expect(authors[0]).toMatchObject({ isContact: false, email: '' });
-    expect(authors[1]).toMatchObject({ isContact: true, email: 'second@example.org' });
+    expect(authors[1]).toMatchObject({ isContact: true, email: '' });
   });
 
   test('parses comma-separated personal names on either side', async () => {
@@ -145,57 +148,26 @@ describe('contact identity', () => {
   test.each(['Jane Doe', 'Doe, Jane, Jr.', 'Doe,'])('preserves %s without guessing name components', async name => {
     const { contributors } = await apply([person()], [contact({ familyName: '', givenName: '', name })]);
     expect(contributors[0]).toMatchObject({ familyname: name, givenname: '', roles: ['Contact Person'] });
-    expect(lookupContacts).not.toHaveBeenCalled();
   });
 
-  test('can match and enrich an ORCID-only contact', async () => {
-    lookupContacts.mockResolvedValue({ email: 'jane@example.org' });
+  test('can mark an author from an ORCID-only contact', async () => {
     const { authors } = await apply([person({ nameIdentifiers: identifiers(ORCID) })],
       [contact({ givenName: '', familyName: '', nameIdentifiers: identifiers(ORCID) })]);
-    expect(authors[0]).toMatchObject({ isContact: true, email: 'jane@example.org' });
+    expect(authors[0]).toMatchObject({ isContact: true, email: '' });
   });
 });
 
-describe('roles and lookup', () => {
-  test.each([undefined, null, []])('handles absent contributors (%s) without lookup', async contributors => {
+describe('roles and contact fields', () => {
+  test.each([undefined, null, []])('handles absent contributors (%s)', async contributors => {
     const result = await apply([person()], contributors);
     expect(result.authors[0].isContact).toBe(false);
-    expect(lookupContacts).not.toHaveBeenCalled();
   });
 
-  test.each([null, {}, { email: null, website: null }, 'failure'])('preserves the role with lookup result %s', async result => {
-    if (result === 'failure') lookupContacts.mockRejectedValue(new Error('offline'));
-    else lookupContacts.mockResolvedValue(result);
-    const { authors } = await apply([person()], [contact()]);
-    expect(authors[0]).toMatchObject({ isContact: true, email: '', website: '' });
-  });
-
-  test('preserves the role when lookup throws synchronously or is unavailable', async () => {
-    lookupContacts.mockImplementation(() => { throw new Error('unavailable'); });
-    expect((await apply([person()], [contact()])).authors[0].isContact).toBe(true);
-    lookupContacts.mockClear();
-    expect((await apply([person()], [contact()], null)).authors[0].isContact).toBe(true);
-    expect(lookupContacts).not.toHaveBeenCalled();
-  });
-
-  test.each([
-    [{ email: 'contact@example.org' }, 'contact@example.org', ''],
-    [{ website: 'https://example.org/' }, '', 'https://example.org/'],
-    [{ email: 'contact@example.org', website: 'https://example.org/' }, 'contact@example.org', 'https://example.org/'],
-  ])('enriches author and contributor contacts with %j', async (response, email, website) => {
-    lookupContacts.mockResolvedValue(response);
-    const { authors, contributors } = await apply([person()], [contact(), contact({ familyName: 'Smith' })]);
-    expect(authors[0]).toMatchObject({ isContact: true, email, website });
-    expect(contributors[0]).toMatchObject({ roles: ['Contact Person'], email, website });
-    expect(JSON.parse(document.querySelector('[name="contributorsPayload"]').value)).toEqual(contributors);
-    expect($('input[name="cpEmail[]"]').val()).toBe(email);
-    expect($('input[name="cbContactEmail[]"]').val()).toBe(email);
-  });
-
-  test('enriches contact contributors without a creators array', async () => {
-    lookupContacts.mockResolvedValue({ email: 'contributor@example.org' });
+  test('imports a contact contributor without a creators array', async () => {
     const { contributors } = await apply(undefined, [contact()]);
-    expect(contributors[0]).toMatchObject({ roles: ['Contact Person'], email: 'contributor@example.org' });
+    expect(contributors[0]).toMatchObject({ roles: ['Contact Person'], email: '', website: '' });
+    expect(JSON.parse(document.querySelector('[name="contributorsPayload"]').value)).toEqual(contributors);
+    expect($('input[name="cbContactEmail[]"]').val()).toBe('');
   });
 
   test('deduplicates contacts while preserving other roles and affiliations', async () => {
@@ -210,14 +182,12 @@ describe('roles and lookup', () => {
     expect(contributors.map(entry => entry.roles)).toEqual([['Data Collector'], ['Contact Person', 'Data Curator']]);
     expect(contributors[0].affiliations).toEqual([{ label: 'Institute', rorId: '04z8jg394' }]);
     expect(contributors[1].affiliations).toEqual([{ label: 'External institute', rorId: '' }]);
-    expect(lookupContacts).toHaveBeenCalledTimes(2);
   });
 
-  test.each([false, true])('respects institutional contacts feature flag %s without personal lookup', async enabled => {
+  test.each([false, true])('respects institutional contacts feature flag %s', async enabled => {
     window.ELMO_FEATURES = { showContactInstitution: enabled };
     const { contributors } = await apply([], [{ nameType: 'Organizational', name: 'Institute', contributorType: 'ContactPerson' }]);
     expect(contributors[0].roles).toEqual(enabled ? ['Contact Person'] : []);
-    expect(lookupContacts).not.toHaveBeenCalled();
   });
 
   test('marks authors when the contributor group is disabled', async () => {
@@ -233,12 +203,15 @@ describe('roles and lookup', () => {
   });
 
   test('a subsequent import clears previous contact selections and details', async () => {
-    lookupContacts.mockResolvedValue({ email: 'old@example.org' });
     await apply([person()], [contact(), contact({ familyName: 'Smith' })]);
-    lookupContacts.mockClear();
+    window.authorStack.setAuthors(window.authorStack.collectPayload().map(author => ({
+      ...author, email: 'old@example.org', website: 'https://example.org/old',
+    })));
+    window.contributorStack.setContributors(window.contributorStack.collectPayload().map(contributor => ({
+      ...contributor, email: 'old-contributor@example.org', website: 'https://example.org/old-contact',
+    })));
     const { authors, contributors } = await apply([person()], []);
     expect(authors[0]).toMatchObject({ isContact: false, email: '', website: '' });
     expect(contributors).toEqual([]);
-    expect(lookupContacts).not.toHaveBeenCalled();
   });
 });

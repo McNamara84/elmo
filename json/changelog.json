@@ -12,7 +12,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons even when no email or website is available. Local contact details are added only for people identified as contacts in the imported metadata."
+                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. The public contact lookup endpoint has been removed."
                 }
               ],
               "editions": ["all"],
