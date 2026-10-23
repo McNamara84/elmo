@@ -37,11 +37,21 @@ const CONTACT_XML = `<?xml version="1.0" encoding="UTF-8"?>
     </dace:contributors>
   </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>ada@example.org</grav:address>
-      <grav:onlineResource>https://ada.example.org</grav:onlineResource>
-      <grav:address>connie@example.org</grav:address>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Author, Ada</grav:name>
+        <grav:address>ada@example.org</grav:address>
+        <grav:onlineResource>https://ada.example.org</grav:onlineResource>
+      </grav:contact>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Contact, Connie</grav:name>
+        <grav:identifier>0000-0002-1825-0097</grav:identifier>
+        <grav:identifierType>ORCID</grav:identifierType>
+        <grav:address>connie@example.org</grav:address>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Contact import regression</grav:modelName>
       <grav:modelType>Static</grav:modelType>
@@ -87,31 +97,14 @@ test('uploads author and contributor contacts without adding the contributor to 
     await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 
     const contributor = page.locator('[data-contributor-card]');
-    await expect(contributor).toHaveCount(2);
-    const cards = await contributor.evaluateAll((nodes) => nodes.map((node) => ({
-      familyname: (node.querySelector('[name="cbPersonLastname[]"]') as HTMLInputElement | null)?.value || '',
-      email: (node.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value || '',
-      website: (node.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
-      contactVisible: !node.querySelector('[data-contributor-contact-fields]')?.classList.contains('d-none'),
-    })));
-    expect(cards).toEqual(expect.arrayContaining([
-      expect.objectContaining({
-        familyname: 'Author', email: 'ada@example.org', website: 'https://ada.example.org', contactVisible: true,
-      }),
-      expect.objectContaining({
-        familyname: 'Contact', email: 'connie@example.org', website: '', contactVisible: true,
-      }),
-    ]));
-    expect(cards).toHaveLength(2);
+    await expect(contributor).toHaveCount(1);
+    await expect(contributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
+    await expect(contributor.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
+    await expect(contributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
 
     const payload = await page.evaluate(() => (window as any).contributorStack.collectPayload());
-    const ada = payload.find((entry: { familyname?: string }) => entry.familyname === 'Author');
     const connie = payload.find((entry: { familyname?: string }) => entry.familyname === 'Contact');
-    expect(ada).toEqual(expect.objectContaining({
-      type: 'person', familyname: 'Author', givenname: 'Ada',
-      email: 'ada@example.org', website: 'https://ada.example.org',
-      roles: ['Contact Person'],
-    }));
+    expect(payload.some((entry: { familyname?: string }) => entry.familyname === 'Author')).toBe(false);
     expect(connie).toEqual(expect.objectContaining({
       type: 'person', familyname: 'Contact', givenname: 'Connie',
       orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',
