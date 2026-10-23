@@ -647,35 +647,54 @@ function ingestContactInfo(card, contact) {
   if (contact.website) card.website = contact.website;
 }
 
-function ingestContactDetailsPersonal(contributors, contacts) {
-  const cards = contributors.filter((card) => (
-    card.type === 'person' && (card.roles || []).includes('Contact Person')
-  ));
+/**
+ * Finds the person card for each contact, or adds one. Normal mapping skips a
+ * DataCite ContactPerson who is also an author, so that contact has no card yet.
+ */
+function ingestContactDetailsPersonal(contributors, contacts, canAddPerson = true) {
   const used = new Set();
-  contacts.forEach((contact) => {
+  const findCard = (contact, cards) => {
     // first try matching by ORCID
     const byOrcid = contact.orcid
-      ? cards.find((card) => !used.has(card) && normalizeOrcid(card.orcid) === contact.orcid)
+      ? cards.find((candidate) => normalizeOrcid(candidate.orcid) === contact.orcid)
       : null;
-    if (byOrcid) {
-      ingestContactInfo(byOrcid, contact);
-      used.add(byOrcid);
-      return;
-    }
-    // second, try to match by name
+    if (byOrcid) return byOrcid;
+    // second, try to match by name. A different ORCID is a different person.
     const wanted = personNameKey(contact.familyName, contact.givenName);
-    const byName = cards.find((card) => (
-      !used.has(card)
-      && personNameKey(card.familyname, card.givenname) === wanted
-      && (!contact.orcid || !normalizeOrcid(card.orcid) || normalizeOrcid(card.orcid) === contact.orcid)
+    return cards.find((candidate) => (
+      personNameKey(candidate.familyname, candidate.givenname) === wanted
+      && (!contact.orcid || !normalizeOrcid(candidate.orcid) || normalizeOrcid(candidate.orcid) === contact.orcid)
     ));
-    if (byName) {
-      ingestContactInfo(byName, contact);
-      used.add(byName);
-      return;
+  };
+
+  contacts.forEach((contact) => {
+    const people = contributors.filter((card) => card.type === 'person');
+    let card = findCard(contact, people.filter((candidate) => !used.has(candidate)));
+    // A repeated contact for a card filled earlier in this import adds nothing.
+    if (!card && findCard(contact, people)) return;
+
+    if (!card) {
+      if (!canAddPerson) {
+        console.warn('no contributor found for contact', contact.name);
+        return;
+      }
+      card = {
+        type: 'person',
+        familyname: contact.familyName,
+        givenname: contact.givenName,
+        orcid: contact.orcid,
+        roles: [],
+        affiliations: [],
+        email: '',
+        website: ''
+      };
+      contributors.push(card);
     }
-    // if no match was found, log a warning
-    console.warn('no contributor found for contact', contact.name);
+
+    if (!card.roles.includes('Contact Person')) card.roles.push('Contact Person');
+    if (contact.orcid && !normalizeOrcid(card.orcid)) card.orcid = contact.orcid;
+    ingestContactInfo(card, contact);
+    used.add(card);
   });
 }
 
@@ -699,7 +718,8 @@ function ingestContactDetailsOrganizational(contributors, contacts) {
 }
 
 /**
- * Fills email and website on the contributor cards already on the page.
+ * Fills email and website on the contributor cards. A personal contact without
+ * a card gets a new Contact Person card.
  *
  * @param {Document} xmlDoc Parsed ICGEM envelope.
  * @throws {Error} When the contributors group is present but not initialized.
@@ -723,7 +743,11 @@ function populateIcgemContactPersons(xmlDoc) {
       ? contributor.affiliations.map((item) => ({ ...item }))
       : []
   }));
-  ingestContactDetailsPersonal(contributors, prepareContactDetailsPersonal(contacts));
+  ingestContactDetailsPersonal(
+    contributors,
+    prepareContactDetailsPersonal(contacts),
+    contributorStack.supportsType?.('person') !== false
+  );
   ingestContactDetailsOrganizational(contributors, prepareContactDetailsOrganizational(contacts));
   contributorStack.setContributors(contributors);
 }
