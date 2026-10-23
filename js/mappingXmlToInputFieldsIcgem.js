@@ -634,12 +634,6 @@ function readGravContacts(xmlDoc) {
   }).filter((contact) => contact.nameType && (contact.name || contact.email || contact.website));
 }
 
-function findContributorCards(contributors, type) {
-  return contributors.filter((card) => (
-    card.type === type && (card.roles || []).includes('Contact Person')
-  ));
-}
-
 function prepareContactDetailsPersonal(contacts) {
   return contacts.filter((contact) => contact.nameType === 'Personal');
 }
@@ -654,7 +648,9 @@ function ingestContactInfo(card, contact) {
 }
 
 function ingestContactDetailsPersonal(contributors, contacts) {
-  const cards = findContributorCards(contributors, 'person');
+  const cards = contributors.filter((card) => (
+    card.type === 'person' && (card.roles || []).includes('Contact Person')
+  ));
   const used = new Set();
   contacts.forEach((contact) => {
     // first try matching by ORCID
@@ -684,7 +680,9 @@ function ingestContactDetailsPersonal(contributors, contacts) {
 }
 
 function ingestContactDetailsOrganizational(contributors, contacts) {
-  const cards = findContributorCards(contributors, 'institution');
+  // The Contact Person role is removed from institution cards when that feature
+  // is off, but the card is still the organization named in the contact.
+  const cards = contributors.filter((card) => card.type === 'institution');
   const used = new Set();
   contacts.forEach((contact) => {
     const wanted = String(contact.name || '').trim().toLowerCase();
@@ -812,7 +810,6 @@ if (typeof module !== 'undefined' && module.exports) {
     populateIcgemModelTypes,
     populateIcgemDataSources,
     populateIcgemDescriptions,
-    findContributorCards,
     prepareContactDetailsPersonal,
     prepareContactDetailsOrganizational,
     ingestContactDetailsPersonal,
