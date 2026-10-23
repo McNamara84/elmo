@@ -156,6 +156,9 @@ function normalizeDoiPersonNameKey(familyName, givenName) {
   return `${normalize(familyName)}\u0000${normalize(givenName)}`;
 }
 
+// Shared JSDoc object types for the annotations below. Standalone @typedef
+// blocks describe data structures; they do not need a function declaration.
+
 /**
  * Identity used to match an imported contact and query local contact details.
  * @typedef {Object} DoiContactIdentity
