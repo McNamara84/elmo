@@ -119,8 +119,7 @@ describe('ICGEM contact person import', () => {
     expect(window.authorStack.collectPayload()).toHaveLength(1);
   });
 
-  test('does not create a contributor card when no Contact Person matches', () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('creates a Contact Person card when no person card matches', () => {
     buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
     mountContributorStack([]);
     const xmlDoc = makeIcgemXml({ familyName: 'Contact', givenName: 'New',
@@ -129,9 +128,40 @@ describe('ICGEM contact person import', () => {
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
     expect(window.authorStack.collectPayload()).toHaveLength(1);
-    expect(window.contributorStack.collectPayload()).toEqual([]);
-    expect(warn).toHaveBeenCalledWith('no contributor found for contact', 'Contact, New');
-    warn.mockRestore();
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ type: 'person', familyname: 'Contact', givenname: 'New',
+        orcid: '0000-0002-1825-0097', roles: ['Contact Person'], email: 'new@example.org' })
+    ]);
+  });
+
+  test('creates a Contact Person card for an author contact that normal mapping skipped', () => {
+    buildAuthorDom([{ familyname: 'Author', givenname: 'Ada' }]);
+    mountContributorStack([{ type: 'person', familyname: 'Other', givenname: 'Olga', roles: ['Editor'] }]);
+    const xmlDoc = makeIcgemXml({ familyName: 'Author', givenName: 'Ada',
+      email: 'ada@example.org', website: 'https://ada.example.org' });
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(window.authorStack.collectPayload()).toEqual([
+      expect.objectContaining({ familyname: 'Author', givenname: 'Ada', email: '' })
+    ]);
+    expect(window.contributorStack.collectPayload().map(entry => [entry.familyname, entry.roles, entry.email])).toEqual([
+      ['Other', ['Editor'], ''],
+      ['Author', ['Contact Person'], 'ada@example.org']
+    ]);
+  });
+
+  test('adds the Contact Person role to a matching card that has other roles', () => {
+    buildAuthorDom([{ familyname: 'Existing', givenname: 'Author' }]);
+    mountContributorStack([{ type: 'person', familyname: 'Contact', givenname: 'Connie', roles: ['Researcher'] }]);
+    const xmlDoc = makeIcgemXml({ familyName: 'Contact', givenName: 'Connie', email: 'connie@example.org' });
+
+    icgemModule.populateIcgemContactPersons(xmlDoc);
+
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ familyname: 'Contact', roles: ['Researcher', 'Contact Person'],
+        email: 'connie@example.org' })
+    ]);
   });
 
   test('matches contributor ORCIDs and keeps roles and other cards on repeated imports', () => {
@@ -376,7 +406,7 @@ describe('ICGEM contact person import', () => {
     warn.mockRestore();
   });
 
-  test('fills a Contact Person institution by name and does not add the other contacts', () => {
+  test('fills a Contact Person institution by name and adds cards for the missing people', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
     window.ELMO_FEATURES = { showContactInstitution: true };
     buildAuthorDom([
@@ -420,11 +450,12 @@ describe('ICGEM contact person import', () => {
     const contributors = window.contributorStack.collectPayload();
     expect(contributors.map(entry => [entry.type, entry.familyname || entry.institutionname, entry.email])).toEqual([
       ['person', 'Contact', 'connie@example.org'],
-      ['institution', 'GFZ', 'gfz@example.org']
+      ['institution', 'GFZ', 'gfz@example.org'],
+      ['person', 'Smith', 'bob@example.org'],
+      ['person', 'Author', 'ada@example.org']
     ]);
     expect(window.authorStack.collectPayload().map(author => author.email || '')).toEqual(['', '']);
-    expect(warn).toHaveBeenCalledWith('no contributor found for contact', 'Smith, Bob');
-    expect(warn).toHaveBeenCalledWith('no contributor found for contact', 'Author, Ada');
+    expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
     delete window.ELMO_FEATURES;
   });

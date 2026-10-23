@@ -464,8 +464,9 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const cpOrcidEntry = cpOrcidList.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'ORCID');
   const contactPersonOrcid = extractText(cpOrcidEntry ?? cpOrcidList[0]);
 
-  // Contact email and website (from grav:contact inside globalGravityProduct)
-  const contactEl = getNode(ggp, 'contact') as Record<string, unknown> | undefined;
+  // Contact email and website (from grav:contacts/grav:contact inside globalGravityProduct)
+  const contactsEl = getNode(ggp, 'contacts') as Record<string, unknown> | undefined;
+  const contactEl = contactsEl ? toArray(getNode(contactsEl, 'contact'))[0] as Record<string, unknown> | undefined : undefined;
   const addressList = contactEl ? toArray(getNode(contactEl, 'address')) : [];
   const contactPersonEmail = extractText(addressList[0]);
   const onlineResourceList = contactEl ? toArray(getNode(contactEl, 'onlineResource')) : [];
@@ -1340,12 +1341,7 @@ for (const testCase of TEST_CASES) {
     }
 
     // Contact email and website live on the contributor card. The ICGEM contact
-    // element does not write them onto the author, and an author who is the
-    // only contact does not get a new contributor card.
-    const contactIsAuthor = parsedData.personalCreators.some((creator) => (
-      creator.lastName === parsedData.contactPersonLastName
-      && creator.firstName === parsedData.contactPersonFirstName
-    ));
+    // element does not write them onto the author.
     const contact = await page.locator('[data-contributor-card]').evaluateAll((cards, email) => {
       const match = cards.find((card) => (
         (card.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value === email
@@ -1356,11 +1352,9 @@ for (const testCase of TEST_CASES) {
         website: (match.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
       };
     }, parsedData.contactPersonEmail);
-    if (contact || !contactIsAuthor) {
-      expect(contact?.email, 'contactPersonEmail').toBe(parsedData.contactPersonEmail);
-      if (parsedData.contactPersonWebsite) {
-        expect(contact?.website, 'contactPersonWebsite').toBe(parsedData.contactPersonWebsite);
-      }
+    expect(contact?.email, 'contactPersonEmail').toBe(parsedData.contactPersonEmail);
+    if (parsedData.contactPersonWebsite) {
+      expect(contact?.website, 'contactPersonWebsite').toBe(parsedData.contactPersonWebsite);
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────

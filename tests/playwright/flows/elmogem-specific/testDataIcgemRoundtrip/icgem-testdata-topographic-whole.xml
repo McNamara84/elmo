@@ -39,9 +39,13 @@
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>topographic.contact@gfz.de</grav:address>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Rexer, Moritz</grav:name>
+        <grav:address>topographic.contact@gfz.de</grav:address>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Test_Topographic_Whole_Density</grav:modelName>
       <grav:publicationYear>2022</grav:publicationYear>

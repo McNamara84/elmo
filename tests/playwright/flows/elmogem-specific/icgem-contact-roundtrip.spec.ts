@@ -5,14 +5,15 @@ import { navigateToHome, registerGoogleMapsNoopRoute, waitForFormInteractionRead
 const FIXTURE = path.join(__dirname, 'testDataIcgemContactRoundtrip/elmogem_contact_info_roundtrip.xml');
 
 /**
- * Contacts that land on a contributor card and come back in the download.
- * cont_pers_1 is an author, so normal mapping does not make a contributor card
- * for that ContactPerson, and the grav address is not copied onto the author.
+ * Contributor cards after upload, in order, and the contacts in the download.
+ * cont_pers_1 is an author. Normal mapping skips that ContactPerson, so the
+ * ICGEM contact adds the card last. The address is not copied onto the author.
  */
 const EXPECTED_CONTACTS = [
   { nameType: 'Organizational', name: 'cont_inst_1', email: 'cont_inst_1@mail.com', website: 'cont_inst_1.com' },
   { nameType: 'Organizational', name: 'cont_inst_2', email: 'cont_inst_2@mail.com', website: 'cont_inst_2.com' },
   { nameType: 'Personal', name: 'cont_pers_2', email: 'cont_pers_2@mail.com', website: 'cont_pers_2.com' },
+  { nameType: 'Personal', name: 'cont_pers_1', email: 'cont_pers_1@mail.com', website: 'cont_pers_1.com' },
 ];
 
 function decodeXml(value: string): string {
@@ -109,7 +110,7 @@ test('uploads the contact round-trip file, reloads the download, and keeps every
   await expect(page.locator('#toast-upload-feedback')).toHaveClass(/text-bg-success/);
   await expect(page.locator('#modal-uploadxml')).toBeHidden();
 
-  await expectRoundTripCards(page, true);
+  await expectRoundTripCards(page);
 
   const downloaded = await downloadIcgemXml(page);
   expect(gravContactPairs(downloaded)).toEqual(EXPECTED_CONTACTS);
@@ -137,11 +138,11 @@ test('uploads the contact round-trip file, reloads the download, and keeps every
   await expect(page.locator('#toast-upload-feedback')).toHaveClass(/text-bg-success/);
   await expect(page.locator('#modal-uploadxml')).toBeHidden();
 
-  await expectRoundTripCards(page, false);
+  await expectRoundTripCards(page);
   expect(pageErrors).toEqual([]);
 });
 
-async function expectRoundTripCards(page: Page, authorIsContact: boolean) {
+async function expectRoundTripCards(page: Page) {
   const authors = page.locator('[data-author-card]');
   await expect(authors).toHaveCount(2);
   await expect(authors.nth(0).locator('[name="familynames[]"]')).toHaveValue('author_1');
@@ -150,11 +151,7 @@ async function expectRoundTripCards(page: Page, authorIsContact: boolean) {
   await expect(authors.nth(0).locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 
   await expect(authors.nth(1).locator('[name="familynames[]"]')).toHaveValue('cont_pers_1');
-  if (authorIsContact) {
-    await expect(authors.nth(1).locator('[name="contacts[]"]')).toBeChecked();
-  } else {
-    await expect(authors.nth(1).locator('[name="contacts[]"]')).not.toBeChecked();
-  }
+  await expect(authors.nth(1).locator('[name="contacts[]"]')).toBeChecked();
   await expect(authors.nth(1).locator('[name="cpEmail[]"]')).toHaveValue('');
   await expect(authors.nth(1).locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 

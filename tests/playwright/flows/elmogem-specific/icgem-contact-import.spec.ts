@@ -96,15 +96,25 @@ test('uploads author and contributor contacts without adding the contributor to 
     await expect(author.locator('[name="cpEmail[]"]')).toHaveValue('');
     await expect(author.locator('[name="cpOnlineResource[]"]')).toHaveValue('');
 
+    // Connie comes from DataCite. Ada is an author, so her card comes from the ICGEM contact.
     const contributor = page.locator('[data-contributor-card]');
-    await expect(contributor).toHaveCount(1);
-    await expect(contributor.locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
-    await expect(contributor.locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
-    await expect(contributor.locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    await expect(contributor).toHaveCount(2);
+    await expect(contributor.nth(0).locator('[name="cbPersonLastname[]"]')).toHaveValue('Contact');
+    await expect(contributor.nth(0).locator('[name="cbContactEmail[]"]')).toHaveValue('connie@example.org');
+    await expect(contributor.nth(0).locator('[name="cbContactWebsite[]"]')).toHaveValue('');
+    await expect(contributor.nth(1).locator('[name="cbPersonLastname[]"]')).toHaveValue('Author');
+    await expect(contributor.nth(1).locator('[name="cbContactEmail[]"]')).toHaveValue('ada@example.org');
+    await expect(contributor.nth(1).locator('[name="cbContactWebsite[]"]')).toHaveValue('https://ada.example.org');
+    await expect(contributor.nth(1).locator('[data-contributor-contact-fields]')).toBeVisible();
 
     const payload = await page.evaluate(() => (window as any).contributorStack.collectPayload());
+    const ada = payload.find((entry: { familyname?: string }) => entry.familyname === 'Author');
     const connie = payload.find((entry: { familyname?: string }) => entry.familyname === 'Contact');
-    expect(payload.some((entry: { familyname?: string }) => entry.familyname === 'Author')).toBe(false);
+    expect(ada).toEqual(expect.objectContaining({
+      type: 'person', familyname: 'Author', givenname: 'Ada',
+      email: 'ada@example.org', website: 'https://ada.example.org',
+      roles: ['Contact Person'],
+    }));
     expect(connie).toEqual(expect.objectContaining({
       type: 'person', familyname: 'Contact', givenname: 'Connie',
       orcid: '0000-0002-1825-0097', email: 'connie@example.org', website: '',

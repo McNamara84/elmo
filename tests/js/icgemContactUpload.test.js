@@ -231,8 +231,7 @@ describe('populateIcgemContactPersons', () => {
     expectAuthorsUntouched();
   });
 
-  test('warns when no Contact Person card matches and leaves authors untouched', () => {
-    const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
+  test('adds a contributor card for an author contact and leaves authors untouched', () => {
     buildAuthorDom([
       { familyname: 'Dahle', givenname: 'Christoph' },
       { familyname: 'Flechtner', givenname: 'Frank' },
@@ -243,9 +242,10 @@ describe('populateIcgemContactPersons', () => {
 
     icgemModule.populateIcgemContactPersons(xmlDoc);
 
-    expect(warn).toHaveBeenCalledWith('no contributor found for contact', 'Dahle, Christoph');
-    expect(window.contributorStack.collectPayload()).toEqual([]);
+    expect(window.contributorStack.collectPayload()).toEqual([
+      expect.objectContaining({ familyname: 'Dahle', givenname: 'Christoph',
+        roles: ['Contact Person'], email: 'gfz@gfz.de' })
+    ]);
     expectAuthorsUntouched();
-    warn.mockRestore();
   });
 });
