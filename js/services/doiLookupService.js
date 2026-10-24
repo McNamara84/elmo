@@ -1,6 +1,5 @@
 /**
  * Service for looking up DOI metadata from the DataCite API via the ELMO backend proxy.
- * Also supports fetching contact person data (email/website) from the local database.
  */
 class DoiLookupService {
   /**
@@ -58,35 +57,6 @@ class DoiLookupService {
 
     if (!response.ok && response.status !== 200) {
       throw new Error(`DOI lookup failed with status ${response.status}`);
-    }
-
-    return response.json();
-  }
-
-  /**
-   * Looks up contact person data (email, website) from the local database.
-   *
-   * @param {Object} params
-   * @param {string} [params.orcid] - ORCID identifier.
-   * @param {string} [params.familyname] - Family name for name-based lookup.
-   * @param {string} [params.givenname] - Given name for name-based lookup.
-   * @returns {Promise<{email: string|null, website: string|null}>}
-   */
-  async lookupContacts({ orcid, familyname, givenname } = {}) {
-    const params = new URLSearchParams();
-    if (orcid) params.set('orcid', orcid);
-    if (familyname) params.set('familyname', familyname);
-    if (givenname) params.set('givenname', givenname);
-
-    const url = `${this.apiBaseUrl}/doi/contacts?${params.toString()}`;
-
-    const response = await this.fetchImpl(url, {
-      method: 'GET',
-      headers: { 'Accept': 'application/json' },
-    });
-
-    if (!response.ok) {
-      return { email: null, website: null };
     }
 
     return response.json();

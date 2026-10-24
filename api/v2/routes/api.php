@@ -19,7 +19,6 @@ require_once __DIR__ . '/../controllers/IdentifierDetectionController.php';
 return [
     // DOI lookup endpoints (DataCite proxy)
     ['GET', '/doi/lookup/{doi:.+}', [new DoiController(), 'lookup']],
-    ['GET', '/doi/contacts', [new DoiController(), 'contacts']],
 
     // General endpoints
     ['GET', '/general/alive', [new GeneralController(), 'getAlive']],
