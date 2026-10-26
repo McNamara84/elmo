@@ -897,6 +897,43 @@ export function cleanupTagifyForInput(inputElement, configKey) {
     }
 }
 
+function updateThesaurusKeywordCount() {
+    const group = document.getElementById('thesaurusKeywordsGroup');
+    const summary = document.querySelector(
+        '[data-thesaurus-summary-count]'
+    );
+
+    if (!group || !summary) return;
+
+    const count = Array.from(group.querySelectorAll('input'))
+        .reduce(function (total, input) {
+            return total + (input._tagify?.value?.length || 0);
+        }, 0);
+
+    summary.textContent = `· ${count} ${count === 1 ? 'Keyword' : 'Keywords'
+        }`;
+}
+
+function bindKeywordCount(inputElement) {
+    const tagify = inputElement._tagify;
+
+    if (
+        !tagify ||
+        tagify._keywordCountBound ||
+        !inputElement.closest('#thesaurusKeywordsGroup')
+    ) {
+        return;
+    }
+
+    tagify._keywordCountBound = true;
+
+    tagify.on('add', updateThesaurusKeywordCount);
+    tagify.on('remove', updateThesaurusKeywordCount);
+    tagify.on('change', updateThesaurusKeywordCount);
+
+    updateThesaurusKeywordCount();
+}
+
 // 3. The Function to hook up new inputs
 export function initTagifyForInput(inputElement, configKey) {
     const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
@@ -936,6 +973,7 @@ export function initTagifyForInput(inputElement, configKey) {
         }
     }
     state.tagifyInstances.add(inputElement._tagify);
+    bindKeywordCount(inputElement);
 
     if (!inputElement.dataset.tagifyValidationBound && inputElement._tagify) {
         inputElement.dataset.tagifyValidationBound = 'true';
@@ -1421,6 +1459,7 @@ $(document).ready(function () {
             input.tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
             state.tagifyInstances.add(thesaurusKeywordstagify);
+            bindKeywordCount(input);
 
             if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                 window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {
