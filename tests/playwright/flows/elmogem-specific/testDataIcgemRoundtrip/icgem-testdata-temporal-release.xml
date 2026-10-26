@@ -40,10 +40,14 @@
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>temporal.contact@gfz.de</grav:address>
-      <grav:onlineResource>icgem.gfz.de/temporal-series</grav:onlineResource>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Dahle, Christoph</grav:name>
+        <grav:address>temporal.contact@gfz.de</grav:address>
+        <grav:onlineResource>icgem.gfz.de/temporal-series</grav:onlineResource>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Test_Temporal_RL06</grav:modelName>
       <grav:publicationYear>2023</grav:publicationYear>

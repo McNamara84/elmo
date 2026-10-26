@@ -1061,6 +1061,16 @@ html[data-help-status="help-off"] .input-group-append:has(> .help-placeholder:on
 }
 
 
+.person-orcid-field .orcid-search-btn.input-right-no-round-corners {
+    border-top-right-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.person-orcid-field .orcid-search-btn.input-right-with-round-corners {
+    border-top-right-radius: 0.375rem !important;
+    border-bottom-right-radius: 0.375rem !important;
+}
+
 @supports (appearance: base-select) {
 
     #input-originatinglaboratory-name,
