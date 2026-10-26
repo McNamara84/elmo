@@ -90,6 +90,64 @@ function validateContributorPersonRequirements() {
 }
 
 /**
+ * Validates the Authors group and displays a group-level error.
+ * Requires at least one author and no invalid fields in the author stack.
+ *
+ * @returns {boolean} True if the Authors group is valid.
+ */
+function validateAuthorsGroup() {
+    const $group = $('#formgroup-authors');
+    if (!$group.length) {
+        return true;
+    }
+
+    const $stack = $group.find('[data-author-stack]');
+    let $feedback = $group.children('#authors-group-error');
+
+    const hasAuthor = $stack
+        .find('input[name="familynames[]"], input[name="authorinstitutionName[]"]')
+        .toArray()
+        .some(input => input.value.trim() !== '');
+
+    const hasInvalidFields = $stack.find(':invalid, .is-invalid').length > 0;
+
+    if (hasAuthor && !hasInvalidFields) {
+        $feedback.remove();
+        return true;
+    }
+
+    if (!$feedback.length) {
+        $feedback = $('<div>', {
+            id: 'authors-group-error',
+            class: 'text-danger px-3 pb-3',
+            role: 'alert',
+            'data-translate': 'authors.validationError'
+        }).appendTo($group);
+    }
+
+    window.applyTranslationsTo($feedback);
+    return false;
+}
+
+window.validateAuthorsGroup = validateAuthorsGroup;
+
+/**
+ * Revalidates Authors after changes, but only after a failed submission.
+ */
+document.addEventListener('authorsPayload:updated', function () {
+    const $form = $('#formgroup-authors').closest('form');
+    if (!$form.hasClass('was-validated')) {
+        return;
+    }
+
+    validateContactPersonRequirements();
+    validateAuthorInstitutionRequirements();
+    validateAuthorNameFields();
+    validateAuthorsGroup();
+});
+
+
+/**
  * Validates the Contributor Organisation section of the form.
  * Ensures the "Name" and "Role" fields are required if any field in the row is filled.
  */

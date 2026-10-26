@@ -12,6 +12,18 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. Missing contact emails are highlighted in red on Submit, even without prior field interaction. The public contact lookup endpoint has been removed."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1300 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "ORCID, ROR, and DOI logos are displayed again in contextual help."
                 }
               ],
@@ -30,6 +42,30 @@
               "editions": [ "all" ],
               "references": [
                 { "type": "issue", "number": 1303 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Checkboxes are now displayed for top-level ICS Chronostratigraphy keywords without children."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1302 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added a translated validation message for missing Authors information, visible even when author fields are collapsed."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1305 }
               ]
             }
           ]

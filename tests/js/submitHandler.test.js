@@ -92,6 +92,9 @@ describe('submitHandler.js', () => {
     global.validateTitleField = jest.fn().mockReturnValue(true);
     global.validateAuthorNameFields = jest.fn().mockReturnValue(true);
 
+    // Mock Authors group validation
+    window.validateAuthorsGroup = jest.fn().mockReturnValue(true);
+
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 
@@ -657,6 +660,21 @@ describe('submitHandler.js', () => {
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
     expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test.each(['', 'contact@example.org'])('handleSubmit checks contacts even when another required field is empty (email: %s)', email => {
+    handler.$form.append('<input name="unrelated-required-field" required>');
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","isContact":true,"email":"${email}"}]'>
+    `;
+
+    handler.handleSubmit();
+
+    expect(window.authorStack.updatePayload).toHaveBeenCalled();
+    expect($('#contact-person-error')).toHaveLength(email ? 0 : 1);
+    expect(handler.$form.hasClass('was-validated')).toBe(true);
+    expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    expect(handler.modals.submit.show).not.toHaveBeenCalled();
   });
 
   test('handleSubmit shows validation-failed modal when author affiliation labels are invalid', () => {

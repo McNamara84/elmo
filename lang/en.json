@@ -180,7 +180,8 @@
         "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide an Institution Name."
+        "InstitutionsNameInvalid": "Please provide an Institution Name.",
+        "validationError": "Please add at least one author and complete all required fields."
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",
