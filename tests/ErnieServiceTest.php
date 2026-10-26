@@ -239,6 +239,76 @@ final class ErnieServiceTest extends TestCase
         $ernieResourceTypesCacheTtl = $ttl;
     }
 
+    public function testEditorProfileUsesEffectiveSettingsInsteadOfReapplyingEnvironment(): void
+    {
+        $hadMode = array_key_exists('showMslMode', $GLOBALS);
+        $previousMode = $GLOBALS['showMslMode'] ?? null;
+        $previousEnvironment = getenv('SHOW_MSL_MODE');
+        try {
+            putenv('SHOW_MSL_MODE=true');
+            unset($GLOBALS['showMslMode']);
+            self::assertSame('elmo', (new \ErnieService())->getEditorProfile());
+
+            foreach ([false, 'false', 0, '0', null] as $value) {
+                $GLOBALS['showMslMode'] = $value;
+                $service = new MemoryLabelSpy();
+                self::assertSame('elmo', $service->getEditorProfile());
+                self::assertSame('/api/v1/resource-types/elmo', $service->memoryMap()['resourceTypes']['ernieEndpoint']);
+            }
+
+            putenv('SHOW_MSL_MODE=false');
+            $GLOBALS['showMslMode'] = true;
+            $service = new MemoryLabelSpy();
+            self::assertSame('elmo-msl', $service->getEditorProfile());
+            self::assertSame('/api/v1/resource-types/elmo-msl', $service->memoryMap()['resourceTypes']['ernieEndpoint']);
+        } finally {
+            if ($hadMode) {
+                $GLOBALS['showMslMode'] = $previousMode;
+            } else {
+                unset($GLOBALS['showMslMode']);
+            }
+            putenv($previousEnvironment === false ? 'SHOW_MSL_MODE' : 'SHOW_MSL_MODE=' . $previousEnvironment);
+        }
+    }
+
+    public function testResourceTypeCacheCannotLeakBetweenEditorProfiles(): void
+    {
+        $hadMode = array_key_exists('showMslMode', $GLOBALS);
+        $previousMode = $GLOBALS['showMslMode'] ?? null;
+        $files = [];
+        try {
+            $services = [];
+            foreach ([false, true] as $isMsl) {
+                $GLOBALS['showMslMode'] = $isMsl;
+                $service = new MemoryLabelSpy();
+                $profile = $service->getEditorProfile();
+                $file = $this->testCacheDir . '/' . basename($service->memoryMap()['resourceTypes']['cacheFile']);
+                $files[] = $file;
+                $service->pointCacheFile('resourceTypes', $file);
+                file_put_contents($file, json_encode([
+                    'lastUpdated' => date('c'),
+                    'data' => [['id' => $isMsl ? 10 : 28, 'name' => $isMsl ? 'Dataset' : 'Software']],
+                ]));
+                $services[$profile] = $service;
+            }
+            self::assertNotSame($files[0], $files[1]);
+            // Read both after writing both: a shared filename would return the wrong list.
+            self::assertSame('Software', $services['elmo']->getResourceTypesWithCache()[0]['name']);
+            self::assertSame('Dataset', $services['elmo-msl']->getResourceTypesWithCache()[0]['name']);
+        } finally {
+            foreach (array_unique($files) as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+            if ($hadMode) {
+                $GLOBALS['showMslMode'] = $previousMode;
+            } else {
+                unset($GLOBALS['showMslMode']);
+            }
+        }
+    }
+
     /**
      * Creates a testable ErnieService with custom cache file paths
      */

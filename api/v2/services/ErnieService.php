@@ -23,6 +23,9 @@ class ErnieService
      */
     private int $cacheTtl;
 
+    /** Editor context resolved after settings and variant overrides. */
+    private string $editorProfile;
+
     /**
      * Cache file path and ERNIE endpoint for each vocabulary ELMO refreshes.
      *
@@ -37,17 +40,24 @@ class ErnieService
      */
     public function __construct()
     {
-        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
+        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl, $showMslMode;
 
         $this->baseUrl = rtrim($ernieUrl ?? '', '/');
         $this->apiKey = $ernieApiKey ?? '';
         // Support both new shared variable and legacy variable for backwards compatibility
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
+        // Settings already resolved SHOW_MSL_MODE and any later variant overrides.
+        $this->editorProfile = filter_var($showMslMode ?? false, FILTER_VALIDATE_BOOLEAN)
+            ? 'elmo-msl'
+            : 'elmo';
+        $resourceTypesCache = $this->editorProfile === 'elmo-msl'
+            ? 'ernie_resource_types_elmo_msl.json'
+            : 'ernie_resource_types.json';
 
         $this->memory = [
         'resourceTypes' => [
-            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_resource_types.json',
-            'ernieEndpoint' => '/api/v1/resource-types/elmo',
+            'cacheFile' => __DIR__ . '/../../../storage/cache/' . $resourceTypesCache,
+            'ernieEndpoint' => '/api/v1/resource-types/' . $this->editorProfile,
         ],
         'titleTypes' => [
             'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_title_types.json',
@@ -110,6 +120,11 @@ class ErnieService
             'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
         ],
     ];
+    }
+
+    public function getEditorProfile(): string
+    {
+        return $this->editorProfile;
     }
 
     /**

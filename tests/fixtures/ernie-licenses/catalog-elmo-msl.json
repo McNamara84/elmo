@@ -1,0 +1,4 @@
+[
+  {"id": 202, "identifier": "CC0-1.0", "name": "Creative Commons Zero v1.0 Universal", "uri": "https://creativecommons.org/publicdomain/zero/1.0/", "scheme_uri": "https://spdx.org/licenses/"},
+  {"id": 301, "identifier": "MIT", "name": "MIT License", "uri": "https://spdx.org/licenses/MIT.html", "scheme_uri": "https://spdx.org/licenses/"}
+]
