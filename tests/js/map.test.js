@@ -303,6 +303,38 @@ describe('map.js', () => {
     expect(createdMarkers.length).toBeGreaterThan(0);
   });
 
+  test.each(['', 'dummy'])('skips map initialization without a container (API key: %p)', async (apiKey) => {
+    document.body.innerHTML = '';
+    global.google = undefined;
+    global.createdMarkers = [];
+    global.createdRectangles = [];
+    global.fetch = jest.fn(() => Promise.resolve({
+      ok: true,
+      json: () => Promise.resolve({ apiKey })
+    }));
+    const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+
+    try {
+      const script = fs.readFileSync(path.resolve(__dirname, '../../js/map.js'), 'utf8');
+      eval(script);
+
+      await expect(window.updateMapOverlay('row1', '', '', '52.5', '13.4')).resolves.toBeUndefined();
+      await expect(window.updateMapOverlay('row1', '52.55', '13.45', '52.45', '13.35')).resolves.toBeUndefined();
+      expect(() => {
+        window.deleteDrawnOverlaysForRow('row1');
+        window.updateOverlayLabels();
+        window.fitMapBounds();
+        window.fitMapBoundsForRow('row1');
+      }).not.toThrow();
+      expect(global.fetch).not.toHaveBeenCalled();
+      expect(createdMarkers).toHaveLength(0);
+      expect(createdRectangles).toHaveLength(0);
+      expect(errorSpy).not.toHaveBeenCalled();
+    } finally {
+      errorSpy.mockRestore();
+    }
+  });
+
   test('updateMapOverlay is a no-op when map initialization fails', async () => {
     jest.resetModules();
     document.body.innerHTML = `
@@ -313,6 +345,7 @@ describe('map.js', () => {
         </div>
       </div>
       <div id="modal-stc-map"></div>
+      <div id="panel-stc-map"></div>
     `;
 
     global.$ = createJQuery();
@@ -321,7 +354,7 @@ describe('map.js', () => {
     global.createdRectangles = [];
     global.fetch = jest.fn(() => Promise.resolve({
       ok: true,
-      json: () => Promise.resolve({ apiKey: 'dummy', mapId: 'test-map-id' })
+      json: () => Promise.resolve({ apiKey: '', mapId: 'test-map-id' })
     }));
 
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -331,7 +364,7 @@ describe('map.js', () => {
     await window.updateMapOverlay('row1', '', '', '52.5', '13.4');
 
     expect(createdMarkers.length).toBe(0);
-    expect(errorSpy).toHaveBeenCalledWith('Map initialization failed:', expect.any(Error));
+    expect(errorSpy).toHaveBeenCalledWith('Map initialization failed:', new Error('API key not found in the response'));
     expect(() => window.fitMapBounds()).not.toThrow();
     expect(() => window.fitMapBoundsForRow('row1')).not.toThrow();
     errorSpy.mockRestore();

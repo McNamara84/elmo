@@ -9,11 +9,11 @@ $(document).ready(function () {
   var AdvancedMarkerElement = null;
   /** @type {?Function} PinElement constructor, set after library load */
   var PinElement = null;
-  /** @type {Promise<void>} Resolves when the map and drawing tools are ready */
-  var mapReady;
+  /** @type {Promise<void>} Resolves when ready, or immediately if no map is rendered */
+  var mapReady = Promise.resolve();
 
   /**
-   * Runs fn once the map is ready. Skips silently if map initialization failed
+   * Runs fn once the map is ready. Skips silently if no map is rendered or initialization failed
    * (that error is logged once where mapReady is created); logs errors thrown by fn.
    *
    * @param {Function} fn - Callback that requires an initialized map.
@@ -21,7 +21,9 @@ $(document).ready(function () {
    */
   function whenMapReady(fn) {
     return mapReady
-      .then(fn, function () { /* map failed to load – already logged; skip */ })
+      .then(function () {
+        if (map) return fn();
+      }, function () { /* map failed to load – already logged; skip */ })
       .catch(function (error) {
         console.error("Map update failed:", error);
       });
@@ -774,22 +776,24 @@ $(document).ready(function () {
     });
   }
 
-  // Fetch the Google Maps API key and Map ID from settings.php, then initialize
-  mapReady = fetch("settings.php?setting=apiKey")
-    .then(function (response) {
-      if (!response.ok) throw new Error("Network response was not ok");
-      return response.json();
-    })
-    .then(function (data) {
-      if (!data.apiKey) throw new Error("API key not found in the response");
-      if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
-        loadGoogleMapsApi(data.apiKey);
-      }
-      return initMap(data.mapId || "");
+  // Variants without spatial coverage need neither API credentials nor a map.
+  if (document.getElementById("panel-stc-map")) {
+    mapReady = fetch("settings.php?setting=apiKey")
+      .then(function (response) {
+        if (!response.ok) throw new Error("Network response was not ok");
+        return response.json();
+      })
+      .then(function (data) {
+        if (!data.apiKey) throw new Error("API key not found in the response");
+        if (!window.google || !window.google.maps || !window.google.maps.importLibrary) {
+          loadGoogleMapsApi(data.apiKey);
+        }
+        return initMap(data.mapId || "");
+      });
+    mapReady.catch(function (error) {
+      console.error("Map initialization failed:", error);
     });
-  mapReady.catch(function (error) {
-    console.error("Map initialization failed:", error);
-  });
+  }
 
 
   // Make functions globally accessible

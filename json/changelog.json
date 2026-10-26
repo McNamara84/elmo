@@ -1,6 +1,53 @@
 {
-  "currentVersion": "2.2.0",
+  "currentVersion": "2.2.1dev",
   "releases": [
+    {
+      "version": "2.2.1dev",
+      "date": "2026-10-20",
+      "sections": [
+        {
+          "title": "Bug fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. Missing contact emails are highlighted in red on Submit, even without prior field interaction. The public contact lookup endpoint has been removed."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1300 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID, ROR, and DOI logos are displayed again in contextual help."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1306 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Made field corners consistent across the form when showing or hiding help."
+                }
+              ],
+              "editions": [ "all" ],
+              "references": [
+                { "type": "issue", "number": 1303 }
+              ]
+            }
+          ]
+        }
+      ]
+    },
     {
       "version": "2.2.0",
       "date": "2026-10-19",
@@ -12,7 +59,20 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Help buttons are shown consistently: exactly once for each input field in the authors formgroup"
+                  "value": "Authors and Contributors share an affiliation editor with automatic ROR suggestions, explicit free-text entry, inline label editing, and reordering. Contributor headers show ORCID and affiliation labels with their ROR IDs. Unfinished inputs require confirmation or discarding before saving, submitting, or collapsing a card and are preserved in autosaved drafts."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1266 },
+                { "type": "issue", "number": 1269 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Each input field in the Authors section now has a single help button."
                 }
               ],
               "editions": [
@@ -33,7 +93,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Geo-point is entered with latitudeMin and longitudeMin is now saved and uploaded correctly"
+                  "value": "Geographic points entered with latitude and longitude are now saved and uploaded correctly."
                 }
               ],
               "editions": [
@@ -47,23 +107,6 @@
                 {
                   "type": "pull",
                   "number": 1243
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "Sync of ERNIE vocabularies into the database on the container start. Ensuring that ERNIE ids are always present"
-                }
-              ],
-              "editions": [
-                "all"
-              ],
-              "references": [
-                {
-                  "type": "pull",
-                  "number": 1216
                 }
               ]
             },
@@ -100,7 +143,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Reformulated button labels in the clear form confirmation dialog. \"Clear\" instead of \"Reset\""
+                  "value": "The confirmation dialog for clearing the form now uses \"Clear\" instead of \"Reset\"."
                 }
               ],
               "editions": [
@@ -146,7 +189,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Related Work XML imports and exports now use XSLT-backed mappings, preserve entry order, and show progress when importing large lists."
+                  "value": "Related Work XML imports and exports preserve entry order, and a progress indicator is shown when importing large lists."
                 }
               ],
               "editions": [
@@ -167,7 +210,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "The Contributors form group now starts empty and combines person and institution entries in one ordered card list."
+                  "value": "The Contributors section now starts empty and combines people and institutions in one ordered card list."
                 }
               ],
               "editions": [
@@ -188,15 +231,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Authors and Contributors share one contact requirement. Contributor persons can use the Contact Person role; contributor institutions can use it when "
-                },
-                {
-                  "type": "code",
-                  "value": "SHOW_CONTACT_INSTITUTION=true"
-                },
-                {
-                  "type": "text",
-                  "value": "."
+                  "value": "Contact persons can now be selected from either Authors or Contributors. Institutions can also be contact persons when this option is enabled."
                 }
               ],
               "editions": [
@@ -234,7 +269,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Deprecated contributor feature toggles were removed: person and institution contributor cards are now always available in the Contributors form group."
+                  "value": "Both person and institution cards are now always available in the Contributors section."
                 }
               ],
               "editions": [
@@ -255,7 +290,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Resource Information now keeps fields and titles in a shared payload. Additional titles can be reordered by keyboard or drag and drop; XML, JSON-LD, and XSLT import preserve title order and textual versions."
+                  "value": "Additional titles can be reordered using the keyboard or drag and drop. Metadata imports and exports preserve title order and version text."
                 }
               ],
               "editions": [
@@ -283,7 +318,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Resource type help follows the selectable dropdown options and shows ERNIE definitions or DataCite-based fallbacks, with a source link and keyboard access."
+                  "value": "Resource type help explains each available option, links to its source, and can be opened using the keyboard."
                 }
               ],
               "editions": [
@@ -321,28 +356,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "ELMO-GEM roundtrip coverage is extended to all input fields"
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 725
-                },
-                {
-                  "type": "pull",
-                  "number": 1218
-                }
-              ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "Selected ELMO-GEM GCMD Science keywords are saved with the full paths"
+                  "value": "ELMO-GEM now saves the full paths of selected GCMD Science keywords."
                 }
               ],
               "editions": [
@@ -363,7 +377,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Documentation and layout for the Data Sources formgroup are improved"
+                  "value": "The Data Sources section has clearer guidance and an improved layout."
                 }
               ],
               "editions": [
@@ -392,7 +406,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "ELMO-GEM now branches on the DOI field at submit: if it is empty, GFZ Data Services receives the usual submission mail (DatasetController envelope) and is asked to report the reserved DOI to ICGEM; if a DOI is already present, that Data Services mail is skipped."
+                  "value": "ELMO-GEM submissions without a DOI are sent to GFZ Data Services with a request to reserve a DOI and report it to ICGEM. If a DOI is already provided, the submission email to Data Services is skipped."
                 }
               ],
               "editions": [
@@ -413,7 +427,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "The ICGEM team always receives the ICGEM metadata file (IcgmController) together with the next step for the ICGEM database: wait for the DOI from Data Services, or upload straight away when a DOI was already provided."
+                  "value": "The ICGEM team receives the model metadata file and instructions to wait for a reserved DOI or upload immediately when a DOI is already available."
                 }
               ],
               "editions": [
@@ -451,15 +465,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "ELMO-GEM's ICGEM registration email now links to the upload URL configured with "
-                },
-                {
-                  "type": "code",
-                  "value": "ICGEM_UPLOAD_URL"
-                },
-                {
-                  "type": "text",
-                  "value": "."
+                  "value": "ELMO-GEM's ICGEM registration email now links to the metadata upload page."
                 }
               ],
               "editions": [
@@ -475,41 +481,44 @@
                   "number": 1245
                 }
               ]
-            },
-            {
-              "parts": [
-                {
-                  "type": "text",
-                  "value": "ELMO-GEM can skip researcher confirmation emails when "
-                },
-                {
-                  "type": "code",
-                  "value": "SEND_RESEARCHER_CONFIRMATION_EMAIL"
-                },
-                {
-                  "type": "text",
-                  "value": " is false."
-                }
-              ],
-              "editions": [
-                "gem"
-              ],
-              "references": [
-                {
-                  "type": "issue",
-                  "number": 1196
-                },
-                {
-                  "type": "pull",
-                  "number": 1245
-                }
-              ]
             }
           ]
         },
         {
           "title": "Fixes:",
           "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ORCID fields in Authors and Contributors show the complete identifier, including its validation icon. Both name fields share the remaining width, and the fields wrap on narrower screens."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1283 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Translated tooltips no longer cause errors when metadata is imported repeatedly."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "pull", "number": 1297}]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID."
+                }
+              ],
+              "editions": ["all"],
+              "references": [{"type": "issue", "number": 1282}]
+            },
             {
               "parts": [
                 {
@@ -541,7 +550,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Identifier types in Related Works and GEM data sources are detected only when unambiguous. Format detection and validation use the patterns supplied by ERNIE, including grouped validation patterns. DOI, IGSN and RAiD are distinguished using registry metadata; ISBN and EAN13 receive additional check-digit checks. ISBN/EAN13 overlaps stay empty for manual selection, and pending lookups preserve manual choices."
+                  "value": "Identifier types in Related Work and GEM data sources are detected more reliably. DOI, IGSN and RAiD are distinguished correctly, and ISBN and EAN13 receive additional validity checks. Ambiguous types remain empty for manual selection, and automatic detection preserves manual choices."
                 }
               ],
               "editions": ["all"],
@@ -551,7 +560,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Identifier validation stays current after vocabulary reloads, mandatory-field checks and form clearing. Reloads also update GEM type choices, remove inactive selections and preserve active choices; delayed option loading or restoration cannot bring removed types back. Manually selected types require a matching format pattern; empty definitions and missing or pending pattern lookups cannot accept arbitrary identifiers. Pending registry lookups respect updated type settings, percent-encoded DOI resolver paths resolve correctly, and the public lookup cache now has a capacity limit with expiry cleanup."
+                  "value": "Identifier validation remains reliable after vocabularies reload, required fields are checked, or the form is cleared. Removed identifier types no longer reappear, valid selections are kept, and incomplete validation no longer accepts arbitrary identifiers. DOI links with encoded characters are handled correctly."
                 }
               ],
               "editions": ["all"],
@@ -561,7 +570,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Submission errors that were not caused by the mail server are reported as JSON again instead of ending the request without a response."
+                  "value": "Submission errors are reported reliably instead of leaving users without a response."
                 }
               ],
               "editions": [
@@ -593,7 +602,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "DataCite relation types are exported as canonical schema values without spaces while retaining readable labels in the editor."
+                  "value": "Related Work relation types are exported correctly to DataCite XML while retaining readable labels in the editor."
                 }
               ],
               "editions": [
@@ -627,7 +636,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Corrected the clear button interaction with license and timezone: now sets default instead of setting empty"
+                  "value": "Clearing the form now restores the default license and timezone instead of leaving them empty."
                 }
               ],
               "editions": [
@@ -707,7 +716,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "The fixed action bar has an opaque theme background and reserves enough space for the last form fields, including wrapped buttons and longer translations."
+                  "value": "The bottom action bar stays readable in both themes and no longer covers the last form fields, including when buttons wrap or translations are longer."
                 }
               ],
               "editions": [
@@ -723,6 +732,16 @@
                   "number": 1265
                 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Used Instruments search now prioritizes exact names and name prefixes, followed by other name matches and then instrument-type matches. Relevant names remain visible when there are many matches, and suggestions refresh when the instrument catalogue finishes loading."
+                }
+              ],
+              "editions": ["elmo", "msl", "igsn"],
+              "references": [{"type": "issue", "number": 1285}]
             },
             {
               "parts": [
@@ -805,7 +824,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Data source fields keep stable IDs and working labels while entering identifiers, so editing and saving GEM forms remain reliable."
+                  "value": "Data source fields remain correctly labelled and editable while entering identifiers, so ELMO-GEM forms can be saved reliably."
                 }
               ],
               "editions": ["gem"],
@@ -820,7 +839,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Resource Information now documents the separate DOI paths and required language."
+                  "value": "The Resource Information guide explains how to import metadata from a DOI, enter the submission DOI, and select the required language."
                 }
               ],
               "editions": [

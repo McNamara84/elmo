@@ -48,6 +48,7 @@ describe('doiLookupService.js', () => {
         'http://localhost/api/v2/doi/lookup/10.1234/test',
         expect.objectContaining({ method: 'GET' })
       );
+      expect(global.fetch).toHaveBeenCalledTimes(1);
       expect(result.found).toBe(true);
       expect(result.attributes.doi).toBe('10.1234/test');
     });
@@ -86,47 +87,6 @@ describe('doiLookupService.js', () => {
       const result = await service.lookupDoi('10.1234/notfound');
 
       expect(result.found).toBe(false);
-    });
-  });
-
-  describe('lookupContacts', () => {
-    test('builds correct URL with orcid', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ email: 'test@example.com', website: null }),
-      });
-
-      const service = new DoiLookupService({ apiBaseUrl: 'http://localhost/api/v2' });
-      await service.lookupContacts({ orcid: '0000-0001-2345-6789' });
-
-      const url = global.fetch.mock.calls[0][0];
-      expect(url).toContain('orcid=0000-0001-2345-6789');
-    });
-
-    test('builds correct URL with name params', async () => {
-      global.fetch.mockResolvedValue({
-        ok: true,
-        json: () => Promise.resolve({ email: null, website: null }),
-      });
-
-      const service = new DoiLookupService({ apiBaseUrl: 'http://localhost/api/v2' });
-      await service.lookupContacts({ familyname: 'Doe', givenname: 'Jane' });
-
-      const url = global.fetch.mock.calls[0][0];
-      expect(url).toContain('familyname=Doe');
-      expect(url).toContain('givenname=Jane');
-    });
-
-    test('returns default values on non-ok response', async () => {
-      global.fetch.mockResolvedValue({
-        ok: false,
-        status: 500,
-        statusText: 'Server Error',
-      });
-
-      const service = new DoiLookupService({ apiBaseUrl: 'http://localhost/api/v2' });
-      const result = await service.lookupContacts({ orcid: '0000' });
-      expect(result).toEqual({ email: null, website: null });
     });
   });
 });

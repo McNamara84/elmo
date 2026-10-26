@@ -31,7 +31,9 @@ function normalizeContributorsPayload(array $postData, bool $allowInstitutionCon
         foreach ($item['affiliations'] ?? [] as $affiliation) {
             if (!is_array($affiliation)) continue;
             $label = trim((string) ($affiliation['label'] ?? ''));
-            if ($label !== '') $affiliations[] = ['label' => $label, 'rorId' => trim((string) ($affiliation['rorId'] ?? ''))];
+            $rorId = trim((string) ($affiliation['rorId'] ?? ''));
+            // Retain the ROR ID for saved entries whose incomplete label can be repaired later.
+            if ($label !== '' || $rorId !== '') $affiliations[] = ['label' => $label, 'rorId' => $rorId];
         }
         $entry = [
             'type' => $type,

@@ -1,4 +1,5 @@
 const { requireFresh } = require('./utils');
+const { mountContributorStack } = require('./utils/peopleStacks');
 
 describe('submitHandler.js', () => {
   let SubmitHandler;
@@ -658,6 +659,21 @@ describe('submitHandler.js', () => {
     expect(notifSpy).not.toHaveBeenCalled();
   });
 
+  test.each(['', 'contact@example.org'])('handleSubmit checks contacts even when another required field is empty (email: %s)', email => {
+    handler.$form.append('<input name="unrelated-required-field" required>');
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","isContact":true,"email":"${email}"}]'>
+    `;
+
+    handler.handleSubmit();
+
+    expect(window.authorStack.updatePayload).toHaveBeenCalled();
+    expect($('#contact-person-error')).toHaveLength(email ? 0 : 1);
+    expect(handler.$form.hasClass('was-validated')).toBe(true);
+    expect(handler.modals.validationFailed.show).toHaveBeenCalled();
+    expect(handler.modals.submit.show).not.toHaveBeenCalled();
+  });
+
   test('handleSubmit shows validation-failed modal when author affiliation labels are invalid', () => {
     global.validateAuthorAffiliationEditors = jest.fn().mockReturnValue(false);
     handler.$form[0].checkValidity = jest.fn().mockReturnValue(true);
@@ -1033,4 +1049,34 @@ describe('submitHandler.js', () => {
       submitSpy.mockRestore();
     });
   });
+  test('unfinished affiliations prevent both submit entry points from sending metadata', async () => {
+    mountContributorStack([{type: 'institution', institutionname: 'Lab'}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    editor.setPendingInput('Unconfirmed');
+    global.fetch = jest.fn();
+    const send = jest.spyOn(handler, 'submitViaAjax');
+    handler.handleSubmit();
+    await handler.handleModalSubmit();
+    expect(send).not.toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+    expect(editor.getAffiliations()).toEqual([]);
+    delete global.fetch;
+  });
+
+  test('submit reveals an invalid contributor label even when native validity already fails', () => {
+    mountContributorStack([{type: 'person', familyname: 'Doe', affiliations: [{label: 'Lab', rorId: '04z8jg394'}]}]);
+    const editor = document.querySelector('[data-affiliation-editor]').affiliationEditor;
+    const label = editor.element.find('[data-affiliation-label]');
+    label.val('').trigger('input');
+    const toggle = document.querySelector('[data-contributor-toggle-edit]');
+    toggle.click();
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(handler.$form[0].checkValidity()).toBe(false);
+    const failed = jest.spyOn(handler, 'showValidationFailedModal');
+    handler.handleSubmit();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(document.activeElement).toBe(label[0]);
+    expect(failed).toHaveBeenCalled();
+  });
+
 });

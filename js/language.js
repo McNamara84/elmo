@@ -146,10 +146,12 @@ function translateElements($root) {
             element.attr('data-bs-original-title', translatedTooltip);
             const tooltip = bootstrap.Tooltip.getInstance(element[0]);
             if (tooltip) {
-                tooltip.dispose();
+                // Preserve pending show/hide callbacks when translations refresh during an import.
+                tooltip.setContent({ '.tooltip-inner': translatedTooltip });
+            } else {
+                const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
+                new bootstrap.Tooltip(element[0], { container: tooltipContainer });
             }
-            const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-            new bootstrap.Tooltip(element[0], { container: tooltipContainer });
         }
     });
 
@@ -178,9 +180,8 @@ function translateElements($root) {
             if (window.bootstrap && typeof bootstrap.Tooltip === 'function' && typeof bootstrap.Tooltip.getInstance === 'function') {
                 const tooltip = bootstrap.Tooltip.getInstance(element[0]);
                 if (tooltip) {
-                    tooltip.dispose();
-                    const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;
-                    new bootstrap.Tooltip(element[0], { container: tooltipContainer });
+                    element.removeAttr('title');
+                    tooltip.setContent({ '.tooltip-inner': translatedTitle });
                 }
             }
         }

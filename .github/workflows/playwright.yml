@@ -29,7 +29,7 @@ jobs:
     
     services:
       mysql:
-        image: mysql:8.0
+        image: mysql:9.7.2@sha256:c7cb87a9822f499375287930cbff71d6d3b201e346b45108b1115b435ee2df13
         env:
           MYSQL_ROOT_PASSWORD: root_password
           MYSQL_DATABASE: mde2-msl-test
@@ -44,19 +44,19 @@ jobs:
           --health-retries 3
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
     - name: Set up PHP
-      uses: shivammathur/setup-php@v2
+      uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
       with:
         php-version: '8.5'
         extensions: mbstring, xml, xsl, dom, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
         tools: phpdbg
 
     - name: Set up Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
       with:
-        node-version: '24'
+        node-version-file: '.nvmrc'
         cache: 'npm'
 
     - name: Install dependencies
@@ -282,7 +282,7 @@ jobs:
 
     - name: Cache Playwright browsers
       id: playwright-cache
-      uses: actions/cache@v4
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/ms-playwright
         key: playwright-${{ runner.os }}-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
@@ -412,7 +412,7 @@ jobs:
 
     - name: Report ELMO load time check run
       if: always()
-      uses: actions/github-script@v7
+      uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
       env:
         PLAYWRIGHT_PROJECT: ${{ matrix.browser }}
         LOAD_TIME_MS: ${{ steps.publish_performance_metrics.outputs.load_time }}
@@ -485,7 +485,7 @@ jobs:
         done
 
     - name: Upload Playwright Report
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: playwright-report-${{ matrix.browser }}
@@ -493,7 +493,7 @@ jobs:
         retention-days: 30
 
     - name: Upload Test Results
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
       if: always()
       with:
         name: test-results-${{ matrix.browser }}

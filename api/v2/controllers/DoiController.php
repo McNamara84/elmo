@@ -3,9 +3,7 @@
  * Controller for DOI lookup via the DataCite REST API.
  *
  * Provides a server-side proxy to query DataCite for existing DOI metadata,
- * avoiding CORS issues and enabling future caching. Also exposes a contact
- * lookup endpoint that resolves email / website from the local Contact_Person
- * table (best-effort, since DataCite does not store these fields).
+ * avoiding CORS issues and enabling future caching.
  */
 
 if (!defined('UNIT_TESTING')) {
@@ -20,16 +18,10 @@ class DoiController
     /** @var int cURL timeout in seconds */
     private int $timeout;
 
-    /** @var mysqli|null Database connection for contact lookup */
-    private ?mysqli $connection;
-
     public function __construct()
     {
         $this->dataciteApiUrl = 'https://api.datacite.org/dois/';
         $this->timeout = 10;
-
-        global $connection;
-        $this->connection = $connection ?? null;
     }
 
     /**
@@ -80,49 +72,6 @@ class DoiController
             throw new RuntimeException('Unexpected DataCite API response');
         }
         return ['found' => true, 'attributes' => $this->filterAttributes($decoded['data']['attributes'])];
-    }
-
-    /**
-     * Searches the local Contact_Person table for email/website by ORCID or name.
-     *
-     * GET /api/v2/doi/contacts?orcid=...&familyname=...&givenname=...
-     *
-     * Priority: exact ORCID match, then exact name match (case-insensitive).
-     *
-     * @param array<mixed> $vars Unused route variables.
-     * @param array<mixed>|null $body Unused.
-     * @return void Outputs JSON response.
-     */
-    public function contacts(array $vars = [], ?array $body = null): void
-    {
-        if (!$this->connection) {
-            $this->respond(200, ['email' => null, 'website' => null]);
-            return;
-        }
-
-        $orcid = trim($_GET['orcid'] ?? '');
-        $familyname = trim($_GET['familyname'] ?? '');
-        $givenname = trim($_GET['givenname'] ?? '');
-
-        // Try ORCID first
-        if ($orcid !== '') {
-            $result = $this->findContactByOrcid($orcid);
-            if ($result !== null) {
-                $this->respond(200, $result);
-                return;
-            }
-        }
-
-        // Fallback to name match
-        if ($familyname !== '' && $givenname !== '') {
-            $result = $this->findContactByName($familyname, $givenname);
-            if ($result !== null) {
-                $this->respond(200, $result);
-                return;
-            }
-        }
-
-        $this->respond(200, ['email' => null, 'website' => null]);
     }
 
     /**
@@ -198,64 +147,6 @@ class DoiController
         }
 
         return $filtered;
-    }
-
-    /**
-     * Finds a contact person by ORCID.
-     *
-     * @return array{email: string|null, website: string|null}|null
-     */
-    private function findContactByOrcid(string $orcid): ?array
-    {
-        $stmt = $this->connection->prepare(
-            'SELECT email, website FROM Contact_Person WHERE orcid = ? LIMIT 1'
-        );
-        if (!$stmt) {
-            return null;
-        }
-        $stmt->bind_param('s', $orcid);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$row) {
-            return null;
-        }
-
-        return [
-            'email' => $row['email'] ?: null,
-            'website' => $row['website'] ?: null,
-        ];
-    }
-
-    /**
-     * Finds a contact person by family name and given name (case-insensitive).
-     *
-     * @return array{email: string|null, website: string|null}|null
-     */
-    private function findContactByName(string $familyname, string $givenname): ?array
-    {
-        $stmt = $this->connection->prepare(
-            'SELECT email, website FROM Contact_Person WHERE LOWER(familyname) = LOWER(?) AND LOWER(givenname) = LOWER(?) LIMIT 1'
-        );
-        if (!$stmt) {
-            return null;
-        }
-        $stmt->bind_param('ss', $familyname, $givenname);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        $row = $result->fetch_assoc();
-        $stmt->close();
-
-        if (!$row) {
-            return null;
-        }
-
-        return [
-            'email' => $row['email'] ?: null,
-            'website' => $row['website'] ?: null,
-        ];
     }
 
     /**

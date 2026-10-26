@@ -41,13 +41,49 @@ function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
 
+/**
+ * Read a normalized ORCID from a DataCite creator or contributor.
+ * @param {Object} creator DataCite person with optional nameIdentifiers.
+ * @returns {string} Bare ORCID, or an empty string when none is supplied.
+ */
 function extractCreatorOrcid(creator) {
   if (!Array.isArray(creator.nameIdentifiers)) {
     return '';
   }
 
   const orcidEntry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-  return orcidEntry ? (orcidEntry.nameIdentifier || '').replace('https://orcid.org/', '') : '';
+  return normalizeOrcid(orcidEntry?.nameIdentifier);
+}
+
+/**
+ * Normalize identifier representation for comparison without checking its checksum.
+ * @param {string|null|undefined} value Bare identifier or ORCID URL.
+ * @returns {string} Trimmed identifier with an uppercase check character.
+ */
+function normalizeOrcid(value) {
+  return String(value || '').trim().replace(/^https?:\/\/orcid\.org\//i, '').toUpperCase();
+}
+
+/**
+ * Preserve personal display names when DataCite omits structured names.
+ * Only the explicit "family, given" format supplies missing name components.
+ * @param {Object} person DataCite creator or contributor.
+ * @returns {{familyname: string, givenname: string}} Names in their original spelling.
+ */
+function extractPersonNames(person) {
+  let givenname = person.givenName || '';
+  let familyname = person.familyName || '';
+  if (person.nameType === 'Personal') {
+    const parts = String(person.name || '').split(',').map(part => part.trim());
+    if (parts.length === 2 && parts.every(Boolean)) {
+      familyname ||= parts[0];
+      givenname ||= parts[1];
+    } else if (!givenname && !familyname) {
+      // Keep an unstructured name intact for manual correction; never guess its order.
+      familyname = person.name || '';
+    }
+  }
+  return { familyname, givenname };
 }
 
 function extractAffiliationsPayload(creator) {
@@ -69,11 +105,15 @@ function extractAffiliationsPayload(creator) {
     .filter(affiliation => affiliation.label !== '' || affiliation.rorId !== '');
 }
 
+/**
+ * Build ordered author entries; explicit contributor roles are applied separately.
+ * @param {Object[]} creators DataCite creators in publication order.
+ * @returns {Object[]} Personal and institutional author payloads.
+ */
 function buildAuthorsPayloadFromCreators(creators) {
   return creators
     .map(creator => {
-      const givenname = creator.givenName || '';
-      const familyname = creator.familyName || '';
+      const { givenname, familyname } = extractPersonNames(creator);
       const nameType = creator.nameType || '';
       const creatorName = creator.name || '';
       const affiliations = extractAffiliationsPayload(creator);
@@ -104,8 +144,52 @@ function buildAuthorsPayloadFromCreators(creators) {
     .filter(Boolean);
 }
 
-function normalizeNameKey(familyName, givenName) {
-  return `${String(familyName || '').trim().toLowerCase()}\u0000${String(givenName || '').trim().toLowerCase()}`;
+/**
+ * Build an exact name key tolerant of Unicode encoding, case and whitespace.
+ * Keep accents and name boundaries to avoid merging distinct people.
+ * @param {string|undefined} familyName Family name.
+ * @param {string|undefined} givenName Given name.
+ * @returns {string} Comparison key, not a display name.
+ */
+function normalizeDoiPersonNameKey(familyName, givenName) {
+  const normalize = value => String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+  return `${normalize(familyName)}\u0000${normalize(givenName)}`;
+}
+
+// Shared JSDoc object type for the annotations below. A standalone @typedef
+// describes a data structure; it does not need a function declaration.
+
+/**
+ * Identity used to match an imported contact to an author.
+ * @typedef {Object} DoiContactIdentity
+ * @property {string} orcid Normalized ORCID, or an empty string.
+ * @property {string} familyname Family name, possibly empty.
+ * @property {string} givenname Given name, possibly empty.
+ */
+
+/**
+ * Resolve only an unambiguous person, with ORCID taking precedence over names.
+ * An ambiguous ORCID must not fall through to a weaker name match.
+ * @param {Object[]} authors Current ordered author payload.
+ * @param {DoiContactIdentity} identity Normalized contact identity.
+ * @returns {number} Author index, or -1 for missing, conflicting or ambiguous matches.
+ */
+function findContactAuthorIndex(authors, identity) {
+  const people = authors.map((author, index) => ({ author, index })).filter(({ author }) => author.type === 'person');
+  if (identity.orcid) {
+    const matches = people.filter(({ author }) => normalizeOrcid(author.orcid) === identity.orcid);
+    if (matches.length) return matches.length === 1 ? matches[0].index : -1;
+  }
+  if (!identity.familyname.trim() || !identity.givenname.trim()) return -1;
+  const key = normalizeDoiPersonNameKey(identity.familyname, identity.givenname);
+  const matches = people.filter(({ author }) => {
+    const orcid = normalizeOrcid(author.orcid);
+    // A name match is allowed only when at least one ORCID is missing.
+    // Two different ORCIDs must keep people separate, even if their names match.
+    return !(identity.orcid && orcid && identity.orcid !== orcid)
+      && normalizeDoiPersonNameKey(author.familyname, author.givenname) === key;
+  });
+  return matches.length === 1 ? matches[0].index : -1;
 }
 
 function getCurrentAuthorsPayload(authorStack) {
@@ -301,6 +385,9 @@ async function prefillTitles(titles) {
 
 /**
  * Maps creators (authors) — both persons and institutions.
+ * @param {Object[]|null|undefined} creators DataCite creators.
+ * @returns {void}
+ * @throws {Error} When authors are supplied before the author form is initialized.
  */
 function prefillCreators(creators) {
   if (!Array.isArray(creators) || creators.length === 0) return;
@@ -316,49 +403,63 @@ function prefillCreators(creators) {
 }
 
 /**
- * Maps contributors (persons and institutions) with role deduplication.
+ * Maps contributor roles, transferring explicit personal contacts to matching authors.
+ * @param {Object[]|null|undefined} contributors DataCite contributors with their roles.
+ * @returns {void}
+ * @throws {Error} When a required form controller has not been initialized.
  */
 function prefillContributors(contributors) {
   if (!Array.isArray(contributors) || contributors.length === 0) return;
 
-  if (window.contributorStack?.setContributors) {
-    const entries = [];
-    const byKey = new Map();
-    const authors = getCurrentAuthorsPayload(getAuthorStackController());
-    contributors.forEach(c => {
-      const role = normalizeRole(c.contributorType || 'Other');
-      const givenname = c.givenName || '';
-      const familyname = c.familyName || '';
-      const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
-      if (role === 'Contact Person' && person && authors.some(author =>
-        author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname))) return;
-      const orcid = (c.nameIdentifiers || []).find(item => item.nameIdentifierScheme === 'ORCID')?.nameIdentifier?.replace(/^https?:\/\/orcid\.org\//, '') || '';
-      const institutionname = c.name || '';
-      const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${institutionname.trim().toLowerCase()}`;
-      const affiliations = (c.affiliation || []).map(item => ({
-        label: typeof item === 'string' ? item : (item.name || ''),
-        rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
-      })).filter(item => item.label);
-      let entry = byKey.get(key);
-      if (!entry) {
-        entry = person
-          ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
-          : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
-        byKey.set(key, entry);
-        entries.push(entry);
+  const authorStack = getAuthorStackController();
+  const contributorStack = window.contributorStack;
+  const entries = [];
+  const byKey = new Map();
+  const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
+  let authorsChanged = false;
+  contributors.forEach(c => {
+    const role = normalizeRole(c.contributorType || 'Other');
+    const { givenname, familyname } = extractPersonNames(c);
+    const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
+    const orcid = extractCreatorOrcid(c);
+    const identity = { orcid, familyname, givenname };
+    // Author contact roles also apply when the Contributors form group is disabled.
+    if (role === 'Contact Person' && person) {
+      const index = findContactAuthorIndex(authors, identity);
+      if (index !== -1) {
+        authors[index].isContact = true;
+        authorsChanged = true;
+        return;
       }
-      if (!entry.roles.includes(role)) entry.roles.push(role);
-      affiliations.forEach(item => {
-        const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
-        if (!existing) entry.affiliations.push(item);
-        else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
-      });
+    }
+    if (!contributorStack?.setContributors) return;
+    const institutionname = c.name || '';
+    // A nameless entry has no safe deduplication key; keep it separate for correction.
+    const key = person
+      ? (orcid || familyname || givenname ? `person:${orcid || normalizeDoiPersonNameKey(familyname, givenname)}` : Symbol())
+      : `institution:${institutionname.trim().toLowerCase()}`;
+    const affiliations = (c.affiliation || []).map(item => ({
+      label: typeof item === 'string' ? item : (item.name || ''),
+      rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
+    })).filter(item => item.label);
+    let entry = byKey.get(key);
+    if (!entry) {
+      entry = person
+        ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
+        : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
+      byKey.set(key, entry);
+      entries.push(entry);
+    }
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    affiliations.forEach(item => {
+      const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
+      if (!existing) entry.affiliations.push(item);
+      else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
     });
-    window.contributorStack.setContributors(entries);
-    return;
-  }
-
-  if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
+  });
+  if (authorsChanged) authorStack.setAuthors(authors);
+  if (contributorStack?.setContributors) contributorStack.setContributors(entries);
+  else if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
 }
 
 /**
@@ -619,78 +720,23 @@ async function prefillRights(rightsList) {
 }
 
 /* ================================================================== */
-/*  Contact person email/website lookup (post-prefill)                */
-/* ================================================================== */
-
-/**
- * For each prefilled author, tries to find email/website in the local database
- * and populates the contact person fields.
- *
- * @param {Array} creators - The creators array from DataCite attributes.
- * @param {DoiLookupService} lookupService - The DOI lookup service instance.
- */
-async function prefillContactPersons(creators, lookupService) {
-  if (!Array.isArray(creators) || !lookupService) return;
-
-  const authorStack = getAuthorStackController();
-  if (authorStack) {
-    const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
-    let changed = false;
-
-    const promises = creators.map(creator => {
-      const givenName = creator.givenName || '';
-      const familyName = creator.familyName || '';
-      if (!givenName && !familyName) return Promise.resolve();
-
-      const orcid = extractCreatorOrcid(creator);
-
-      return lookupService.lookupContacts({ orcid, familyname: familyName, givenname: givenName })
-        .then(contact => {
-          if (!contact || (!contact.email && !contact.website)) {
-            return;
-          }
-
-          const creatorKey = normalizeNameKey(familyName, givenName);
-          const author = authors.find(candidate => (
-            candidate.type === 'person' && normalizeNameKey(candidate.familyname, candidate.givenname) === creatorKey
-          ));
-
-          if (!author) {
-            return;
-          }
-
-          author.isContact = true;
-          if (contact.email) author.email = contact.email;
-          if (contact.website) author.website = contact.website;
-          changed = true;
-        })
-        .catch(() => { /* best-effort: silently ignore lookup failures */ });
-    });
-
-    await Promise.all(promises);
-
-    if (changed) {
-      authorStack.setAuthors(authors);
-    }
-    return;
-  }
-
-  throw new Error('Authors form is not initialized.');
-}
-
-/* ================================================================== */
 /*  Main entry point                                                  */
 /* ================================================================== */
 
 /**
  * Applies all DOI prefill data to the form (called after user confirms in modal).
+ * Clears previous input and retains the source DOI in the metadata search field.
+ * The separate submission DOI remains empty after importing metadata.
  *
  * @param {Object} attributes - The DataCite `data.attributes` object.
- * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
+ * @returns {Promise<void>} Resolves after mapping the public DataCite metadata.
  */
-async function applyDoiPrefill(attributes, lookupService) {
+async function applyDoiPrefill(attributes) {
   const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
+  // Clearing resets both DOI fields. Keep the import source visible while the
+  // submission DOI stays empty for a new dataset.
+  $('#input-resourceinformation-source-doi').val(attributes.doi || '');
 
   // Wait for dynamic description type fields to be ready
   if (window.descriptionTypesReady) {
@@ -715,11 +761,6 @@ async function applyDoiPrefill(attributes, lookupService) {
   await prefillLanguage(attributes);
   await prefillTitles(attributes.titles);
   await prefillRights(attributes.rightsList);
-
-  // Post-prefill: look up contact person email/website from local DB
-  if (lookupService && Array.isArray(attributes.creators)) {
-    await prefillContactPersons(attributes.creators, lookupService);
-  }
 }
 
 /* ================================================================== */
@@ -808,7 +849,6 @@ if (typeof module !== 'undefined' && module.exports) {
     prefillRelatedWorks,
     prefillFunding,
     prefillRights,
-    prefillContactPersons,
     applyDoiPrefill,
     buildPrefillPreview,
     escapeHtml,

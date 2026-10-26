@@ -119,8 +119,12 @@ export async function waitForRenderingSettled(page: Page): Promise<void> {
   }));
 }
 
-/** Prevents unrelated Google Maps downloads in tests that never interact with the map. */
+/** Stubs Google Maps configuration and downloads in tests that never interact with the map. */
 export async function registerGoogleMapsNoopRoute(page: Page): Promise<void> {
+  // CI has no Maps API key. A dummy key lets map.js reach the script stub below.
+  await page.route('**/settings.php?setting=apiKey', route => route.fulfill({
+    json: { apiKey: 'playwright-google-maps-noop', mapId: '' },
+  }));
   await page.route('https://maps.googleapis.com/maps/api/js**', async route => {
     await route.fulfill({
       status: 200,

@@ -75,7 +75,7 @@ test.describe('Issue #1142 roleless contributor export', () => {
 });
 
 async function addAffiliation(row: import('@playwright/test').Locator, value: string): Promise<void> {
-  const tagInput = row.locator('.tagify__input[title^="Affiliation"]');
+  const tagInput = row.locator('[data-affiliation-input]');
   await expect(tagInput).toBeVisible();
   await tagInput.click();
   await tagInput.fill(value);
