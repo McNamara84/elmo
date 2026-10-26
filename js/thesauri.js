@@ -910,8 +910,7 @@ function updateThesaurusKeywordCount() {
             return total + (input._tagify?.value?.length || 0);
         }, 0);
 
-    summary.textContent = `· ${count} ${count === 1 ? 'Keyword' : 'Keywords'
-        }`;
+    summary.textContent = `· ${count} ${count === 1 ? 'Keyword' : 'Keywords'}`;
 }
 
 function bindKeywordCount(inputElement) {
