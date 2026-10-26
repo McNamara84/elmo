@@ -217,12 +217,15 @@ describe('authorStack.js', () => {
 
     expect(toggle.attr('aria-pressed')).toBeUndefined();
     expect(toggle.hasClass('text-dark')).toBe(false);
+    expect(email.prop('required')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
 
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(true);
+    expect(email.prop('required')).toBe(true);
+    expect(website.prop('required')).toBe(false);
     expect(toggle.hasClass('text-dark')).toBe(true);
     expect(toggle.attr('aria-pressed')).toBeUndefined();
     expect(email.closest('.contact-person-input').css('display')).not.toBe('none');
@@ -233,6 +236,7 @@ describe('authorStack.js', () => {
     toggle.trigger('click');
 
     expect(checkbox.prop('checked')).toBe(false);
+    expect(email.prop('required')).toBe(false);
     expect(toggle.hasClass('text-dark')).toBe(false);
     expect(email.closest('.contact-person-input').css('display')).toBe('none');
     expect(website.closest('.contact-person-input').css('display')).toBe('none');
@@ -348,6 +352,24 @@ describe('authorStack.js', () => {
     expect($('[data-author-contact-summary]').text()).toBe('1 contact person');
     expect($('[data-author-add-type="person"]').length).toBe(1);
     expect($('[data-author-add-type="institution"]').length).toBe(1);
+  });
+
+  test('imported contacts require email without prior field interaction and reset on replacement', () => {
+    window.authorStack.setAuthors([
+      { type: 'person', familyname: 'Missing email', isContact: true },
+      { type: 'person', familyname: 'Not a contact', isContact: false },
+      { type: 'person', familyname: 'Complete contact', isContact: true, email: 'contact@example.org' }
+    ]);
+
+    const emails = $('input[name="cpEmail[]"]').toArray();
+    expect(emails.map(input => input.required)).toEqual([true, false, true]);
+    expect(emails.map(input => input.checkValidity())).toEqual([false, true, true]);
+    expect($('input[name="cpOnlineResource[]"]').toArray().every(input => !input.required)).toBe(true);
+
+    window.authorStack.setAuthors([{ type: 'person', familyname: 'Replacement', isContact: false }]);
+    expect($('input[name="cpEmail[]"]')).toHaveLength(1);
+    expect($('input[name="cpEmail[]"]')[0].checkValidity()).toBe(true);
+    expect($('input[name="cpEmail[]"]').prop('required')).toBe(false);
   });
 
   test('renders the final card structure with summary, edit panel, and person-only contact affordances', () => {

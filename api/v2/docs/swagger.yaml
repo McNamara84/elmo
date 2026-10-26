@@ -1713,60 +1713,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /doi/contacts:
-    get:
-      tags:
-        - doi
-      security: []
-      summary: Look up contact person data by ORCID or name
-      description: |-
-        Searches the local Contact_Person table for email and website by ORCID (preferred)
-        or by family name and given name (fallback). Returns null values when no match is found.
-        This is a best-effort lookup since DataCite does not store contact details.
-      operationId: doiContacts
-      parameters:
-        - name: orcid
-          in: query
-          required: false
-          schema:
-            type: string
-          description: ORCID identifier of the contact person
-          example: "0000-0002-1825-0097"
-        - name: familyname
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Family name for name-based lookup
-          example: "Doe"
-        - name: givenname
-          in: query
-          required: false
-          schema:
-            type: string
-          description: Given name for name-based lookup
-          example: "Jane"
-      responses:
-        "200":
-          description: Contact person lookup result
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  email:
-                    type: string
-                    nullable: true
-                    description: Email address if found, null otherwise
-                    example: "jane.doe@example.org"
-                  website:
-                    type: string
-                    nullable: true
-                    description: Website URL if found, null otherwise
-                    example: "https://example.org/~jdoe"
-                required:
-                  - email
-                  - website
 components:
   securitySchemes:
     ApiKeyAuth:

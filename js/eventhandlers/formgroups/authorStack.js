@@ -714,6 +714,8 @@ $(document).ready(function () {
             : translate('authors.markAsContact', 'Mark as contact')
         ));
 
+      // Imports set the checkbox without a change event, so synchronize validation here too.
+      row.find('input[name="cpEmail[]"]').prop('required', checkbox.prop('checked'));
       if (checkbox.prop('checked')) {
         contactFields.show();
       } else {

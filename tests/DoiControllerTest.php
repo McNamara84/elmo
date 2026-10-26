@@ -15,7 +15,7 @@ if (!defined('UNIT_TESTING')) {
 require_once __DIR__ . '/../api/v2/controllers/DoiController.php';
 
 /**
- * Tests for DoiController — DOI lookup and contact person resolution.
+ * Tests for DoiController — public DOI metadata lookup.
  */
 #[AllowMockObjectsWithoutExpectations]
 #[CoversClass(\DoiController::class)]
@@ -281,21 +281,5 @@ final class DoiControllerTest extends TestCase
         $this->assertSame($attributes, $actual['attributes']);
         $this->assertArrayNotHasKey('titleType', $actual['attributes']['titles'][0]);
         $this->assertSame($titleType, $actual['attributes']['titles'][1]['titleType']);
-    }
-
-    /* ----- contacts() tests ----- */
-
-    public function testContactsReturnsNullsWithoutDatabase(): void
-    {
-        // DoiController with no DB connection (default in test env)
-        $controller = new \DoiController();
-
-        ob_start();
-        $controller->contacts();
-        $output = ob_get_clean();
-
-        $data = json_decode($output, true);
-        $this->assertNull($data['email']);
-        $this->assertNull($data['website']);
     }
 }

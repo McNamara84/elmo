@@ -408,7 +408,9 @@ class SubmitHandler {
             ? globalThis.validateAuthorAffiliationEditors()
             : true;
         const affiliationsValid = validateAffiliationEditors(this.$form[0]);
-        if (!this.$form[0].checkValidity() || !validateContactPerson() || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
+        // Show contact feedback even when another required field is already invalid.
+        const contactPersonValid = validateContactPerson();
+        if (!this.$form[0].checkValidity() || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
