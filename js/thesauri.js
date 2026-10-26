@@ -897,6 +897,10 @@ export function cleanupTagifyForInput(inputElement, configKey) {
     }
 }
 
+/**
+ * Updates the total number of selected keywords in the thesauri group header.
+ */
+
 function updateThesaurusKeywordCount() {
     const group = document.getElementById('thesaurusKeywordsGroup');
     const summary = document.querySelector(
@@ -912,6 +916,12 @@ function updateThesaurusKeywordCount() {
 
     summary.textContent = `· ${count} ${count === 1 ? 'Keyword' : 'Keywords'}`;
 }
+
+/**
+ * Binds keyword count updates once per Tagify instance in the thesauri group.
+ *
+ * @param {HTMLInputElement} inputElement - Input enhanced with Tagify.
+ */
 
 function bindKeywordCount(inputElement) {
     const tagify = inputElement._tagify;
