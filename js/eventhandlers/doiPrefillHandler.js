@@ -47,7 +47,7 @@ $(document).ready(function () {
       $(modalEl).one('hidden.bs.modal', async function () {
         toggleSpinner(true);
         try {
-          await applyDoiPrefill(attributes, lookupService);
+          await applyDoiPrefill(attributes);
         } finally {
           toggleSpinner(false);
         }
