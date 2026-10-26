@@ -203,7 +203,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ```
   ELMO → ERNIE (fetch vocabularies)
-  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/{editorProfile}
   ├─ ELMO GETs: GET https://ernie.../api/v1/title-types/elmo
   ├─ ELMO GETs: GET https://ernie.../api/v1/relation-types/elmo
   ├─ ELMO GETs: GET https://ernie.../api/v1/identifier-types/elmo
@@ -211,10 +211,8 @@ If you encounter problems with the installation, feel free to leave an entry in 
   └─ ERNIE verifies the key on its side
 
   ELMO ← ERNIE (on-demand cache refresh)
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/titletypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/relationtypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/identifiertypes/refresh
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/refresh
+  ├─ Cache status: GET /api/v2/admin/cache/status
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
   └─ ELMO verifies against $ELMO_API_KEY in ELMO's .env
   ```
@@ -223,6 +221,10 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types, title types, relation types, identifier types, and other vocabularies are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
   - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
+
+  Resource types use the editor profile selected by the effective `$showMslMode` setting: `elmo-msl` for MSL and `elmo` for the other editions. Settings resolve `SHOW_MSL_MODE` before the service is created, so later application or test overrides take precedence. The profile-specific resource-type caches are `storage/cache/ernie_resource_types_elmo_msl.json` and `storage/cache/ernie_resource_types.json`. The existing ELMO endpoint `/api/v2/vocabs/resourcetypes` continues to return local mapping IDs; cache status and refresh operate on the selected profile.
+
+  The preparation for ERNIE-managed licenses adds response validation and an explicit mapping from known DataCite resource types to ERNIE slugs in `LicenseService`. License fetching and cache integration are subsequent implementation steps; the license endpoints currently use the existing local database. The database serves as a temporary mapping store.
 
 </details>
 

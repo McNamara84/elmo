@@ -510,7 +510,12 @@ paths:
         - vocabularies
       security: []
       summary: Get resource types
-      description: Retrieve all available DataCite resource types
+      description: |-
+        Retrieve the available DataCite resource types, returning local mapping IDs.
+        When ERNIE is configured, the effective server-side MSL mode selects
+        `/api/v1/resource-types/elmo-msl`; other editions use `/api/v1/resource-types/elmo`.
+        Resource-type file caches are separate for these editor profiles.
+        Existing cache and local-database fallback behavior applies when ERNIE is unavailable.
       operationId: getResourceTypes
       responses:
         "200":
@@ -1572,6 +1577,9 @@ paths:
       summary: Get all ERNIE cache statuses
       description: |-
         Returns the file-cache status of every ERNIE vocabulary.
+
+        The `resourceTypes` entry describes the cache for the effective editor profile
+        (`elmo-msl` in MSL mode, otherwise `elmo`). Its response key is unchanged.
 
         Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
       operationId: getAllCacheStatus

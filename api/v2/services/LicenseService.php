@@ -54,7 +54,12 @@ final class LicenseService
         'other' => ['Other'],
     ];
 
-    /** Resolve a server-side resource type name, never a browser-supplied path. */
+    /**
+     * Resolve a server-side resource type name, never a browser-supplied path.
+     *
+     * @param string $resourceType Canonical DataCite token or known ERNIE display name.
+     * @return string|null Verified ERNIE slug, or null for an unknown name.
+     */
     public static function resourceTypeSlug(string $resourceType): ?string
     {
         $resourceType = trim($resourceType);
@@ -76,6 +81,7 @@ final class LicenseService
      * Identical duplicates are collapsed without changing the response order.
      * Additional fields are ignored for forward compatibility.
      *
+     * @param string $json Raw JSON response; decoding preserves the list/object distinction.
      * @return list<array{id: int, identifier: string, name: string, uri: ?string, scheme_uri: ?string}>
      * @throws UnexpectedValueException When the response cannot be trusted.
      */

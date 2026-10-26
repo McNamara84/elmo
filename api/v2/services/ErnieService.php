@@ -122,6 +122,14 @@ class ErnieService
     ];
     }
 
+    /**
+     * Returns the editor profile resolved from the final application settings.
+     *
+     * Environment variables are handled by settings.php before construction,
+     * so a later variant override takes precedence over SHOW_MSL_MODE.
+     *
+     * @return string Either "elmo" or "elmo-msl".
+     */
     public function getEditorProfile(): string
     {
         return $this->editorProfile;
