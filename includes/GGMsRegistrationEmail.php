@@ -72,10 +72,10 @@ function formatGGMsContactName(string $rawName): string
 /**
  * Extract title and researcher contacts from an ICGEM envelope.
  *
- * The ICGEM schema keeps contact emails in grav:contact/grav:address, not in an
- * ISO pointOfContact block, so the standard ELMO extraction finds nothing here.
- * Names come from the embedded DataCite ContactPerson contributors, which are
- * written in the same order as the addresses.
+ * A current ICGEM envelope keeps each address on its own grav:contact, together
+ * with the contact name. An older envelope still lists nameless grav:address
+ * values under one grav:contact; those names come from DataCite ContactPerson
+ * contributors in the same order. ISO pointOfContact is not used here.
  *
  * @param string $xmlContent Raw ICGEM envelope XML.
  * @return array{title: string, contacts: array<int, array{fullName: string, email: string}>, invalidContacts: array<int, array{fullName: string, email: string}>}
@@ -100,35 +100,48 @@ function collectGGMsResearcherConfirmationDataFromXml(string $xmlContent): array
             $title = trim((string) $titleNodes[0]);
         }
 
-        $names = [];
-        $contactPersonNodes = $xml->xpath(
-            '//*[local-name()="contributor"][@contributorType="ContactPerson"]/*[local-name()="contributorName"]'
-        );
-        foreach ($contactPersonNodes ?: [] as $contactPersonNode) {
-            $names[] = formatGGMsContactName((string) $contactPersonNode);
-        }
-
-        $addressNodes = $xml->xpath('//*[local-name()="contact"]/*[local-name()="address"]');
-
-        foreach ($addressNodes ?: [] as $index => $addressNode) {
-            $email = trim((string) $addressNode);
-            $fullName = $names[$index] ?? 'researcher';
-
+        $remember = static function (string $fullName, string $email) use (&$contacts, &$invalidContacts, &$seen): void {
+            $fullName = $fullName !== '' ? $fullName : 'researcher';
             if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $invalidContacts[] = [
                     'fullName' => $fullName,
                     'email' => $email === '' ? '(empty)' : $email,
                 ];
-                continue;
+                return;
             }
 
             $key = mb_strtolower($fullName) . '|' . mb_strtolower($email);
             if (isset($seen[$key])) {
-                continue;
+                return;
             }
 
             $seen[$key] = true;
             $contacts[] = ['fullName' => $fullName, 'email' => $email];
+        };
+
+        $namedContacts = $xml->xpath('//*[local-name()="contacts"]/*[local-name()="contact"]') ?: [];
+        if ($namedContacts !== []) {
+            foreach ($namedContacts as $contactNode) {
+                $nameNodes = $contactNode->xpath('./*[local-name()="name"]') ?: [];
+                $addressNodes = $contactNode->xpath('./*[local-name()="address"]') ?: [];
+                $remember(
+                    formatGGMsContactName(trim((string) ($nameNodes[0] ?? ''))),
+                    trim((string) ($addressNodes[0] ?? ''))
+                );
+            }
+        } else {
+            $names = [];
+            $contactPersonNodes = $xml->xpath(
+                '//*[local-name()="contributor"][@contributorType="ContactPerson"]/*[local-name()="contributorName"]'
+            );
+            foreach ($contactPersonNodes ?: [] as $contactPersonNode) {
+                $names[] = formatGGMsContactName((string) $contactPersonNode);
+            }
+
+            $addressNodes = $xml->xpath('//*[local-name()="contact"]/*[local-name()="address"]');
+            foreach ($addressNodes ?: [] as $index => $addressNode) {
+                $remember($names[$index] ?? 'researcher', trim((string) $addressNode));
+            }
         }
 
         error_log('ELMO GEM confirmation: Extracted ' . count($contacts) . ' contact(s) from ICGEM XML.');

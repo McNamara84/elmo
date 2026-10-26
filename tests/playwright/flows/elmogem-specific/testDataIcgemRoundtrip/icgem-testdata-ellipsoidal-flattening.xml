@@ -40,9 +40,13 @@
   <dace:geoLocations/>
 </dace:resource>
   <grav:globalGravityProduct>
-    <grav:contact>
-      <grav:address>ellipsoidal.contact@gfz.de</grav:address>
-    </grav:contact>
+    <grav:contacts>
+      <grav:contact>
+        <grav:nameType>Personal</grav:nameType>
+        <grav:name>Abrykosov, Oleh</grav:name>
+        <grav:address>ellipsoidal.contact@gfz.de</grav:address>
+      </grav:contact>
+    </grav:contacts>
     <grav:harmonicCoefficientsModel>
       <grav:modelName>Test_Ellipsoidal_Flattening</grav:modelName>
       <grav:publicationYear>2024</grav:publicationYear>
