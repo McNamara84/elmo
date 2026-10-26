@@ -12,7 +12,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. The public contact lookup endpoint has been removed."
+                  "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. Missing contact emails are highlighted in red on Submit, even without prior field interaction. The public contact lookup endpoint has been removed."
                 }
               ],
               "editions": ["all"],
