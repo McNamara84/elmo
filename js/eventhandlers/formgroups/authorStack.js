@@ -227,6 +227,10 @@ $(document).ready(function () {
   function setHelpIconVisibility(icon, shouldBeVisible) {
     const wrapper = icon.closest('span.input-group-text');
 
+    icon.closest('.input-group').find('.orcid-search-btn')
+      .toggleClass('input-right-no-round-corners', shouldBeVisible)
+      .toggleClass('input-right-with-round-corners', !shouldBeVisible);
+
     icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
     if (!wrapper.length) {
       return;

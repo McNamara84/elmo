@@ -19,6 +19,18 @@
               "references": [
                 { "type": "issue", "number": 1306 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Made field corners consistent across the form when showing or hiding help."
+                }
+              ],
+              "editions": [ "all" ],
+              "references": [
+                { "type": "issue", "number": 1303 }
+              ]
             }
           ]
         }
