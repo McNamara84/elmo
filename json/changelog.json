@@ -43,6 +43,30 @@
               "references": [
                 { "type": "issue", "number": 1303 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Checkboxes are now displayed for top-level ICS Chronostratigraphy keywords without children."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1302 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added a translated validation message for missing Authors information, visible even when author fields are collapsed."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1305 }
+              ]
             }
           ]
         }

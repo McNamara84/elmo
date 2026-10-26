@@ -92,6 +92,9 @@ describe('submitHandler.js', () => {
     global.validateTitleField = jest.fn().mockReturnValue(true);
     global.validateAuthorNameFields = jest.fn().mockReturnValue(true);
 
+    // Mock Authors group validation
+    window.validateAuthorsGroup = jest.fn().mockReturnValue(true);
+
     // Mock scrollIntoView
     Element.prototype.scrollIntoView = jest.fn();
 

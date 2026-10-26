@@ -48,8 +48,14 @@
     border-color: var(--elmo-focus-color);
 }
 
+/* Hide checkboxes on top-level nodes in all thesauri. */
 .jstree-container-ul>li>a>i.jstree-checkbox {
     display: none;
+}
+
+/* Show checkboxes on top-level ICS nodes without children. */
+#jstree-chronostratigraphy>.jstree-container-ul>li.jstree-leaf>a>i.jstree-checkbox {
+    display: inline-block;
 }
 
 .invalid {
