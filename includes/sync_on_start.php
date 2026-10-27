@@ -8,6 +8,9 @@ try {
     $controller = new VocabController();
     $service = new ErnieService();
 
+    // License availability must never prevent the other vocabularies from starting.
+    $service->getLicensesWithCache();
+
     $controller->syncRolesToDb($service->getContributorPersonRolesWithCache(), 0);
     $controller->syncRolesToDb($service->getContributorInstitutionRolesWithCache(), 1);
     $controller->syncResourceTypesFromErnie($service->getResourceTypesWithCache());

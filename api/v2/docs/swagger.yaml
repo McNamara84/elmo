@@ -1581,6 +1581,13 @@ paths:
         The `resourceTypes` entry describes the cache for the effective editor profile
         (`elmo-msl` in MSL mode, otherwise `elmo`). Its response key is unchanged.
 
+        License snapshots appear as `licenses:all` and `licenses:{resourceTypeSlug}`
+        for previously requested scopes. They include profile, scope, lastUpdated,
+        itemCount, state (fresh/stale/unavailable), and an optional error. Zero items
+        is a valid successful snapshot. License caches are isolated by ERNIE URL
+        and editor profile. Refresh includes the catalog and these used scopes,
+        with a shared 20-second license refresh budget and individual results.
+
         Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
       operationId: getAllCacheStatus
       parameters:

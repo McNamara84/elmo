@@ -10,6 +10,12 @@ declare(strict_types=1);
  */
 final class LicenseService
 {
+    /** @return list<string> Verified license endpoint scopes. */
+    public static function resourceTypeSlugs(): array
+    {
+        return array_keys(self::RESOURCE_TYPES);
+    }
+
     /**
      * Explicit ERNIE slugs with their DataCite tokens and ERNIE display names.
      * Source: ERNIE ResourceTypeSeeder at e00b0f76120dd412b3732bff8625d8b0b019995c.

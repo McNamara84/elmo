@@ -165,6 +165,7 @@ class VocabController
                     'success' => true,
                     'message' => 'All ERNIE caches refreshed',
                     'results' => $results,
+                    'status' => $ernieService->getAllCacheStatus(),
                 ]);
                 return;
             }
@@ -175,6 +176,7 @@ class VocabController
                 'message' => 'Some ERNIE caches failed to refresh',
                 'failed' => $failed,
                 'results' => $results,
+                'status' => $ernieService->getAllCacheStatus(),
             ]);
         } catch (Exception $e) {
             error_log('[ELMO admin] cache refresh failed: ' . $e->getMessage());
