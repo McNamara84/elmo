@@ -6,6 +6,7 @@ import { hasCompleteContact } from './contactRequirement.js';
 import { synchronizeRelatedWorksPayload } from './services/relatedWorkPayloadService.js';
 import { synchronizeResourceInformationPayload } from './services/resourceInformationPayloadService.js';
 import { synchronizeTagifyInputs } from './thesauriHelpers.js';
+import { validateResourceVersion } from './validation/resourceVersionValidation.js';
 
 /**
  * Validates that the embargo date is not before the creation date.
@@ -399,6 +400,7 @@ class SubmitHandler {
         if (this.autosaveService) {
             this.autosaveService.flushPending();
         }
+        this.validateVersionForSubmit();
         validateEmbargoDate();
         validateTitleField();
         validateAuthorNameFields();
@@ -412,19 +414,17 @@ class SubmitHandler {
         const contactPersonValid = validateContactPerson();
         const authorsValid = window.validateAuthorsGroup();
         if (!this.$form[0].checkValidity() || !authorsValid || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
-            this.$form.addClass('was-validated');
-            const $firstInvalid = this.$form.find(':invalid').first();
-            if ($firstInvalid.length > 0 && $firstInvalid[0]) {
-                $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
-                $firstInvalid.focus();
-            }
-            this.showValidationFailedModal();
+            this.showFormValidationFailure();
             return;
         }
 
         const doiValidation = window.resourceInformation?.validateSubmissionDoi?.({ forSubmit: true });
         const showAfterDoiValidation = valid => {
             if (valid) {
+                if (!this.validateVersionForSubmit()) {
+                    this.showFormValidationFailure();
+                    return;
+                }
                 this.modals.submit.show();
                 return;
             }
@@ -437,6 +437,37 @@ class SubmitHandler {
         } else {
             showAfterDoiValidation(doiValidation !== false);
         }
+    }
+
+    /** Normalize the visible version before validation and payload collection. */
+    validateVersionForSubmit() {
+        const input = this.$form[0].querySelector('#input-resourceinformation-version');
+        const previousValue = input?.value;
+        const valid = validateResourceVersion(input, { trim: true });
+        if (input && input.value !== previousValue) window.resourceInformation?.sync?.();
+        return valid;
+    }
+
+    /** Reveal invalid fields after closing any open submission dialog. */
+    showFormValidationFailure() {
+        const $submitModal = $('#modal-submit');
+        if ($submitModal.hasClass('show')) {
+            $submitModal.one('hidden.bs.modal', () => {
+                $submitModal.off('shown.bs.modal.versionValidation');
+                this.showFormValidationFailure();
+            });
+            // Bootstrap ignores hide() during the opening animation.
+            $submitModal.one('shown.bs.modal.versionValidation', () => this.modals.submit.hide());
+            this.modals.submit.hide();
+            return;
+        }
+        this.$form.addClass('was-validated');
+        const $firstInvalid = this.$form.find(':invalid').first();
+        if ($firstInvalid.length && $firstInvalid[0]) {
+            $firstInvalid[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            $firstInvalid.focus();
+        }
+        this.showValidationFailedModal();
     }
 
     /**
@@ -473,6 +504,10 @@ class SubmitHandler {
 
         // Input can change while autosave flushes, so repeat the guard before sending metadata.
         if (!resolvePendingAffiliations(this.$form[0]) || !validateAffiliationEditors(this.$form[0])) return;
+        if (!this.validateVersionForSubmit()) {
+            this.showFormValidationFailure();
+            return;
+        }
         let authorsPayload;
         let contributorsPayload = null;
         let relatedWorksPayload = null;
@@ -508,6 +543,10 @@ class SubmitHandler {
 
         // Ensure the form-level CSRF token is present.
         const csrfToken = await fetchAndStoreCsrfToken('form');
+        if (!this.validateVersionForSubmit()) {
+            this.showFormValidationFailure();
+            return;
+        }
         if (csrfToken) {
             submitData.set('csrf-token', csrfToken.toString());
         }

@@ -22,7 +22,7 @@ function validateSubmissionResourceInformation(
     }
     $version = trim((string) ($postData['version'] ?? ''));
     if ($version !== '' && !preg_match('/^\d+\.\d+$/D', $version)) {
-        throw new DomainException('Please enter a version in the form x.y.');
+        throw new DomainException('Enter the version as major.minor, e.g. 1.4 or 12.3, or leave this field blank.');
     }
     $doi = trim((string) ($postData['doi'] ?? ''));
     if ($doi === '' || $isIcgem) return $postData;

@@ -11,7 +11,7 @@ describe('resourceInformationTitle.js', () => {
       <input id="input-resourceinformation-doi">
       <input id="input-resourceinformation-publicationyear">
       <select id="input-resourceinformation-resourcetype"><option value="1">Dataset</option></select>
-      <input id="input-resourceinformation-version">
+      <input id="input-resourceinformation-version" pattern="\\d+\\.\\d+">
       <select id="input-resourceinformation-language"><option value="1" title="en">English</option></select>
       <div id="group-resourceinformation">
         <div class="row">
@@ -59,6 +59,7 @@ describe('resourceInformationTitle.js', () => {
 
     // Mock external function imported by the module
     window.replaceHelpButtonInClonedRows = jest.fn();
+    window.validateResourceVersion = require('../../js/validation/resourceVersionValidation.js').validateResourceVersion;
 
     // Set up window globals that would normally be populated by select.js AJAX
     window.maxTitles = 5;
@@ -94,6 +95,7 @@ describe('resourceInformationTitle.js', () => {
     delete window.alternativeTitleTypeId;
     delete window.titleTypeOptionsHtml;
     delete window.replaceHelpButtonInClonedRows;
+    delete window.validateResourceVersion;
     delete window.resourceInformation;
   });
 
@@ -306,5 +308,38 @@ describe('resourceInformationTitle.js', () => {
     window.resourceInformation.clear();
     expect($('input[name="title[]"]').length).toBe(1);
     expect(window.resourceInformation.collectPayload().doi).toBe('');
+  });
+
+  test('validates input immediately and keeps the structured payload in sync', () => {
+    const $version = $('#input-resourceinformation-version');
+    $version.val('1.2.3').trigger('input');
+    expect($version.hasClass('is-invalid')).toBe(true);
+    expect(JSON.parse($('#resource-information-payload').val()).version).toBe('1.2.3');
+    $version.val('1.10').trigger('input');
+    expect($version.hasClass('is-invalid')).toBe(false);
+    expect(window.resourceInformation.collectPayload().version).toBe('1.10');
+  });
+
+  test.each(['blur', 'change'])('%s trims the visible version and synchronizes the payload', event => {
+    const $version = $('#input-resourceinformation-version');
+    $version.val(' 1.10 ').trigger('input');
+    expect($version.val()).toBe(' 1.10 ');
+    $version.trigger(event);
+    expect($version.val()).toBe('1.10');
+    expect($version.attr('aria-invalid')).toBe('false');
+    expect(JSON.parse($('#resource-information-payload').val()).version).toBe('1.10');
+  });
+
+  test('import/restore exposes invalid original values and clear resets their state', () => {
+    window.resourceInformation.setResourceInformation({ version: '1.2.3' });
+    const $version = $('#input-resourceinformation-version');
+    expect($version.val()).toBe('1.2.3');
+    expect($version.hasClass('is-invalid')).toBe(true);
+    expect(JSON.parse($('#resource-information-payload').val()).version).toBe('1.2.3');
+    window.resourceInformation.clear();
+    expect($version.val()).toBe('');
+    expect($version.hasClass('is-invalid')).toBe(false);
+    expect($version.attr('aria-invalid')).toBe('false');
+    expect($version.attr('data-empty')).toBe('true');
   });
 });
