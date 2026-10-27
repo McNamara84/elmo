@@ -15,7 +15,11 @@ if (preg_match('~^/api/v1/resource-types/elmo(?:-msl)?$~D', $path)) {
     return;
 }
 if ($path === '/api/v1/title-types/elmo') {
-    echo '[{"id":1,"name":"Main Title"},{"id":2,"name":"Alternative Title"},{"id":3,"name":"Translated Title"}]';
+    echo '[{"id":1,"name":"Main Title"},{"id":2,"name":"Alternative Title"},{"id":3,"name":"Translated Title"},{"id":4,"name":"Subtitle"},{"id":5,"name":"Other"}]';
+    return;
+}
+if ($path === '/api/v1/relation-types/elmo') {
+    echo file_get_contents(__DIR__ . '/ernie-licenses/relation-types.json');
     return;
 }
 if (!preg_match('~^/api/v1/licenses/(elmo|elmo-msl)(?:/([a-z-]+))?$~D', $path, $matches)) {
