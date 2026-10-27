@@ -3,12 +3,17 @@
 require_once __DIR__ . '/resource_information_payload.php';
 
 /**
- * Validate an existing DOI before a Standard/MSL/IGSN submission is persisted.
+ * Validate the language, optional version and existing DOI before persistence.
+ * Existing DOI lookup and next-major-version rules apply to Standard/MSL/IGSN.
  * The lookup callback is shared with the public DOI proxy in production.
  *
  * @param array<string, mixed> $postData
+ * @param bool $isIcgem Whether the ICGEM-specific DOI workflow applies.
  * @param callable(string): array $lookup
+ * @param string $curationContact Contact address included in curation errors.
  * @return array<string, mixed>
+ * @throws InvalidArgumentException When the structured Resource Information payload is invalid.
+ * @throws DomainException When metadata or DOI verification fails.
  */
 function validateSubmissionResourceInformation(
     array $postData,

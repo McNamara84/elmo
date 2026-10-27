@@ -233,6 +233,27 @@ describe('submitHandler.js', () => {
       expect(JSON.parse(formData.get('resourceInformationPayload')).version).toBe('1.10');
       delete global.fetch;
     });
+
+    test.each([false, true])('uses a valid version changed during CSRF loading (structured: %s)', async structured => {
+      handler.$form.append('<input type="hidden" name="authorsPayload" value="[]">');
+      if (structured) {
+        handler.$form.append('<input type="hidden" name="resourceInformationPayload">');
+        window.resourceInformation = { sync: () => ({ version: input.value, titles: [] }) };
+      }
+      let resolveToken;
+      global.fetch = jest.fn(() => new Promise(resolve => { resolveToken = resolve; }));
+      const send = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+      input.value = '1.4';
+      const submission = handler.handleModalSubmit();
+      input.value = ' 1.10 ';
+      resolveToken({ json: async () => ({ token: 'version-test-token' }) });
+      await submission;
+      expect(input.value).toBe('1.10');
+      const formData = send.mock.calls[0][0];
+      expect(formData.get('version')).toBe('1.10');
+      if (structured) expect(JSON.parse(formData.get('resourceInformationPayload')).version).toBe('1.10');
+      delete global.fetch;
+    });
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {

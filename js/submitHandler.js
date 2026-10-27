@@ -439,7 +439,10 @@ class SubmitHandler {
         }
     }
 
-    /** Normalize the visible version before validation and payload collection. */
+    /**
+     * Normalize the visible version before validation and payload collection.
+     * @returns {boolean} Whether the optional version satisfies its HTML constraints.
+     */
     validateVersionForSubmit() {
         const input = this.$form[0].querySelector('#input-resourceinformation-version');
         const previousValue = input?.value;
@@ -448,7 +451,10 @@ class SubmitHandler {
         return valid;
     }
 
-    /** Reveal invalid fields after closing any open submission dialog. */
+    /**
+     * Reveal invalid fields after closing any open submission dialog.
+     * @returns {void}
+     */
     showFormValidationFailure() {
         const $submitModal = $('#modal-submit');
         if ($submitModal.hasClass('show')) {
@@ -511,6 +517,7 @@ class SubmitHandler {
         let authorsPayload;
         let contributorsPayload = null;
         let relatedWorksPayload = null;
+        let csrfToken;
         try {
             authorsPayload = synchronizeAuthorsPayload(this.$form[0]);
             synchronizeResourceInformationPayload(this.$form[0]);
@@ -521,6 +528,13 @@ class SubmitHandler {
             if (hasRelatedWorks) {
                 relatedWorksPayload = synchronizeRelatedWorksPayload(this.$form[0]);
             }
+            csrfToken = await fetchAndStoreCsrfToken('form');
+            if (!this.validateVersionForSubmit()) {
+                this.showFormValidationFailure();
+                return;
+            }
+            // Token loading can outlast an edit; serialize the latest visible version.
+            synchronizeResourceInformationPayload(this.$form[0]);
         } catch (error) {
             console.error('Could not synchronize structured form payloads for submission:', error);
             this.showNotification(
@@ -541,12 +555,6 @@ class SubmitHandler {
             submitData.set('relatedWorksPayload', JSON.stringify(relatedWorksPayload));
         }
 
-        // Ensure the form-level CSRF token is present.
-        const csrfToken = await fetchAndStoreCsrfToken('form');
-        if (!this.validateVersionForSubmit()) {
-            this.showFormValidationFailure();
-            return;
-        }
         if (csrfToken) {
             submitData.set('csrf-token', csrfToken.toString());
         }

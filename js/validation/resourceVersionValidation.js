@@ -3,7 +3,7 @@
  * Keep empty fields neutral and preserve the text (including minor zeroes).
  *
  * @param {HTMLInputElement|null} input The resource version field.
- * @param {{trim?: boolean}} options Normalize outer whitespace on blur/submit.
+ * @param {{trim?: boolean}} [options={}] Normalize outer whitespace on blur/submit.
  * @returns {boolean} Whether the version satisfies the field's constraints.
  */
 export function validateResourceVersion(input, { trim = false } = {}) {

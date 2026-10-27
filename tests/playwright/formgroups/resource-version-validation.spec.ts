@@ -1,8 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { completeMinimalDatasetForm, disableHelp, navigateToHome } from '../utils';
+import { completeMinimalDatasetForm, disableHelp, navigateToHome, registerGoogleMapsNoopRoute } from '../utils';
 import en from '../../../lang/en.json';
 import de from '../../../lang/de.json';
 import fr from '../../../lang/fr.json';
+
+const consoleProblems = new WeakMap<Page, string[]>();
 
 async function completeDataset(page: Page) {
   await completeMinimalDatasetForm(page);
@@ -22,10 +24,23 @@ async function completeDataset(page: Page) {
 
 test.describe('Resource version validation (#873)', () => {
   test.beforeEach(async ({ page }) => {
+    const problems: string[] = [];
+    consoleProblems.set(page, problems);
+    page.on('console', message => {
+      if (['warning', 'error'].includes(message.type())) problems.push(`${message.type()}: ${message.text()}`);
+    });
+    page.on('pageerror', error => problems.push(`pageerror: ${error.message}`));
+    // These version scenarios do not exercise external Maps or thesaurus services.
+    await registerGoogleMapsNoopRoute(page);
+    await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));
     await page.addInitScript(() => localStorage.setItem('userLanguage', 'en'));
     await navigateToHome(page);
     await page.waitForFunction(() => Boolean(window.resourceInformation?.setResourceInformation
       && window.elmo?.translations?.resourceInfo?.versionHint));
+  });
+
+  test.afterEach(async ({ page }) => {
+    expect(consoleProblems.get(page), 'Browser console warnings, errors and uncaught exceptions').toEqual([]);
   });
 
   test('shows format errors immediately while typing and clears them on correction', async ({ page }) => {
@@ -139,5 +154,39 @@ test.describe('Resource version validation (#873)', () => {
     await expect(page.locator('#modal-validation-failed')).toBeVisible();
     await expect(page.locator('#resource-version-error')).toBeVisible();
     expect(requests).toEqual([]);
+  });
+
+  test('sends the latest valid version after waiting for the CSRF token', async ({ page }) => {
+    test.setTimeout(90_000);
+    await completeDataset(page);
+    await page.locator('#input-resourceinformation-version').fill('1.4');
+    await page.locator('#button-form-submit').click();
+    await expect(page.locator('#modal-submit')).toBeVisible();
+    let releaseToken!: () => void;
+    let tokenRequested!: () => void;
+    const tokenWait = new Promise<void>(resolve => { releaseToken = resolve; });
+    const tokenRequest = new Promise<void>(resolve => { tokenRequested = resolve; });
+    await page.route('**/api/csrf_token.php', async route => {
+      tokenRequested();
+      await tokenWait;
+      await route.fulfill({ json: { token: 'version-dod-test-token' } });
+    });
+    let receiveMetadata!: (body: string) => void;
+    const submittedMetadata = new Promise<string>(resolve => { receiveMetadata = resolve; });
+    await page.route('**/endpoints/send_xml_file.php', async route => {
+      receiveMetadata(route.request().postData() || '');
+      await route.fulfill({ json: { success: true } });
+    });
+    await page.locator('#input-submit-privacycheck').check();
+    await page.locator('#button-submit-submit').click();
+    await tokenRequest;
+    await page.evaluate(() => { document.querySelector<HTMLInputElement>('#input-resourceinformation-version')!.value = '1.10'; });
+    releaseToken();
+    const body = await submittedMetadata;
+    const field = (name: string) => body.match(new RegExp(`name="${name}"\\r\\n\\r\\n([^\\r\\n]*)`))?.[1];
+    expect(field('version')).toBe('1.10');
+    expect(JSON.parse(field('resourceInformationPayload') || '{}').version).toBe('1.10');
+    await expect(page.locator('#modal-submit')).not.toBeVisible();
+    await expect(page.locator('#modal-notification')).toBeVisible();
   });
 });
