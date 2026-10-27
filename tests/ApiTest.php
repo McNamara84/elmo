@@ -147,6 +147,10 @@ final class ApiTest extends DatabaseTestCase
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
+            $expected = json_decode(file_get_contents(__DIR__ . '/fixtures/ernie-licenses/catalog-elmo.json'), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame(array_column($expected, 'identifier'), array_column($data, 'rightsIdentifier'));
+            $this->assertSame(array_column($expected, 'id'), array_column($data, 'ernie_id'));
+
             $firstLicense = $data[0];
             $this->assertArrayHasKey('rightsIdentifier', $firstLicense);
             $this->assertArrayHasKey('text', $firstLicense);
@@ -183,13 +187,13 @@ final class ApiTest extends DatabaseTestCase
             $this->assertIsArray($data, 'Response should be an array');
             $this->assertNotEmpty($data, 'Response should not be empty');
 
-            foreach ($data as $license) {
-                $this->assertArrayHasKey('forSoftware', $license);
-                $this->assertEquals(
-                    '1',
-                    $license['forSoftware'],
-                    'All returned licenses should have forSoftware=1'
-                );
+            $expected = json_decode(file_get_contents(__DIR__ . '/fixtures/ernie-licenses/software-elmo.json'), true, 512, JSON_THROW_ON_ERROR);
+            $this->assertSame(array_column($expected, 'identifier'), array_column($data, 'rightsIdentifier'));
+            $this->assertSame(array_column($expected, 'id'), array_column($data, 'ernie_id'));
+            foreach ($data as $index => $license) {
+                $this->assertSame($expected[$index]['uri'], $license['rightsURI']);
+                $this->assertSame($expected[$index]['scheme_uri'], $license['schemeURI']);
+                $this->assertArrayNotHasKey('forSoftware', $license);
             }
         } catch (Exception $e) {
             throw $e;
