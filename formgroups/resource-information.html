@@ -102,9 +102,12 @@
             <div class="input-group has-validation">
               <div class="form-floating">
                 <input type="text" class="form-control input-with-help input-right-no-round-corners"
-                  id="input-resourceinformation-version" name="version" pattern="^\d+\.\d+$"  />
+                  id="input-resourceinformation-version" name="version" pattern="^\d+\.\d+$"
+                  aria-invalid="false" data-empty="true"
+                  aria-describedby="resource-version-hint resource-version-error" />
                 <label for="input-resourceinformation-version" data-translate="resourceInfo.version"></label>
-                <div class="invalid-feedback" data-translate="resourceInfo.versionInvalid"></div>
+                <div id="resource-version-error" class="invalid-feedback" aria-live="polite" aria-atomic="true"
+                  data-translate="resourceInfo.versionInvalid"></div>
               </div>
               <div class="input-group-append">
                 <span class="input-group-text">
@@ -112,6 +115,7 @@
                 </span>
               </div>
             </div>
+            <div id="resource-version-hint" class="form-text" data-translate="resourceInfo.versionHint">Optional: major.minor, e.g. 1.4 or 12.3.</div>
           </div>
           <!-- Input field for Language -->
           <div class="col-12 col-sm-6 col-md-6 col-lg-2 p-1">

@@ -116,6 +116,144 @@ describe('submitHandler.js', () => {
     delete global.validateAuthorAffiliationEditors;
     delete window.authorStack;
     delete window.relatedWorkStack;
+    delete window.resourceInformation;
+  });
+
+  describe('resource version at Submit', () => {
+    let input;
+
+    beforeEach(() => {
+      handler.$form.append('<input id="input-resourceinformation-version" name="version" pattern="\\d+\\.\\d+">');
+      input = document.getElementById('input-resourceinformation-version');
+      jest.spyOn(handler, 'showValidationFailedModal').mockImplementation(() => {});
+    });
+
+    test.each(['1.2.3', '1.2.3.4', '1'])('blocks %s even without prior interaction', value => {
+      input.value = value;
+      handler.handleSubmit();
+      expect(handler.modals.submit.show).not.toHaveBeenCalled();
+      expect(handler.showValidationFailedModal).toHaveBeenCalled();
+      expect(input.getAttribute('aria-invalid')).toBe('true');
+      expect(document.activeElement).toBe(input);
+    });
+
+    test.each([['', ''], ['1.10', '1.10'], [' 12.3 ', '12.3'], ['   ', '']])('allows %j with normalized value %j', (raw, expected) => {
+      // These independent group validators are not the subject of this test.
+      jest.spyOn(handler.$form[0], 'checkValidity').mockImplementation(() => input.validity.valid);
+      const contact = document.createElement('input');
+      contact.name = 'authorsPayload';
+      contact.value = JSON.stringify([{ type: 'person', familyname: 'Doe', isContact: true, email: 'doe@example.org' }]);
+      handler.$form.append(contact);
+      window.resourceInformation = { sync: jest.fn() };
+      input.value = raw;
+      handler.handleSubmit();
+      expect(input.value).toBe(expected);
+      expect(input.getAttribute('aria-invalid')).toBe('false');
+      expect(handler.modals.submit.show).toHaveBeenCalled();
+      expect(window.resourceInformation.sync).toHaveBeenCalledTimes(raw === expected ? 0 : 1);
+    });
+
+    test('checks again after autosave and sends no request for a changed invalid version', async () => {
+      input.value = '1.4';
+      handler.autosaveService = { flushPending: jest.fn(async () => { input.value = '1.2.3'; }) };
+      const send = jest.spyOn(handler, 'submitViaAjax');
+      await handler.handleModalSubmit();
+      expect(send).not.toHaveBeenCalled();
+      expect(handler.showValidationFailedModal).toHaveBeenCalled();
+      expect(input.classList.contains('is-invalid')).toBe(true);
+    });
+
+    test('waits for the confirmation dialog to close before showing the field error', async () => {
+      input.value = '1.2.3';
+      $('#modal-submit').addClass('show');
+      await handler.handleModalSubmit();
+      expect(handler.modals.submit.hide).toHaveBeenCalled();
+      expect(handler.showValidationFailedModal).not.toHaveBeenCalled();
+      $('#modal-submit').removeClass('show').trigger('hidden.bs.modal');
+      expect(handler.showValidationFailedModal).toHaveBeenCalledTimes(1);
+      expect(document.activeElement).toBe(input);
+    });
+
+    test('closes confirmation even when Bootstrap was still animating it open', async () => {
+      input.value = '1.2.3';
+      $('#modal-submit').addClass('show');
+      await handler.handleModalSubmit();
+      expect(handler.modals.submit.hide).toHaveBeenCalledTimes(1);
+      $('#modal-submit').trigger('shown.bs.modal');
+      expect(handler.modals.submit.hide).toHaveBeenCalledTimes(2);
+      $('#modal-submit').removeClass('show').trigger('hidden.bs.modal');
+      expect(handler.showValidationFailedModal).toHaveBeenCalledTimes(1);
+      $('#modal-submit').trigger('shown.bs.modal');
+      expect(handler.modals.submit.hide).toHaveBeenCalledTimes(2);
+    });
+
+    test('rechecks the version after an asynchronous DOI lookup', async () => {
+      handler.$form.append('<input name="authorsPayload" type="hidden">');
+      document.querySelector('[name="authorsPayload"]').value = JSON.stringify([
+        { type: 'person', familyname: 'Doe', isContact: true, email: 'doe@example.org' }
+      ]);
+      let resolveLookup;
+      window.resourceInformation = { validateSubmissionDoi: () => new Promise(resolve => { resolveLookup = resolve; }) };
+      input.value = '1.4';
+      handler.handleSubmit();
+      input.value = '1.2.3';
+      resolveLookup(true);
+      await Promise.resolve();
+      expect(handler.modals.submit.show).not.toHaveBeenCalled();
+      expect(handler.showValidationFailedModal).toHaveBeenCalled();
+    });
+
+    test('rechecks after CSRF loading and sends no metadata if the version changed', async () => {
+      handler.$form.append('<input type="hidden" name="authorsPayload" value="[]">');
+      let resolveToken;
+      global.fetch = jest.fn(() => new Promise(resolve => { resolveToken = resolve; }));
+      const send = jest.spyOn(handler, 'submitViaAjax');
+      input.value = '1.10';
+      const submission = handler.handleModalSubmit();
+      input.value = '1.2.3';
+      resolveToken({ json: async () => ({ token: 'version-test-token' }) });
+      await submission;
+      expect(send).not.toHaveBeenCalled();
+      expect(handler.showValidationFailedModal).toHaveBeenCalled();
+      delete global.fetch;
+    });
+
+    test('submits the normalized textual version in both scalar and structured fields', async () => {
+      handler.$form.append('<input type="hidden" name="authorsPayload" value="[]">' +
+        '<input type="hidden" name="resourceInformationPayload">');
+      input.value = ' 1.10 ';
+      window.resourceInformation = { sync: () => ({ version: input.value, titles: [] }) };
+      global.fetch = jest.fn().mockResolvedValue({ json: async () => ({ token: 'version-test-token' }) });
+      const send = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+      await handler.handleModalSubmit();
+      expect(input.value).toBe('1.10');
+      expect(send).toHaveBeenCalledTimes(1);
+      const formData = send.mock.calls[0][0];
+      expect(formData.get('version')).toBe('1.10');
+      expect(JSON.parse(formData.get('resourceInformationPayload')).version).toBe('1.10');
+      delete global.fetch;
+    });
+
+    test.each([false, true])('uses a valid version changed during CSRF loading (structured: %s)', async structured => {
+      handler.$form.append('<input type="hidden" name="authorsPayload" value="[]">');
+      if (structured) {
+        handler.$form.append('<input type="hidden" name="resourceInformationPayload">');
+        window.resourceInformation = { sync: () => ({ version: input.value, titles: [] }) };
+      }
+      let resolveToken;
+      global.fetch = jest.fn(() => new Promise(resolve => { resolveToken = resolve; }));
+      const send = jest.spyOn(handler, 'submitViaAjax').mockImplementation(() => {});
+      input.value = '1.4';
+      const submission = handler.handleModalSubmit();
+      input.value = ' 1.10 ';
+      resolveToken({ json: async () => ({ token: 'version-test-token' }) });
+      await submission;
+      expect(input.value).toBe('1.10');
+      const formData = send.mock.calls[0][0];
+      expect(formData.get('version')).toBe('1.10');
+      if (structured) expect(JSON.parse(formData.get('resourceInformationPayload')).version).toBe('1.10');
+      delete global.fetch;
+    });
   });
 
   test('validateEmbargoDate marks invalid when embargo before creation', () => {
