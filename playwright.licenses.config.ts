@@ -4,6 +4,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './tests/integration',
   testMatch: 'ernie-licenses.spec.ts',
+  outputDir: 'test-results/licenses',
   workers: 1,
   retries: 0,
   timeout: 60000,

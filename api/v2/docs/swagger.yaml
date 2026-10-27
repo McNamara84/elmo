@@ -446,12 +446,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
   /vocabs/licenses/software:
     get:
       tags:
@@ -469,18 +463,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SoftwareLicense"
-        "404":
-          description: Reserved; empty license lists return 200
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
         "503":
           description: No suitable ERNIE snapshot or local mapping available
   /vocabs/licenses/resource-type/{resourceTypeId}:

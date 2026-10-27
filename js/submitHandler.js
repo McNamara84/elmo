@@ -412,7 +412,8 @@ class SubmitHandler {
         // Show contact feedback even when another required field is already invalid.
         const contactPersonValid = validateContactPerson();
         const authorsValid = window.validateAuthorsGroup();
-        if (!this.$form[0].checkValidity() || !authorsValid || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
+        const licensesValid = window.elmo?.licenses?.canSubmit() ?? true;
+        if (!this.$form[0].checkValidity() || !licensesValid || !authorsValid || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
             this.$form.addClass('was-validated');
             const $firstInvalid = this.$form.find(':invalid').first();
             if ($firstInvalid.length > 0 && $firstInvalid[0]) {
@@ -613,6 +614,7 @@ class SubmitHandler {
         if (contentType.includes('application/json')) {
             try {
                 const response = JSON.parse(xhr.responseText);
+                if (response.field === 'Rights') window.elmo?.licenses?.load();
                 errorMessage = response.message || errorMessage;
                 if (response.debug) {
                     console.error('Error details:', response.debug);

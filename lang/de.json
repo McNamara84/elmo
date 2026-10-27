@@ -141,12 +141,12 @@
     },
     "rights": {
     "availability": {
-      "chooseType": "Bitte zuerst einen Resource Type ausw?hlen.",
+      "chooseType": "Bitte zuerst einen Resource Type auswählen.",
       "loading": "Lizenzen werden geladen...",
-      "empty": "F?r diesen Resource Type sind derzeit keine Lizenzen freigegeben.",
-      "unavailable": "Lizenzen sind derzeit nicht verf?gbar. Bitte sp?ter erneut versuchen.",
-      "retained": "Diese Lizenz ist derzeit nicht zul?ssig. Sie bleibt f?r Entwurf und Export erhalten. Vor dem Einreichen bitte eine zul?ssige Lizenz ausw?hlen.",
-      "choose": "Lizenz ausw?hlen..."
+      "empty": "Für diesen Resource Type sind derzeit keine Lizenzen freigegeben.",
+      "unavailable": "Lizenzen sind derzeit nicht verfügbar. Bitte später erneut versuchen.",
+      "retained": "Diese Lizenz ist derzeit nicht zulässig. Sie bleibt für Entwurf und Export erhalten. Vor dem Einreichen bitte eine zulässige Lizenz auswählen.",
+      "choose": "Lizenz auswählen..."
     },
         "title": "Lizenzen und Rechte",
         "licenseTitle": "Lizenz"

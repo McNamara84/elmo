@@ -298,8 +298,7 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
   'api/v2/vocabs/languages': MOCK_LANGUAGES,
   'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
-  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
-  'api/v2/vocabs/licenses/software': MOCK_LICENSES,
+  'api/v2/vocabs/licenses/resource-type/': { licenses: MOCK_LICENSES, availability: 'available' },
   'api/v2/vocabs/roles?type=person': MOCK_ROLES.person,
   'api/v2/vocabs/roles?type=institution': MOCK_ROLES.institution,
   'api/v2/vocabs/roles?type=both': MOCK_ROLES.both,
@@ -532,6 +531,7 @@ test.describe('XML Upload Mapping Flow', () => {
     await injectStylesheet(page, 'node_modules/@yaireo/tagify/dist/tagify.css');
 
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'js/services/licenseService.js');
     
     // Patch jQuery $.ajax and $.getJSON to return mock data directly
     await page.evaluate((data) => {
@@ -685,7 +685,9 @@ test.describe('XML Upload Mapping Flow', () => {
     await expect(page.locator('#input-resourceinformation-language')).toHaveValue('1');
     await expect(page.locator('#input-resourceinformation-title')).toHaveValue('ELMO Upload Flow');
 
-    await expect(page.locator('#input-rights-license')).toHaveValue('1');
+    await expect.poll(async () => JSON.parse(await page.locator('[name="licensePayload"]').inputValue()).license).toMatchObject({
+      identifier: 'CC-BY-4.0', uri: 'https://creativecommons.org/licenses/by/4.0/legalcode',
+    });
 
     const familyName = page.locator('input[name="familynames[]"]').first();
     const givenName = page.locator('input[name="givennames[]"]').first();

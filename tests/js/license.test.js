@@ -102,3 +102,23 @@ test('an imported empty license stays empty even when CC BY is allowed', async (
   await service.reset();
   expect(select().value).toBe('81');
 });
+
+test('submission stays blocked while a disabled license control is loading', async () => {
+  let finish;
+  fetch.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const pending = service.load('3');
+  expect(select().disabled).toBe(true);
+  expect(service.canSubmit()).toBe(false);
+  finish(response([cc]));
+  await pending;
+  expect(service.canSubmit()).toBe(true);
+});
+
+test('matching imported rights preserve their original text until deliberately changed', async () => {
+  document.getElementById('input-resourceinformation-resourcetype').value = '3';
+  await service.setMetadata({ identifier: 'CC-BY-4.0', name: 'Original attribution text', uri: cc.rightsURI, scheme_uri: cc.schemeURI });
+  expect(select().selectedOptions[0].text).toContain('Original attribution text');
+  expect(payload().name).toBe('Original attribution text');
+  $(select()).val('17').trigger('change');
+  expect(payload().name).toBe('MIT');
+});

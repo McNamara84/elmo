@@ -1,4 +1,4 @@
-import { setCCBYasDefault, setBrowserTimezone, resetIdentifierField } from './select.js';
+import { setBrowserTimezone, resetIdentifierField } from './select.js';
 
 /**
  * Clears and resets input fields and Tagify instances.

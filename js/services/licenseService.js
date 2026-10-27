@@ -107,6 +107,11 @@
     /** @returns {object|null} Metadata independent of any temporary local ID. */
     getMetadata() { return this.selection ? { ...this.selection } : null; }
 
+    /** Disabled loading controls do not participate in native form validation. */
+    canSubmit() {
+      return !this.select || (this.state === 'available' && this.select.checkValidity());
+    }
+
     reset() {
       this.allowDefault = true;
       this.selection = null;
@@ -121,14 +126,15 @@
       const retained = this.selection && !chosen;
       select.replaceChildren(new Option(this.text(this.state === 'available' ? 'choose' : this.state), ''));
       for (const row of this.rows) {
-        select.add(new Option(row.text + (row.rightsIdentifier ? ' (' + row.rightsIdentifier + ')' : ''), String(row.rights_id)));
+        const label = chosen === row && this.selection.name ? this.selection.name : row.text;
+        select.add(new Option(label + (row.rightsIdentifier ? ' (' + row.rightsIdentifier + ')' : ''), String(row.rights_id)));
       }
       if (retained) {
         select.add(new Option(this.selection.name || this.selection.identifier || this.selection.uri, '__retained__'));
       }
       select.value = chosen ? String(chosen.rights_id) : (retained ? '__retained__' : '');
       select.disabled = ['loading', 'chooseType'].includes(this.state);
-      const problem = retained ? 'retained' : (this.state === 'available' ? null : this.state);
+      const problem = this.state === 'loading' ? 'loading' : (retained ? 'retained' : (this.state === 'available' ? null : this.state));
       select.setCustomValidity(problem ? this.text(problem) : '');
       const status = document.getElementById('license-availability');
       if (status) status.textContent = problem ? this.text(problem) : '';
