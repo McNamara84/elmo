@@ -362,7 +362,14 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <p>Rights information for the dataset. Following the Guidelines for the Handling of Research Data
                     of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                     Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
-                <p>Please choose between:</p>
+                <p>Choose a Resource Type first. The license dropdown shows the licenses currently
+                    allowed by ERNIE for that resource type and this editor. CC-BY-4.0 is selected
+                    automatically only when it is allowed and no license has been selected.</p>
+                <p>An imported or previously selected license that is no longer allowed remains
+                    available for drafts and exports. Select an allowed license before submitting.
+                    If no licenses can be loaded, try again later; no replacement license is assigned.</p>
+                <p>The following examples explain common licenses. Their availability is determined
+                    by the current dropdown:</p>
                 <ul>
                     <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
                             Commons Attribution 4.0 International</a>: Authorises the free use, distribution and

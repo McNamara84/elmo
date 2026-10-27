@@ -10,6 +10,25 @@ declare(strict_types=1);
  */
 final class LicenseService
 {
+    /** Resolve a local ID on the server; browser-provided slugs are never trusted. */
+    public static function resolveResourceType(mysqli $connection, mixed $id): string
+    {
+        if ((!is_string($id) && !is_int($id)) || !preg_match('/^[1-9][0-9]*$/D', (string) $id)
+            || filter_var($id, FILTER_VALIDATE_INT) === false) {
+            throw new InvalidArgumentException('Select a valid resource type.');
+        }
+        $statement = $connection->prepare('SELECT resource_type_general FROM Resource_Type WHERE resource_name_id = ?');
+        $statement->bind_param('i', $id);
+        $statement->execute();
+        $row = $statement->get_result()->fetch_assoc();
+        $statement->close();
+        $slug = $row === null ? null : self::resourceTypeSlug($row['resource_type_general']);
+        if ($slug === null) {
+            throw new OutOfBoundsException('Unknown resource type.');
+        }
+        return $slug;
+    }
+
     /**
      * Normalize a portable license payload without inventing missing metadata.
      * Limits are byte-based and below the database TEXT capacity, including UTF-8.

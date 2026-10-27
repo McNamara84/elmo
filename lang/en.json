@@ -139,6 +139,14 @@
         "titleType": "Title Type"
     },
     "rights": {
+    "availability": {
+      "chooseType": "Choose a Resource Type first.",
+      "loading": "Loading licenses...",
+      "empty": "No licenses are currently allowed for this Resource Type.",
+      "unavailable": "Licenses are currently unavailable. Please try again later.",
+      "retained": "This license is not currently allowed. You can keep it in a draft or export, but must choose an allowed license before submitting.",
+      "choose": "Choose a license..."
+    },
         "title": "Licenses and Rights",
         "licenseTitle": "License"
     },

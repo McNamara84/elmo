@@ -71,7 +71,10 @@ final class LicenseRepository
         return $id;
     }
 
-    /** @param array<string, mixed> $metadata @return array<string, mixed> */
+    /**
+     * @param array<string, mixed> $metadata
+     * @return array<string, mixed>
+     */
     private function adapter(int $id, array $metadata, int $ernieId): array
     {
         return [

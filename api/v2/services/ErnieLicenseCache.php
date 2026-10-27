@@ -94,7 +94,10 @@ final class ErnieLicenseCache
         return $this->result($snapshot, $source, $scope);
     }
 
-    /** @param array<string, mixed>|null $snapshot @return array<string, mixed> */
+    /**
+     * @param array<string, mixed>|null $snapshot
+     * @return array<string, mixed>
+     */
     private function result(?array $snapshot, string $source, string $scope): array
     {
         $licenses = $snapshot['data'] ?? [];

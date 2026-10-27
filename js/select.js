@@ -80,7 +80,6 @@ async function initializeAllDropdownsParallel() {
     resourceType: $("#input-resourceinformation-resourcetype"),
     language: $("#input-resourceinformation-language"),
     titleType: $("#input-resourceinformation-titletype"),
-    license: $("#input-rights-license"),
     relation: $("#input-relatedwork-relation"),
     identifierType: $("#input-relatedwork-identifiertype")
   };
@@ -101,7 +100,6 @@ async function initializeAllDropdownsParallel() {
     resourceTypes: fetch('api/v2/vocabs/resourcetypes').then(r => r.ok ? r.json() : Promise.reject()),
     languages: fetch('api/v2/vocabs/languages').then(r => r.ok ? r.json() : Promise.reject()),
     titleTypes: fetch('api/v2/vocabs/titletypes').then(r => r.ok ? r.json() : Promise.reject()),
-    licenses: fetch('api/v2/vocabs/licenses/all').then(r => r.ok ? r.json() : Promise.reject()),
     relations: fetch('api/v2/vocabs/relations').then(r => r.ok ? r.json() : { relations: [] }),
     identifierTypes: fetch('api/v2/validation/identifiertypes/active').then(r => r.ok ? r.json() : { identifierTypes: [] })
   };
@@ -133,7 +131,7 @@ async function initializeAllDropdownsParallel() {
   if ('resourceTypes' in data) populateResourceTypeDropdownWithData(data.resourceTypes);
   if ('languages' in data) populateLanguageDropdownWithData(data.languages);
   if ('titleTypes' in data) populateTitleTypeDropdownWithData(data.titleTypes);
-  if ('licenses' in data) populateLicenseDropdownWithData(data.licenses);
+  await window.elmo?.licenses?.load();
   if ('relations' in data) populateRelationsDropdownWithData(data.relations);
   if ('identifierTypes' in data) populateIdentifierTypesDropdownWithData(data.identifierTypes);
 
@@ -310,52 +308,15 @@ function populateTitleTypeDropdownWithData(types) {
   $select.prop('disabled', false);
 }
 
+/** Apply the allowed default only when the shared selection is empty. */
 export function setCCBYasDefault() {
-  const $select = $("#input-rights-license");
-  if (!$select.length) return;
-
-  const $option = $select.find('option').filter(function () {
-    return String($(this).text()).includes('(CC-BY-4.0)');
-  }).first();
-  if ($option.length) {
-    $select.val($option.val());
-  } else {
-    // select the first option if CC-BY-4.0 is not found
-    $select.find('option').first().prop('selected', true);
-  }
+  window.elmo?.licenses?.selectDefault();
+  window.elmo?.licenses?.render();
 }
 
-
-/**
- * Populates license dropdown with pre-fetched data
- * @param {Array} licenses - Array of license objects
- */
-function populateLicenseDropdownWithData(licenses) {
-  const $select = $("#input-rights-license");
-  if (!$select.length) return;
-
-  $select.empty();
-
-  if (Array.isArray(licenses) && licenses.length > 0) {
-    licenses.forEach(val => {
-      const $option = $("<option>", {
-        value: val.rights_id,
-        text: val.text + " (" + val.rightsIdentifier + ")"
-      });
-      if (val.rightsIdentifier === 'CC-BY-4.0') {
-        $option.prop('selected', true);
-      }
-      $select.append($option);
-    });
-  } else {
-    // Fallback: use CC-BY-4.0 (rights_id=1)
-    $select.append($("<option>", {
-      value: "1",
-      text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-      selected: true
-    }));
-  }
-  $select.prop('disabled', false).trigger("change");
+/** Compatibility entry point: list loading always uses the current resource type. */
+function populateLicenseDropdownWithData() {
+  return window.elmo?.licenses?.load();
 }
 
 function relatedWorkSelects(root, name, legacyId) {
@@ -507,23 +468,8 @@ $(document).ready(function () {
   // Use parallel initialization for faster page load
   startInitialDropdownPopulation();
   
-  // Event handler to monitor if the resource type is changed
-  // Only reload licenses when user actually selects a resource type (not on initial load)
-  $("#input-resourceinformation-resourcetype").change(function () {
-    var selectedValue = $(this).val();
-    // Skip if no value selected (e.g., "Choose..." or initial trigger)
-    if (!selectedValue) {
-      return;
-    }
-    
-    var selectedResourceType = $("#input-resourceinformation-resourcetype option:selected").text().trim();
-
-    // Check if "Software" is selected
-    if (selectedResourceType === "Software") {
-      window.setupLicenseDropdown(true);
-    } else {
-      window.setupLicenseDropdown(false);
-    }
+  $('#input-resourceinformation-resourcetype').on('change.licenses', () => {
+    window.elmo?.licenses?.load();
   });
 
   /**
