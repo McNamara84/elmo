@@ -395,6 +395,7 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
+        window.elmo?.licenses?.render();
         if (!resolvePendingAffiliations(this.$form[0])) return;
         if (this.autosaveService) {
             this.autosaveService.flushPending();
@@ -497,6 +498,7 @@ class SubmitHandler {
         }
 
         synchronizeTagifyInputs(this.$form[0]);
+        window.elmo?.licenses?.syncPayload();
         const submitData = new FormData(this.$form[0]);
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
         if (Array.isArray(contributorsPayload)) {

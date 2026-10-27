@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+require_once __DIR__ . '/LicenseValidationException.php';
+
 /**
  * ERNIE license contract and resource-type identity.
  *
@@ -10,6 +12,85 @@ declare(strict_types=1);
  */
 final class LicenseService
 {
+    /**
+     * Validate once before saving, and replace browser metadata with the allowed record.
+     * The caller supplies the trusted submission context; POST action/flags are irrelevant.
+     *
+     * @param array<string, mixed> $postData
+     * @return array<string, mixed> Canonical metadata and its current local mapping.
+     */
+    public static function prepareSubmission(
+        mysqli $connection, array $postData, ErnieService $ernie, bool $required, ?string $automaticLicense = null
+    ): array {
+        try {
+            $metadata = self::metadataFromPost($connection, $postData);
+        } catch (InvalidArgumentException $error) {
+            throw new LicenseValidationException($error->getMessage());
+        }
+        if ($metadata === null && $required) {
+            throw new LicenseValidationException('Choose a license allowed for this Resource Type before submitting.');
+        }
+        $automatic = $metadata === null && $automaticLicense !== null && $automaticLicense !== '';
+        if ($metadata === null && !$automatic) {
+            return self::withMetadata($postData, null, null);
+        }
+        try {
+            $slug = self::resolveResourceType($connection, $postData['resourcetype'] ?? null);
+        } catch (InvalidArgumentException | OutOfBoundsException $error) {
+            throw new LicenseValidationException($error->getMessage());
+        }
+        $snapshot = $ernie->getLicensesWithCache($slug);
+        if ($snapshot['availability'] === 'unavailable') {
+            if ($automatic) {
+                return self::withMetadata($postData, null, null);
+            }
+            throw new LicenseValidationException('Allowed licenses are currently unavailable. Please try again later.', 503);
+        }
+        $matches = [];
+        foreach ($snapshot['licenses'] as $license) {
+            if ($automatic
+                ? self::isSpdxScheme($license['scheme_uri']) && strcasecmp($license['identifier'], $automaticLicense) === 0
+                : self::matchesMetadata($metadata, $license)) {
+                $matches[] = $license;
+            }
+        }
+        if (count($matches) !== 1) {
+            if ($automatic) {
+                return self::withMetadata($postData, null, null);
+            }
+            throw new LicenseValidationException('This license is not currently allowed for this Resource Type. Please choose an allowed license.');
+        }
+        require_once __DIR__ . '/LicenseRepository.php';
+        $mapped = (new LicenseRepository($connection))->map($matches, $ernie->getLicenseOrigin());
+        return self::withMetadata($postData, self::normalizeMetadata($matches[0]), $mapped[0]['rights_id']);
+    }
+
+    /**
+     * @param array<string, mixed> $selection
+     * @param array<string, mixed> $allowed
+     */
+    public static function matchesMetadata(array $selection, array $allowed): bool
+    {
+        if ($selection['identifier'] !== null) {
+            return self::identityKey($selection['identifier'], $selection['scheme_uri'])
+                === self::identityKey($allowed['identifier'], $allowed['scheme_uri'])
+                && ($selection['uri'] === null || $selection['uri'] === $allowed['uri']);
+        }
+        return $selection['uri'] !== null && $selection['uri'] === $allowed['uri'];
+    }
+
+    /**
+     * @param array<string, mixed> $postData
+     * @param array<string, mixed>|null $metadata
+     * @return array<string, mixed>
+     */
+    private static function withMetadata(array $postData, ?array $metadata, ?int $id): array
+    {
+        $postData['licensePayload'] = json_encode(['version' => 1, 'license' => $metadata], JSON_THROW_ON_ERROR);
+        $postData['Rights'] = $id;
+        return $postData;
+    }
+
     /**
      * Portable payload takes precedence over legacy IDs, including explicit null.
      * Legacy IDs are usable only while the corresponding local row still exists.

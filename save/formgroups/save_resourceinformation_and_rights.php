@@ -24,9 +24,10 @@ require_once dirname(__FILE__) . '/../../includes/resource_information_payload.p
  *                          - titleType (array): Array of title types
  *
  * @return int|false The ID of the newly created resource or false if validation fails
+ * @param array{rights_id: ?int}|null $preparedRights Mapping prepared by the trusted save pipeline.
  * @throws mysqli_sql_exception If a database error occurs
  */
-function saveResourceInformationAndRights($connection, $postData)
+function saveResourceInformationAndRights($connection, $postData, ?array $preparedRights = null)
 {
     global $showLicense, $showGGMsProperties;
     
@@ -58,7 +59,7 @@ function saveResourceInformationAndRights($connection, $postData)
         }
 
         // Sanitize and prepare data
-        $resourceData = prepareResourceData($postData);
+        $resourceData = prepareResourceData($postData, $preparedRights);
         // Create new resource 
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
@@ -79,13 +80,14 @@ function saveResourceInformationAndRights($connection, $postData)
  * Prepares and sanitizes resource data for database operations.
  *
  * @param array $postData The POST data to prepare
+ * @param array{rights_id: ?int}|null $preparedRights Mapping resolved before the dataset transaction.
  * @return array Sanitized and typed resource data
  */
-function prepareResourceData($postData)
+function prepareResourceData($postData, ?array $preparedRights = null)
 {
     global $connection;
     require_once __DIR__ . '/../../api/v2/services/LicenseService.php';
-    $rightsId = LicenseService::draftRightsId($connection, $postData);
+    $rightsId = $preparedRights !== null ? $preparedRights['rights_id'] : LicenseService::draftRightsId($connection, $postData);
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => isset($postData['year']) && trim($postData['year']) !== ''
