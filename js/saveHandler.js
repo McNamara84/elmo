@@ -201,6 +201,7 @@ class SaveHandler {
                 ? synchronizeRelatedWorksPayload(formEl)
                 : null;
             synchronizeTagifyInputs(formEl);
+            window.elmo?.licenses?.syncPayload();
             const formData = new FormData(formEl);
             if (resourceInformationPayload) formData.set('resourceInformationPayload', JSON.stringify(resourceInformationPayload));
             formData.set('authorsPayload', JSON.stringify(authorsPayload));

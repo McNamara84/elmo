@@ -603,20 +603,23 @@ http://www.altova.com/mapforce
 						</version>
 					</xsl:for-each>
 				</xsl:if>
-				<rightsList>
-					<rights>
-						<xsl:attribute name="rightsURI" namespace="">
-							<xsl:value-of select="*[local-name()='Rights' and namespace-uri()='']/*[local-name()='rightsURI' and namespace-uri()='']"/>
-						</xsl:attribute>
-						<xsl:attribute name="rightsIdentifier" namespace="">
-							<xsl:value-of select="*[local-name()='Rights' and namespace-uri()='']/*[local-name()='rightsIdentifier' and namespace-uri()='']"/>
-						</xsl:attribute>
-						<xsl:attribute name="rightsIdentifierScheme" namespace="">SPDX</xsl:attribute>
-						<xsl:attribute name="schemeURI" namespace="">https://spdx.org/licenses/</xsl:attribute>
-						<xsl:attribute name="xml:lang">en</xsl:attribute>
-						<xsl:value-of select="*[local-name()='Rights' and namespace-uri()='']/*[local-name()='text' and namespace-uri()='']"/>
-					</rights>
-				</rightsList>
+                <xsl:for-each select="Rights">
+                    <rightsList><rights>
+                        <xsl:if test="string-length(rightsURI) &gt; 0">
+                            <xsl:attribute name="rightsURI"><xsl:value-of select="rightsURI"/></xsl:attribute>
+                        </xsl:if>
+                        <xsl:if test="string-length(rightsIdentifier) &gt; 0">
+                            <xsl:attribute name="rightsIdentifier"><xsl:value-of select="rightsIdentifier"/></xsl:attribute>
+                        </xsl:if>
+                        <xsl:if test="string-length(schemeName) &gt; 0">
+                            <xsl:attribute name="rightsIdentifierScheme"><xsl:value-of select="schemeName"/></xsl:attribute>
+                        </xsl:if>
+                        <xsl:if test="string-length(schemeURI) &gt; 0">
+                            <xsl:attribute name="schemeURI"><xsl:value-of select="schemeURI"/></xsl:attribute>
+                        </xsl:if>
+                        <xsl:value-of select="text"/>
+                    </rights></rightsList>
+                </xsl:for-each>
 				<descriptions>
 					<xsl:for-each select="*[local-name()='Descriptions' and namespace-uri()='']/*[local-name()='Description' and namespace-uri()='']">
 						<xsl:variable name="var47_cur" select="."/>

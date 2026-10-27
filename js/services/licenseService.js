@@ -38,6 +38,7 @@
       this.state = 'chooseType';
       this.revision = 0;
       this.ready = Promise.resolve();
+      this.allowDefault = true;
     }
 
     get select() { return document.getElementById('input-rights-license'); }
@@ -91,13 +92,14 @@
 
     /** Default only an empty selection, using an explicitly allowed SPDX license. */
     selectDefault() {
-      if (this.selection || this.state !== 'available') return;
+      if (!this.allowDefault || this.selection || this.state !== 'available') return;
       const row = this.rows.find(item => item.rightsIdentifier?.toUpperCase() === 'CC-BY-4.0' && spdx(item.schemeURI));
       if (row) this.selection = metadata(row);
     }
 
     /** Preserve imported metadata, even when it is absent from current grants. */
     setMetadata(value) {
+      this.allowDefault = false;
       this.selection = value ? metadata(value) : null;
       return this.load();
     }
@@ -106,13 +108,14 @@
     getMetadata() { return this.selection ? { ...this.selection } : null; }
 
     reset() {
+      this.allowDefault = true;
       this.selection = null;
       return this.load();
     }
 
     render() {
       const select = this.select;
-      if (!select) return;
+      if (!select) { this.syncPayload(); return; }
       const candidates = this.selection ? this.rows.filter(row => matches(this.selection, metadata(row))) : [];
       const chosen = candidates.length === 1 ? candidates[0] : null;
       const retained = this.selection && !chosen;
@@ -129,12 +132,19 @@
       select.setCustomValidity(problem ? this.text(problem) : '');
       const status = document.getElementById('license-availability');
       if (status) status.textContent = problem ? this.text(problem) : '';
+      this.syncPayload();
+    }
+
+    /** Keep portable metadata in FormData even when the license group is hidden. */
+    syncPayload() {
       let payload = document.querySelector('[name="licensePayload"]');
       if (!payload) {
+        const parent = this.select?.parentElement || document.querySelector('form');
+        if (!parent) return;
         payload = document.createElement('input');
         payload.type = 'hidden';
         payload.name = 'licensePayload';
-        select.insertAdjacentElement('afterend', payload);
+        parent.append(payload);
       }
       payload.value = JSON.stringify({ version: 1, license: this.selection });
     }

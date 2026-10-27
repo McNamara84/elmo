@@ -847,40 +847,22 @@ describe('doiPrefill.js', () => {
   /* ── prefillRights ──────────────────────────────────────────── */
 
   describe('prefillRights', () => {
-    beforeEach(() => {
-      document.body.innerHTML = '<select id="input-rights-license"><option value="">--</option><option value="1">CC BY 4.0</option></select>';
-      mod._resetCaches();
+    beforeEach(() => { window.elmo = { licenses: { setMetadata: jest.fn().mockResolvedValue() } }; });
+    afterEach(() => { delete window.elmo; });
+
+    test.each(['cc-by-4.0', 'CC0-1.0', 'custom-2.1'])('preserves identifier %s, text and scheme for the shared selection', async identifier => {
+      await mod.prefillRights([{ rightsIdentifier: identifier, rights: 'Original terms', rightsUri: 'urn:example:terms', schemeUri: 'urn:example:scheme', rightsIdentifierScheme: 'Custom' }]);
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith({ identifier, name: 'Original terms', uri: 'urn:example:terms', scheme_uri: 'urn:example:scheme', scheme_name: 'Custom' });
     });
 
-    test('matches license case-insensitively (DataCite lowercase vs ELMO uppercase)', async () => {
-      // Simulate ELMO DB: keys are uppercase
-      $.getJSON = jest.fn().mockResolvedValue([
-        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
-      ]);
-
-      // DataCite returns lowercase
-      await mod.prefillRights([
-        { rightsIdentifier: 'cc-by-4.0', rights: 'Creative Commons Attribution 4.0 International' },
-      ]);
-
-      expect($('#input-rights-license').val()).toBe('1');
+    test('retains URI-only rights without guessing or truncating an identifier', async () => {
+      await mod.prefillRights([{ rights: 'CC0', rightsUri: 'https://spdx.org/licenses/CC0-1.0.html' }]);
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith({ identifier: null, name: 'CC0', uri: 'https://spdx.org/licenses/CC0-1.0.html', scheme_uri: null, scheme_name: null });
     });
 
-    test('matches license with exact case', async () => {
-      $.getJSON = jest.fn().mockResolvedValue([
-        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
-      ]);
-
-      await mod.prefillRights([
-        { rightsIdentifier: 'CC-BY-4.0', rights: 'Creative Commons Attribution 4.0 International' },
-      ]);
-
-      expect($('#input-rights-license').val()).toBe('1');
-    });
-
-    test('handles empty rightsList gracefully', async () => {
+    test('clears rights when the imported document has none', async () => {
       await mod.prefillRights([]);
-      expect($('#input-rights-license').val()).toBe('');
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith(null);
     });
   });
 

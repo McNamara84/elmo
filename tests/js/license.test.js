@@ -93,3 +93,12 @@ test('schema identity controls matching and custom identifiers retain case', () 
   expect(matches({ identifier: 'Custom', scheme_uri: null }, { identifier: 'custom', scheme_uri: null })).toBe(false);
   expect(matches({ identifier: 'cc-by-4.0', scheme_uri: 'https://spdx.org/licenses' }, { identifier: 'CC-BY-4.0', scheme_uri: 'https://spdx.org/licenses/' })).toBe(true);
 });
+
+test('an imported empty license stays empty even when CC BY is allowed', async () => {
+  document.getElementById('input-resourceinformation-resourcetype').value = '3';
+  await service.setMetadata(null);
+  expect(select().value).toBe('');
+  expect(payload()).toBeNull();
+  await service.reset();
+  expect(select().value).toBe('81');
+});

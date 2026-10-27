@@ -10,6 +10,57 @@ declare(strict_types=1);
  */
 final class LicenseService
 {
+    /**
+     * Portable payload takes precedence over legacy IDs, including explicit null.
+     * Legacy IDs are usable only while the corresponding local row still exists.
+     *
+     * @param array<string, mixed> $postData
+     * @return array<string, mixed>|null
+     */
+    public static function metadataFromPost(mysqli $connection, array $postData): ?array
+    {
+        if (array_key_exists('licensePayload', $postData)) {
+            if (!is_string($postData['licensePayload']) || strlen($postData['licensePayload']) > 200000) {
+                throw new InvalidArgumentException('Invalid license payload.');
+            }
+            try {
+                $payload = json_decode($postData['licensePayload'], true, 32, JSON_THROW_ON_ERROR);
+            } catch (JsonException $error) {
+                throw new InvalidArgumentException('Invalid license payload.', 0, $error);
+            }
+            if (!is_array($payload) || ($payload['version'] ?? null) !== 1 || !array_key_exists('license', $payload)
+                || ($payload['license'] !== null && !is_array($payload['license']))) {
+                throw new InvalidArgumentException('Unsupported license payload.');
+            }
+            return $payload['license'] === null ? null : self::normalizeMetadata($payload['license']);
+        }
+        $id = filter_var($postData['Rights'] ?? null, FILTER_VALIDATE_INT);
+        if ($id === false || $id <= 0) {
+            return null;
+        }
+        require_once __DIR__ . '/LicenseRepository.php';
+        $row = (new LicenseRepository($connection))->find($id);
+        return $row === null ? null : self::normalizeMetadata([
+            'identifier' => $row['rightsIdentifier'], 'name' => $row['text'], 'uri' => $row['rightsURI'],
+            'scheme_uri' => $row['schemeURI'], 'scheme_name' => $row['schemeName'],
+        ]);
+    }
+
+    /** @param array<string, mixed> $postData Resolve drafts without granting submission permission. */
+    public static function draftRightsId(mysqli $connection, array $postData): ?int
+    {
+        $metadata = self::metadataFromPost($connection, $postData);
+        if ($metadata === null) {
+            return null;
+        }
+        require_once __DIR__ . '/LicenseRepository.php';
+        // Existing live legacy clients can still refer to their current local mapping.
+        if (!array_key_exists('licensePayload', $postData)) {
+            return (int) $postData['Rights'];
+        }
+        return (new LicenseRepository($connection))->storeImported($metadata);
+    }
+
     /** Resolve a local ID on the server; browser-provided slugs are never trusted. */
     public static function resolveResourceType(mysqli $connection, mixed $id): string
     {

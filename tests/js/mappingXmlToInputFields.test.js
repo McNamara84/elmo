@@ -110,11 +110,12 @@ describe("mappingXmlToInputFields helpers", () => {
     expect(select.value).toBe("Dataset");
   });
 
-  test("extractLicenseIdentifier resolves SPDX identifier", () => {
+  test("URI-only rights do not invent an identifier", () => {
     const ctx = loadMappingModule();
     const xml = `<rights rightsURI=\"https://spdx.org/licenses/CC0-1.0.html\">CC0 1.0</rights>`;
     const node = new DOMParser().parseFromString(xml, "application/xml").documentElement;
-    expect(ctx.extractLicenseIdentifier(node)).toBe("CC0-1");
+    expect(ctx.extractLicenseIdentifier(node)).toBe("");
+    expect(ctx.extractLicenseMetadata(node).uri).toBe("https://spdx.org/licenses/CC0-1.0.html");
   });
 
   test("mapTitleType maps known types to option values", () => {
@@ -257,19 +258,10 @@ describe("mappingXmlToInputFields helpers", () => {
     }
   });
 
-  test("createLicenseMapping resolves API data and handles errors", async () => {
-    const getJSON = jest.fn(() => Promise.resolve([{ rightsIdentifier: "MIT", rights_id: 4 }]));
-    const ctx = loadMappingModule({ $: { getJSON } });
-    const result = await ctx.createLicenseMapping();
-    expect(getJSON).toHaveBeenCalled();
-    expect(result).toEqual({ MIT: "4" });
-
-    const failingGetJSON = jest.fn(() => Promise.reject(new Error("fail")));
-    const ctxFail = loadMappingModule({ $: { getJSON: failingGetJSON }, console: { ...console, error: jest.fn() } });
-    const fallback = await ctxFail.createLicenseMapping();
-    expect(failingGetJSON).toHaveBeenCalled();
-    expect(fallback["CC-BY-4.0"]).toBe("1");
-    expect(fallback["Apache-2.0"]).toBe("5");
+  test("license metadata preserves identifier versions and custom schema attributes", () => {
+    const ctx = loadMappingModule();
+    const node = new DOMParser().parseFromString('<rights rightsIdentifier="Custom-4.0" rightsURI="urn:example:terms" schemeURI="urn:example:scheme" rightsIdentifierScheme="Local">Original terms</rights>', 'application/xml').documentElement;
+    expect(ctx.extractLicenseMetadata(node)).toEqual({ identifier: 'Custom-4.0', name: 'Original terms', uri: 'urn:example:terms', scheme_uri: 'urn:example:scheme', scheme_name: 'Local' });
   });
 
   test("processFunders populates fields including award URI", () => {

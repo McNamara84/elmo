@@ -73,6 +73,22 @@ describe('autosaveService', () => {
     expect(window.resourceInformation.setResourceInformation).toHaveBeenCalledWith(payload);
   });
 
+  test('restores portable license metadata and ignores obsolete local IDs', () => {
+    document.querySelector('form').insertAdjacentHTML('beforeend', '<input name="licensePayload"><select name="Rights"><option value="1">Unrelated license</option></select>');
+    const license = { identifier: 'Old-4.0', name: 'Original terms', uri: null, scheme_uri: 'urn:example:scheme' };
+    const payload = JSON.stringify({ version: 1, license });
+    window.elmo = { licenses: {
+      syncPayload: jest.fn(() => { document.querySelector('[name="licensePayload"]').value = payload; }),
+      setMetadata: jest.fn()
+    } };
+    const service = new AutosaveService('form-mde', { fetch: jest.fn() });
+    expect(service.serializeValues().licensePayload).toBe(payload);
+    service.applyDraftValues({ licensePayload: payload, Rights: '99999' });
+    expect(window.elmo.licenses.setMetadata).toHaveBeenLastCalledWith(license);
+    service.applyDraftValues({ Rights: '1' });
+    expect(window.elmo.licenses.setMetadata).toHaveBeenLastCalledWith(null);
+  });
+
   test('throttles autosave cadence before persisting', async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,

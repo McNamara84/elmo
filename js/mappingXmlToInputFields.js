@@ -248,60 +248,21 @@ function processResourceType(xmlDoc, resolver) {
   }
 }
 
-/*
- * Extracts license identifier from various formats
- * @param {Element} rightsNode - The XML rights element
- * @returns {string} The normalized license identifier
- */
+/** Preserve the complete supplied identifier, including its version. */
 function extractLicenseIdentifier(rightsNode) {
-  // Try to get identifier from rightsIdentifier attribute first
-  let identifier = rightsNode.getAttribute("rightsIdentifier");
-
-  if (!identifier) {
-    // Try to extract from rightsURI
-    const uri = rightsNode.getAttribute("rightsURI");
-    if (uri) {
-      // Extract identifier from SPDX URL (e.g. "https://spdx.org/licenses/CC0-1.0.html" -> "CC0-1.0")
-      const match = uri.match(/licenses\/([^/.]+)/);
-      if (match) {
-        identifier = match[1];
-      }
-    }
-  }
-
-  if (!identifier) {
-    // Use text content as last resort
-    identifier = rightsNode.textContent.trim();
-  }
-
-  return identifier;
+  return rightsNode.getAttribute('rightsIdentifier') || '';
 }
 
-/**
- * Creates a license mapping from API data
- * @returns {Promise<Object>} A promise that resolves to the license mapping
- */
-async function createLicenseMapping() {
-  try {
-    const response = await $.getJSON("./api/v2/vocabs/licenses/all");
-    const mapping = {};
-
-    response.forEach((license) => {
-      mapping[license.rightsIdentifier] = license.rights_id.toString();
-    });
-
-    return mapping;
-  } catch (error) {
-    console.error("Error creating license mapping:", error);
-    return {
-      "CC-BY-4.0": "1",
-      "CC0-1.0": "2",
-      "GPL-3.0-or-later": "3",
-      "MIT": "4",
-      "Apache-2.0": "5",
-      "EUPL-1.2": "6",
-    };
-  }
+/** @returns {object|null} Portable DataCite rights, without guessed IDs or schema URIs. */
+function extractLicenseMetadata(rightsNode) {
+  if (!rightsNode) return null;
+  return {
+    identifier: extractLicenseIdentifier(rightsNode) || null,
+    name: rightsNode.textContent.trim(),
+    uri: rightsNode.getAttribute('rightsURI') || null,
+    scheme_uri: rightsNode.getAttribute('schemeURI') || null,
+    scheme_name: rightsNode.getAttribute('rightsIdentifierScheme') || null,
+  };
 }
 
 /**
@@ -1547,48 +1508,10 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     }
   }
 
-  // Erstelle das License- und Language-Mapping zuerst
-  const licenseMapping = await createLicenseMapping();
   const languageMapping = await createLanguageMapping();
   const titleTypeMapping = await createTitleTypeMapping();
-
-  // Non-resource fields retain their existing mapping.
-  const XML_MAPPING = {
-    // Rights
-    "rightsList/ns:rights": {
-      selector: "#input-rights-license",
-      attribute: "rightsIdentifier",
-      transform: (value) => {
-        return licenseMapping[value] || "1";
-      },
-    },
-  };
-
-  // const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
-  const defaultNS = resourceNode.namespaceURI || "http://datacite.org/schema/kernel-4";
-
-  function resolver(prefix) {
-    if (prefix === "ns") {
-      return defaultNS;
-    }
-    return "";
-  }
-
-  // Verarbeite zuerst die Standard-Mappings
-  for (const [xmlPath, config] of Object.entries(XML_MAPPING)) {
-    const nsPath = `.//ns:${xmlPath}`;
-
-    const xmlElements = xmlDoc.evaluate(nsPath, xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-
-    const xmlNode = xmlElements.singleNodeValue;
-    if (xmlNode) {
-      const value = config.attribute === "textContent" ? xmlNode.textContent : xmlNode.getAttribute(config.attribute);
-
-      const transformedValue = config.transform ? config.transform(value) : value;
-
-      $(config.selector).val(transformedValue);
-    }
-  }
+  const defaultNS = resourceNode.namespaceURI || 'http://datacite.org/schema/kernel-4';
+  const resolver = prefix => prefix === 'ns' ? defaultNS : '';
 
   const mappedResource = await transformResourceInformationDocument(xmlDoc);
   if (!window.resourceInformation?.setResourceInformation) {
@@ -1596,6 +1519,9 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   }
   const resourceInformation = parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping);
   window.resourceInformation.setResourceInformation(resourceInformation);
+  const rightsNode = xmlDoc.evaluate(".//*[local-name()='rightsList']/*[local-name()='rights'][1]",
+    resourceNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  await window.elmo?.licenses?.setMetadata(extractLicenseMetadata(rightsNode));
   if (resourceInformation.doi) window.resourceInformation.enableDoiEditing?.(true);
   // Processing Creators
   processCreators(xmlDoc, resolver);
@@ -1656,6 +1582,7 @@ if (typeof module !== 'undefined' && module.exports) {
         transformResourceInformationDocument,
         parseResourceInformationMap,
         extractLicenseIdentifier,
+        extractLicenseMetadata,
         mapTitleType,
         processTitles,
         getNodeText,
