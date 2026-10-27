@@ -10,7 +10,7 @@ http://www.altova.com/mapforce
 -->
 <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns:xs="http://www.w3.org/2001/XMLSchema" exclude-result-prefixes="xs">
 	<xsl:output method="xml" encoding="UTF-8" indent="yes"/>
-	<xsl:param name="contactEmail" select="'datapub@gfz.de'"/>
+	<xsl:param name="contactAddressRepository" select="'datapub@gfz.de'"/>
 	<xsl:template name="person-display-name">
 		<xsl:param name="person"/>
 		<xsl:variable name="family" select="normalize-space($person/*[local-name()='familyname' and namespace-uri()=''])"/>
@@ -87,7 +87,7 @@ http://www.altova.com/mapforce
 									<CI_Address>
 										<electronicMailAddress>
 											<gco:CharacterString>
-												<xsl:value-of select="$contactEmail"/>
+												<xsl:value-of select="$contactAddressRepository"/>
 											</gco:CharacterString>
 										</electronicMailAddress>
 									</CI_Address>

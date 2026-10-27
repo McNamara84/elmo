@@ -160,6 +160,7 @@ jobs:
         $showFundingReference = true;
         $showAuthorInstitution = true;
         $xmlSubmitAddress = 'datapub@gfz.de';
+        $contactAddressRepository = 'datapub@gfz.de';
 
         $envOverrides = [
             'SHOW_MSL_MODE' => 'showMslMode',
