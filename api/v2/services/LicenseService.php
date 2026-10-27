@@ -5,11 +5,48 @@ declare(strict_types=1);
 /**
  * ERNIE license contract and resource-type identity.
  *
- * Licenses are not fetched or persisted here yet. These checks are shared by
- * the upcoming cache, temporary database mapping and submission integration.
+ * Metadata is independent of temporary database IDs. Only ERNIE snapshots
+ * establish permission; imported metadata can be retained without granting it.
  */
 final class LicenseService
 {
+    /**
+     * Normalize a portable license payload without inventing missing metadata.
+     * Limits are byte-based and below the database TEXT capacity, including UTF-8.
+     *
+     * @param array<string, mixed> $metadata
+     * @return array{identifier: ?string, name: string, uri: ?string, scheme_uri: ?string, scheme_name: ?string}
+     */
+    public static function normalizeMetadata(array $metadata): array
+    {
+        $result = [];
+        foreach (['identifier', 'name', 'uri', 'scheme_uri', 'scheme_name'] as $key) {
+            $value = $metadata[$key] ?? ($key === 'name' ? '' : null);
+            if ($value !== null && (!is_string($value) || strlen($value) > 32768
+                || preg_match('//u', $value) !== 1 || str_contains($value, "\0"))) {
+                throw new InvalidArgumentException('Invalid license metadata: ' . $key);
+            }
+            $result[$key] = $value === '' && $key !== 'name' ? null : $value;
+        }
+        foreach (['uri', 'scheme_uri'] as $key) {
+            if ($result[$key] !== null && !self::isAbsoluteUri($result[$key])) {
+                throw new InvalidArgumentException('Invalid license URI: ' . $key);
+            }
+        }
+        if ($result['identifier'] === null && trim($result['name']) === '' && $result['uri'] === null) {
+            throw new InvalidArgumentException('License metadata is empty.');
+        }
+        if ($result['scheme_name'] === null && self::isSpdxScheme($result['scheme_uri'])) {
+            $result['scheme_name'] = 'SPDX';
+        }
+        return $result;
+    }
+
+    public static function isSpdxScheme(?string $scheme): bool
+    {
+        return in_array($scheme, ['https://spdx.org/licenses/', 'https://spdx.org/licenses'], true);
+    }
+
     /** @return list<string> Verified license endpoint scopes. */
     public static function resourceTypeSlugs(): array
     {
@@ -163,7 +200,7 @@ final class LicenseService
     private static function identityKey(string $identifier, ?string $scheme): string
     {
         // SPDX identifiers are case-insensitive; custom identifiers are not.
-        if ($scheme === 'https://spdx.org/licenses/' || $scheme === 'https://spdx.org/licenses') {
+        if (self::isSpdxScheme($scheme)) {
             $scheme = 'https://spdx.org/licenses/';
             $identifier = strtolower($identifier);
         }

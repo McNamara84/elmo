@@ -71,15 +71,18 @@ final class ErnieLicenseCache
                     $snapshot = $fresh;
                     $source = 'ernie';
                     // A write failure is reported separately; it must not revive an older grant.
-                    $this->write($scope, $fresh);
+                    try {
+                        $this->write($scope, $fresh);
+                    } catch (RuntimeException $error) {
+                        $this->errors[$scope] = $error->getMessage();
+                        return $this->result($snapshot, $source, $scope);
+                    }
                 }
                 unset($this->errors[$scope]);
             } catch (RuntimeException $error) {
                 $this->errors[$scope] = $error->getMessage();
                 // Re-read under/after the lock: never fall back to a pre-refresh generation.
-                if ($source !== 'ernie') {
-                    $snapshot = $this->read($scope);
-                }
+                $snapshot = $this->read($scope);
             } finally {
                 if (is_resource($lock)) {
                     flock($lock, LOCK_UN);
@@ -88,8 +91,14 @@ final class ErnieLicenseCache
             }
         }
 
+        return $this->result($snapshot, $source, $scope);
+    }
+
+    /** @param array<string, mixed>|null $snapshot @return array<string, mixed> */
+    private function result(?array $snapshot, string $source, string $scope): array
+    {
         $licenses = $snapshot['data'] ?? [];
-        if ($slug !== null && $snapshot !== null) {
+        if ($scope !== 'all' && $snapshot !== null) {
             $catalog = $this->read('all');
             if ($catalog !== null && $catalog['fetchedAt'] >= $snapshot['fetchedAt']) {
                 $current = array_column($catalog['data'], null, 'id');

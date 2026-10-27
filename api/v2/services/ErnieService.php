@@ -10,6 +10,12 @@ class ErnieService
 {
     private ?ErnieLicenseCache $licenseCache = null;
 
+    /** Identity of the license source, without credentials or local database IDs. */
+    public function getLicenseOrigin(): string
+    {
+        return hash('sha256', $this->baseUrl);
+    }
+
     /** @return array<string, mixed> Validated catalog or resource-type grants with availability metadata. */
     public function getLicensesWithCache(?string $resourceTypeSlug = null): array
     {
@@ -38,6 +44,7 @@ class ErnieService
         ], 'ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
         $response = @file_get_contents($this->baseUrl . $endpoint, false, $context);
         // PHP 8.3 still uses the locally scoped response-header variable.
+        // @phpstan-ignore nullCoalesce.variable (Absent on transport failure in PHP 8.3.)
         $headers = function_exists('http_get_last_response_headers') ? http_get_last_response_headers() : ($http_response_header ?? []);
         if ($response === false || !preg_match('~^HTTP/\\S+ 200(?: |$)~', $headers[0] ?? '')) {
             throw new RuntimeException('ERNIE license request failed.');
