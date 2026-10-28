@@ -647,6 +647,54 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
+    test('routes DataCite GCMD Instruments by schemeUri and stores the vocabulary keyword', async () => {
+      const { resolveTagAgainstWhitelist } = require('../../js/thesauriHelpers');
+      const tagify = document.querySelector('#input-instruments')._tagify;
+      const canonical = 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS';
+      const valueURI = 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c';
+      tagify.settings = {
+        whitelist: [{
+          value: canonical,
+          id: valueURI,
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }],
+        enforceWhitelist: true,
+      };
+      window.resolveThesaurusTag = resolveTagAgainstWhitelist;
+      let releaseVocabulary;
+      window.waitForThesaurusVocabulary = jest.fn(() => new Promise(resolve => {
+        releaseVocabulary = resolve;
+      }));
+
+      const pending = mod.prefillKeywords([{
+        subject: 'In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS',
+        subjectScheme: 'GCMD Instruments',
+        schemeUri: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        valueUri: valueURI,
+      }]);
+
+      expect(tagify.addTags).not.toHaveBeenCalled();
+      releaseVocabulary('loaded');
+      await pending;
+
+      expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('instruments');
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({
+          value: canonical,
+          id: valueURI,
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }),
+      ]);
+      expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
+      expect(tagify.settings.enforceWhitelist).toBe(true);
+      delete window.resolveThesaurusTag;
+      delete window.waitForThesaurusVocabulary;
+    });
+
     test('handles empty subjects', () => {
       mod.prefillKeywords([]);
       const tagify = document.querySelector('#input-freekeyword')._tagify;

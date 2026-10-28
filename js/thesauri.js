@@ -2,9 +2,17 @@ import {
     stampFullKeywords,
     getNodeFullKeyword,
     whitelistValueFromNode,
+    resolveTagAgainstWhitelist,
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
 } from './thesauriHelpers.js';
+
+// DOI import resolves DataCite subjects onto the loaded whitelist before Tagify
+// enforces it. thesauriHelpers is an ES module, so the classic doiPrefill script
+// reaches this function through the page.
+if (typeof window !== 'undefined') {
+    window.resolveThesaurusTag = resolveTagAgainstWhitelist;
+}
 
 /**
  * Recursively searches a jsTree data array for a specific node ID.
