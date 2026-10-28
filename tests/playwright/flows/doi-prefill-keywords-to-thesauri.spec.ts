@@ -1,40 +1,224 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Page } from '@playwright/test';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { XMLParser } from 'fast-xml-parser';
+import {
+  navigateToHome, REPO_ROOT, registerGoogleMapsNoopRoute, waitForHomepageReady, waitForFormInteractionReady,
+} from '../utils';
 
+/**
+ * Public DataCite lookup for 10.5880/fidgeo.d.2025.001, reduced to the
+ * attributes ELMO's DOI proxy returns. Subjects keep DataCite's schemeUri /
+ * valueUri names and the "GCMD Instruments" scheme label.
+ */
+const DOI = '10.5880/fidgeo.d.2025.001';
+const LOOKUP = JSON.parse(readFileSync(
+  path.join(REPO_ROOT, 'tests/fixtures/doi-prefill/10.5880-fidgeo.d.2025.001.json'),
+  'utf8',
+));
 
-let fixture_10.5880/fidgeo.d.2025.001 = {
-    {"found":true,"attributes":{"doi":"10.5880\/fidgeo.d.2025.001","titles":[{"title":"Lithogeochemistry of the Volcanic-Sedimentary Complex and major and trace element contents in apatite from the Neves Corvo Cu-Zn-Pb(-Sn) deposit (Portugal)"}],"creators":[{"name":"Code\u00e7o, Marta","nameType":"Personal","givenName":"Marta","familyName":"Code\u00e7o","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Lowell Institute for Mineral Resources, Geosciences Department, University of Arizona, Arizona, United States"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-3080-3923","nameIdentifierScheme":"ORCID"}]},{"name":"Gleeson, Sarah","nameType":"Personal","givenName":"Sarah","familyName":"Gleeson","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Freie Universit\u00e4t Berlin, Institute for Geological Sciences, Berlin, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-5314-4281","nameIdentifierScheme":"ORCID"}]},{"name":"Barrote, Vitor","nameType":"Personal","givenName":"Vitor","familyName":"Barrote","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Paul-Scherrer-Institut (PSI), Villigen PSI, Switzerland"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-7442-9748","nameIdentifierScheme":"ORCID"}]},{"name":"Harlov, Daniel","nameType":"Personal","givenName":"Daniel","familyName":"Harlov","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[]},{"name":"Koch-M\u00fcller, Monika","nameType":"Personal","givenName":"Monika","familyName":"Koch-M\u00fcller","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-6973-4967","nameIdentifierScheme":"ORCID"}]},{"name":"Kusebauch, Christof","nameType":"Personal","givenName":"Christof","familyName":"Kusebauch","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-8608-3913","nameIdentifierScheme":"ORCID"}]},{"name":"Relvas, Jorge","nameType":"Personal","givenName":"Jorge","familyName":"Relvas","affiliation":[{"name":"Universidade de Lisboa, Faculdade de Ci\u00eancias, Instituto Dom Luiz, Lisboa, Portugal"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-1228-2247","nameIdentifierScheme":"ORCID"}]},{"name":"Schleicher, Anja","nameType":"Personal","givenName":"Anja","familyName":"Schleicher","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-4052-8654","nameIdentifierScheme":"ORCID"}]},{"name":"Schmidt, Christian","nameType":"Personal","givenName":"Christian","familyName":"Schmidt","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-1799-5684","nameIdentifierScheme":"ORCID"}]},{"name":"Stammeier, Jessica","nameType":"Personal","givenName":"Jessica","familyName":"Stammeier","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-3603-3272","nameIdentifierScheme":"ORCID"}]},{"name":"Syczewski, Marcin","nameType":"Personal","givenName":"Marcin","familyName":"Syczewski","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-6434-3027","nameIdentifierScheme":"ORCID"}]},{"name":"Wilke, Franziska D. H.","nameType":"Personal","givenName":"Franziska D. H.","familyName":"Wilke","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-3463-6176","nameIdentifierScheme":"ORCID"}]}],"contributors":[{"name":"Code\u00e7o, Marta","nameType":"Personal","givenName":"Marta","familyName":"Code\u00e7o","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Lowell Institute for Mineral Resources, Geosciences Department, University of Arizona, Arizona, United States"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-3080-3923","nameIdentifierScheme":"ORCID"}]},{"name":"Gleeson, Sarah","nameType":"Personal","givenName":"Sarah","familyName":"Gleeson","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Freie Universit\u00e4t Berlin, Institute for Geological Sciences, Berlin, Germany"}],"contributorType":"ProjectLeader","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-5314-4281","nameIdentifierScheme":"ORCID"}]},{"name":"Barrote, Vitor","nameType":"Personal","givenName":"Vitor","familyName":"Barrote","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"},{"name":"Paul-Scherrer-Institut (PSI), Villigen PSI, Switzerland"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-7442-9748","nameIdentifierScheme":"ORCID"}]},{"name":"Koch-M\u00fcller, Monika","nameType":"Personal","givenName":"Monika","familyName":"Koch-M\u00fcller","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-6973-4967","nameIdentifierScheme":"ORCID"}]},{"name":"Schleicher, Anja","nameType":"Personal","givenName":"Anja","familyName":"Schleicher","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-4052-8654","nameIdentifierScheme":"ORCID"}]},{"name":"Schmidt, Christian","nameType":"Personal","givenName":"Christian","familyName":"Schmidt","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-1799-5684","nameIdentifierScheme":"ORCID"}]},{"name":"Stammeier, Jessica","nameType":"Personal","givenName":"Jessica","familyName":"Stammeier","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-3603-3272","nameIdentifierScheme":"ORCID"}]},{"name":"Syczewski, Marcin","nameType":"Personal","givenName":"Marcin","familyName":"Syczewski","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0001-6434-3027","nameIdentifierScheme":"ORCID"}]},{"name":"Wilke, Franziska D. H.","nameType":"Personal","givenName":"Franziska D. H.","familyName":"Wilke","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0002-3463-6176","nameIdentifierScheme":"ORCID"}]},{"name":"Dittmann, Uwe","nameType":"Personal","givenName":"Uwe","familyName":"Dittmann","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"Other","nameIdentifiers":[]},{"name":"Liep, Hartmund","nameType":"Personal","givenName":"Hartmund","familyName":"Liep","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"Other","nameIdentifiers":[]},{"name":"Appelt, Oona","nameType":"Personal","givenName":"Oona","familyName":"Appelt","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[]},{"name":"Roddatis, Vladimir","nameType":"Personal","givenName":"Vladimir","familyName":"Roddatis","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[]},{"name":"Gottsche, Andrea","nameType":"Personal","givenName":"Andrea","familyName":"Gottsche","affiliation":[{"name":"GFZ Helmholtz Centre for Geosciences, Potsdam, Germany"}],"contributorType":"DataCollector","nameIdentifiers":[]},{"name":"Code\u00e7o, Marta","nameType":"Personal","givenName":"Marta","familyName":"Code\u00e7o","affiliation":[{"name":"Lowell Institute for Mineral Resources, Geosciences Department, University of Arizona, Arizona, United States"}],"contributorType":"ContactPerson","nameIdentifiers":[{"schemeUri":"https:\/\/orcid.org\/","nameIdentifier":"https:\/\/orcid.org\/0000-0003-3080-3923","nameIdentifierScheme":"ORCID"}]}],"publicationYear":2025,"types":{"ris":"DATA","bibtex":"misc","citeproc":"dataset","schemaOrg":"Dataset","resourceType":"Dataset","resourceTypeGeneral":"Dataset"},"language":null,"version":null,"descriptions":[{"description":"Analyzing the chemical composition of rocks and minerals is an important tool for exploring and understanding mineral resources. The Neves Corvo Cu-Zn-Pb(-Sn) is one of the richest volcanogenic massive sulfide deposits in the work and is unique within the Iberian Pyrite Belt (IBP) in terms of size, Cu-Zn grades and tonnages, the notable occurrence of Sn mineralization (Relvas et al., 2001) and In and Se contents (Carvalho et al., 2018). The mineralization occurs in close association with felsic volcanic rocks and black shale, where three main types are defined: (1) stringer and massive cassiterite mineralization, (2) stockwork and massive sulfide mineralization, and (3) late tectonic-metamorphic remobilization. The Sn mineralization is structurally controlled and occurs along the so-called \u201ctin corridor\u201d in the Corvo orebody (e.g., Relvas et al., 2006a, 2006b). <br>We analyzed major, minor and trace element contents of the footwall metavolcanic and metasedimentary units by XRF, ICP-MS and ICP-OS. This data publication reports for the first-time apatite major, minor and trace element compositions by microprobe and laser ablation inductively coupled plasma mass spectrometry (LA-ICP-MS) and Raman Spectroscopy, and microprobe analyses from florencite and xenotime, in previously characterized samples from the Corvo orebody (Relvas 2000 and Relvas et al. 2001, 2006a, 2006b). <br>This document describes the samples studied and the analytical methods","descriptionType":"Abstract"},{"description":"The over-riding goal of the DFG priority programm 2238 - DOME (https:\/\/www.uni-potsdam.de\/en\/spp2238\/) is to find solutions to fundamental questions of element transport and mineralization in heterogeneous chemical systems that are complex, dynamic and highly transient. The topic of ore genesis has been studied for a long time from a combined field\/laboratory perspective and also experimentally in simplified systems, but rarely have these techniques been integrated in a coordinated way with the third perspective from numerical process modeling. The originality and innovation potential of this priority program lies in the coordination of empirical field-related studies that define the geological\/mineralogical framework of natural ore systems with experimental work and numerical models that provide a quantitative understanding of the processes involved.","descriptionType":"Other"}],"dates":[{"date":"2023-06-03","dateType":"Created"},{"date":"2025","dateType":"Issued"}],"geoLocations":[],"subjects":[{"lang":"en","subject":"Geochemistry"},{"lang":"en","subject":"FOS: Earth and related environmental sciences","schemeUri":"http:\/\/www.oecd.org\/science\/inno\/38235147.pdf","subjectScheme":"Fields of Science and Technology (FOS)"},{"lang":"en","subject":"hydrothermal alteration"},{"lang":"en","subject":"whole-rock chemistry"},{"lang":"en","subject":"apatite"},{"lang":"en","subject":"Florencite"},{"lang":"en","subject":"xenotime"},{"lang":"en","subject":"felsic volcanic rocks"},{"lang":"en","subject":"black shales"},{"lang":"en","subject":"trace elements in apatite"},{"lang":"en","subject":"Neves Corvo"},{"lang":"en","subject":"VMS mineralization"},{"lang":"en","subject":"Earth Remote Sensing Instruments &gt; Passive Remote Sensing &gt; Spectrometers\/Radiometers &gt; Spectrometers &gt; FTIR SPECTROMETER","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"},{"lang":"en","subject":"EARTH SCIENCE &gt; SOLID EARTH &gt; GEOCHEMISTRY &gt; GEOCHEMICAL PROPERTIES &gt; CHEMICAL CONCENTRATIONS","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/sciencekeywords","subjectScheme":"NASA\/GCMD Earth Science Keywords"},{"lang":"en","subject":"In Situ\/Laboratory Instruments &gt; Probes &gt; ELECTRON MICROPROBES","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/ff2d6f74-959c-42f2-9905-dd942fd80598","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"},{"lang":"en","subject":"In Situ\/Laboratory Instruments &gt; Spectrometers\/Radiometers &gt; ICP-MS","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/616bdf0f-8797-496b-af3d-50974baa470c","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"},{"lang":"en","subject":"In Situ\/Laboratory Instruments &gt; Spectrometers\/Radiometers &gt; LA-ICP-MS","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/3e3d658f-1326-42b4-b3a8-3f897a8a2a42","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"},{"lang":"en","subject":"In Situ\/Laboratory Instruments &gt; Spectrometers\/Radiometers &gt; XRF","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/665b8764-0c0a-4df7-96f1-4ddae0c6de18","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"},{"lang":"en","subject":"Solar\/Space Observing Instruments &gt; X-Ray\/Gamma Ray Detectors &gt; XRD","valueUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concept\/41db9c48-4af8-40db-8632-a86983d81258","schemeUri":"https:\/\/gcmd.earthdata.nasa.gov\/kms\/concepts\/concept_scheme\/instruments","subjectScheme":"GCMD Instruments"}],"fundingReferences":[{"awardTitle":"Melts-Fluids-Models: keys to understanding ore-forming processes at the world-class Neves Corvo massive sulphide deposit, Iberian Pyrite Belt","funderName":"Deutsche Forschungsgemeinschaft","awardNumber":"GL945\/1-1","funderIdentifier":"https:\/\/doi.org\/10.13039\/501100001659","funderIdentifierType":"Crossref Funder ID"}],"relatedIdentifiers":[{"relationType":"IsSupplementTo","relatedIdentifier":"10.1007\/s00126-025-01348-w","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1111\/ggr.12149","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1107\/s1600576715014685","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1039\/c1ja10172b","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1016\/j.oregeorev.2011.11.001","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1111\/j.1751-908x.2006.tb00910.x","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1007\/s001260100168","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.2113\/gsecongeo.101.4.753","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.2113\/gsecongeo.101.4.791","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"10.1016\/j.gr.2009.09.004","relatedIdentifierType":"DOI"},{"relationType":"Cites","relatedIdentifier":"https:\/\/www.geoanalyst.org\/wp-content\/uploads\/2021\/02\/GP-21-report.pdf","relatedIdentifierType":"URL"}],"rightsList":[{"rights":"Creative Commons Attribution 4.0 International","rightsUri":"https:\/\/creativecommons.org\/licenses\/by\/4.0\/legalcode","schemeUri":"https:\/\/spdx.org\/licenses\/","rightsIdentifier":"cc-by-4.0","rightsIdentifierScheme":"SPDX"}],"formats":[],"sizes":[]}}
+const SCIENCE_SCHEME = 'NASA/GCMD Earth Science Keywords';
+const SCIENCE_SCHEME_URI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords';
+const INSTRUMENTS_SCHEME = 'NASA/GCMD Instruments';
+const INSTRUMENTS_SCHEME_URI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments';
+
+type ThesaurusKeyword = {
+  value: string;
+  id: string;
+  scheme: string;
+  schemeURI: string;
+  language: string;
+};
+
+type SavedSubject = {
+  text: string;
+  subjectScheme: string;
+  schemeURI: string;
+  valueURI: string;
+  lang: string;
+};
+
+const SCIENCE_KEYWORDS: ThesaurusKeyword[] = [{
+  value: 'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEOCHEMISTRY > GEOCHEMICAL PROPERTIES > CHEMICAL CONCENTRATIONS',
+  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6',
+  scheme: SCIENCE_SCHEME,
+  schemeURI: SCIENCE_SCHEME_URI,
+  language: 'en',
+}];
+
+const INSTRUMENT_KEYWORDS: ThesaurusKeyword[] = [
+  {
+    value: 'Instruments > Earth Remote Sensing Instruments > Passive Remote Sensing > Spectrometers/Radiometers > Spectrometers > FTIR SPECTROMETER',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+  {
+    value: 'Instruments > In Situ/Laboratory Instruments > Probes > ELECTRON MICROPROBES',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/ff2d6f74-959c-42f2-9905-dd942fd80598',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+  {
+    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+  {
+    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > LA-ICP-MS',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/3e3d658f-1326-42b4-b3a8-3f897a8a2a42',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+  {
+    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > XRF',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/665b8764-0c0a-4df7-96f1-4ddae0c6de18',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+  {
+    value: 'Instruments > Solar/Space Observing Instruments > X-Ray/Gamma Ray Detectors > XRD',
+    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/41db9c48-4af8-40db-8632-a86983d81258',
+    scheme: INSTRUMENTS_SCHEME,
+    schemeURI: INSTRUMENTS_SCHEME_URI,
+    language: 'en',
+  },
+];
+
+// Every subject that is not a GCMD science or instruments keyword stays free.
+// The prototype named the first three; the rest of the mocked record belongs here too.
+const FREE_KEYWORDS = [
+  'Geochemistry',
+  'FOS: Earth and related environmental sciences',
+  'hydrothermal alteration',
+  'whole-rock chemistry',
+  'apatite',
+  'Florencite',
+  'xenotime',
+  'felsic volcanic rocks',
+  'black shales',
+  'trace elements in apatite',
+  'Neves Corvo',
+  'VMS mineralization',
+];
+
+function savedSubject(keyword: ThesaurusKeyword): SavedSubject {
+  return {
+    text: keyword.value,
+    subjectScheme: keyword.scheme,
+    schemeURI: keyword.schemeURI,
+    valueURI: keyword.id,
+    lang: keyword.language,
+  };
 }
 
-mockApiResponse(GET /api/v2/doi/lookup/10.5880/fidgeo.d.2025.001,fixture_10.5880/fidgeo.d.2025.001 )
+const EXPECTED_SUBJECTS: SavedSubject[] = [
+  ...SCIENCE_KEYWORDS.map(savedSubject),
+  ...INSTRUMENT_KEYWORDS.map(savedSubject),
+  ...FREE_KEYWORDS.map(text => ({
+    text,
+    subjectScheme: '',
+    schemeURI: '',
+    valueURI: '',
+    lang: '',
+  })),
+];
 
+function subjectKey(subject: SavedSubject): string {
+  return JSON.stringify(subject);
+}
 
-test('metadata import from a DOI correctly populates', async ({ page }) => {
+async function keywordTags(page: Page, selector: string): Promise<ThesaurusKeyword[]> {
+  return page.locator(selector).evaluate((input) => {
+    const tags = (input as HTMLInputElement & { _tagify?: { value?: ThesaurusKeyword[] } })._tagify?.value || [];
+    return tags.map(tag => ({
+      value: tag.value || '',
+      id: tag.id || '',
+      scheme: tag.scheme || '',
+      schemeURI: tag.schemeURI || '',
+      language: tag.language || '',
+    }));
+  });
+}
 
-await page.getById('button', { id="button-resourceinformation-prefill-doi"' }).click();
-    // the response should be the fixture above
-    // expect the Science Keyword Tagify has this keyword:
-    <tag title="Science Keywords &gt; EARTH SCIENCE &gt; SOLID EARTH &gt; GEOCHEMISTRY &gt; GEOCHEMICAL PROPERTIES &gt; CHEMICAL CONCENTRATIONS" contenteditable="false" tabindex="-1" class="tagify__tag " value="Science Keywords &amp;gt; EARTH SCIENCE &amp;gt; SOLID EARTH &amp;gt; GEOCHEMISTRY &amp;gt; GEOCHEMICAL PROPERTIES &amp;gt; CHEMICAL CONCENTRATIONS" id="https://gcmd.earthdata.nasa.gov/kms/concept/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6" scheme="NASA/GCMD Earth Science Keywords" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Science Keywords &gt; EARTH SCIENCE &gt; SOLID EARTH &gt; GEOCHEMISTRY &gt; GEOCHEMICAL PROPERTIES &gt; CHEMICAL CONCENTRATIONS</span></div></tag>
+async function freeKeywordValues(page: Page): Promise<string[]> {
+  const tags = await keywordTags(page, '#input-freekeyword');
+  return tags.map(tag => tag.value);
+}
 
-    // expect that GCMD Instruments have these keywords
-    <tag title="Instruments &gt; Earth Remote Sensing Instruments &gt; Passive Remote Sensing &gt; Spectrometers/Radiometers &gt; Spectrometers &gt; FTIR SPECTROMETER" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; Earth Remote Sensing Instruments &amp;gt; Passive Remote Sensing &amp;gt; Spectrometers/Radiometers &amp;gt; Spectrometers &amp;gt; FTIR SPECTROMETER" id="https://gcmd.earthdata.nasa.gov/kms/concept/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; Earth Remote Sensing Instruments &gt; Passive Remote Sensing &gt; Spectrometers/Radiometers &gt; Spectrometers &gt; FTIR SPECTROMETER</span></div></tag><tag title="Instruments &gt; In Situ/Laboratory Instruments &gt; Probes &gt; ELECTRON MICROPROBES" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; In Situ/Laboratory Instruments &amp;gt; Probes &amp;gt; ELECTRON MICROPROBES" id="https://gcmd.earthdata.nasa.gov/kms/concept/ff2d6f74-959c-42f2-9905-dd942fd80598" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; In Situ/Laboratory Instruments &gt; Probes &gt; ELECTRON MICROPROBES</span></div></tag><tag title="Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; In Situ/Laboratory Instruments &amp;gt; Spectrometers/Radiometers &amp;gt; ICP-MS" id="https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS</span></div></tag><tag title="Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; LA-ICP-MS" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; In Situ/Laboratory Instruments &amp;gt; Spectrometers/Radiometers &amp;gt; LA-ICP-MS" id="https://gcmd.earthdata.nasa.gov/kms/concept/3e3d658f-1326-42b4-b3a8-3f897a8a2a42" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; LA-ICP-MS</span></div></tag><tag title="Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; XRF" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; In Situ/Laboratory Instruments &amp;gt; Spectrometers/Radiometers &amp;gt; XRF" id="https://gcmd.earthdata.nasa.gov/kms/concept/665b8764-0c0a-4df7-96f1-4ddae0c6de18" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; XRF</span></div></tag><tag title="Instruments &gt; Solar/Space Observing Instruments &gt; X-Ray/Gamma Ray Detectors &gt; XRD" contenteditable="false" tabindex="-1" class="tagify__tag " value="Instruments &amp;gt; Solar/Space Observing Instruments &amp;gt; X-Ray/Gamma Ray Detectors &amp;gt; XRD" id="https://gcmd.earthdata.nasa.gov/kms/concept/41db9c48-4af8-40db-8632-a86983d81258" scheme="NASA/GCMD Instruments" schemeuri="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" language="en"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Instruments &gt; Solar/Space Observing Instruments &gt; X-Ray/Gamma Ray Detectors &gt; XRD</span></div></tag><span contenteditable="" data-can-editable="" tabindex="0" data-placeholder="Open thesaurus to choose keywords or start typing..." aria-placeholder="Open thesaurus to choose keywords or start typing..." class="tagify__input" role="textbox" autocapitalize="false" autocorrect="off" aria-autocomplete="list" aria-multiline="false" aria-labelledby="input-instruments-label-4" title="GCMD Instruments" aria-haspopup="listbox"></span>
+test('DOI prefill splits keywords into thesauri and saves them in the XML', async ({ page }) => {
+  test.slow();
+  await registerGoogleMapsNoopRoute(page);
+  await page.route(`**/api/v2/doi/lookup/${encodeURIComponent(DOI)}`, route => {
+    if (route.request().method() !== 'GET') return route.fallback();
+    return route.fulfill({ json: LOOKUP });
+  });
 
-    // expect that free keywords have these keywords
-    <tag title="Geochemistry" contenteditable="false" tabindex="-1" class="tagify__tag " value="Geochemistry"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">Geochemistry</span></div></tag><tag title="hydrothermal alteration" contenteditable="false" tabindex="-1" class="tagify__tag " value="hydrothermal alteration"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">hydrothermal alteration</span></div></tag><tag title="whole-rock chemistry" contenteditable="false" tabindex="-1" class="tagify__tag " value="whole-rock chemistry"><x title="" tabindex="-1" class="tagify__tag__removeBtn" role="button" aria-label="remove tag"></x><div><span autocapitalize="false" autocorrect="off" spellcheck="false" class="tagify__tag-text">whole-rock chemistry</span></div></tag><span contenteditable="" data-can-editable="" tabindex="0" data-placeholder="Please enter keywords and separate them by a comma." aria-placeholder="Please enter keywords and separate them by a comma." class="tagify__input" role="textbox" autocapitalize="false" autocorrect="off" aria-autocomplete="list" aria-multiline="false" aria-labelledby="input-freekeyword-label-1" title="Free Keyword" aria-haspopup="listbox"></span>
+  await navigateToHome(page);
+  await waitForHomepageReady(page);
+  await expect.poll(() => page.evaluate(() => ({
+    science: Boolean((document.querySelector('#input-sciencekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
+    instruments: Boolean((document.querySelector('#input-instruments') as HTMLInputElement & { _tagify?: unknown })?._tagify),
+    free: Boolean((document.querySelector('#input-freekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
+  })), { timeout: 20000 }).toEqual({ science: true, instruments: true, free: true });
 
+  await page.locator('#input-resourceinformation-source-doi').fill(DOI);
+  await page.locator('#button-resourceinformation-prefill-doi').click();
+  await expect(page.locator('#modal-doi-prefill')).toBeVisible();
+  await page.locator('#button-doi-prefill-confirm').click();
+  await expect(page.locator('#modal-doi-prefill')).toBeHidden();
+  await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0, { timeout: 60000 });
 
-    // then save dataset 
-    id="button-form-save".click()
-    // expect that subjects have this content: 
-    // (the individual subject entries can be in any order. we check only the content equality)
-    <subjects>
-    <subject subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6" xml:lang="en">Science Keywords &gt; EARTH SCIENCE &gt; SOLID EARTH &gt; GEOCHEMISTRY &gt; GEOCHEMICAL PROPERTIES &gt; CHEMICAL CONCENTRATIONS</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2" xml:lang="en">Instruments &gt; Earth Remote Sensing Instruments &gt; Passive Remote Sensing &gt; Spectrometers/Radiometers &gt; Spectrometers &gt; FTIR SPECTROMETER</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/ff2d6f74-959c-42f2-9905-dd942fd80598" xml:lang="en">Instruments &gt; In Situ/Laboratory Instruments &gt; Probes &gt; ELECTRON MICROPROBES</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c" xml:lang="en">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/3e3d658f-1326-42b4-b3a8-3f897a8a2a42" xml:lang="en">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; LA-ICP-MS</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/665b8764-0c0a-4df7-96f1-4ddae0c6de18" xml:lang="en">Instruments &gt; In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; XRF</subject>
-    <subject subjectScheme="NASA/GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/41db9c48-4af8-40db-8632-a86983d81258" xml:lang="en">Instruments &gt; Solar/Space Observing Instruments &gt; X-Ray/Gamma Ray Detectors &gt; XRD</subject>
-    <subject>Geochemistry</subject>
-    <subject>hydrothermal alteration</subject>
-    <subject>whole-rock chemistry</subject>
-    </subjects>
+  await expect.poll(() => keywordTags(page, '#input-sciencekeyword')).toEqual(SCIENCE_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-instruments')).toEqual(INSTRUMENT_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual([]);
+  await expect.poll(async () => (await freeKeywordValues(page)).slice().sort()).toEqual([...FREE_KEYWORDS].sort());
+
+  await page.locator('#button-form-save').click();
+  await expect(page.locator('#modal-saveas')).toBeVisible();
+  await page.locator('#input-saveas-filename').fill('doi-keyword-thesauri');
+  await waitForFormInteractionReady(page, 'save');
+  const responsePromise = page.waitForResponse(response =>
+    response.url().includes('/save/save_data.php') && response.request().method() === 'POST');
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#button-saveas-save').click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const xml = Buffer.concat(chunks).toString('utf8');
+  await test.info().attach('saved-metadata.xml', { body: xml, contentType: 'application/xml' });
+
+  const parsed = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+    removeNSPrefix: true,
+  }).parse(xml);
+  const resource = parsed.resource || parsed.envelope?.resource;
+  expect(resource, `Expected a DataCite resource in the downloaded XML: ${xml.slice(0, 1000)}`).toBeTruthy();
+
+  const subjectNodes = [resource.subjects?.subject].flat().filter(Boolean);
+  const actual = subjectNodes.map((node): SavedSubject => {
+    if (typeof node === 'string') {
+      return { text: node, subjectScheme: '', schemeURI: '', valueURI: '', lang: '' };
+    }
+    return {
+      text: node['#text'] || '',
+      subjectScheme: node.subjectScheme || '',
+      schemeURI: node.schemeURI || '',
+      valueURI: node.valueURI || '',
+      lang: node['xml:lang'] || node.lang || '',
+    };
+  });
+
+  expect(actual.map(subjectKey).sort()).toEqual(EXPECTED_SUBJECTS.map(subjectKey).sort());
+});
