@@ -962,6 +962,7 @@ export function initTagifyForInput(inputElement, configKey) {
         inputElement._tagify = new Tagify(inputElement, {
             whitelist: state.whitelist,
             enforceWhitelist: state.whitelist.length > 0,
+            pasteAsTags: false,
             placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
             dropdown: {
                 maxItems: 50,
@@ -969,7 +970,21 @@ export function initTagifyForInput(inputElement, configKey) {
                 closeOnSelect: true,
                 classname: 'thesaurus-tagify',
             },
-            editTags: false
+            editTags: false,
+            callbacks: {
+                paste: function (e) {
+                    const tagify = e.detail.tagify;
+                    const value = tagify.state.inputText || '';
+
+                    // Apply the configured dropdown minimum length to pasted text.
+                    if (value.length < tagify.settings.dropdown.enabled) {
+                        // Defer hiding until after Tagify's scheduled dropdown rendering.
+                        setTimeout(function () {
+                            tagify.dropdown.hide();
+                        }, 0);
+                    }
+                }
+            }
         });
 
         // Trigger whitelist fetch on first focus/input so users who type before
@@ -1455,6 +1470,7 @@ $(document).ready(function () {
                 whitelist: state.whitelist,
                 enforceWhitelist: false,
                 delimiters: null,
+                pasteAsTags: false,
                 placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
                 dropdown: {
                     maxItems: 50,
@@ -1462,7 +1478,21 @@ $(document).ready(function () {
                     closeOnSelect: true,
                     classname: "thesaurus-tagify",
                 },
-                editTags: false
+                editTags: false,
+                callbacks: {
+                    paste: function (e) {
+                        const tagify = e.detail.tagify;
+                        const value = tagify.state.inputText || '';
+
+                        // Apply the configured dropdown minimum length to pasted text.
+                        if (value.length < tagify.settings.dropdown.enabled) {
+                            // Defer hiding until after Tagify's scheduled dropdown rendering.
+                            setTimeout(function () {
+                                tagify.dropdown.hide();
+                            }, 0);
+                        }
+                    }
+                }
             });
             input._tagify = thesaurusKeywordstagify;
             input.tagify = thesaurusKeywordstagify;
