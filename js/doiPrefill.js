@@ -556,61 +556,156 @@ function prefillGeoLocations(geoLocations) {
   });
 }
 
+const THESAURUS_GROUPS_TO_LOAD = new Set([
+  'science_keywords',
+  'platforms',
+  'instruments',
+  'chronostratigraphy',
+  'gemet',
+]);
+
+/**
+ * DataCite JSON uses schemeUri/valueUri. Saved XML and some callers use schemeURI/valueURI.
+ * @param {Object|string} subject
+ * @param {...string} keys
+ * @returns {string}
+ */
+function subjectProperty(subject, ...keys) {
+  if (!subject || typeof subject !== 'object') return '';
+  for (const key of keys) {
+    if (subject[key]) return subject[key];
+  }
+  return '';
+}
+
+/**
+ * Which keyword field a DataCite subject belongs in.
+ * Scheme URIs are authoritative. DataCite also labels GCMD instruments as
+ * "GCMD Instruments" rather than the vocabulary's "NASA/GCMD Instruments".
+ * @param {Object|string} subject
+ * @returns {string}
+ */
+function classifyDoiSubject(subject) {
+  const schemeURI = subjectProperty(subject, 'schemeURI', 'schemeUri');
+  const subjectScheme = subjectProperty(subject, 'subjectScheme');
+
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
+    subjectScheme === 'NASA/GCMD Earth Science Keywords') {
+    return 'science_keywords';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
+    subjectScheme === 'NASA/GCMD Platforms' ||
+    subjectScheme === 'GCMD Platforms') {
+    return 'platforms';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
+    subjectScheme === 'NASA/GCMD Instruments' ||
+    subjectScheme === 'GCMD Instruments') {
+    return 'instruments';
+  }
+  if (
+    schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
+    subjectScheme === 'International Chronostratigraphic Chart' ||
+    subjectScheme === 'Chronostratigraphic Chart'
+  ) {
+    return 'chronostratigraphy';
+  }
+  if (
+    schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
+    schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
+    (subjectScheme && subjectScheme.includes('GEMET'))
+  ) {
+    return 'gemet';
+  }
+  if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
+    return 'msl';
+  }
+  return 'free';
+}
+
+/**
+ * Adds one thesaurus keyword, rewritten to the loaded whitelist when possible.
+ * The DataCite scheme name is not copied: the vocabulary entry is the scheme
+ * that save writes into subjectScheme.
+ * @param {Tagify} tagify
+ * @param {{value: string, id: string, schemeURI: string}} tagData
+ */
+function addThesaurusTag(tagify, tagData) {
+  const whitelist = tagify.settings?.whitelist || [];
+  const resolved = typeof window.resolveThesaurusTag === 'function'
+    ? window.resolveThesaurusTag(tagData, whitelist)
+    : tagData;
+  const settings = tagify.settings;
+  const enforceWhitelist = settings?.enforceWhitelist;
+  if (settings) settings.enforceWhitelist = false;
+  try {
+    tagify.addTags([resolved]);
+  } finally {
+    if (settings && enforceWhitelist !== undefined) {
+      settings.enforceWhitelist = enforceWhitelist;
+    }
+  }
+}
+
 /**
  * Maps subjects to free keywords and thesaurus keyword tagify fields.
+ * Loads each targeted thesaurus first so a keyword is stored as the vocabulary's
+ * full breadcrumb instead of the shorter DataCite label.
+ * @param {Array<Object|string>} subjects
+ * @returns {Promise<void>}
  */
-function prefillKeywords(subjects) {
+async function prefillKeywords(subjects) {
   if (!Array.isArray(subjects) || subjects.length === 0) return;
 
   const tagifyFree = getTagify(document.querySelector('#input-freekeyword'));
   if (!tagifyFree) return;
 
-  const tagifyGCMD = getTagify(document.querySelector('#input-sciencekeyword'));
-  const tagifyPlatforms = getTagify(document.querySelector('#input-platforms'));
-  const tagifyInstruments = getTagify(document.querySelector('#input-instruments'));
-  const tagifyChronostrat = getTagify(document.querySelector('#input-chronostratigraphy'));
-  const tagifyGemet = getTagify(document.querySelector('#input-gemet'));
-  const tagifyMsl = getTagify(document.querySelector('#input-mslkeyword'));
+  const targets = {
+    science_keywords: getTagify(document.querySelector('#input-sciencekeyword')),
+    platforms: getTagify(document.querySelector('#input-platforms')),
+    instruments: getTagify(document.querySelector('#input-instruments')),
+    chronostratigraphy: getTagify(document.querySelector('#input-chronostratigraphy')),
+    gemet: getTagify(document.querySelector('#input-gemet')),
+    msl: getTagify(document.querySelector('#input-mslkeyword')),
+  };
 
-  subjects.forEach(s => {
-    const rawKeyword = (typeof s === 'string') ? s : (s.subject || '');
+  const prepared = [];
+  const groupsToLoad = new Set();
+
+  subjects.forEach(subject => {
+    const rawKeyword = (typeof subject === 'string') ? subject : (subject.subject || '');
     if (!rawKeyword) return;
 
     // Decode HTML entities (DataCite may deliver e.g. "&gt;" instead of ">")
     const keyword = decodeHtmlEntities(rawKeyword);
-
-    const schemeURI = s.schemeURI || '';
-    const subjectScheme = s.subjectScheme || '';
-    const valueURI = s.valueURI || '';
-
-    const tagData = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI };
-
-    if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
-      subjectScheme === 'NASA/GCMD Earth Science Keywords') {
-      (tagifyGCMD || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
-      subjectScheme === 'NASA/GCMD Platforms') {
-      (tagifyPlatforms || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
-      subjectScheme === 'NASA/GCMD Instruments') {
-      (tagifyInstruments || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
-      subjectScheme === 'International Chronostratigraphic Chart' ||
-      subjectScheme === 'Chronostratigraphic Chart'
-    ) {
-      (tagifyChronostrat || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
-      schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
-      (subjectScheme && subjectScheme.includes('GEMET'))
-    ) {
-      (tagifyGemet || tagifyFree).addTags([tagData]);
-    } else if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
-      (tagifyMsl || tagifyFree).addTags([tagData]);
-    } else {
-      tagifyFree.addTags([tagData]);
+    const group = classifyDoiSubject(subject);
+    const target = group === 'free' ? null : targets[group];
+    prepared.push({
+      group,
+      target,
+      keyword,
+      schemeURI: subjectProperty(subject, 'schemeURI', 'schemeUri'),
+      valueURI: subjectProperty(subject, 'valueURI', 'valueUri'),
+    });
+    if (target && THESAURUS_GROUPS_TO_LOAD.has(group)) {
+      groupsToLoad.add(group);
     }
+  });
+
+  if (groupsToLoad.size > 0 && typeof window.waitForThesaurusVocabulary === 'function') {
+    await Promise.all([...groupsToLoad].map(group => window.waitForThesaurusVocabulary(group)));
+  }
+
+  prepared.forEach(entry => {
+    if (entry.target) {
+      addThesaurusTag(entry.target, {
+        value: entry.keyword,
+        id: entry.valueURI,
+        schemeURI: entry.schemeURI,
+      });
+      return;
+    }
+    tagifyFree.addTags([{ value: entry.keyword }]);
   });
 }
 
@@ -753,7 +848,6 @@ async function applyDoiPrefill(attributes) {
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
-  prefillKeywords(attributes.subjects);
   prefillRelatedWorks(attributes.relatedIdentifiers);
   prefillFunding(attributes.fundingReferences);
 
@@ -761,6 +855,7 @@ async function applyDoiPrefill(attributes) {
   await prefillLanguage(attributes);
   await prefillTitles(attributes.titles);
   await prefillRights(attributes.rightsList);
+  await prefillKeywords(attributes.subjects);
 }
 
 /* ================================================================== */
@@ -845,6 +940,7 @@ if (typeof module !== 'undefined' && module.exports) {
     prefillDescriptions,
     prefillDates,
     prefillGeoLocations,
+    classifyDoiSubject,
     prefillKeywords,
     prefillRelatedWorks,
     prefillFunding,
