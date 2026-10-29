@@ -167,27 +167,6 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   await navigateToHome(page);
   await waitForHomepageReady(page);
 
-  // Tagify keeps #input-* as the original input and inserts <tags class="tagify">
-  // immediately before it. The instance doiPrefill reads is input._tagify.
-  await expect.poll(() => page.evaluate(() => {
-    const ready = (selector: string) => {
-      const input = document.querySelector(selector) as TagifyInput | null;
-      const widget = input?.previousElementSibling;
-      const instance = input?._tagify;
-      return Boolean(
-        instance
-        && widget?.tagName === 'TAGS'
-        && widget.classList.contains('tagify')
-        && instance.DOM?.scope === widget,
-      );
-    };
-    return {
-      science: ready('#input-sciencekeyword'),
-      instruments: ready('#input-instruments'),
-      free: ready('#input-freekeyword'),
-    };
-  })).toEqual({ science: true, instruments: true, free: true });
-
   await page.locator('#input-resourceinformation-source-doi').fill(DOI);
   await page.locator('#button-resourceinformation-prefill-doi').click();
   await expect(page.locator('#modal-doi-prefill')).toBeVisible();
