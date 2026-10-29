@@ -3,12 +3,17 @@
 require_once __DIR__ . '/resource_information_payload.php';
 
 /**
- * Validate an existing DOI before a Standard/MSL/IGSN submission is persisted.
+ * Validate the language, optional version and existing DOI before persistence.
+ * Existing DOI lookup and next-major-version rules apply to Standard/MSL/IGSN.
  * The lookup callback is shared with the public DOI proxy in production.
  *
  * @param array<string, mixed> $postData
+ * @param bool $isIcgem Whether the ICGEM-specific DOI workflow applies.
  * @param callable(string): array $lookup
+ * @param string $curationContact Contact address included in curation errors.
  * @return array<string, mixed>
+ * @throws InvalidArgumentException When the structured Resource Information payload is invalid.
+ * @throws DomainException When metadata or DOI verification fails.
  */
 function validateSubmissionResourceInformation(
     array $postData,
@@ -22,7 +27,7 @@ function validateSubmissionResourceInformation(
     }
     $version = trim((string) ($postData['version'] ?? ''));
     if ($version !== '' && !preg_match('/^\d+\.\d+$/D', $version)) {
-        throw new DomainException('Please enter a version in the form x.y.');
+        throw new DomainException('Enter the version as major.minor, e.g. 1.4 or 12.3, or leave this field blank.');
     }
     $doi = trim((string) ($postData['doi'] ?? ''));
     if ($doi === '' || $isIcgem) return $postData;
