@@ -46,6 +46,15 @@ const SCIENCE_KEYWORDS: ThesaurusKeyword[] = [{
   language: 'en',
 }];
 
+/** One vocabulary concept the DOI does not use. It must stay out of the form and the XML. */
+const EXTRA_SCIENCE_KEYWORD: ThesaurusKeyword = {
+  value: 'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEOCHEMISTRY > GEOCHEMICAL PROPERTIES > MAJOR ELEMENTS',
+  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/extra-major-elements',
+  scheme: SCIENCE_SCHEME,
+  schemeURI: SCIENCE_SCHEME_URI,
+  language: 'en',
+};
+
 const INSTRUMENT_KEYWORDS: ThesaurusKeyword[] = [
   {
     value: 'Instruments > Earth Remote Sensing Instruments > Passive Remote Sensing > Spectrometers/Radiometers > Spectrometers > FTIR SPECTROMETER',
@@ -108,6 +117,51 @@ const FREE_KEYWORDS = [
   'VMS mineralization',
 ];
 
+type VocabNode = {
+  id: string;
+  text: string;
+  scheme: string;
+  schemeURI: string;
+  language: string;
+  children?: VocabNode[];
+};
+
+/** Builds the `{ data: tree }` payload `api/v2/vocabs/thesauri/*` returns. */
+function vocabPayload(keywords: ThesaurusKeyword[]): { data: VocabNode[] } {
+  const roots: VocabNode[] = [];
+  keywords.forEach(keyword => {
+    const parts = keyword.value.split(' > ');
+    let level = roots;
+    parts.forEach((text, index) => {
+      const leaf = index === parts.length - 1;
+      let node = level.find(item => item.text === text);
+      if (!node) {
+        node = {
+          id: leaf ? keyword.id : `parent-${parts.slice(0, index + 1).join('--')}`,
+          text,
+          scheme: keyword.scheme,
+          schemeURI: keyword.schemeURI,
+          language: keyword.language,
+        };
+        level.push(node);
+      }
+      if (!leaf) {
+        node.children ??= [];
+        level = node.children;
+      }
+    });
+  });
+  return { data: roots };
+}
+
+const MOCK_AVAILABILITY = {
+  science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
+  platforms: { available: true, displayName: 'GCMD Platforms' },
+  instruments: { available: true, displayName: 'GCMD Instruments' },
+  chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
+  gemet: { available: false, displayName: 'GEMET' },
+};
+
 function savedSubject(keyword: ThesaurusKeyword): SavedSubject {
   return {
     text: keyword.value,
@@ -159,6 +213,16 @@ async function freeKeywordValues(page: Page): Promise<string[]> {
 test('DOI prefill splits keywords into thesauri and saves them in the XML', async ({ page }) => {
   test.slow();
   await registerGoogleMapsNoopRoute(page);
+  // Thesauri are not bundled. The page asks ELMO, and ELMO proxies ERNIE.
+  // CI cannot rely on that hop, so the vocabularies are the DOI subjects plus one unused concept.
+  await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: MOCK_AVAILABILITY }));
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', route => route.fulfill({
+    json: vocabPayload([...SCIENCE_KEYWORDS, EXTRA_SCIENCE_KEYWORD]),
+  }));
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', route => route.fulfill({
+    json: vocabPayload(INSTRUMENT_KEYWORDS),
+  }));
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', route => route.fulfill({ json: { data: [] } }));
   await page.route(`**/api/v2/doi/lookup/${encodeURIComponent(DOI)}`, route => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill({ json: LOOKUP });
@@ -170,18 +234,14 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   await page.locator('#input-resourceinformation-source-doi').fill(DOI);
   await page.locator('#button-resourceinformation-prefill-doi').click();
   await expect(page.locator('#modal-doi-prefill')).toBeVisible();
-  // Lookup removes the spinner before confirm. Apply turns it on again only after
-  // the modal's hidden event, then keeps it up while thesaurus vocabularies load.
-  const applying = page.locator('#doi-lookup-spinner');
   await page.locator('#button-doi-prefill-confirm').click();
   await expect(page.locator('#modal-doi-prefill')).toBeHidden();
-  await expect(applying).toBeVisible();
-  await expect(applying).toHaveCount(0, { timeout: 60_000 });
+  await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
 
-  await expect.poll(() => keywordTags(page, '#input-sciencekeyword'), { timeout: 15_000 }).toEqual(SCIENCE_KEYWORDS);
-  await expect.poll(() => keywordTags(page, '#input-instruments'), { timeout: 15_000 }).toEqual(INSTRUMENT_KEYWORDS);
-  await expect.poll(() => keywordTags(page, '#input-platforms'), { timeout: 15_000 }).toEqual([]);
-  await expect.poll(async () => (await freeKeywordValues(page)).slice().sort(), { timeout: 15_000 }).toEqual([...FREE_KEYWORDS].sort());
+  await expect.poll(() => keywordTags(page, '#input-sciencekeyword')).toEqual(SCIENCE_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-instruments')).toEqual(INSTRUMENT_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual([]);
+  await expect.poll(async () => (await freeKeywordValues(page)).slice().sort()).toEqual([...FREE_KEYWORDS].sort());
 
   // start saving the form.
   await page.locator('#button-form-save').click();
