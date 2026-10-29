@@ -12,6 +12,18 @@
               "parts": [
                 {
                   "type": "text",
+                  "value": "Version fields now show immediate format feedback with examples, consistent Submit validation, and help aligned with DataCite's versioning recommendations."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 873 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
                   "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. Missing contact emails are highlighted in red on Submit, even without prior field interaction. The public contact lookup endpoint has been removed."
                 }
               ],
@@ -55,6 +67,58 @@
               "editions": [ "all" ],
               "references": [
                 { "type": "issue", "number": 1303 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Checkboxes are now displayed for top-level ICS Chronostratigraphy keywords without children."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1302 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Added a translated validation message for missing Authors information, visible even when author fields are collapsed."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                {"type": "issue", "number": 1305 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Pasted text now triggers the thesaurus keyword search instead of being added directly as a tag. Suggestions are shown for input with at least three characters."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {"type": "issue", "number": 1273 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The Thesauri Keywords section now shows the total number of selected keywords in its header. The count updates when keywords are added or removed."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {"type": "issue", "number": 1284 }
               ]
             }
           ]

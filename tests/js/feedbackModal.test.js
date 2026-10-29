@@ -23,4 +23,9 @@ describe('Feedback modal markup accessibility', () => {
       expect(label.textContent.trim()).not.toHaveLength(0);
     });
   });
+
+  it('starts with the send button disabled', () => {
+    const sendButton = feedbackModal.querySelector('#button-feedback-send');
+    expect(sendButton.disabled).toBe(true);
+  });
 });

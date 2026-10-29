@@ -153,6 +153,7 @@ jobs:
           $SIMULATE_EMAIL = true;
           $feedbackAddress = 'feedback@test.com';
           $xmlSubmitAddress = 'xmlsubmit@test.com';
+          $contactAddressRepository = 'datapub@gfz.de';
           $instanceTitle = 'ELMO Test';
 
           function getSettings($setting) {

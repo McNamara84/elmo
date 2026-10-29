@@ -611,6 +611,264 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     delete window.ELMO_FEATURES;
   });
 
+  describe.each(['regular', 'dynamic'])('%s thesaurus paste support', (inputType) => {
+    let tagify;
+
+    beforeEach(() => {
+      if (inputType === 'regular') {
+        tagify = document.getElementById('input-sciencekeyword')._tagify;
+      } else {
+        const input = document.createElement('input');
+        input.id = 'input-test-dynamic-platforms';
+        document.body.appendChild(input);
+
+        exports.initTagifyForInput(input, 'satellitePlatforms');
+        tagify = input._tagify;
+      }
+
+      tagify.state = { inputText: '' };
+      tagify.dropdown = { hide: jest.fn() };
+
+      // Enable fake timers after the existing asynchronous setup has finished.
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+    });
+
+    function paste(value) {
+      tagify.state.inputText = value;
+      tagify.settings.callbacks.paste({
+        detail: { tagify },
+      });
+    }
+
+    test('keeps pasted text as a search query instead of creating tags', () => {
+      expect(tagify.settings.pasteAsTags).toBe(false);
+    });
+
+    test('configures a three-character minimum and a paste callback', () => {
+      expect(tagify.settings.dropdown.enabled).toBe(3);
+      expect(tagify.settings.callbacks.paste).toEqual(expect.any(Function));
+    });
+
+    test.each(['', 'a', 'ab'])(
+      'defers hiding the dropdown for short pasted input %j',
+      (value) => {
+        paste(value);
+
+        expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+
+        jest.runOnlyPendingTimers();
+
+        expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+        expect(tagify.state.inputText).toBe(value);
+      }
+    );
+
+    test.each(['air', 'air Quality'])(
+      'does not hide the dropdown for pasted input %j',
+      (value) => {
+        paste(value);
+
+        jest.runOnlyPendingTimers();
+
+        expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+        expect(tagify.state.inputText).toBe(value);
+      }
+    );
+
+    test('uses the configured minimum instead of a hard-coded value', () => {
+      tagify.settings.dropdown.enabled = 5;
+
+      paste('lead');
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+
+      tagify.dropdown.hide.mockClear();
+
+      paste('ocean');
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+    });
+
+    test('handles missing input text as an empty search', () => {
+      tagify.state = {};
+
+      expect(() => {
+        tagify.settings.callbacks.paste({
+          detail: { tagify },
+        });
+      }).not.toThrow();
+
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+    });
+  });
+
+
+  describe('keyword summary count', () => {
+    let group;
+    let summary;
+
+    beforeEach(() => {
+      document.body.innerHTML = `
+      <div id="thesaurusKeywordsFormGroup">
+        <div class="card-header">
+          <span data-thesaurus-summary-count></span>
+        </div>
+        <div id="thesaurusKeywordsGroup"></div>
+      </div>
+    `;
+
+      group = document.getElementById('thesaurusKeywordsGroup');
+      summary = document.querySelector('[data-thesaurus-summary-count]');
+    });
+
+    function createInput(values = [], container = group) {
+      const input = document.createElement('input');
+
+      input._tagify = {
+        value: values.map(value => ({ value })),
+        on: jest.fn(),
+      };
+
+      container.appendChild(input);
+      return input;
+    }
+
+    describe('updateThesaurusKeywordCount', () => {
+      test('shows zero keywords when the group is empty', () => {
+        exports.updateThesaurusKeywordCount();
+
+        expect(summary.textContent).toBe('· 0 Keywords');
+      });
+
+      test('uses the singular label for one keyword', () => {
+        createInput(['Science keyword']);
+
+        exports.updateThesaurusKeywordCount();
+
+        expect(summary.textContent).toBe('· 1 Keyword');
+      });
+
+      test('sums keywords across multiple thesaurus inputs', () => {
+        createInput(['First science keyword', 'Second science keyword']);
+        createInput(['Platform keyword']);
+
+        exports.updateThesaurusKeywordCount();
+
+        expect(summary.textContent).toBe('· 3 Keywords');
+      });
+
+      test('ignores inputs outside the group and inputs without Tagify', () => {
+        createInput(['Science keyword']);
+        createInput(['Outside keyword'], document.body);
+        group.appendChild(document.createElement('input'));
+
+        exports.updateThesaurusKeywordCount();
+
+        expect(summary.textContent).toBe('· 1 Keyword');
+      });
+
+      test('does not throw when the group is missing', () => {
+        group.remove();
+
+        expect(() => {
+          exports.updateThesaurusKeywordCount();
+        }).not.toThrow();
+      });
+
+      test('does not throw when the summary is missing', () => {
+        summary.remove();
+
+        expect(() => {
+          exports.updateThesaurusKeywordCount();
+        }).not.toThrow();
+      });
+    });
+
+    describe('bindKeywordCount', () => {
+      test('registers the handlers and updates the initial count', () => {
+        const input = createInput(['Science keyword']);
+        const tagify = input._tagify;
+
+        exports.bindKeywordCount(input);
+
+        expect(tagify._keywordCountBound).toBe(true);
+        expect(tagify.on).toHaveBeenCalledTimes(3);
+        expect(tagify.on).toHaveBeenCalledWith(
+          'add', exports.updateThesaurusKeywordCount
+        );
+        expect(tagify.on).toHaveBeenCalledWith(
+          'remove', exports.updateThesaurusKeywordCount
+        );
+        expect(tagify.on).toHaveBeenCalledWith(
+          'change', exports.updateThesaurusKeywordCount
+        );
+        expect(summary.textContent).toBe('· 1 Keyword');
+      });
+
+      test.each(['add', 'remove', 'change'])(
+        'recalculates the count through the registered %s handler',
+        (event) => {
+          const input = createInput(['First keyword']);
+          const tagify = input._tagify;
+
+          exports.bindKeywordCount(input);
+          expect(summary.textContent).toBe('· 1 Keyword');
+
+          const callback = tagify.on.mock.calls.find(
+            ([eventName]) => eventName === event
+          )[1];
+
+          tagify.value = event === 'remove'
+            ? []
+            : [{ value: 'First keyword' }, { value: 'Second keyword' }];
+
+          callback();
+
+          expect(summary.textContent).toBe(
+            event === 'remove' ? '· 0 Keywords' : '· 2 Keywords'
+          );
+        }
+      );
+
+      test('does not register handlers twice for the same instance', () => {
+        const input = createInput();
+
+        exports.bindKeywordCount(input);
+        exports.bindKeywordCount(input);
+
+        expect(input._tagify.on).toHaveBeenCalledTimes(3);
+      });
+
+      test('does nothing when the input has no Tagify instance', () => {
+        const input = document.createElement('input');
+        group.appendChild(input);
+
+        expect(() => exports.bindKeywordCount(input)).not.toThrow();
+        expect(summary.textContent).toBe('');
+      });
+
+      test('does not bind inputs outside the thesauri group', () => {
+        const input = createInput(['Outside keyword'], document.body);
+
+        exports.bindKeywordCount(input);
+
+        expect(input._tagify.on).not.toHaveBeenCalled();
+        expect(input._tagify._keywordCountBound).toBeUndefined();
+        expect(summary.textContent).toBe('');
+      });
+    });
+  });
+
+
   // ── showLoadingSpinner ────────────────────────────────────────────────────
 
   test('showLoadingSpinner inserts spinner markup into container', () => {

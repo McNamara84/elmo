@@ -55,6 +55,8 @@ services:
       # XML_SUBMIT_ADDRESS is for sending to data curators. In our case, GFZ Data Services
       # overrides it when a shared env file configures every variant.
       XML_SUBMIT_ADDRESS: "${XML_SUBMIT_ADDRESS}"
+      # Email written into contact/CI_ResponsibleParty of the ISO metadata schema.
+      CONTACT_ADDRESS_REPOSITORY: "${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}"
       # ICGEM registration mail
       ICGEM_SUBMIT_ADDRESS: ${ICGEM_SUBMIT_ADDRESS}
       # ELMO-GEM only: researcher confirmation mail and the upload link in the ICGEM mail

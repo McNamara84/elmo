@@ -118,6 +118,7 @@ describe('saveHandler.js', () => {
     delete global.validateAuthorAffiliationEditors;
     delete window.authorStack;
     delete window.relatedWorkStack;
+    delete window.resourceInformation;
   });
 
   test('generateFilename returns formatted timestamp', async () => {
@@ -198,6 +199,28 @@ describe('saveHandler.js', () => {
       expect(JSON.parse(request[1].body.get(`${group}Payload`))[0].affiliations).toEqual([affiliation]);
     }
     expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    delete global.fetch;
+  });
+
+  test.each(['xml', 'jsonld'])('%s downloads keep an invalid draft version without blocking', async format => {
+    document.getElementById('form-mde').insertAdjacentHTML('beforeend',
+      '<input id="input-resourceinformation-version" name="version" pattern="\\d+\\.\\d+" value="1.2.3" class="is-invalid" aria-invalid="true">' +
+      '<input name="resourceInformationPayload" type="hidden">');
+    window.resourceInformation = { sync: () => ({ version: '1.2.3', titles: [] }) };
+    global.fetch = createSaveHandlerFetchMock();
+    window.URL.createObjectURL = jest.fn(() => 'blob:version-draft');
+    window.URL.revokeObjectURL = jest.fn();
+    const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+    jest.spyOn(handler, 'showNotification').mockImplementation(() => {});
+
+    await handler.saveAndDownload('version-draft', format);
+
+    const request = global.fetch.mock.calls.find(call => call[0] === 'save/save_data.php');
+    expect(request).toBeDefined();
+    expect(request[1].body.get('version')).toBe('1.2.3');
+    expect(JSON.parse(request[1].body.get('resourceInformationPayload')).version).toBe('1.2.3');
+    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    expect(document.getElementById('input-resourceinformation-version').classList.contains('is-invalid')).toBe(false);
     delete global.fetch;
   });
 

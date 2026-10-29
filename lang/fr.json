@@ -133,7 +133,8 @@
         "publicationYearInvalid": "Veuillez saisir une année valide entre 1901-2155 (4 chiffres au format AAAA).",
         "resourceType": "Type de ressource",
         "version": "Version",
-        "versionInvalid": "Veuillez utiliser le format chiffres.chiffres. Laissez vide en cas de doute",
+        "versionHint": "Facultatif : majeure.mineure, par exemple 1.4 ou 12.3.",
+        "versionInvalid": "Saisissez la version au format majeure.mineure, par exemple 1.4 ou 12.3, ou laissez ce champ vide.",
         "datasetLanguage": "Langue du jeu de données",
         "resourceTitle": "Titre",
         "resourceTitleInvalid": "Veuillez fournir un titre descriptif (qui ne répète pas le titre de l'article, mais qui décrit les données).",
@@ -181,7 +182,8 @@
         "affiliationRorId": "ID ROR",
         "affiliationRemove": "Supprimer une affiliation",
         "affiliationInvalid": "Veuillez indiquer une affiliation.",
-        "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution."
+        "InstitutionsNameInvalid": "Veuillez fournir le nom de l'institution.",
+        "validationError": "Bitte füge mindestens einen Autor hinzu und fülle alle Pflichtfelder aus."
     },
     "authorsInstitutions": {
         "title": "Auteur: Institutions",

@@ -308,6 +308,7 @@ describe('doiPrefill.js', () => {
       window.titleTypeOptionsHtml = titleTypes.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
       $('#input-resourceinformation-titletype').html(window.titleTypeOptionsHtml);
       window.replaceHelpButtonInClonedRows = jest.fn();
+      window.validateResourceVersion = require('../../js/validation/resourceVersionValidation.js').validateResourceVersion;
       const source = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceInformationTitle.js'), 'utf8')
         .replace(/^import .*;\s*$/gm, '')
         .replace('$(document).ready(function () {', '(function () {')
@@ -325,6 +326,7 @@ describe('doiPrefill.js', () => {
 
     afterEach(() => {
       $(document).off('elmo:clearTitles');
+      delete window.validateResourceVersion;
       ['resourceInformation', 'maxTitles', 'mainTitleTypeId', 'alternativeTitleTypeId', 'titleTypeOptionsHtml',
         'replaceHelpButtonInClonedRows', 'loadClearInputFields'].forEach(key => delete window[key]);
     });
@@ -334,6 +336,20 @@ describe('doiPrefill.js', () => {
       expect(JSON.parse(document.querySelector('[name="authorsPayload"]').value)[0].affiliations).toEqual(expected);
       expect($('[data-author-affiliation-label]').map((_, input) => input.value).get()).toEqual(expected.map(item => item.label));
     }
+
+    test('preserves an imported version and exposes its ELMO format error', async () => {
+      attributes.version = '1.2.3';
+      await mod.applyDoiPrefill(attributes);
+      const version = document.getElementById('input-resourceinformation-version');
+      expect(version.value).toBe('1.2.3');
+      expect(version.classList.contains('is-invalid')).toBe(true);
+      expect(version.getAttribute('aria-invalid')).toBe('true');
+      expect(window.resourceInformation.collectPayload().version).toBe('1.2.3');
+      attributes.version = '1.10';
+      await mod.applyDoiPrefill(attributes);
+      expect(version.value).toBe('1.10');
+      expect(version.classList.contains('is-invalid')).toBe(false);
+    });
 
     test.each([
       ['Other', '83', 'Other'],

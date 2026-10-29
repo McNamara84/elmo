@@ -237,3 +237,151 @@ describe('validateSpatialTemporalCoverageRequirements', () => {
   });
 
 });
+
+describe('validateAuthorsGroup', () => {
+  let $;
+  let previousApplyTranslationsTo;
+
+  beforeEach(() => {
+    document.body.innerHTML = `
+      <form id="authors-test-form">
+        <div id="formgroup-authors">
+          <div class="card-header">Authors</div>
+          <div class="card-body">
+            <div data-author-stack>
+              <div data-author-entry-row data-creator-row>
+                <input type="text" name="familynames[]" />
+                <input type="email" name="cpEmail[]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    `;
+
+    $ = require('jquery');
+    global.$ = global.jQuery = $;
+    window.$ = window.jQuery = $;
+
+    previousApplyTranslationsTo = window.applyTranslationsTo;
+    window.applyTranslationsTo = jest.fn();
+
+    const scriptPath = path.resolve(
+      __dirname,
+      '../../js/checkMandatoryFields.js'
+    );
+
+    window.eval(fs.readFileSync(scriptPath, 'utf8'));
+  });
+
+  afterEach(() => {
+    window.applyTranslationsTo = previousApplyTranslationsTo;
+
+    jest.resetModules();
+    delete global.$;
+    delete global.jQuery;
+    delete window.$;
+    delete window.jQuery;
+  });
+
+  test('returns true when the Authors group is absent', () => {
+    $('#formgroup-authors').remove();
+
+    expect(window.validateAuthorsGroup()).toBe(true);
+    expect($('#authors-group-error')).toHaveLength(0);
+  });
+
+  test('shows an error when no author cards exist', () => {
+    $('[data-author-stack]').empty();
+
+    expect(window.validateAuthorsGroup()).toBe(false);
+    expect($('#authors-group-error')).toHaveLength(1);
+  });
+
+  test('rejects an empty or whitespace-only author name', () => {
+    $('input[name="familynames[]"]').val('   ');
+
+    expect(window.validateAuthorsGroup()).toBe(false);
+    expect($('#authors-group-error')).toHaveLength(1);
+  });
+
+  test('accepts a person with a name and valid fields', () => {
+    $('input[name="familynames[]"]').val('Doe');
+
+    expect(window.validateAuthorsGroup()).toBe(true);
+    expect($('#authors-group-error')).toHaveLength(0);
+  });
+
+  test('accepts an institution with a name', () => {
+    $('[data-author-stack]').html(`
+      <div data-author-entry-row data-authorinstitution-row>
+        <input
+          type="text"
+          name="authorinstitutionName[]"
+          value="GFZ"
+        />
+      </div>
+    `);
+
+    expect(window.validateAuthorsGroup()).toBe(true);
+    expect($('#authors-group-error')).toHaveLength(0);
+  });
+
+  test('rejects a field with native validation errors', () => {
+    $('input[name="familynames[]"]').val('Doe');
+    $('input[name="cpEmail[]"]').val('invalid-email');
+
+    expect(window.validateAuthorsGroup()).toBe(false);
+    expect($('#authors-group-error')).toHaveLength(1);
+  });
+
+  test('rejects a field marked as invalid by custom validation', () => {
+    $('input[name="familynames[]"]')
+      .val('Doe')
+      .addClass('is-invalid');
+
+    expect(window.validateAuthorsGroup()).toBe(false);
+    expect($('#authors-group-error')).toHaveLength(1);
+  });
+
+  test('removes the error after the author becomes valid', () => {
+    expect(window.validateAuthorsGroup()).toBe(false);
+
+    $('input[name="familynames[]"]').val('Doe');
+
+    expect(window.validateAuthorsGroup()).toBe(true);
+    expect($('#authors-group-error')).toHaveLength(0);
+  });
+
+  test('does not duplicate the error and requests its translation', () => {
+    window.validateAuthorsGroup();
+    window.validateAuthorsGroup();
+
+    const $feedback = $('#authors-group-error');
+
+    expect($feedback).toHaveLength(1);
+    expect($feedback.attr('data-translate'))
+      .toBe('authors.validationError');
+
+    expect(window.applyTranslationsTo).toHaveBeenCalledTimes(2);
+
+    const calls = window.applyTranslationsTo.mock.calls;
+    const translatedElement = calls[calls.length - 1][0];
+
+    expect(translatedElement).toHaveLength(1);
+    expect(translatedElement[0]).toBe($feedback[0]);
+  });
+
+  test('places the error below the card body, outside collapsed fields', () => {
+    $('.card-body').addClass('collapse');
+
+    window.validateAuthorsGroup();
+
+    const feedback = document.getElementById('authors-group-error');
+    const group = document.getElementById('formgroup-authors');
+
+    expect(feedback.parentElement).toBe(group);
+    expect(group.lastElementChild).toBe(feedback);
+    expect(feedback.closest('.collapse')).toBeNull();
+  });
+});

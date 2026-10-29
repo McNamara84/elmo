@@ -51,6 +51,58 @@ final class DoiSubmissionPolicyTest extends TestCase
         self::assertSame('1.0', $result['version']);
     }
 
+    #[DataProvider('validVersions')]
+    public function testAcceptsOptionalVersionsInLegacyAndStructuredPayloads(string $version): void
+    {
+        foreach ([false, true] as $structured) {
+            $post = self::post('', $version);
+            if ($structured) {
+                $post['version'] = 'stale';
+                $post['resourceInformationPayload'] = json_encode([
+                    'doi' => '', 'version' => $version, 'languageId' => '1', 'titles' => [],
+                ], JSON_THROW_ON_ERROR);
+            }
+            $result = validateSubmissionResourceInformation($post, false,
+                static function () { self::fail('A new DOI must not trigger a lookup.'); }, self::CONTACT);
+            self::assertSame(trim($version), trim($result['version']));
+        }
+    }
+
+    public static function validVersions(): iterable
+    {
+        foreach (['', '   ', '1.4', '12.3', '0.1', '1.10', '01.02', ' 1.10 '] as $version) {
+            yield [$version];
+        }
+    }
+
+    #[DataProvider('invalidVersions')]
+    public function testRejectsMalformedVersionBeforeDoiLookup(string $version): void
+    {
+        foreach ([false, true] as $structured) {
+            $post = self::post('10.5880/example', $version);
+            if ($structured) {
+                $post['version'] = '1.0';
+                $post['resourceInformationPayload'] = json_encode([
+                    'doi' => '10.5880/example', 'version' => $version, 'languageId' => '1', 'titles' => [],
+                ], JSON_THROW_ON_ERROR);
+            }
+            try {
+                validateSubmissionResourceInformation($post, false,
+                    static function () { self::fail('Invalid versions must fail before a DOI lookup.'); }, self::CONTACT);
+                self::fail('Invalid version was accepted.');
+            } catch (DomainException $error) {
+                self::assertSame('Enter the version as major.minor, e.g. 1.4 or 12.3, or leave this field blank.', $error->getMessage());
+            }
+        }
+    }
+
+    public static function invalidVersions(): iterable
+    {
+        foreach (['1.2.3', '1.2.3.4', '1', '1.', '.1', 'v1.4', '-1.4', '1,4', '١.٤'] as $version) {
+            yield $version => [$version];
+        }
+    }
+
     #[DataProvider('blockedCases')]
     public function testRejectsUnverifiedOrConflictingDoi(array $post, callable $lookup, string $message): void
     {

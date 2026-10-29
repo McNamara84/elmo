@@ -48,8 +48,14 @@
     border-color: var(--elmo-focus-color);
 }
 
+/* Hide checkboxes on top-level nodes in all thesauri. */
 .jstree-container-ul>li>a>i.jstree-checkbox {
     display: none;
+}
+
+/* Show checkboxes on top-level ICS nodes without children. */
+#jstree-chronostratigraphy>.jstree-container-ul>li.jstree-leaf>a>i.jstree-checkbox {
+    display: inline-block;
 }
 
 .invalid {
@@ -391,6 +397,16 @@ label.mandatory-field::after {
 .feedback-button-send {
     margin-left: auto;
     display: block;
+}
+
+#button-feedback-send:disabled:not([aria-busy="true"]) {
+    --bs-btn-disabled-color: var(--bs-body-color);
+    --bs-btn-disabled-bg: #fdd8dd;
+    --bs-btn-disabled-border-color: #fdd8dd;
+    color: var(--bs-body-color);
+    background-color: #fdd8dd !important;
+    border-color: #fdd8dd !important;
+    opacity: 1;
 }
 
 .add-button {

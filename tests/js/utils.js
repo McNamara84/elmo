@@ -67,6 +67,8 @@ function transformThesauriScript(source, extraExportEntries = '') {
     'loadedConfigs',
     'handleTreeNodeActivation',
     'findNodeByPath',
+    'updateThesaurusKeywordCount',
+    'bindKeywordCount',
   ];
 
   if (/\bfunction ensureThesaurusLoaded\b/.test(script)) {
