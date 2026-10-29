@@ -6,10 +6,10 @@ import {
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
 } from './thesauriHelpers.js';
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
 
-// DOI import resolves DataCite subjects onto the loaded whitelist before Tagify
-// enforces it. thesauriHelpers is an ES module, so the classic doiPrefill script
-// reaches this function through the page.
+export { THESAURUS_CONFIG };
+
 if (typeof window !== 'undefined') {
     window.resolveThesaurusTag = resolveTagAgainstWhitelist;
 }
@@ -40,75 +40,6 @@ export function filterTreeByRoot(nodes, rootId) {
     // jsTree expects an array of root nodes, so we wrap the result in an array
     return rootNode ? [rootNode] : nodes; 
 }
-export const THESAURUS_CONFIG = {
-    science_keywords: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
-        inputName: 'gcmdScienceKeywords',
-        inputId: 'input-sciencekeyword',
-        modalId: 'modal-sciencekeyword',
-        jsTreeId: 'jstree-sciencekeyword',
-        searchInputId: 'input-sciencekeyword-thesaurussearch',
-        selectedListId: 'selected-keywords-sciencekeyword',
-        helpSectionId: 'help-scienceKeywords-keyword',
-        stateKey: 'input-sciencekeyword'
-    },
-    platforms: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-        inputName: 'platforms',
-        inputId: 'input-platforms',
-        modalId: 'modal-platforms',
-        jsTreeId: 'jstree-platforms',
-        searchInputId: 'input-platforms-thesaurussearch',
-        selectedListId: 'selected-keywords-platforms',
-        helpSectionId: 'help-gcmd-platforms-keyword',
-        stateKey: 'input-platforms'
-    },
-    instruments: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
-        inputName: 'instruments',
-        inputId: 'input-instruments',
-        modalId: 'modal-instruments',
-        jsTreeId: 'jstree-instruments',
-        searchInputId: 'input-instruments-thesaurussearch',
-        selectedListId: 'selected-keywords-instruments',
-        helpSectionId: 'help-gcmd-instruments-keyword',
-        stateKey: 'input-instruments'
-    },
-    chronostratigraphy: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
-        inputName: 'chronostratKeywords',
-        inputId: 'input-chronostratigraphy',
-        modalId: 'modal-chronostratigraphy',
-        jsTreeId: 'jstree-chronostratigraphy',
-        searchInputId: 'input-chronostratigraphy-thesaurussearch',
-        selectedListId: 'selected-keywords-chronostratigraphy',
-        helpSectionId: 'help-chronostratigraphy-keyword',
-        stateKey: 'input-chronostratigraphy'
-    },
-    gemet: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
-        inputName: 'gemetKeywords',
-        inputId: 'input-gemet',
-        modalId: 'modal-gemet',
-        jsTreeId: 'jstree-gemet',
-        searchInputId: 'input-gemet-thesaurussearch',
-        selectedListId: 'selected-keywords-gemet',
-        helpSectionId: 'help-gemet-keyword',
-        stateKey: 'input-gemet'
-    },
-    satellitePlatforms: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-        rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
-        // Datasource controls are pre-rendered outside the generic thesauri generator, so this dynamic config keeps selectors.
-        modalId: '#modal-platforms-datasource',
-        jsTreeId: '#jstree-platforms-datasource',
-        searchInputId: '#input-platforms-thesaurussearch-ds',
-        selectedListId: 'selected-keywords-platforms-ds',
-        stateKey: 'satellitePlatforms',
-        dynamicOnly: true
-    }
-};
-
 export let currentActiveInput = null;
 
 const loadedConfigs = new Map();
@@ -341,7 +272,10 @@ function finalizeThesaurusTreeReady(config, state) {
     return synchronized;
 }
 
-function isThesaurusConsumerReady(config) {
+function isThesaurusConsumerReady(configKeyOrConfig) {
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (!config || !config.jsTreeId) return false;
+
     const state = ensureSharedState(config);
     const readiness = ensureThesaurusReadiness(config);
     const tree = $(config.jsTreeId).jstree(true);
