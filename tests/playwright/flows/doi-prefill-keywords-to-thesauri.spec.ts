@@ -134,9 +134,13 @@ function subjectKey(subject: SavedSubject): string {
   return JSON.stringify(subject);
 }
 
+type TagifyInput = HTMLInputElement & {
+  _tagify?: { DOM?: { scope?: Element }; value?: ThesaurusKeyword[] };
+};
+
 async function keywordTags(page: Page, selector: string): Promise<ThesaurusKeyword[]> {
   return page.locator(selector).evaluate((input) => {
-    const tags = (input as HTMLInputElement & { _tagify?: { value?: ThesaurusKeyword[] } })._tagify?.value || [];
+    const tags = (input as TagifyInput)._tagify?.value || [];
     return tags.map(tag => ({
       value: tag.value || '',
       id: tag.id || '',
@@ -163,11 +167,26 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   await navigateToHome(page);
   await waitForHomepageReady(page);
 
-  await expect.poll(() => page.evaluate(() => ({
-    science: Boolean((document.querySelector('#input-sciencekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
-    instruments: Boolean((document.querySelector('#input-instruments') as HTMLInputElement & { _tagify?: unknown })?._tagify),
-    free: Boolean((document.querySelector('#input-freekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
-  }))).toEqual({ science: true, instruments: true, free: true });
+  // Tagify keeps #input-* as the original input and inserts <tags class="tagify">
+  // immediately before it. The instance doiPrefill reads is input._tagify.
+  await expect.poll(() => page.evaluate(() => {
+    const ready = (selector: string) => {
+      const input = document.querySelector(selector) as TagifyInput | null;
+      const widget = input?.previousElementSibling;
+      const instance = input?._tagify;
+      return Boolean(
+        instance
+        && widget?.tagName === 'TAGS'
+        && widget.classList.contains('tagify')
+        && instance.DOM?.scope === widget,
+      );
+    };
+    return {
+      science: ready('#input-sciencekeyword'),
+      instruments: ready('#input-instruments'),
+      free: ready('#input-freekeyword'),
+    };
+  })).toEqual({ science: true, instruments: true, free: true });
 
   await page.locator('#input-resourceinformation-source-doi').fill(DOI);
   await page.locator('#button-resourceinformation-prefill-doi').click();
