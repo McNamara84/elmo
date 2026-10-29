@@ -75,9 +75,7 @@ describe('doiPrefill.js', () => {
     delete window.usedInstrumentsModule;
     delete window.ELMO_FEATURES;
     delete window.thesauriReady;
-    delete window.isThesaurusConsumerReady;
     delete window.waitForThesaurusVocabulary;
-    delete window.resolveThesaurusTag;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -580,8 +578,8 @@ describe('doiPrefill.js', () => {
       attachTagify('#input-instruments');
     });
 
-    test('routes subjects to free keywords by default', () => {
-      mod.prefillKeywords([{ subject: 'Geophysics' }]);
+    test('routes subjects to free keywords by default', async () => {
+      await mod.prefillKeywords([{ subject: 'Geophysics' }]);
 
       const tagify = document.querySelector('#input-freekeyword')._tagify;
       expect(tagify.addTags).toHaveBeenCalled();
@@ -590,8 +588,8 @@ describe('doiPrefill.js', () => {
       );
     });
 
-    test('routes GCMD keywords to sciencekeyword tagify', () => {
-      mod.prefillKeywords([
+    test('routes GCMD keywords to sciencekeyword tagify', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'Earth Science',
           schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
@@ -606,8 +604,8 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
-    test('routes GCMD keywords by subjectScheme when no schemeURI (DataCite JSON)', () => {
-      mod.prefillKeywords([
+    test('routes GCMD keywords by subjectScheme when no schemeURI (DataCite JSON)', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD',
           subjectScheme: 'NASA/GCMD Earth Science Keywords',
@@ -623,8 +621,8 @@ describe('doiPrefill.js', () => {
       expect(tagifyFree.addTags).not.toHaveBeenCalled();
     });
 
-    test('routes GCMD Platforms by subjectScheme', () => {
-      mod.prefillKeywords([
+    test('routes GCMD Platforms by subjectScheme', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'GRACE-FO',
           subjectScheme: 'NASA/GCMD Platforms',
@@ -637,8 +635,8 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
-    test('routes GCMD Instruments by subjectScheme', () => {
-      mod.prefillKeywords([
+    test('routes GCMD Instruments by subjectScheme', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'GRACE-FO ACC',
           subjectScheme: 'NASA/GCMD Instruments',
@@ -685,21 +683,7 @@ describe('doiPrefill.js', () => {
       expect(configKeys).toEqual(expect.arrayContaining(thesaurusGroups));
     });
 
-    test('does not reload a thesaurus that is already ready for keywords', async () => {
-      window.isThesaurusConsumerReady = jest.fn(() => true);
-      window.waitForThesaurusVocabulary = jest.fn();
-
-      await mod.prefillKeywords([{
-        subject: 'GRACE-FO ACC',
-        subjectScheme: 'NASA/GCMD Instruments',
-      }]);
-
-      expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalled();
-      expect(document.querySelector('#input-instruments')._tagify.addTags).toHaveBeenCalled();
-    });
-
-    test('routes DataCite GCMD Instruments by schemeUri and stores the vocabulary keyword', async () => {
-      const { resolveTagAgainstWhitelist } = require('../../js/thesauriHelpers');
+    test('loads the thesaurus vocabulary before importing DataCite keywords into Tagify', async () => {
       const tagify = document.querySelector('#input-instruments')._tagify;
       const canonical = 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS';
       const valueURI = 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c';
@@ -713,7 +697,6 @@ describe('doiPrefill.js', () => {
         }],
         enforceWhitelist: true,
       };
-      window.resolveThesaurusTag = resolveTagAgainstWhitelist;
       let releaseVocabulary;
       window.waitForThesaurusVocabulary = jest.fn(() => new Promise(resolve => {
         releaseVocabulary = resolve;
@@ -742,18 +725,51 @@ describe('doiPrefill.js', () => {
       ]);
       expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
       expect(tagify.settings.enforceWhitelist).toBe(true);
-      delete window.resolveThesaurusTag;
-      delete window.waitForThesaurusVocabulary;
     });
 
-    test('handles empty subjects', () => {
-      mod.prefillKeywords([]);
+    test('warns when a thesaurus keyword is absent from the loaded Tagify vocabulary', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const tagify = document.querySelector('#input-instruments')._tagify;
+      tagify.settings = {
+        whitelist: [{
+          value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+          id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }],
+        enforceWhitelist: true,
+      };
+      window.waitForThesaurusVocabulary = jest.fn().mockResolvedValue('loaded');
+
+      await mod.prefillKeywords([{
+        subject: 'Instruments > Retired Instrument',
+        subjectScheme: 'GCMD Instruments',
+        schemeUri: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        valueUri: 'https://gcmd.earthdata.nasa.gov/kms/concept/00000000-0000-0000-0000-000000000000',
+      }]);
+
+      expect(tagify.addTags).not.toHaveBeenCalled();
+      expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Thesaurus keyword could not be imported into Tagify:',
+        expect.objectContaining({
+          thesaurus: 'instruments',
+          keyword: 'Instruments > Retired Instrument',
+          valueURI: 'https://gcmd.earthdata.nasa.gov/kms/concept/00000000-0000-0000-0000-000000000000',
+        })
+      );
+      warnSpy.mockRestore();
+    });
+
+    test('handles empty subjects', async () => {
+      await mod.prefillKeywords([]);
       const tagify = document.querySelector('#input-freekeyword')._tagify;
       expect(tagify.addTags).not.toHaveBeenCalled();
     });
 
-    test('decodes HTML entities in keyword values', () => {
-      mod.prefillKeywords([
+    test('decodes HTML entities in keyword values', async () => {
+      await mod.prefillKeywords([
         { subject: 'EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS' },
       ]);
 

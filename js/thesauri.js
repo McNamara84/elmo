@@ -2,17 +2,12 @@ import {
     stampFullKeywords,
     getNodeFullKeyword,
     whitelistValueFromNode,
-    resolveTagAgainstWhitelist,
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
 } from './thesauriHelpers.js';
 import { THESAURUS_CONFIG } from './thesaurusConfig.js';
 
 export { THESAURUS_CONFIG };
-
-if (typeof window !== 'undefined') {
-    window.resolveThesaurusTag = resolveTagAgainstWhitelist;
-}
 
 /**
  * Recursively searches a jsTree data array for a specific node ID.
