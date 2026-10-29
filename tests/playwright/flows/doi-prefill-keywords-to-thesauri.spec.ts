@@ -170,14 +170,18 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   await page.locator('#input-resourceinformation-source-doi').fill(DOI);
   await page.locator('#button-resourceinformation-prefill-doi').click();
   await expect(page.locator('#modal-doi-prefill')).toBeVisible();
+  // Lookup removes the spinner before confirm. Apply turns it on again only after
+  // the modal's hidden event, then keeps it up while thesaurus vocabularies load.
+  const applying = page.locator('#doi-lookup-spinner');
   await page.locator('#button-doi-prefill-confirm').click();
   await expect(page.locator('#modal-doi-prefill')).toBeHidden();
-  await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0, { timeout: 60000 });
+  await expect(applying).toBeVisible();
+  await expect(applying).toHaveCount(0, { timeout: 60_000 });
 
-  await expect.poll(() => keywordTags(page, '#input-sciencekeyword')).toEqual(SCIENCE_KEYWORDS);
-  await expect.poll(() => keywordTags(page, '#input-instruments')).toEqual(INSTRUMENT_KEYWORDS);
-  await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual([]);
-  await expect.poll(async () => (await freeKeywordValues(page)).slice().sort()).toEqual([...FREE_KEYWORDS].sort());
+  await expect.poll(() => keywordTags(page, '#input-sciencekeyword'), { timeout: 15_000 }).toEqual(SCIENCE_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-instruments'), { timeout: 15_000 }).toEqual(INSTRUMENT_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-platforms'), { timeout: 15_000 }).toEqual([]);
+  await expect.poll(async () => (await freeKeywordValues(page)).slice().sort(), { timeout: 15_000 }).toEqual([...FREE_KEYWORDS].sort());
 
   // start saving the form.
   await page.locator('#button-form-save').click();
