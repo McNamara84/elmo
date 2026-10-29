@@ -8,7 +8,7 @@
         {
           "title": "Bug fixes:",
           "entries": [
-            {
+             {
               "parts": [
                 {
                   "type": "text",
@@ -18,6 +18,19 @@
               "editions": ["all"],
               "references": [
                 { "type": "issue", "number": 1300 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Reusing metadata from a DOI thesaurus keywords end up in correct controlled vocabularies instead of being treated as free keywords or even being lost"
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "issue", "number": 1322 },
+                { "type": "pull", "number": 1323 }
               ]
             },
             {
