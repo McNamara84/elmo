@@ -5,8 +5,13 @@
  * the metadata editor form. Each section has its own mapping function to keep
  * the code maintainable and testable.
  *
+ * Loaded as an ES module. Thesaurus targets come from THESAURUS_CONFIG.
+ * applyDoiPrefill and buildPrefillPreview are also assigned to window because
+ * doiPrefillHandler.js is a classic script.
+ *
  * Depends on jQuery ($) and Tagify being available globally.
  */
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helper: Tagify instance retrieval (mirrors mappingXmlToInputFields) */
@@ -556,14 +561,6 @@ function prefillGeoLocations(geoLocations) {
   });
 }
 
-const THESAURUS_GROUPS_TO_LOAD = new Set([
-  'science_keywords',
-  'platforms',
-  'instruments',
-  'chronostratigraphy',
-  'gemet',
-]);
-
 /**
  * DataCite JSON uses schemeUri/valueUri. Saved XML and some callers use schemeURI/valueURI.
  * @param {Object|string} subject
@@ -647,21 +644,25 @@ function addThesaurusTag(tagify, tagData) {
   }
 }
 
-const THESAURUS_INPUTS = {
-  science_keywords: '#input-sciencekeyword',
-  platforms: '#input-platforms',
-  instruments: '#input-instruments',
-  chronostratigraphy: '#input-chronostratigraphy',
-  gemet: '#input-gemet',
-  msl: '#input-mslkeyword',
-};
+/**
+ * Input selector for a DOI subject group.
+ * MSL is outside THESAURUS_CONFIG. satellitePlatforms is dynamicOnly and has no keyword input.
+ * @param {string} group
+ * @returns {string}
+ */
+function thesaurusInputSelector(group) {
+  if (group === 'msl') return '#input-mslkeyword';
+  const config = THESAURUS_CONFIG[group];
+  if (!config?.inputId || config.dynamicOnly) return '';
+  return config.inputId.startsWith('#') ? config.inputId : `#${config.inputId}`;
+}
 
 function thesaurusTargets() {
   return Object.fromEntries(
-    Object.entries(THESAURUS_INPUTS).map(([group, selector]) => [
-      group,
-      getTagify(document.querySelector(selector)),
-    ])
+    [...Object.keys(THESAURUS_CONFIG), 'msl']
+      .map(group => [group, thesaurusInputSelector(group)])
+      .filter(([, selector]) => selector)
+      .map(([group, selector]) => [group, getTagify(document.querySelector(selector))])
   );
 }
 
@@ -672,7 +673,8 @@ function thesaurusTargets() {
  * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>|null}
  */
 function wakeThesaurusVocabulary(group) {
-  if (!THESAURUS_GROUPS_TO_LOAD.has(group)) return null;
+  const config = THESAURUS_CONFIG[group];
+  if (!config?.inputId || config.dynamicOnly) return null;
   const ready = typeof window.isThesaurusConsumerReady === 'function'
     && window.isThesaurusConsumerReady(group);
   if (ready || typeof window.waitForThesaurusVocabulary !== 'function') return null;
@@ -946,7 +948,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Export for testing (CommonJS)
+// doiPrefillHandler.js is a classic script and reads these as globals.
+if (typeof window !== 'undefined') {
+  window.applyDoiPrefill = applyDoiPrefill;
+  window.buildPrefillPreview = buildPrefillPreview;
+}
+
+// Export for testing (CommonJS, after Babel rewrites the import above)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     getTagify,
