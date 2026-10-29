@@ -79,6 +79,34 @@
               "references": [
                 {"type": "issue", "number": 1305 }
               ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Pasted text now triggers the thesaurus keyword search instead of being added directly as a tag. Suggestions are shown for input with at least three characters."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {"type": "issue", "number": 1273 }
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "The Thesauri Keywords section now shows the total number of selected keywords in its header. The count updates when keywords are added or removed."
+                }
+              ],
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {"type": "issue", "number": 1284 }
+              ]
             }
           ]
         }
