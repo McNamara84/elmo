@@ -647,6 +647,38 @@ function addThesaurusTag(tagify, tagData) {
   }
 }
 
+const THESAURUS_INPUTS = {
+  science_keywords: '#input-sciencekeyword',
+  platforms: '#input-platforms',
+  instruments: '#input-instruments',
+  chronostratigraphy: '#input-chronostratigraphy',
+  gemet: '#input-gemet',
+  msl: '#input-mslkeyword',
+};
+
+function thesaurusTargets() {
+  return Object.fromEntries(
+    Object.entries(THESAURUS_INPUTS).map(([group, selector]) => [
+      group,
+      getTagify(document.querySelector(selector)),
+    ])
+  );
+}
+
+/**
+ * Starts lazy vocabulary loading for one thesaurus that is not ready yet.
+ * Returns null when there is nothing to wait for, so callers can stay synchronous.
+ * @param {string} group
+ * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>|null}
+ */
+function wakeThesaurusVocabulary(group) {
+  if (!THESAURUS_GROUPS_TO_LOAD.has(group)) return null;
+  const ready = typeof window.isThesaurusConsumerReady === 'function'
+    && window.isThesaurusConsumerReady(group);
+  if (ready || typeof window.waitForThesaurusVocabulary !== 'function') return null;
+  return window.waitForThesaurusVocabulary(group);
+}
+
 /**
  * Maps subjects to free keywords and thesaurus keyword tagify fields.
  * Loads each targeted thesaurus first so a keyword is stored as the vocabulary's
@@ -660,45 +692,37 @@ async function prefillKeywords(subjects) {
   const tagifyFree = getTagify(document.querySelector('#input-freekeyword'));
   if (!tagifyFree) return;
 
-  const targets = {
-    science_keywords: getTagify(document.querySelector('#input-sciencekeyword')),
-    platforms: getTagify(document.querySelector('#input-platforms')),
-    instruments: getTagify(document.querySelector('#input-instruments')),
-    chronostratigraphy: getTagify(document.querySelector('#input-chronostratigraphy')),
-    gemet: getTagify(document.querySelector('#input-gemet')),
-    msl: getTagify(document.querySelector('#input-mslkeyword')),
-  };
+  if (window.thesauriReady && typeof window.thesauriReady.then === 'function') {
+    await window.thesauriReady;
+  }
 
   const prepared = [];
-  const groupsToLoad = new Set();
-
   subjects.forEach(subject => {
     const rawKeyword = (typeof subject === 'string') ? subject : (subject.subject || '');
     if (!rawKeyword) return;
 
     // Decode HTML entities (DataCite may deliver e.g. "&gt;" instead of ">")
     const keyword = decodeHtmlEntities(rawKeyword);
-    const group = classifyDoiSubject(subject);
-    const target = group === 'free' ? null : targets[group];
     prepared.push({
-      group,
-      target,
+      group: classifyDoiSubject(subject),
       keyword,
       schemeURI: subjectProperty(subject, 'schemeURI', 'schemeUri'),
       valueURI: subjectProperty(subject, 'valueURI', 'valueUri'),
     });
-    if (target && THESAURUS_GROUPS_TO_LOAD.has(group)) {
-      groupsToLoad.add(group);
-    }
   });
 
-  if (groupsToLoad.size > 0 && typeof window.waitForThesaurusVocabulary === 'function') {
-    await Promise.all([...groupsToLoad].map(group => window.waitForThesaurusVocabulary(group)));
+  const pendingVocabularies = [...new Set(prepared.map(entry => entry.group))]
+    .map(wakeThesaurusVocabulary)
+    .filter(Boolean);
+  if (pendingVocabularies.length > 0) {
+    await Promise.all(pendingVocabularies);
   }
 
+  const targets = thesaurusTargets();
   prepared.forEach(entry => {
-    if (entry.target) {
-      addThesaurusTag(entry.target, {
+    const target = entry.group === 'free' ? null : targets[entry.group];
+    if (target) {
+      addThesaurusTag(target, {
         value: entry.keyword,
         id: entry.valueURI,
         schemeURI: entry.schemeURI,
