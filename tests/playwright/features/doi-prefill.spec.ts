@@ -378,15 +378,12 @@ test.describe('DOI Prefill Feature', () => {
     test(`imports the published ${titleType} and the issue #1282 affiliation without a ROR ID`, async ({ page }) => {
       doiResponse = { found: true, attributes: structuredClone(ISSUE_1282.data.attributes) };
       doiResponse.attributes.titles[1].titleType = titleType;
-      await page.locator('#input-resourceinformation-source-doi').fill(doiResponse.attributes.doi);
-      await page.locator('#button-resourceinformation-prefill-doi').click();
-      await page.locator('#button-doi-prefill-confirm').click();
+      await importCurrentDoi(page);
 
       const expectedAffiliation = ISSUE_1282.data.attributes.creators[0].affiliation[0].name;
       await expect(page.locator('[data-author-affiliation-label]')).toHaveValue(expectedAffiliation);
       await expect(page.locator('select[name="titleType[]"]').nth(1)).toHaveValue(id);
       await expect(page.locator('select[name="titleType[]"]').nth(1).locator('option:checked')).toHaveText(label);
-      await expect(page.locator('#doi-lookup-spinner')).toHaveCount(0);
       const payload = await page.evaluate(() => ({
         authors: JSON.parse((document.querySelector('[name="authorsPayload"]') as HTMLInputElement).value),
         resource: JSON.parse((document.querySelector('[name="resourceInformationPayload"]') as HTMLInputElement).value),

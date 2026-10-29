@@ -752,7 +752,7 @@ describe('doiPrefill.js', () => {
       expect(tagify.addTags).not.toHaveBeenCalled();
       expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
       expect(warnSpy).toHaveBeenCalledWith(
-        'Thesaurus keyword could not be imported into Tagify:',
+        'Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:',
         expect.objectContaining({
           thesaurus: 'instruments',
           keyword: 'Instruments > Retired Instrument',
