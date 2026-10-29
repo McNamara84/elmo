@@ -152,6 +152,24 @@ async function freeKeywordValues(page: Page): Promise<string[]> {
   return tags.map(tag => tag.value);
 }
 
+/** Availability builds the inputs. Vocabulary JSON loads only when a field is used. */
+async function wakeThesauri(page: Page, groups: string[]) {
+  await page.waitForFunction(() => typeof (window as any).thesauriReady?.then === 'function');
+  return page.evaluate(async (groups) => {
+    const app = window as any;
+    await app.thesauriReady;
+    const results: Record<string, string> = {};
+    for (const group of groups) {
+      if (typeof app.isThesaurusConsumerReady === 'function' && app.isThesaurusConsumerReady(group)) {
+        results[group] = 'ready';
+        continue;
+      }
+      results[group] = await app.waitForThesaurusVocabulary(group);
+    }
+    return results;
+  }, groups);
+}
+
 test('DOI prefill splits keywords into thesauri and saves them in the XML', async ({ page }) => {
   test.slow();
   await registerGoogleMapsNoopRoute(page);
@@ -162,11 +180,16 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
 
   await navigateToHome(page);
   await waitForHomepageReady(page);
+  const thesaurusState = await wakeThesauri(page, ['science_keywords', 'instruments']);
+  expect(thesaurusState).toEqual({
+    science_keywords: expect.stringMatching(/^(ready|loaded)$/),
+    instruments: expect.stringMatching(/^(ready|loaded)$/),
+  });
   await expect.poll(() => page.evaluate(() => ({
     science: Boolean((document.querySelector('#input-sciencekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
     instruments: Boolean((document.querySelector('#input-instruments') as HTMLInputElement & { _tagify?: unknown })?._tagify),
     free: Boolean((document.querySelector('#input-freekeyword') as HTMLInputElement & { _tagify?: unknown })?._tagify),
-  })), { timeout: 20000 }).toEqual({ science: true, instruments: true, free: true });
+  }))).toEqual({ science: true, instruments: true, free: true });
 
   await page.locator('#input-resourceinformation-source-doi').fill(DOI);
   await page.locator('#button-resourceinformation-prefill-doi').click();
@@ -180,6 +203,7 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual([]);
   await expect.poll(async () => (await freeKeywordValues(page)).slice().sort()).toEqual([...FREE_KEYWORDS].sort());
 
+  // start saving the form.
   await page.locator('#button-form-save').click();
   await expect(page.locator('#modal-saveas')).toBeVisible();
   await page.locator('#input-saveas-filename').fill('doi-keyword-thesauri');

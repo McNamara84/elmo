@@ -74,6 +74,10 @@ describe('doiPrefill.js', () => {
     delete window.relatedWorkStack;
     delete window.usedInstrumentsModule;
     delete window.ELMO_FEATURES;
+    delete window.thesauriReady;
+    delete window.isThesaurusConsumerReady;
+    delete window.waitForThesaurusVocabulary;
+    delete window.resolveThesaurusTag;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -645,6 +649,53 @@ describe('doiPrefill.js', () => {
       expect(tagify.addTags).toHaveBeenCalledWith([
         expect.objectContaining({ value: 'GRACE-FO ACC' }),
       ]);
+    });
+
+    test('classifyDoiSubject thesaurus groups are THESAURUS_CONFIG keys', () => {
+      const source = fs.readFileSync(path.resolve(__dirname, '../../js/thesaurusConfig.js'), 'utf8');
+      const start = source.indexOf('export const THESAURUS_CONFIG = {');
+      const end = source.indexOf('\n};', start);
+      const configKeys = [...source.slice(start, end).matchAll(/\n {4}(\w+): \{/g)].map(match => match[1]);
+
+      const cases = [
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' }, 'science_keywords'],
+        [{ subjectScheme: 'NASA/GCMD Earth Science Keywords' }, 'science_keywords'],
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' }, 'platforms'],
+        [{ subjectScheme: 'NASA/GCMD Platforms' }, 'platforms'],
+        [{ subjectScheme: 'GCMD Platforms' }, 'platforms'],
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' }, 'instruments'],
+        [{ subjectScheme: 'NASA/GCMD Instruments' }, 'instruments'],
+        [{ subjectScheme: 'GCMD Instruments' }, 'instruments'],
+        [{ schemeURI: 'http://resource.geosciml.org/vocabulary/timescale/gts2020' }, 'chronostratigraphy'],
+        [{ subjectScheme: 'International Chronostratigraphic Chart' }, 'chronostratigraphy'],
+        [{ subjectScheme: 'Chronostratigraphic Chart' }, 'chronostratigraphy'],
+        [{ schemeURI: 'http://www.eionet.europa.eu/gemet/gemetThesaurus' }, 'gemet'],
+        [{ schemeURI: 'http://www.eionet.europa.eu/gemet/concept/' }, 'gemet'],
+        [{ subjectScheme: 'GEMET - Concepts' }, 'gemet'],
+        [{ schemeURI: 'https://epos-msl.uu.nl/voc/materials/1.3/example' }, 'msl'],
+        [{ subject: 'Geochemistry' }, 'free'],
+      ];
+
+      const groups = cases.map(([subject, expected]) => {
+        expect(mod.classifyDoiSubject(subject)).toBe(expected);
+        return expected;
+      });
+      // free is uncontrolled text. msl uses its own input, outside THESAURUS_CONFIG.
+      const thesaurusGroups = [...new Set(groups.filter(group => group !== 'free' && group !== 'msl'))];
+      expect(configKeys).toEqual(expect.arrayContaining(thesaurusGroups));
+    });
+
+    test('does not reload a thesaurus that is already ready for keywords', async () => {
+      window.isThesaurusConsumerReady = jest.fn(() => true);
+      window.waitForThesaurusVocabulary = jest.fn();
+
+      await mod.prefillKeywords([{
+        subject: 'GRACE-FO ACC',
+        subjectScheme: 'NASA/GCMD Instruments',
+      }]);
+
+      expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalled();
+      expect(document.querySelector('#input-instruments')._tagify.addTags).toHaveBeenCalled();
     });
 
     test('routes DataCite GCMD Instruments by schemeUri and stores the vocabulary keyword', async () => {
