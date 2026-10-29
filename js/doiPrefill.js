@@ -12,6 +12,7 @@
  * Depends on jQuery ($) and Tagify being available globally.
  */
 import { THESAURUS_CONFIG } from './thesaurusConfig.js';
+import { resolveTagAgainstWhitelist } from './thesauriHelpers.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helper: Tagify instance retrieval (mirrors mappingXmlToInputFields) */
@@ -621,25 +622,38 @@ function classifyDoiSubject(subject) {
 }
 
 /**
- * Adds one thesaurus keyword, rewritten to the loaded whitelist when possible.
- * The DataCite scheme name is not copied: the vocabulary entry is the scheme
- * that save writes into subjectScheme.
+ * Adds one thesaurus keyword to a ready Tagify field.
+ * The whitelist entry supplies value and subjectScheme. If Tagify does not
+ * accept the keyword (e.g. the concept is not in the loaded vocabulary),
+ * logs a warning instead of dropping it into free keywords.
+ * @param {string} group
  * @param {Tagify} tagify
  * @param {{value: string, id: string, schemeURI: string}} tagData
  */
-function addThesaurusTag(tagify, tagData) {
-  const whitelist = tagify.settings?.whitelist || [];
-  const resolved = typeof window.resolveThesaurusTag === 'function'
-    ? window.resolveThesaurusTag(tagData, whitelist)
-    : tagData;
-  const settings = tagify.settings;
-  const enforceWhitelist = settings?.enforceWhitelist;
-  if (settings) settings.enforceWhitelist = false;
-  try {
-    tagify.addTags([resolved]);
-  } finally {
-    if (settings && enforceWhitelist !== undefined) {
-      settings.enforceWhitelist = enforceWhitelist;
+function importThesaurusKeyword(group, tagify, tagData) {
+  const whitelist = tagify.settings?.whitelist;
+  const resolved = resolveTagAgainstWhitelist(tagData, whitelist);
+  if (Array.isArray(whitelist) && whitelist.length > 0) {
+    const inWhitelist = whitelist.some(entry => entry && entry.value === resolved.value);
+    if (!inWhitelist) {
+      console.warn('Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
+      return;
+    }
+  }
+  const before = Array.isArray(tagify.value) ? tagify.value.length : null;
+  tagify.addTags([resolved]);
+  if (before !== null && Array.isArray(tagify.value) && tagify.value.length === before) {
+    const alreadyPresent = tagify.value.some(tag => tag && tag.value === resolved.value);
+    if (!alreadyPresent) {
+      console.warn('Metadata export by DOI: Ignoring duplicate keyword:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
     }
   }
 }
@@ -667,24 +681,40 @@ function thesaurusTargets() {
 }
 
 /**
- * Starts lazy vocabulary loading for one thesaurus that is not ready yet.
- * Returns null when there is nothing to wait for, so callers can stay synchronous.
- * @param {string} group
- * @returns {Promise<'loaded'|'error'|'timeout'|'missing'>|null}
+ * Loads the thesauri referenced by the imported subjects and waits until each
+ * field's Tagify whitelist and jsTree are ready, following XML import.
+ * @param {Array<{group: string}>} prepared
+ * @returns {Promise<Set<string>>} Groups whose vocabulary failed to become ready.
  */
-function wakeThesaurusVocabulary(group) {
-  const config = THESAURUS_CONFIG[group];
-  if (!config?.inputId || config.dynamicOnly) return null;
-  const ready = typeof window.isThesaurusConsumerReady === 'function'
-    && window.isThesaurusConsumerReady(group);
-  if (ready || typeof window.waitForThesaurusVocabulary !== 'function') return null;
-  return window.waitForThesaurusVocabulary(group);
+async function prepareThesauriForKeywords(prepared) {
+  if (typeof window.waitForThesaurusVocabulary !== 'function') {
+    return new Set();
+  }
+  const groups = [...new Set(prepared.map(entry => entry.group))]
+    .filter(group => {
+      const config = THESAURUS_CONFIG[group];
+      return Boolean(config?.inputId && !config.dynamicOnly);
+    });
+  if (groups.length === 0) {
+    return new Set();
+  }
+  const results = await Promise.all(groups.map(group => window.waitForThesaurusVocabulary(group)));
+  const notReady = new Set();
+  groups.forEach((group, index) => {
+    if (results[index] !== 'loaded') {
+      console.warn('Thesaurus vocabulary not ready for DOI keyword import:', {
+        thesaurus: group,
+        status: results[index],
+      });
+      notReady.add(group);
+    }
+  });
+  return notReady;
 }
 
 /**
  * Maps subjects to free keywords and thesaurus keyword tagify fields.
- * Loads each targeted thesaurus first so a keyword is stored as the vocabulary's
- * full breadcrumb instead of the shorter DataCite label.
+ * Waits for thesauri inputs and each referenced vocabulary before importing.
  * @param {Array<Object|string>} subjects
  * @returns {Promise<void>}
  */
@@ -713,25 +743,36 @@ async function prefillKeywords(subjects) {
     });
   });
 
-  const pendingVocabularies = [...new Set(prepared.map(entry => entry.group))]
-    .map(wakeThesaurusVocabulary)
-    .filter(Boolean);
-  if (pendingVocabularies.length > 0) {
-    await Promise.all(pendingVocabularies);
-  }
-
+  await prepareThesauriForKeywords(prepared);
   const targets = thesaurusTargets();
+
   prepared.forEach(entry => {
-    const target = entry.group === 'free' ? null : targets[entry.group];
-    if (target) {
-      addThesaurusTag(target, {
-        value: entry.keyword,
-        id: entry.valueURI,
-        schemeURI: entry.schemeURI,
+    if (entry.group === 'free') {
+      tagifyFree.addTags([{ value: entry.keyword }]);
+      return;
+    }
+    const target = targets[entry.group];
+    if (!target) {
+      console.warn('Thesaurus keyword could not be imported into Tagify:', {
+        thesaurus: entry.group,
+        keyword: entry.keyword,
+        valueURI: entry.valueURI,
       });
       return;
     }
-    tagifyFree.addTags([{ value: entry.keyword }]);
+    importThesaurusKeyword(entry.group, target, {
+      value: entry.keyword,
+      id: entry.valueURI,
+      schemeURI: entry.schemeURI,
+    });
+  });
+
+  Object.values(targets).concat(tagifyFree).filter(Boolean).forEach(tagify => {
+    if (typeof tagify.update === 'function') {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === 'function') {
+      tagify._updateHiddenField();
+    }
   });
 }
 
