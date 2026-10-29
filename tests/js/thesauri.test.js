@@ -611,6 +611,106 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
     delete window.ELMO_FEATURES;
   });
 
+  describe.each(['regular', 'dynamic'])('%s thesaurus paste support', (inputType) => {
+    let tagify;
+
+    beforeEach(() => {
+      if (inputType === 'regular') {
+        tagify = document.getElementById('input-sciencekeyword')._tagify;
+      } else {
+        const input = document.createElement('input');
+        input.id = 'input-test-dynamic-platforms';
+        document.body.appendChild(input);
+
+        exports.initTagifyForInput(input, 'satellitePlatforms');
+        tagify = input._tagify;
+      }
+
+      tagify.state = { inputText: '' };
+      tagify.dropdown = { hide: jest.fn() };
+
+      // Enable fake timers after the existing asynchronous setup has finished.
+      jest.useFakeTimers();
+    });
+
+    afterEach(() => {
+      jest.clearAllTimers();
+      jest.useRealTimers();
+    });
+
+    function paste(value) {
+      tagify.state.inputText = value;
+      tagify.settings.callbacks.paste({
+        detail: { tagify },
+      });
+    }
+
+    test('keeps pasted text as a search query instead of creating tags', () => {
+      expect(tagify.settings.pasteAsTags).toBe(false);
+    });
+
+    test('configures a three-character minimum and a paste callback', () => {
+      expect(tagify.settings.dropdown.enabled).toBe(3);
+      expect(tagify.settings.callbacks.paste).toEqual(expect.any(Function));
+    });
+
+    test.each(['', 'a', 'ab'])(
+      'defers hiding the dropdown for short pasted input %j',
+      (value) => {
+        paste(value);
+
+        expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+
+        jest.runOnlyPendingTimers();
+
+        expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+        expect(tagify.state.inputText).toBe(value);
+      }
+    );
+
+    test.each(['air', 'air Quality'])(
+      'does not hide the dropdown for pasted input %j',
+      (value) => {
+        paste(value);
+
+        jest.runOnlyPendingTimers();
+
+        expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+        expect(tagify.state.inputText).toBe(value);
+      }
+    );
+
+    test('uses the configured minimum instead of a hard-coded value', () => {
+      tagify.settings.dropdown.enabled = 5;
+
+      paste('lead');
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+
+      tagify.dropdown.hide.mockClear();
+
+      paste('ocean');
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).not.toHaveBeenCalled();
+    });
+
+    test('handles missing input text as an empty search', () => {
+      tagify.state = {};
+
+      expect(() => {
+        tagify.settings.callbacks.paste({
+          detail: { tagify },
+        });
+      }).not.toThrow();
+
+      jest.runOnlyPendingTimers();
+
+      expect(tagify.dropdown.hide).toHaveBeenCalledTimes(1);
+    });
+  });
+
 
   describe('keyword summary count', () => {
     let group;
