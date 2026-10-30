@@ -47,6 +47,7 @@ class SaveHandler {
         };
         this.autosaveService = autosaveService;
         this.currentFormat = 'xml';
+        this.saveInProgress = false;
         
         // Security fields
         this.$honeypotField = $('#input-please-fill-in-this-field');
@@ -60,10 +61,10 @@ class SaveHandler {
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
         $('#modal-saveas').on('hidden.bs.modal', () => {
-            // Only dismiss the notification when it still shows the preparatory
-            // info alert. After the save completes the notification contains
-            // a success/danger alert and must stay visible.
-            if ($('#modal-notification-body .alert-info').length) {
+            // Cancel dismisses the preparatory info alert. During a save, keep
+            // the notification open: Bootstrap ignores show() while hide() is
+            // animating, which could otherwise swallow the save result.
+            if (!this.saveInProgress && $('#modal-notification-body .alert-info').length) {
                 this.modals.notification.hide();
             }
         });
@@ -135,6 +136,7 @@ class SaveHandler {
      * Handle save confirmation
      */
     async handleSaveConfirm() {
+        if (this.saveInProgress) return;
         const filename = $('#input-saveas-filename').val().trim();
         if (!filename) {
             this.showNotification('danger',
@@ -143,8 +145,13 @@ class SaveHandler {
             return;
         }
 
-        this.modals.saveAs.hide();
-        await this.saveAndDownload(filename, this.currentFormat);
+        this.saveInProgress = true;
+        try {
+            this.modals.saveAs.hide();
+            await this.saveAndDownload(filename, this.currentFormat);
+        } finally {
+            this.saveInProgress = false;
+        }
     }
 
     /**

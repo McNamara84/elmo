@@ -68,18 +68,19 @@ async function downloadIcgemXml(page: Page): Promise<string> {
   await page.locator('#modal-saveas').waitFor({ state: 'visible', timeout: 5_000 });
   await page.locator('#input-saveas-filename').fill('elmogem-contact-info-roundtrip');
   await waitForFormInteractionReady(page, 'save');
-  await page.locator('#button-saveas-save').click();
-  await page.waitForResponse(
+  const saveResponse = page.waitForResponse(
     (response) => response.url().includes('/save/save_data.php') && response.request().method() === 'POST',
     { timeout: 30_000 },
   );
+  await page.locator('#button-saveas-save').click();
+  await saveResponse;
   await page.unroute('**/save/save_data.php');
 
   expect(capturedStatus, capturedBody.slice(0, 500)).toBe(200);
   expect(capturedBody.trim().length).toBeGreaterThan(0);
 
   const notification = page.locator('#modal-notification');
-  await expect(notification).toBeVisible();
+  await expect(notification.locator('.alert-success')).toBeVisible();
   await notification.locator('.btn-primary').click();
   await expect(notification).toBeHidden();
   await expect(page.locator('#modal-saveas')).toBeHidden();
