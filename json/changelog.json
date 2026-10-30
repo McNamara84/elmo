@@ -8,6 +8,18 @@
         {
           "title": "Bug fixes:",
           "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "ERNIE license cache lock files now explain their purpose and cache context instead of remaining empty. Existing empty locks are annotated on their next refresh while preserving concurrent refresh protection."
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "pull", "number": 1318 }
+              ]
+            },
              {
               "parts": [
                 {

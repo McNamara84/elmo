@@ -55,6 +55,18 @@ final class ErnieLicenseCache
                     }
                     usleep(10000);
                 }
+                // Keep the same file between requests: unlinking or replacing it can
+                // let waiting processes lock different inodes for the same scope.
+                // Annotate new and legacy empty locks only while holding that lock.
+                if (fstat($lock)['size'] === 0) {
+                    $metadata = [
+                        'purpose' => 'Persistent ERNIE license refresh lock; not a license snapshot. Do not delete while ELMO is running.',
+                        'origin' => $this->baseUrl, 'profile' => $this->profile, 'scope' => $scope,
+                    ];
+                    // These diagnostics are optional; failure must not prevent a fetch.
+                    @fwrite($lock, json_encode($metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR) . "\n");
+                    @fflush($lock);
+                }
                 // Another request may already have refreshed this scope while we waited.
                 $latest = $this->read($scope);
                 if (!$force && $latest !== null && microtime(true) - $latest['fetchedAt'] < $this->ttl) {

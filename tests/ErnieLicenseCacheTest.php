@@ -76,6 +76,80 @@ final class ErnieLicenseCacheTest extends TestCase
         }
     }
 
+    public function testRefreshLocksDescribeTheirContextAndAreReused(): void
+    {
+        $cache = $this->cache();
+        $cache->get('dataset');
+        $locks = glob($this->directory . '/*.json.lock');
+        self::assertCount(1, $locks);
+        $body = file_get_contents($locks[0]);
+        $metadata = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        self::assertStringContainsString('Do not delete', $metadata['purpose']);
+        self::assertSame('https://ernie.test', $metadata['origin']);
+        self::assertSame('elmo', $metadata['profile']);
+        self::assertSame('dataset', $metadata['scope']);
+
+        $cache->get('dataset');
+        $cache->get('dataset', true);
+        $this->response = 'offline';
+        self::assertSame('stale-cache', $cache->get('dataset', true)['source']);
+        self::assertSame($locks, glob($this->directory . '/*.json.lock'));
+        self::assertSame($body, file_get_contents($locks[0]));
+        self::assertCount(2, glob($this->directory . '/*'));
+    }
+
+    public function testLegacyEmptyLockIsAnnotatedInPlaceOnlyAfterItsOwnerReleasesIt(): void
+    {
+        $path = $this->directory . '/ernie_licenses_' . hash('sha256', 'https://ernie.test') . '_elmo_dataset.json.lock';
+        $owner = fopen($path, 'c+');
+        self::assertTrue(flock($owner, LOCK_EX | LOCK_NB));
+        try {
+            $cache = $this->cache();
+            $busy = $cache->get('dataset', timeout: 0.02);
+            self::assertSame('unavailable', $busy['availability']);
+            self::assertStringContainsString('busy', $busy['error']);
+            self::assertSame(0, fstat($owner)['size']);
+            self::assertSame([], $this->requests);
+
+            flock($owner, LOCK_UN);
+            self::assertSame('ernie', $cache->get('dataset')['source']);
+            // Read through the original open handle: replacing the lock would
+            // leave this handle pointing to the old, empty file.
+            rewind($owner);
+            $metadata = json_decode(stream_get_contents($owner), true, 512, JSON_THROW_ON_ERROR);
+            self::assertSame('dataset', $metadata['scope']);
+
+            self::assertTrue(flock($owner, LOCK_EX | LOCK_NB));
+            $busy = $cache->get('dataset', true, 0.02);
+            self::assertSame('stale-cache', $busy['source']);
+            self::assertSame('available', $busy['availability']);
+            self::assertStringContainsString('busy', $busy['error']);
+            self::assertCount(1, $this->requests);
+        } finally {
+            flock($owner, LOCK_UN);
+            fclose($owner);
+        }
+    }
+
+    public function testFailedFirstFetchIsRememberedAcrossCacheInstances(): void
+    {
+        $this->response = 'offline';
+        self::assertSame('unavailable', $this->cache()->get('software')['availability']);
+        self::assertSame([], glob($this->directory . '/*.json'));
+        $locks = glob($this->directory . '/*.json.lock');
+        self::assertCount(1, $locks);
+        self::assertSame('software', json_decode(file_get_contents($locks[0]), true, 512, JSON_THROW_ON_ERROR)['scope']);
+
+        $cache = $this->cache();
+        self::assertFalse($cache->status()['licenses:software']['exists']);
+        self::assertSame('unavailable', $cache->status()['licenses:software']['state']);
+        $this->response = '[]';
+        $this->requests = [];
+        self::assertSame(['licenses:all' => true, 'licenses:software' => true], $cache->refresh());
+        self::assertSame(['/api/v1/licenses/elmo', '/api/v1/licenses/elmo/software'], $this->requests);
+        self::assertSame('empty', $cache->get('software')['availability']);
+    }
+
     public function testUnavailableWithoutSuitableCacheAndUnknownScopeRejected(): void
     {
         $cache = $this->cache();

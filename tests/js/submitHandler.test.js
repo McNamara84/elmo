@@ -117,6 +117,7 @@ describe('submitHandler.js', () => {
     delete window.authorStack;
     delete window.relatedWorkStack;
     delete window.resourceInformation;
+    delete window.elmo;
   });
 
   describe('resource version at Submit', () => {
@@ -798,6 +799,23 @@ describe('submitHandler.js', () => {
     handler.handleSubmit();
     expect(modalSpy).toHaveBeenCalled();
     expect(notifSpy).not.toHaveBeenCalled();
+  });
+
+  test.each([false, true])('handleSubmit respects license grants with a valid resource version (allowed: %s)', allowed => {
+    handler.$form.append('<input id="input-resourceinformation-version" name="version" pattern="\\d+\\.\\d+" value="1.2">');
+    document.getElementById('group-author').innerHTML = `
+      <input type="hidden" name="authorsPayload" value='[{"type":"person","familyname":"Doe","isContact":true,"email":"doe@example.org"}]'>
+    `;
+    window.elmo = { licenses: { render: jest.fn(), canSubmit: jest.fn(() => allowed) } };
+
+    handler.handleSubmit();
+
+    expect(window.elmo.licenses.render).toHaveBeenCalled();
+    expect(window.elmo.licenses.canSubmit).toHaveBeenCalled();
+    expect(document.getElementById('input-resourceinformation-version').validity.valid).toBe(true);
+    expect(handler.modals.submit.show).toHaveBeenCalledTimes(allowed ? 1 : 0);
+    expect(handler.modals.validationFailed.show).toHaveBeenCalledTimes(allowed ? 0 : 1);
+    expect(handler.$form.hasClass('was-validated')).toBe(!allowed);
   });
 
   test.each(['', 'contact@example.org'])('handleSubmit checks contacts even when another required field is empty (email: %s)', email => {
