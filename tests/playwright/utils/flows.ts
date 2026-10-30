@@ -14,6 +14,13 @@ export async function completeMinimalDatasetForm(page: Page) {
   
   await page.getByRole('textbox', { name: 'Publication Year (YYYY)*' }).fill('2025');
   await page.getByLabel('Resource Type*').selectOption({ label: 'Dataset' });
+  // Some editor profiles have no allowed CC BY default: make an explicit choice.
+  const license = page.locator('#input-rights-license');
+  if (await license.count()) {
+    await expect(license).toBeEnabled();
+    await expect(license.locator('option[value]:not([value=""]):not([value="__retained__"])').first()).toBeAttached();
+    if (!(await license.inputValue())) await license.selectOption({ index: 1 });
+  }
   await page.getByRole('textbox', { name: 'Title*' }).fill('A dataset');
 
   // Fill author using the robust addAuthor function

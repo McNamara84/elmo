@@ -1,142 +1,124 @@
-// plan: 1. mock response from getJson, 2. trigger the function 3. check filtering and cc-by-4.0 at the top of the list. 
-
-/**
- * @jest-environment jsdom
- */
+/** @jest-environment jsdom */
 const $ = require('jquery');
+global.$ = global.jQuery = $;
+const { LicenseSelection, matches } = require('../../js/services/licenseService.js');
 
-describe('setupLicenseDropdown', () => {
-  beforeAll(() => {
-    global.$ = $;
-    global.jQuery = $;
+const cc = { rights_id: 81, text: 'CC BY', rightsIdentifier: 'CC-BY-4.0', rightsURI: 'https://creativecommons.org/licenses/by/4.0/', schemeURI: 'https://spdx.org/licenses/' };
+const mit = { rights_id: 17, text: 'MIT', rightsIdentifier: 'MIT', rightsURI: 'https://opensource.org/license/mit/', schemeURI: 'https://spdx.org/licenses/' };
+const response = rows => ({ ok: true, json: async () => ({ licenses: rows, availability: rows.length ? 'available' : 'empty' }) });
+let service;
+beforeEach(() => {
+  document.body.innerHTML = '<select id="input-resourceinformation-resourcetype"><option value="">Choose</option><option value="3">Dataset</option></select><select id="input-rights-license" required></select><div id="license-availability"></div>';
+  service = new LicenseSelection();
+  window.elmo.licenses = service;
+  global.fetch = jest.fn().mockResolvedValue(response([mit, cc]));
+});
+const select = () => document.getElementById('input-rights-license');
+const payload = () => JSON.parse(document.querySelector('[name="licensePayload"]').value).license;
 
-    // Stub fetch used by setupTimezoneDropdownAjax
-    global.fetch = jest.fn().mockResolvedValue({
-      json: async () => [],
-    });
+test('waits for resource type without fetching or inventing a default', async () => {
+  await service.load();
+  expect(fetch).not.toHaveBeenCalled();
+  expect(select().value).toBe('');
+  expect(select().disabled).toBe(true);
+  expect(payload()).toBeNull();
+});
 
-    // Stub $.ajax used by other dropdowns to avoid network in tests
-    jest.spyOn($, 'ajax').mockImplementation((opts) => {
-      if (typeof opts?.beforeSend === 'function') opts.beforeSend();
-      if (typeof opts?.success === 'function') opts.success([]);
-      if (typeof opts?.complete === 'function') opts.complete();
-      return { fail: jest.fn(), always: jest.fn() };
-    });
+test('uses scoped endpoint, ERNIE order and allowed default with arbitrary local IDs', async () => {
+  await service.load('3');
+  expect(fetch).toHaveBeenCalledWith('api/v2/vocabs/licenses/resource-type/3');
+  expect([...select().options].map(o => o.value)).toEqual(['', '17', '81']);
+  expect(select().value).toBe('81');
+  expect(payload().identifier).toBe('CC-BY-4.0');
+  await service.load('3');
+  expect(select().options).toHaveLength(3);
+});
 
-    // Load select.js once (document.ready will run)
-    require('../../js/select.js');
+test('requires explicit selection without an allowed default and ignores legacy filters', async () => {
+  fetch.mockResolvedValue(response([{ ...mit, forSoftware: '0' }]));
+  await service.load('3');
+  expect(select().value).toBe('');
+  $(select()).val('17').trigger('change');
+  expect(payload().identifier).toBe('MIT');
+  expect(select().validity.valid).toBe(true);
+});
+
+test('preserves valid choices and visibly retains a revoked choice without replacement', async () => {
+  await service.load('3');
+  $(select()).val('17').trigger('change');
+  await service.load('3');
+  expect(select().value).toBe('17');
+  fetch.mockResolvedValue(response([cc]));
+  await service.load('4');
+  expect(select().value).toBe('__retained__');
+  expect(payload().identifier).toBe('MIT');
+  expect(select().validity.valid).toBe(false);
+  expect(document.getElementById('license-availability').textContent).toContain('not currently allowed');
+});
+
+test.each(['empty', 'offline', 'malformed'])('%s cannot restore local seed licenses', async state => {
+  fetch.mockImplementation(async () => {
+    if (state === 'offline') throw new Error('timeout');
+    return state === 'empty' ? response([]) : { ok: true, json: async () => ({}) };
   });
+  await service.load('3');
+  expect(select().value).toBe('');
+  expect(select().options).toHaveLength(1);
+  expect(payload()).toBeNull();
+  expect(select().validity.valid).toBe(false);
+});
 
-  beforeEach(() => {
-    // Fresh DOM per test
-    document.body.innerHTML = `
-      <select id="input-rights-license"></select>
-      <select id="input-resourceinformation-resourcetype"></select>
-    `;
-    jest.clearAllMocks();
-  });
+test('ignores an earlier response after a rapid resource type change', async () => {
+  let resolveOld;
+  fetch.mockImplementationOnce(() => new Promise(resolve => { resolveOld = resolve; }));
+  const old = service.load('3');
+  fetch.mockResolvedValueOnce(response([mit]));
+  await service.load('4');
+  resolveOld(response([cc]));
+  await old;
+  expect([...select().options].map(o => o.value)).toEqual(['', '17']);
+  expect(payload()).toBeNull();
+});
 
-  function mockGetJSONForBothEndpoints({ allData, softwareData }) {
-    jest.spyOn($, 'getJSON').mockImplementation((url, success) => {
-      if (url.includes('/vocabs/licenses/all')) {
-        success(allData);
-      } else if (url.includes('/vocabs/licenses/software')) {
-        success(softwareData);
-      } else {
-        success([]);
-      }
-      return { fail: jest.fn() };
-    });
-  }
+test('retains imported custom rights and full identifier versions in portable payload', async () => {
+  document.getElementById('input-resourceinformation-resourcetype').value = '3';
+  const imported = { identifier: 'custom-4.0', name: 'Original rights', uri: null, scheme_uri: 'urn:example:licenses', scheme_name: 'Example' };
+  await service.setMetadata(imported);
+  expect(payload()).toEqual(imported);
+  expect(select().value).toBe('__retained__');
+});
 
-  test('non-software licenses: filters out software-only, sorts by rightsIdentifier with CC-BY-4.0 on top and selects it', () => {
-    const allData = [
-      // software-only
-      { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0', forSoftware: '1' },
-      { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License', forSoftware: '1' },
-      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License', forSoftware: '1' },
-      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
+test('schema identity controls matching and custom identifiers retain case', () => {
+  expect(matches({ identifier: 'MIT', scheme_uri: null }, { identifier: 'MIT', scheme_uri: 'https://spdx.org/licenses/' })).toBe(false);
+  expect(matches({ identifier: 'Custom', scheme_uri: null }, { identifier: 'custom', scheme_uri: null })).toBe(false);
+  expect(matches({ identifier: 'cc-by-4.0', scheme_uri: 'https://spdx.org/licenses' }, { identifier: 'CC-BY-4.0', scheme_uri: 'https://spdx.org/licenses/' })).toBe(true);
+});
 
-      // non-software
-      { rights_id: 'rid-eul', rightsIdentifier: 'EUPL-1.2', text: 'European Union Public License 2.0', forSoftware: '0' },
-      {
-        rights_id: 'rid-ccb4',
-        rightsIdentifier: 'CC-BY-4.0',
-        text: 'Creative Commons Attribution 4.0 International',
-        forSoftware: '0',
-      },
-      {
-        rights_id: 'rid-cc0',
-        rightsIdentifier: 'CC0-1.0',
-        text: 'Creative Commons Zero v1.0 Universal',
-        forSoftware: '0',
-      },
-      {
-        rights_id: 'rid-ccbync4',
-        rightsIdentifier: 'CC-BY-NC-4.0',
-        text: 'Creative Commons Attribution-NonCommercial 4.0 International',
-        forSoftware: '0',
-      },
-    ];
+test('an imported empty license stays empty even when CC BY is allowed', async () => {
+  document.getElementById('input-resourceinformation-resourcetype').value = '3';
+  await service.setMetadata(null);
+  expect(select().value).toBe('');
+  expect(payload()).toBeNull();
+  await service.reset();
+  expect(select().value).toBe('81');
+});
 
-    mockGetJSONForBothEndpoints({ allData, softwareData: [] });
+test('submission stays blocked while a disabled license control is loading', async () => {
+  let finish;
+  fetch.mockImplementation(() => new Promise(resolve => { finish = resolve; }));
+  const pending = service.load('3');
+  expect(select().disabled).toBe(true);
+  expect(service.canSubmit()).toBe(false);
+  finish(response([cc]));
+  await pending;
+  expect(service.canSubmit()).toBe(true);
+});
 
-    // Call the function under test
-    window.setupLicenseDropdown(false);
-
-    const $select = $('#input-rights-license');
-    const options = $select.find('option').toArray();
-
-    // No "Choose..." placeholder
-    expect(options.some(o => o.textContent.includes('Choose'))).toBe(false);
-
-    // Ensure only non-software remain and are sorted correctly
-    const texts = options.map(o => o.textContent.trim());
-    expect(texts).toEqual([
-      'Creative Commons Attribution 4.0 International (CC-BY-4.0)',
-      'Creative Commons Attribution-NonCommercial 4.0 International (CC-BY-NC-4.0)',
-      'Creative Commons Zero v1.0 Universal (CC0-1.0)',
-      'European Union Public License 2.0 (EUPL-1.2)',
-    ]);
-
-    // CC-BY-4.0 is selected and is the first
-    expect($select.val()).toBe('rid-ccb4');
-  });
-
-  test('software licenses: filters for software-only and sorts with copyleft licenses last', () => {
-    const softwareData = [
-      { rights_id: 'rid-mit', rightsIdentifier: 'MIT', text: 'MIT License', forSoftware: '1' },
-      { rights_id: 'rid-apache', rightsIdentifier: 'Apache-2.0', text: 'Apache License 2.0', forSoftware: '1' },
-      { rights_id: 'rid-gpl', rightsIdentifier: 'GPL-3.0-or-later', text: 'GNU General Public License v3.0 or later', forSoftware: '1' },
-      { rights_id: 'rid-bsd', rightsIdentifier: 'BSD-3-Clause', text: 'BSD 3-Clause License', forSoftware: '1' },
-      // These should be filtered out even if present
-      { rights_id: 'rid-ccb4', rightsIdentifier: 'CC-BY-4.0', text: 'Creative Commons Attribution 4.0 International', forSoftware: '0' }
-    ];
-
-    mockGetJSONForBothEndpoints({ allData: [], softwareData });
-
-    // Call the function under test
-    window.setupLicenseDropdown(true);
-
-    const $select = $('#input-rights-license');
-    const options = $select.find('option').toArray();
-    const texts = options.map(o => o.textContent.trim());
-
-    // No "Choose..." placeholder
-    expect(texts.some(t => t.includes('Choose'))).toBe(false);
-
-    // Should only have software licenses (forSoftware === '1')
-    expect(texts.length).toBe(4);
-
-    // Non-copyleft licenses first (Apache, BSD, MIT), then copyleft (GPL) at end
-    expect(texts).toEqual([
-      'Apache License 2.0 (Apache-2.0)',
-      'BSD 3-Clause License (BSD-3-Clause)',
-      'MIT License (MIT)',
-      'GNU General Public License v3.0 or later (GPL-3.0-or-later)'
-    ]);
-
-    // No CC-BY in software list
-    expect(texts.join(' ')).not.toContain('CC-BY-4.0');
-  });
+test('matching imported rights preserve their original text until deliberately changed', async () => {
+  document.getElementById('input-resourceinformation-resourcetype').value = '3';
+  await service.setMetadata({ identifier: 'CC-BY-4.0', name: 'Original attribution text', uri: cc.rightsURI, scheme_uri: cc.schemeURI });
+  expect(select().selectedOptions[0].text).toContain('Original attribution text');
+  expect(payload().name).toBe('Original attribution text');
+  $(select()).val('17').trigger('change');
+  expect(payload().name).toBe('MIT');
 });

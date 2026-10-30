@@ -190,7 +190,7 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/vocabs/resourcetypes': MOCK_RESOURCE_TYPES,
   'api/v2/vocabs/languages': MOCK_LANGUAGES,
   'api/v2/vocabs/titletypes': MOCK_TITLE_TYPES,
-  'api/v2/vocabs/licenses/all': MOCK_LICENSES,
+  'api/v2/vocabs/licenses/resource-type/': { licenses: MOCK_LICENSES, availability: 'available' },
   'api/v2/vocabs/licenses/software': MOCK_LICENSES,
   'api/v2/vocabs/relations': { relations: [] },
   'api/v2/vocabs/pid4inst/instruments': MOCK_INSTRUMENTS_API,
@@ -326,6 +326,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
 
     // Inject JS dependencies
     await injectScript(page, 'node_modules/jquery/dist/jquery.min.js');
+    await injectScript(page, 'js/services/licenseService.js');
 
     // Patch jQuery $.ajax to return mock data
     await page.evaluate((data) => {

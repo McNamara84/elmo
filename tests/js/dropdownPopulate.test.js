@@ -68,7 +68,7 @@ function buildFetchMock() {
     'api/v2/vocabs/resourcetypes': toArray(resourceTypesMockResponse),
     'api/v2/vocabs/languages': toArray(languagesMockResponse),
     'api/v2/vocabs/titletypes': toArray(titleTypesMockResponse),
-    'api/v2/vocabs/licenses/all': toArray(licensesMockResponse),
+    'api/v2/vocabs/licenses/resource-type/': { availability: 'available', licenses: toArray(licensesMockResponse).map(row => ({ ...row, schemeURI: 'https://spdx.org/licenses/' })) },
     'api/v2/vocabs/relations': { relations: toArray(relationsTypeMockResponse) },
     'api/v2/validation/identifiertypes/active': { identifierTypes: toArray(identifierTypesMockResponse) },
     'json/funders.json': [],
@@ -131,6 +131,8 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     delete window.fundersData;
 
     global.fetch = buildFetchMock();
+    const { LicenseSelection } = require('../../js/services/licenseService.js');
+    window.elmo.licenses = new LicenseSelection();
 
     const dropdownsReady = new Promise((resolve) => {
       document.addEventListener('dropdownsReady', resolve, { once: true });
@@ -151,7 +153,7 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     expect(urls.some((url) => url.includes('api/v2/vocabs/resourcetypes'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/vocabs/languages'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/vocabs/titletypes'))).toBe(true);
-    expect(urls.some((url) => url.includes('api/v2/vocabs/licenses/all'))).toBe(true);
+    expect(urls.some((url) => url.includes('api/v2/vocabs/licenses/'))).toBe(false);
     expect(urls.some((url) => url.includes('api/v2/vocabs/relations'))).toBe(true);
     expect(urls.some((url) => url.includes('api/v2/validation/identifiertypes/active'))).toBe(true);
     expect(urls.some((url) => url.includes('json/funders.json'))).toBe(false);
@@ -229,7 +231,10 @@ describe('initializeAllDropdownsParallel populate integration', () => {
     );
   });
 
-  test('populates license dropdown and selects CC-BY-4.0', () => {
+  test('loads scoped grants and selects allowed CC-BY-4.0 after choosing a resource type', async () => {
+    expect($('#input-rights-license').prop('disabled')).toBe(true);
+    $('#input-resourceinformation-resourcetype').val('14');
+    await window.elmo.licenses.load();
     const $license = $('#input-rights-license');
     const selectedText = $license.find('option:selected').text();
 

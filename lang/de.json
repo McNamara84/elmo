@@ -141,6 +141,14 @@
         "titleType": "Titeltyp"
     },
     "rights": {
+    "availability": {
+      "chooseType": "Bitte zuerst einen Resource Type auswählen.",
+      "loading": "Lizenzen werden geladen...",
+      "empty": "Für diesen Resource Type sind derzeit keine Lizenzen freigegeben.",
+      "unavailable": "Lizenzen sind derzeit nicht verfügbar. Bitte später erneut versuchen.",
+      "retained": "Diese Lizenz ist derzeit nicht zulässig. Sie bleibt für Entwurf und Export erhalten. Vor dem Einreichen bitte eine zulässige Lizenz auswählen.",
+      "choose": "Lizenz auswählen..."
+    },
         "title": "Lizenzen und Rechte",
         "licenseTitle": "Lizenz"
     },

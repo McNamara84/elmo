@@ -39,7 +39,7 @@ validateRequestSecurity('save', $_POST);
 // include a helper function to execute save functions and handle errors
 require_once __DIR__ . '/../includes/save_to_db_helper.php';
 try {
-    $resource_id = saveALL($_POST);
+    $resource_id = saveALL($_POST, submission: false);
 } catch (\Throwable $e) {
     // Transaction or save operation failed
     error_log("[SAVE] Transaction rolled back for resource_id=" . (isset($resource_id) ? $resource_id : 'N/A') . ": " . $e->getMessage());

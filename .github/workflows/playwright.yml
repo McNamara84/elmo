@@ -198,17 +198,23 @@ jobs:
         ERNIE_URL: ${{ secrets.ERNIE_URL }}
         ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
-        if [ -z "${ERNIE_URL}" ]; then
-          echo "::warning::ERNIE_URL secret is empty; ELMO will use hardcoded vocab fallbacks"
-        else
-          echo "ERNIE_URL is set for PHP servers"
-        fi
+        # Standard ELMO uses deterministic ERNIE data for license submissions.
+        # The other editions and live smoke tests retain their existing credentials.
+        mkdir -p .tmp/ernie-license-ci storage/cache
+        printf ready > .tmp/ernie-license-ci/state
+        ERNIE_LICENSE_TEST_STATE="$PWD/.tmp/ernie-license-ci/state" \
+        php -S localhost:8010 tests/fixtures/ernie_license_api.php > server-ernie.log 2>&1 &
+        echo $! > server-ernie.pid
+        for i in {1..10}; do
+          if curl -sf -H 'X-API-KEY: license-test-key' http://localhost:8010/api/v1/licenses/elmo > /dev/null; then break; fi
+          sleep 1
+        done
+        curl -sf -H 'X-API-KEY: license-test-key' http://localhost:8010/api/v1/licenses/elmo > /dev/null
+        ERNIE_URL=http://localhost:8010 ERNIE_API_KEY=license-test-key \
+        php -r "require 'settings.php'; require 'includes/sync_on_start.php';"
 
-        # The large standard suite runs four browser workers. Use the local
-        # vocabulary fallback so a slow ERNIE request cannot occupy every PHP worker.
-        # The MSL smoke tests below still check the live ERNIE connection.
         # ELMO Standard (Port 8000)
-        ERNIE_URL="" ERNIE_API_KEY="" \
+        ERNIE_URL=http://localhost:8010 ERNIE_API_KEY=license-test-key \
         SHOW_MSL_MODE=false \
         SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
@@ -334,6 +340,14 @@ jobs:
         CI: true
         ERNIE_URL: ${{ secrets.ERNIE_URL }}
         ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
+
+    - name: Verify license submission against the local ERNIE server
+      if: matrix.browser == 'chromium'
+      run: npx playwright test --config=playwright.licenses.config.ts
+      env:
+        BASE_URL: http://localhost:8000/
+        ERNIE_LICENSE_TEST_STATE: ${{ github.workspace }}/.tmp/ernie-license-ci/state
+        ERNIE_LICENSE_TEST_CACHE: ${{ github.workspace }}/storage/cache
 
     - name: Publish ELMO performance metrics
       id: publish_performance_metrics
@@ -524,7 +538,7 @@ jobs:
     - name: Display server logs on failure
       if: failure()
       run: |
-        for instance in elmo gem igsn msl; do
+        for instance in elmo gem igsn msl ernie; do
           echo "=== Server Log (${instance}) ==="
           cat "server-${instance}.log" 2>/dev/null || echo "(no log)"
         done
@@ -533,7 +547,7 @@ jobs:
       if: always()
       run: |
         echo "=== SAVE-related log entries from all servers ==="
-        for instance in elmo gem igsn msl; do
+        for instance in elmo gem igsn msl ernie; do
           echo "--- ${instance} ---"
           grep -i "SAVE\|error\|fatal\|XSLTProcessor\|xsl" "server-${instance}.log" 2>/dev/null | tail -50 || echo "(no matches)"
         done
@@ -541,7 +555,7 @@ jobs:
     - name: Stop PHP servers
       if: always()
       run: |
-        for instance in elmo gem igsn msl; do
+        for instance in elmo gem igsn msl ernie; do
           if [ -f "server-${instance}.pid" ]; then
             kill "$(cat "server-${instance}.pid")" 2>/dev/null || true
           fi

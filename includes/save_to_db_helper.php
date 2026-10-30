@@ -62,21 +62,33 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
  * Saves every enabled form group in a single database transaction.
  *
  * @param array<string, mixed> $postData Submitted form data.
+ * @param bool $submission Trusted entry-point mode, never derived from POST action.
+ * @param ErnieService|null $ernie Optional service instance for controlled integrations/tests.
  * @return int Database identifier of the saved resource.
  *
  * @throws Exception When a form-group save or transaction operation fails.
  */
-function saveALL(array $postData): int {
+function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie = null): int {
     global $connection, $showMslMode;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
 
     $postData = normalizeResourceInformationPostData($postData);
+    // The HTTP entry point chooses this mode. A POST action cannot downgrade submission.
+    $postData['action'] = $submission ? 'submit' : 'save_and_download';
+    require_once __DIR__ . '/../api/v2/services/LicenseService.php';
+    if ($submission) {
+        require_once __DIR__ . '/../api/v2/services/ErnieService.php';
+        $postData = LicenseService::prepareSubmission($connection, $postData, $ernie ?? new ErnieService(),
+            (bool) ($GLOBALS['showLicense'] ?? false), $GLOBALS['defaultLicense'] ?? null);
+    }
+    // Both network validation and reconstructible mapping finish before the dataset transaction.
+    $rights = ['rights_id' => $submission ? $postData['Rights'] : LicenseService::draftRightsId($connection, $postData)];
     if (array_key_exists('contributorsPayload', $postData)) ensureContributorLinkSchema($connection);
     $connection->begin_transaction();
     try {
         // main line: Saving all mandatory fields & optional fields if needed
-        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $postData);
+        $resource_id = executeSaveFunction('saveResourceInformationAndRights', $connection, $postData, $rights);
         error_log("[SAVE]:the id generated is " . $resource_id);
         executeSaveFunction('saveAuthors', $connection, $postData, $resource_id);
         executeSaveFunction('saveContactPerson', $connection, $postData, $resource_id);

@@ -429,7 +429,7 @@ paths:
         - vocabularies
       security: []
       summary: Get all licenses
-      description: Returns all available licenses
+      description: Returns the current ERNIE editor catalog as an array, including an empty array. Catalog membership alone is not a resource-type grant. Local IDs are temporary.
       operationId: getAllLicenses
       responses:
         "200":
@@ -440,14 +440,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/License"
-        "404":
-          description: No licenses found
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
+        "503":
+          description: No suitable ERNIE snapshot or local mapping available
           content:
             application/json:
               schema:
@@ -458,7 +452,7 @@ paths:
         - vocabularies
       security: []
       summary: Get software licenses
-      description: Returns licenses specifically for software
+      description: Returns current ERNIE grants for Software and the effective editor profile. No local forSoftware filter is used.
       operationId: getSoftwareLicenses
       responses:
         "200":
@@ -469,18 +463,38 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SoftwareLicense"
+        "503":
+          description: No suitable ERNIE snapshot or local mapping available
+  /vocabs/licenses/resource-type/{resourceTypeId}:
+    get:
+      tags: [vocabularies]
+      security: []
+      summary: Get allowed licenses for a local resource type and the effective editor profile
+      operationId: getResourceTypeLicenses
+      parameters:
+        - in: path
+          name: resourceTypeId
+          required: true
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description: Available or successfully empty list; matching stale snapshots remain usable during outages
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LicenseAvailability"
+        "400":
+          description: Malformed local resource type ID
         "404":
-          description: No software licenses found
+          description: Unknown resource type or no verified ERNIE slug
+        "503":
+          description: No usable snapshot or mapping; no local replacement licenses
           content:
             application/json:
               schema:
-                $ref: "#/components/schemas/Error"
-        "500":
-          description: Internal server error
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Error"
+                $ref: "#/components/schemas/LicenseAvailability"
   /vocabs/pid4inst/instruments:
     get:
       tags:
@@ -510,7 +524,12 @@ paths:
         - vocabularies
       security: []
       summary: Get resource types
-      description: Retrieve all available DataCite resource types
+      description: |-
+        Retrieve the available DataCite resource types, returning local mapping IDs.
+        When ERNIE is configured, the effective server-side MSL mode selects
+        `/api/v1/resource-types/elmo-msl`; other editions use `/api/v1/resource-types/elmo`.
+        Resource-type file caches are separate for these editor profiles.
+        Existing cache and local-database fallback behavior applies when ERNIE is unavailable.
       operationId: getResourceTypes
       responses:
         "200":
@@ -1573,6 +1592,16 @@ paths:
       description: |-
         Returns the file-cache status of every ERNIE vocabulary.
 
+        The `resourceTypes` entry describes the cache for the effective editor profile
+        (`elmo-msl` in MSL mode, otherwise `elmo`). Its response key is unchanged.
+
+        License snapshots appear as `licenses:all` and `licenses:{resourceTypeSlug}`
+        for previously requested scopes. They include profile, scope, lastUpdated,
+        itemCount, state (fresh/stale/unavailable), and an optional error. Zero items
+        is a valid successful snapshot. License caches are isolated by ERNIE URL
+        and editor profile. Refresh includes the catalog and these used scopes,
+        with a shared 20-second license refresh budget and individual results.
+
         Authenticate with the `X-API-KEY` header. The value must match `ELMO_API_KEY`.
       operationId: getAllCacheStatus
       parameters:
@@ -1865,57 +1894,56 @@ components:
         - thesauriAvailability
     License:
       type: object
+      required: [rights_id, text, rightsIdentifier, rightsURI, schemeURI, ernie_id]
       properties:
         rights_id:
           type: integer
-          format: int64
-          description: Unique identifier for the license
-          example: 1
-        name:
-          type: string
-          description: Full name of the license
-          example: "Creative Commons Attribution 4.0 International"
-        url:
-          type: string
-          format: uri
-          description: URL to the license text
-          example: "https://creativecommons.org/licenses/by/4.0/"
-        forSoftware:
+          description: Reconstructible local mapping ID; never persist as license identity.
+        ernie_id:
           type: integer
-          enum: [0, 1]
-          default: 0
-          description: Indicates if license is suitable for software (1) or not (0)
-      required:
-        - rights_id
-        - name
-        - url
+          description: ERNIE identity, distinct from rights_id.
+        text:
+          type: string
+        rightsIdentifier:
+          type: string
+        rightsURI:
+          type: string
+          nullable: true
+        schemeURI:
+          type: string
+          nullable: true
+        schemeName:
+          type: string
+          nullable: true
     SoftwareLicense:
+      allOf:
+        - $ref: "#/components/schemas/License"
+    LicenseAvailability:
       type: object
+      required: [licenses, availability, source, lastUpdated]
       properties:
-        rights_id:
-          type: integer
-          format: int64
-          description: Unique identifier for the software license
-          example: 2
-        name:
+        licenses:
+          type: array
+          items:
+            $ref: "#/components/schemas/License"
+        availability:
           type: string
-          description: Full name of the software license
-          example: "MIT License"
-        url:
+          enum: [available, empty, unavailable]
+        source:
           type: string
-          format: uri
-          description: URL to the license text
-          example: "https://opensource.org/licenses/MIT"
-        forSoftware:
-          type: integer
-          enum: [1]
-          default: 1
-          description: Always 1 for software licenses
-      required:
-        - rights_id
-        - name
-        - url
-        - forSoftware
+          nullable: true
+          enum: [ernie, cache, stale-cache, null]
+        lastUpdated:
+          type: string
+          nullable: true
+        profile:
+          type: string
+          enum: [elmo, elmo-msl]
+        scope:
+          type: string
+        error:
+          type: string
+          nullable: true
     DraftRequest:
       type: object
       description: Request body for creating or updating an autosave draft.

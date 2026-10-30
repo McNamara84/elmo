@@ -165,6 +165,7 @@ class VocabController
                     'success' => true,
                     'message' => 'All ERNIE caches refreshed',
                     'results' => $results,
+                    'status' => $ernieService->getAllCacheStatus(),
                 ]);
                 return;
             }
@@ -175,6 +176,7 @@ class VocabController
                 'message' => 'Some ERNIE caches failed to refresh',
                 'failed' => $failed,
                 'results' => $results,
+                'status' => $ernieService->getAllCacheStatus(),
             ]);
         } catch (Exception $e) {
             error_log('[ELMO admin] cache refresh failed: ' . $e->getMessage());
@@ -770,78 +772,68 @@ class VocabController
         }
     }
 
-    /**
-     * Retrieves licenses from the database, filtered by type, and returns them as JSON.
-     *
-     * @param bool $forSoftwareOnly If true, retrieves licenses only for software; otherwise, retrieves all licenses.
-     * @return void
-     */
-    private function getLicensesByType($forSoftwareOnly = false)
+    /** @return array<string, mixed> Current grants mapped to reconstructible local IDs. */
+    private function licenseResult(?string $slug): array
     {
+        require_once __DIR__ . '/../services/LicenseRepository.php';
+        $service = $this->getErnieService();
+        $result = $service->getLicensesWithCache($slug);
+        $result['licenses'] = (new LicenseRepository($GLOBALS['connection']))->map(
+            $result['licenses'], $service->getLicenseOrigin()
+        );
+        return $result;
+    }
+
+    /** @param array<string, mixed> $vars Route parameters. */
+    public function getResourceTypeLicenses(array $vars): void
+    {
+        require_once __DIR__ . '/../services/LicenseService.php';
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
         try {
-            $sql = $forSoftwareOnly
-                ? 'SELECT * FROM Rights WHERE forSoftware = 1'
-                : 'SELECT * FROM Rights';
-
-            $result = $GLOBALS['connection']->query($sql);
-
-            if (!$result) {
-                throw new Exception("Database query failed");
-            }
-
-            $licenses = [];
-            while ($row = $result->fetch_assoc()) {
-                $licenses[] = $row;
-            }
-
-            if (empty($licenses)) {
-                http_response_code(404);
-                echo json_encode([
-                    'error' => $forSoftwareOnly
-                        ? 'No software licenses found'
-                        : 'No licenses found'
-                ]);
-                return;
-            }
-
-            header('Content-Type: application/json; charset=utf-8');
-            echo json_encode($licenses);
-
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            $slug = LicenseService::resolveResourceType($GLOBALS['connection'], $vars['resourceTypeId'] ?? null);
+            $result = $this->licenseResult($slug);
+            http_response_code($result['availability'] === 'unavailable' ? 503 : 200);
+            echo json_encode($result);
+        } catch (InvalidArgumentException $error) {
+            http_response_code(400);
+            echo json_encode(['error' => $error->getMessage()]);
+        } catch (OutOfBoundsException $error) {
+            http_response_code(404);
+            echo json_encode(['error' => $error->getMessage()]);
+        } catch (Exception $error) {
+            error_log('License mapping failed: ' . $error->getMessage());
+            http_response_code(503);
+            echo json_encode(['licenses' => [], 'availability' => 'unavailable', 'source' => null, 'lastUpdated' => null]);
         }
     }
 
-    /**
-     * Retrieves all licenses and returns them as JSON.
-     *
-     * @return void
-     */
-    public function getAllLicenses()
+    /** Legacy array adapter; database rows and forSoftware never establish grants. */
+    private function getLicensesByType(bool $forSoftwareOnly = false): void
     {
+        header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store');
         try {
-            $this->getLicensesByType(false);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
+            $result = $this->licenseResult($forSoftwareOnly ? 'software' : null);
+            http_response_code($result['availability'] === 'unavailable' ? 503 : 200);
+            echo json_encode($result['availability'] === 'unavailable' ? $result : $result['licenses']);
+        } catch (Exception $error) {
+            error_log('License mapping failed: ' . $error->getMessage());
+            http_response_code(503);
+            echo json_encode(['error' => 'Licenses are currently unavailable.']);
         }
     }
 
-    /**
-     * Retrieves software licenses and returns them as JSON.
-     *
-     * @return void
-     */
-    public function getSoftwareLicenses()
+    /** Return the current editor catalog as a legacy array. */
+    public function getAllLicenses(): void
     {
-        try {
+        $this->getLicensesByType();
+    }
 
-            $this->getLicensesByType(true);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['error' => $e->getMessage()]);
-        }
+    /** Return the current editor's Software grants as a legacy array. */
+    public function getSoftwareLicenses(): void
+    {
+        $this->getLicensesByType(true);
     }
 
     /**

@@ -493,6 +493,10 @@ class AutosaveService {
     if (this.restoreResourceInformationPayload(values)) {
       this.getResourceInformationPayloadFieldNames().forEach((name) => skippedPayloadNames.add(name));
     }
+    if (window.elmo?.licenses) {
+      skippedPayloadNames.add('Rights');
+      skippedPayloadNames.add('licensePayload');
+    }
 
     this.prepareArrayFields(values, skippedPayloadNames);
 
@@ -535,6 +539,13 @@ class AutosaveService {
       element.dispatchEvent(new Event('input', { bubbles: true }));
       element.dispatchEvent(new Event('change', { bubbles: true }));
     });
+
+    if (window.elmo?.licenses) {
+      const payload = values.licensePayload ? JSON.parse(values.licensePayload) : { version: 1, license: null };
+      if (payload.version !== 1 || !Object.hasOwn(payload, 'license')) throw new Error('Unsupported license draft.');
+      // Legacy drafts with only a local ID require a new choice; IDs can be reused after DB reset.
+      window.elmo.licenses.setMetadata(payload.license);
+    }
 
     // Stored arrays follow enabled fields in DOM order. Protect even an empty
     // type choice while newly created GEM rows are still loading their options.
@@ -695,6 +706,7 @@ class AutosaveService {
     this.isSerializing = true;
     try {
       window.resourceInformation?.sync?.();
+      window.elmo?.licenses?.syncPayload();
       if (this.form.querySelector('input[name="authorsPayload"]')) {
         synchronizeAuthorsPayload(this.form);
         authorDraftFields.filter(name => name !== 'authorsPayload').forEach(name => peopleNames.add(name));

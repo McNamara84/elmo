@@ -8,6 +8,50 @@ if (!defined('ERNIE_SERVICE_TEST_MODE')) {
 
 class ErnieService
 {
+    private ?ErnieLicenseCache $licenseCache = null;
+
+    /** Identity of the license source, without credentials or local database IDs. */
+    public function getLicenseOrigin(): string
+    {
+        return hash('sha256', $this->baseUrl);
+    }
+
+    /** @return array<string, mixed> Validated catalog or resource-type grants with availability metadata. */
+    public function getLicensesWithCache(?string $resourceTypeSlug = null): array
+    {
+        return $this->getLicenseCache()->get($resourceTypeSlug);
+    }
+
+    private function getLicenseCache(): ErnieLicenseCache
+    {
+        require_once __DIR__ . '/ErnieLicenseCache.php';
+        return $this->licenseCache ??= new ErnieLicenseCache(
+            $this->baseUrl, $this->editorProfile, $this->cacheTtl,
+            __DIR__ . '/../../../storage/cache',
+            fn(string $endpoint, float $timeout): string => $this->fetchLicenseResponse($endpoint, $timeout)
+        );
+    }
+
+    /** Fetch raw JSON so that the validator can distinguish [] from {}. */
+    protected function fetchLicenseResponse(string $endpoint, float $timeout): string
+    {
+        if (!$this->isConfigured()) {
+            throw new RuntimeException('ERNIE is not configured.');
+        }
+        $context = stream_context_create(['http' => [
+            'method' => 'GET', 'header' => ['X-API-KEY: ' . $this->apiKey, 'Accept: application/json'],
+            'timeout' => $timeout, 'ignore_errors' => true, 'follow_location' => 0,
+        ], 'ssl' => ['verify_peer' => true, 'verify_peer_name' => true]]);
+        $response = @file_get_contents($this->baseUrl . $endpoint, false, $context);
+        // PHP 8.3 still uses the locally scoped response-header variable.
+        // @phpstan-ignore nullCoalesce.variable (Absent on transport failure in PHP 8.3.)
+        $headers = function_exists('http_get_last_response_headers') ? http_get_last_response_headers() : ($http_response_header ?? []);
+        if ($response === false || !preg_match('~^HTTP/\\S+ 200(?: |$)~', $headers[0] ?? '')) {
+            throw new RuntimeException('ERNIE license request failed.');
+        }
+        return $response;
+    }
+
     /**
      * @var string The base URL for the ERNIE API
      */
@@ -23,6 +67,9 @@ class ErnieService
      */
     private int $cacheTtl;
 
+    /** Editor context resolved after settings and variant overrides. */
+    private string $editorProfile;
+
     /**
      * Cache file path and ERNIE endpoint for each vocabulary ELMO refreshes.
      *
@@ -37,17 +84,24 @@ class ErnieService
      */
     public function __construct()
     {
-        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl;
+        global $ernieUrl, $ernieApiKey, $ernieCacheTtl, $ernieResourceTypesCacheTtl, $showMslMode;
 
         $this->baseUrl = rtrim($ernieUrl ?? '', '/');
         $this->apiKey = $ernieApiKey ?? '';
         // Support both new shared variable and legacy variable for backwards compatibility
         $this->cacheTtl = $ernieCacheTtl ?? $ernieResourceTypesCacheTtl ?? 21600; // Default: 6 hours
+        // Settings already resolved SHOW_MSL_MODE and any later variant overrides.
+        $this->editorProfile = filter_var($showMslMode ?? false, FILTER_VALIDATE_BOOLEAN)
+            ? 'elmo-msl'
+            : 'elmo';
+        $resourceTypesCache = $this->editorProfile === 'elmo-msl'
+            ? 'ernie_resource_types_elmo_msl.json'
+            : 'ernie_resource_types.json';
 
         $this->memory = [
         'resourceTypes' => [
-            'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_resource_types.json',
-            'ernieEndpoint' => '/api/v1/resource-types/elmo',
+            'cacheFile' => __DIR__ . '/../../../storage/cache/' . $resourceTypesCache,
+            'ernieEndpoint' => '/api/v1/resource-types/' . $this->editorProfile,
         ],
         'titleTypes' => [
             'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_title_types.json',
@@ -110,6 +164,19 @@ class ErnieService
             'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
         ],
     ];
+    }
+
+    /**
+     * Returns the editor profile resolved from the final application settings.
+     *
+     * Environment variables are handled by settings.php before construction,
+     * so a later variant override takes precedence over SHOW_MSL_MODE.
+     *
+     * @return string Either "elmo" or "elmo-msl".
+     */
+    public function getEditorProfile(): string
+    {
+        return $this->editorProfile;
     }
 
     /**
@@ -385,7 +452,7 @@ class ErnieService
             );
         }
 
-        return $results;
+        return $results + $this->getLicenseCache()->refresh();
     }
 
     /**
@@ -405,7 +472,7 @@ class ErnieService
             $returnArray[$key] = $status;
         }
 
-        return $returnArray;
+        return $returnArray + $this->getLicenseCache()->status();
     }
 
 

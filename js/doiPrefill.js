@@ -220,7 +220,6 @@ function decodeHtmlEntities(str) {
 /*  Vocabulary mapping helpers (fetched once, cached)                  */
 /* ------------------------------------------------------------------ */
 
-let _licenseMappingCache = null;
 let _languageMappingCache = null;
 let _titleTypeMappingCache = null;
 let _roleMappingCache = null;
@@ -229,18 +228,6 @@ let _relationMappingCache = null;
 /**
  * Loads vocabulary mapping tables from the API. Each loader caches its result.
  */
-async function getLicenseMapping() {
-  if (_licenseMappingCache) return _licenseMappingCache;
-  try {
-    const data = await $.getJSON('./api/v2/vocabs/licenses/all');
-    _licenseMappingCache = {};
-    data.forEach(l => { _licenseMappingCache[l.rightsIdentifier.toUpperCase()] = l.rights_id.toString(); });
-  } catch {
-    _licenseMappingCache = { 'CC-BY-4.0': '1', 'CC0-1.0': '2' };
-  }
-  return _licenseMappingCache;
-}
-
 async function getLanguageMapping() {
   if (_languageMappingCache) return _languageMappingCache;
   try {
@@ -859,26 +846,14 @@ function prefillFunding(fundingReferences) {
  * Maps rightsList to the license dropdown.
  */
 async function prefillRights(rightsList) {
-  if (!Array.isArray(rightsList) || rightsList.length === 0) return;
-
-  const mapping = await getLicenseMapping();
-
-  for (const rights of rightsList) {
-    let identifier = rights.rightsIdentifier || '';
-
-    // Try extracting from URI as fallback
-    if (!identifier && rights.rightsUri) {
-      const match = rights.rightsUri.match(/licenses\/([^/.]+)/);
-      if (match) identifier = match[1];
-    }
-
-    // Compare case-insensitively (ELMO stores CC-BY-4.0, DataCite returns cc-by-4.0)
-    const key = identifier.toUpperCase();
-    if (key && mapping[key]) {
-      $('#input-rights-license').val(mapping[key]);
-      return; // Use first matching license
-    }
-  }
+  const rights = Array.isArray(rightsList) ? rightsList[0] : null;
+  await window.elmo?.licenses?.setMetadata(rights ? {
+    identifier: rights.rightsIdentifier || null,
+    name: rights.rights || '',
+    uri: rights.rightsUri || rights.rightsURI || null,
+    scheme_uri: rights.schemeUri || rights.schemeURI || null,
+    scheme_name: rights.rightsIdentifierScheme || null,
+  } : null);
 }
 
 /* ================================================================== */
@@ -1023,7 +998,6 @@ if (typeof module !== 'undefined' && module.exports) {
     escapeHtml,
     // Expose cache resetters for testing
     _resetCaches: function () {
-      _licenseMappingCache = null;
       _languageMappingCache = null;
       _titleTypeMappingCache = null;
       _roleMappingCache = null;

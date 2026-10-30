@@ -136,12 +136,18 @@ function createDatabaseStructure($connection): array
 
         "Rights" => "CREATE TABLE IF NOT EXISTS `Rights` (
     `rights_id` INT NOT NULL AUTO_INCREMENT,
-    `text` VARCHAR(200) NOT NULL,
-    `rightsIdentifier` VARCHAR(20) NULL,
-    `rightsURI` VARCHAR(256) NULL,
-    `forSoftware` SMALLINT,
+    `text` TEXT NOT NULL,
+    `rightsIdentifier` TEXT NULL,
+    `rightsURI` TEXT NULL,
+    `schemeURI` TEXT NULL,
+    `schemeName` TEXT NULL,
+    `ernie_id` BIGINT NULL,
+    `ernie_source` CHAR(64) NULL,
+    `mapping_key` CHAR(64) NULL,
+    `forSoftware` SMALLINT DEFAULT 0,
     PRIMARY KEY (`rights_id`),
-    UNIQUE KEY `unique_name` (`text`)
+    UNIQUE KEY `unique_license_mapping` (`mapping_key`),
+    KEY `license_external_identity` (`ernie_source`, `ernie_id`)
     );",
 
         "Language" => "CREATE TABLE IF NOT EXISTS `Language` (
@@ -886,6 +892,13 @@ function insertLookupData($connection)
         ],
 
     ];
+
+    // Legacy seed rows remain import/export metadata, never ERNIE permission.
+    foreach ($lookupData['Rights'] as &$seedLicense) {
+        $seedLicense['schemeURI'] = 'https://spdx.org/licenses/';
+        $seedLicense['schemeName'] = 'SPDX';
+    }
+    unset($seedLicense);
 
     foreach ($lookupData as $tableName => $data) {
         $columns = implode(", ", array_keys($data[0]));

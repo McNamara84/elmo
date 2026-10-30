@@ -48,8 +48,14 @@ $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 
+// Single source of truth for MSL features and the ERNIE editor profile.
+$showMslMode = false;
+$envShowMslMode = getenv('SHOW_MSL_MODE');
+if ($envShowMslMode !== false) {
+    $showMslMode = filter_var($envShowMslMode, FILTER_VALIDATE_BOOLEAN);
+}
 // having the MSL logo in the header:
-$showMslLogo = false;
+$showMslLogo = $showMslMode;
 
 $showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
@@ -70,9 +76,10 @@ $defaultLicense = 'CC-BY-4.0';
 
 // SETTINGS FOR EPOS MSL
 // Show MSL labs form group
-$showMslLabs = false;
+$showMslLabs = $showMslMode;
 // Show MSL vocabularies
-$showMslVocabs = false;
+$showMslVocabs = $showMslMode;
+$showMslDefaultFreeKeywords = $showMslMode;
 // URL to the source with all vocabularies for MSL
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 

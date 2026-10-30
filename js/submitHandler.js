@@ -396,6 +396,7 @@ class SubmitHandler {
      * Handle submit action
      */
     handleSubmit() {
+        window.elmo?.licenses?.render();
         if (!resolvePendingAffiliations(this.$form[0])) return;
         if (this.autosaveService) {
             this.autosaveService.flushPending();
@@ -413,7 +414,8 @@ class SubmitHandler {
         // Show contact feedback even when another required field is already invalid.
         const contactPersonValid = validateContactPerson();
         const authorsValid = window.validateAuthorsGroup();
-        if (!this.$form[0].checkValidity() || !authorsValid || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
+        const licensesValid = window.elmo?.licenses?.canSubmit() ?? true;
+        if (!this.$form[0].checkValidity() || !licensesValid || !authorsValid || !contactPersonValid || !temporalCoverageValid || !authorAffiliationsValid || !affiliationsValid) {
             this.showFormValidationFailure();
             return;
         }
@@ -546,6 +548,7 @@ class SubmitHandler {
         }
 
         synchronizeTagifyInputs(this.$form[0]);
+        window.elmo?.licenses?.syncPayload();
         const submitData = new FormData(this.$form[0]);
         submitData.set('authorsPayload', JSON.stringify(authorsPayload));
         if (Array.isArray(contributorsPayload)) {
@@ -658,6 +661,7 @@ class SubmitHandler {
         if (contentType.includes('application/json')) {
             try {
                 const response = JSON.parse(xhr.responseText);
+                if (response.field === 'Rights') window.elmo?.licenses?.load();
                 errorMessage = response.message || errorMessage;
                 if (response.debug) {
                     console.error('Error details:', response.debug);

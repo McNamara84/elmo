@@ -141,6 +141,14 @@
         "titleType": "Type de titre"
     },
     "rights": {
+    "availability": {
+      "chooseType": "Veuillez d’abord choisir un type de ressource.",
+      "loading": "Chargement des licences...",
+      "empty": "Aucune licence n’est actuellement autorisée pour ce type de ressource.",
+      "unavailable": "Les licences sont actuellement indisponibles. Veuillez réessayer plus tard.",
+      "retained": "Cette licence n’est actuellement pas autorisée. Elle peut être conservée dans un brouillon ou un export. Veuillez choisir une licence autorisée avant de soumettre.",
+      "choose": "Choisir une licence..."
+    },
         "title": "Licences et droits",
         "licenseTitle": "Licence"
     },

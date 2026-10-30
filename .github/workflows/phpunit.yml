@@ -37,7 +37,7 @@ jobs:
         uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.5'
-          extensions: mbstring, xml, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
+          extensions: mbstring, xml, xsl, ctype, iconv, intl, pdo_sqlite, pdo_mysql, mysqli, zip
           coverage: xdebug
 
       - name: Determine Composer cache directory
@@ -119,8 +119,8 @@ jobs:
           $apiKeyGoogleMaps = 'test_api_key';
           $apiKeyTimezone = 'test_timezone_api_key';
 
-          $ernieUrl = '';
-          $ernieApiKey = '';
+          $ernieUrl = getenv('ERNIE_URL') ?: '';
+          $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
           $ernieCacheTtl = 21600;
 
           $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
@@ -188,7 +188,15 @@ jobs:
 
       - name: Start PHP built-in web server
         run: |
-          php -S localhost:8000 -t . tests/server.php 2>&1 > server.log &
+          php -S localhost:8010 tests/fixtures/ernie_license_api.php > ernie-server.log 2>&1 &
+          echo $! > ernie-server.pid
+          for i in {1..10}; do
+            if curl -sf -H 'X-API-KEY: license-test-key' http://localhost:8010/api/v1/licenses/elmo > /dev/null; then break; fi
+            sleep 1
+          done
+          curl -sf -H 'X-API-KEY: license-test-key' http://localhost:8010/api/v1/licenses/elmo > /dev/null
+          ERNIE_URL=http://localhost:8010 ERNIE_API_KEY=license-test-key \
+          php -S localhost:8000 -t . tests/server.php > server.log 2>&1 &
           echo $! > server.pid
           sleep 10
 
@@ -277,4 +285,7 @@ jobs:
             kill "$(cat server.pid)"
           else
             echo "server.pid not found; PHP server was likely not started."
+          fi
+          if [ -f ernie-server.pid ]; then
+            kill "$(cat ernie-server.pid)"
           fi
