@@ -236,8 +236,10 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         the form can import metadata without copying that DOI into this submission field.</p>
                     <p><strong>Leave the submission DOI empty to request a new GFZ Data Services DOI.</strong>
                         Use Edit only when submitting a new major version of an existing GFZ DOI beginning with
-                        10.5880. ELMO verifies it against public DataCite metadata and sends the same DOI for manual
-                        curation. If the DOI is not found, contact the data curation team. Other publishers' DOIs
+                        10.5880. ELMO verifies it against public DataCite metadata and passes that DOI to manual
+                        curation for review. DataCite recommends a new identifier for a major version change;
+                        the curation team decides how to register the new version. ELMO does not automatically
+                        update the published DataCite record. If the DOI is not found, contact the data curation team. Other publishers' DOIs
                         cannot be used in this field.</p>
                     <?php if ($showGGMsProperties ?? false): ?>
                     <p>
@@ -305,14 +307,20 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
                 <div id="help-resourceinformation-version">
                     <h4>Version</h4>
-                    <p>The version number or other identifier of the dataset. If your dataset is published for the
-                        first time, this field can be left empty. If it has been updated, specify the version number
-                        here.
-                        The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Use the format digits.digits, for example 1.4. For an existing GFZ DOI,
-                        ELMO proposes the next major version: 2.4 becomes 3.0; a DOI without a published version starts at 1.0.
-                    </p>
-                    <p><strong>Optional field. If unsure, leave blank.</strong></p>
+                    <p>The version number of the resource. ELMO accepts <em>major.minor</em>, with one or more
+                        digits on each side of the dot, for example <strong>1.4</strong> or <strong>12.3</strong>.
+                        A value such as 1.2.3 is not accepted. This is an ELMO input rule following the suggested
+                        practice in the <a href="https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/version/"
+                        target="_blank" rel="noopener">DataCite 4.7 documentation</a>; the DataCite schema itself
+                        does not require this notation.</p>
+                    <p><strong>Optional field. If unsure, leave blank.</strong> When submitting an existing GFZ DOI,
+                        ELMO proposes and requires the next major version: 2.4 becomes 3.0; a DOI without a published
+                        version starts at 1.0. This submission is passed to manual curation, which reviews the
+                        registration of the new version. Passing the existing DOI does not guarantee that the
+                        new major version will keep that DOI.</p>
+                    <p>DataCite recommends registering a new identifier for a major version change. The resource's
+                        stewards decide which changes are major or minor. AlternateIdentifier, RelatedIdentifier
+                        and Description can provide additional information about versions and changes.</p>
                 </div>
                 <div id="help-resourceinformation-language">
                     <h4>Language of dataset</h4>

@@ -108,7 +108,8 @@ window.ELMO_FEATURES = {
     showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
     funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
     dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
-    xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>
+    xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>,
+    contactAddressRepository: <?php echo json_encode($contactAddressRepository ?? 'datapub@gfz.de'); ?>
 };
 </script>
 
@@ -176,7 +177,7 @@ window.ELMO_FEATURES = {
 <!-- DOI Lookup Service -->
 <script src="js/services/doiLookupService.js"></script>
 <!-- DOI Prefill: JSON → form mapping -->
-<script src="js/doiPrefill.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/doiPrefill.js'), 0, 12); ?>"></script>
+<script type="module" src="js/doiPrefill.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/doiPrefill.js'), 0, 12); ?>"></script>
 <!-- DOI metadata search and submission DOI checks -->
 <script src="js/eventhandlers/doiPrefillHandler.js"></script>
 <!-- Bootstrap 5 -->

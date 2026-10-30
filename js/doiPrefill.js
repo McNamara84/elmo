@@ -5,8 +5,14 @@
  * the metadata editor form. Each section has its own mapping function to keep
  * the code maintainable and testable.
  *
+ * Loaded as an ES module. Thesaurus targets come from THESAURUS_CONFIG.
+ * applyDoiPrefill and buildPrefillPreview are also assigned to window because
+ * doiPrefillHandler.js is a classic script.
+ *
  * Depends on jQuery ($) and Tagify being available globally.
  */
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
+import { resolveTagAgainstWhitelist } from './thesauriHelpers.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helper: Tagify instance retrieval (mirrors mappingXmlToInputFields) */
@@ -544,59 +550,215 @@ function prefillGeoLocations(geoLocations) {
 }
 
 /**
- * Maps subjects to free keywords and thesaurus keyword tagify fields.
+ * DataCite JSON uses schemeUri/valueUri. Saved XML and some callers use schemeURI/valueURI.
+ * @param {Object|string} subject
+ * @param {...string} keys
+ * @returns {string}
  */
-function prefillKeywords(subjects) {
+function subjectProperty(subject, ...keys) {
+  if (!subject || typeof subject !== 'object') return '';
+  for (const key of keys) {
+    if (subject[key]) return subject[key];
+  }
+  return '';
+}
+
+/**
+ * Which keyword field a DataCite subject belongs in.
+ * Scheme URIs are authoritative. DataCite also labels GCMD instruments as
+ * "GCMD Instruments" rather than the vocabulary's "NASA/GCMD Instruments".
+ * @param {Object|string} subject
+ * @returns {string}
+ */
+function classifyDoiSubject(subject) {
+  const schemeURI = subjectProperty(subject, 'schemeURI', 'schemeUri');
+  const subjectScheme = subjectProperty(subject, 'subjectScheme');
+
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
+    subjectScheme === 'NASA/GCMD Earth Science Keywords') {
+    return 'science_keywords';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
+    subjectScheme === 'NASA/GCMD Platforms' ||
+    subjectScheme === 'GCMD Platforms') {
+    return 'platforms';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
+    subjectScheme === 'NASA/GCMD Instruments' ||
+    subjectScheme === 'GCMD Instruments') {
+    return 'instruments';
+  }
+  if (
+    schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
+    subjectScheme === 'International Chronostratigraphic Chart' ||
+    subjectScheme === 'Chronostratigraphic Chart'
+  ) {
+    return 'chronostratigraphy';
+  }
+  if (
+    schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
+    schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
+    (subjectScheme && subjectScheme.includes('GEMET'))
+  ) {
+    return 'gemet';
+  }
+  if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
+    return 'msl';
+  }
+  return 'free';
+}
+
+/**
+ * Adds one thesaurus keyword to a ready Tagify field.
+ * The whitelist entry supplies value and subjectScheme. If Tagify does not
+ * accept the keyword (e.g. the concept is not in the loaded vocabulary),
+ * logs a warning instead of dropping it into free keywords.
+ * @param {string} group
+ * @param {Tagify} tagify
+ * @param {{value: string, id: string, schemeURI: string}} tagData
+ */
+function importThesaurusKeyword(group, tagify, tagData) {
+  const whitelist = tagify.settings?.whitelist;
+  const resolved = resolveTagAgainstWhitelist(tagData, whitelist);
+  if (Array.isArray(whitelist) && whitelist.length > 0) {
+    const inWhitelist = whitelist.some(entry => entry && entry.value === resolved.value);
+    if (!inWhitelist) {
+      console.warn('Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
+      return;
+    }
+  }
+  const before = Array.isArray(tagify.value) ? tagify.value.length : null;
+  tagify.addTags([resolved]);
+  if (before !== null && Array.isArray(tagify.value) && tagify.value.length === before) {
+    const alreadyPresent = tagify.value.some(tag => tag && tag.value === resolved.value);
+    if (!alreadyPresent) {
+      console.warn('Metadata export by DOI: Ignoring duplicate keyword:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
+    }
+  }
+}
+
+/**
+ * Input selector for a DOI subject group.
+ * MSL is outside THESAURUS_CONFIG. satellitePlatforms is dynamicOnly and has no keyword input.
+ * @param {string} group
+ * @returns {string}
+ */
+function thesaurusInputSelector(group) {
+  if (group === 'msl') return '#input-mslkeyword';
+  const config = THESAURUS_CONFIG[group];
+  if (!config?.inputId || config.dynamicOnly) return '';
+  return config.inputId.startsWith('#') ? config.inputId : `#${config.inputId}`;
+}
+
+function thesaurusTargets() {
+  return Object.fromEntries(
+    [...Object.keys(THESAURUS_CONFIG), 'msl']
+      .map(group => [group, thesaurusInputSelector(group)])
+      .filter(([, selector]) => selector)
+      .map(([group, selector]) => [group, getTagify(document.querySelector(selector))])
+  );
+}
+
+/**
+ * Loads the thesauri referenced by the imported subjects and waits until each
+ * field's Tagify whitelist and jsTree are ready, following XML import.
+ * @param {Array<{group: string}>} prepared
+ * @returns {Promise<Set<string>>} Groups whose vocabulary failed to become ready.
+ */
+async function prepareThesauriForKeywords(prepared) {
+  if (typeof window.waitForThesaurusVocabulary !== 'function') {
+    return new Set();
+  }
+  const groups = [...new Set(prepared.map(entry => entry.group))]
+    .filter(group => {
+      const config = THESAURUS_CONFIG[group];
+      return Boolean(config?.inputId && !config.dynamicOnly);
+    });
+  if (groups.length === 0) {
+    return new Set();
+  }
+  const results = await Promise.all(groups.map(group => window.waitForThesaurusVocabulary(group)));
+  const notReady = new Set();
+  groups.forEach((group, index) => {
+    if (results[index] !== 'loaded') {
+      console.warn('Thesaurus vocabulary not ready for DOI keyword import:', {
+        thesaurus: group,
+        status: results[index],
+      });
+      notReady.add(group);
+    }
+  });
+  return notReady;
+}
+
+/**
+ * Maps subjects to free keywords and thesaurus keyword tagify fields.
+ * Waits for thesauri inputs and each referenced vocabulary before importing.
+ * @param {Array<Object|string>} subjects
+ * @returns {Promise<void>}
+ */
+async function prefillKeywords(subjects) {
   if (!Array.isArray(subjects) || subjects.length === 0) return;
 
   const tagifyFree = getTagify(document.querySelector('#input-freekeyword'));
   if (!tagifyFree) return;
 
-  const tagifyGCMD = getTagify(document.querySelector('#input-sciencekeyword'));
-  const tagifyPlatforms = getTagify(document.querySelector('#input-platforms'));
-  const tagifyInstruments = getTagify(document.querySelector('#input-instruments'));
-  const tagifyChronostrat = getTagify(document.querySelector('#input-chronostratigraphy'));
-  const tagifyGemet = getTagify(document.querySelector('#input-gemet'));
-  const tagifyMsl = getTagify(document.querySelector('#input-mslkeyword'));
+  if (window.thesauriReady && typeof window.thesauriReady.then === 'function') {
+    await window.thesauriReady;
+  }
 
-  subjects.forEach(s => {
-    const rawKeyword = (typeof s === 'string') ? s : (s.subject || '');
+  const prepared = [];
+  subjects.forEach(subject => {
+    const rawKeyword = (typeof subject === 'string') ? subject : (subject.subject || '');
     if (!rawKeyword) return;
 
     // Decode HTML entities (DataCite may deliver e.g. "&gt;" instead of ">")
     const keyword = decodeHtmlEntities(rawKeyword);
+    prepared.push({
+      group: classifyDoiSubject(subject),
+      keyword,
+      schemeURI: subjectProperty(subject, 'schemeURI', 'schemeUri'),
+      valueURI: subjectProperty(subject, 'valueURI', 'valueUri'),
+    });
+  });
 
-    const schemeURI = s.schemeURI || '';
-    const subjectScheme = s.subjectScheme || '';
-    const valueURI = s.valueURI || '';
+  await prepareThesauriForKeywords(prepared);
+  const targets = thesaurusTargets();
 
-    const tagData = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI };
+  prepared.forEach(entry => {
+    if (entry.group === 'free') {
+      tagifyFree.addTags([{ value: entry.keyword }]);
+      return;
+    }
+    const target = targets[entry.group];
+    if (!target) {
+      console.warn('Thesaurus keyword could not be imported into Tagify:', {
+        thesaurus: entry.group,
+        keyword: entry.keyword,
+        valueURI: entry.valueURI,
+      });
+      return;
+    }
+    importThesaurusKeyword(entry.group, target, {
+      value: entry.keyword,
+      id: entry.valueURI,
+      schemeURI: entry.schemeURI,
+    });
+  });
 
-    if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
-      subjectScheme === 'NASA/GCMD Earth Science Keywords') {
-      (tagifyGCMD || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
-      subjectScheme === 'NASA/GCMD Platforms') {
-      (tagifyPlatforms || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
-      subjectScheme === 'NASA/GCMD Instruments') {
-      (tagifyInstruments || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
-      subjectScheme === 'International Chronostratigraphic Chart' ||
-      subjectScheme === 'Chronostratigraphic Chart'
-    ) {
-      (tagifyChronostrat || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
-      schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
-      (subjectScheme && subjectScheme.includes('GEMET'))
-    ) {
-      (tagifyGemet || tagifyFree).addTags([tagData]);
-    } else if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
-      (tagifyMsl || tagifyFree).addTags([tagData]);
-    } else {
-      tagifyFree.addTags([tagData]);
+  Object.values(targets).concat(tagifyFree).filter(Boolean).forEach(tagify => {
+    if (typeof tagify.update === 'function') {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === 'function') {
+      tagify._updateHiddenField();
     }
   });
 }
@@ -728,7 +890,6 @@ async function applyDoiPrefill(attributes) {
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
-  prefillKeywords(attributes.subjects);
   prefillRelatedWorks(attributes.relatedIdentifiers);
   prefillFunding(attributes.fundingReferences);
 
@@ -736,6 +897,7 @@ async function applyDoiPrefill(attributes) {
   await prefillLanguage(attributes);
   await prefillTitles(attributes.titles);
   await prefillRights(attributes.rightsList);
+  await prefillKeywords(attributes.subjects);
 }
 
 /* ================================================================== */
@@ -802,7 +964,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Export for testing (CommonJS)
+// doiPrefillHandler.js is a classic script and reads these as globals.
+if (typeof window !== 'undefined') {
+  window.applyDoiPrefill = applyDoiPrefill;
+  window.buildPrefillPreview = buildPrefillPreview;
+}
+
+// Export for testing (CommonJS, after Babel rewrites the import above)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     getTagify,
@@ -820,6 +988,7 @@ if (typeof module !== 'undefined' && module.exports) {
     prefillDescriptions,
     prefillDates,
     prefillGeoLocations,
+    classifyDoiSubject,
     prefillKeywords,
     prefillRelatedWorks,
     prefillFunding,

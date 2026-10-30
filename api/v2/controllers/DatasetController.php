@@ -1285,8 +1285,8 @@ class DatasetController
 
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
-        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
-        $proc->setParameter('', 'contactEmail', $contactEmail);
+        $contactAddressRepository = $GLOBALS['contactAddressRepository'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactAddressRepository', $contactAddressRepository);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {

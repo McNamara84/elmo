@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   playwright-tests:
-    # Keep the browser build and its system libraries on the same Ubuntu release.
+    # Keep WebKit binaries and system libraries on the same supported Ubuntu release.
     runs-on: ubuntu-24.04
     env:
       ERNIE_URL: ${{ secrets.ERNIE_URL }}
@@ -161,6 +161,7 @@ jobs:
         $showFundingReference = true;
         $showAuthorInstitution = true;
         $xmlSubmitAddress = 'datapub@gfz.de';
+        $contactAddressRepository = 'datapub@gfz.de';
 
         $envOverrides = [
             'SHOW_MSL_MODE' => 'showMslMode',
@@ -292,12 +293,31 @@ jobs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       with:
         path: ~/.cache/ms-playwright
-        key: playwright-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
+        key: playwright-${{ runner.os }}-${{ runner.arch }}-ubuntu24.04-${{ matrix.browser }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          playwright-${{ runner.os }}-${{ runner.arch }}-ubuntu-24.04-${{ matrix.browser }}-
+          playwright-${{ runner.os }}-${{ runner.arch }}-ubuntu24.04-${{ matrix.browser }}-
 
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps ${{ matrix.browser }}
+
+    - name: Verify Playwright browser startup
+      env:
+        PLAYWRIGHT_BROWSER: ${{ matrix.browser }}
+      run: |
+        node <<'NODE'
+        const { [process.env.PLAYWRIGHT_BROWSER]: browserType } = require('playwright');
+        (async () => {
+          const browser = await browserType.launch();
+          try {
+            const page = await browser.newPage();
+            await page.setContent('<title>Playwright startup check</title>');
+            if (await page.title() !== 'Playwright startup check') throw new Error('Browser page did not render.');
+            console.log(`${process.env.PLAYWRIGHT_BROWSER} ${browser.version()} started successfully.`);
+          } finally {
+            await browser.close();
+          }
+        })().catch(error => { console.error(error); process.exitCode = 1; });
+        NODE
 
     - name: Verify servers are running
       run: |

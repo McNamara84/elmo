@@ -20,6 +20,8 @@ function simulateSubmitValidation(root = document) {
 }
 
 const FULL_KEYWORDS_IMPORT = /import\s*\{[\s\S]*?\}\s*from\s*['"]\.\/thesauriHelpers\.js['"]\s*;?\s*/;
+const THESAURUS_CONFIG_IMPORT = /import\s*\{\s*THESAURUS_CONFIG\s*\}\s*from\s*['"]\.\/thesaurusConfig\.js['"]\s*;?\s*/;
+const THESAURUS_CONFIG_REEXPORT = /export\s*\{\s*THESAURUS_CONFIG\s*\}\s*;?\s*/;
 
 /**
  * Strips ES module exports so thesauri.js can be eval'd in Jest (non-module) tests.
@@ -38,14 +40,20 @@ function transformThesauriScript(source, extraExportEntries = '') {
     .replace(/\bexport default /g, '')
     .replace(/if \(typeof module !== 'undefined' && module\.exports\) \{[\s\S]*?\n\}/, '');
 
+  const configPath = path.resolve(__dirname, '../../js/thesaurusConfig.js');
+  const config = fs.readFileSync(configPath, 'utf8')
+    .replace(/\bexport const /g, 'const ');
+
   let script = source
     .replace(FULL_KEYWORDS_IMPORT, '')
+    .replace(THESAURUS_CONFIG_IMPORT, '')
+    .replace(THESAURUS_CONFIG_REEXPORT, '')
     .replace(/\bexport function /g, 'function ')
     .replace(/\bexport const /g, 'const ')
     .replace(/\bexport let /g, 'let ')
     .replace(/\bexport default /g, '');
 
-  script = helpers + '\n' + script;
+  script = helpers + '\n' + config + '\n' + script;
 
   const exportsList = [
     'filterTreeByRoot',
@@ -59,6 +67,8 @@ function transformThesauriScript(source, extraExportEntries = '') {
     'loadedConfigs',
     'handleTreeNodeActivation',
     'findNodeByPath',
+    'updateThesaurusKeywordCount',
+    'bindKeywordCount',
   ];
 
   if (/\bfunction ensureThesaurusLoaded\b/.test(script)) {
