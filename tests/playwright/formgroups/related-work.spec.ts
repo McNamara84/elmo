@@ -120,7 +120,7 @@ const relatedWorkMarkup = String.raw`<!DOCTYPE html>
     <script type="module" src="js/clearInputFieldsLoader.js"></script>
     <script type="module" src="js/select.js"></script>
     <script src="js/resourceTypeUtils.js"></script>
-    <script src="js/mappingXmlToInputFields.js"></script>
+    <script type="module" src="js/mappingXmlToInputFields.js"></script>
     <script src="js/upload.js"></script>
     <script type="module" src="js/eventhandlers/formgroups/relatedwork.js"></script>
   </body>
