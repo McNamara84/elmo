@@ -81,9 +81,9 @@ export function whitelistValueFromNode(item, parentPath) {
 function applyWhitelistEntry(tag, entry) {
     return Object.assign({}, tag, {
         value: entry.value,
-        id: tag.id || entry.id,
-        scheme: tag.scheme || entry.scheme,
-        schemeURI: tag.schemeURI || entry.schemeURI,
+        id: entry.id || tag.id,
+        scheme: entry.scheme || tag.scheme,
+        schemeURI: entry.schemeURI || tag.schemeURI,
         language: tag.language || entry.language
     });
 }
@@ -148,6 +148,102 @@ export function resolveTagAgainstWhitelist(tag, whitelist) {
     }
 
     return tag;
+}
+
+/**
+ * Resolves a DataCite subject through the aliases held in THESAURUS_CONFIG.
+ * @param {Object|string} subject
+ * @param {Object} thesaurusConfig
+ * @returns {string}
+ */
+export function classifyDoiSubject(subject, thesaurusConfig) {
+    const metadata = subject && typeof subject === 'object' ? subject : {};
+    const schemeURI = metadata.schemeURI || metadata.schemeUri || '';
+    const subjectScheme = metadata.subjectScheme || '';
+
+    const matched = Object.entries(thesaurusConfig).find(([, config]) => (
+        !config.dynamicOnly && (
+            config.schemeURIs?.includes(schemeURI)
+            || config.subjectSchemes?.includes(subjectScheme)
+            || config.subjectSchemePrefixes?.some(prefix => subjectScheme.startsWith(prefix))
+        )
+    ));
+    if (matched) return matched[0];
+    if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) return 'msl';
+    return 'free';
+}
+
+/**
+ * Live Tagify instances for configured thesauri plus the separate MSL input.
+ * inputId is canonical; inputName supports pre-rendered form variants.
+ * @param {Object} thesaurusConfig
+ * @returns {Object<string, Tagify|null>}
+ */
+export function thesaurusTargets(thesaurusConfig) {
+    const targets = Object.fromEntries(
+        Object.entries(thesaurusConfig)
+            .filter(([, config]) => config.inputId && !config.dynamicOnly)
+            .map(([group, config]) => {
+                const inputId = config.inputId.replace(/^#/, '');
+                const input = document.getElementById(inputId)
+                    || document.querySelector(`[name="${config.inputName}"]`);
+                return [group, input?._tagify ?? null];
+            })
+    );
+    targets.msl = document.getElementById('input-mslkeyword')?._tagify ?? null;
+    return targets;
+}
+
+/**
+ * Adds a thesaurus keyword resolved against the loaded whitelist.
+ * @param {string} group
+ * @param {Tagify} tagify
+ * @param {Object} tagData
+ * @param {{source?: 'xml'|'doi'}} [options]
+ */
+export function importThesaurusKeyword(group, tagify, tagData, options = {}) {
+    const prefix = options.source === 'xml' ? 'XML import' : 'Metadata export by DOI';
+    const whitelist = tagify.settings?.whitelist;
+    const resolved = resolveTagAgainstWhitelist(tagData, whitelist);
+    if (Array.isArray(whitelist) && whitelist.length > 0
+        && !whitelist.some(entry => entry && entry.value === resolved.value)) {
+        console.warn(`${prefix}: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:`, {
+            thesaurus: group,
+            keyword: tagData.value,
+            valueURI: tagData.id,
+        });
+        return;
+    }
+    tagify.addTags([resolved]);
+}
+
+/**
+ * Waits for every configured vocabulary referenced by prepared subjects.
+ * @param {Array<{group: string}>} prepared
+ * @param {Object} thesaurusConfig
+ * @param {{source?: 'xml'|'doi'}} [options]
+ * @returns {Promise<Set<string>>}
+ */
+export async function prepareThesauriForKeywords(prepared, thesaurusConfig, options = {}) {
+    if (typeof window.waitForThesaurusVocabulary !== 'function') return new Set();
+    const groups = [...new Set(prepared.map(entry => entry.group))]
+        .filter(group => {
+            const config = thesaurusConfig[group];
+            return Boolean(config?.inputId && !config.dynamicOnly);
+        });
+    const results = await Promise.all(groups.map(group => window.waitForThesaurusVocabulary(group)));
+    const notReady = new Set();
+    const source = options.source === 'xml' ? 'XML keyword import' : 'DOI keyword import';
+    groups.forEach((group, index) => {
+        if (results[index] !== 'loaded') {
+            console.warn(`Thesaurus vocabulary not ready for ${source}:`, {
+                thesaurus: group,
+                status: results[index],
+            });
+            notReady.add(group);
+        }
+    });
+    return notReady;
 }
 
 /**
@@ -257,6 +353,10 @@ if (typeof module !== 'undefined' && module.exports) {
         getNodeFullKeyword,
         whitelistValueFromNode,
         resolveTagAgainstWhitelist,
+        classifyDoiSubject,
+        thesaurusTargets,
+        importThesaurusKeyword,
+        prepareThesauriForKeywords,
         upgradeExistingTagsToFullKeywords,
         findNodeByPath,
         synchronizeTagifyInputs,

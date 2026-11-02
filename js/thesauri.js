@@ -2,7 +2,6 @@ import {
     stampFullKeywords,
     getNodeFullKeyword,
     whitelistValueFromNode,
-    resolveTagAgainstWhitelist,
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
 } from './thesauriHelpers.js';
@@ -1520,6 +1519,4 @@ $(document).ready(function () {
 // EXPORT for testing
 if (typeof window !== 'undefined') {
     window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
-    window.THESAURUS_CONFIG = THESAURUS_CONFIG;
-    window.resolveTagAgainstWhitelist = resolveTagAgainstWhitelist;
 }
