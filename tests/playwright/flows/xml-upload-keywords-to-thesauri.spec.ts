@@ -1,25 +1,31 @@
 import { test, expect, type Page } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
+import { XMLParser } from 'fast-xml-parser';
 import {
-  navigateToHome, REPO_ROOT, registerGoogleMapsNoopRoute, waitForHomepageReady,
+  navigateToHome, REPO_ROOT, registerGoogleMapsNoopRoute, waitForFormInteractionReady, waitForHomepageReady,
 } from '../utils';
 
 /**
- * DataCite XML for 10.5880/fidgeo.d.2025.001. Free keywords are listed before
- * GCMD science / instruments subjects. processKeywords() must wait for the
- * referenced vocabularies before addTags — including those free keywords.
+ * DataCite XML for 10.5880/gfz.4.6.2020.005. It covers free keywords and every
+ * thesaurus supported by the shared ELMO editor, including GEMET.
  */
 const XML_PATH = path.join(
   REPO_ROOT,
-  'tests/fixtures/xml-import/lithogeochemistry-of-the-volcanic-sedimentary-datacite.xml',
+  'tests/fixtures/xml-import/seismic-data-from-the-hochvogel-summit-array-datacite.xml',
 );
-const TITLE = 'Lithogeochemistry of the Volcanic-Sedimentary Complex and major and trace element contents in apatite from the Neves Corvo Cu-Zn-Pb(-Sn) deposit (Portugal)';
+const TITLE = 'Seismic data from the Hochvogel summit array';
 
 const SCIENCE_SCHEME = 'NASA/GCMD Earth Science Keywords';
 const SCIENCE_SCHEME_URI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords';
 const INSTRUMENTS_SCHEME = 'NASA/GCMD Instruments';
 const INSTRUMENTS_SCHEME_URI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments';
+const PLATFORMS_SCHEME = 'GCMD Platforms';
+const PLATFORMS_SCHEME_URI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms';
+const GEMET_SCHEME = 'GEMET - GEneral Multilingual Environmental Thesaurus';
+const GEMET_SCHEME_URI = 'http://www.eionet.europa.eu/gemet/concept/';
+const CHRONOSTRAT_SCHEME = 'International Chronostratigraphic Chart';
+const CHRONOSTRAT_SCHEME_URI = 'http://resource.geosciml.org/vocabulary/timescale/gts2020';
 
 type ThesaurusKeyword = {
   value: string;
@@ -29,80 +35,78 @@ type ThesaurusKeyword = {
   language: string;
 };
 
+type SavedSubject = {
+  text: string;
+  subjectScheme: string;
+  schemeURI: string;
+  valueURI: string;
+  lang: string;
+};
+
 const SCIENCE_KEYWORDS: ThesaurusKeyword[] = [{
-  value: 'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEOCHEMISTRY > GEOCHEMICAL PROPERTIES > CHEMICAL CONCENTRATIONS',
-  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6',
+  value: 'Science Keywords > EARTH SCIENCE > LAND SURFACE > GEOMORPHOLOGY',
+  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/d35b9ba5-d018-48a5-8f0d-92b9c55b3279',
   scheme: SCIENCE_SCHEME,
   schemeURI: SCIENCE_SCHEME_URI,
   language: 'en',
 }];
 
-const EXTRA_SCIENCE_KEYWORD: ThesaurusKeyword = {
-  value: 'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEOCHEMISTRY > GEOCHEMICAL PROPERTIES > MAJOR ELEMENTS',
-  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/extra-major-elements',
-  scheme: SCIENCE_SCHEME,
-  schemeURI: SCIENCE_SCHEME_URI,
+const INSTRUMENT_KEYWORDS: ThesaurusKeyword[] = [{
+  value: 'Instruments > In Situ/Laboratory Instruments',
+  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/ff564c87-78f2-47eb-a857-a4bdc0a71ae5',
+  scheme: INSTRUMENTS_SCHEME,
+  schemeURI: INSTRUMENTS_SCHEME_URI,
   language: 'en',
-};
+}];
 
-const INSTRUMENT_KEYWORDS: ThesaurusKeyword[] = [
+const PLATFORM_KEYWORDS: ThesaurusKeyword[] = [{
+  value: 'Platforms > In Situ Land-based Platforms > GEOPHYSICAL STATIONS/NETWORKS > SEISMOLOGICAL STATIONS',
+  id: 'https://gcmd.earthdata.nasa.gov/kms/concept/182fc560-a2b1-4c9d-9acf-febe0e1bf179',
+  scheme: PLATFORMS_SCHEME,
+  schemeURI: PLATFORMS_SCHEME_URI,
+  language: 'en',
+}];
+
+const GEMET_KEYWORDS: ThesaurusKeyword[] = [
   {
-    value: 'Instruments > Earth Remote Sensing Instruments > Passive Remote Sensing > Spectrometers/Radiometers > Spectrometers > FTIR SPECTROMETER',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
+    value: 'NATURAL ENVIRONMENT, ANTHROPIC ENVIRONMENT > ENVIRONMENT (natural environment, anthropic environment) > geophysical environment',
+    id: 'http://www.eionet.europa.eu/gemet/group/13195',
+    scheme: GEMET_SCHEME,
+    schemeURI: GEMET_SCHEME_URI,
     language: 'en',
   },
   {
-    value: 'Instruments > In Situ/Laboratory Instruments > Probes > ELECTRON MICROPROBES',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/ff2d6f74-959c-42f2-9905-dd942fd80598',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
+    value: 'NATURAL ENVIRONMENT, ANTHROPIC ENVIRONMENT > ENVIRONMENT (natural environment, anthropic environment) > terrestrial environment',
+    id: 'http://www.eionet.europa.eu/gemet/group/10198',
+    scheme: GEMET_SCHEME,
+    schemeURI: GEMET_SCHEME_URI,
     language: 'en',
   },
   {
-    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
-    language: 'en',
-  },
-  {
-    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > LA-ICP-MS',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/3e3d658f-1326-42b4-b3a8-3f897a8a2a42',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
-    language: 'en',
-  },
-  {
-    value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > XRF',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/665b8764-0c0a-4df7-96f1-4ddae0c6de18',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
-    language: 'en',
-  },
-  {
-    value: 'Instruments > Solar/Space Observing Instruments > X-Ray/Gamma Ray Detectors > XRD',
-    id: 'https://gcmd.earthdata.nasa.gov/kms/concept/41db9c48-4af8-40db-8632-a86983d81258',
-    scheme: INSTRUMENTS_SCHEME,
-    schemeURI: INSTRUMENTS_SCHEME_URI,
+    value: 'NATURAL ENVIRONMENT, ANTHROPIC ENVIRONMENT > ENVIRONMENT (natural environment, anthropic environment) > physical environment',
+    id: 'http://www.eionet.europa.eu/gemet/group/10166',
+    scheme: GEMET_SCHEME,
+    schemeURI: GEMET_SCHEME_URI,
     language: 'en',
   },
 ];
 
+const CHRONOSTRAT_KEYWORDS: ThesaurusKeyword[] = [{
+  value: 'The Present',
+  id: 'http://resource.geosciml.org/classifier/ics/ischart/Present',
+  scheme: CHRONOSTRAT_SCHEME,
+  schemeURI: CHRONOSTRAT_SCHEME_URI,
+  language: 'en',
+}];
+
 const FREE_KEYWORDS = [
-  'Geochemistry',
-  'FOS: Earth and related environmental sciences',
-  'hydrothermal alteration',
-  'whole-rock chemistry',
-  'apatite',
-  'Florencite',
-  'xenotime',
-  'felsic volcanic rocks',
-  'black shales',
-  'trace elements in apatite',
-  'Neves Corvo',
-  'VMS mineralization',
+  'Environmental seismology',
+  'rock mechanics',
+  'rock stress',
+  'natural hazard',
+  'monitoring',
+  'early warning',
+  'compound material > sedimentary material > carbonate sedimentary material',
 ];
 
 type VocabNode = {
@@ -145,8 +149,8 @@ const MOCK_AVAILABILITY = {
   science_keywords: { available: true, displayName: 'GCMD Science Keywords' },
   platforms: { available: true, displayName: 'GCMD Platforms' },
   instruments: { available: true, displayName: 'GCMD Instruments' },
-  chronostratigraphy: { available: false, displayName: 'ICS Chronostratigraphy' },
-  gemet: { available: false, displayName: 'GEMET' },
+  chronostratigraphy: { available: true, displayName: 'ICS Chronostratigraphy' },
+  gemet: { available: true, displayName: 'GEMET' },
 };
 
 type TagifyInput = HTMLInputElement & {
@@ -171,39 +175,104 @@ async function freeKeywordValues(page: Page): Promise<string[]> {
   return tags.map(tag => tag.value);
 }
 
-test('XML upload splits lithogeochemistry keywords into thesauri after the vocabularies load', async ({ page }) => {
+function parseSubjects(xml: string): SavedSubject[] {
+  const parsed = new XMLParser({
+    ignoreAttributes: false,
+    attributeNamePrefix: '',
+    removeNSPrefix: true,
+  }).parse(xml);
+  const resource = parsed.resource || parsed.envelope?.resource;
+  expect(resource, `Expected a DataCite resource in the XML: ${xml.slice(0, 1000)}`).toBeTruthy();
+
+  return [resource.subjects?.subject].flat().filter(Boolean).map((node): SavedSubject => {
+    if (typeof node === 'string') {
+      return { text: node, subjectScheme: '', schemeURI: '', valueURI: '', lang: '' };
+    }
+    return {
+      text: node['#text'] || '',
+      subjectScheme: node.subjectScheme || '',
+      schemeURI: node.schemeURI || '',
+      valueURI: node.valueURI || '',
+      lang: node['xml:lang'] || node.lang || '',
+    };
+  });
+}
+
+function subjectKey(subject: SavedSubject): string {
+  return JSON.stringify(subject);
+}
+
+test('XML upload splits Hochvogel keywords into every supported thesaurus', async ({ page }) => {
   test.slow();
   await registerGoogleMapsNoopRoute(page);
   await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: MOCK_AVAILABILITY }));
   await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', route => route.fulfill({
-    json: vocabPayload([...SCIENCE_KEYWORDS, EXTRA_SCIENCE_KEYWORD]),
+    json: vocabPayload(SCIENCE_KEYWORDS),
   }));
   await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', route => route.fulfill({
     json: vocabPayload(INSTRUMENT_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', route => route.fulfill({ json: { data: [] } }));
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', route => route.fulfill({
+    json: vocabPayload(PLATFORM_KEYWORDS),
+  }));
+  await page.route('**/api/v2/vocabs/thesauri/gemet', route => route.fulfill({
+    json: vocabPayload(GEMET_KEYWORDS),
+  }));
+  await page.route('**/api/v2/vocabs/thesauri/chronostrat-timescale', route => route.fulfill({
+    json: vocabPayload(CHRONOSTRAT_KEYWORDS),
+  }));
 
   await navigateToHome(page);
   await waitForHomepageReady(page);
 
   const xml = readFileSync(XML_PATH, 'utf8');
-  expect(xml.indexOf('Geochemistry')).toBeLessThan(xml.indexOf('GCMD Instruments'));
+  expect(xml).toContain('GEMET - GEneral Multilingual Environmental Thesaurus');
 
   await page.locator('#button-form-load').click();
   const modal = page.locator('#modal-uploadxml');
   await expect(modal).toBeVisible();
   await page.setInputFiles('#input-uploadxml-file', {
-    name: 'lithogeochemistry-of-the-volcanic-sedimentary-datacite.xml',
+    name: 'seismic-data-from-the-hochvogel-summit-array-datacite.xml',
     mimeType: 'text/xml',
     buffer: Buffer.from(xml, 'utf8'),
   });
 
-  await expect(page.locator('#upload-spinner-overlay')).toBeVisible({ timeout: 15_000 });
-  await expect(page.locator('#upload-spinner-overlay')).toBeHidden({ timeout: 30_000 });
-  await expect(page.locator('#input-resourceinformation-title')).toHaveValue(TITLE);
+  await page.waitForFunction(
+    (title) => {
+      const titleInput = document.querySelector<HTMLInputElement>('#input-resourceinformation-title');
+      const spinner = document.querySelector('#upload-spinner-overlay');
+      return titleInput?.value === title && spinner?.classList.contains('d-none');
+    },
+    TITLE,
+    { timeout: 30_000 },
+  );
 
   await expect.poll(() => keywordTags(page, '#input-sciencekeyword')).toEqual(SCIENCE_KEYWORDS);
   await expect.poll(() => keywordTags(page, '#input-instruments')).toEqual(INSTRUMENT_KEYWORDS);
-  await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual([]);
+  await expect.poll(() => keywordTags(page, '#input-platforms')).toEqual(PLATFORM_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-gemet')).toEqual(GEMET_KEYWORDS);
+  await expect.poll(() => keywordTags(page, '#input-chronostratigraphy')).toEqual(CHRONOSTRAT_KEYWORDS);
   await expect.poll(async () => (await freeKeywordValues(page)).slice().sort()).toEqual([...FREE_KEYWORDS].sort());
+
+  await page.locator('#button-form-save').click();
+  await expect(page.locator('#modal-saveas')).toBeVisible();
+  await page.locator('#input-saveas-filename').fill('hochvogel-keyword-thesauri');
+  await waitForFormInteractionReady(page, 'save');
+  const responsePromise = page.waitForResponse(response =>
+    response.url().includes('/save/save_data.php') && response.request().method() === 'POST');
+  const downloadPromise = page.waitForEvent('download');
+  await page.locator('#button-saveas-save').click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+
+  const download = await downloadPromise;
+  const stream = await download.createReadStream();
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  const savedXml = Buffer.concat(chunks).toString('utf8');
+  await test.info().attach('saved-metadata.xml', { body: savedXml, contentType: 'application/xml' });
+
+  const expectedSubjects = parseSubjects(xml);
+  const actualSubjects = parseSubjects(savedXml);
+  expect(actualSubjects.map(subjectKey).sort()).toEqual(expectedSubjects.map(subjectKey).sort());
 });

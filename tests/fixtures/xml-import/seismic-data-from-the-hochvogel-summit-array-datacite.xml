@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns="http://datacite.org/schema/kernel-4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.7/metadata.xsd">
+  <identifier identifierType="DOI">10.5880/gfz.4.6.2020.005</identifier>
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Dietze, Michael</creatorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </creator>
+    <creator>
+      <creatorName nameType="Personal">Krautblatter, Michael</creatorName>
+      <givenName>Michael</givenName>
+      <familyName>Krautblatter</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2775-2742</nameIdentifier>
+      <affiliation>TU Munich</affiliation>
+    </creator>
+  </creators>
+  <titles>
+    <title>Seismic data from the Hochvogel summit array</title>
+  </titles>
+  <publisher publisherIdentifier="https://doi.org/10.17616/R3VQ0S" publisherIdentifierScheme="re3data" schemeURI="https://re3data.org/" xml:lang="en">GFZ Data Services</publisher>
+  <publicationYear>2020</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <subjects>
+    <subject xml:lang="en">Environmental seismology</subject>
+    <subject xml:lang="en">rock mechanics</subject>
+    <subject xml:lang="en">rock stress</subject>
+    <subject xml:lang="en">natural hazard</subject>
+    <subject xml:lang="en">monitoring</subject>
+    <subject xml:lang="en">early warning</subject>
+    <subject xml:lang="en" subjectScheme="CGI Simple Lithology" schemeURI="http://resource.geosciml.org/classifierscheme/cgi/2016.01/simplelithology" valueURI="http://resource.geosciml.org/classifier/cgi/lithology/carbonate_sedimentary_material">compound material &gt; sedimentary material &gt; carbonate sedimentary material</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/d35b9ba5-d018-48a5-8f0d-92b9c55b3279">EARTH SCIENCE &gt; LAND SURFACE &gt; GEOMORPHOLOGY</subject>
+    <subject xml:lang="en" subjectScheme="GEMET - GEneral Multilingual Environmental Thesaurus" schemeURI="http://www.eionet.europa.eu/gemet/concept/" valueURI="http://www.eionet.europa.eu/gemet/concept/13195">environment &gt; geophysical environment</subject>
+    <subject xml:lang="en" subjectScheme="GEMET - GEneral Multilingual Environmental Thesaurus" schemeURI="http://www.eionet.europa.eu/gemet/concept/" valueURI="http://www.eionet.europa.eu/gemet/concept/10198">environment &gt; natural environment &gt; terrestrial environment</subject>
+    <subject xml:lang="en" subjectScheme="GEMET - GEneral Multilingual Environmental Thesaurus" schemeURI="http://www.eionet.europa.eu/gemet/concept/" valueURI="http://www.eionet.europa.eu/gemet/concept/10166">environment &gt; physical environment</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Platforms" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/182fc560-a2b1-4c9d-9acf-febe0e1bf179">In Situ Land-based Platforms &gt; GEOPHYSICAL STATIONS/NETWORKS &gt; SEISMOLOGICAL STATIONS</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments">In Situ/Laboratory Instruments</subject>
+    <subject xml:lang="en" subjectScheme="International Chronostratigraphic Chart" schemeURI="http://resource.geosciml.org/vocabulary/timescale/gts2020" valueURI="http://resource.geosciml.org/classifier/ics/ischart/Present">The Present</subject>
+    <subject xml:lang="en" subjectScheme="Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/ff564c87-78f2-47eb-a857-a4bdc0a71ae5">In Situ/Laboratory Instruments</subject>
+  </subjects>
+  <contributors>
+    <contributor contributorType="ContactPerson">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="DataCollector">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="DataCurator">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="DataManager">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="ProjectLeader">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="Researcher">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+    <contributor contributorType="ProjectMember">
+      <contributorName nameType="Personal">Krautblatter, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Krautblatter</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2775-2742</nameIdentifier>
+      <affiliation>TU Munich</affiliation>
+    </contributor>
+    <contributor contributorType="Researcher">
+      <contributorName nameType="Personal">Krautblatter, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Krautblatter</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2775-2742</nameIdentifier>
+      <affiliation>TU Munich</affiliation>
+    </contributor>
+    <contributor contributorType="ContactPerson">
+      <contributorName nameType="Personal">Dietze, Michael</contributorName>
+      <givenName>Michael</givenName>
+      <familyName>Dietze</familyName>
+      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
+      <affiliation>GFZ Potsdam</affiliation>
+    </contributor>
+  </contributors>
+  <dates>
+    <date dateType="Available">2022-07-12</date>
+    <date dateType="Collected">2018-07-12/2018-10-12</date>
+    <date dateType="Created">2018-07-12</date>
+    <date dateType="Issued">2020</date>
+  </dates>
+  <relatedIdentifiers>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="Cites">10.5194/esurf-6-669-2018</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="Cites">10.5880/gfz.5.1.2018.001</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="URL" relationType="Cites">https://www.gfz-potsdam.de/en/section/geophysical-deep-sounding/infrastructure/geophysical-instrument-pool-potsdam-gipp/software/gipptools/</relatedIdentifier>
+    <relatedIdentifier relatedIdentifierType="DOI" relationType="IsSupplementTo">10.1002/esp.5034</relatedIdentifier>
+  </relatedIdentifiers>
+  <rightsList>
+    <rights rightsURI="https://spdx.org/licenses/CC-BY-4.0.html" rightsIdentifier="CC-BY-4.0" rightsIdentifierScheme="SPDX" schemeURI="https://spdx.org/licenses/">Creative Commons Attribution 4.0 International</rights>
+    <rights rightsURI="http://purl.org/coar/access_right/c_abf2" rightsIdentifier="c_abf2" rightsIdentifierScheme="COAR Access Rights" schemeURI="http://purl.org/coar/access_right/">Open access</rights>
+  </rightsList>
+  <descriptions>
+    <description descriptionType="Abstract">Large rock slope failures play a pivotal role in long-term landscape evolution and are a major concern in land use planning and hazard aspects. While the failure phase and the time immediately prior to failure are increasingly well studied, the nature of the preparation phase remains enigmatic. This knowledge gap is due, to a large degree, to difficulties associated with instrumenting high mountain terrain and the local nature of classic monitoring methods, which does not allow integral observation of large rock volumes. Here, we analyse data from a small network of up to seven seismic sensors installed during July--October 2018 (with 43 days of data loss) at the summit of the Hochvogel, a 2592 m high Alpine peak. <br/><br/> We develop proxy time series indicative of cyclic and progressive changes of the summit. Fundamental frequency analysis, horizontal-to-vertical spectral ratio data and end-member modelling analysis reveal diurnal cycles of increasing and decreasing coupling stiffness of a 126,000 m^3 large, instable rock volume, due to thermal forcing. Relative seismic wave velocity changes also indicate diurnal accumulation and release of stress within the rock mass. At longer time scales, there is a systematic superimposed pattern of stress increases over multiple days and episodic stress release within a few days, expressed in an increased emission of short seismic pulses indicative of rock cracking. We interpret our data to reflect an early stage of stick slip motion of a large rock mass, providing new information on the development of large-scale slope instabilities towards catastrophic failure.</description>
+  </descriptions>
+  <geoLocations>
+    <geoLocation>
+      <geoLocationPlace>Summit network, covering 3000 ³, aperture maximum 75 m</geoLocationPlace>
+      <geoLocationBox>
+        <westBoundLongitude>10.43340000</westBoundLongitude>
+        <eastBoundLongitude>10.43350000</eastBoundLongitude>
+        <southBoundLatitude>47.38320000</southBoundLatitude>
+        <northBoundLatitude>47.38380000</northBoundLatitude>
+      </geoLocationBox>
+    </geoLocation>
+  </geoLocations>
+</resource>
