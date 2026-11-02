@@ -139,6 +139,7 @@ function buildRelatedWorksXml(count: number): string {
 }
 
 async function importRelatedWorksXml(page: Page, xml: string) {
+  await page.waitForFunction(() => typeof (window as any).processRelatedWorks === 'function');
   return page.evaluate(async source => {
     const xmlDocument = new DOMParser().parseFromString(source, 'application/xml');
     const importer = (window as any).processRelatedWorks;
@@ -417,6 +418,7 @@ test.describe('Related work form group', () => {
   test('uploads all 401 issue-769 entries with visible progress and no request storm', async ({ page }, testInfo) => {
     const countsBefore = { ...apiRequestCounts.get(page)! };
 
+    await page.waitForFunction(() => typeof (window as any).processRelatedWorks === 'function');
     await page.evaluate(() => {
       const browserWindow = window as any;
       browserWindow.__issue769Progress = [];

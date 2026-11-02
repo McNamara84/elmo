@@ -1540,6 +1540,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
 if (typeof window !== 'undefined') {
   window.loadXmlToForm = loadXmlToForm;
   window.processKeywords = processKeywords;
+  window.processRelatedWorks = processRelatedWorks;
 }
 
 // Export for testing (CommonJS)
