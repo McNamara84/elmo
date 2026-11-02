@@ -1,5 +1,5 @@
 /**
- * Thesaurus helpers for GCMD breadcrumb paths and Tagify form sync.
+ * Thesaurus helpers for GCMD path construction and Tagify form sync.
  *
  * GGM (and other) UIs show a cut subtree, but saved keyword text must be the
  * unfiltered path including scheme-root (`Science Keywords > …`, `Platforms > …`).
@@ -100,7 +100,7 @@ function gemetIdentifier(uri) {
 }
 
 /**
- * Maps an imported Tagify tag onto a whitelist entry that was built from
+ * Used in upload from XML upload or DOI pre-fill.Maps an imported Tagify tag onto a whitelist entry that was built from
  * stamped `fullKeyword` values. Three consecutive stages; first hit wins.
  *
  *   1. exact match on `entry.value`

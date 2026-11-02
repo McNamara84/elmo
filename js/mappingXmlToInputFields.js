@@ -1196,6 +1196,7 @@ async function processKeywords(xmlDoc, resolver) {
   }
 
   const tagifyFree = document.getElementById('input-freekeyword')?._tagify ?? null;
+  // get the list of tagify instances for keyword addition
   let targets = thesaurusTargets(THESAURUS_CONFIG);
   const allTagifyInstances = Object.values(targets).concat(tagifyFree).filter(Boolean);
 
@@ -1209,6 +1210,7 @@ async function processKeywords(xmlDoc, resolver) {
     const subjectNode = subjectNodes.snapshotItem(i);
     const keyword = subjectNode.textContent.trim();
     if (!keyword) continue;
+    // construct the subject as a JS named array (object) before adding it to tagify
     const language = subjectNode.getAttribute('xml:lang') || '';
     const subject = {
       subject: keyword,
@@ -1232,7 +1234,7 @@ async function processKeywords(xmlDoc, resolver) {
   }
 
   targets = thesaurusTargets(THESAURUS_CONFIG);
-
+// enter the tags into the appropriate Tagify instances based on their group
   prepared.forEach(entry => {
     if (entry.group === 'free') {
       if (!tagifyFree || tagifyFree.value?.some(tag => tag.value === entry.keyword)) return;
@@ -1262,6 +1264,9 @@ async function processKeywords(xmlDoc, resolver) {
     }, { source: 'xml' });
   });
 
+  // After importing tags from XML, refresh every Tagify field.
+  // This makes each input save its current values back into the hidden form field
+  // so the page and the backend both see the imported data.
   Object.values(targets).concat(tagifyFree).filter(Boolean).forEach(tagify => {
     if (typeof tagify.update === 'function') {
       tagify.update();
