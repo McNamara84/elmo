@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import path from 'node:path';
 import { readFileSync } from 'node:fs';
 import { REPO_ROOT } from '../utils';
-import { injectScript, injectStylesheet } from '../utils/assets';
+import { injectModuleFromApp, injectScript, injectStylesheet } from '../utils/assets';
 
 declare const translations: any;
 declare function processKeywords(xmlDoc: Document, resolver: Function): void;
@@ -172,7 +172,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
 
   test('processKeywords loads tags with all metadata fields including language', async ({ page }) => {
     // Inject the production mapping module so processKeywords is available globally
-    await injectScript(page, 'js/mappingXmlToInputFields.js');
+    await injectModuleFromApp(page, 'js/mappingXmlToInputFields.js');
 
     const tagData = await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();
@@ -222,7 +222,7 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
 
   test('Tagify hidden input contains valid JSON for backend after loading XML keywords', async ({ page }) => {
     // Inject the production mapping module so processKeywords is available globally
-    await injectScript(page, 'js/mappingXmlToInputFields.js');
+    await injectModuleFromApp(page, 'js/mappingXmlToInputFields.js');
 
     await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();

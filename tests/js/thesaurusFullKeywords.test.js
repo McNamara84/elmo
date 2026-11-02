@@ -7,11 +7,39 @@ const {
   getNodeFullKeyword,
   whitelistValueFromNode,
   resolveTagAgainstWhitelist,
+  classifyDoiSubject,
+  thesaurusTargets,
   upgradeExistingTagsToFullKeywords,
   findNodeByPath,
 } = require('../../js/thesauriHelpers.js');
+const { THESAURUS_CONFIG } = require('../../js/thesaurusConfig.js');
 
 describe('thesauriHelpers', () => {
+  describe('DataCite keyword routing', () => {
+    test('uses THESAURUS_CONFIG inputId/inputName and excludes dynamic-only inputs', () => {
+      document.body.innerHTML = `
+        <input name="gcmdScienceKeywords">
+        <input id="input-mslkeyword">
+      `;
+      const scienceTagify = {};
+      const mslTagify = {};
+      document.querySelector('[name="gcmdScienceKeywords"]')._tagify = scienceTagify;
+      document.getElementById('input-mslkeyword')._tagify = mslTagify;
+
+      const targets = thesaurusTargets(THESAURUS_CONFIG);
+      expect(targets.science_keywords).toBe(scienceTagify);
+      expect(targets.msl).toBe(mslTagify);
+      expect(targets).not.toHaveProperty('satellitePlatforms');
+    });
+
+    test('routes subjects by DataCite scheme label or URI', () => {
+      expect(classifyDoiSubject({ subjectScheme: 'GCMD Instruments' }, THESAURUS_CONFIG)).toBe('instruments');
+      expect(classifyDoiSubject({
+        schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
+      }, THESAURUS_CONFIG)).toBe('science_keywords');
+    });
+  });
+
   describe('stampFullKeywords', () => {
     test('stamps each descendant with its own unfiltered breadcrumb', () => {
       const tree = [{
@@ -53,6 +81,24 @@ describe('thesauriHelpers', () => {
     test('stage 1 exact match leaves a full breadcrumb unchanged', () => {
       const resolved = resolveTagAgainstWhitelist({ value: graceFull, id: 'uri:grace' }, whitelist);
       expect(resolved.value).toBe(graceFull);
+    });
+
+    test('whitelist scheme and id win over DataCite subjectScheme on the tag', () => {
+      const resolved = resolveTagAgainstWhitelist(
+        {
+          value: graceFull,
+          scheme: 'GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        },
+        [{
+          value: graceFull,
+          id: 'uri:grace',
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        }]
+      );
+      expect(resolved.scheme).toBe('NASA/GCMD Instruments');
+      expect(resolved.id).toBe('uri:grace');
     });
 
     test('stage 2 matches by node.id / valueURI', () => {

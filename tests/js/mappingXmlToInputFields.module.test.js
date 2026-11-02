@@ -626,7 +626,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(firstThesaurus).toBeGreaterThan(firstFree);
         });
 
-        test('routes free keywords to the free keyword field', () => {
+        test('routes free keywords to the free keyword field', async () => {
             document.body.innerHTML = `
             <input id="input-freekeyword">
         `;
@@ -646,14 +646,14 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
             expect(freeTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Test Keyword' })
             ]);
         });
 
-        test('routes MSL keywords to the MSL keyword field', () => {
+        test('routes MSL keywords to the MSL keyword field', async () => {
             document.body.innerHTML = `
             <input id="input-mslkeyword">
         `;
@@ -673,14 +673,14 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
             expect(mslTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'msl Keyword' })
             ]);
         });
 
-        test('routes GCMD science keywords to the science keyword field', () => {
+        test('routes GCMD science keywords to the science keyword field', async () => {
             document.body.innerHTML = `
             <input id="input-sciencekeyword">
         `;
@@ -700,14 +700,14 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
             expect(scienceTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'Earth Science' })
             ]);
         });
 
-        test('routes chronostrat keywords to the chronostratigraphy field', () => {
+        test('routes chronostrat keywords to the chronostratigraphy field', async () => {
             document.body.innerHTML = `
             <input id="input-chronostratigraphy">
         `;
@@ -727,7 +727,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             </ns:resource>
         `, 'text/xml');
 
-            mappingModule.processKeywords(xmlDoc, resolver);
+            await mappingModule.processKeywords(xmlDoc, resolver);
 
             expect(chronostratTagify.addTags).toHaveBeenCalledWith([
                 expect.objectContaining({ value: 'one > two > chronostratigraphy' })

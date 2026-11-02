@@ -14,44 +14,16 @@ const { mountAuthorStack } = require('./utils/peopleStacks');
  * tested here; those are covered by Playwright E2E tests.
  */
 
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
+const { requireFresh } = require("./utils");
 
 function loadMappingModule(contextOverrides = {}) {
-  const resourceTypeUtilsCode = fs.readFileSync(
-    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
-    "utf8"
-  );
-  const code = fs.readFileSync(
-    path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-    "utf8"
-  );
-  const { THESAURUS_CONFIG } = require("../../js/thesaurusConfig.js");
-  const { resolveTagAgainstWhitelist } = require("../../js/thesauriHelpers.js");
-  const context = {
-    console,
-    document: global.document,
-    window: global.window,
-    XPathResult: global.XPathResult,
-    ELMO_FEATURES: {},
-    Tagify: jest.fn().mockImplementation(() => ({
-      addTags: jest.fn(),
-      removeAllTags: jest.fn(),
-      settings: { whitelist: [] },
-    })),
-    translations: {},
-    ...contextOverrides,
-  };
-  vm.createContext(context);
-  vm.runInContext(resourceTypeUtilsCode, context);
-  context.window.resourceTypeUtils = context.resourceTypeUtils;
-  context.window.THESAURUS_CONFIG = THESAURUS_CONFIG;
-  context.window.resolveTagAgainstWhitelist = resolveTagAgainstWhitelist;
-  context.window.loadClearInputFields = context.window.loadClearInputFields
+  window.loadClearInputFields = window.loadClearInputFields
     || (() => Promise.resolve(() => {}));
-  vm.runInContext(code, context);
-  return context;
+  if (contextOverrides.$) {
+    global.$ = contextOverrides.$;
+    window.$ = contextOverrides.$;
+  }
+  return requireFresh("../../js/mappingXmlToInputFields.js");
 }
 
 /**
@@ -857,7 +829,7 @@ describe("Keyword metadata round-trip via Tagify tags", () => {
 
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
-    ctx.window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve("loaded"));
+    window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve("loaded"));
 
     const xml = buildNsPrefixXml(`
       <ns:subjects>
