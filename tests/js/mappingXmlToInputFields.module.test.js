@@ -4,6 +4,8 @@
  * Tests for mappingXmlToInputFields.js using require() for proper coverage tracking
  */
 
+const fs = require('fs');
+const path = require('path');
 const {
     getDataCite47ResourceTypes,
     toSpacedResourceTypeLabel
@@ -98,6 +100,9 @@ describe('mappingXmlToInputFields module coverage', () => {
         delete global.translations;
         delete window.updateMapOverlay;
         delete window.waitForThesaurusVocabulary;
+        delete window.thesauriReady;
+        delete window.THESAURUS_CONFIG;
+        delete window.resolveTagAgainstWhitelist;
     });
 
     describe('module exports', () => {
@@ -608,6 +613,18 @@ describe('mappingXmlToInputFields module coverage', () => {
 
     describe('processKeywords', () => {
         const resolver = (prefix) => prefix === 'ns' ? 'http://datacite.org/schema/kernel-4' : null;
+        const lithogeochemistryXml = fs.readFileSync(
+            path.resolve(__dirname, '../fixtures/xml-import/lithogeochemistry-of-the-volcanic-sedimentary-datacite.xml'),
+            'utf8'
+        );
+
+        test('lithogeochemistry DataCite XML lists free keywords before thesaurus subjects', () => {
+            const subjects = [...lithogeochemistryXml.matchAll(/<subject[\s\S]*?<\/subject>/g)].map((match) => match[0]);
+            const firstThesaurus = subjects.findIndex((subject) => /gcmd\.earthdata\.nasa\.gov/.test(subject));
+            const firstFree = subjects.findIndex((subject) => !/gcmd\.earthdata\.nasa\.gov/.test(subject));
+            expect(firstFree).toBe(0);
+            expect(firstThesaurus).toBeGreaterThan(firstFree);
+        });
 
         test('routes free keywords to the free keyword field', () => {
             document.body.innerHTML = `
@@ -851,6 +868,182 @@ describe('mappingXmlToInputFields module coverage', () => {
             );
 
             expect(scienceTagify.addTags).not.toHaveBeenCalled();
+        });
+
+        test('waits for vocabularies before adding free keywords that precede thesaurus subjects', async () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+            <input id="input-instruments">
+            <input id="input-sciencekeyword">
+        `;
+
+            const freeTagify = {
+                addTags: jest.fn(),
+                update: jest.fn(),
+                settings: { whitelist: [], enforceWhitelist: false }
+            };
+            const instrumentsScheme = 'NASA/GCMD Instruments';
+            const instrumentsSchemeURI = 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments';
+            const icpMs = {
+                value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+                id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+                scheme: instrumentsScheme,
+                schemeURI: instrumentsSchemeURI,
+                language: 'en',
+            };
+            const instrumentsTagify = {
+                addTags: jest.fn(),
+                update: jest.fn(),
+                settings: { whitelist: [icpMs], enforceWhitelist: true }
+            };
+            const scienceTagify = {
+                addTags: jest.fn(),
+                update: jest.fn(),
+                settings: { whitelist: [], enforceWhitelist: true }
+            };
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+            document.querySelector('#input-instruments')._tagify = instrumentsTagify;
+            document.querySelector('#input-sciencekeyword')._tagify = scienceTagify;
+
+            let resolveWait;
+            window.waitForThesaurusVocabulary = jest.fn(() => new Promise((resolve) => {
+                resolveWait = resolve;
+            }));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject xml:lang="en">Geochemistry</ns:subject>
+                    <ns:subject xml:lang="en" subjectScheme="GCMD Instruments"
+                        schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments"
+                        valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c">In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            const done = mappingModule.processKeywords(xmlDoc, resolver);
+            expect(freeTagify.addTags).not.toHaveBeenCalled();
+            expect(instrumentsTagify.addTags).not.toHaveBeenCalled();
+            expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('instruments');
+            expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalledWith('msl');
+            expect(window.waitForThesaurusVocabulary).not.toHaveBeenCalledWith('free');
+
+            resolveWait('loaded');
+            await done;
+
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Geochemistry' })
+            ]);
+            expect(instrumentsTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({
+                    value: icpMs.value,
+                    id: icpMs.id,
+                    scheme: instrumentsScheme,
+                    schemeURI: instrumentsSchemeURI,
+                    language: 'en',
+                })
+            ]);
+            expect(instrumentsTagify.settings.enforceWhitelist).toBe(true);
+            expect(scienceTagify.addTags).not.toHaveBeenCalled();
+        });
+
+        test('does not copy DataCite GCMD Instruments scheme onto the tag or into free keywords', async () => {
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+            <input id="input-instruments">
+        `;
+
+            const freeTagify = { addTags: jest.fn(), update: jest.fn() };
+            const canonical = {
+                value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+                id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+                scheme: 'NASA/GCMD Instruments',
+                schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+                language: 'en',
+            };
+            const instrumentsTagify = {
+                addTags: jest.fn(),
+                update: jest.fn(),
+                settings: { whitelist: [canonical], enforceWhitelist: true }
+            };
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+            document.querySelector('#input-instruments')._tagify = instrumentsTagify;
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject xml:lang="en">apatite</ns:subject>
+                    <ns:subject xml:lang="en" subjectScheme="GCMD Instruments"
+                        schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments"
+                        valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c">In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await mappingModule.processKeywords(xmlDoc, resolver);
+
+            const added = instrumentsTagify.addTags.mock.calls[0][0][0];
+            expect(added.scheme).toBe('NASA/GCMD Instruments');
+            expect(added.scheme).not.toBe('GCMD Instruments');
+            expect(freeTagify.addTags).toHaveBeenCalledTimes(1);
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'apatite' })
+            ]);
+        });
+
+        test('warns when a thesaurus keyword is absent from the loaded vocabulary', async () => {
+            const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+            document.body.innerHTML = `
+            <input id="input-freekeyword">
+            <input id="input-instruments">
+        `;
+
+            const freeTagify = { addTags: jest.fn(), update: jest.fn() };
+            const instrumentsTagify = {
+                addTags: jest.fn(),
+                update: jest.fn(),
+                settings: {
+                    whitelist: [{
+                        value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+                        id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+                        scheme: 'NASA/GCMD Instruments',
+                    }],
+                    enforceWhitelist: true
+                }
+            };
+            document.querySelector('#input-freekeyword')._tagify = freeTagify;
+            document.querySelector('#input-instruments')._tagify = instrumentsTagify;
+            window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve('loaded'));
+
+            const xmlDoc = new DOMParser().parseFromString(`
+            <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+                <ns:subjects>
+                    <ns:subject xml:lang="en">Geochemistry</ns:subject>
+                    <ns:subject xml:lang="en" subjectScheme="GCMD Instruments"
+                        schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments"
+                        valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/00000000-0000-0000-0000-000000000000">Instruments &gt; Retired Instrument</ns:subject>
+                </ns:subjects>
+            </ns:resource>
+        `, 'text/xml');
+
+            await mappingModule.processKeywords(xmlDoc, resolver);
+
+            expect(instrumentsTagify.addTags).not.toHaveBeenCalled();
+            expect(freeTagify.addTags).toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Geochemistry' })
+            ]);
+            expect(freeTagify.addTags).not.toHaveBeenCalledWith([
+                expect.objectContaining({ value: 'Instruments > Retired Instrument' })
+            ]);
+            expect(warnSpy).toHaveBeenCalledWith(
+                'XML import: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:',
+                expect.objectContaining({
+                    thesaurus: 'instruments',
+                    keyword: 'Instruments > Retired Instrument',
+                })
+            );
+            warnSpy.mockRestore();
         });
     });
 });

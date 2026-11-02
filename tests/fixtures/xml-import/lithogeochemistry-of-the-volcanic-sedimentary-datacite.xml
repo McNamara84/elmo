@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resource xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xmlns="http://datacite.org/schema/kernel-4"
+          xsi:schemaLocation="http://datacite.org/schema/kernel-4 https://schema.datacite.org/meta/kernel-4.5/metadata.xsd">
+  <identifier identifierType="DOI">10.5880/fidgeo.d.2025.001</identifier>
+  <creators>
+    <creator>
+      <creatorName nameType="Personal">Codeço, Marta</creatorName>
+      <givenName>Marta</givenName>
+      <familyName>Codeço</familyName>
+    </creator>
+  </creators>
+  <titles>
+    <title xml:lang="en">Lithogeochemistry of the Volcanic-Sedimentary Complex and major and trace element contents in apatite from the Neves Corvo Cu-Zn-Pb(-Sn) deposit (Portugal)</title>
+  </titles>
+  <publisher xml:lang="en">GFZ Data Services</publisher>
+  <publicationYear>2025</publicationYear>
+  <resourceType resourceTypeGeneral="Dataset">Dataset</resourceType>
+  <!-- Free keywords come before thesaurus keywords, as in the DataCite record. -->
+  <subjects>
+    <subject xml:lang="en">Geochemistry</subject>
+    <subject xml:lang="en" subjectScheme="Fields of Science and Technology (FOS)" schemeURI="http://www.oecd.org/science/inno/38235147.pdf">FOS: Earth and related environmental sciences</subject>
+    <subject xml:lang="en">hydrothermal alteration</subject>
+    <subject xml:lang="en">whole-rock chemistry</subject>
+    <subject xml:lang="en">apatite</subject>
+    <subject xml:lang="en">Florencite</subject>
+    <subject xml:lang="en">xenotime</subject>
+    <subject xml:lang="en">felsic volcanic rocks</subject>
+    <subject xml:lang="en">black shales</subject>
+    <subject xml:lang="en">trace elements in apatite</subject>
+    <subject xml:lang="en">Neves Corvo</subject>
+    <subject xml:lang="en">VMS mineralization</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/aa2c39cf-1c4c-437e-ae2d-29e6a77f1aa2">Earth Remote Sensing Instruments &gt; Passive Remote Sensing &gt; Spectrometers/Radiometers &gt; Spectrometers &gt; FTIR SPECTROMETER</subject>
+    <subject xml:lang="en" subjectScheme="NASA/GCMD Earth Science Keywords" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/12ed4fa0-27cc-4e05-a2b7-bbf2fde871f6">EARTH SCIENCE &gt; SOLID EARTH &gt; GEOCHEMISTRY &gt; GEOCHEMICAL PROPERTIES &gt; CHEMICAL CONCENTRATIONS</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/ff2d6f74-959c-42f2-9905-dd942fd80598">In Situ/Laboratory Instruments &gt; Probes &gt; ELECTRON MICROPROBES</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c">In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/3e3d658f-1326-42b4-b3a8-3f897a8a2a42">In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; LA-ICP-MS</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/665b8764-0c0a-4df7-96f1-4ddae0c6de18">In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; XRF</subject>
+    <subject xml:lang="en" subjectScheme="GCMD Instruments" schemeURI="https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments" valueURI="https://gcmd.earthdata.nasa.gov/kms/concept/41db9c48-4af8-40db-8632-a86983d81258">Solar/Space Observing Instruments &gt; X-Ray/Gamma Ray Detectors &gt; XRD</subject>
+  </subjects>
+  <rightsList>
+    <rights xml:lang="en" schemeURI="https://spdx.org/licenses/" rightsIdentifierScheme="SPDX" rightsIdentifier="CC-BY-4.0" rightsURI="https://creativecommons.org/licenses/by/4.0/">Creative Commons Attribution 4.0 International</rights>
+  </rightsList>
+</resource>

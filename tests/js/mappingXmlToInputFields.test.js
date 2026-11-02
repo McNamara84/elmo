@@ -8,6 +8,8 @@ function loadMappingModule(contextOverrides = {}) {
     "utf8"
   );
   const code = fs.readFileSync(path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"), "utf8");
+  const { THESAURUS_CONFIG } = require("../../js/thesaurusConfig.js");
+  const { resolveTagAgainstWhitelist } = require("../../js/thesauriHelpers.js");
   const context = {
     console,
     document: global.document,
@@ -17,6 +19,8 @@ function loadMappingModule(contextOverrides = {}) {
   };
   context.window.loadClearInputFields = context.window.loadClearInputFields
     || (() => Promise.resolve(() => {}));
+  context.window.THESAURUS_CONFIG = THESAURUS_CONFIG;
+  context.window.resolveTagAgainstWhitelist = resolveTagAgainstWhitelist;
   vm.createContext(context);
   vm.runInContext(resourceTypeUtilsCode, context);
   context.window.resourceTypeUtils = context.resourceTypeUtils;
