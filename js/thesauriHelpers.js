@@ -89,6 +89,17 @@ function applyWhitelistEntry(tag, entry) {
 }
 
 /**
+ * GEMET DataCite records use concept URIs while ERNIE's tree currently uses
+ * group URIs for the same numeric identifiers.
+ */
+function gemetIdentifier(uri) {
+    var match = String(uri || '').match(
+        /^https?:\/\/www\.eionet\.europa\.eu\/gemet\/(?:concept|group)\/([^/?#]+)\/?$/
+    );
+    return match ? match[1] : '';
+}
+
+/**
  * Maps an imported Tagify tag onto a whitelist entry that was built from
  * stamped `fullKeyword` values. Three consecutive stages; first hit wins.
  *
@@ -125,6 +136,14 @@ export function resolveTagAgainstWhitelist(tag, whitelist) {
             return entry && entry.id === tag.id;
         });
         if (byId) return applyWhitelistEntry(tag, byId);
+
+        var importedGemetId = gemetIdentifier(tag.id);
+        if (importedGemetId) {
+            var byGemetId = whitelist.find(function (entry) {
+                return entry && gemetIdentifier(entry.id) === importedGemetId;
+            });
+            if (byGemetId) return applyWhitelistEntry(tag, byGemetId);
+        }
     }
 
     // Stage 3 — suffix: `Space-based Platforms > GRACE` matches
@@ -195,7 +214,8 @@ export function thesaurusTargets(thesaurusConfig) {
 }
 
 /**
- * Adds a thesaurus keyword resolved against the loaded whitelist.
+ * Adds one thesaurus chip for a keyword resolved against the loaded whitelist.
+ * The chip is the subject that is displayed and saved.
  * @param {string} group
  * @param {Tagify} tagify
  * @param {Object} tagData
@@ -212,6 +232,9 @@ export function importThesaurusKeyword(group, tagify, tagData, options = {}) {
             keyword: tagData.value,
             valueURI: tagData.id,
         });
+        return;
+    }
+    if (tagify.value?.some(tag => tag.value === resolved.value)) {
         return;
     }
     tagify.addTags([resolved]);

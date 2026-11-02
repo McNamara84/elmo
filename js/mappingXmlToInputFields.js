@@ -1235,7 +1235,7 @@ async function processKeywords(xmlDoc, resolver) {
 
   prepared.forEach(entry => {
     if (entry.group === 'free') {
-      if (!tagifyFree) return;
+      if (!tagifyFree || tagifyFree.value?.some(tag => tag.value === entry.keyword)) return;
       tagifyFree.addTags([{
         value: entry.keyword,
         ...(entry.language ? { language: entry.language } : {}),
