@@ -9,6 +9,7 @@ const {
   resolveTagAgainstWhitelist,
   classifyDoiSubject,
   thesaurusTargets,
+  importThesaurusKeyword,
   upgradeExistingTagsToFullKeywords,
   findNodeByPath,
 } = require('../../js/thesauriHelpers.js');
@@ -109,6 +110,22 @@ describe('thesauriHelpers', () => {
       expect(resolved.value).toBe(graceFull);
     });
 
+    test('stage 2 treats GEMET concept and group URIs as the same identifier', () => {
+      const resolved = resolveTagAgainstWhitelist(
+        {
+          value: 'environment > geophysical environment',
+          id: 'http://www.eionet.europa.eu/gemet/concept/13195',
+        },
+        [{
+          value: 'NATURAL ENVIRONMENT > ENVIRONMENT > geophysical environment',
+          id: 'http://www.eionet.europa.eu/gemet/group/13195',
+          scheme: 'GEMET - GEneral Multilingual Environmental Thesaurus',
+        }]
+      );
+      expect(resolved.value).toBe('NATURAL ENVIRONMENT > ENVIRONMENT > geophysical environment');
+      expect(resolved.id).toBe('http://www.eionet.europa.eu/gemet/group/13195');
+    });
+
     test('stage 3 suffix match warns because it can be imprecise', () => {
       const warn = jest.spyOn(console, 'warn').mockImplementation(() => {});
       const resolved = resolveTagAgainstWhitelist(
@@ -139,6 +156,37 @@ describe('thesauriHelpers', () => {
         'Science Keywords > B > LEAF',
       ]);
       warn.mockRestore();
+    });
+  });
+
+  describe('importThesaurusKeyword', () => {
+    test('adds one chip for repeated subjects that resolve to the same keyword', () => {
+      const canonical = {
+        value: 'Instruments > In Situ/Laboratory Instruments',
+        id: 'instrument-id',
+        scheme: 'NASA/GCMD Instruments',
+      };
+      const tagify = {
+        value: [],
+        settings: { whitelist: [canonical] },
+        addTags: jest.fn(function (tags) {
+          this.value.push(tags[0]);
+        }),
+      };
+
+      importThesaurusKeyword('instruments', tagify, {
+        value: 'In Situ/Laboratory Instruments',
+        scheme: 'GCMD Instruments',
+      }, { source: 'xml' });
+      importThesaurusKeyword('instruments', tagify, {
+        value: 'In Situ/Laboratory Instruments',
+        id: 'instrument-id',
+        scheme: 'Instruments',
+      }, { source: 'xml' });
+
+      expect(tagify.value).toHaveLength(1);
+      expect(tagify.value[0]).toMatchObject(canonical);
+      expect(tagify.addTags).toHaveBeenCalledTimes(1);
     });
   });
 

@@ -175,6 +175,31 @@ async function freeKeywordValues(page: Page): Promise<string[]> {
   return tags.map(tag => tag.value);
 }
 
+function savedSubject(keyword: ThesaurusKeyword): SavedSubject {
+  return {
+    text: keyword.value,
+    subjectScheme: keyword.scheme,
+    schemeURI: keyword.schemeURI,
+    valueURI: keyword.id,
+    lang: keyword.language,
+  };
+}
+
+const EXPECTED_SUBJECTS: SavedSubject[] = [
+  ...SCIENCE_KEYWORDS.map(savedSubject),
+  ...INSTRUMENT_KEYWORDS.map(savedSubject),
+  ...PLATFORM_KEYWORDS.map(savedSubject),
+  ...GEMET_KEYWORDS.map(savedSubject),
+  ...CHRONOSTRAT_KEYWORDS.map(savedSubject),
+  ...FREE_KEYWORDS.map(text => ({
+    text,
+    subjectScheme: '',
+    schemeURI: '',
+    valueURI: '',
+    lang: '',
+  })),
+];
+
 function parseSubjects(xml: string): SavedSubject[] {
   const parsed = new XMLParser({
     ignoreAttributes: false,
@@ -272,7 +297,6 @@ test('XML upload splits Hochvogel keywords into every supported thesaurus', asyn
   const savedXml = Buffer.concat(chunks).toString('utf8');
   await test.info().attach('saved-metadata.xml', { body: savedXml, contentType: 'application/xml' });
 
-  const expectedSubjects = parseSubjects(xml);
   const actualSubjects = parseSubjects(savedXml);
-  expect(actualSubjects.map(subjectKey).sort()).toEqual(expectedSubjects.map(subjectKey).sort());
+  expect(actualSubjects.map(subjectKey).sort()).toEqual(EXPECTED_SUBJECTS.map(subjectKey).sort());
 });
