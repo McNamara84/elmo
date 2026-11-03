@@ -1,0 +1,124 @@
+{
+  "_source": {
+    "url": "https://api.datacite.org/dois/10.5880/fidgeo.2024.003?affiliation=true",
+    "retrieved": "2026-10-21"
+  },
+  "data": {
+    "attributes": {
+      "doi": "10.5880/fidgeo.2024.003",
+      "creators": [
+        {
+          "name": "Müller, Regine",
+          "nameType": "Personal",
+          "givenName": "Regine",
+          "familyName": "Müller",
+          "affiliation": [
+            {
+              "name": "SPAU GmbH, Münzenberg, Germany"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0009-0007-5815-4116",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Klein, Sabine",
+          "nameType": "Personal",
+          "givenName": "Sabine",
+          "familyName": "Klein",
+          "affiliation": [
+            {
+              "name": "Forschungsbereich Archäometallurgie, Leibniz-Forschungsmuseum für Georessourcen/Deutsches Bergbau-Museum Bochum, Bochum, Germany"
+            },
+            {
+              "name": "FIERCE, Frankfurt Isotope & Element Research Center, Goethe Universität, Frankfurt a.M., Germany"
+            },
+            {
+              "name": "Institut für Archäologische Wissenschaften, Ruhr-Universität, Bochum, Germany"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0000-0002-3939-4428",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Schreiner, Katrin",
+          "nameType": "Personal",
+          "givenName": "Katrin",
+          "familyName": "Schreiner",
+          "affiliation": [
+            {
+              "name": "SPAU GmbH, Münzenberg, Germany"
+            }
+          ],
+          "nameIdentifiers": []
+        },
+        {
+          "name": "Reid, John",
+          "nameType": "Personal",
+          "givenName": "John",
+          "familyName": "Reid",
+          "affiliation": [
+            {
+              "name": "The Trimontium Trust, Melrose, Scottland, UK"
+            }
+          ],
+          "nameIdentifiers": []
+        }
+      ],
+      "contributors": [
+        {
+          "name": "Klein, Sabine",
+          "nameType": "Personal",
+          "givenName": "Sabine",
+          "familyName": "Klein",
+          "affiliation": [
+            {
+              "name": "Deutsches Bergbau-Museum Bochum, Bochum, Germany"
+            }
+          ],
+          "contributorType": "ContactPerson",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0000-0002-3939-4428",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Müller, Regine",
+          "nameType": "Personal",
+          "givenName": "Regine",
+          "familyName": "Müller",
+          "affiliation": [
+            {
+              "name": "SPAU GmbH, Münzenberg, Germany"
+            }
+          ],
+          "contributorType": "ContactPerson",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "https://orcid.org/0009-0007-5815-4116",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "titles": [
+        {
+          "title": "Lead isotope analyses (LIA) on lead sling bullets from Pre-Roman and Roman context"
+        }
+      ]
+    }
+  }
+}

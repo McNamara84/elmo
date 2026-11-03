@@ -1,0 +1,135 @@
+{
+  "_source": {
+    "url": "https://api.datacite.org/dois/10.5880/gfz.dqto.2026.001?affiliation=true",
+    "retrieved": "2026-10-21"
+  },
+  "data": {
+    "attributes": {
+      "doi": "10.5880/gfz.dqto.2026.001",
+      "creators": [
+        {
+          "name": "Achmüller, Korbinian",
+          "nameType": "Personal",
+          "givenName": "Korbinian",
+          "familyName": "Achmüller",
+          "affiliation": [
+            {
+              "name": "Technical University of Berlin"
+            },
+            {
+              "name": "GFZ Helmholtz Centre for Geosciences"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0003-6909-3997",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Timmen, Ludger",
+          "nameType": "Personal",
+          "givenName": "Ludger",
+          "familyName": "Timmen",
+          "affiliation": [
+            {
+              "name": "Leibniz University Hannover"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0003-2334-5282",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Wziontek, Hartmut",
+          "nameType": "Personal",
+          "givenName": "Hartmut",
+          "familyName": "Wziontek",
+          "affiliation": [
+            {
+              "name": "Federal Agency for Cartography and Geodesy"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0003-4139-714X",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Gerlach, Christian",
+          "nameType": "Personal",
+          "givenName": "Christian",
+          "familyName": "Gerlach",
+          "affiliation": [
+            {
+              "name": "Bavarian Academy of Sciences and Humanities"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0002-3210-8767",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Voigt, Christian",
+          "nameType": "Personal",
+          "givenName": "Christian",
+          "familyName": "Voigt",
+          "affiliation": [
+            {
+              "name": "GFZ Helmholtz Centre for Geosciences"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0002-9988-965X",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "contributors": [
+        {
+          "name": "Achmüller, Korbinian",
+          "nameType": "Personal",
+          "givenName": "Korbinian",
+          "familyName": "Achmüller",
+          "affiliation": [
+            {
+              "name": "Technical University of Berlin"
+            },
+            {
+              "name": "GFZ Helmholtz Centre for Geosciences"
+            }
+          ],
+          "contributorType": "ContactPerson",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0003-6909-3997",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "titles": [
+        {
+          "title": "Measurements of Gravity Differences using Scintrex CG6#362 and CG6#171 Spring Gravimeters in the Zugspitze Gravimeter Calibration System"
+        }
+      ]
+    }
+  }
+}

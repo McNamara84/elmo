@@ -9,14 +9,14 @@
 				<xs:element name="year" type="xs:gYear" />
 				<xs:element name="dateCreated" type="xs:date" />
 				<xs:element name="dateEmbargoUntil" type="xs:date" minOccurs="0" maxOccurs="1" />
-				<xs:element name="Rights" minOccurs="1" maxOccurs="1">
+				<xs:element name="Rights" minOccurs="0" maxOccurs="1">
 					<xs:complexType>
 						<xs:sequence>
-							<xs:element name="rights_id" type="xs:integer" />
-							<xs:element name="text" type="xs:string" />
-							<xs:element name="rightsIdentifier" type="xs:string" />
-							<xs:element name="rightsURI" type="xs:anyURI" />
-							<xs:element name="forSoftware" type="xs:integer" />
+                            <xs:element name="text" type="xs:string" minOccurs="0" />
+                            <xs:element name="rightsIdentifier" type="xs:string" minOccurs="0" />
+                            <xs:element name="rightsURI" type="xs:anyURI" minOccurs="0" />
+                            <xs:element name="schemeURI" type="xs:anyURI" minOccurs="0" />
+                            <xs:element name="schemeName" type="xs:string" minOccurs="0" />
 						</xs:sequence>
 					</xs:complexType>
 				</xs:element>

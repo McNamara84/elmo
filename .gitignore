@@ -29,6 +29,8 @@ storage/drafts/
 # ERNIE cache files
 storage/cache/identifier-detection/
 storage/cache/*.json
+storage/cache/ernie_licenses_*.json.lock
+storage/cache/ernie_licenses_*.json.tmp.*
 !storage/cache/.gitkeep
 
 # PHPUnit logs

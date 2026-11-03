@@ -5,8 +5,14 @@
  * the metadata editor form. Each section has its own mapping function to keep
  * the code maintainable and testable.
  *
+ * Loaded as an ES module. Thesaurus targets come from THESAURUS_CONFIG.
+ * applyDoiPrefill and buildPrefillPreview are also assigned to window because
+ * doiPrefillHandler.js is a classic script.
+ *
  * Depends on jQuery ($) and Tagify being available globally.
  */
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
+import { resolveTagAgainstWhitelist } from './thesauriHelpers.js';
 
 /* ------------------------------------------------------------------ */
 /*  Helper: Tagify instance retrieval (mirrors mappingXmlToInputFields) */
@@ -41,13 +47,49 @@ function normalizeRorId(value) {
   return value ? String(value).trim().replace(/^https?:\/\/ror\.org\//, '') : '';
 }
 
+/**
+ * Read a normalized ORCID from a DataCite creator or contributor.
+ * @param {Object} creator DataCite person with optional nameIdentifiers.
+ * @returns {string} Bare ORCID, or an empty string when none is supplied.
+ */
 function extractCreatorOrcid(creator) {
   if (!Array.isArray(creator.nameIdentifiers)) {
     return '';
   }
 
   const orcidEntry = creator.nameIdentifiers.find(ni => ni.nameIdentifierScheme === 'ORCID');
-  return orcidEntry ? (orcidEntry.nameIdentifier || '').replace('https://orcid.org/', '') : '';
+  return normalizeOrcid(orcidEntry?.nameIdentifier);
+}
+
+/**
+ * Normalize identifier representation for comparison without checking its checksum.
+ * @param {string|null|undefined} value Bare identifier or ORCID URL.
+ * @returns {string} Trimmed identifier with an uppercase check character.
+ */
+function normalizeOrcid(value) {
+  return String(value || '').trim().replace(/^https?:\/\/orcid\.org\//i, '').toUpperCase();
+}
+
+/**
+ * Preserve personal display names when DataCite omits structured names.
+ * Only the explicit "family, given" format supplies missing name components.
+ * @param {Object} person DataCite creator or contributor.
+ * @returns {{familyname: string, givenname: string}} Names in their original spelling.
+ */
+function extractPersonNames(person) {
+  let givenname = person.givenName || '';
+  let familyname = person.familyName || '';
+  if (person.nameType === 'Personal') {
+    const parts = String(person.name || '').split(',').map(part => part.trim());
+    if (parts.length === 2 && parts.every(Boolean)) {
+      familyname ||= parts[0];
+      givenname ||= parts[1];
+    } else if (!givenname && !familyname) {
+      // Keep an unstructured name intact for manual correction; never guess its order.
+      familyname = person.name || '';
+    }
+  }
+  return { familyname, givenname };
 }
 
 function extractAffiliationsPayload(creator) {
@@ -69,11 +111,15 @@ function extractAffiliationsPayload(creator) {
     .filter(affiliation => affiliation.label !== '' || affiliation.rorId !== '');
 }
 
+/**
+ * Build ordered author entries; explicit contributor roles are applied separately.
+ * @param {Object[]} creators DataCite creators in publication order.
+ * @returns {Object[]} Personal and institutional author payloads.
+ */
 function buildAuthorsPayloadFromCreators(creators) {
   return creators
     .map(creator => {
-      const givenname = creator.givenName || '';
-      const familyname = creator.familyName || '';
+      const { givenname, familyname } = extractPersonNames(creator);
       const nameType = creator.nameType || '';
       const creatorName = creator.name || '';
       const affiliations = extractAffiliationsPayload(creator);
@@ -104,8 +150,52 @@ function buildAuthorsPayloadFromCreators(creators) {
     .filter(Boolean);
 }
 
-function normalizeNameKey(familyName, givenName) {
-  return `${String(familyName || '').trim().toLowerCase()}\u0000${String(givenName || '').trim().toLowerCase()}`;
+/**
+ * Build an exact name key tolerant of Unicode encoding, case and whitespace.
+ * Keep accents and name boundaries to avoid merging distinct people.
+ * @param {string|undefined} familyName Family name.
+ * @param {string|undefined} givenName Given name.
+ * @returns {string} Comparison key, not a display name.
+ */
+function normalizeDoiPersonNameKey(familyName, givenName) {
+  const normalize = value => String(value || '').normalize('NFC').trim().replace(/\s+/g, ' ').toLowerCase();
+  return `${normalize(familyName)}\u0000${normalize(givenName)}`;
+}
+
+// Shared JSDoc object type for the annotations below. A standalone @typedef
+// describes a data structure; it does not need a function declaration.
+
+/**
+ * Identity used to match an imported contact to an author.
+ * @typedef {Object} DoiContactIdentity
+ * @property {string} orcid Normalized ORCID, or an empty string.
+ * @property {string} familyname Family name, possibly empty.
+ * @property {string} givenname Given name, possibly empty.
+ */
+
+/**
+ * Resolve only an unambiguous person, with ORCID taking precedence over names.
+ * An ambiguous ORCID must not fall through to a weaker name match.
+ * @param {Object[]} authors Current ordered author payload.
+ * @param {DoiContactIdentity} identity Normalized contact identity.
+ * @returns {number} Author index, or -1 for missing, conflicting or ambiguous matches.
+ */
+function findContactAuthorIndex(authors, identity) {
+  const people = authors.map((author, index) => ({ author, index })).filter(({ author }) => author.type === 'person');
+  if (identity.orcid) {
+    const matches = people.filter(({ author }) => normalizeOrcid(author.orcid) === identity.orcid);
+    if (matches.length) return matches.length === 1 ? matches[0].index : -1;
+  }
+  if (!identity.familyname.trim() || !identity.givenname.trim()) return -1;
+  const key = normalizeDoiPersonNameKey(identity.familyname, identity.givenname);
+  const matches = people.filter(({ author }) => {
+    const orcid = normalizeOrcid(author.orcid);
+    // A name match is allowed only when at least one ORCID is missing.
+    // Two different ORCIDs must keep people separate, even if their names match.
+    return !(identity.orcid && orcid && identity.orcid !== orcid)
+      && normalizeDoiPersonNameKey(author.familyname, author.givenname) === key;
+  });
+  return matches.length === 1 ? matches[0].index : -1;
 }
 
 function getCurrentAuthorsPayload(authorStack) {
@@ -130,7 +220,6 @@ function decodeHtmlEntities(str) {
 /*  Vocabulary mapping helpers (fetched once, cached)                  */
 /* ------------------------------------------------------------------ */
 
-let _licenseMappingCache = null;
 let _languageMappingCache = null;
 let _titleTypeMappingCache = null;
 let _roleMappingCache = null;
@@ -139,18 +228,6 @@ let _relationMappingCache = null;
 /**
  * Loads vocabulary mapping tables from the API. Each loader caches its result.
  */
-async function getLicenseMapping() {
-  if (_licenseMappingCache) return _licenseMappingCache;
-  try {
-    const data = await $.getJSON('./api/v2/vocabs/licenses/all');
-    _licenseMappingCache = {};
-    data.forEach(l => { _licenseMappingCache[l.rightsIdentifier.toUpperCase()] = l.rights_id.toString(); });
-  } catch {
-    _licenseMappingCache = { 'CC-BY-4.0': '1', 'CC0-1.0': '2' };
-  }
-  return _licenseMappingCache;
-}
-
 async function getLanguageMapping() {
   if (_languageMappingCache) return _languageMappingCache;
   try {
@@ -301,6 +378,9 @@ async function prefillTitles(titles) {
 
 /**
  * Maps creators (authors) — both persons and institutions.
+ * @param {Object[]|null|undefined} creators DataCite creators.
+ * @returns {void}
+ * @throws {Error} When authors are supplied before the author form is initialized.
  */
 function prefillCreators(creators) {
   if (!Array.isArray(creators) || creators.length === 0) return;
@@ -316,49 +396,63 @@ function prefillCreators(creators) {
 }
 
 /**
- * Maps contributors (persons and institutions) with role deduplication.
+ * Maps contributor roles, transferring explicit personal contacts to matching authors.
+ * @param {Object[]|null|undefined} contributors DataCite contributors with their roles.
+ * @returns {void}
+ * @throws {Error} When a required form controller has not been initialized.
  */
 function prefillContributors(contributors) {
   if (!Array.isArray(contributors) || contributors.length === 0) return;
 
-  if (window.contributorStack?.setContributors) {
-    const entries = [];
-    const byKey = new Map();
-    const authors = getCurrentAuthorsPayload(getAuthorStackController());
-    contributors.forEach(c => {
-      const role = normalizeRole(c.contributorType || 'Other');
-      const givenname = c.givenName || '';
-      const familyname = c.familyName || '';
-      const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
-      if (role === 'Contact Person' && person && authors.some(author =>
-        author.type === 'person' && normalizeNameKey(author.familyname, author.givenname) === normalizeNameKey(familyname, givenname))) return;
-      const orcid = (c.nameIdentifiers || []).find(item => item.nameIdentifierScheme === 'ORCID')?.nameIdentifier?.replace(/^https?:\/\/orcid\.org\//, '') || '';
-      const institutionname = c.name || '';
-      const key = person ? `person:${orcid || normalizeNameKey(familyname, givenname)}` : `institution:${institutionname.trim().toLowerCase()}`;
-      const affiliations = (c.affiliation || []).map(item => ({
-        label: typeof item === 'string' ? item : (item.name || ''),
-        rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
-      })).filter(item => item.label);
-      let entry = byKey.get(key);
-      if (!entry) {
-        entry = person
-          ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
-          : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
-        byKey.set(key, entry);
-        entries.push(entry);
+  const authorStack = getAuthorStackController();
+  const contributorStack = window.contributorStack;
+  const entries = [];
+  const byKey = new Map();
+  const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
+  let authorsChanged = false;
+  contributors.forEach(c => {
+    const role = normalizeRole(c.contributorType || 'Other');
+    const { givenname, familyname } = extractPersonNames(c);
+    const person = c.nameType === 'Personal' || Boolean(givenname || familyname);
+    const orcid = extractCreatorOrcid(c);
+    const identity = { orcid, familyname, givenname };
+    // Author contact roles also apply when the Contributors form group is disabled.
+    if (role === 'Contact Person' && person) {
+      const index = findContactAuthorIndex(authors, identity);
+      if (index !== -1) {
+        authors[index].isContact = true;
+        authorsChanged = true;
+        return;
       }
-      if (!entry.roles.includes(role)) entry.roles.push(role);
-      affiliations.forEach(item => {
-        const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
-        if (!existing) entry.affiliations.push(item);
-        else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
-      });
+    }
+    if (!contributorStack?.setContributors) return;
+    const institutionname = c.name || '';
+    // A nameless entry has no safe deduplication key; keep it separate for correction.
+    const key = person
+      ? (orcid || familyname || givenname ? `person:${orcid || normalizeDoiPersonNameKey(familyname, givenname)}` : Symbol())
+      : `institution:${institutionname.trim().toLowerCase()}`;
+    const affiliations = (c.affiliation || []).map(item => ({
+      label: typeof item === 'string' ? item : (item.name || ''),
+      rorId: (typeof item === 'string' ? '' : item.affiliationIdentifier || '').replace(/^https?:\/\/ror\.org\//, '')
+    })).filter(item => item.label);
+    let entry = byKey.get(key);
+    if (!entry) {
+      entry = person
+        ? { type: 'person', familyname, givenname, orcid, roles: [], affiliations: [], email: '', website: '' }
+        : { type: 'institution', institutionname, roles: [], affiliations: [], email: '', website: '' };
+      byKey.set(key, entry);
+      entries.push(entry);
+    }
+    if (!entry.roles.includes(role)) entry.roles.push(role);
+    affiliations.forEach(item => {
+      const existing = entry.affiliations.find(affiliation => affiliation.label === item.label);
+      if (!existing) entry.affiliations.push(item);
+      else if (!existing.rorId && item.rorId) existing.rorId = item.rorId;
     });
-    window.contributorStack.setContributors(entries);
-    return;
-  }
-
-  if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
+  });
+  if (authorsChanged) authorStack.setAuthors(authors);
+  if (contributorStack?.setContributors) contributorStack.setContributors(entries);
+  else if (document.querySelector('[name="contributorsPayload"]')) throw new Error('Contributors form is not initialized.');
 }
 
 /**
@@ -456,59 +550,215 @@ function prefillGeoLocations(geoLocations) {
 }
 
 /**
- * Maps subjects to free keywords and thesaurus keyword tagify fields.
+ * DataCite JSON uses schemeUri/valueUri. Saved XML and some callers use schemeURI/valueURI.
+ * @param {Object|string} subject
+ * @param {...string} keys
+ * @returns {string}
  */
-function prefillKeywords(subjects) {
+function subjectProperty(subject, ...keys) {
+  if (!subject || typeof subject !== 'object') return '';
+  for (const key of keys) {
+    if (subject[key]) return subject[key];
+  }
+  return '';
+}
+
+/**
+ * Which keyword field a DataCite subject belongs in.
+ * Scheme URIs are authoritative. DataCite also labels GCMD instruments as
+ * "GCMD Instruments" rather than the vocabulary's "NASA/GCMD Instruments".
+ * @param {Object|string} subject
+ * @returns {string}
+ */
+function classifyDoiSubject(subject) {
+  const schemeURI = subjectProperty(subject, 'schemeURI', 'schemeUri');
+  const subjectScheme = subjectProperty(subject, 'subjectScheme');
+
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
+    subjectScheme === 'NASA/GCMD Earth Science Keywords') {
+    return 'science_keywords';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
+    subjectScheme === 'NASA/GCMD Platforms' ||
+    subjectScheme === 'GCMD Platforms') {
+    return 'platforms';
+  }
+  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
+    subjectScheme === 'NASA/GCMD Instruments' ||
+    subjectScheme === 'GCMD Instruments') {
+    return 'instruments';
+  }
+  if (
+    schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
+    subjectScheme === 'International Chronostratigraphic Chart' ||
+    subjectScheme === 'Chronostratigraphic Chart'
+  ) {
+    return 'chronostratigraphy';
+  }
+  if (
+    schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
+    schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
+    (subjectScheme && subjectScheme.includes('GEMET'))
+  ) {
+    return 'gemet';
+  }
+  if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
+    return 'msl';
+  }
+  return 'free';
+}
+
+/**
+ * Adds one thesaurus keyword to a ready Tagify field.
+ * The whitelist entry supplies value and subjectScheme. If Tagify does not
+ * accept the keyword (e.g. the concept is not in the loaded vocabulary),
+ * logs a warning instead of dropping it into free keywords.
+ * @param {string} group
+ * @param {Tagify} tagify
+ * @param {{value: string, id: string, schemeURI: string}} tagData
+ */
+function importThesaurusKeyword(group, tagify, tagData) {
+  const whitelist = tagify.settings?.whitelist;
+  const resolved = resolveTagAgainstWhitelist(tagData, whitelist);
+  if (Array.isArray(whitelist) && whitelist.length > 0) {
+    const inWhitelist = whitelist.some(entry => entry && entry.value === resolved.value);
+    if (!inWhitelist) {
+      console.warn('Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
+      return;
+    }
+  }
+  const before = Array.isArray(tagify.value) ? tagify.value.length : null;
+  tagify.addTags([resolved]);
+  if (before !== null && Array.isArray(tagify.value) && tagify.value.length === before) {
+    const alreadyPresent = tagify.value.some(tag => tag && tag.value === resolved.value);
+    if (!alreadyPresent) {
+      console.warn('Metadata export by DOI: Ignoring duplicate keyword:', {
+        thesaurus: group,
+        keyword: tagData.value,
+        valueURI: tagData.id,
+      });
+    }
+  }
+}
+
+/**
+ * Input selector for a DOI subject group.
+ * MSL is outside THESAURUS_CONFIG. satellitePlatforms is dynamicOnly and has no keyword input.
+ * @param {string} group
+ * @returns {string}
+ */
+function thesaurusInputSelector(group) {
+  if (group === 'msl') return '#input-mslkeyword';
+  const config = THESAURUS_CONFIG[group];
+  if (!config?.inputId || config.dynamicOnly) return '';
+  return config.inputId.startsWith('#') ? config.inputId : `#${config.inputId}`;
+}
+
+function thesaurusTargets() {
+  return Object.fromEntries(
+    [...Object.keys(THESAURUS_CONFIG), 'msl']
+      .map(group => [group, thesaurusInputSelector(group)])
+      .filter(([, selector]) => selector)
+      .map(([group, selector]) => [group, getTagify(document.querySelector(selector))])
+  );
+}
+
+/**
+ * Loads the thesauri referenced by the imported subjects and waits until each
+ * field's Tagify whitelist and jsTree are ready, following XML import.
+ * @param {Array<{group: string}>} prepared
+ * @returns {Promise<Set<string>>} Groups whose vocabulary failed to become ready.
+ */
+async function prepareThesauriForKeywords(prepared) {
+  if (typeof window.waitForThesaurusVocabulary !== 'function') {
+    return new Set();
+  }
+  const groups = [...new Set(prepared.map(entry => entry.group))]
+    .filter(group => {
+      const config = THESAURUS_CONFIG[group];
+      return Boolean(config?.inputId && !config.dynamicOnly);
+    });
+  if (groups.length === 0) {
+    return new Set();
+  }
+  const results = await Promise.all(groups.map(group => window.waitForThesaurusVocabulary(group)));
+  const notReady = new Set();
+  groups.forEach((group, index) => {
+    if (results[index] !== 'loaded') {
+      console.warn('Thesaurus vocabulary not ready for DOI keyword import:', {
+        thesaurus: group,
+        status: results[index],
+      });
+      notReady.add(group);
+    }
+  });
+  return notReady;
+}
+
+/**
+ * Maps subjects to free keywords and thesaurus keyword tagify fields.
+ * Waits for thesauri inputs and each referenced vocabulary before importing.
+ * @param {Array<Object|string>} subjects
+ * @returns {Promise<void>}
+ */
+async function prefillKeywords(subjects) {
   if (!Array.isArray(subjects) || subjects.length === 0) return;
 
   const tagifyFree = getTagify(document.querySelector('#input-freekeyword'));
   if (!tagifyFree) return;
 
-  const tagifyGCMD = getTagify(document.querySelector('#input-sciencekeyword'));
-  const tagifyPlatforms = getTagify(document.querySelector('#input-platforms'));
-  const tagifyInstruments = getTagify(document.querySelector('#input-instruments'));
-  const tagifyChronostrat = getTagify(document.querySelector('#input-chronostratigraphy'));
-  const tagifyGemet = getTagify(document.querySelector('#input-gemet'));
-  const tagifyMsl = getTagify(document.querySelector('#input-mslkeyword'));
+  if (window.thesauriReady && typeof window.thesauriReady.then === 'function') {
+    await window.thesauriReady;
+  }
 
-  subjects.forEach(s => {
-    const rawKeyword = (typeof s === 'string') ? s : (s.subject || '');
+  const prepared = [];
+  subjects.forEach(subject => {
+    const rawKeyword = (typeof subject === 'string') ? subject : (subject.subject || '');
     if (!rawKeyword) return;
 
     // Decode HTML entities (DataCite may deliver e.g. "&gt;" instead of ">")
     const keyword = decodeHtmlEntities(rawKeyword);
+    prepared.push({
+      group: classifyDoiSubject(subject),
+      keyword,
+      schemeURI: subjectProperty(subject, 'schemeURI', 'schemeUri'),
+      valueURI: subjectProperty(subject, 'valueURI', 'valueUri'),
+    });
+  });
 
-    const schemeURI = s.schemeURI || '';
-    const subjectScheme = s.subjectScheme || '';
-    const valueURI = s.valueURI || '';
+  await prepareThesauriForKeywords(prepared);
+  const targets = thesaurusTargets();
 
-    const tagData = { value: keyword, scheme: subjectScheme, schemeURI, id: valueURI };
+  prepared.forEach(entry => {
+    if (entry.group === 'free') {
+      tagifyFree.addTags([{ value: entry.keyword }]);
+      return;
+    }
+    const target = targets[entry.group];
+    if (!target) {
+      console.warn('Thesaurus keyword could not be imported into Tagify:', {
+        thesaurus: entry.group,
+        keyword: entry.keyword,
+        valueURI: entry.valueURI,
+      });
+      return;
+    }
+    importThesaurusKeyword(entry.group, target, {
+      value: entry.keyword,
+      id: entry.valueURI,
+      schemeURI: entry.schemeURI,
+    });
+  });
 
-    if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
-      subjectScheme === 'NASA/GCMD Earth Science Keywords') {
-      (tagifyGCMD || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
-      subjectScheme === 'NASA/GCMD Platforms') {
-      (tagifyPlatforms || tagifyFree).addTags([tagData]);
-    } else if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
-      subjectScheme === 'NASA/GCMD Instruments') {
-      (tagifyInstruments || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
-      subjectScheme === 'International Chronostratigraphic Chart' ||
-      subjectScheme === 'Chronostratigraphic Chart'
-    ) {
-      (tagifyChronostrat || tagifyFree).addTags([tagData]);
-    } else if (
-      schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
-      schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
-      (subjectScheme && subjectScheme.includes('GEMET'))
-    ) {
-      (tagifyGemet || tagifyFree).addTags([tagData]);
-    } else if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
-      (tagifyMsl || tagifyFree).addTags([tagData]);
-    } else {
-      tagifyFree.addTags([tagData]);
+  Object.values(targets).concat(tagifyFree).filter(Boolean).forEach(tagify => {
+    if (typeof tagify.update === 'function') {
+      tagify.update();
+    } else if (typeof tagify._updateHiddenField === 'function') {
+      tagify._updateHiddenField();
     }
   });
 }
@@ -596,86 +846,14 @@ function prefillFunding(fundingReferences) {
  * Maps rightsList to the license dropdown.
  */
 async function prefillRights(rightsList) {
-  if (!Array.isArray(rightsList) || rightsList.length === 0) return;
-
-  const mapping = await getLicenseMapping();
-
-  for (const rights of rightsList) {
-    let identifier = rights.rightsIdentifier || '';
-
-    // Try extracting from URI as fallback
-    if (!identifier && rights.rightsUri) {
-      const match = rights.rightsUri.match(/licenses\/([^/.]+)/);
-      if (match) identifier = match[1];
-    }
-
-    // Compare case-insensitively (ELMO stores CC-BY-4.0, DataCite returns cc-by-4.0)
-    const key = identifier.toUpperCase();
-    if (key && mapping[key]) {
-      $('#input-rights-license').val(mapping[key]);
-      return; // Use first matching license
-    }
-  }
-}
-
-/* ================================================================== */
-/*  Contact person email/website lookup (post-prefill)                */
-/* ================================================================== */
-
-/**
- * For each prefilled author, tries to find email/website in the local database
- * and populates the contact person fields.
- *
- * @param {Array} creators - The creators array from DataCite attributes.
- * @param {DoiLookupService} lookupService - The DOI lookup service instance.
- */
-async function prefillContactPersons(creators, lookupService) {
-  if (!Array.isArray(creators) || !lookupService) return;
-
-  const authorStack = getAuthorStackController();
-  if (authorStack) {
-    const authors = getCurrentAuthorsPayload(authorStack).map(author => ({ ...author }));
-    let changed = false;
-
-    const promises = creators.map(creator => {
-      const givenName = creator.givenName || '';
-      const familyName = creator.familyName || '';
-      if (!givenName && !familyName) return Promise.resolve();
-
-      const orcid = extractCreatorOrcid(creator);
-
-      return lookupService.lookupContacts({ orcid, familyname: familyName, givenname: givenName })
-        .then(contact => {
-          if (!contact || (!contact.email && !contact.website)) {
-            return;
-          }
-
-          const creatorKey = normalizeNameKey(familyName, givenName);
-          const author = authors.find(candidate => (
-            candidate.type === 'person' && normalizeNameKey(candidate.familyname, candidate.givenname) === creatorKey
-          ));
-
-          if (!author) {
-            return;
-          }
-
-          author.isContact = true;
-          if (contact.email) author.email = contact.email;
-          if (contact.website) author.website = contact.website;
-          changed = true;
-        })
-        .catch(() => { /* best-effort: silently ignore lookup failures */ });
-    });
-
-    await Promise.all(promises);
-
-    if (changed) {
-      authorStack.setAuthors(authors);
-    }
-    return;
-  }
-
-  throw new Error('Authors form is not initialized.');
+  const rights = Array.isArray(rightsList) ? rightsList[0] : null;
+  await window.elmo?.licenses?.setMetadata(rights ? {
+    identifier: rights.rightsIdentifier || null,
+    name: rights.rights || '',
+    uri: rights.rightsUri || rights.rightsURI || null,
+    scheme_uri: rights.schemeUri || rights.schemeURI || null,
+    scheme_name: rights.rightsIdentifierScheme || null,
+  } : null);
 }
 
 /* ================================================================== */
@@ -688,10 +866,9 @@ async function prefillContactPersons(creators, lookupService) {
  * The separate submission DOI remains empty after importing metadata.
  *
  * @param {Object} attributes - The DataCite `data.attributes` object.
- * @param {DoiLookupService} [lookupService] - Optional service for contact person lookup.
- * @returns {Promise<void>} Resolves after mapping metadata and completing the optional contact lookup.
+ * @returns {Promise<void>} Resolves after mapping the public DataCite metadata.
  */
-async function applyDoiPrefill(attributes, lookupService) {
+async function applyDoiPrefill(attributes) {
   const clearInputFields = await window.loadClearInputFields();
   clearInputFields();
   // Clearing resets both DOI fields. Keep the import source visible while the
@@ -713,7 +890,6 @@ async function applyDoiPrefill(attributes, lookupService) {
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
-  prefillKeywords(attributes.subjects);
   prefillRelatedWorks(attributes.relatedIdentifiers);
   prefillFunding(attributes.fundingReferences);
 
@@ -721,11 +897,7 @@ async function applyDoiPrefill(attributes, lookupService) {
   await prefillLanguage(attributes);
   await prefillTitles(attributes.titles);
   await prefillRights(attributes.rightsList);
-
-  // Post-prefill: look up contact person email/website from local DB
-  if (lookupService && Array.isArray(attributes.creators)) {
-    await prefillContactPersons(attributes.creators, lookupService);
-  }
+  await prefillKeywords(attributes.subjects);
 }
 
 /* ================================================================== */
@@ -792,7 +964,13 @@ function escapeHtml(str) {
   return div.innerHTML;
 }
 
-// Export for testing (CommonJS)
+// doiPrefillHandler.js is a classic script and reads these as globals.
+if (typeof window !== 'undefined') {
+  window.applyDoiPrefill = applyDoiPrefill;
+  window.buildPrefillPreview = buildPrefillPreview;
+}
+
+// Export for testing (CommonJS, after Babel rewrites the import above)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
     getTagify,
@@ -810,17 +988,16 @@ if (typeof module !== 'undefined' && module.exports) {
     prefillDescriptions,
     prefillDates,
     prefillGeoLocations,
+    classifyDoiSubject,
     prefillKeywords,
     prefillRelatedWorks,
     prefillFunding,
     prefillRights,
-    prefillContactPersons,
     applyDoiPrefill,
     buildPrefillPreview,
     escapeHtml,
     // Expose cache resetters for testing
     _resetCaches: function () {
-      _licenseMappingCache = null;
       _languageMappingCache = null;
       _titleTypeMappingCache = null;
       _roleMappingCache = null;

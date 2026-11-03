@@ -13,7 +13,7 @@ export const EDITION_BADGES = Object.freeze({
   igsn: ['ELMO-IGSN', 'changelog-edition-badge--igsn'],
 });
 
-const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:RC\d+)?$/;
+const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:RC\d+|dev)?$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const REPOSITORY_URL = 'https://github.com/McNamara84/elmo';
 

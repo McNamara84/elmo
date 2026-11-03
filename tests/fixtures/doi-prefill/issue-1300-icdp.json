@@ -1,0 +1,294 @@
+{
+  "_source": {
+    "url": "https://api.datacite.org/dois/10.5880/icdp.5071.006?affiliation=true",
+    "retrieved": "2026-10-21"
+  },
+  "data": {
+    "attributes": {
+      "doi": "10.5880/icdp.5071.006",
+      "creators": [
+        {
+          "name": "Secrétan, Alexia",
+          "nameType": "Personal",
+          "givenName": "Alexia",
+          "familyName": "Secrétan",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0002-4664-3242",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Müntener, Othmar",
+          "nameType": "Personal",
+          "givenName": "Othmar",
+          "familyName": "Müntener",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0002-7771-4381",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Klein, Benjamin",
+          "nameType": "Personal",
+          "givenName": "Benjamin",
+          "familyName": "Klein",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0001-5206-3490",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Degen, Sarah",
+          "nameType": "Personal",
+          "givenName": "Sarah",
+          "familyName": "Degen",
+          "affiliation": [
+            {
+              "name": "University of Bern",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/02k7v4d05",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0008-6745-3027",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Pacchiega, Luca",
+          "nameType": "Personal",
+          "givenName": "Luca",
+          "familyName": "Pacchiega",
+          "affiliation": [
+            {
+              "name": "University of Bern",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/02k7v4d05",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0001-2742-3447",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Li, Junjian",
+          "nameType": "Personal",
+          "givenName": "Junjian",
+          "familyName": "Li",
+          "affiliation": [
+            {
+              "name": "Montanuniversität Leoben",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/02fhfw393",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0008-5812-5283",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Pistone, Mattia",
+          "nameType": "Personal",
+          "givenName": "Mattia",
+          "familyName": "Pistone",
+          "affiliation": [
+            {
+              "name": "University of Georgia",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/00te3t702",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0001-7560-3146",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Lemke, Kim",
+          "nameType": "Personal",
+          "givenName": "Kim",
+          "familyName": "Lemke",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0009-0005-1431-6481",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Hetényi, György",
+          "nameType": "Personal",
+          "givenName": "György",
+          "familyName": "Hetényi",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0001-9036-4761",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        },
+        {
+          "name": "Hermann, Joerg",
+          "nameType": "Personal",
+          "givenName": "Joerg",
+          "familyName": "Hermann",
+          "affiliation": [
+            {
+              "name": "University of Bern",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/02k7v4d05",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0001-8360-3592",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "contributors": [
+        {
+          "name": "X-ray Fluorescence Laboratory, University of Lausanne, Institute of Earth Sciences (Switzerland)",
+          "nameType": "Organizational",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "contributorType": "HostingInstitution",
+          "nameIdentifiers": []
+        },
+        {
+          "name": "LA-ICP-MS Laboratory, University of Lausanne, Institute of Earth Sciences",
+          "nameType": "Organizational",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "contributorType": "HostingInstitution",
+          "nameIdentifiers": []
+        },
+        {
+          "name": "LA-ICP-MS Laboratory, University of Bern, Institute of Geological Sciences (Switzerland)",
+          "nameType": "Organizational",
+          "affiliation": [
+            {
+              "name": "University of Bern",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/02k7v4d05",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "contributorType": "HostingInstitution",
+          "nameIdentifiers": []
+        },
+        {
+          "name": "Secrétan, Alexia",
+          "nameType": "Personal",
+          "givenName": "Alexia",
+          "familyName": "Secrétan",
+          "affiliation": [
+            {
+              "name": "University of Lausanne",
+              "schemeUri": "https://ror.org/",
+              "affiliationIdentifier": "https://ror.org/019whta54",
+              "affiliationIdentifierScheme": "ROR"
+            }
+          ],
+          "contributorType": "ContactPerson",
+          "nameIdentifiers": [
+            {
+              "schemeUri": "https://orcid.org/",
+              "nameIdentifier": "0000-0002-4664-3242",
+              "nameIdentifierScheme": "ORCID"
+            }
+          ]
+        }
+      ],
+      "titles": [
+        {
+          "title": "Bulk chemistry and phase equilibrium modeling of drill cores of ICDP project DIVE (5071) in the Ivrea-Verbano Zone"
+        }
+      ]
+    }
+  }
+}

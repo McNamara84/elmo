@@ -5,6 +5,9 @@ import {
     upgradeExistingTagsToFullKeywords,
     findNodeByPath
 } from './thesauriHelpers.js';
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
+
+export { THESAURUS_CONFIG };
 
 /**
  * Recursively searches a jsTree data array for a specific node ID.
@@ -32,75 +35,6 @@ export function filterTreeByRoot(nodes, rootId) {
     // jsTree expects an array of root nodes, so we wrap the result in an array
     return rootNode ? [rootNode] : nodes; 
 }
-export const THESAURUS_CONFIG = {
-    science_keywords: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
-        inputName: 'gcmdScienceKeywords',
-        inputId: 'input-sciencekeyword',
-        modalId: 'modal-sciencekeyword',
-        jsTreeId: 'jstree-sciencekeyword',
-        searchInputId: 'input-sciencekeyword-thesaurussearch',
-        selectedListId: 'selected-keywords-sciencekeyword',
-        helpSectionId: 'help-scienceKeywords-keyword',
-        stateKey: 'input-sciencekeyword'
-    },
-    platforms: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-        inputName: 'platforms',
-        inputId: 'input-platforms',
-        modalId: 'modal-platforms',
-        jsTreeId: 'jstree-platforms',
-        searchInputId: 'input-platforms-thesaurussearch',
-        selectedListId: 'selected-keywords-platforms',
-        helpSectionId: 'help-gcmd-platforms-keyword',
-        stateKey: 'input-platforms'
-    },
-    instruments: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
-        inputName: 'instruments',
-        inputId: 'input-instruments',
-        modalId: 'modal-instruments',
-        jsTreeId: 'jstree-instruments',
-        searchInputId: 'input-instruments-thesaurussearch',
-        selectedListId: 'selected-keywords-instruments',
-        helpSectionId: 'help-gcmd-instruments-keyword',
-        stateKey: 'input-instruments'
-    },
-    chronostratigraphy: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
-        inputName: 'chronostratKeywords',
-        inputId: 'input-chronostratigraphy',
-        modalId: 'modal-chronostratigraphy',
-        jsTreeId: 'jstree-chronostratigraphy',
-        searchInputId: 'input-chronostratigraphy-thesaurussearch',
-        selectedListId: 'selected-keywords-chronostratigraphy',
-        helpSectionId: 'help-chronostratigraphy-keyword',
-        stateKey: 'input-chronostratigraphy'
-    },
-    gemet: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
-        inputName: 'gemetKeywords',
-        inputId: 'input-gemet',
-        modalId: 'modal-gemet',
-        jsTreeId: 'jstree-gemet',
-        searchInputId: 'input-gemet-thesaurussearch',
-        selectedListId: 'selected-keywords-gemet',
-        helpSectionId: 'help-gemet-keyword',
-        stateKey: 'input-gemet'
-    },
-    satellitePlatforms: {
-        apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
-        rootNodeId: 'https://gcmd.earthdata.nasa.gov/kms/concept/b39a69b4-c3b9-4a94-b296-bbbbe5e4c847',
-        // Datasource controls are pre-rendered outside the generic thesauri generator, so this dynamic config keeps selectors.
-        modalId: '#modal-platforms-datasource',
-        jsTreeId: '#jstree-platforms-datasource',
-        searchInputId: '#input-platforms-thesaurussearch-ds',
-        selectedListId: 'selected-keywords-platforms-ds',
-        stateKey: 'satellitePlatforms',
-        dynamicOnly: true
-    }
-};
-
 export let currentActiveInput = null;
 
 const loadedConfigs = new Map();
@@ -333,7 +267,10 @@ function finalizeThesaurusTreeReady(config, state) {
     return synchronized;
 }
 
-function isThesaurusConsumerReady(config) {
+function isThesaurusConsumerReady(configKeyOrConfig) {
+    const config = resolveThesaurusConfig(configKeyOrConfig);
+    if (!config || !config.jsTreeId) return false;
+
     const state = ensureSharedState(config);
     const readiness = ensureThesaurusReadiness(config);
     const tree = $(config.jsTreeId).jstree(true);
@@ -897,6 +834,52 @@ export function cleanupTagifyForInput(inputElement, configKey) {
     }
 }
 
+/**
+ * Updates the total number of selected keywords in the thesauri group header.
+ */
+
+function updateThesaurusKeywordCount() {
+    const group = document.getElementById('thesaurusKeywordsGroup');
+    const summary = document.querySelector(
+        '[data-thesaurus-summary-count]'
+    );
+
+    if (!group || !summary) return;
+
+    const count = Array.from(group.querySelectorAll('input'))
+        .reduce(function (total, input) {
+            return total + (input._tagify?.value?.length || 0);
+        }, 0);
+
+    summary.textContent = `· ${count} ${count === 1 ? 'Keyword' : 'Keywords'}`;
+}
+
+/**
+ * Binds keyword count updates once per Tagify instance in the thesauri group.
+ *
+ * @param {HTMLInputElement} inputElement - Input enhanced with Tagify.
+ */
+
+function bindKeywordCount(inputElement) {
+    const tagify = inputElement._tagify;
+
+    if (
+        !tagify ||
+        tagify._keywordCountBound ||
+        !inputElement.closest('#thesaurusKeywordsGroup')
+    ) {
+        return;
+    }
+
+    tagify._keywordCountBound = true;
+
+    tagify.on('add', updateThesaurusKeywordCount);
+    tagify.on('remove', updateThesaurusKeywordCount);
+    tagify.on('change', updateThesaurusKeywordCount);
+
+    updateThesaurusKeywordCount();
+}
+
 // 3. The Function to hook up new inputs
 export function initTagifyForInput(inputElement, configKey) {
     const config = ensureConfigRegistered(configKey) || THESAURUS_CONFIG[configKey];
@@ -916,6 +899,7 @@ export function initTagifyForInput(inputElement, configKey) {
         inputElement._tagify = new Tagify(inputElement, {
             whitelist: state.whitelist,
             enforceWhitelist: state.whitelist.length > 0,
+            pasteAsTags: false,
             placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
             dropdown: {
                 maxItems: 50,
@@ -923,7 +907,21 @@ export function initTagifyForInput(inputElement, configKey) {
                 closeOnSelect: true,
                 classname: 'thesaurus-tagify',
             },
-            editTags: false
+            editTags: false,
+            callbacks: {
+                paste: function (e) {
+                    const tagify = e.detail.tagify;
+                    const value = tagify.state.inputText || '';
+
+                    // Apply the configured dropdown minimum length to pasted text.
+                    if (value.length < tagify.settings.dropdown.enabled) {
+                        // Defer hiding until after Tagify's scheduled dropdown rendering.
+                        setTimeout(function () {
+                            tagify.dropdown.hide();
+                        }, 0);
+                    }
+                }
+            }
         });
 
         // Trigger whitelist fetch on first focus/input so users who type before
@@ -936,6 +934,7 @@ export function initTagifyForInput(inputElement, configKey) {
         }
     }
     state.tagifyInstances.add(inputElement._tagify);
+    bindKeywordCount(inputElement);
 
     if (!inputElement.dataset.tagifyValidationBound && inputElement._tagify) {
         inputElement.dataset.tagifyValidationBound = 'true';
@@ -1408,6 +1407,7 @@ $(document).ready(function () {
                 whitelist: state.whitelist,
                 enforceWhitelist: false,
                 delimiters: null,
+                pasteAsTags: false,
                 placeholder: translations?.keywords?.thesaurus?.label || 'Thesaurus keywords',
                 dropdown: {
                     maxItems: 50,
@@ -1415,12 +1415,27 @@ $(document).ready(function () {
                     closeOnSelect: true,
                     classname: "thesaurus-tagify",
                 },
-                editTags: false
+                editTags: false,
+                callbacks: {
+                    paste: function (e) {
+                        const tagify = e.detail.tagify;
+                        const value = tagify.state.inputText || '';
+
+                        // Apply the configured dropdown minimum length to pasted text.
+                        if (value.length < tagify.settings.dropdown.enabled) {
+                            // Defer hiding until after Tagify's scheduled dropdown rendering.
+                            setTimeout(function () {
+                                tagify.dropdown.hide();
+                            }, 0);
+                        }
+                    }
+                }
             });
             input._tagify = thesaurusKeywordstagify;
             input.tagify = thesaurusKeywordstagify;
             state.tagify = thesaurusKeywordstagify;
             state.tagifyInstances.add(thesaurusKeywordstagify);
+            bindKeywordCount(input);
 
             if (typeof window.applyTagifyAccessibilityAttributes === 'function') {
                 window.applyTagifyAccessibilityAttributes(thesaurusKeywordstagify, input, {

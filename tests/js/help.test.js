@@ -188,33 +188,17 @@ describe('help.js', () => {
     expect($('#resource-type-help-list dd').text()).toBe('Fallback description');
   });
 
-  test.each([
-    ['<li>Special license (for software)</li>', 'software'],
-    ['<li><a href="https://gnu.org/licenses/gpl-3.0">GPL</a></li>', 'software'],
-    ['<li><a href="https://opensource.org/license/mit">MIT</a></li>', 'software'],
-    ['<li><a href="https://apache.org/licenses/LICENSE-2.0">Apache</a></li>', 'software'],
-    ['<li><a href="https://opensource.org/licenses/bsd-3-clause">BSD</a></li>', 'software'],
-    ['<li><a href="https://joinup.ec.europa.eu/license">EUPL</a></li>', 'general'],
-    ['<li><a href="https://example.org/eupl">EUPL</a></li>', 'general'],
-    ['<li><a href="https://creativecommons.org/licenses/by/4.0">CC BY</a></li>', 'general'],
-    ['<li><a href="https://creativecommons.org/publicdomain/zero/1.0">CC0</a></li>', 'general'],
-    ['<li><a href="https://creativecommons.org/licenses/by-nc/4.0">CC BY-NC</a></li>', 'general'],
-    ['<li>Custom license</li>', 'general']
-  ])('classifies license help %s as %s', (html, expected) => {
-    expect(help.classifyLicenseScope($(html))).toBe(expected);
-  });
-
-  test('filters license help when displayed and when the resource type changes', () => {
+  test('shows license examples without inferring ERNIE grants from resource type', () => {
     $(document.body).append('<select id="input-resourceinformation-resourcetype"><option value="1">Dataset</option><option value="2">Software</option></select>');
     help.filterHelpRightsByResourceType(); // Other help sections remain untouched.
     $('#helpModal').data('currentSection', 'help-rights');
     help.filterHelpRightsByResourceType(); // A section without a list is valid.
     help.displayHelpSection('help-rights', '<section id="help-rights"><ul><li id="general-license">General license</li><li id="software-license">License (for software)</li></ul></section>');
     expect($('#general-license').css('display')).not.toBe('none');
-    expect($('#software-license').css('display')).toBe('none');
+    expect($('#software-license').css('display')).not.toBe('none');
     $('#helpModal').addClass('show');
     $('#input-resourceinformation-resourcetype').val('2').trigger('change');
-    expect($('#general-license').css('display')).toBe('none');
+    expect($('#general-license').css('display')).not.toBe('none');
     expect($('#software-license').css('display')).not.toBe('none');
     $('#helpModal').data('currentSection', 'section1');
     $('#input-resourceinformation-resourcetype').val('1').trigger('change');

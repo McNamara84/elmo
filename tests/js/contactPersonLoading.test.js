@@ -1,4 +1,4 @@
-const { mountAuthorStack } = require('./utils/peopleStacks');
+const { mountAuthorStack, mountContributorStack } = require('./utils/peopleStacks');
 
 /**
  * @jest-environment jsdom
@@ -611,5 +611,146 @@ describe('processContactPersons ISO→DataCite fallback integration', () => {
     expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
     // Email should come from ISO, confirming ISO was used (not DataCite fallback)
     expect($firstRow.find('input[name="cpEmail[]"]').val()).toBe('erika@example.com');
+  });
+
+  test('checks the author from DataCite when the ISO name is not Family, Given', () => {
+    const xmlDoc = new DOMParser().parseFromString(
+      `<?xml version="1.0" encoding="UTF-8"?>
+       <envelope>
+         <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+           <ns:contributors>
+             <ns:contributor contributorType="ContactPerson">
+               <ns:familyName>Müller</ns:familyName>
+               <ns:givenName>Erika</ns:givenName>
+             </ns:contributor>
+           </ns:contributors>
+         </ns:resource>
+         <gmd:MD_Metadata xmlns:gmd="http://www.isotc211.org/2005/gmd"
+                          xmlns:gco="http://www.isotc211.org/2005/gco">
+           <gmd:identificationInfo>
+             <gmd:MD_DataIdentification>
+               <gmd:pointOfContact>
+                 <gmd:CI_ResponsibleParty>
+                   <gmd:individualName>
+                     <gco:CharacterString>Erika Müller</gco:CharacterString>
+                   </gmd:individualName>
+                 </gmd:CI_ResponsibleParty>
+               </gmd:pointOfContact>
+             </gmd:MD_DataIdentification>
+           </gmd:identificationInfo>
+         </gmd:MD_Metadata>
+       </envelope>`,
+      'application/xml'
+    );
+
+    mappingModule.processContactPersons(xmlDoc);
+
+    const $firstRow = $('div[data-creator-row]').eq(0);
+    expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect($firstRow.find('input[name="cpEmail[]"]').val()).toBe('');
+  });
+
+  test('checks the author from ISO and leaves that person out of Contributors', () => {
+    mountContributorStack([]);
+    const xmlDoc = new DOMParser().parseFromString(
+      `<?xml version="1.0" encoding="UTF-8"?>
+       <envelope>
+         <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+           <ns:contributors>
+             <ns:contributor contributorType="ContactPerson">
+               <ns:contributorName nameType="Personal">Müller, Erika</ns:contributorName>
+               <ns:givenName>Erika</ns:givenName>
+               <ns:familyName>Müller</ns:familyName>
+             </ns:contributor>
+           </ns:contributors>
+         </ns:resource>
+         <gmd:MD_Metadata xmlns:gmd="http://www.isotc211.org/2005/gmd"
+                          xmlns:gco="http://www.isotc211.org/2005/gco">
+           <gmd:pointOfContact>
+             <gmd:CI_ResponsibleParty>
+               <gmd:individualName>
+                 <gco:CharacterString>Müller, Erika</gco:CharacterString>
+               </gmd:individualName>
+               <gmd:contactInfo>
+                 <gmd:CI_Contact>
+                   <gmd:address>
+                     <gmd:CI_Address>
+                       <gmd:electronicMailAddress>
+                         <gco:CharacterString>erika@example.com</gco:CharacterString>
+                       </gmd:electronicMailAddress>
+                     </gmd:CI_Address>
+                   </gmd:address>
+                 </gmd:CI_Contact>
+               </gmd:contactInfo>
+             </gmd:CI_ResponsibleParty>
+           </gmd:pointOfContact>
+         </gmd:MD_Metadata>
+       </envelope>`,
+      'application/xml'
+    );
+
+    mappingModule.processContactPersons(xmlDoc);
+    mappingModule.processContributors(xmlDoc, () => null);
+
+    const $firstRow = $('div[data-creator-row]').eq(0);
+    expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect($firstRow.find('input[name="cpEmail[]"]').val()).toBe('erika@example.com');
+    expect(window.contributorStack.collectPayload()).toEqual([]);
+  });
+
+  test('copies the ISO email onto a mononym author', () => {
+    mountAuthorStack([{ type: 'person', familyname: 'cont_pers_author_1', givenname: '' }]);
+    const xmlDoc = new DOMParser().parseFromString(
+      `<?xml version="1.0" encoding="UTF-8"?>
+       <envelope>
+         <ns:resource xmlns:ns="http://datacite.org/schema/kernel-4">
+           <ns:contributors>
+             <ns:contributor contributorType="ContactPerson">
+               <ns:contributorName nameType="Personal">cont_pers_author_1</ns:contributorName>
+               <ns:familyName>cont_pers_author_1</ns:familyName>
+             </ns:contributor>
+           </ns:contributors>
+         </ns:resource>
+         <gmd:MD_Metadata xmlns:gmd="http://www.isotc211.org/2005/gmd"
+                          xmlns:gco="http://www.isotc211.org/2005/gco">
+           <gmd:identificationInfo>
+             <gmd:MD_DataIdentification>
+               <gmd:pointOfContact>
+                 <gmd:CI_ResponsibleParty>
+                   <gmd:individualName>
+                     <gco:CharacterString>cont_pers_author_1</gco:CharacterString>
+                   </gmd:individualName>
+                   <gmd:contactInfo>
+                     <gmd:CI_Contact>
+                       <gmd:address>
+                         <gmd:CI_Address>
+                           <gmd:electronicMailAddress>
+                             <gco:CharacterString>cont_pers_author_1@mail.com</gco:CharacterString>
+                           </gmd:electronicMailAddress>
+                         </gmd:CI_Address>
+                       </gmd:address>
+                       <gmd:onlineResource>
+                         <gmd:CI_OnlineResource>
+                           <gmd:linkage><gmd:URL>cont_pers_author_1.com</gmd:URL></gmd:linkage>
+                         </gmd:CI_OnlineResource>
+                       </gmd:onlineResource>
+                     </gmd:CI_Contact>
+                   </gmd:contactInfo>
+                 </gmd:CI_ResponsibleParty>
+               </gmd:pointOfContact>
+             </gmd:MD_DataIdentification>
+           </gmd:identificationInfo>
+         </gmd:MD_Metadata>
+       </envelope>`,
+      'application/xml'
+    );
+
+    mappingModule.processContactPersons(xmlDoc);
+
+    const $firstRow = $('div[data-creator-row]').eq(0);
+    expect($firstRow.find('input[name="contacts[]"]').prop('checked')).toBe(true);
+    expect($firstRow.find('input[name="cpEmail[]"]').val()).toBe('cont_pers_author_1@mail.com');
+    expect($firstRow.find('input[name="cpOnlineResource[]"]').val()).toBe('cont_pers_author_1.com');
+    expect($('div[data-creator-row]')).toHaveLength(1);
   });
 });

@@ -227,6 +227,10 @@ $(document).ready(function () {
   function setHelpIconVisibility(icon, shouldBeVisible) {
     const wrapper = icon.closest('span.input-group-text');
 
+    icon.closest('.input-group').find('.orcid-search-btn')
+      .toggleClass('input-right-no-round-corners', shouldBeVisible)
+      .toggleClass('input-right-with-round-corners', !shouldBeVisible);
+
     icon.toggleClass('d-none', !shouldBeVisible).attr('aria-hidden', shouldBeVisible ? 'false' : 'true');
     if (!wrapper.length) {
       return;
@@ -710,6 +714,8 @@ $(document).ready(function () {
             : translate('authors.markAsContact', 'Mark as contact')
         ));
 
+      // Imports set the checkbox without a change event, so synchronize validation here too.
+      row.find('input[name="cpEmail[]"]').prop('required', checkbox.prop('checked'));
       if (checkbox.prop('checked')) {
         contactFields.show();
       } else {

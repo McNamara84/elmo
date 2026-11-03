@@ -160,6 +160,9 @@ $feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
 // Target address for XML submit
 $xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
 
+// Email written into contact/CI_ResponsibleParty of the ISO metadata.
+$contactAddressRepository = getenv('CONTACT_ADDRESS_REPOSITORY') ?: 'datapub@gfz.de';
+
 // Target address for the ELMO GEM ICGEM registration mail.
 $icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
 

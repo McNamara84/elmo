@@ -1,0 +1,172 @@
+[
+  {
+    "id": 1000,
+    "name": "Audiovisual",
+    "description": null
+  },
+  {
+    "id": 1001,
+    "name": "Award",
+    "description": null
+  },
+  {
+    "id": 1002,
+    "name": "Book",
+    "description": null
+  },
+  {
+    "id": 1003,
+    "name": "Book Chapter",
+    "description": null
+  },
+  {
+    "id": 1004,
+    "name": "Collection",
+    "description": null
+  },
+  {
+    "id": 1005,
+    "name": "Computational Notebook",
+    "description": null
+  },
+  {
+    "id": 1006,
+    "name": "Conference Paper",
+    "description": null
+  },
+  {
+    "id": 1007,
+    "name": "Conference Proceeding",
+    "description": null
+  },
+  {
+    "id": 1008,
+    "name": "Data Paper",
+    "description": null
+  },
+  {
+    "id": 1009,
+    "name": "Dataset",
+    "description": null
+  },
+  {
+    "id": 1010,
+    "name": "Dissertation",
+    "description": null
+  },
+  {
+    "id": 1011,
+    "name": "Event",
+    "description": null
+  },
+  {
+    "id": 1012,
+    "name": "Image",
+    "description": null
+  },
+  {
+    "id": 1013,
+    "name": "Instrument",
+    "description": null
+  },
+  {
+    "id": 1014,
+    "name": "Interactive Resource",
+    "description": null
+  },
+  {
+    "id": 1015,
+    "name": "Journal",
+    "description": null
+  },
+  {
+    "id": 1016,
+    "name": "Journal Article",
+    "description": null
+  },
+  {
+    "id": 1017,
+    "name": "Model",
+    "description": null
+  },
+  {
+    "id": 1018,
+    "name": "Output Management Plan",
+    "description": null
+  },
+  {
+    "id": 1019,
+    "name": "Peer Review",
+    "description": null
+  },
+  {
+    "id": 1020,
+    "name": "Physical Object",
+    "description": null
+  },
+  {
+    "id": 1021,
+    "name": "Poster",
+    "description": null
+  },
+  {
+    "id": 1022,
+    "name": "Preprint",
+    "description": null
+  },
+  {
+    "id": 1023,
+    "name": "Presentation",
+    "description": null
+  },
+  {
+    "id": 1024,
+    "name": "Project",
+    "description": null
+  },
+  {
+    "id": 1025,
+    "name": "Report",
+    "description": null
+  },
+  {
+    "id": 1026,
+    "name": "Service",
+    "description": null
+  },
+  {
+    "id": 1027,
+    "name": "Software",
+    "description": null
+  },
+  {
+    "id": 1028,
+    "name": "Sound",
+    "description": null
+  },
+  {
+    "id": 1029,
+    "name": "Standard",
+    "description": null
+  },
+  {
+    "id": 1030,
+    "name": "Study Registration",
+    "description": null
+  },
+  {
+    "id": 1031,
+    "name": "Text",
+    "description": null
+  },
+  {
+    "id": 1032,
+    "name": "Workflow",
+    "description": null
+  },
+  {
+    "id": 1033,
+    "name": "Other",
+    "description": null
+  }
+]

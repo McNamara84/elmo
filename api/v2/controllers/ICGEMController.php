@@ -817,37 +817,203 @@ class ICGEMController extends DatasetController
         }
     }
     /**
-     * Inserts the mandatory grav:contact element (CI_Contact type) as the first child
-     * of globalGravityProduct, per the ICGEM XSD sequence.
+     * Writes grav:contacts as the first child of globalGravityProduct.
      *
-     * Populates grav:address from each contact person's email (required, minOccurs=1)
-     * and grav:onlineResource from each contact person's website (optional).
-     * If no contact persons exist, an empty grav:contact element is added to satisfy
-     * the schema requirement (validation at submit time will catch missing email).
+     * Author contacts and contributor contacts are written from their own rows.
+     * Authors come first. A contributor is skipped only when an author contact
+     * already has the same name, identifier, address and website. The same name
+     * with a different ORCID is kept.
+     *
+     * The wrapper is omitted when nobody has an address. The contact type requires
+     * one address, so a website with no address is left out. Add another contact
+     * field as a further child in appendIcgemContactEntry().
      *
      * @param SimpleXMLElement $icgempart The globalGravityProduct element.
      * @param int $id The resource ID.
      */
     protected function insertContact(SimpleXMLElement $icgempart, int $id): void
     {
-        $contactPersons = $this->getContactPersons($this->connection, $id);
-        $contact = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
+        $entries = $this->collectIcgemContactEntries($id);
+        if ($entries === []) {
+            return;
+        }
 
-        foreach ($contactPersons as $cp) {
-            if (!empty($cp['email'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':address',
-                    htmlspecialchars(trim($cp['email'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+        $contacts = $icgempart->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contacts', null, self::ICGEM_NAMESPACE_URI);
+        foreach ($entries as $entry) {
+            $this->appendIcgemContactEntry($contacts, $entry);
+        }
+    }
+
+    /**
+     * Builds one self-describing contact per stored address.
+     *
+     * @param int $id The resource ID.
+     * @return array<int, array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}>
+     */
+    private function collectIcgemContactEntries(int $id): array
+    {
+        $entries = [];
+        $seen = [];
+
+        foreach ($this->getContactPersons($this->connection, $id) as $person) {
+            $this->keepIcgemContactEntry($entries, $seen, $this->contactEntryFromContactPerson($person));
+        }
+
+        $contributors = $this->getContributors($this->connection, $id);
+        foreach ($contributors['entries'] as $contributor) {
+            $this->keepIcgemContactEntry($entries, $seen, $this->contactEntryFromContributor($contributor));
+        }
+
+        return $entries;
+    }
+
+    /**
+     * @param array<string, mixed> $contributor
+     * @return array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
+     */
+    private function contactEntryFromContributor(array $contributor): ?array
+    {
+        $roleNames = array_column($contributor['Roles'] ?? [], 'name');
+        $email = trim((string) ($contributor['email'] ?? ''));
+        $website = trim((string) ($contributor['website'] ?? ''));
+        $isContactPerson = in_array('Contact Person', $roleNames, true);
+        $institutionContact = ($contributor['type'] ?? '') === 'institution' && ($email !== '' || $website !== '');
+        if ((!$isContactPerson && !$institutionContact) || $email === '') {
+            return null;
+        }
+
+        if (($contributor['type'] ?? '') === 'institution') {
+            $name = trim((string) ($contributor['name'] ?? ''));
+            $ror = '';
+            foreach ($contributor['Affiliations'] ?? [] as $affiliation) {
+                if (!is_array($affiliation)) {
+                    continue;
+                }
+                $ror = $this->normalizeIcgemIdentifier((string) ($affiliation['rorId'] ?? ''));
+                if ($ror !== '') {
+                    break;
+                }
             }
-            if (!empty($cp['website'])) {
-                $contact->addChild(
-                    self::ICGEM_NAMESPACE_PREFIX . ':onlineResource',
-                    htmlspecialchars(trim($cp['website'])),
-                    self::ICGEM_NAMESPACE_URI
-                );
+            if ($name === '') {
+                return null;
             }
+
+            return [
+                'nameType' => 'Organizational',
+                'name' => $name,
+                'identifier' => $ror,
+                'identifierType' => $ror !== '' ? 'ROR' : '',
+                'email' => $email,
+                'website' => $website,
+            ];
+        }
+
+        $family = trim((string) ($contributor['familyname'] ?? ''));
+        $given = trim((string) ($contributor['givenname'] ?? ''));
+        $name = $this->formatIcgemPersonalName($family, $given);
+        if ($name === '') {
+            return null;
+        }
+        $orcid = $this->normalizeIcgemIdentifier((string) ($contributor['orcid'] ?? ''));
+
+        return [
+            'nameType' => 'Personal',
+            'name' => $name,
+            'identifier' => $orcid,
+            'identifierType' => $orcid !== '' ? 'ORCID' : '',
+            'email' => $email,
+            'website' => $website,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $person
+     * @return array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null
+     */
+    private function contactEntryFromContactPerson(array $person): ?array
+    {
+        $email = trim((string) ($person['email'] ?? ''));
+        $name = $this->formatIcgemPersonalName(
+            trim((string) ($person['familyname'] ?? '')),
+            trim((string) ($person['givenname'] ?? ''))
+        );
+        if ($email === '' || $name === '') {
+            return null;
+        }
+        $orcid = $this->normalizeIcgemIdentifier((string) ($person['orcid'] ?? ''));
+
+        return [
+            'nameType' => 'Personal',
+            'name' => $name,
+            'identifier' => $orcid,
+            'identifierType' => $orcid !== '' ? 'ORCID' : '',
+            'email' => $email,
+            'website' => trim((string) ($person['website'] ?? '')),
+        ];
+    }
+
+    /**
+     * Keeps the first copy of a contact. A later entry is skipped only when
+     * every written field matches one already kept.
+     *
+     * @param array<int, array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}> $entries
+     * @param array<string, true> $seen
+     * @param array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string}|null $entry
+     */
+    private function keepIcgemContactEntry(array &$entries, array &$seen, ?array $entry): void
+    {
+        if ($entry === null) {
+            return;
+        }
+        $key = strtolower(implode("\0", [
+            $entry['nameType'],
+            $entry['name'],
+            $entry['identifier'],
+            $entry['identifierType'],
+            $entry['email'],
+            $entry['website'],
+        ]));
+        if (isset($seen[$key])) {
+            return;
+        }
+        $seen[$key] = true;
+        $entries[] = $entry;
+    }
+
+    private function formatIcgemPersonalName(string $family, string $given): string
+    {
+        if ($family !== '' && $given !== '') {
+            return $family . ', ' . $given;
+        }
+
+        return $family !== '' ? $family : $given;
+    }
+
+    private function normalizeIcgemIdentifier(string $value): string
+    {
+        $value = trim($value);
+
+        return trim((string) preg_replace('#^https?://(?:orcid\.org|ror\.org)/#i', '', $value));
+    }
+
+    /**
+     * Appends one grav:contact. Add another contact field as a further child here.
+     *
+     * @param SimpleXMLElement $contacts The grav:contacts element.
+     * @param array{nameType: string, name: string, identifier: string, identifierType: string, email: string, website: string} $entry
+     */
+    private function appendIcgemContactEntry(SimpleXMLElement $contacts, array $entry): void
+    {
+        $contact = $contacts->addChild(self::ICGEM_NAMESPACE_PREFIX . ':contact', null, self::ICGEM_NAMESPACE_URI);
+        $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':nameType', $entry['nameType'], self::ICGEM_NAMESPACE_URI);
+        $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':name', $entry['name'], self::ICGEM_NAMESPACE_URI);
+        if ($entry['identifier'] !== '' && $entry['identifierType'] !== '') {
+            $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifier', $entry['identifier'], self::ICGEM_NAMESPACE_URI);
+            $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':identifierType', $entry['identifierType'], self::ICGEM_NAMESPACE_URI);
+        }
+        $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':address', $entry['email'], self::ICGEM_NAMESPACE_URI);
+        if ($entry['website'] !== '') {
+            $contact->addChild(self::ICGEM_NAMESPACE_PREFIX . ':onlineResource', $entry['website'], self::ICGEM_NAMESPACE_URI);
         }
     }
 
@@ -948,7 +1114,7 @@ class ICGEMController extends DatasetController
         // 6. Create ICGEM globalGravityProduct as child of envelope
         $icgempart = $envelope->addChild(self::ICGEM_NAMESPACE_PREFIX . ':globalGravityProduct', null, self::ICGEM_NAMESPACE_URI);
 
-        // 6a. Insert grav:contact (FIRST per XSD sequence, before xs:choice)
+        // 6a. Insert grav:contacts (FIRST per XSD sequence, before xs:choice)
         $this->insertContact($icgempart, $id);
 
         // 7. Create harmonicCoefficientsModel container (xs:choice option, SECOND per XSD sequence)

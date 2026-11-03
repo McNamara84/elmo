@@ -196,6 +196,15 @@ $(document).ready(function () {
         field.classList.toggle('input-right-no-round-corners', show);
         field.classList.toggle('input-right-with-round-corners', !show);
       }
+
+      const searchButton = icon.closest('.input-group')
+        ?.querySelector('.orcid-search-btn');
+
+      if (searchButton) {
+        searchButton.classList.toggle('input-right-no-round-corners', show);
+        searchButton.classList.toggle('input-right-with-round-corners', !show);
+      }
+      
       icon.classList.toggle('d-none', !show);
       icon.setAttribute('aria-hidden', String(!show));
       const wrapper = icon.closest('.input-group-text');

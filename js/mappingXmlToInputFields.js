@@ -248,60 +248,21 @@ function processResourceType(xmlDoc, resolver) {
   }
 }
 
-/*
- * Extracts license identifier from various formats
- * @param {Element} rightsNode - The XML rights element
- * @returns {string} The normalized license identifier
- */
+/** Preserve the complete supplied identifier, including its version. */
 function extractLicenseIdentifier(rightsNode) {
-  // Try to get identifier from rightsIdentifier attribute first
-  let identifier = rightsNode.getAttribute("rightsIdentifier");
-
-  if (!identifier) {
-    // Try to extract from rightsURI
-    const uri = rightsNode.getAttribute("rightsURI");
-    if (uri) {
-      // Extract identifier from SPDX URL (e.g. "https://spdx.org/licenses/CC0-1.0.html" -> "CC0-1.0")
-      const match = uri.match(/licenses\/([^/.]+)/);
-      if (match) {
-        identifier = match[1];
-      }
-    }
-  }
-
-  if (!identifier) {
-    // Use text content as last resort
-    identifier = rightsNode.textContent.trim();
-  }
-
-  return identifier;
+  return rightsNode.getAttribute('rightsIdentifier') || '';
 }
 
-/**
- * Creates a license mapping from API data
- * @returns {Promise<Object>} A promise that resolves to the license mapping
- */
-async function createLicenseMapping() {
-  try {
-    const response = await $.getJSON("./api/v2/vocabs/licenses/all");
-    const mapping = {};
-
-    response.forEach((license) => {
-      mapping[license.rightsIdentifier] = license.rights_id.toString();
-    });
-
-    return mapping;
-  } catch (error) {
-    console.error("Error creating license mapping:", error);
-    return {
-      "CC-BY-4.0": "1",
-      "CC0-1.0": "2",
-      "GPL-3.0-or-later": "3",
-      "MIT": "4",
-      "Apache-2.0": "5",
-      "EUPL-1.2": "6",
-    };
-  }
+/** @returns {object|null} Portable DataCite rights, without guessed IDs or schema URIs. */
+function extractLicenseMetadata(rightsNode) {
+  if (!rightsNode) return null;
+  return {
+    identifier: extractLicenseIdentifier(rightsNode) || null,
+    name: rightsNode.textContent.trim(),
+    uri: rightsNode.getAttribute('rightsURI') || null,
+    scheme_uri: rightsNode.getAttribute('schemeURI') || null,
+    scheme_name: rightsNode.getAttribute('rightsIdentifierScheme') || null,
+  };
 }
 
 /**
@@ -421,7 +382,13 @@ function getNodeText(contextNode, xpath, xmlDoc, resolver) {
     xpath = "./" + xpath;
   }
 
-  const node = xmlDoc.evaluate(xpath, contextNode, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  const node = xmlDoc.evaluate(
+    xpath,
+    contextNode,
+    (prefix) => (typeof resolver === "function" ? resolver(prefix) : "") || "",
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  ).singleNodeValue;
 
   return node ? node.textContent.trim() : "";
 }
@@ -534,7 +501,7 @@ function applyContactsToAuthorStack(contactPersons, matchedOnly = false) {
 
 function collectDataCiteContactPersons(xmlDoc) {
   function dcResolver(prefix) {
-    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : null;
+    return prefix === "ns" ? "http://datacite.org/schema/kernel-4" : "";
   }
 
   const contactPersons = [];
@@ -609,7 +576,13 @@ function processCreators(xmlDoc, resolver) {
 }
 
 /**
- * Process contact persons from XML and populate the form
+ * Marks authors as contact persons from ISO pointOfContact and DataCite ContactPerson names.
+ * Email and website come from ISO. A DataCite name with no ISO match only checks the author.
+ *
+ * Names are "Family, Given", or a single token that matches an author or DataCite
+ * contact whose given name is empty. Add another name shape in the split before
+ * the DataCite names are merged in.
+ *
  * @param {Document} xmlDoc - The parsed XML document
  */
 function processContactPersons(xmlDoc) {
@@ -619,7 +592,7 @@ function processContactPersons(xmlDoc) {
       gmd: "http://www.isotc211.org/2005/gmd",
       gco: "http://www.isotc211.org/2005/gco",
     };
-    return ns[prefix] || null;
+    return ns[prefix] || "";
   }
 
   const contactPersonNodes = xmlDoc.evaluate("//gmd:pointOfContact/gmd:CI_ResponsibleParty", xmlDoc, nsResolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
@@ -627,14 +600,11 @@ function processContactPersons(xmlDoc) {
   if (getAuthorStackController()) {
     const contactPersons = [];
 
+    const looseContacts = [];
+
     for (let i = 0; i < contactPersonNodes.snapshotLength; i++) {
       const contactPersonNode = contactPersonNodes.snapshotItem(i);
-      const fullName = getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver);
-      const [familyname, givenname] = fullName?.split(", ");
-
-      if (!givenname || !familyname) {
-        continue;
-      }
+      const fullName = (getNodeText(contactPersonNode, "gmd:individualName/gco:CharacterString", xmlDoc, nsResolver) || "").trim();
 
       let email = getNodeText(
         contactPersonNode,
@@ -656,12 +626,47 @@ function processContactPersons(xmlDoc) {
         website = getNodeText(contactPersonNode, "//linkage/URL", xmlDoc, null);
       }
 
-      contactPersons.push({ familyname, givenname, email, website });
+      if (!fullName) continue;
+
+      if (fullName.includes(",")) {
+        const parts = fullName.split(",");
+        const familyname = (parts.shift() || "").trim();
+        const givenname = parts.join(",").trim();
+        if (!familyname && !givenname) continue;
+        contactPersons.push({ familyname, givenname, email, website });
+        continue;
+      }
+
+      looseContacts.push({ name: fullName, email, website });
     }
 
-    if (contactPersonNodes.snapshotLength === 0) {
-      contactPersons.push(...collectDataCiteContactPersons(xmlDoc));
-    }
+    const authors = getCurrentAuthorsPayload(getAuthorStackController());
+    const dataciteContacts = collectDataCiteContactPersons(xmlDoc);
+    const seen = new Set(contactPersons.map((contact) => normalizeNameKey(contact.familyname, contact.givenname)));
+    looseContacts.forEach((contact) => {
+      const key = normalizeNameKey(contact.name, "");
+      if (seen.has(key)) return;
+      const matchesAuthor = authors.some((author) => (
+        author.type === "person" && normalizeNameKey(author.familyname, author.givenname) === key
+      ));
+      const matchesDataCite = dataciteContacts.some((person) => (
+        normalizeNameKey(person.familyname, person.givenname) === key
+      ));
+      if (!matchesAuthor && !matchesDataCite) return;
+      seen.add(key);
+      contactPersons.push({
+        familyname: contact.name,
+        givenname: "",
+        email: contact.email,
+        website: contact.website
+      });
+    });
+    dataciteContacts.forEach((contact) => {
+      const key = normalizeNameKey(contact.familyname, contact.givenname);
+      if (seen.has(key)) return;
+      seen.add(key);
+      contactPersons.push(contact);
+    });
 
     applyContactsToAuthorStack(contactPersons, Boolean(window.contributorStack));
     return;
@@ -812,6 +817,15 @@ function processContributors(xmlDoc, resolver) {
   processContributorsIntoStack(xmlDoc, resolver);
 }
 
+/**
+ * Builds contributor cards from DataCite contributors, then copies email and
+ * website from ISO pointOfContact onto the matching card.
+ * A Contact Person who is already an author stays off this list.
+ * Another ISO contact field belongs in the pointOfContact loop.
+ *
+ * @param {Document} xmlDoc - The parsed XML document
+ * @param {Function} resolver - The namespace resolver function
+ */
 function processContributorsIntoStack(xmlDoc, resolver) {
   const entries = [];
   const byKey = new Map();
@@ -860,7 +874,6 @@ function processContributorsIntoStack(xmlDoc, resolver) {
     });
   }
 
-  // ISO carries email and website, which DataCite cannot encode.
   const contacts = Array.from(xmlDoc.getElementsByTagNameNS('*', 'pointOfContact'))
     .flatMap(element => Array.from(element.getElementsByTagNameNS('*', 'CI_ResponsibleParty')));
   for (const node of contacts) {
@@ -1472,7 +1485,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
       if (prefix === "ns") {
         return "http://datacite.org/schema/kernel-4";
       }
-      return null;
+      return "";
     },
     XPathResult.FIRST_ORDERED_NODE_TYPE,
     null
@@ -1495,48 +1508,10 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     }
   }
 
-  // Erstelle das License- und Language-Mapping zuerst
-  const licenseMapping = await createLicenseMapping();
   const languageMapping = await createLanguageMapping();
   const titleTypeMapping = await createTitleTypeMapping();
-
-  // Non-resource fields retain their existing mapping.
-  const XML_MAPPING = {
-    // Rights
-    "rightsList/ns:rights": {
-      selector: "#input-rights-license",
-      attribute: "rightsIdentifier",
-      transform: (value) => {
-        return licenseMapping[value] || "1";
-      },
-    },
-  };
-
-  // const nsResolver = xmlDoc.createNSResolver(xmlDoc.documentElement);
-  const defaultNS = resourceNode.namespaceURI || "http://datacite.org/schema/kernel-4";
-
-  function resolver(prefix) {
-    if (prefix === "ns") {
-      return defaultNS;
-    }
-    return null;
-  }
-
-  // Verarbeite zuerst die Standard-Mappings
-  for (const [xmlPath, config] of Object.entries(XML_MAPPING)) {
-    const nsPath = `.//ns:${xmlPath}`;
-
-    const xmlElements = xmlDoc.evaluate(nsPath, xmlDoc, resolver, XPathResult.FIRST_ORDERED_NODE_TYPE, null);
-
-    const xmlNode = xmlElements.singleNodeValue;
-    if (xmlNode) {
-      const value = config.attribute === "textContent" ? xmlNode.textContent : xmlNode.getAttribute(config.attribute);
-
-      const transformedValue = config.transform ? config.transform(value) : value;
-
-      $(config.selector).val(transformedValue);
-    }
-  }
+  const defaultNS = resourceNode.namespaceURI || 'http://datacite.org/schema/kernel-4';
+  const resolver = prefix => prefix === 'ns' ? defaultNS : '';
 
   const mappedResource = await transformResourceInformationDocument(xmlDoc);
   if (!window.resourceInformation?.setResourceInformation) {
@@ -1544,6 +1519,9 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   }
   const resourceInformation = parseResourceInformationMap(mappedResource, languageMapping, titleTypeMapping);
   window.resourceInformation.setResourceInformation(resourceInformation);
+  const rightsNode = xmlDoc.evaluate(".//*[local-name()='rightsList']/*[local-name()='rights'][1]",
+    resourceNode, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+  await window.elmo?.licenses?.setMetadata(extractLicenseMetadata(rightsNode));
   if (resourceInformation.doi) window.resourceInformation.enableDoiEditing?.(true);
   // Processing Creators
   processCreators(xmlDoc, resolver);
@@ -1585,7 +1563,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
   processFunders(xmlDoc, resolver);
   // Process Dates
   processDates(xmlDoc, resolver);
-  // For ICGEM schema files, populate GGM-specific formgroups (descriptions + all ICGEM fields)
+  // The contributor cards are on the page now. ICGEM contact import reads them.
   if (isIcgem) {
     await window.icgemModule.loadIcgemXmlToForm(xmlDoc);
   }
@@ -1604,6 +1582,7 @@ if (typeof module !== 'undefined' && module.exports) {
         transformResourceInformationDocument,
         parseResourceInformationMap,
         extractLicenseIdentifier,
+        extractLicenseMetadata,
         mapTitleType,
         processTitles,
         getNodeText,

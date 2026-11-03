@@ -218,4 +218,32 @@ final class GGMsRegistrationMailTest extends TestCase
         $this->assertSame([], $data['contacts']);
         $this->assertSame([['fullName' => 'Josiah Carberry', 'email' => 'not-an-email']], $data['invalidContacts']);
     }
+
+    public function testNamedContactUsesTheNameOnTheContactElement(): void
+    {
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>
+            <grav:envelope xmlns:grav="http://icgem.gfz.de/schema" xmlns:dace="http://datacite.org/schema/kernel-4">
+                <dace:resource>
+                    <dace:titles><dace:title xml:lang="en">EIGEN-6C4</dace:title></dace:titles>
+                    <dace:contributors>
+                        <dace:contributor contributorType="ContactPerson">
+                            <dace:contributorName>Other, Person</dace:contributorName>
+                        </dace:contributor>
+                    </dace:contributors>
+                </dace:resource>
+                <grav:globalGravityProduct>
+                    <grav:contacts>
+                        <grav:contact>
+                            <grav:nameType>Personal</grav:nameType>
+                            <grav:name>Carberry, Josiah</grav:name>
+                            <grav:address>author@example.com</grav:address>
+                        </grav:contact>
+                    </grav:contacts>
+                </grav:globalGravityProduct>
+            </grav:envelope>';
+
+        $data = collectGGMsResearcherConfirmationDataFromXml($xml);
+
+        $this->assertSame([['fullName' => 'Josiah Carberry', 'email' => 'author@example.com']], $data['contacts']);
+    }
 }

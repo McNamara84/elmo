@@ -155,7 +155,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             expect(mappingModule.extractLicenseIdentifier(rightsNode)).toBe('CC-BY-4.0');
         });
 
-        test('extracts identifier from rightsURI when no identifier', () => {
+        test('does not manufacture an identifier from the URI', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
                 '<rights rightsURI="https://spdx.org/licenses/CC0-1.0.html">Creative Commons</rights>',
@@ -164,11 +164,11 @@ describe('mappingXmlToInputFields module coverage', () => {
             const rightsNode = xmlDoc.querySelector('rights');
             
             const result = mappingModule.extractLicenseIdentifier(rightsNode);
-            // The regex captures everything before the dot, so CC0-1 is correct
-            expect(result).toBe('CC0-1');
+            // URI-only licenses retain their URI in the portable metadata.
+            expect(result).toBe('');
         });
 
-        test('uses text content as fallback', () => {
+        test('does not use free text as an identifier', () => {
             const parser = new DOMParser();
             const xmlDoc = parser.parseFromString(
                 '<rights>Some License Text</rights>',
@@ -177,7 +177,7 @@ describe('mappingXmlToInputFields module coverage', () => {
             const rightsNode = xmlDoc.querySelector('rights');
             
             const result = mappingModule.extractLicenseIdentifier(rightsNode);
-            expect(result).toBe('Some License Text');
+            expect(result).toBe('');
         });
     });
 

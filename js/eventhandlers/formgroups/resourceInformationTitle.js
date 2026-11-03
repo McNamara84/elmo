@@ -5,6 +5,7 @@
  */
 
 import { replaceHelpButtonInClonedRows } from '../functions.js';
+import { validateResourceVersion } from '../../validation/resourceVersionValidation.js';
 
 $(document).ready(function () {
   /**
@@ -90,6 +91,7 @@ $(document).ready(function () {
         if (title.key && index > 0) $row.attr('data-resource-title-row', String(title.key));
       });
     }
+    validateResourceVersion(document.getElementById('input-resourceinformation-version'));
     updateOrder();
   }
 
@@ -267,6 +269,12 @@ $(document).ready(function () {
   });
 
   $mainRow.parent().on('input change', 'input[name="title[]"], select[name="titleType[]"]', sync);
+  $('#input-resourceinformation-version')
+    .on('input', function () { validateResourceVersion(this); })
+    .on('blur change', function () {
+      validateResourceVersion(this, { trim: true });
+      sync();
+    });
   $('#input-resourceinformation-doi, #input-resourceinformation-publicationyear, #input-resourceinformation-resourcetype, #input-resourceinformation-version, #input-resourceinformation-language')
     .on('input change', sync);
 
@@ -276,5 +284,6 @@ $(document).ready(function () {
     $("#button-resourceinformation-addtitle").prop("disabled", false);
     updateOrder();
   });
+  validateResourceVersion(document.getElementById('input-resourceinformation-version'));
   sync();
 });

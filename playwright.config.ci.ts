@@ -35,6 +35,7 @@ export default defineConfig({
       name: 'firefox-gem',
       use: { ...devices['Desktop Firefox'], baseURL: 'http://localhost:8001/' },
       testMatch: [
+        'features/save-notification.spec.ts',
         'formgroups/orcid-layout.spec.ts',
         'formgroups/elmogem-specific/**/*.spec.ts',
         'flows/elmogem-specific/**/*.spec.ts',

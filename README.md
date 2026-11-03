@@ -203,7 +203,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
 
   ```
   ELMO → ERNIE (fetch vocabularies)
-  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/elmo
+  ├─ ELMO GETs: GET https://ernie.../api/v1/resource-types/{editorProfile}
   ├─ ELMO GETs: GET https://ernie.../api/v1/title-types/elmo
   ├─ ELMO GETs: GET https://ernie.../api/v1/relation-types/elmo
   ├─ ELMO GETs: GET https://ernie.../api/v1/identifier-types/elmo
@@ -211,10 +211,8 @@ If you encounter problems with the installation, feel free to leave an entry in 
   └─ ERNIE verifies the key on its side
 
   ELMO ← ERNIE (on-demand cache refresh)
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/resourcetypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/titletypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/relationtypes/refresh
-  ├─ ERNIE POSTs: POST /api/v2/admin/cache/identifiertypes/refresh
+  ├─ ERNIE POSTs: POST /api/v2/admin/cache/refresh
+  ├─ Cache status: GET /api/v2/admin/cache/status
   ├─ Header: X-API-KEY: [ELMO_API_KEY from ERNIE's config]
   └─ ELMO verifies against $ELMO_API_KEY in ELMO's .env
   ```
@@ -223,6 +221,26 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$ernieUrl`: URL to the ERNIE API (e.g., `https://ernie.rz-vm499.gfz.de/`). When set, resource types, title types, relation types, identifier types, and other vocabularies are fetched from ERNIE instead of the local database.
   - `$ernieApiKey`: API key for ELMO to authenticate with the ERNIE service. **Direction: ELMO → ERNIE**
   - `$ernieCacheTtl`: Cache time-to-live in seconds for all ERNIE data (resource types, title types; default: 21600 = 6 hours). Also determines the automatic refresh interval.
+
+  Resource types use the editor profile selected by the effective `$showMslMode` setting: `elmo-msl` for MSL and `elmo` for the other editions. Settings resolve `SHOW_MSL_MODE` before the service is created, so later application or test overrides take precedence. The profile-specific resource-type caches are `storage/cache/ernie_resource_types_elmo_msl.json` and `storage/cache/ernie_resource_types.json`. The existing ELMO endpoint `/api/v2/vocabs/resourcetypes` continues to return local mapping IDs; cache status and refresh operate on the selected profile.
+
+  Licenses use the same editor profile. `GET /api/v2/vocabs/licenses/resource-type/{resourceTypeId}` resolves the temporary local resource-type ID and returns only the licenses allowed by ERNIE for that type. The legacy `/licenses/all` and `/licenses/software` routes are adapters over ERNIE data. A successful empty list remains empty; local seeds and `forSoftware` are never permission sources.
+
+  Validated license snapshots live in `storage/cache`, isolated by ERNIE origin, profile and resource-type slug. TTL refresh and authenticated `POST /api/v2/admin/cache/refresh` update the catalog and already requested type filters. During an outage, only a validated snapshot for the same context can be reused. Without one, the API and license-dependent submission return HTTP 503. Rejected licenses return HTTP 422 on submission.
+
+  Each requested license scope also has a persistent `.json.lock` file to coordinate concurrent refreshes and remember scopes whose first fetch failed. These are coordination files, not empty license snapshots; their JSON metadata describes their purpose, ERNIE origin, profile and scope. Repeated requests reuse the same file. Older zero-byte lock files are annotated on their next refresh. Do not delete or replace locks while ELMO workers are running: requests could otherwise acquire different locks for the same cache. To remove an obsolete origin/profile's snapshots and locks, stop all ELMO workers first and remove only that context's files.
+
+  `Rights` contains temporary, reconstructible mappings and imported metadata only. Initialize the test/deployment database using the existing installer and start sync; there is no persistent license registry or migration history. Cache reads rebuild missing license mappings after database reinitialization. Drafts and imports carry versioned `licensePayload` metadata (identifier, text, URI and scheme), so exports do not depend on old local IDs. Unknown or revoked imported rights stay visible and exportable, while submission requires a currently allowed choice. CC BY 4.0 is preselected only when explicitly allowed and the selection is initially empty.
+
+  To review this behavior, choose Dataset and then Software, compare the choices with the scoped license API response, and check that an incompatible previous choice remains visible. Repeat in MSL, import custom rights, save/download them, and verify that submission requires a currently allowed license. Use a disposable test instance with `SIMULATE_EMAIL=true` for submission and database-reset checks.
+
+  The PHP regression tests are `ErnieServiceTest`, `ErnieLicenseCacheTest`, `LicenseServiceTest`, `LicenseRepositoryTest`, `LicenseApiTest`, `LicenseExportTest`, `LicenseSubmissionTest`, `SaveResourceInformationAndRightsTest`, `DatasetControllerTest` and `DataCiteJsonLdServiceTest`. Tests extending `DatabaseTestCase` rebuild `mde2-msl-test`; configure a disposable server through `DB_HOST`, `ROOT_PASSWORD`, `DB_USER` and `DB_PASSWORD`. Run these sequentially. Run JavaScript regression tests with `npm test -- --runInBand`.
+
+  Browser checks cover `formgroups/ernie-licenses.spec.ts`, `resource-type-profile.spec.ts`, `licenses-and-rights.spec.ts`, `license-duplicates.spec.ts` and the XML upload flows under `tests/playwright`. Set `BASE_URL`, then use `playwright.generic.config.ts --project=generic` or `playwright.msl.config.ts --project=msl`. Add `--no-deps` when the running instance already has the intended settings.
+
+  Real HTTP submission tests use `playwright.licenses.config.ts` and `tests/fixtures/ernie_license_api.php`. Start the fixture with PHP's built-in server, configure ELMO's `ERNIE_URL` to its address and `ERNIE_API_KEY=license-test-key`, enable mail simulation, and use the test ELMO admin key `1234-1234-1234-1234`. Set `ERNIE_LICENSE_TEST_STATE` to the same writable state file for the fixture and test runner (initial content: `ready`); provide `ERNIE_LICENSE_TEST_CACHE` as the disposable instance's license cache directory and `BASE_URL` as its application URL. Setting the test instance's `$ernieCacheTtl=0` exercises stale-cache fallback on every request. Initialize its database and startup sync before running `npx playwright test --config=playwright.licenses.config.ts`.
+
+  These HTTP tests perform real session/CSRF-protected requests, simulate outages and empty grants, and restore the fixture state afterwards. They remove license snapshots/locks only from the explicitly supplied test cache directory, so run them separately from other browser tests and never against production. Missing fixture paths cause an explicit skip. The CI workflow starts the fixture for generic ELMO and runs these checks after the Chromium suite; other editions and existing live ERNIE smoke tests retain their credentials.
 
 </details>
 
@@ -271,7 +289,9 @@ npm install
 
 The lockfiles contain the latest stable direct npm and Composer dependencies verified against npm and Packagist. Install them with `npm ci` and `composer install`; `npm update` and `composer update --with-all-dependencies` deliberately refresh the lockfiles.
 
-Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.0 (`.nvmrc` and NodeSource 24), MariaDB 12.3.3, and MySQL 9.7.2 in CI. Newer Current/Innovation releases (Node.js 26, MariaDB 13.0, and MySQL 26.7) are excluded from this baseline. PHP uses stable 8.5.11 on Debian 13 (Trixie), Composer uses 2.10.3, and the Playwright image matches the locked test runner at 1.64.1. Container references and CI actions are pinned to immutable digests or commit IDs; update these together with their version labels during maintenance.
+Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.2 (`.nvmrc` and NodeSource 24), MariaDB 12.3.3, and MySQL 9.7.4 in CI. Newer Current/Innovation releases (Node.js 26, MariaDB 13.0, and MySQL 26.7) are excluded from this baseline. PHP uses stable 8.5.11 on Debian 13 (Trixie), Composer uses 2.11.1, and the Playwright image matches the locked test runner at 1.64.1. Container references and CI actions are pinned to immutable digests or commit IDs; update these together with their version labels during maintenance.
+
+Playwright CI uses Ubuntu 24.04 so WebKit's native libraries match its browser build. Browser cache keys include the Ubuntu release and runner architecture to prevent reuse across incompatible runner images. A browser startup check verifies each engine before the application tests run.
 
 The PHP image builds also install available Debian security updates (including Apache 2.4.69). Production omits npm development packages, compilers, and Linux development headers. Trivy still reports upstream vulnerabilities in Debian's MariaDB client and libxml2 packages without available distribution fixes, and in the Go runtime embedded in the official database images' `gosu` helper. The image update therefore does not establish a zero-vulnerability container baseline; review these findings again before deployment.
 
@@ -303,8 +323,9 @@ Before deploying the MariaDB 11 to 12.3 upgrade, back up the database and rehear
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/identifier/)
   - Example values: `10.5880/GFZ.3.1.2024.002`, `10.5880/pik.2024.001`
   - Mapping: is mapped to `<identifier>` in the DataCite scheme and to `<gmd:fileIdentifier>` as well as `<gmd:identifier> <gmd:MD_Identifier> <gmd:code>` and `<gmd:distributionInfo> <gmd:MD_Distribution> <gmd:transferOptions> <gmd:MD_DigitalTransferOptions> <gmd:onLine> <gmd:CI_OnlineResource>` in the ISO scheme
-  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI starts read-only; Edit unlocks it, and XML import may populate and unlock it. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and sends the same DOI for manual curation. Other DOI prefixes and unverifiable `10.5880` DOIs remain visible and block submission until corrected or removed. The ICGEM DOI mail flow retains its own rules.
+  - The separate DOI search imports metadata without copying its DOI into this submission field. The submission DOI starts read-only; Edit unlocks it, and XML import may populate and unlock it. Leave it empty for a new GFZ DOI. In Standard, MSL, and IGSN, an existing `10.5880` DOI must be publicly found in DataCite; ELMO proposes the next major version and passes the existing DOI to manual curation for review. DataCite recommends a new identifier for a major version change; the curation team decides how to register it. ELMO does not automatically update the published DataCite record. Other DOI prefixes and unverifiable `10.5880` DOIs remain visible and block submission until corrected or removed. The ICGEM DOI mail flow retains its own rules.
   - Metadata reuse follows the public DataCite record, including its title types, which can differ from the publication's landing page. Author affiliations are imported with or without a ROR ID. The source DOI remains visible in the search field after import.
+  - Reusing DOI metadata also restores Contact Person roles. Contacts are matched to authors by ORCID first, then by an unambiguous full name without conflicting ORCIDs; other contacts remain Contributors. Email and website remain empty after import. Enter the appropriate contact details for this submission manually; a contact email is required, while the website is optional.
 
 - Publication Year
 
@@ -336,6 +357,8 @@ Before deploying the MariaDB 11 to 12.3 upgrade, back up the database and rehear
   - Occurrence: 0-1
   - The corresponding field in the database where the value is saved is called: `version` in the table `Resource`
   - Restrictions: optional on new submissions; when supplied on Submit, use `major.minor` with digits on both sides of the dot.
+  - This is an ELMO input rule following DataCite's suggested practice; the DataCite schema does not require this notation. For an existing GFZ DOI, ELMO requires the proposed next major version for manual curation.
+  - Invalid formats such as `1.2.3` are explained immediately while typing. Correcting or clearing the field removes the error. Outer whitespace is trimmed when leaving the field or submitting; values such as `1.10` remain textually intact. Submit validates the latest value, including changes during token loading. Save and Autosave still support incomplete drafts.
   - [DataCite documentation](https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/version/)
   - Example values: `1.0` `2.1` `3.5`
   - Mapping: mapped to `<version>` in DataCite scheme

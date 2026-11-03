@@ -92,6 +92,26 @@ $(document).ready(function () {
   });
 
   /**
+   * A tooltip transition can finish after dispose has cleared the instance.
+   * Skip that callback once the tooltip element is gone.
+   * Later Bootstrap releases can drop this guard when dispose cancels the transition.
+   */
+  const tooltipPrototype = window.bootstrap?.Tooltip?.prototype;
+  if (tooltipPrototype && typeof tooltipPrototype._queueCallback === 'function' && !tooltipPrototype._elmoTransitionGuard) {
+    const queueCallback = tooltipPrototype._queueCallback;
+    tooltipPrototype._queueCallback = function (callback, element, isAnimated) {
+      const instance = this;
+      return queueCallback.call(this, () => {
+        if (!instance._element) {
+          return;
+        }
+        callback();
+      }, element, isAnimated);
+    };
+    tooltipPrototype._elmoTransitionGuard = true;
+  }
+
+  /**
    * Initialize all tooltips on the page.
    */
   const tooltipContainer = window.getTooltipContainer ? window.getTooltipContainer() : document.body;

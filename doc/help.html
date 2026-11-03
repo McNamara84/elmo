@@ -210,6 +210,11 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li>Imported values, including title types, follow the public DataCite record. They can differ
                             from those shown on the publication's landing page.</li>
                         <li>Author affiliations are also imported when they have no ROR ID.</li>
+                        <li>Contact persons listed in the imported record are marked automatically. If a contact
+                            can be matched unambiguously to an author, that author's card is marked; otherwise,
+                            the contact appears in Contributors.</li>
+                        <li>Email and website remain empty after import. Enter the contact details for this
+                            submission manually. A contact email address is required; the website is optional.</li>
                         <li>Review the imported fields; some details may need to be changed or entered manually.</li>
                         <li>The source DOI remains visible in the search field after import. The submission DOI field
                             stays empty.</li>
@@ -226,13 +231,15 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <?php endif; ?>
                 </div>
                 <div id="help-resourceinformation-doi">
-                    <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../assets/logos/doi-logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='../assets/logos/doi-logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
+                    <h4>DOI<a href="https://www.doi.org/" target="_blank" rel="noopener"><img id="doi-logo" src="../assets/logos/doi-logo.svg" class="logo-icon" alt="DOI Logo" onerror="this.onerror=null; this.src='assets/logos/doi-logo.svg';" class="logo-icon" alt="DOI Logo"></a></h4>
                     <p>The DOI is a unique identifier in the format 10.ORGANISATION/ID. The separate DOI search above
                         the form can import metadata without copying that DOI into this submission field.</p>
                     <p><strong>Leave the submission DOI empty to request a new GFZ Data Services DOI.</strong>
                         Use Edit only when submitting a new major version of an existing GFZ DOI beginning with
-                        10.5880. ELMO verifies it against public DataCite metadata and sends the same DOI for manual
-                        curation. If the DOI is not found, contact the data curation team. Other publishers' DOIs
+                        10.5880. ELMO verifies it against public DataCite metadata and passes that DOI to manual
+                        curation for review. DataCite recommends a new identifier for a major version change;
+                        the curation team decides how to register the new version. ELMO does not automatically
+                        update the published DataCite record. If the DOI is not found, contact the data curation team. Other publishers' DOIs
                         cannot be used in this field.</p>
                     <?php if ($showGGMsProperties ?? false): ?>
                     <p>
@@ -300,14 +307,20 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
                 <div id="help-resourceinformation-version">
                     <h4>Version</h4>
-                    <p>The version number or other identifier of the dataset. If your dataset is published for the
-                        first time, this field can be left empty. If it has been updated, specify the version number
-                        here.
-                        The suggested practice is to use a pair of <em>major_version.minor_version</em> to indicate
-                        changes in the dataset. Use the format digits.digits, for example 1.4. For an existing GFZ DOI,
-                        ELMO proposes the next major version: 2.4 becomes 3.0; a DOI without a published version starts at 1.0.
-                    </p>
-                    <p><strong>Optional field. If unsure, leave blank.</strong></p>
+                    <p>The version number of the resource. ELMO accepts <em>major.minor</em>, with one or more
+                        digits on each side of the dot, for example <strong>1.4</strong> or <strong>12.3</strong>.
+                        A value such as 1.2.3 is not accepted. This is an ELMO input rule following the suggested
+                        practice in the <a href="https://datacite-metadata-schema.readthedocs.io/en/4.7/properties/version/"
+                        target="_blank" rel="noopener">DataCite 4.7 documentation</a>; the DataCite schema itself
+                        does not require this notation.</p>
+                    <p><strong>Optional field. If unsure, leave blank.</strong> When submitting an existing GFZ DOI,
+                        ELMO proposes and requires the next major version: 2.4 becomes 3.0; a DOI without a published
+                        version starts at 1.0. This submission is passed to manual curation, which reviews the
+                        registration of the new version. Passing the existing DOI does not guarantee that the
+                        new major version will keep that DOI.</p>
+                    <p>DataCite recommends registering a new identifier for a major version change. The resource's
+                        stewards decide which changes are major or minor. AlternateIdentifier, RelatedIdentifier
+                        and Description can provide additional information about versions and changes.</p>
                 </div>
                 <div id="help-resourceinformation-language">
                     <h4>Language of dataset</h4>
@@ -357,7 +370,14 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <p>Rights information for the dataset. Following the Guidelines for the Handling of Research Data
                     of the GFZ German Research Centre for Geosciences for open science, we recommend a Creative
                     Commons Attribution 4.0 (CC-BY) license whenever possible.</p>
-                <p>Please choose between:</p>
+                <p>Choose a Resource Type first. The license dropdown shows the licenses currently
+                    allowed by ERNIE for that resource type and this editor. CC-BY-4.0 is selected
+                    automatically only when it is allowed and no license has been selected.</p>
+                <p>An imported or previously selected license that is no longer allowed remains
+                    available for drafts and exports. Select an allowed license before submitting.
+                    If no licenses can be loaded, try again later; no replacement license is assigned.</p>
+                <p>The following examples explain common licenses. Their availability is determined
+                    by the current dropdown:</p>
                 <ul>
                     <li><a href="https://creativecommons.org/licenses/by/4.0/ " target="_blank">Creative
                             Commons Attribution 4.0 International</a>: Authorises the free use, distribution and
@@ -418,7 +438,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         contact status. Author contact fields appear only on person author cards.</p>
                 </div>
                 <div id="help-author-orcid">
-                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../assets/logos/orcid-logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='../assets/logos/orcid-logo.png';"></a></h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../assets/logos/orcid-logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='assets/logos/orcid-logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in the format XXXX-XXXX-XXXX-XXXX (i.e. 0000-0001-5727-2427). If you do not
                         have an ORCID iD yet, you can learn about it and register
@@ -447,7 +467,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         Correct or remove empty labels before submitting.</p>
                     <p>Editing an affiliation label preserves its ROR ID, so it is not analogous to adding a second
                         affiliation.</p>
-                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
                         and consistent attribution. When a ROR result is selected, the displayed affiliation label may
@@ -475,6 +495,9 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <p>Mark a person author with the contact button, or choose the Contact Person role on a contributor
                         card. Contributor institutions can have this role when the feature is enabled. A contact needs
                         a name and valid email address before submission. A website is optional.</p>
+                    <p>When you re-use metadata from a DOI, ELMO also imports the published contact roles.
+                        Email and website remain empty. Enter the appropriate email address for this submission
+                        and, optionally, a website.</p>
                     <h5>Email</h5>
                     <p>Please provide a valid email address (e.g. name@institution.org). This address
                         may be used by others to contact the responsible person for questions about the dataset.</p>
@@ -541,7 +564,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     <p><strong>Optional field.</strong></p>
                 </div>
                 <div id="help-contributorpersons-orcid">
-                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../assets/logos/orcid-logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='../assets/logos/orcid-logo.png';"></a></h4>
+                    <h4>ORCID<a href="https://orcid.org/" target="_blank" rel="noopener"><img id="orcid-logo" src="../assets/logos/orcid-logo.png" class="logo-icon" alt="ORCID Logo" onerror="this.onerror=null; this.src='assets/logos/orcid-logo.png';"></a></h4>
                     <p>Uniquely identifies an individual or legal entity, according to various schemes. Please enter
                         a valid ORCID in form of XXXX-XXXX-XXXX-XXX(X) (i.e. 0000-0001-5727-2427). You can find your
                         colleagues' ORCID on the <a href="https://orcid.org/orcid-search/search" target="_blank">ORCID
@@ -656,7 +679,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
                         autosaved draft keep the empty label. Entries with neither a label nor a ROR ID are omitted from exports.
                         Correct or remove empty labels before submitting.</p>
-                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
                         and consistent attribution.
@@ -770,7 +793,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         block saving. When a ROR ID is present, exports use its ROR URL as replacement text; the editor and
                         autosaved draft keep the empty label. Entries with neither a label nor a ROR ID are omitted from exports.
                         Correct or remove empty labels before submitting.</p>
-                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='../assets/logos/ror-logo.svg';"></a></h4>
+                    <h4>ROR ID<a href="https://ror.org/" target="_blank" rel="noopener"><img id="ror-logo" src="../assets/logos/ror-logo.svg" class="logo-icon" alt="ROR Logo" onerror="this.onerror=null; this.src='assets/logos/ror-logo.svg';"></a></h4>
                     <p>Affiliation data is based on the <a href="https://ror.org" target="_blank">Research Organization
                             Registry (ROR)</a>. The ROR ID uniquely identifies organisations worldwide and ensures clear
                         and consistent attribution.
@@ -1304,16 +1327,10 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         This section defines the essential characteristics of Global Gravitational Models (GGMs) and describes GGMs published via the ICGEM (International Center for Global Earth Models) service.
                     </p>
                     <p>
-                        ICGEM provides the opportunity to publish a Global Gravitational model.
+                        ICGEM provides the opportunity to publish a Global Gravitational model. Model publication is a unique effort of scientific work, so ICGEM provides long-term support for the model developers.
                     </p>
                     <p>
-                        Model publication is a unique effort of scientific work, so ICGEM provides long-term support for the model developers.
-                    </p>
-                    <p>
-                        The model is published on the ICGEM website and is available for download, calculation, and visualization.
-                    </p>
-                    <p>
-                        The data file of the model is provided with metadata and published with a DOI via GFZ Data Services. Rich and structured metadata is essential for the model findability and reusability.
+                        The model is published on the ICGEM website and is available for download, calculation, and visualization. The data file of the model is provided with metadata and published with a DOI via GFZ Data Services. Rich and structured metadata is essential for the model findability and reusability.
                     </p>
                     <p>
                         This editor is a tool to provide metadata for GGM model publications. It is adapted from GFZ Data Services metadata editor, which connects ICGEM to the data publication workflow in the GFZ.
@@ -1331,35 +1348,35 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         A higher level classification of the Global Gravitational Models (GGM). The types are represented on the ICGEM website and include:
                     </p>
                     <ul>
-                        <li><strong>static</strong> – models of the gravity field potential computed from satellite-based gravity measurements. The spatial details of the gravity field (short wavelengths or high frequencies) are collected via terrestrial, airborne, and shipborne gravity measurements as well as radar altimetry.</li>
+                        <li><strong>static</strong> – models of the mean gravity field potential computed from satellite-based and surface gravity measurements collected over years or decades. The long wavelengths typically are determined from satellite data with global coverage, while the spatial details of the gravity field (short wavelengths or high frequencies) are collected via terrestrial, airborne, and shipborne gravity measurements as well as radar altimetry.</li>
                         <li><strong>temporal</strong> – models derived from input data covering specific time periods, enabling monitoring of temporal changes in the gravity field.</li>
-                        <li><strong>topographic</strong> – models representing the gravitational potential generated by Earth's topographic masses. Gravity is computed based on very high resolution digital elevation models describing the Earth's shape and mass densities within the topography. These models are not based on actual gravity measurements.</li>
-                        <li><strong>simulated</strong> – models based on simulated data and not on measurements.</li>
+                        <li><strong>topographic</strong> – models representing the gravitational potential generated by the attraction of Earth's topographic masses. Gravity is computed based on very high resolution digital elevation models describing the Earth's shape and mass densities within the topography. These models are not based on actual gravity measurements.</li>
+                        <li><strong>simulated</strong> – models based on simulated data and not on real measurements.</li>
                     </ul>
                     <p>
-                        Based on Ince et al. (2019): ICGEM – 15 years of successful collection and distribution of global gravitational models, associated services, and future plans. Earth System Science Data, 11, pp. 647–674. DOI: <a href="http://doi.org/10.5194/essd-11-647-2019" target="_blank">10.5194/essd-11-647-2019</a>
+                        Based on Ince et al. (2019): ICGEM – 15 years of successful collection and distribution of global gravitational models, associated services, and future plans. Earth System Science Data, 11, pp. 647–674. DOI: <a href="https://doi.org/10.5194/essd-11-647-2019" target="_blank" rel="noopener">10.5194/essd-11-647-2019</a>
                     </p>
                 </div>
                 <div id="help-math-representation">
                     <h4>Mathematical Representation</h4>
                     <p>
-                        The mathematical representation of a gravity field model refers to the set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordinate system determines the type of harmonics — spherical or ellipsoidal — and thus defines the mathematical form of the model.
+                        The mathematical representation of a gravity field model refers to the set of functions used to express the gravitational potential, which are solutions of Laplace’s equation in a given coordinate system. The coordinate system determines the type of harmonics — <strong>spherical</strong> or <strong>ellipsoidal</strong> — and thus defines the mathematical form of the model.
                     </p>
                     <p>
-                        Based on STR by Barthelmes (2013): <a href="https://doi.org/10.2312/GFZ.b103-0902-26" target="_blank">https://doi.org/10.2312/GFZ.b103-0902-26</a>
+                        Based on STR by Barthelmes (2013): <a href="https://doi.org/10.2312/GFZ.b103-0902-26" target="_blank" rel="noopener">https://doi.org/10.2312/GFZ.b103-0902-26</a>
                     </p>
-                    <p><strong>Note:</strong> This field is mandatory because it is not possible to use the model without this information.</p>
+                    <p>This field is mandatory because it is not possible to use the model without this information.</p>
                 </div>
                 <div id="help-celestial-body">
                     <h4>Celestial Body</h4>
                     <p>
-                        Specify the celestial body for which the gravity field model was computed. The default selection is Earth, but models for other planetary bodies are also supported.
+                        Specify the celestial body for which the gravity field model was computed. The default selection is <strong>Earth</strong>, but models for other planetary bodies are also supported.
                     </p>
                 </div>
                 <div id="help-file-format">
                     <h4>File Format</h4>
                     <p>
-                        All models on the ICGEM are published in the ICGEM file format. See description at <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank">ICGEM-Format-2023.pdf</a>
+                        All models on the ICGEM are published in the <strong>ICGEM file format</strong>. See description at <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf</a>
                     </p>
                     <p>
                         This field is mandatory. To support time-limited validity periods for time-varying coefficients, a new parameter has been introduced: <code>format=icgem2.0</code>.
@@ -1371,10 +1388,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-model-name">
                     <h4>Model Name</h4>
                     <p>
-                        The unique identifier name for your gravity field model to be represented on the ICGEM website. This should be a concise and descriptive name that follows standard conventions in the gravity field community. No spaces are allowed.
-                    </p>
-                    <p>
-                        As a title, this name will be displayed on the GFZ Data Services landing page. It will also be the main title from the first formgroup.
+                        The unique identifier <strong>name of your gravity field model</strong> to be represented on the ICGEM website. This should be a concise and descriptive name that follows standard conventions in the gravity field community. No spaces are allowed. As well as title, this name will be displayed on the landing page.
                     </p>
                     <p><strong>Requirements:</strong></p>
                     <ul>
@@ -1394,191 +1408,67 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     </p>
                 </div>
             </div>
-
-            <!-- formgroup GGMs Properties -->
-            <div id="help-model-characteristics" class="section-content">
-                <div id="help-model-characteristics-fg">
-                    <h3>Characteristics of the model</h3>
+            <div class="section-divider"></div>
+            <hr>
+            <div id="help-datasources" class="section-content">
+                <div id="help-datasources-fg">
+                    <h3>Data Sources</h3>
                     <p>
-                        This section defines the essential characteristics of Global Gravitational Models (GGMs). Amd describes GGM published via the ICGEM (International Center for Global Earth Models) service.
-                        ICGEM provides opportunity to publish a Global Gravitational model. 
-                        
-                        Model publication is a unique effort of scientific work, so ICGEM provides a long term support for the model developers.
-                        The model is published on the ICGEM website and is available for download, calculation visualisation. The data file of the model is provided with metadata and published with a DOI via GFZ Data Services. Rich and structured metadata is essential for the model findability and reusability.
-
-                        This editor is a tool to provide metadata for GGM model publications. It is adapted from GFZ Data Services metadata editor, which connects ICGEM to the data publication workflow in the GFZ.
-
-                        ICGEM database is an archive and information hub, centered around gravity field models. It collects properties that describe the mathematical and technical specifications of your gravity field model. 
-                    
+                        <strong>Overview of this form group</strong>
+                        This section allows you to specify one or many data sources that were used in the development of the model being published.
+                        A Data Source is understood as an object containing or producing information relevant for understanding of the gravity field, information from which is used in the development of the published model. Such information is crucial for understanding the context of the model. You can add multiple data sources if needed.
                     </p>
                     <p>
-                        <strong>Validation Logic:</strong> In order to upload the model, we ask you to provide the following information: Model Type, Mathematical Representation, 
-                        Model Name, and File Format. Please make sure to provide them.
+                        <strong>Satellite data sources</strong>
+                        Satellites playing a major role in global gravity field modelling are considered data sources.
+                        Multiple satellites entered in one row are considered separate data sources downstream. Grouping satellites will make them share the description.
+                        To specify which measuring devices from the satellites were used in calculation, you can refer to the GCMD Instruments form group further down in this editor.
                     </p>
                 </div>
-                
-                <div id="help-model-type">
-                    <h4>Model Type</h4>
-                    <p>
-                        A higher level classification of the Global Gravitational Models (GGM). The types are represented 
-                        on the ICGEM website and include:
-                        <ul>
-                        <li><strong>static</strong> – models of the gravity field potential computed from satellite-based gravity measurements. 
-                        The spatial details of the gravity field (short wavelengths or high frequencies) are collected via terrestrial, 
-                        airborne, and shipborne gravity measurements as well as radar altimetry.
-                        </li>
-                        <li><strong>temporal</strong> – models derived from input data covering specific time periods, 
-                        enabling monitoring of temporal changes in the gravity field.
-                        </li>
-                        <li><strong>topographic</strong> – models representing the gravitational potential generated by 
-                        the attraction of Earth's topographic masses. Gravity is computed based on very high resolution 
-                        digital elevation models describing the Earth's shape and mass densities within the topography. 
-                        These models are not based on actual gravity measurements.
-                        </li>
-                        <li><strong>simulated</strong> – models based on simulated data and not on measurements.
-                        </li></ul>
-                        Based on Ince et al. (2019): ICGEM – 15 years of successful collection and distribution of global gravitational models, 
-                        associated services, and future plans. Earth System Science Data, 11, pp. 647–674. 
-                        DOI: http://doi.org/10.5194/essd-11-647-2019
-                    </p>
-                </div>
-                
-                <div id="help-math-representation">
-                    <h4>Mathematical Representation</h4>
-                    <p>
-                        The mathematical representation of a gravity field model refers to the set of functions used 
-                        to express the gravitational potential, which are solutions of Laplace’s equation in a given 
-                        coordinate system. The coordinate system determines the type of harmonics — spherical or ellipsoidal — 
-                        and thus defines the mathematical form of the model.
-
-                        Based on STR by Barthelmes (2013): https://doi.org/10.2312/GFZ.b103-0902-26
-
-                        This field is mandatory because it is not possible to use the model without this information.
-                    </p>
-                </div>
-                
-                <div id="help-celestial-body">
-                    <h4>Celestial Body</h4>
-                    <p>
-                        Specify the celestial body for which the gravity field model was computed. 
-                        The default selection is Earth, but models for other planetary bodies are also supported.
-                    </p>
-                </div>
-                
-                <div id="help-file-format">
-                    <h4>File Format</h4>
-                    <p>
-                        All models on the ICGEM are published in the ICGEM file format. 
-                        See description at https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf
-
-                        This field is mandatory. To support time-limited validity periods for time-varying coefficients, 
-                        a new parameter has been introduced: format=icgem2.0.
-
-                        Note: You cannot mix coefficients formatted as icgem1.0 and icgem2.0. 
-                        Please ensure all model files use the same format version.
-                    </p>
-                </div>
-                
-                <div id="help-model-name">
-                    <h4>Model Name</h4>
-                    <p>
-                        The unique identifier name for your gravity field model to be represented on the ICGEM website. 
-                        This should be a concise and descriptive name that follows standard conventions in the gravity field community. 
-                        No spaces are allowed.
-
-                        As a title, this name will be displayed on the GFZ Data Services landing page. 
-                        It will also be the main title from the first formgroup.
-                    </p>
-                    <p>
-                        <strong>Requirements:</strong>
-                    </p>
+                <div id="help-datasource-type">
+                    <h4>Type</h4>
+                    <p>Select the category of the data source from the following options:</p>
                     <ul>
-                        <li>No spaces allowed in the model name</li>
-                        <li>Use underscores or hyphens to separate words if needed</li>
-                        <li>Should be unique and descriptive</li>
-                        <li>Examples: GO_CONS_GCF_2_SPW_R5, Tongji-Grace02s, LUH-GRACE-FO-2020</li>
+                        <li><strong>S = Satellite:</strong> Satellite gravity-related observations including SLR.</li>
+                        <li><strong>G = Ground data:</strong> Data measured by gravimeters or ground data derived from gravity models.</li>
+                        <li><strong>A = Altimetry:</strong> Gravity data determined from Altimetry grid data or data produced from radar altimeters.</li>
+                        <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data. Relevant for Topographic gravity field models</li>
+                        <li><strong>M = Reference Model:</strong> Another physical Earth model that is used as a reference in the development of the published model. In this category the reference model taken “as is”. For temporal models, it is recommended to include Gravitational background model(s).</li>
+                    </ul>
+                    <p>The letter type codes are taken from the classification used on the ICGEM website.</p>
+                </div>
+                <div id="help-datasource-details">
+                    <h4>Details</h4>
+                    <p>This field allows you to enter the sub-category of the data source you selected. For any additional details you would like to document, please use field "Description".</p>
+                </div>
+                <div id="help-datasources-identifier">
+                    <h4>Identifier</h4>
+                    <p>
+                        Identifier of the reference model that is included as a data source.
+                        For model published on the ICGEM, please use the model DOI.
+                        Other models can be identified by a DOI of an article or a presentation about the model.
+                        If not available, a URL of model description can be used.
+                        These must be globally unique identifiers.
+                    </p>
+                </div>
+                <div id="help-datasources-identifiertype">
+                    <h4>Identifier Type</h4>
+                    <p>The type of the Related Identifier.</p>
+                    <p>The same automatic detection rules apply as in Related Work: identifier types and accepted formats are provided by ERNIE, and a type is selected only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or the identifier is ambiguous, choose the type manually. Your manual choice is kept until you edit the identifier.</p>
+                    <ul>
+                        <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
+                        <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format should be 10.ORGANISATION/ID.</li>
+                        <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).</li>
+                        <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural environment and related features-of-interest.</li>
+                        <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.</li>
+                        <li><strong>URL:</strong> Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.</li>
+                        <li><strong>URN:</strong> A Uniform Resource Name (URN) is a type of URI that uses the syntax: urn:&lt;NID&gt;:&lt;NSS&gt;. The leading urn: sequence is case-insensitive, &lt;NID&gt; is the namespace identifier, &lt;NSS&gt; is the namespace-specific string.</li>
                     </ul>
                 </div>
-                
-                <div id="help-product-type">
-                    <h4>Product Type</h4>
-                    <p>
-                        Static and temporal models produced based on direct gravity observations 
-                        (for instance, from satellite gravity missions) have the product type "gravity field".
-
-                        If the model is topographic and was produced using forward modelling, 
-                        then the product type is "topographic gravity field".
-                    </p>
-                </div>
-                <div id="help-datasources" class="section-content">
-                    <div id="help-datasources-fg">
-                        <h3>Data Sources</h3>
-                        <p>
-                            <b>Overview of this form group</b>
-                            This section allows you to specify one or many data sources that were used in the development of the model being published.
-                            A Data Source is understood as a object containing or producing information relevant for understanding of the gravity field, information from which is used in the development of the published model. Such information is crucial for understanding the context of the model. You can add multiple data sources if needed.
-                        </p>
-                        <p>
-                            <b>Satellite data sources</b>
-                            Satellites playing a major role in global gravity field modelling are considered data sources.
-                            Multiple satellites entered in one row are considered separate data sources downstream. Grouping satellites will make them share the description.
-                            To specify which measuring devices from the satellites were used in calculation, you can refer to the GCMD Instruments form group further down in this editor.
-                        </p>
-                    </div>
-                    <div id="help-datasource-type">
-                        <h4>Type</h4>
-                        <p>Select the category of the data source from the following options:</p>
-                        <ul>
-                            <li><strong>S = Satellite:</strong> Satellite gravity-related observations including SLR.</li>
-                            <li><strong>G = Ground data:</strong> Data measured by gravimeters or ground data derived from gravity models.</li>
-                            <li><strong>A = Altimetry:</strong> Gravity data determined from Altimetry grid data or data produced from radar altimeters.</li>
-                            <li><strong>T = Elevation/Terrain:</strong> Gravity modelled from topography data. Relevant for Topographic gravity field models</li>
-                            <li><strong>M = Reference Model:</strong> Another physical Earth model that is used as a reference in the development of the published model. In this category the reference model taken “as is”. For temporal models, it is recommended to include Gravitational background model(s).</li>
-                        </ul>
-                        <p>The letter type codes are taken from the classification used on the ICGEM website.</p>
-                    </div>
-                    <div id="help-datasource-details">
-                        <h4>Details</h4>
-                        <p>This field allows you to enter the sub-category of the data source you selected. For any additional details you would like to document, please use field "Description".</p>
-                    </div>
-                    <div id="help-datasources-identifier">
-                        <h4>Identifier</h4>
-                        <p>Identifier of the reference model that is included as a data source.
-                            For model published on the ICGEM, please use the model DOI. 
-                            Other models can be identified by a DOI of an article or a presentation about the model. 
-                            If not available, a URL of model description can be used.
-                            These must be globally unique identifiers.</p>
-                    </div>
-                    <div id="help-datasources-identifiertype">
-                        <h4>Identifier Type</h4>
-                        <p>The type of the Related Identifier.</p>
-                        <p>The same automatic detection rules apply as in Related Work: identifier types and accepted formats are provided by ERNIE, and a type is selected only when its format matches and it can be determined uniquely. DOI-shaped identifiers are checked using registry metadata to distinguish DOI, IGSN and RAiD. If the lookup fails or the identifier is ambiguous, choose the type manually. Your manual choice is kept until you edit the identifier.</p>
-                        <ul>
-                            <li><strong>ARK:</strong> A URI designed to support long-term access to information objects. In general, ARK syntax is of the form (brackets, []. indicate optional elements).</li>
-                            <!-- arXiv: Repository for scientific preprints in math, physics, astronomy, etc. -->
-                            <!-- bibcode: Standardized 19-character identifier for scientific literature. -->
-                            <li><strong>DOI:</strong> A character string used to uniquely identify an object. Format should be 10.ORGANISATION/ID.</li>
-                            <!-- EAN13: 13-digit barcode standard, superset of UPC. -->
-                            <!-- EISSN: Electronic ISSN for periodicals. -->
-                            <li><strong>Handle:</strong> This refers specifically to an ID in the Handle system operated by the Corporation for National Research Initiatives (CNRI).</li>
-                            <li><strong>IGSN:</strong> A code that uniquely identifies samples from our natural environment and related features-of-interest.</li>
-                            <!-- ISBN: Unique book identifier, 10 or 13 digits. -->
-                            <!-- ISSN: 8-digit identifier for periodicals. -->
-                            <!-- ISTC: Unique number for textual works, 16 characters. -->
-                            <!-- LISSN: Linking ISSN for collocation among media versions. -->
-                            <li><strong>LSID:</strong> A unique identifier for data in the Life Science domain. Format: urn:lsid:authority:namespace:identifier:revision.</li>
-                            <!-- PMID: Unique number for PubMed records. -->
-                            <!-- PURL: Persistent URL with protocol, resolver, and name. -->
-                            <!-- UPC: Barcode for trade items, 12 digits. -->
-                            <li><strong>URL:</strong> Also known as web address, a URL is a specific character string that constitutes a reference to a resource. The syntax is: scheme://domain:port/path?query_string#fragment_id.</li>
-                            <li><strong>URN:</strong> A Uniform Resource Name (URN) is a type of URI that uses the syntax: urn:&lt;NID&gt;:&lt;NSS&gt;. The leading urn: sequence is case-insensitive, &lt;NID&gt; is the namespace identifier, &lt;NSS&gt; is the namespace-specific string.</li>
-                            <!-- w3id: Used for vocabularies and ontologies, stands for “World Wide Web”. -->
-                        </ul>
-                    </div>
-                </div>             
             </div>
+            <div class="section-divider"></div>
             <hr>
-            <div id="help-technical">
+            <div id="help-technical" class="section-content">
                 <h3>Characteristics of the model</h3>
                 <p>
                     This section is fully based on the technical specifications of the model. They are provided in the model file header. According to the <a href="https://icgem.gfz.de/docs/ICGEM-Format-2023.pdf" target="_blank" rel="noopener">ICGEM file format description</a>, these variables are required, as they are essential for the use of the model.
@@ -1589,44 +1479,40 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-tide-system">
                     <h4>Tide system</h4>
                     <p>
-                        A tide system defines how permanent tidal effects from the Sun and Moon are treated in a gravity field or geoid model. 
-                        Options include:
-                        <ul>
-                        <li><b>Tide-free</b>: (or nontidal): This geoid is considered for a tide-free Earth with all (direct and indirect) effects of the Sun and Moon removed.</li>
-                        <li><b>Mean-tide</b>: This geoid is considered in the presence of the Sun and the Moon (or, equivalently, if no permanent tidal effects are removed).</li>
-                        <li><b>Zero-tide</b>: This geoid is considered if the permanent direct effects of the Sun and Moon are removed, but the indirect effect component related to the elastic deformation of the Earth is retained.</li>
-                        </ul>
+                        A tide system defines how permanent tidal effects from the Sun and Moon are treated in a gravity field or geoid model. Options include:
                     </p>
+                    <ul>
+                        <li><strong>Tide-free</strong>: (or nontidal): The model is for a tide-free Earth with all (direct and indirect) permanent effects of the Sun and Moon removed.</li>
+                        <li><strong>Mean-tide</strong>: The model considers the presence of the Sun and the Moon (direct and indirect permanent effects).</li>
+                        <li><strong>Zero-tide</strong>: Model for which the permanent direct effects of the Sun and Moon are removed, but the indirect effect component related to the elastic deformation of the Earth is retained.</li>
+                    </ul>
                 </div>
                 <div id="help-errors">
                     <h4>Errors</h4>
                     <p>
-                        Error handling information. Signifies if error information is included in the model file.
-                        Options include:
-                        <ul>
-                            <li><b>calibrated</b>: the uncertainties in the spherical harmonic coefficients are included in the model file. A calibrating factor or a calibration scheme derived from external data is applied. For this option, an error calibration approach is provided.</li>
-                            <li><b>formal</b>: the estimated uncertainties in the spherical harmonic coefficients representing internal accuracy are included in the model file</li>
-                            <li><b>no</b>: no uncertainties or zero values are included.</li>
-                        </ul>
+                        Error handling information. Signifies if error information is included in the model file. Options include:
                     </p>
+                    <ul>
+                        <li><strong>calibrated</strong>: the uncertainties in the spherical harmonic coefficients are included in the model file. A calibrating factor or a calibration scheme derived from external data is applied. For this option, an error calibration approach is provided.</li>
+                        <li><strong>formal</strong>: the estimated uncertainties in the spherical harmonic coefficients representing internal accuracy are included in the model file</li>
+                        <li><strong>no</strong>: no uncertainties or zero values are included.</li>
+                    </ul>
                 </div>
                 <div id="help-degree">
                     <h4>Degree</h4>
                     <p>
-                        The maximum degree expansion of the model simply represents the maximum spatial resolution that can be reached in the model output. (Ince, E.S., Abrykosov, O., Förste, C. et al. Forward Gravity Modelling to Augment High-Resolution Combined Gravity Field Models. Surv Geophys 41, 767–804 (2020). https://doi.org/10.1007/s10712-020-09590-9, page 2)
+                        The maximum degree expansion of the model simply represents the maximum spatial resolution that can be reached in the model output. (Ince, E.S., Abrykosov, O., Förste, C. et al. Forward Gravity Modelling to Augment High-Resolution Combined Gravity Field Models. Surv Geophys 41, 767–804 (2020). <a href="https://doi.org/10.1007/s10712-020-09590-9" target="_blank" rel="noopener">https://doi.org/10.1007/s10712-020-09590-9</a>, page 2)
                     </p>
                 </div>
                 <div id="help-radius">
                     <h4>Radius</h4>
-                    <p>
-                        The radius is entered in the format used in the model file: 
-                        <ul>
-                            <li>Decimal point is possible. if point is provided, digits after point are required.</li>
-                            <li>Scientific notation is possible, exponent base 10 is provided after e or E.</li>
-                            <li>Negative values are not allowed.</li>
-                            <li>Examples: 6.3781363000e+06, 0.6378136000E+07</li>
-                        </ul>
-                    </p>
+                    <p>The radius is entered in the format used in the model file:</p>
+                    <ul>
+                        <li>Decimal point is possible. if point is provided, digits after point are required.</li>
+                        <li>Scientific notation is possible, exponent base 10 is provided after e or E.</li>
+                        <li>Negative values are not allowed.</li>
+                        <li>Examples: 6.3781363000e+06, 0.6378136000E+07</li>
+                    </ul>
                 </div>
                 <div id="help-reference-ellipsoid">
                     <h4>Reference ellipsoid values</h4>
@@ -1637,62 +1523,61 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 <div id="help-second-variable">
                     <h4>Second variable</h4>
                     <p>
-                        Specifies the second defining parameter of the reference ellipsoid. Choose
-                        between the semiminor axis <em>b</em>, flattening, or reciprocal flattening.
+                        Specifies the second defining parameter of the reference ellipsoid. Choose between the semiminor axis <em>b</em>, flattening, or reciprocal flattening.
                     </p>
                 </div>
             </div>
+            <div class="section-divider"></div>
+            <hr>
             <div id="help-no-model-type" class="help-section">
                 <h3>Model specific variables</h3>
                 <p>This section is dedicated to variables specific for each model type. Please choose a model type above to start input.</p>
             </div>
 
             <div id="help-static" class="help-section d-none">
-                <h3 data-translate="help.static.title">Static Model Help</h3>
-                <p data-translate="help.static.description">This section providesdocumentation for the variables, which are relevant for static models:</p>
-                <h4 data-translate="help.static.dealiasing">Time-variable coefficients</h4>
-                <p data-translate="help.static.dealiasing.description">
-                    If some coefficients in your static models provide values for different time periods, please provide the information about it here in a free text format. 
+                <h3>Static Model Help</h3>
+                <p>This section provides documentation for the variables, which are relevant for static models:</p>
+                <h4>Time-variable coefficients</h4>
+                <p>
+                    If some coefficients in your static models provide values for different time periods, please provide the information about it here in a free text format.
                 </p>
             </div>
 
             <div id="help-temporal" class="help-section d-none">
-                <h3 data-translate="help.temporal.title">Temporal Model Help</h3>
-                <p data-translate="help.temporal.description">This section provides documentation for the variables, which are relevant for temporal models:</p>
-                <h4 data-translate="help.temporal.what-to-publish">Unit of publication</h4>
+                <h3>Temporal Model Help</h3>
+                <p>This section provides documentation for the variables, which are relevant for temporal models:</p>
+                <h4>Unit of publication</h4>
                 <p>
-                    The unit of publication for temporal models is one release. The DOI number will be assigned to each release of the model. 
+                    The unit of publication for temporal models is one release. The DOI number will be assigned to each release of the model.
                 </p>
-                
                 <div id="help-temporal-time-coverage">
-                    <h4 data-translate="help.temporal.time-coverage">Start/stop date</h4>
+                    <h4>Start/stop date</h4>
                     <p>
                         The time frame of a model being published: from the begin of the release to the most recent available data.
                     </p>
                 </div>
                 <div id="help-temporal-release-frequency">
-                    <h4 data-translate="help.temporal.time-coverage">Release frequency</h4>
+                    <h4>Temporal resolution</h4>
                     <p>
-                        The time period between two releases of the model. It denotes the minimal temporal changes that can be observed with the model.
-                        In case, the values in the dropdown menu do not fit your model, please choose "other" and provide the information in the additional field. Please convert the resolution to days. For example, if a new release is evailable every 3 weeks, please provide 21 days.
+                        The time period between two data products of the model. It denotes the minimal temporal changes that can be observed with the model (only applicable to temporal models).
+                        In case, the values in the dropdown menu do not fit your model, please choose "other" and provide the information in the additional field. Please convert the resolution to days. For example, if a new release is available every 3 weeks, please provide 21 days.
                     </p>
                 </div>
             </div>
 
             <div id="help-topographic" class="help-section d-none">
-                <h3 data-translate="help.topographic.title">Topographic Model Help</h3>
-                <p data-translate="help.topographic.description">This section provides help for topographic models...</p>
-                <h4 data-translate="help.topographic.harmonics">Approximation</h4>
+                <h3>Topographic Model Help</h3>
+                <p>This section provides help for topographic models.</p>
+                <h4>Approximation</h4>
                 <p>
-                    Approximated surface in gravity inversion. Do not confuse with “mathematical_representation” field. Mathematical represenntationis derived from inversion. 
+                    Approximated surface in gravity inversion. Do not confuse with “mathematical_representation” field. Mathematical representation is derived from inversion.
                 </p>
-                <h4 data-translate="help.topographic.density">Density</h4>
+                <h4>Density</h4>
                 <p>
-                    Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here.
-                    What is more, the density information can be provided for crust and mantle separately.
+                    Density information sources include density models, layer specific or the constant. Density information description allows you to specify your selection. The citation of density model can be provided here. If density information is layer-specific, layer-specific density values can be given here. What is more, the density information can be provided for crust and mantle separately.
                 </p>
             </div>
-        <?php endif; ?>
+            <?php endif; ?>
     </div>
     <!-- Bootstrap 5 -->
     <script src="../node_modules/bootstrap/dist/js/bootstrap.bundle.min.js"></script>

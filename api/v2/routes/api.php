@@ -19,7 +19,6 @@ require_once __DIR__ . '/../controllers/IdentifierDetectionController.php';
 return [
     // DOI lookup endpoints (DataCite proxy)
     ['GET', '/doi/lookup/{doi:.+}', [new DoiController(), 'lookup']],
-    ['GET', '/doi/contacts', [new DoiController(), 'contacts']],
 
     // General endpoints
     ['GET', '/general/alive', [new GeneralController(), 'getAlive']],
@@ -39,6 +38,7 @@ return [
     ['GET', '/vocabs/relations', [new VocabController(), 'getRelations']],
     ['GET', '/vocabs/licenses/all', [new VocabController(), 'getAllLicenses']],
     ['GET', '/vocabs/licenses/software', [new VocabController(), 'getSoftwareLicenses']],
+    ['GET', '/vocabs/licenses/resource-type/{resourceTypeId}', [new VocabController(), 'getResourceTypeLicenses']],
     ['GET', '/vocabs/freekeywords/all', [new VocabController(), 'getAllFreeKeywords']],
     ['GET', '/vocabs/freekeywords/curated', [new VocabController(), 'getCuratedFreeKeywords']],
     ['GET', '/vocabs/freekeywords/uncurated', [new VocabController(), 'getUncuratedFreeKeywords']],

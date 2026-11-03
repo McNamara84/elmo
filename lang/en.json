@@ -132,13 +132,22 @@
         "publicationYearInvalid": "Please provide a valid year ranging from 1901-2155 (4 digits in the format YYYY).",
         "resourceType": "Resource Type",
         "version": "Version",
-        "versionInvalid": "Please use digits.digits as the format. If unsure leave blank",
+        "versionHint": "Optional: major.minor, e.g. 1.4 or 12.3.",
+        "versionInvalid": "Enter the version as major.minor, e.g. 1.4 or 12.3, or leave this field blank.",
         "datasetLanguage": "Language of dataset",
         "resourceTitle": "Title",
         "resourceTitleInvalid": "Please provide a descriptive title (that does not repeat the paper title, but describes the data).",
         "titleType": "Title Type"
     },
     "rights": {
+    "availability": {
+      "chooseType": "Choose a Resource Type first.",
+      "loading": "Loading licenses...",
+      "empty": "No licenses are currently allowed for this Resource Type.",
+      "unavailable": "Licenses are currently unavailable. Please try again later.",
+      "retained": "This license is not currently allowed. You can keep it in a draft or export, but must choose an allowed license before submitting.",
+      "choose": "Choose a license..."
+    },
         "title": "Licenses and Rights",
         "licenseTitle": "License"
     },
@@ -180,7 +189,8 @@
         "affiliationRorId": "ROR ID",
         "affiliationRemove": "Remove affiliation",
         "affiliationInvalid": "Please provide an affiliation.",
-        "InstitutionsNameInvalid": "Please provide an Institution Name."
+        "InstitutionsNameInvalid": "Please provide an Institution Name.",
+        "validationError": "Please add at least one author and complete all required fields."
     },
     "authorsInstitutions": {
         "title": "Author: Institutions",

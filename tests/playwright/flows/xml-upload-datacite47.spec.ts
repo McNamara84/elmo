@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { navigateToHome } from '../utils';
+import { navigateToHome, registerGoogleMapsNoopRoute } from '../utils';
 
 /**
  * Full DataCite 4.7 XML with nearly all properties that ELMO supports:
@@ -86,6 +86,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
   let jsErrors: string[];
 
   test.beforeEach(async ({ page }) => {
+    await registerGoogleMapsNoopRoute(page);
     consoleErrors = [];
     jsErrors = [];
 
@@ -234,7 +235,7 @@ test.describe('DataCite 4.7 Full XML Upload (Docker E2E)', () => {
 
     // ── Step 13: License ───────────────────────────────────────────────
     const licenseText = await page.locator('#input-rights-license option:checked').textContent();
-    expect(licenseText?.toLowerCase()).toContain('cc');
+    expect(licenseText).toContain('Creative Commons Attribution 4.0 International');
 
     // ── Step 14: No console errors ─────────────────────────────────────
     // Filter known CI-environment messages (maps, favicon, other 503s).

@@ -348,7 +348,7 @@ function extractResourceNode(envelope: any): any | null {
 }
 
 async function expectIsoContactEmail(page: Page, actualEnvelope: any, refEnvelope: any) {
-  const configuredEmail = await page.evaluate(() => (window as any).ELMO_FEATURES?.xmlSubmitAddress || null);
+  const configuredEmail = await page.evaluate(() => (window as any).ELMO_FEATURES?.contactAddressRepository || null);
   const expectedMetadataContactEmail = configuredEmail || getIsoMetadataContactEmail(refEnvelope);
   const expectedPointOfContactEmail = getIsoPointOfContactEmail(refEnvelope);
 

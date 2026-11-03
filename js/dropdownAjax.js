@@ -303,79 +303,9 @@ function setupTitleTypeDropdownAjax() {
   });
 }
 
-/**
- * Populates the select field with ID input-rights-license with options created via an API call.
- * @param {boolean} isSoftware - Determines whether to retrieve licenses for software or all resource types.
- */
-function setupLicenseDropdown(isSoftware) {
-  const $select = $("#input-rights-license");
-  const top_licenseId = "CC-BY-4.0";
-  const copyleftLicenses = ['GPL-3.0-or-later', 'EUPL-1.2'];
-  const endpoint = isSoftware ? "vocabs/licenses/software" : "vocabs/licenses/all";
-
-  $select.prop("disabled", true).empty().append(
-    $("<option>", {
-      value: "",
-      text: "Loading...",
-      "data-translate": "general.loading",
-    })
-  );
-
-  $.getJSON(`./api/v2/${endpoint}`, function (data) {
-    let processedLicenses = [];
-
-    if (!isSoftware) {
-      processedLicenses = data
-        .filter(item => item.forSoftware === "0")
-        .sort((a, b) => {
-          if (a.rightsIdentifier === top_licenseId) return -1;
-          if (b.rightsIdentifier === top_licenseId) return 1;
-          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-        });
-    } else {
-      processedLicenses = data
-        .filter(item => item.forSoftware === "1")
-        .sort((a, b) => {
-          const aIsCopyleft = copyleftLicenses.includes(a.rightsIdentifier);
-          const bIsCopyleft = copyleftLicenses.includes(b.rightsIdentifier);
-
-          if (aIsCopyleft !== bIsCopyleft) {
-            return aIsCopyleft ? 1 : -1;
-          }
-          return a.rightsIdentifier.localeCompare(b.rightsIdentifier);
-        });
-    }
-
-    $select.empty();
-
-    processedLicenses.forEach(license => {
-      const option = $("<option>", {
-        value: license.rights_id,
-        text: `${license.text} (${license.rightsIdentifier})`,
-        title: license.description || license.text
-      });
-
-      if (license.rightsIdentifier === "CC-BY-4.0") {
-        option.prop("selected", true);
-      }
-
-      $select.append(option);
-    });
-
-    $select.prop("disabled", false).trigger("change");
-
-  }).fail(function (jqXHR, textStatus, errorThrown) {
-    console.error("Error loading licenses:", textStatus, errorThrown);
-    $select.empty().append(
-      $("<option>", {
-        value: "1",
-        text: "Creative Commons Attribution 4.0 International (CC-BY-4.0)",
-        selected: true
-      })
-    );
-
-    $select.prop("disabled", false).trigger("change");
-  });
+/** Load the current resource type through the shared license selection service. */
+function setupLicenseDropdown() {
+  return window.elmo?.licenses?.load();
 }
 
 /**

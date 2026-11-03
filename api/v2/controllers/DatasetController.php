@@ -729,8 +729,10 @@ class DatasetController
         $rights = $this->getRelatedData($connection, 'Rights', 'rights_id', $resource['Rights_rights_id']);
         if ($rights) {
             $rightsXml = $xml->addChild('Rights');
-            foreach ($rights as $key => $value) {
-                $rightsXml->addChild($key, htmlspecialchars($value ?? ''));
+            foreach (['text', 'rightsIdentifier', 'rightsURI', 'schemeURI', 'schemeName'] as $key) {
+                if ($rights[$key] !== null && $rights[$key] !== '') {
+                    $rightsXml->addChild($key, htmlspecialchars($rights[$key], ENT_XML1, 'UTF-8'));
+                }
             }
         }
 
@@ -1283,8 +1285,8 @@ class DatasetController
 
         $proc = new XSLTProcessor;
         $proc->importStyleSheet($xsl);
-        $contactEmail = $GLOBALS['xmlSubmitAddress'] ?? 'datapub@gfz.de';
-        $proc->setParameter('', 'contactEmail', $contactEmail);
+        $contactAddressRepository = $GLOBALS['contactAddressRepository'] ?? 'datapub@gfz.de';
+        $proc->setParameter('', 'contactAddressRepository', $contactAddressRepository);
         $newXml = $proc->transformToXML($xml);
 
         if ($newXml === false) {

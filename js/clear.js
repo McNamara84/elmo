@@ -1,4 +1,4 @@
-import { setCCBYasDefault, setBrowserTimezone, resetIdentifierField } from './select.js';
+import { setBrowserTimezone, resetIdentifierField } from './select.js';
 
 /**
  * Clears and resets input fields and Tagify instances.
@@ -31,8 +31,7 @@ export default function clearInputFields() {
     $(document).trigger('elmo:clearTitles');  
     }
     // Reset Rights License select field
-    $('#input-rights-license').val('');
-    setCCBYasDefault();
+    window.elmo?.licenses?.reset();
   
     window.authorStack?.setAuthors([]);
     $('#contact-person-error').remove();

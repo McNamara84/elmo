@@ -99,7 +99,7 @@ if ($showThesauri) {
     include $baseDir . 'formgroups/thesaurus-keywords.html';
 }
 if ($showFreeKeywords) {
-    include $baseDir . 'formgroups/freeKeywords.html';
+    include $baseDir . 'formgroups/free-keywords.html';
 }
 include $baseDir . 'formgroups/dates.html';
 if ($showSpatialTemporalCoverage) {

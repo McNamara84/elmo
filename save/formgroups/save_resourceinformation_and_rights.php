@@ -24,9 +24,10 @@ require_once dirname(__FILE__) . '/../../includes/resource_information_payload.p
  *                          - titleType (array): Array of title types
  *
  * @return int|false The ID of the newly created resource or false if validation fails
+ * @param array{rights_id: ?int}|null $preparedRights Mapping prepared by the trusted save pipeline.
  * @throws mysqli_sql_exception If a database error occurs
  */
-function saveResourceInformationAndRights($connection, $postData)
+function saveResourceInformationAndRights($connection, $postData, ?array $preparedRights = null)
 {
     global $showLicense, $showGGMsProperties;
     
@@ -58,7 +59,7 @@ function saveResourceInformationAndRights($connection, $postData)
         }
 
         // Sanitize and prepare data
-        $resourceData = prepareResourceData($postData);
+        $resourceData = prepareResourceData($postData, $preparedRights);
         // Create new resource 
         $resource_id = createNewResource($connection, $resourceData);
         // Save titles after resource is created
@@ -79,62 +80,14 @@ function saveResourceInformationAndRights($connection, $postData)
  * Prepares and sanitizes resource data for database operations.
  *
  * @param array $postData The POST data to prepare
+ * @param array{rights_id: ?int}|null $preparedRights Mapping resolved before the dataset transaction.
  * @return array Sanitized and typed resource data
  */
-function prepareResourceData($postData)
+function prepareResourceData($postData, ?array $preparedRights = null)
 {
-    global $connection, $defaultLicense;
-
-    $rightsId = null;
-    
-    // Try to get Rights from POST data
-    if (isset($postData['Rights']) && !empty($postData['Rights'])) {
-        try {
-            $rightsId = (int) $postData['Rights'];
-            // Check if casting resulted in 0 or invalid value
-            if ($rightsId <= 0) {
-                error_log("Rights value is not a valid positive integer: " . var_export($postData['Rights'], true));
-                $rightsId = null;
-            }
-        } catch (Exception $e) {
-            error_log("Failed to cast Rights to int: " . $e->getMessage() . ". Value: " . var_export($postData['Rights'], true));
-            $rightsId = null;
-        }
-        
-        // Validate that this rights_id actually exists
-        if ($rightsId !== null) {
-            $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rights_id = ?");
-            $stmt->bind_param("i", $rightsId);
-            $stmt->execute();
-            if ($stmt->get_result()->num_rows === 0) {
-                error_log("Invalid Rights ID provided: $rightsId. Falling back to default.");
-                $rightsId = null;
-            }
-        }
-    }
-    
-    // If no valid Rights from POST, use default
-    if ($rightsId === null) {
-        $stmt = $connection->prepare("SELECT rights_id FROM Rights WHERE rightsIdentifier = ? LIMIT 1");
-        $stmt->bind_param("s", $defaultLicense);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        if ($row = $result->fetch_assoc()) {
-            $rightsId = $row['rights_id'];
-        } else {
-            // Fallback to first available rights (not hardcoded ID)
-            $stmt = $connection->prepare("SELECT rights_id FROM Rights ORDER BY rights_id ASC LIMIT 1");
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($row = $result->fetch_assoc()) {
-                $rightsId = $row['rights_id'];
-                error_log("Default license '$defaultLicense' not found. Using first available: {$rightsId}");
-            } else {
-                error_log("CRITICAL: No Rights records exist in database!");
-                return true; // Cannot proceed without a valid rights_id
-            }
-        }
-    }
+    global $connection;
+    require_once __DIR__ . '/../../api/v2/services/LicenseService.php';
+    $rightsId = $preparedRights !== null ? $preparedRights['rights_id'] : LicenseService::draftRightsId($connection, $postData);
     return [
         'doi' => isset($postData['doi']) ? trim($postData['doi']) : null,
         'year' => isset($postData['year']) && trim($postData['year']) !== ''
@@ -149,7 +102,7 @@ function prepareResourceData($postData)
             ? normalizeResourceVersion((string) $postData['version']) : null,
         'language' => isset($postData['language']) && trim($postData['language']) !== ''
             ? trim($postData['language']): null,
-        'rights' => (int) $rightsId
+        'rights' => $rightsId
     ];
 }
 

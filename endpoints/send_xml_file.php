@@ -88,7 +88,13 @@ try {
     ]);
     // step 1: save to the database
     try {
-        $resource_id = saveALL($_POST);
+        $resource_id = saveALL($_POST, submission: true);
+    } catch (LicenseValidationException $error) {
+        ob_clean();
+        http_response_code($error->httpStatus);
+        header('Content-Type: application/json');
+        echo json_encode(['success' => false, 'message' => $error->getMessage(), 'field' => 'Rights']);
+        return;
     } catch (Throwable $e) {
         error_log('send_xml_file.php: Save operation failed: ' . $e->getMessage());
         ob_clean();

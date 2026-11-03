@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tests;
 
+use PHPUnit\Framework\Attributes\DataProvider;
+
 
 /**
  * Testklasse für die Funktionalität zum Speichern von Ressourceninformationen und Rechten.
@@ -44,6 +46,49 @@ final class SaveResourceInformationAndRightsTest extends DatabaseTestCase
         self::assertFalse(saveResourceInformationAndRights($this->connection, $base));
         self::assertFalse(saveResourceInformationAndRights($this->connection, $base + ['language' => '1', 'version' => 'bad']));
         self::assertSame(0, (int) $this->connection->query('SELECT COUNT(*) AS count FROM Resource')->fetch_assoc()['count']);
+    }
+
+    #[DataProvider('resourceVersions')]
+    public function testResourceVersionPersistenceDependsOnSubmitOrDraft(string $version, bool $valid): void
+    {
+        require_once __DIR__ . '/../save/formgroups/save_resourceinformation_and_rights.php';
+        foreach ([false, true] as $structured) {
+            foreach (['submit', 'save_and_download'] as $action) {
+                $post = [
+                    'action' => $action, 'year' => '2026', 'resourcetype' => '1', 'language' => '1',
+                    'Rights' => '1', 'version' => $version, 'title' => ['Version test'], 'titleType' => ['1'],
+                ];
+                if ($structured) {
+                    $post['version'] = 'stale';
+                    $post['resourceInformationPayload'] = json_encode([
+                        'year' => '2026', 'resourceTypeId' => '1', 'languageId' => '1', 'version' => $version,
+                        'titles' => [['text' => 'Version test', 'typeId' => '1']],
+                    ], JSON_THROW_ON_ERROR);
+                }
+                $before = (int) $this->connection->query('SELECT COUNT(*) AS count FROM Resource')->fetch_assoc()['count'];
+                $id = saveResourceInformationAndRights($this->connection, $post);
+                if ($action === 'submit' && !$valid) {
+                    self::assertFalse($id);
+                    self::assertSame($before, (int) $this->connection->query('SELECT COUNT(*) AS count FROM Resource')->fetch_assoc()['count']);
+                } else {
+                    self::assertIsInt($id);
+                    $stored = $this->connection->query("SELECT version FROM Resource WHERE resource_id = {$id}")->fetch_assoc()['version'];
+                    self::assertSame(trim($version) === '' ? null : trim($version), $stored);
+                }
+            }
+        }
+    }
+
+    public static function resourceVersions(): iterable
+    {
+        yield 'optional' => ['', true];
+        yield 'whitespace' => ['   ', true];
+        yield 'minor zero preserved' => ['1.10', true];
+        yield 'multi-digit' => ['12.3', true];
+        yield 'trimmed' => [' 1.4 ', true];
+        yield 'patch version' => ['1.2.3', false];
+        yield 'four components' => ['1.2.3.4', false];
+        yield 'unfinished' => ['1.', false];
     }
 
     /**

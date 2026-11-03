@@ -1,0 +1,4 @@
+[
+  {"id": 101, "identifier": "CC-BY-4.0", "name": "Creative Commons Attribution 4.0 International", "uri": "https://creativecommons.org/licenses/by/4.0/", "scheme_uri": "https://spdx.org/licenses/"},
+  {"id": 9001, "identifier": "custom-rights-research-use-2026", "name": "Research use — please contact the data owner", "uri": null, "scheme_uri": null}
+]

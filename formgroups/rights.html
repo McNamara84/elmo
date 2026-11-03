@@ -11,12 +11,14 @@
           <div class="input-group has-validation">
             <div class="form-floating">
               <select class="form-select input-right-round-corners" id="input-rights-license"
-                name="Rights" required>
+                name="Rights" aria-describedby="license-availability" required>
               </select>
+              <input type="hidden" name="licensePayload" value='{"version":1,"license":null}'>
               <label for="input-rights-license"><span data-translate="rights.licenseTitle">License</span><span
                   class="red-star">*</span></label>
             </div>
           </div>
+          <div id="license-availability" class="form-text" role="status" aria-live="polite"></div>
         </div>
       </div>
     </div>

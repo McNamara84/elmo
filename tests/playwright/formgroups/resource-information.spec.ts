@@ -51,6 +51,7 @@ test.describe('Resource Information Form Tests', () => {
   });
 
   test('Test dropdown fields functionality', async ({ page }) => {
+    const isGem = await page.evaluate(() => Boolean(window.ELMO_FEATURES?.showGGMsProperties));
     const resourceTypeSelect = page.locator('#input-resourceinformation-resourcetype');
     await expect(resourceTypeSelect).toBeVisible();
     await expect(resourceTypeSelect).toHaveAttribute('required');
@@ -59,7 +60,12 @@ test.describe('Resource Information Form Tests', () => {
 
     const resourceTypeOptions = resourceTypeSelect.locator('option');
     const optionCount = await resourceTypeOptions.count();
-    expect(optionCount).toBeGreaterThan(5);
+    // GEM deliberately offers only Dataset; the other editions have the full list.
+    if (isGem) {
+      await expect(resourceTypeSelect.locator('option:not([disabled])')).toHaveText(['Dataset']);
+    } else {
+      expect(optionCount).toBeGreaterThan(5);
+    }
 
     const languageSelect = page.locator('#input-resourceinformation-language');
     await expect(languageSelect).toBeVisible();
@@ -68,13 +74,17 @@ test.describe('Resource Information Form Tests', () => {
 
     const languageOptions = languageSelect.locator('option');
     const languageCount = await languageOptions.count();
-    expect(languageCount).toBeGreaterThanOrEqual(3);
+    if (!isGem) expect(languageCount).toBeGreaterThanOrEqual(3);
 
     // Match by visible text instead of DB auto-increment IDs, which can
     // shift when ERNIE syncs additional languages into the Language table.
     const optionTexts = await languageSelect.locator('option:not([disabled])').allTextContents();
     expect(optionTexts).toContain('English');
-    expect(optionTexts).toContain('German');
+    if (isGem) {
+      expect(optionTexts).toEqual(['English']);
+    } else {
+      expect(optionTexts).toContain('German');
+    }
     // Note: French may not be available when ERNIE is configured and returns
     // a subset of languages, so we only assert English and German.
   });
@@ -96,9 +106,14 @@ test.describe('Resource Information Form Tests', () => {
 
   test('additional title controls do not overlap its type field on mobile', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 900 });
+    await page.waitForFunction(() => document.querySelector('#input-resourceinformation-titletype option[value]:not([value=""])'));
     await page.locator('#button-resourceinformation-addtitle').click();
-    const type = await page.locator('[id^="container-resourceinformation-titletype-"]').last().boundingBox();
-    const actions = await page.locator('.title-row-actions').boundingBox();
+    const typeField = page.locator('[id^="container-resourceinformation-titletype-"]').last();
+    const actionGroup = page.locator('.title-row-actions');
+    await expect(typeField).toBeVisible();
+    await expect(actionGroup).toBeVisible();
+    const type = await typeField.boundingBox();
+    const actions = await actionGroup.boundingBox();
     expect(type && actions).toBeTruthy();
     expect(actions!.y).toBeGreaterThanOrEqual(type!.y + type!.height - 2);
     const buttons = page.locator('.title-row-actions button');

@@ -131,6 +131,8 @@ describe('clear module coverage', () => {
 
         // Require the module
         clearModule = require('../../js/clear.js');
+        const { LicenseSelection } = require('../../js/services/licenseService.js');
+        window.elmo.licenses = new LicenseSelection();
         mountAuthorStack([
             { type: 'person', familyname: 'Doe', isContact: true, email: 'jane@example.org' },
             { type: 'institution', institutionname: 'Institute' },
@@ -279,11 +281,11 @@ describe('clear module coverage', () => {
         test('clears rights license', () => {
             clearModule.clearInputFields();
 
-            // The default license should be set to "CC-BY" after clearing
-            expect($('#input-rights-license').val()).toEqual("1");
+            expect($('#input-rights-license').val()).toEqual('');
+            expect($('#input-rights-license').prop('disabled')).toBe(true);
         });
 
-        test('restores a license and a timezone value after clear', () => {
+        test('waits for a resource type and restores the timezone after clear', () => {
             const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
             $('#input-rights-license').html(`
@@ -303,14 +305,14 @@ describe('clear module coverage', () => {
             const timezone = document.getElementById('input-stc-timezone');
 
             expect(license.options.length).toBeGreaterThan(0);
-            expect(license.value).toBeTruthy();
-            expect(license.selectedOptions[0].text).toContain('(CC-BY-4.0)');
+            expect(license.value).toBe('');
+            expect(license.disabled).toBe(true);
 
             expect(timezone.options.length).toBeGreaterThan(0);
             expect(timezone.value).toBeTruthy();
             expect(timezone.selectedOptions[0].text).toContain(`(${browserTimezone})`);
         });
-        test ('falls back to the first license in the list if CC-BY-4.0 is not found', () => {
+        test ('does not substitute the first license when clearing', () => {
             $('#input-rights-license').html(`
                 <option value="9" selected>MIT License (MIT)</option>
                 <option value="2">EUPL</option>
@@ -321,8 +323,8 @@ describe('clear module coverage', () => {
 
             const license = document.getElementById('input-rights-license');
             expect(license.options.length).toBeGreaterThan(0);
-            expect(license.value).toBeTruthy();
-            expect(license.selectedOptions[0].text).toContain('(MIT)');
+            expect(license.value).toBe('');
+            expect(window.elmo.licenses.getMetadata()).toBeNull();
         });
     });
 });

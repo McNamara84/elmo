@@ -48,6 +48,7 @@ services:
       SHOW_USED_INSTRUMENTS: "false"
       SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
       SIMULATE_EMAIL: "true"
+      CONTACT_ADDRESS_REPOSITORY: ${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
     depends_on:

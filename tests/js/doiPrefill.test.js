@@ -74,6 +74,8 @@ describe('doiPrefill.js', () => {
     delete window.relatedWorkStack;
     delete window.usedInstrumentsModule;
     delete window.ELMO_FEATURES;
+    delete window.thesauriReady;
+    delete window.waitForThesaurusVocabulary;
   });
 
   /* ── escapeHtml ─────────────────────────────────────────────── */
@@ -306,6 +308,7 @@ describe('doiPrefill.js', () => {
       window.titleTypeOptionsHtml = titleTypes.map(type => `<option value="${type.id}">${type.name}</option>`).join('');
       $('#input-resourceinformation-titletype').html(window.titleTypeOptionsHtml);
       window.replaceHelpButtonInClonedRows = jest.fn();
+      window.validateResourceVersion = require('../../js/validation/resourceVersionValidation.js').validateResourceVersion;
       const source = fs.readFileSync(path.resolve(__dirname, '../../js/eventhandlers/formgroups/resourceInformationTitle.js'), 'utf8')
         .replace(/^import .*;\s*$/gm, '')
         .replace('$(document).ready(function () {', '(function () {')
@@ -323,6 +326,7 @@ describe('doiPrefill.js', () => {
 
     afterEach(() => {
       $(document).off('elmo:clearTitles');
+      delete window.validateResourceVersion;
       ['resourceInformation', 'maxTitles', 'mainTitleTypeId', 'alternativeTitleTypeId', 'titleTypeOptionsHtml',
         'replaceHelpButtonInClonedRows', 'loadClearInputFields'].forEach(key => delete window[key]);
     });
@@ -332,6 +336,20 @@ describe('doiPrefill.js', () => {
       expect(JSON.parse(document.querySelector('[name="authorsPayload"]').value)[0].affiliations).toEqual(expected);
       expect($('[data-author-affiliation-label]').map((_, input) => input.value).get()).toEqual(expected.map(item => item.label));
     }
+
+    test('preserves an imported version and exposes its ELMO format error', async () => {
+      attributes.version = '1.2.3';
+      await mod.applyDoiPrefill(attributes);
+      const version = document.getElementById('input-resourceinformation-version');
+      expect(version.value).toBe('1.2.3');
+      expect(version.classList.contains('is-invalid')).toBe(true);
+      expect(version.getAttribute('aria-invalid')).toBe('true');
+      expect(window.resourceInformation.collectPayload().version).toBe('1.2.3');
+      attributes.version = '1.10';
+      await mod.applyDoiPrefill(attributes);
+      expect(version.value).toBe('1.10');
+      expect(version.classList.contains('is-invalid')).toBe(false);
+    });
 
     test.each([
       ['Other', '83', 'Other'],
@@ -349,7 +367,7 @@ describe('doiPrefill.js', () => {
       expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
     });
 
-    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations after contact enrichment', async representation => {
+    test.each(['objects', 'strings', 'mixed'])('preserves %s affiliations while importing the contact role', async representation => {
       const label = attributes.creators[0].affiliation[0].name;
       const expected = [{ label, rorId: '' }];
       if (representation === 'strings') attributes.creators[0].affiliation = [label];
@@ -357,19 +375,13 @@ describe('doiPrefill.js', () => {
         attributes.creators[0].affiliation.push({ name: 'GFZ', affiliationIdentifier: 'https://ror.org/04z8jg394' });
         expected.push({ label: 'GFZ', rorId: '04z8jg394' });
       }
-      const lookupContacts = jest.fn().mockResolvedValue({ email: 'contact@example.org', website: 'https://example.org/' });
-      await mod.applyDoiPrefill(attributes, { lookupContacts });
+      await mod.applyDoiPrefill(attributes);
 
       expectAffiliations(expected);
       expect(window.authorStack.collectPayload()[0]).toMatchObject({
         familyname: 'Kreuz', givenname: 'Angela', orcid: '0000-0003-2450-824X',
-        isContact: true, email: 'contact@example.org', website: 'https://example.org/',
+        isContact: true, email: '', website: '',
       });
-    });
-
-    test('keeps affiliations when the contact lookup fails', async () => {
-      await mod.applyDoiPrefill(attributes, { lookupContacts: jest.fn().mockRejectedValue(new Error('offline')) });
-      expectAffiliations([{ label: attributes.creators[0].affiliation[0].name, rorId: '' }]);
     });
 
     test('retains the imported source DOI after clearing without assigning a submission DOI', async () => {
@@ -460,46 +472,6 @@ describe('doiPrefill.js', () => {
       mod.prefillCreators(null);
       mod.prefillCreators([]);
       expect(window.authorStack.collectPayload()).toEqual([]);
-    });
-  });
-
-  describe('prefillContactPersons', () => {
-    test('updates matching person payload from lookup results when authorStack is available', async () => {
-      const setAuthors = jest.fn();
-      window.authorStack = {
-        collectPayload: jest.fn(() => [
-          { type: 'person', familyname: 'Doe', givenname: 'Jane', affiliations: [] },
-          { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
-        ]),
-        setAuthors,
-      };
-      const lookupService = {
-        lookupContacts: jest.fn().mockResolvedValue({
-          email: 'jane@example.org',
-          website: 'https://example.org/jane',
-        }),
-      };
-
-      await mod.prefillContactPersons([
-        { familyName: 'Doe', givenName: 'Jane', nameIdentifiers: [] },
-      ], lookupService);
-
-      expect(lookupService.lookupContacts).toHaveBeenCalledWith({
-        orcid: '',
-        familyname: 'Doe',
-        givenname: 'Jane',
-      });
-      expect(setAuthors).toHaveBeenCalledWith([
-        expect.objectContaining({
-          type: 'person',
-          familyname: 'Doe',
-          givenname: 'Jane',
-          isContact: true,
-          email: 'jane@example.org',
-          website: 'https://example.org/jane',
-        }),
-        { type: 'institution', institutionname: 'World Research Institute', affiliations: [] },
-      ]);
     });
   });
 
@@ -622,8 +594,8 @@ describe('doiPrefill.js', () => {
       attachTagify('#input-instruments');
     });
 
-    test('routes subjects to free keywords by default', () => {
-      mod.prefillKeywords([{ subject: 'Geophysics' }]);
+    test('routes subjects to free keywords by default', async () => {
+      await mod.prefillKeywords([{ subject: 'Geophysics' }]);
 
       const tagify = document.querySelector('#input-freekeyword')._tagify;
       expect(tagify.addTags).toHaveBeenCalled();
@@ -632,8 +604,8 @@ describe('doiPrefill.js', () => {
       );
     });
 
-    test('routes GCMD keywords to sciencekeyword tagify', () => {
-      mod.prefillKeywords([
+    test('routes GCMD keywords to sciencekeyword tagify', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'Earth Science',
           schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords',
@@ -648,8 +620,8 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
-    test('routes GCMD keywords by subjectScheme when no schemeURI (DataCite JSON)', () => {
-      mod.prefillKeywords([
+    test('routes GCMD keywords by subjectScheme when no schemeURI (DataCite JSON)', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'EARTH SCIENCE > SOLID EARTH > GRAVITY/GRAVITATIONAL FIELD',
           subjectScheme: 'NASA/GCMD Earth Science Keywords',
@@ -665,8 +637,8 @@ describe('doiPrefill.js', () => {
       expect(tagifyFree.addTags).not.toHaveBeenCalled();
     });
 
-    test('routes GCMD Platforms by subjectScheme', () => {
-      mod.prefillKeywords([
+    test('routes GCMD Platforms by subjectScheme', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'GRACE-FO',
           subjectScheme: 'NASA/GCMD Platforms',
@@ -679,8 +651,8 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
-    test('routes GCMD Instruments by subjectScheme', () => {
-      mod.prefillKeywords([
+    test('routes GCMD Instruments by subjectScheme', async () => {
+      await mod.prefillKeywords([
         {
           subject: 'GRACE-FO ACC',
           subjectScheme: 'NASA/GCMD Instruments',
@@ -693,14 +665,127 @@ describe('doiPrefill.js', () => {
       ]);
     });
 
-    test('handles empty subjects', () => {
-      mod.prefillKeywords([]);
+    test('classifyDoiSubject thesaurus groups are THESAURUS_CONFIG keys', () => {
+      const source = fs.readFileSync(path.resolve(__dirname, '../../js/thesaurusConfig.js'), 'utf8');
+      const start = source.indexOf('export const THESAURUS_CONFIG = {');
+      const end = source.indexOf('\n};', start);
+      const configKeys = [...source.slice(start, end).matchAll(/\n {4}(\w+): \{/g)].map(match => match[1]);
+
+      const cases = [
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' }, 'science_keywords'],
+        [{ subjectScheme: 'NASA/GCMD Earth Science Keywords' }, 'science_keywords'],
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' }, 'platforms'],
+        [{ subjectScheme: 'NASA/GCMD Platforms' }, 'platforms'],
+        [{ subjectScheme: 'GCMD Platforms' }, 'platforms'],
+        [{ schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' }, 'instruments'],
+        [{ subjectScheme: 'NASA/GCMD Instruments' }, 'instruments'],
+        [{ subjectScheme: 'GCMD Instruments' }, 'instruments'],
+        [{ schemeURI: 'http://resource.geosciml.org/vocabulary/timescale/gts2020' }, 'chronostratigraphy'],
+        [{ subjectScheme: 'International Chronostratigraphic Chart' }, 'chronostratigraphy'],
+        [{ subjectScheme: 'Chronostratigraphic Chart' }, 'chronostratigraphy'],
+        [{ schemeURI: 'http://www.eionet.europa.eu/gemet/gemetThesaurus' }, 'gemet'],
+        [{ schemeURI: 'http://www.eionet.europa.eu/gemet/concept/' }, 'gemet'],
+        [{ subjectScheme: 'GEMET - Concepts' }, 'gemet'],
+        [{ schemeURI: 'https://epos-msl.uu.nl/voc/materials/1.3/example' }, 'msl'],
+        [{ subject: 'Geochemistry' }, 'free'],
+      ];
+
+      const groups = cases.map(([subject, expected]) => {
+        expect(mod.classifyDoiSubject(subject)).toBe(expected);
+        return expected;
+      });
+      // free is uncontrolled text. msl uses its own input, outside THESAURUS_CONFIG.
+      const thesaurusGroups = [...new Set(groups.filter(group => group !== 'free' && group !== 'msl'))];
+      expect(configKeys).toEqual(expect.arrayContaining(thesaurusGroups));
+    });
+
+    test('loads the thesaurus vocabulary before importing DataCite keywords into Tagify', async () => {
+      const tagify = document.querySelector('#input-instruments')._tagify;
+      const canonical = 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS';
+      const valueURI = 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c';
+      tagify.settings = {
+        whitelist: [{
+          value: canonical,
+          id: valueURI,
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }],
+        enforceWhitelist: true,
+      };
+      let releaseVocabulary;
+      window.waitForThesaurusVocabulary = jest.fn(() => new Promise(resolve => {
+        releaseVocabulary = resolve;
+      }));
+
+      const pending = mod.prefillKeywords([{
+        subject: 'In Situ/Laboratory Instruments &gt; Spectrometers/Radiometers &gt; ICP-MS',
+        subjectScheme: 'GCMD Instruments',
+        schemeUri: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        valueUri: valueURI,
+      }]);
+
+      expect(tagify.addTags).not.toHaveBeenCalled();
+      releaseVocabulary('loaded');
+      await pending;
+
+      expect(window.waitForThesaurusVocabulary).toHaveBeenCalledWith('instruments');
+      expect(tagify.addTags).toHaveBeenCalledWith([
+        expect.objectContaining({
+          value: canonical,
+          id: valueURI,
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }),
+      ]);
+      expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
+      expect(tagify.settings.enforceWhitelist).toBe(true);
+    });
+
+    test('warns when a thesaurus keyword is absent from the loaded Tagify vocabulary', async () => {
+      const warnSpy = jest.spyOn(console, 'warn').mockImplementation(() => {});
+      const tagify = document.querySelector('#input-instruments')._tagify;
+      tagify.settings = {
+        whitelist: [{
+          value: 'Instruments > In Situ/Laboratory Instruments > Spectrometers/Radiometers > ICP-MS',
+          id: 'https://gcmd.earthdata.nasa.gov/kms/concept/616bdf0f-8797-496b-af3d-50974baa470c',
+          scheme: 'NASA/GCMD Instruments',
+          schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+          language: 'en',
+        }],
+        enforceWhitelist: true,
+      };
+      window.waitForThesaurusVocabulary = jest.fn().mockResolvedValue('loaded');
+
+      await mod.prefillKeywords([{
+        subject: 'Instruments > Retired Instrument',
+        subjectScheme: 'GCMD Instruments',
+        schemeUri: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments',
+        valueUri: 'https://gcmd.earthdata.nasa.gov/kms/concept/00000000-0000-0000-0000-000000000000',
+      }]);
+
+      expect(tagify.addTags).not.toHaveBeenCalled();
+      expect(document.querySelector('#input-freekeyword')._tagify.addTags).not.toHaveBeenCalled();
+      expect(warnSpy).toHaveBeenCalledWith(
+        'Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:',
+        expect.objectContaining({
+          thesaurus: 'instruments',
+          keyword: 'Instruments > Retired Instrument',
+          valueURI: 'https://gcmd.earthdata.nasa.gov/kms/concept/00000000-0000-0000-0000-000000000000',
+        })
+      );
+      warnSpy.mockRestore();
+    });
+
+    test('handles empty subjects', async () => {
+      await mod.prefillKeywords([]);
       const tagify = document.querySelector('#input-freekeyword')._tagify;
       expect(tagify.addTags).not.toHaveBeenCalled();
     });
 
-    test('decodes HTML entities in keyword values', () => {
-      mod.prefillKeywords([
+    test('decodes HTML entities in keyword values', async () => {
+      await mod.prefillKeywords([
         { subject: 'EARTH SCIENCE &gt; SOLID EARTH &gt; GEODETICS' },
       ]);
 
@@ -893,40 +978,22 @@ describe('doiPrefill.js', () => {
   /* ── prefillRights ──────────────────────────────────────────── */
 
   describe('prefillRights', () => {
-    beforeEach(() => {
-      document.body.innerHTML = '<select id="input-rights-license"><option value="">--</option><option value="1">CC BY 4.0</option></select>';
-      mod._resetCaches();
+    beforeEach(() => { window.elmo = { licenses: { setMetadata: jest.fn().mockResolvedValue() } }; });
+    afterEach(() => { delete window.elmo; });
+
+    test.each(['cc-by-4.0', 'CC0-1.0', 'custom-2.1'])('preserves identifier %s, text and scheme for the shared selection', async identifier => {
+      await mod.prefillRights([{ rightsIdentifier: identifier, rights: 'Original terms', rightsUri: 'urn:example:terms', schemeUri: 'urn:example:scheme', rightsIdentifierScheme: 'Custom' }]);
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith({ identifier, name: 'Original terms', uri: 'urn:example:terms', scheme_uri: 'urn:example:scheme', scheme_name: 'Custom' });
     });
 
-    test('matches license case-insensitively (DataCite lowercase vs ELMO uppercase)', async () => {
-      // Simulate ELMO DB: keys are uppercase
-      $.getJSON = jest.fn().mockResolvedValue([
-        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
-      ]);
-
-      // DataCite returns lowercase
-      await mod.prefillRights([
-        { rightsIdentifier: 'cc-by-4.0', rights: 'Creative Commons Attribution 4.0 International' },
-      ]);
-
-      expect($('#input-rights-license').val()).toBe('1');
+    test('retains URI-only rights without guessing or truncating an identifier', async () => {
+      await mod.prefillRights([{ rights: 'CC0', rightsUri: 'https://spdx.org/licenses/CC0-1.0.html' }]);
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith({ identifier: null, name: 'CC0', uri: 'https://spdx.org/licenses/CC0-1.0.html', scheme_uri: null, scheme_name: null });
     });
 
-    test('matches license with exact case', async () => {
-      $.getJSON = jest.fn().mockResolvedValue([
-        { rights_id: 1, rightsIdentifier: 'CC-BY-4.0', text: 'CC BY 4.0' },
-      ]);
-
-      await mod.prefillRights([
-        { rightsIdentifier: 'CC-BY-4.0', rights: 'Creative Commons Attribution 4.0 International' },
-      ]);
-
-      expect($('#input-rights-license').val()).toBe('1');
-    });
-
-    test('handles empty rightsList gracefully', async () => {
+    test('clears rights when the imported document has none', async () => {
       await mod.prefillRights([]);
-      expect($('#input-rights-license').val()).toBe('');
+      expect(window.elmo.licenses.setMetadata).toHaveBeenCalledWith(null);
     });
   });
 

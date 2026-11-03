@@ -46,8 +46,8 @@ describe('changelog renderer', () => {
     expect(container.querySelectorAll('.badge')).toHaveLength(badgeCount);
     expect(container.querySelectorAll('a[href*="github.com/McNamara84/elmo/pull/"]'))
       .toHaveLength(countReferences(changelog.releases, 'pull'));
-    const issueLinks = [...container.querySelectorAll('.accordion-item:first-child a[href*="github.com/McNamara84/elmo/issues/"]')];
-    expect(issueLinks).toHaveLength(countReferences(changelog.releases.slice(0, 1), 'issue'));
+    const issueLinks = [...container.querySelectorAll('a[href*="github.com/McNamara84/elmo/issues/"]')];
+    expect(issueLinks).toHaveLength(countReferences(changelog.releases, 'issue'));
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #831');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1013');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1061');
@@ -55,8 +55,11 @@ describe('changelog renderer', () => {
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1127');
     expect(issueLinks.map(link => link.textContent)).toContain('Issue #1240');
     expect(issueLinks.map(link => link.textContent)).not.toContain('Issue #1058');
-    expect(container.querySelectorAll('.accordion-item:not(:first-child) .badge')).toHaveLength(0);
-    expect(container.querySelectorAll('.accordion-item:not(:first-child) a')).toHaveLength(0);
+    const historicalStart = changelog.releases.findIndex(release => release.version === '2.1.2');
+    for (const item of [...container.querySelectorAll('.accordion-item')].slice(historicalStart)) {
+      expect(item.querySelectorAll('.badge')).toHaveLength(0);
+      expect(item.querySelectorAll('a')).toHaveLength(0);
+    }
     expect(container.querySelectorAll('code')).toHaveLength(countCodeParts(changelog));
     expect(container.querySelector('.accordion-item:last-child .accordion-body p').textContent)
       .toBe('First alpha release of ELMO');

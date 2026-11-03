@@ -464,8 +464,9 @@ function parseIcgemXmlFile(xmlPath: string): IcgemParsedData {
   const cpOrcidEntry = cpOrcidList.find((n: unknown) => (n as Record<string, unknown>)['nameIdentifierScheme'] === 'ORCID');
   const contactPersonOrcid = extractText(cpOrcidEntry ?? cpOrcidList[0]);
 
-  // Contact email and website (from grav:contact inside globalGravityProduct)
-  const contactEl = getNode(ggp, 'contact') as Record<string, unknown> | undefined;
+  // Contact email and website (from grav:contacts/grav:contact inside globalGravityProduct)
+  const contactsEl = getNode(ggp, 'contacts') as Record<string, unknown> | undefined;
+  const contactEl = contactsEl ? toArray(getNode(contactsEl, 'contact'))[0] as Record<string, unknown> | undefined : undefined;
   const addressList = contactEl ? toArray(getNode(contactEl, 'address')) : [];
   const contactPersonEmail = extractText(addressList[0]);
   const onlineResourceList = contactEl ? toArray(getNode(contactEl, 'onlineResource')) : [];
@@ -1339,21 +1340,21 @@ for (const testCase of TEST_CASES) {
       }
     }
 
-    // Contact person email (required) and website (optional).
-    // Email comes from grav:contact/grav:address; the matching author is the
-    // row whose contact checkbox was checked, not necessarily the first creator.
-    const contactRow = page.locator('#group-author [data-creator-row]').filter({
-      has: page.locator('input[name="contacts[]"]:checked'),
-    }).first();
-    await expect(
-      contactRow.locator('input[name="cpEmail[]"]'),
-      'contactPersonEmail',
-    ).toHaveValue(parsedData.contactPersonEmail, { timeout: 5_000 });
+    // Contact email and website live on the contributor card. The ICGEM contact
+    // element does not write them onto the author.
+    const contact = await page.locator('[data-contributor-card]').evaluateAll((cards, email) => {
+      const match = cards.find((card) => (
+        (card.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement | null)?.value === email
+      ));
+      if (!match) return null;
+      return {
+        email: (match.querySelector('[name="cbContactEmail[]"]') as HTMLInputElement).value,
+        website: (match.querySelector('[name="cbContactWebsite[]"]') as HTMLInputElement | null)?.value || '',
+      };
+    }, parsedData.contactPersonEmail);
+    expect(contact?.email, 'contactPersonEmail').toBe(parsedData.contactPersonEmail);
     if (parsedData.contactPersonWebsite) {
-      await expect(
-        contactRow.locator('input[name="cpOnlineResource[]"]'),
-        'contactPersonWebsite',
-      ).toHaveValue(parsedData.contactPersonWebsite, { timeout: 5_000 });
+      expect(contact?.website, 'contactPersonWebsite').toBe(parsedData.contactPersonWebsite);
     }
 
     // ── ICGEM Definition fields ────────────────────────────────────────────
