@@ -3,18 +3,9 @@
   <identifier identifierType="DOI">10.5880/gfz.4.6.2020.005</identifier>
   <creators>
     <creator>
-      <creatorName nameType="Personal">Dietze, Michael</creatorName>
-      <givenName>Michael</givenName>
-      <familyName>Dietze</familyName>
-      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2324-2518</nameIdentifier>
-      <affiliation>GFZ Potsdam</affiliation>
-    </creator>
-    <creator>
-      <creatorName nameType="Personal">Krautblatter, Michael</creatorName>
-      <givenName>Michael</givenName>
-      <familyName>Krautblatter</familyName>
-      <nameIdentifier nameIdentifierScheme="ORCID" schemeURI="https://orcid.org/">https://orcid.org/0000-0002-2775-2742</nameIdentifier>
-      <affiliation>TU Munich</affiliation>
+      <creatorName nameType="Personal">Surname, Name</creatorName>
+      <givenName>Name</givenName>
+      <familyName>Surname</familyName>
     </creator>
   </creators>
   <titles>
