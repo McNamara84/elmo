@@ -307,7 +307,7 @@ const MOCK_API_DATA: Record<string, any> = {
   'api/v2/validation/identifiertypes/active': MOCK_IDENTIFIER_TYPES,
   'json/funders.json': MOCK_FUNDERS,
   // 'json/msl-labs.json': MOCK_LABS,
-  '/api/v2/vocabs/msl-laboratories': {
+  'api/v2/vocabs/msl-laboratories': {
     version: 'test',
     lastUpdated: '2026-09-07T00:00:00+00:00',
     total: MOCK_LABS.length,
