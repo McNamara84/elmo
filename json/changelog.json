@@ -1,6 +1,44 @@
 {
-  "currentVersion": "2.2.1dev",
+  "currentVersion": "2.2.2dev",
   "releases": [
+    {
+      "version": "2.2.2",
+      "date": "2026-10-20",
+      "sections": [
+        {
+          "title": "Bug fixes:",
+          "entries": [
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Correct the upload of thesaurus keywords into dedidcated vocabularies"
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "pull", "number": 1328 },
+                { "type": "issue", "number": 1324 }
+
+              ]
+            },
+            {
+              "parts": [
+                {
+                  "type": "text",
+                  "value": "Represent the GEMET thesaurus on the page according to ERNIE visibility settings"
+                }
+              ],
+              "editions": ["all"],
+              "references": [
+                { "type": "pull", "number": 1328 },
+                { "type": "issue", "number": 1322 }
+
+              ]
+        }
+        ]
+      }
+    },
     {
       "version": "2.2.1dev",
       "date": "2026-10-20",
