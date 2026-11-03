@@ -289,7 +289,7 @@ npm install
 
 The lockfiles contain the latest stable direct npm and Composer dependencies verified against npm and Packagist. Install them with `npm ci` and `composer install`; `npm update` and `composer update --with-all-dependencies` deliberately refresh the lockfiles.
 
-Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.0 (`.nvmrc` and NodeSource 24), MariaDB 12.3.3, and MySQL 9.7.2 in CI. Newer Current/Innovation releases (Node.js 26, MariaDB 13.0, and MySQL 26.7) are excluded from this baseline. PHP uses stable 8.5.11 on Debian 13 (Trixie), Composer uses 2.10.3, and the Playwright image matches the locked test runner at 1.64.1. Container references and CI actions are pinned to immutable digests or commit IDs; update these together with their version labels during maintenance.
+Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.2 (`.nvmrc` and NodeSource 24), MariaDB 12.3.3, and MySQL 9.7.4 in CI. Newer Current/Innovation releases (Node.js 26, MariaDB 13.0, and MySQL 26.7) are excluded from this baseline. PHP uses stable 8.5.11 on Debian 13 (Trixie), Composer uses 2.11.1, and the Playwright image matches the locked test runner at 1.64.1. Container references and CI actions are pinned to immutable digests or commit IDs; update these together with their version labels during maintenance.
 
 Playwright CI uses Ubuntu 24.04 so WebKit's native libraries match its browser build. Browser cache keys include the Ubuntu release and runner architecture to prevent reuse across incompatible runner images. A browser startup check verifies each engine before the application tests run.
 
