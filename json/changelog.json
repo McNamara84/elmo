@@ -15,11 +15,18 @@
                   "value": "Correct the upload of thesaurus keywords into dedidcated vocabularies"
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "pull", "number": 1328 },
-                { "type": "issue", "number": 1324 }
-
+                {
+                  "type": "pull",
+                  "number": 1328
+                },
+                {
+                  "type": "issue",
+                  "number": 1324
+                }
               ]
             },
             {
@@ -29,15 +36,23 @@
                   "value": "Represent the GEMET thesaurus on the page according to ERNIE visibility settings"
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "pull", "number": 1328 },
-                { "type": "issue", "number": 1322 }
-
+                {
+                  "type": "pull",
+                  "number": 1328
+                },
+                {
+                  "type": "issue",
+                  "number": 1322
+                }
               ]
+            }
+          ]
         }
-        ]
-      }
+      ]
     },
     {
       "version": "2.2.1dev",
@@ -53,9 +68,14 @@
                   "value": "Save results remain visible when saving completes while the Save As dialog is closing. Success and error messages no longer disappear during the dialog animation."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "pull", "number": 1318 }
+                {
+                  "type": "pull",
+                  "number": 1318
+                }
               ]
             },
             {
@@ -65,21 +85,31 @@
                   "value": "ERNIE license cache lock files now explain their purpose and cache context instead of remaining empty. Existing empty locks are annotated on their next refresh while preserving concurrent refresh protection."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "pull", "number": 1318 }
+                {
+                  "type": "pull",
+                  "number": 1318
+                }
               ]
             },
-             {
+            {
               "parts": [
                 {
                   "type": "text",
                   "value": "Version fields now show immediate format feedback with examples, consistent Submit validation, and help aligned with DataCite's versioning recommendations."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 873 }
+                {
+                  "type": "issue",
+                  "number": 873
+                }
               ]
             },
             {
@@ -89,9 +119,14 @@
                   "value": "Reusing metadata from a DOI now marks the dataset's contact persons. Email and website remain empty for manual entry, so details from other submissions are not reused. Missing contact emails are highlighted in red on Submit, even without prior field interaction. The public contact lookup endpoint has been removed."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1300 }
+                {
+                  "type": "issue",
+                  "number": 1300
+                }
               ]
             },
             {
@@ -101,10 +136,18 @@
                   "value": "Reusing metadata from a DOI thesaurus keywords end up in correct controlled vocabularies instead of being treated as free keywords or even being lost"
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1322 },
-                { "type": "pull", "number": 1323 }
+                {
+                  "type": "issue",
+                  "number": 1322
+                },
+                {
+                  "type": "pull",
+                  "number": 1323
+                }
               ]
             },
             {
@@ -114,9 +157,14 @@
                   "value": "ORCID, ROR, and DOI logos are displayed again in contextual help."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1306 }
+                {
+                  "type": "issue",
+                  "number": 1306
+                }
               ]
             },
             {
@@ -126,9 +174,14 @@
                   "value": "Made field corners consistent across the form when showing or hiding help."
                 }
               ],
-              "editions": [ "all" ],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1303 }
+                {
+                  "type": "issue",
+                  "number": 1303
+                }
               ]
             },
             {
@@ -138,9 +191,14 @@
                   "value": "Checkboxes are now displayed for top-level ICS Chronostratigraphy keywords without children."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                {"type": "issue", "number": 1302 }
+                {
+                  "type": "issue",
+                  "number": 1302
+                }
               ]
             },
             {
@@ -150,9 +208,14 @@
                   "value": "Added a translated validation message for missing Authors information, visible even when author fields are collapsed."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                {"type": "issue", "number": 1305 }
+                {
+                  "type": "issue",
+                  "number": 1305
+                }
               ]
             },
             {
@@ -166,7 +229,10 @@
                 "all"
               ],
               "references": [
-                {"type": "issue", "number": 1273 }
+                {
+                  "type": "issue",
+                  "number": 1273
+                }
               ]
             },
             {
@@ -180,7 +246,10 @@
                 "all"
               ],
               "references": [
-                {"type": "issue", "number": 1284 }
+                {
+                  "type": "issue",
+                  "number": 1284
+                }
               ]
             }
           ]
@@ -201,10 +270,18 @@
                   "value": "Authors and Contributors share an affiliation editor with automatic ROR suggestions, explicit free-text entry, inline label editing, and reordering. Contributor headers show ORCID and affiliation labels with their ROR IDs. Unfinished inputs require confirmation or discarding before saving, submitting, or collapsing a card and are preserved in autosaved drafts."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1266 },
-                { "type": "issue", "number": 1269 }
+                {
+                  "type": "issue",
+                  "number": 1266
+                },
+                {
+                  "type": "issue",
+                  "number": 1269
+                }
               ]
             },
             {
@@ -633,9 +710,14 @@
                   "value": "ORCID fields in Authors and Contributors show the complete identifier, including its validation icon. Both name fields share the remaining width, and the fields wrap on narrower screens."
                 }
               ],
-              "editions": ["all"],
+              "editions": [
+                "all"
+              ],
               "references": [
-                { "type": "issue", "number": 1283 }
+                {
+                  "type": "issue",
+                  "number": 1283
+                }
               ]
             },
             {
@@ -645,8 +727,15 @@
                   "value": "Translated tooltips no longer cause errors when metadata is imported repeatedly."
                 }
               ],
-              "editions": ["all"],
-              "references": [{"type": "pull", "number": 1297}]
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1297
+                }
+              ]
             },
             {
               "parts": [
@@ -655,8 +744,15 @@
                   "value": "DOI metadata import keeps the source DOI visible and preserves DataCite title types and author affiliations, including affiliations without a ROR ID."
                 }
               ],
-              "editions": ["all"],
-              "references": [{"type": "issue", "number": 1282}]
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1282
+                }
+              ]
             },
             {
               "parts": [
@@ -665,8 +761,15 @@
                   "value": "Help off now hides all contextual help, including section headings, dialogs and dynamically added fields. Help on restores the appropriate help for each entry, while the Guide and form actions remain available. Existing help preferences are preserved."
                 }
               ],
-              "editions": ["all"],
-              "references": [{"type": "issue", "number": 1279}]
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1279
+                }
+              ]
             },
             {
               "parts": [
@@ -692,8 +795,15 @@
                   "value": "Identifier types in Related Work and GEM data sources are detected more reliably. DOI, IGSN and RAiD are distinguished correctly, and ISBN and EAN13 receive additional validity checks. Ambiguous types remain empty for manual selection, and automatic detection preserves manual choices."
                 }
               ],
-              "editions": ["all"],
-              "references": [{"type": "issue", "number": 1267}]
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1267
+                }
+              ]
             },
             {
               "parts": [
@@ -702,8 +812,19 @@
                   "value": "Identifier validation remains reliable after vocabularies reload, required fields are checked, or the form is cleared. Removed identifier types no longer reappear, valid selections are kept, and incomplete validation no longer accepts arbitrary identifiers. DOI links with encoded characters are handled correctly."
                 }
               ],
-              "editions": ["all"],
-              "references": [{"type": "issue", "number": 1267}, {"type": "pull", "number": 1278}]
+              "editions": [
+                "all"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1267
+                },
+                {
+                  "type": "pull",
+                  "number": 1278
+                }
+              ]
             },
             {
               "parts": [
@@ -879,8 +1000,17 @@
                   "value": "Used Instruments search now prioritizes exact names and name prefixes, followed by other name matches and then instrument-type matches. Relevant names remain visible when there are many matches, and suggestions refresh when the instrument catalogue finishes loading."
                 }
               ],
-              "editions": ["elmo", "msl", "igsn"],
-              "references": [{"type": "issue", "number": 1285}]
+              "editions": [
+                "elmo",
+                "msl",
+                "igsn"
+              ],
+              "references": [
+                {
+                  "type": "issue",
+                  "number": 1285
+                }
+              ]
             },
             {
               "parts": [
@@ -966,8 +1096,15 @@
                   "value": "Data source fields remain correctly labelled and editable while entering identifiers, so ELMO-GEM forms can be saved reliably."
                 }
               ],
-              "editions": ["gem"],
-              "references": [{"type": "pull", "number": 1278}]
+              "editions": [
+                "gem"
+              ],
+              "references": [
+                {
+                  "type": "pull",
+                  "number": 1278
+                }
+              ]
             }
           ]
         },
@@ -1225,7 +1362,7 @@
               "parts": [
                 {
                   "type": "text",
-                  "value": "Importing free keywords from CSV files via the “Add CSV” button"
+                  "value": "Importing free keywords from CSV files via the \u201cAdd CSV\u201d button"
                 }
               ]
             }
