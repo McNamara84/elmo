@@ -138,7 +138,7 @@ $(document).ready(function () {
     });
 
     if ($("#group-originatinglaboratory").length) {
-        $.getJSON("/api/v2/vocabs/msl-laboratories", function (originatingLaboratories) {
+        $.getJSON("api/v2/vocabs/msl-laboratories", function (originatingLaboratories) {
             labData = originatingLaboratories.data;
             populateAllLabSelectOptions(labData);
         }).fail(function (jqXHR) {
