@@ -1,9 +1,9 @@
 {
-  "currentVersion": "2.2.2",
+  "currentVersion": "2.2.1",
   "releases": [
     {
       "version": "2.2.2",
-      "date": "2026-11-03",
+      "date": "2026-XX-XX",
       "sections": [
         {
           "title": "Bug fixes:",

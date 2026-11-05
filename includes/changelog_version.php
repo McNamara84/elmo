@@ -19,8 +19,14 @@ function elmoChangelogVersion(string $path): ?string
         return null;
     }
     $version = $data['currentVersion'] ?? null;
-    $latest = $data['releases'][0]['version'] ?? null;
-    if (!is_string($version) || !preg_match('/^\d+\.\d+\.\d+(?:RC\d+|dev)?$/', $version) || $latest !== $version) {
+    $listed = false;
+    foreach ($data['releases'] as $release) {
+        if (is_array($release) && ($release['version'] ?? null) === $version) {
+            $listed = true;
+            break;
+        }
+    }
+    if (!is_string($version) || !preg_match('/^\d+\.\d+\.\d+(?:RC\d+|dev)?$/', $version) || !$listed) {
         return null;
     }
 
