@@ -188,7 +188,7 @@ export async function injectClearFormDependencies(page: Page): Promise<void> {
   await injectModuleFromApp(page, 'js/clearInputFieldsLoader.js');
 }
 
-const APP_MODULE_SCRIPTS = new Set(['js/select.js', 'js/thesauri.js']);
+const APP_MODULE_SCRIPTS = new Set(['js/select.js', 'js/thesauri.js', 'js/mappingXmlToInputFields.js']);
 
 /**
  * Inject a production script the same way footer.html does: modules by URL, classic scripts from app origin.

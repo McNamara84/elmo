@@ -161,7 +161,7 @@ class ErnieService
         ],
         'thesauriAvailability' => [
             'cacheFile' => __DIR__ . '/../../../storage/cache/ernie_thesauri_availability.json',
-            'ernieEndpoint' => '/api/v1/elmo/vocabularies/thesauri-availability',
+            'ernieEndpoint' => '/api/v1/vocabularies/thesauri-availability',
         ],
     ];
     }
@@ -1079,35 +1079,27 @@ class ErnieService
     // ──────────────────────────────────────────────────────────────
 
     /**
-     * Fetches thesauri availability from ERNIE API
-     * 
-     * Tries the ELMO-specific endpoint first (requires API key),
-     * falls back to the public endpoint if the ELMO-specific one fails.
-     * 
+     * Fetches thesauri availability from the public ERNIE vocabulary endpoint.
+     *
      * @return array<string, array{available: bool, displayName: string}>|null Availability data or null on failure
      */
     private function fetchThesauriAvailability(): ?array
     {
-        // Try ELMO-specific endpoint first (requires API key)
-        $data = $this->fetchFromErnie('/api/v1/elmo/vocabularies/thesauri-availability', 'thesauri availability (ELMO)');
-        if ($data !== null) {
-            return $data;
-        }
-
-        // Fall back to public endpoint (no API key needed, but fetchFromErnie sends it anyway — harmless)
-        return $this->fetchFromErnie('/api/v1/vocabularies/thesauri-availability', 'thesauri availability (public)');
+        return $this->fetchFromErnie(
+            $this->memory['thesauriAvailability']['ernieEndpoint'],
+            'thesauri availability'
+        );
     }
 
     /**
      * Gets thesauri availability with caching logic
      *
      * File cache only — availability is not persisted to MariaDB, so this
-     * getter does not accept onFreshData. Cannot use generic getDataWithCache()
-     * because fetchThesauriAvailability() has custom dual-endpoint logic.
+     * getter does not accept onFreshData.
      *
      * Priority:
      * 1. Valid cache (not expired)
-     * 2. Fresh data from ERNIE (ELMO-specific, then public fallback)
+     * 2. Fresh data from the public ERNIE availability endpoint
      * 3. Stale cache (if ERNIE unavailable)
      * 4. Hardcoded fallback (only 3 GCMD thesauri) as last resort
      *
@@ -1115,7 +1107,6 @@ class ErnieService
      */
     public function getThesauriAvailabilityWithCache(): array
     {
-        // Cannot use generic getDataWithCache() because fetchThesauriAvailability() has custom dual-endpoint logic
         $cacheFile = $this->memory['thesauriAvailability']['cacheFile'];
 
         $fileStatus = $this->getCacheFileStatus($this->memory['thesauriAvailability']['cacheFile']);

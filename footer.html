@@ -173,7 +173,7 @@ window.ELMO_FEATURES = {
 <!-- Shared DataCite/ERNIE resource type matching -->
 <script src="js/resourceTypeUtils.js"></script>
 <!-- Mapping from XML file to input fields -->
-<script src="js/mappingXmlToInputFields.js"></script>
+<script type="module" src="js/mappingXmlToInputFields.js?v=<?php echo substr(hash_file('sha256', __DIR__ . '/js/mappingXmlToInputFields.js'), 0, 12); ?>"></script>
 <!-- DOI Lookup Service -->
 <script src="js/services/doiLookupService.js"></script>
 <!-- DOI Prefill: JSON → form mapping -->

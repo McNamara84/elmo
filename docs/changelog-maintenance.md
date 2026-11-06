@@ -1,8 +1,8 @@
 # Maintaining the ELMO changelog
 
-`json/changelog.json` is the single source for the changelog dialog and the version shown in the footer. Keep `currentVersion` equal to the first release's `version`. The footer displays this value immediately, independently of Git release tags.
+`json/changelog.json` is the single source for the changelog dialog and the version shown in the footer. `currentVersion` is that footer version and must match one release. A newer release may be listed above it while it is still being written; use `YYYY-XX-XX` for its date until the release date is known. The footer displays `currentVersion` immediately, independently of Git release tags.
 
-Add releases in descending order. Dates use `YYYY-MM-DD`; the dialog displays `YYYY/MM/DD`. Keep entries under their section heading. Use `parts` with `type: "text"` for prose and `type: "code"` for inline code. Do not put HTML in `parts`: the browser displays these values as text.
+Add releases in descending order. Released dates use `YYYY-MM-DD`; the dialog displays `YYYY/MM/DD`. Keep entries under their section heading. Use `parts` with `type: "text"` for prose and `type: "code"` for inline code. Do not put HTML in `parts`: the browser displays these values as text.
 
 For entries from version 2.2.0 onward, set `editions` to one or more of `elmo`, `msl`, `gem`, and `igsn`. Use `all` alone when a change applies to every edition. The dialog displays the badges **ELMO**, **ELMO-MSL**, **ELMO-GEM**, **ELMO-IGSN**, and **All ELMOs**. Historical entries before 2.2.0 have no badges.
 

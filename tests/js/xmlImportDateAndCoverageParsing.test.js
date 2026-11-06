@@ -1,6 +1,4 @@
-const fs = require('fs');
-const path = require('path');
-const vm = require('vm');
+const { requireFresh } = require('./utils');
 
 function createJQuery() {
   const $ = (selector) => {
@@ -23,29 +21,13 @@ function createJQuery() {
 }
 
 function loadMappingModule(contextOverrides = {}) {
-  const code = fs.readFileSync(
-    path.resolve(__dirname, '../../js/mappingXmlToInputFields.js'),
-    'utf8'
-  );
-  const context = {
-    console,
-    document: global.document,
-    window: global.window,
-    XPathResult: global.XPathResult,
-    ELMO_FEATURES: {},
-    Tagify: jest.fn().mockImplementation(() => ({
-      addTags: jest.fn(),
-      removeAllTags: jest.fn(),
-      settings: { whitelist: [] }
-    })),
-    translations: {},
-    ...contextOverrides
-  };
-  vm.createContext(context);
-  context.window.loadClearInputFields = context.window.loadClearInputFields
+  window.loadClearInputFields = window.loadClearInputFields
     || (() => Promise.resolve(() => {}));
-  vm.runInContext(code, context);
-  return context;
+  if (contextOverrides.$) {
+    global.$ = contextOverrides.$;
+    window.$ = contextOverrides.$;
+  }
+  return requireFresh('../../js/mappingXmlToInputFields.js');
 }
 
 const dataciteResolver = (prefix) =>
