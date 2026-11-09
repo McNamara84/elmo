@@ -1,27 +1,13 @@
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
+const { requireFresh } = require("./utils");
 
 function loadMappingModule(contextOverrides = {}) {
-  const resourceTypeUtilsCode = fs.readFileSync(
-    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
-    "utf8"
-  );
-  const code = fs.readFileSync(path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"), "utf8");
-  const context = {
-    console,
-    document: global.document,
-    window: global.window,
-    XPathResult: global.XPathResult,
-    ...contextOverrides,
-  };
-  context.window.loadClearInputFields = context.window.loadClearInputFields
+  window.loadClearInputFields = window.loadClearInputFields
     || (() => Promise.resolve(() => {}));
-  vm.createContext(context);
-  vm.runInContext(resourceTypeUtilsCode, context);
-  context.window.resourceTypeUtils = context.resourceTypeUtils;
-  vm.runInContext(code, context);
-  return context;
+  if (contextOverrides.$) {
+    global.$ = contextOverrides.$;
+    window.$ = contextOverrides.$;
+  }
+  return requireFresh("../../js/mappingXmlToInputFields.js");
 }
 
 function createJQuery() {
@@ -138,10 +124,7 @@ describe("mappingXmlToInputFields helpers", () => {
 
   test("findLabNameById returns lab info from labData", () => {
     const ctx = loadMappingModule();
-    vm.runInContext(
-      `labData = [{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation_name: 'Max Planck Society', affiliation_ror: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}];`,
-      ctx
-    );
+    ctx.setLabData([{identifier: 'MSL-001', name: 'Max Planck Institute for Astronomy', display_name: 'Max Planck Institute for Astronomy - Max Planck Society', affiliation_name: 'Max Planck Society', affiliation_ror: 'https://ror.org/05y42nb95', scientific_domain: 'Astronomy', country: 'Germany'}]);
     const lab = ctx.findLabNameById("MSL-001");
 
     expect(lab).toEqual({ identifier: "MSL-001", name: "Max Planck Institute for Astronomy",
@@ -354,8 +337,8 @@ describe("mappingXmlToInputFields helpers", () => {
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
 
-    vm.runInContext(`labData = [{
-      identifier: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation_name: 'Aff1', affiliation_ror: 'R1', scientific_domain: 'Test domain', country: 'Test country' }];`, ctx);
+    ctx.setLabData([{
+      identifier: 'LAB1', name: 'Lab1', display_name: 'Lab1 - Aff1', affiliation_name: 'Aff1', affiliation_ror: 'R1', scientific_domain: 'Test domain', country: 'Test country' }]);
 
     const row = $(document.getElementById("row"));
     ctx.setLabDataInRow(row, "LAB1");

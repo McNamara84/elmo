@@ -274,9 +274,18 @@ test.describe('Clear form confirmation dialog', () => {
     // Fill form data
     await page.fill('#input-resourceinformation-publicationyear', testYear);
     
-    // Click clear button - modal opens
+    // Click clear button - modal opens. Cancel is ignored while Bootstrap is still
+    // fading the dialog in, so wait until the show transition has finished.
     await page.click('#button-form-reset');
     await expect(page.locator('#modal-confirm')).toBeVisible();
+    await page.locator('#modal-confirm').evaluate(element => new Promise<void>((resolve) => {
+      const modal = (window as any).bootstrap?.Modal?.getInstance(element);
+      if (modal && modal._isTransitioning === false && element.classList.contains('show')) {
+        resolve();
+        return;
+      }
+      element.addEventListener('shown.bs.modal', () => resolve(), { once: true });
+    }));
     
     // Cancel modal
     await page.click('#button-confirm-cancel');
@@ -285,6 +294,14 @@ test.describe('Clear form confirmation dialog', () => {
     // Click again - modal should open again
     await page.click('#button-form-reset');
     await expect(page.locator('#modal-confirm')).toBeVisible();
+    await page.locator('#modal-confirm').evaluate(element => new Promise<void>((resolve) => {
+      const modal = (window as any).bootstrap?.Modal?.getInstance(element);
+      if (modal && modal._isTransitioning === false && element.classList.contains('show')) {
+        resolve();
+        return;
+      }
+      element.addEventListener('shown.bs.modal', () => resolve(), { once: true });
+    }));
     
     // Cancel and verify data is still there
     await page.click('#button-confirm-cancel');

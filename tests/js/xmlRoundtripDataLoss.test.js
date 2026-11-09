@@ -14,40 +14,16 @@ const { mountAuthorStack } = require('./utils/peopleStacks');
  * tested here; those are covered by Playwright E2E tests.
  */
 
-const fs = require("fs");
-const path = require("path");
-const vm = require("vm");
+const { requireFresh } = require("./utils");
 
 function loadMappingModule(contextOverrides = {}) {
-  const resourceTypeUtilsCode = fs.readFileSync(
-    path.resolve(__dirname, "../../js/resourceTypeUtils.js"),
-    "utf8"
-  );
-  const code = fs.readFileSync(
-    path.resolve(__dirname, "../../js/mappingXmlToInputFields.js"),
-    "utf8"
-  );
-  const context = {
-    console,
-    document: global.document,
-    window: global.window,
-    XPathResult: global.XPathResult,
-    ELMO_FEATURES: {},
-    Tagify: jest.fn().mockImplementation(() => ({
-      addTags: jest.fn(),
-      removeAllTags: jest.fn(),
-      settings: { whitelist: [] },
-    })),
-    translations: {},
-    ...contextOverrides,
-  };
-  vm.createContext(context);
-  vm.runInContext(resourceTypeUtilsCode, context);
-  context.window.resourceTypeUtils = context.resourceTypeUtils;
-  context.window.loadClearInputFields = context.window.loadClearInputFields
+  window.loadClearInputFields = window.loadClearInputFields
     || (() => Promise.resolve(() => {}));
-  vm.runInContext(code, context);
-  return context;
+  if (contextOverrides.$) {
+    global.$ = contextOverrides.$;
+    window.$ = contextOverrides.$;
+  }
+  return requireFresh("../../js/mappingXmlToInputFields.js");
 }
 
 /**
@@ -827,14 +803,22 @@ describe("Title xml:lang attribute limitation", () => {
 // ─── BUG 10: Thesaurus keyword metadata round-trip ──────────────────────────
 
 describe("Keyword metadata round-trip via Tagify tags", () => {
-  test("thesaurus keyword schemeURI and valueURI are preserved in Tagify tag data", () => {
+  test("thesaurus keyword schemeURI and valueURI are preserved in Tagify tag data", async () => {
     document.body.innerHTML = `
       <input id="input-freekeyword" />
       <input id="input-sciencekeyword" />`;
 
+    const canonical = {
+      value: "Science Keywords > EARTH SCIENCE > SOLID EARTH",
+      id: "https://gcmd.earthdata.nasa.gov/kms/concept/123",
+      scheme: "NASA/GCMD Earth Science Keywords",
+      schemeURI: "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords",
+      language: "en",
+    };
     const mockScienceTagify = {
       addTags: jest.fn(),
       removeAllTags: jest.fn(),
+      settings: { whitelist: [canonical], enforceWhitelist: true },
     };
     const mockFreeTagify = {
       addTags: jest.fn(),
@@ -845,6 +829,7 @@ describe("Keyword metadata round-trip via Tagify tags", () => {
 
     const $ = createJQuery();
     const ctx = loadMappingModule({ $ });
+    window.waitForThesaurusVocabulary = jest.fn(() => Promise.resolve("loaded"));
 
     const xml = buildNsPrefixXml(`
       <ns:subjects>
@@ -855,16 +840,14 @@ describe("Keyword metadata round-trip via Tagify tags", () => {
       </ns:subjects>`);
 
     const xmlDoc = new DOMParser().parseFromString(xml, "application/xml");
-    ctx.processKeywords(xmlDoc, NS_RESOLVER);
+    await ctx.processKeywords(xmlDoc, NS_RESOLVER);
 
     expect(mockScienceTagify.addTags).toHaveBeenCalled();
 
     const addedTag = mockScienceTagify.addTags.mock.calls[0][0][0];
-    expect(addedTag.value).toBe("EARTH SCIENCE > SOLID EARTH");
-    expect(addedTag.schemeURI).toBe(
-      "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords"
-    );
-    expect(addedTag.id).toBe("https://gcmd.earthdata.nasa.gov/kms/concept/123");
+    expect(addedTag.value).toBe(canonical.value);
+    expect(addedTag.schemeURI).toBe(canonical.schemeURI);
+    expect(addedTag.id).toBe(canonical.id);
     expect(addedTag.scheme).toBe("NASA/GCMD Earth Science Keywords");
     expect(addedTag.language).toBe("en");
   });

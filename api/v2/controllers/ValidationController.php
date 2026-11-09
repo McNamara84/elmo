@@ -132,6 +132,9 @@ class ValidationController
      */
     public function getActiveIdentifierTypes(): void
     {
+        // A past Expires keeps mod_expires from appending max-age=86400.
+        header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+        header('Cache-Control: no-store');
         try {
             require_once __DIR__ . '/../services/ErnieService.php';
             $ernieService = new \ErnieService();

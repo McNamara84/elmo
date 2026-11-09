@@ -51,6 +51,17 @@ class VocabController
     }
 
     /**
+     * Stops the browser, and Apache mod_expires, from keeping this response.
+     * An Expires value must already be present: otherwise mod_expires appends
+     * Cache-Control: max-age=86400 to every application/json response.
+     */
+    private function doNotStoreResponse(): void
+    {
+        header('Expires: Thu, 01 Jan 1970 00:00:00 GMT');
+        header('Cache-Control: no-store');
+    }
+
+    /**
      * Adds a timestamp to the provided data structure
      * 
      * Creates a wrapper object that includes both the original data
@@ -198,6 +209,7 @@ class VocabController
      */
     public function getRelations(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 
@@ -528,6 +540,7 @@ class VocabController
      */
     public function getRoles(array $vars)
     {
+        $this->doNotStoreResponse();
         $type = $vars['type'] ?? $_GET['type'] ?? 'all';
 
         if (!in_array($type, ['all', 'person', 'institution', 'both'], true)) {
@@ -1383,6 +1396,7 @@ class VocabController
      */
     public function getResourceTypes(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 
@@ -1684,6 +1698,7 @@ class VocabController
      */
     public function getLanguages(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 
@@ -1831,6 +1846,7 @@ class VocabController
      */
     public function getDescriptionTypes(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 
@@ -1882,6 +1898,7 @@ class VocabController
      */
     public function getTitleTypes(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 
@@ -2009,6 +2026,7 @@ class VocabController
      */
     public function getThesauriAvailability(): void
     {
+        $this->doNotStoreResponse();
         try {
             $ernieService = $this->getErnieService();
 

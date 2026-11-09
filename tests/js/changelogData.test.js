@@ -14,19 +14,43 @@ function isEditionScopedRelease(version) {
   return major > 2 || (major === 2 && minor >= 2);
 }
 
+function versionRank(version) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:RC(\d+)|dev)?$/.exec(version);
+  if (!match) return null;
+  const prerelease = version.endsWith('dev') ? 0 : match[4] !== undefined ? 1 : 2;
+  return [Number(match[1]), Number(match[2]), Number(match[3]), prerelease, Number(match[4] ?? 0)];
+}
+
+function compareVersions(left, right) {
+  const leftRank = versionRank(left);
+  const rightRank = versionRank(right);
+  for (let index = 0; index < leftRank.length; index++) {
+    if (leftRank[index] !== rightRank[index]) return leftRank[index] - rightRank[index];
+  }
+  return 0;
+}
+
 describe('changelog migration', () => {
   test('contains every existing release and preserves their order', () => {
     expect(changelog.releases.length).toBeGreaterThan(0);
-    expect(changelog.releases[0].version).toBe(changelog.currentVersion);
+    const currentIndex = changelog.releases.findIndex(release => release.version === changelog.currentVersion);
+    expect(currentIndex).toBeGreaterThanOrEqual(0);
     expect(new Set(changelog.releases.map(release => release.version)).size)
       .toBe(changelog.releases.length);
 
-    const dates = changelog.releases.map(release => {
+    const dates = [];
+    changelog.releases.forEach((release, index) => {
+      const unreleased = index < currentIndex;
+      if (unreleased) expect(compareVersions(release.version, changelog.currentVersion)).toBeGreaterThan(0);
+      if (/^\d{4}-XX-XX$/.test(release.date)) {
+        expect(unreleased).toBe(true);
+        return;
+      }
       expect(release.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       const date = new Date(`${release.date}T00:00:00Z`);
       expect(Number.isNaN(date.getTime())).toBe(false);
       expect(date.toISOString().slice(0, 10)).toBe(release.date);
-      return date.getTime();
+      dates.push(date.getTime());
     });
     expect(dates).toEqual([...dates].sort((a, b) => b - a));
   });
