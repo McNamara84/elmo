@@ -1,13 +1,24 @@
 /**
- * Static thesaurus definitions shared by thesauri.js and doiPrefill.js.
- * Kept separate so DOI import can read the selectors without running
- * thesauri.js document.ready side effects.
+ * Canonical registry for every ERNIE-backed thesaurus consumer.
+ *
+ * Keep routing and DOM metadata here so XML upload, DOI prefill, Tagify and
+ * jsTree do not maintain parallel maps:
+ * - inputId identifies the Tagify source input (stored without "#").
+ * - inputName is the submitted form field name and a DOM lookup fallback.
+ * - searchInputId identifies the modal's text-search input, not a Tagify input.
+ * - schemeURIs / subjectSchemes classify imported DataCite subjects.
+ *
+ * `satellitePlatforms` is dynamicOnly because datasource rows own their Tagify
+ * inputs. MSL remains outside this registry because initMslKeywords has its own
+ * non-ERNIE lifecycle.
  */
 export const THESAURUS_CONFIG = {
     science_keywords: {
         apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-science-keywords',
         inputName: 'gcmdScienceKeywords',
         inputId: 'input-sciencekeyword',
+        schemeURIs: ['https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords'],
+        subjectSchemes: ['NASA/GCMD Earth Science Keywords'],
         modalId: 'modal-sciencekeyword',
         jsTreeId: 'jstree-sciencekeyword',
         searchInputId: 'input-sciencekeyword-thesaurussearch',
@@ -19,6 +30,8 @@ export const THESAURUS_CONFIG = {
         apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-platforms',
         inputName: 'platforms',
         inputId: 'input-platforms',
+        schemeURIs: ['https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms'],
+        subjectSchemes: ['NASA/GCMD Platforms', 'GCMD Platforms'],
         modalId: 'modal-platforms',
         jsTreeId: 'jstree-platforms',
         searchInputId: 'input-platforms-thesaurussearch',
@@ -30,6 +43,8 @@ export const THESAURUS_CONFIG = {
         apiEndpoint: 'api/v2/vocabs/thesauri/gcmd-instruments',
         inputName: 'instruments',
         inputId: 'input-instruments',
+        schemeURIs: ['https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments'],
+        subjectSchemes: ['NASA/GCMD Instruments', 'GCMD Instruments'],
         modalId: 'modal-instruments',
         jsTreeId: 'jstree-instruments',
         searchInputId: 'input-instruments-thesaurussearch',
@@ -41,6 +56,8 @@ export const THESAURUS_CONFIG = {
         apiEndpoint: 'api/v2/vocabs/thesauri/chronostrat-timescale',
         inputName: 'chronostratKeywords',
         inputId: 'input-chronostratigraphy',
+        schemeURIs: ['http://resource.geosciml.org/vocabulary/timescale/gts2020'],
+        subjectSchemes: ['International Chronostratigraphic Chart', 'Chronostratigraphic Chart'],
         modalId: 'modal-chronostratigraphy',
         jsTreeId: 'jstree-chronostratigraphy',
         searchInputId: 'input-chronostratigraphy-thesaurussearch',
@@ -52,6 +69,12 @@ export const THESAURUS_CONFIG = {
         apiEndpoint: 'api/v2/vocabs/thesauri/gemet',
         inputName: 'gemetKeywords',
         inputId: 'input-gemet',
+        schemeURIs: [
+            'http://www.eionet.europa.eu/gemet/gemetThesaurus',
+            'http://www.eionet.europa.eu/gemet/concept/'
+        ],
+        subjectSchemes: ['GEMET - Concepts'],
+        subjectSchemePrefixes: ['GEMET'],
         modalId: 'modal-gemet',
         jsTreeId: 'jstree-gemet',
         searchInputId: 'input-gemet-thesaurussearch',

@@ -347,9 +347,6 @@ export function waitForThesaurusVocabulary(configKeyOrConfig, timeoutMs) {
     });
 }
 
-if (typeof window !== 'undefined') {
-    window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
-}
 
 /**
  * Loads and processes keyword data, initializing jsTree.
@@ -1518,3 +1515,8 @@ $(document).ready(function () {
 
     document.addEventListener('translationsLoaded', refreshThesaurusTagifyInstances);
 });
+
+// EXPORT for testing
+if (typeof window !== 'undefined') {
+    window.waitForThesaurusVocabulary = waitForThesaurusVocabulary;
+}

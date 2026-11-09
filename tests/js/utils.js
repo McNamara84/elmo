@@ -34,6 +34,7 @@ const THESAURUS_CONFIG_REEXPORT = /export\s*\{\s*THESAURUS_CONFIG\s*\}\s*;?\s*/;
 function transformThesauriScript(source, extraExportEntries = '') {
   const helpersPath = path.resolve(__dirname, '../../js/thesauriHelpers.js');
   const helpers = fs.readFileSync(helpersPath, 'utf8')
+    .replace(/\bexport async function /g, 'async function ')
     .replace(/\bexport function /g, 'function ')
     .replace(/\bexport const /g, 'const ')
     .replace(/\bexport let /g, 'let ')
@@ -48,6 +49,7 @@ function transformThesauriScript(source, extraExportEntries = '') {
     .replace(FULL_KEYWORDS_IMPORT, '')
     .replace(THESAURUS_CONFIG_IMPORT, '')
     .replace(THESAURUS_CONFIG_REEXPORT, '')
+    .replace(/\bexport async function /g, 'async function ')
     .replace(/\bexport function /g, 'function ')
     .replace(/\bexport const /g, 'const ')
     .replace(/\bexport let /g, 'let ')

@@ -1,6 +1,18 @@
 ﻿/**
- * Shared resource-type helpers for XML upload and DOI prefill.
+ * Map DataCite XML to ELMO form fields.
+ *
+ * Loaded as an ES module so it can import thesauriHelpers.js the same way
+ * doiPrefill.js does. upload.js is classic
+ * and reads window.loadXmlToForm.
  */
+import { THESAURUS_CONFIG } from './thesaurusConfig.js';
+import {
+  classifyDoiSubject,
+  importThesaurusKeyword,
+  prepareThesauriForKeywords,
+  thesaurusTargets,
+} from './thesauriHelpers.js';
+
 var resourceTypeUtils = typeof module !== 'undefined' && module.exports
   ? require('./resourceTypeUtils')
   : window.resourceTypeUtils;
@@ -689,6 +701,10 @@ function processContactPersonsFromDataCite(xmlDoc) {
 // Global variable to store labs data
 let labData = [];
 
+function setLabData(data) {
+  labData = data;
+}
+
 /**
  * Helper function to find lab name by ID
  * @param {string} labId - The laboratory ID
@@ -1165,144 +1181,96 @@ function processDates(xmlDoc, resolver) {
 
 /**
  * Populate keyword Tagify fields from XML subjects.
- * processKeywords collects thesaurus keys referenced in the XML,
- * waits for each via waitForThesaurusVocabulary (whitelist applied, jsTree ready), then imports. On timeout/error, import is aborted so Tagify does not silently drop tags.
+ * Cook thesaurus form groups first (thesauriReady, then waitForThesaurusVocabulary
+ * until whitelist + jsTree are ready), then addTags. Free keywords may appear
+ * before thesaurus subjects in the XML; they are still imported after the wait.
+ * On timeout/error, import is aborted so Tagify does not silently drop tags.
  * @param {Document} xmlDoc - The parsed XML document
  * @param {Function} resolver - The namespace resolver function
  */
 async function processKeywords(xmlDoc, resolver) {
-  // Collect all subject nodes from the XML
-  const subjectNodes = xmlDoc.evaluate(".//ns:subjects/ns:subject", xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null );
+  const subjectNodes = xmlDoc.evaluate('.//ns:subjects/ns:subject', xmlDoc, resolver, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 
-  // Keys for GCMD / GEMET / chronostrat match THESAURUS_CONFIG in thesauri.js.
-  // This file is a classic script, so it cannot import that object; the input
-  // ids below are the same values as THESAURUS_CONFIG[key].inputId.
-  function getTagifyMap() {
-    return {
-      free: document.querySelector("#input-freekeyword")?._tagify || null,
-      msl: document.querySelector("#input-mslkeyword")?._tagify || null,
-      science_keywords: document.querySelector("#input-sciencekeyword")?._tagify || null,
-      platforms: document.querySelector("#input-platforms")?._tagify || null,
-      instruments: document.querySelector("#input-instruments")?._tagify || null,
-      chronostratigraphy: document.querySelector("#input-chronostratigraphy")?._tagify || null,
-      gemet: document.querySelector("#input-gemet")?._tagify || null,
-    };
+  if (window.thesauriReady && typeof window.thesauriReady.then === 'function') {
+    await window.thesauriReady;
   }
 
-  let tagifyMap = getTagifyMap();
-
-  // Keep only initialized Tagify fields
-  let allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
+  const tagifyFree = document.getElementById('input-freekeyword')?._tagify ?? null;
+  // get the list of tagify instances for keyword addition
+  let targets = thesaurusTargets(THESAURUS_CONFIG);
+  const allTagifyInstances = Object.values(targets).concat(tagifyFree).filter(Boolean);
 
   if (allTagifyInstances.length === 0) {
-    console.error("No keyword Tagify instances are initialized, upload cannot import subjects.");
+    console.error('No keyword Tagify instances are initialized, upload cannot import subjects.');
     return;
   }
 
-  function buildTagData(subjectNode) {
-    const subjectScheme = subjectNode.getAttribute("subjectScheme") || "";
-    const schemeURI = subjectNode.getAttribute("schemeURI") || "";
-    const valueURI = subjectNode.getAttribute("valueURI") || "";
-    const language = subjectNode.getAttribute("xml:lang") || "";
+  const prepared = [];
+  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
+    const subjectNode = subjectNodes.snapshotItem(i);
     const keyword = subjectNode.textContent.trim();
-
-    const tagData = {
-      value: keyword,
-      scheme: subjectScheme,
-      schemeURI: schemeURI,
-      id: valueURI,
+    if (!keyword) continue;
+    // construct the subject as a JS named array (object) before adding it to tagify
+    const language = subjectNode.getAttribute('xml:lang') || '';
+    const subject = {
+      subject: keyword,
+      subjectScheme: subjectNode.getAttribute('subjectScheme') || '',
+      schemeURI: subjectNode.getAttribute('schemeURI') || '',
+      valueURI: subjectNode.getAttribute('valueURI') || '',
     };
-
-    if (language) {
-      tagData.language = language;
-    }
-
-    return {
-      subjectScheme,
-      schemeURI,
-      valueURI,
+    prepared.push({
+      group: classifyDoiSubject(subject, THESAURUS_CONFIG),
       keyword,
-      tagData,
-    };
+      schemeURI: subject.schemeURI,
+      valueURI: subject.valueURI,
+      language,
+      subjectScheme: subject.subjectScheme,
+    });
   }
 
-  // Resolve which form group a subject belongs to
-  function resolveTargetGroup(subjectScheme, schemeURI) {
-    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords") {
-      return "science_keywords";
-    }
-
-    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms") {
-      return "platforms";
-    }
-
-    if (schemeURI === "https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments") {
-      return "instruments";
-    }
-
-    if (schemeURI === "http://resource.geosciml.org/vocabulary/timescale/gts2020") {
-      return "chronostratigraphy";
-    }
-
-    if (
-      schemeURI === "http://www.eionet.europa.eu/gemet/gemetThesaurus" ||
-      schemeURI === "http://www.eionet.europa.eu/gemet/concept/"
-    ) {
-      return "gemet";
-    }
-
-    if (schemeURI.startsWith("https://epos-msl.uu.nl/voc/")) {
-      return "msl";
-    }
-
-    return "free";
+  const notReady = await prepareThesauriForKeywords(prepared, THESAURUS_CONFIG, { source: 'xml' });
+  if (notReady.size > 0) {
+    throw new Error('Thesaurus vocabularies not ready for import: ' + [...notReady].join(', '));
   }
 
-  const thesaurusKeys = new Set();
-  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-    const subjectNode = subjectNodes.snapshotItem(i);
-    const { subjectScheme, schemeURI } = buildTagData(subjectNode);
-    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
-    if (targetGroup !== "free" && targetGroup !== "msl") {
-      thesaurusKeys.add(targetGroup);
+  targets = thesaurusTargets(THESAURUS_CONFIG);
+// enter the tags into the appropriate Tagify instances based on their group
+  prepared.forEach(entry => {
+    if (entry.group === 'free') {
+      if (!tagifyFree || tagifyFree.value?.some(tag => tag.value === entry.keyword)) return;
+      tagifyFree.addTags([{
+        value: entry.keyword,
+        ...(entry.language ? { language: entry.language } : {}),
+      }]);
+      return;
     }
-  }
-  if (thesaurusKeys.size > 0 && typeof window.waitForThesaurusVocabulary === "function") {
-    const keys = [...thesaurusKeys];
-    // all existing thesauri inputs will wait for the corresponding fields to be ready
-    const results = await Promise.all(keys.map((key) => window.waitForThesaurusVocabulary(key)));
-    const notReady = keys.filter((key, index) => results[index] !== 'loaded');
-    if (notReady.length > 0) {
-      throw new Error('Thesaurus vocabularies not ready for import: ' + notReady.join(', '));
+    const target = targets[entry.group];
+    if (!target) return;
+    if (entry.group === 'msl') {
+      target.addTags([{
+        value: entry.keyword,
+        scheme: entry.subjectScheme,
+        schemeURI: entry.schemeURI,
+        id: entry.valueURI,
+        ...(entry.language ? { language: entry.language } : {}),
+      }]);
+      return;
     }
+    importThesaurusKeyword(entry.group, target, {
+      value: entry.keyword,
+      id: entry.valueURI,
+      schemeURI: entry.schemeURI,
+      ...(entry.language ? { language: entry.language } : {}),
+    }, { source: 'xml' });
+  });
 
-    tagifyMap = getTagifyMap();
-    allTagifyInstances = Object.values(tagifyMap).filter(Boolean);
-  }
-
-  // We don't clear existing tags before importing new ones
-
-
-  for (let i = 0; i < subjectNodes.snapshotLength; i++) {
-    const subjectNode = subjectNodes.snapshotItem(i);
-    const { subjectScheme, schemeURI, tagData } = buildTagData(subjectNode);
-
-    const targetGroup = resolveTargetGroup(subjectScheme, schemeURI);
-    const targetTagify = tagifyMap[targetGroup];
-
-    // Ignore keywords if the target field is not initialized
-    // Different versions may have different thesaurus selections
-    if (!targetTagify) {
-      continue;
-    }
-
-    targetTagify.addTags([tagData]);
-  }
-
-  allTagifyInstances.forEach((tagify) => {
-    if (typeof tagify.update === "function") {
+  // After importing tags from XML, refresh every Tagify field.
+  // This makes each input save its current values back into the hidden form field
+  // so the page and the backend both see the imported data.
+  Object.values(targets).concat(tagifyFree).filter(Boolean).forEach(tagify => {
+    if (typeof tagify.update === 'function') {
       tagify.update();
-    } else if (typeof tagify._updateHiddenField === "function") {
+    } else if (typeof tagify._updateHiddenField === 'function') {
       tagify._updateHiddenField();
     }
   });
@@ -1571,6 +1539,8 @@ async function loadXmlToForm(xmlDoc, options = {}) {
 
 if (typeof window !== 'undefined') {
   window.loadXmlToForm = loadXmlToForm;
+  window.processKeywords = processKeywords;
+  window.processRelatedWorks = processRelatedWorks;
 }
 
 // Export for testing (CommonJS)
@@ -1583,6 +1553,8 @@ if (typeof module !== 'undefined' && module.exports) {
         parseResourceInformationMap,
         extractLicenseIdentifier,
         extractLicenseMetadata,
+        createLanguageMapping,
+        createTitleTypeMapping,
         mapTitleType,
         processTitles,
         getNodeText,
@@ -1591,6 +1563,7 @@ if (typeof module !== 'undefined' && module.exports) {
         processContactPersons,
         processContactPersonsFromDataCite,
         findLabNameById,
+        setLabData,
         setLabDataInRow,
         processOriginatingLaboratories,
         normalizeRole,

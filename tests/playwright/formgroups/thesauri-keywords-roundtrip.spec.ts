@@ -171,8 +171,10 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
   });
 
   test('processKeywords loads tags with all metadata fields including language', async ({ page }) => {
-    // Inject the production mapping module so processKeywords is available globally
-    await injectScript(page, 'js/mappingXmlToInputFields.js');
+    // Stay on this page's origin. injectModuleFromApp uses APP_BASE_URL, which is
+    // http://localhost/elmo/ in CI while the harness is served from the Playwright base URL.
+    await page.addScriptTag({ url: 'js/mappingXmlToInputFields.js', type: 'module' });
+    await page.waitForFunction(() => typeof (window as any).processKeywords === 'function');
 
     const tagData = await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();
@@ -221,8 +223,8 @@ test.describe('Thesaurus Keywords Roundtrip (Issue #1043)', () => {
   });
 
   test('Tagify hidden input contains valid JSON for backend after loading XML keywords', async ({ page }) => {
-    // Inject the production mapping module so processKeywords is available globally
-    await injectScript(page, 'js/mappingXmlToInputFields.js');
+    await page.addScriptTag({ url: 'js/mappingXmlToInputFields.js', type: 'module' });
+    await page.waitForFunction(() => typeof (window as any).processKeywords === 'function');
 
     await page.evaluate(async (xmlString) => {
       const parser = new DOMParser();

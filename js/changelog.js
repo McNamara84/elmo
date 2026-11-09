@@ -15,6 +15,7 @@ export const EDITION_BADGES = Object.freeze({
 
 const VERSION_PATTERN = /^\d+\.\d+\.\d+(?:RC\d+|dev)?$/;
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const UNRELEASED_DATE_PATTERN = /^\d{4}-XX-XX$/;
 const REPOSITORY_URL = 'https://github.com/McNamara84/elmo';
 
 function isNonEmptyString(value) {
@@ -54,21 +55,47 @@ function validateEntry(entry) {
   }
 }
 
+function versionRank(version) {
+  const match = /^(\d+)\.(\d+)\.(\d+)(?:RC(\d+)|dev)?$/.exec(version);
+  if (!match) return null;
+  const prerelease = version.endsWith('dev') ? 0 : match[4] !== undefined ? 1 : 2;
+  return [Number(match[1]), Number(match[2]), Number(match[3]), prerelease, Number(match[4] ?? 0)];
+}
+
+function compareVersions(left, right) {
+  const leftRank = versionRank(left);
+  const rightRank = versionRank(right);
+  if (!leftRank || !rightRank) return 0;
+  for (let index = 0; index < leftRank.length; index++) {
+    if (leftRank[index] !== rightRank[index]) return leftRank[index] - rightRank[index];
+  }
+  return 0;
+}
+
 /**
  * Check data before creating any links or changing the displayed content.
+ * currentVersion is the released version shown in the footer. Newer releases
+ * may be listed above it while they are still being written.
  * @param {ChangelogData} data
  * @returns {ChangelogData}
  */
 export function validateChangelog(data) {
   if (!data || typeof data !== 'object' || !VERSION_PATTERN.test(data.currentVersion) ||
       !Array.isArray(data.releases) || data.releases.length === 0 ||
-      data.releases[0].version !== data.currentVersion) {
+      !data.releases.some(release => release?.version === data.currentVersion)) {
     throw new Error('Invalid changelog releases');
   }
+  const currentIndex = data.releases.findIndex(release => release.version === data.currentVersion);
   const seenVersions = new Set();
-  for (const release of data.releases) {
+  for (const [index, release] of data.releases.entries()) {
+    const unreleased = index < currentIndex;
+    const dateOk = unreleased
+      ? DATE_PATTERN.test(release?.date) || UNRELEASED_DATE_PATTERN.test(release?.date)
+      : DATE_PATTERN.test(release?.date);
     if (!release || !VERSION_PATTERN.test(release.version) || seenVersions.has(release.version) ||
-        !DATE_PATTERN.test(release.date) || !Array.isArray(release.sections)) {
+        !dateOk || !Array.isArray(release.sections) ||
+        (unreleased && compareVersions(release.version, data.currentVersion) <= 0) ||
+        (unreleased && index > 0 && compareVersions(data.releases[index - 1].version, release.version) <= 0)) {
       throw new Error('Invalid changelog release');
     }
     seenVersions.add(release.version);

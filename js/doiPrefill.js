@@ -12,21 +12,15 @@
  * Depends on jQuery ($) and Tagify being available globally.
  */
 import { THESAURUS_CONFIG } from './thesaurusConfig.js';
-import { resolveTagAgainstWhitelist } from './thesauriHelpers.js';
+import {
+  classifyDoiSubject as classifyConfiguredSubject,
+  importThesaurusKeyword,
+  prepareThesauriForKeywords,
+  thesaurusTargets,
+} from './thesauriHelpers.js';
 
-/* ------------------------------------------------------------------ */
-/*  Helper: Tagify instance retrieval (mirrors mappingXmlToInputFields) */
-/* ------------------------------------------------------------------ */
-
-/**
- * Returns the Tagify instance attached to an element, if any.
- * @param {HTMLElement|jQuery} el
- * @returns {Tagify|null}
- */
-function getTagify(el) {
-  if (!el) return null;
-  if (el.jquery) el = el[0]; // unwrap jQuery
-  return el?._tagify ?? null;
+function classifyDoiSubject(subject) {
+  return classifyConfiguredSubject(subject, THESAURUS_CONFIG);
 }
 
 function getAuthorStackController() {
@@ -550,156 +544,6 @@ function prefillGeoLocations(geoLocations) {
 }
 
 /**
- * DataCite JSON uses schemeUri/valueUri. Saved XML and some callers use schemeURI/valueURI.
- * @param {Object|string} subject
- * @param {...string} keys
- * @returns {string}
- */
-function subjectProperty(subject, ...keys) {
-  if (!subject || typeof subject !== 'object') return '';
-  for (const key of keys) {
-    if (subject[key]) return subject[key];
-  }
-  return '';
-}
-
-/**
- * Which keyword field a DataCite subject belongs in.
- * Scheme URIs are authoritative. DataCite also labels GCMD instruments as
- * "GCMD Instruments" rather than the vocabulary's "NASA/GCMD Instruments".
- * @param {Object|string} subject
- * @returns {string}
- */
-function classifyDoiSubject(subject) {
-  const schemeURI = subjectProperty(subject, 'schemeURI', 'schemeUri');
-  const subjectScheme = subjectProperty(subject, 'subjectScheme');
-
-  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords' ||
-    subjectScheme === 'NASA/GCMD Earth Science Keywords') {
-    return 'science_keywords';
-  }
-  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/platforms' ||
-    subjectScheme === 'NASA/GCMD Platforms' ||
-    subjectScheme === 'GCMD Platforms') {
-    return 'platforms';
-  }
-  if (schemeURI === 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/instruments' ||
-    subjectScheme === 'NASA/GCMD Instruments' ||
-    subjectScheme === 'GCMD Instruments') {
-    return 'instruments';
-  }
-  if (
-    schemeURI === 'http://resource.geosciml.org/vocabulary/timescale/gts2020' ||
-    subjectScheme === 'International Chronostratigraphic Chart' ||
-    subjectScheme === 'Chronostratigraphic Chart'
-  ) {
-    return 'chronostratigraphy';
-  }
-  if (
-    schemeURI === 'http://www.eionet.europa.eu/gemet/gemetThesaurus' ||
-    schemeURI === 'http://www.eionet.europa.eu/gemet/concept/' ||
-    (subjectScheme && subjectScheme.includes('GEMET'))
-  ) {
-    return 'gemet';
-  }
-  if (schemeURI.startsWith('https://epos-msl.uu.nl/voc/')) {
-    return 'msl';
-  }
-  return 'free';
-}
-
-/**
- * Adds one thesaurus keyword to a ready Tagify field.
- * The whitelist entry supplies value and subjectScheme. If Tagify does not
- * accept the keyword (e.g. the concept is not in the loaded vocabulary),
- * logs a warning instead of dropping it into free keywords.
- * @param {string} group
- * @param {Tagify} tagify
- * @param {{value: string, id: string, schemeURI: string}} tagData
- */
-function importThesaurusKeyword(group, tagify, tagData) {
-  const whitelist = tagify.settings?.whitelist;
-  const resolved = resolveTagAgainstWhitelist(tagData, whitelist);
-  if (Array.isArray(whitelist) && whitelist.length > 0) {
-    const inWhitelist = whitelist.some(entry => entry && entry.value === resolved.value);
-    if (!inWhitelist) {
-      console.warn('Metadata export by DOI: Thesaurus keyword could not be imported into Tagify, because it is not in whitelist:', {
-        thesaurus: group,
-        keyword: tagData.value,
-        valueURI: tagData.id,
-      });
-      return;
-    }
-  }
-  const before = Array.isArray(tagify.value) ? tagify.value.length : null;
-  tagify.addTags([resolved]);
-  if (before !== null && Array.isArray(tagify.value) && tagify.value.length === before) {
-    const alreadyPresent = tagify.value.some(tag => tag && tag.value === resolved.value);
-    if (!alreadyPresent) {
-      console.warn('Metadata export by DOI: Ignoring duplicate keyword:', {
-        thesaurus: group,
-        keyword: tagData.value,
-        valueURI: tagData.id,
-      });
-    }
-  }
-}
-
-/**
- * Input selector for a DOI subject group.
- * MSL is outside THESAURUS_CONFIG. satellitePlatforms is dynamicOnly and has no keyword input.
- * @param {string} group
- * @returns {string}
- */
-function thesaurusInputSelector(group) {
-  if (group === 'msl') return '#input-mslkeyword';
-  const config = THESAURUS_CONFIG[group];
-  if (!config?.inputId || config.dynamicOnly) return '';
-  return config.inputId.startsWith('#') ? config.inputId : `#${config.inputId}`;
-}
-
-function thesaurusTargets() {
-  return Object.fromEntries(
-    [...Object.keys(THESAURUS_CONFIG), 'msl']
-      .map(group => [group, thesaurusInputSelector(group)])
-      .filter(([, selector]) => selector)
-      .map(([group, selector]) => [group, getTagify(document.querySelector(selector))])
-  );
-}
-
-/**
- * Loads the thesauri referenced by the imported subjects and waits until each
- * field's Tagify whitelist and jsTree are ready, following XML import.
- * @param {Array<{group: string}>} prepared
- * @returns {Promise<Set<string>>} Groups whose vocabulary failed to become ready.
- */
-async function prepareThesauriForKeywords(prepared) {
-  if (typeof window.waitForThesaurusVocabulary !== 'function') {
-    return new Set();
-  }
-  const groups = [...new Set(prepared.map(entry => entry.group))]
-    .filter(group => {
-      const config = THESAURUS_CONFIG[group];
-      return Boolean(config?.inputId && !config.dynamicOnly);
-    });
-  if (groups.length === 0) {
-    return new Set();
-  }
-  const results = await Promise.all(groups.map(group => window.waitForThesaurusVocabulary(group)));
-  const notReady = new Set();
-  groups.forEach((group, index) => {
-    if (results[index] !== 'loaded') {
-      console.warn('Thesaurus vocabulary not ready for DOI keyword import:', {
-        thesaurus: group,
-        status: results[index],
-      });
-      notReady.add(group);
-    }
-  });
-  return notReady;
-}
-
-/**
  * Maps subjects to free keywords and thesaurus keyword tagify fields.
  * Waits for thesauri inputs and each referenced vocabulary before importing.
  * @param {Array<Object|string>} subjects
@@ -708,7 +552,7 @@ async function prepareThesauriForKeywords(prepared) {
 async function prefillKeywords(subjects) {
   if (!Array.isArray(subjects) || subjects.length === 0) return;
 
-  const tagifyFree = getTagify(document.querySelector('#input-freekeyword'));
+  const tagifyFree = document.getElementById('input-freekeyword')?._tagify ?? null;
   if (!tagifyFree) return;
 
   if (window.thesauriReady && typeof window.thesauriReady.then === 'function') {
@@ -725,13 +569,13 @@ async function prefillKeywords(subjects) {
     prepared.push({
       group: classifyDoiSubject(subject),
       keyword,
-      schemeURI: subjectProperty(subject, 'schemeURI', 'schemeUri'),
-      valueURI: subjectProperty(subject, 'valueURI', 'valueUri'),
+      schemeURI: subject?.schemeURI || subject?.schemeUri || '',
+      valueURI: subject?.valueURI || subject?.valueUri || '',
     });
   });
 
-  await prepareThesauriForKeywords(prepared);
-  const targets = thesaurusTargets();
+  await prepareThesauriForKeywords(prepared, THESAURUS_CONFIG);
+  const targets = thesaurusTargets(THESAURUS_CONFIG);
 
   prepared.forEach(entry => {
     if (entry.group === 'free') {
@@ -973,7 +817,6 @@ if (typeof window !== 'undefined') {
 // Export for testing (CommonJS, after Babel rewrites the import above)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = {
-    getTagify,
     decodeHtmlEntities,
     normalizeRole,
     normalizeRelationType,

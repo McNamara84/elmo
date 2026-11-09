@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, type Locator } from '@playwright/test';
 import { promises as fs, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { registerStaticAssetRoutes, REPO_ROOT } from '../utils';
@@ -13,10 +13,19 @@ const EDITION_LABELS: Record<string, string> = {
   igsn: 'ELMO-IGSN',
 };
 
-type ChangelogEntry = { editions?: string[] };
+type ChangelogReference = { type: 'issue' | 'pull'; number: number };
+type ChangelogEntry = {
+  parts?: { value: string }[];
+  editions?: string[];
+  references?: ChangelogReference[];
+};
+type ChangelogRelease = {
+  version: string;
+  sections: { entries: ChangelogEntry[] }[];
+};
 type ChangelogData = {
   currentVersion: string;
-  releases: { sections: { entries: ChangelogEntry[] }[] }[];
+  releases: ChangelogRelease[];
 };
 
 const changelogData = JSON.parse(
@@ -27,10 +36,44 @@ function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function editionGroups(data: ChangelogData): string[][] {
-  return data.releases[0].sections.map(section =>
+const REPOSITORY_URL = 'https://github.com/McNamara84/elmo';
+
+function editionGroups(release: ChangelogRelease): string[][] {
+  return release.sections.map(section =>
     section.entries.flatMap(entry => (entry.editions ?? []).map(edition => EDITION_LABELS[edition]))
   );
+}
+
+function entryText(entry: ChangelogEntry): string {
+  return (entry.parts ?? []).map(part => part.value).join('');
+}
+
+function releaseByVersion(version: string): ChangelogRelease {
+  const release = changelogData.releases.find(item => item.version === version);
+  if (!release) throw new Error(`Changelog release ${version} is missing`);
+  return release;
+}
+
+async function expectEntryLinks(rows: Locator, release: ChangelogRelease, textPrefix: string) {
+  const references = release.sections
+    .flatMap(section => section.entries)
+    .find(entry => entryText(entry).startsWith(textPrefix))?.references ?? [];
+  expect(references.length, `${release.version} entry "${textPrefix}"`).toBeGreaterThan(0);
+  const row = rows.filter({ hasText: textPrefix });
+  for (const reference of references) {
+    const label = `${reference.type === 'issue' ? 'Issue' : 'PR'} #${reference.number}`;
+    const kind = reference.type === 'issue' ? 'issues' : 'pull';
+    await expect(row.getByRole('link', { name: label, exact: true }))
+      .toHaveAttribute('href', `${REPOSITORY_URL}/${kind}/${reference.number}`);
+  }
+}
+
+async function expectEditionGroups(releaseRoot: Locator, release: ChangelogRelease) {
+  const groups = await releaseRoot.locator('.accordion-body > ul > li').evaluateAll(sections => sections.map(section =>
+    [...section.querySelectorAll(':scope > ul > li > .changelog-edition-badge')]
+      .map(badge => badge.textContent?.trim())
+  ));
+  expect(groups).toEqual(editionGroups(release));
 }
 
 async function fixtureHtml(baseURL: string): Promise<string> {
@@ -104,46 +147,28 @@ test.describe('Changelog access and rendering', () => {
     await expect(changelog).toBeVisible();
     await expect(changelog.locator('.accordion-item')).toHaveCount(changelogData.releases.length);
     await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toHaveClass(/show/u);
-    await expect(changelog.locator('.accordion-item').first().getByText('All ELMOs', { exact: true }).first()).toBeVisible();
-    await expect(changelog.getByRole('link', { name: 'Issue #1300', exact: true }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1300');
-    await expect(changelog.getByRole('link', { name: 'Issue #1306' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1306');
+
+    const release221 = releaseByVersion('2.2.1');
+    const previousRelease = changelog.locator('.accordion-item').filter({
+      has: page.getByRole('button', { name: /^Version 2\.2\.1 -/u }),
+    });
+    await previousRelease.locator('.accordion-button').click();
+    const previousEntries = previousRelease.locator('.accordion-body > ul > li > ul > li');
+    await expectEntryLinks(previousEntries, release221, 'Reusing metadata from a DOI now marks');
+    await expectEntryLinks(previousEntries, release221, 'ORCID, ROR, and DOI logos');
+    await expectEditionGroups(previousRelease, release221);
+
+    const release220 = releaseByVersion('2.2.0');
     const migratedRelease = changelog.locator('.accordion-item').filter({
       has: page.getByRole('button', { name: /^Version 2\.2\.0 -/u }),
     });
     await migratedRelease.locator('.accordion-button').click();
     await expect(changelog.getByText('ELMO-GEM', { exact: true }).first()).toBeVisible();
-    await expect(changelog.getByRole('link', { name: 'PR #1188' }).first())
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
     const releaseEntries = migratedRelease.locator('.accordion-body > ul > li > ul > li');
-    const doiEntry = releaseEntries.filter({ hasText: 'ELMO-GEM submissions without a DOI' });
-    const relatedWorkEntry = releaseEntries.filter({ hasText: 'Related Work now starts empty' });
-    await expect(doiEntry.getByRole('link', { name: 'Issue #1127' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1127');
-    await expect(doiEntry.getByRole('link', { name: 'PR #1188' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1188');
-    await expect(relatedWorkEntry.getByRole('link', { name: 'Issue #812' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/812');
-    await expect(relatedWorkEntry.getByRole('link', { name: 'Issue #1009' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1009');
-    await expect(relatedWorkEntry.getByRole('link', { name: 'PR #1229' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1229');
-    const changelogEntry = releaseEntries.filter({ hasText: 'The footer version opens a separate changelog' });
-    await expect(changelogEntry.getByRole('link', { name: 'Issue #807' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/807');
-    await expect(changelogEntry.getByRole('link', { name: 'Issue #909' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/909');
-    await expect(changelogEntry.getByRole('link', { name: 'Issue #1240' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/issues/1240');
-    await expect(changelogEntry.getByRole('link', { name: 'PR #1246' }))
-      .toHaveAttribute('href', 'https://github.com/McNamara84/elmo/pull/1246');
-    const groups = await changelog.locator('.accordion-item').first()
-      .locator('.accordion-body > ul > li').evaluateAll(sections => sections.map(section =>
-        [...section.querySelectorAll(':scope > ul > li > .changelog-edition-badge')]
-          .map(badge => badge.textContent?.trim())
-      ));
-    expect(groups).toEqual(editionGroups(changelogData));
+    await expectEntryLinks(releaseEntries, release220, 'ELMO-GEM submissions without a DOI');
+    await expectEntryLinks(releaseEntries, release220, 'Related Work now starts empty');
+    await expectEntryLinks(releaseEntries, release220, 'The footer version opens a separate changelog');
+    await expectEditionGroups(migratedRelease, release220);
     const historicalRelease = changelog.locator('.accordion-item').filter({
       has: page.getByRole('button', { name: /^Version 2\.1\.2 -/u }),
     });
@@ -171,16 +196,15 @@ test.describe('Changelog access and rendering', () => {
 
   test('refreshes cached changelog data when the modal is opened again', async ({ page }) => {
     const current = JSON.parse(await fs.readFile(path.join(REPO_ROOT, 'json/changelog.json'), 'utf8'));
-    const issueNumber = current.releases[0].sections
-      .flatMap((section: { entries: { references?: { type: string; number: number }[] }[] }) => section.entries)
-      .flatMap((entry: { references?: { type: string; number: number }[] }) => entry.references ?? [])
-      .find((reference: { type: string }) => reference.type === 'issue').number;
+    const marker = { type: 'issue', number: 987654 };
+    const currentEntry = current.releases[0].sections[0].entries[0];
+    currentEntry.references = [
+      ...(currentEntry.references ?? []).filter((reference: ChangelogReference) => reference.number !== marker.number),
+      marker,
+    ];
     const outdated = structuredClone(current);
-    for (const section of outdated.releases[0].sections) {
-      for (const entry of section.entries) {
-        entry.references = entry.references?.filter((reference: { type: string }) => reference.type !== 'issue');
-      }
-    }
+    const outdatedEntry = outdated.releases[0].sections[0].entries[0];
+    outdatedEntry.references = outdatedEntry.references.filter((reference: ChangelogReference) => reference.number !== marker.number);
     let requests = 0;
     await page.route(CHANGELOG_PATH, async route => {
       requests++;
@@ -195,10 +219,10 @@ test.describe('Changelog access and rendering', () => {
     await page.locator('#button-changelog-show').click();
     const changelog = page.locator('#modal-changelog');
     await expect(changelog.locator('.accordion-item').first().locator('.accordion-collapse')).toBeVisible();
-    await expect(changelog.getByRole('link', { name: `Issue #${issueNumber}`, exact: true })).toHaveCount(0);
+    await expect(changelog.getByRole('link', { name: `Issue #${marker.number}`, exact: true })).toHaveCount(0);
     await changelog.locator('.btn-close').click();
     await page.locator('#button-changelog-show').click();
-    await expect(changelog.getByRole('link', { name: `Issue #${issueNumber}`, exact: true }).first()).toBeVisible();
+    await expect(changelog.getByRole('link', { name: `Issue #${marker.number}`, exact: true }).first()).toBeVisible();
     expect(requests).toBe(2);
   });
 
