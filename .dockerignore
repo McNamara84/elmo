@@ -22,6 +22,31 @@ temp/
 *.pem
 *.key
 *.crt
+**/.env*
+**/*.pem
+**/*.key
+**/*.crt
+**/*.p12
+**/*.pfx
+**/*.sql
+settings.php
+**/settings.php
+test-settings.php
+**/test-settings.php
+playwright-variant-lock.php
+.ssh/
+.aws/
+.codex/
+.agents/
+.github/
+scripts/ci/
+.docker/
+**/.npmrc
+**/.netrc
+**/.pypirc
+**/.git-credentials
+**/.dockercfg
+**/auth.json
 
 # Ignore documentation and markdown files
 docs/
@@ -51,6 +76,7 @@ coverage-report*/
 playwright-report*/
 test-results/
 storage/
+xml/
 
 # Ignore project-specific patterns
 config.local.*
