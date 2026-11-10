@@ -7,7 +7,7 @@ import { candidateMetadata } from '../../scripts/ci/deploymentChecks.mjs';
 export const root = fileURLToPath(new URL('../..', import.meta.url));
 export const stage = readFileSync(join(root, 'docker-compose.stage.yml'), 'utf8');
 export const prod = readFileSync(join(root, 'docker-compose.prod.yml'), 'utf8');
-export const changelog = JSON.stringify({ currentVersion: '2.2.1', releases: [{ version: '2.2.2' }, { version: '2.2.1' }] });
+export const changelog = JSON.stringify({ currentVersion: '2.2.1', releases: [{ version: '2.2.2', date: '2026-XX-XX' }, { version: '2.2.1', date: '2026-11-10' }] });
 export const metadata = candidateMetadata(changelog, stage, prod);
 export const repository = 'McNamara84/elmo';
 export const digest = letter => `sha256:${letter.repeat(64)}`;

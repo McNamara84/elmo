@@ -41,12 +41,25 @@ function validSourceRun(run, repository, branch, sha, workflow) {
         && run.workflow_id === workflow.id && run.path === workflow.path && run.name === workflow.name;
 }
 
-/** Read only: no branch, package, PR artifact, or caller-supplied conclusion is trusted. */
-export async function assessCandidate({ github, repo, runId, policy = requiredWorkflows }) {
-    if (!Number.isSafeInteger(Number(runId)) || Number(runId) < 1) throw new Error('Invalid triggering run ID.');
+async function sourcePolicy(github, repo, policy) {
     const repository = (await github.rest.repos.get(repo)).data;
     if (repository.full_name.toLowerCase() !== `${repo.owner}/${repo.repo}`.toLowerCase()
         || repository.default_branch !== 'main') throw new Error('Expected the main default branch in this repository.');
+    const workflows = [];
+    for (const required of policy.workflows) {
+        const workflow = (await github.rest.actions.getWorkflow({ ...repo, workflow_id: required.file })).data;
+        if (workflow.path !== `.github/workflows/${required.file}` || workflow.name !== required.name) {
+            throw new Error(`Required workflow identity changed: ${required.file}`);
+        }
+        workflows.push({ ...workflow, checks: required.checks });
+    }
+    return { repository, workflows };
+}
+
+/** Read only: no branch, package, PR artifact, or caller-supplied conclusion is trusted. */
+export async function assessCandidate({ github, repo, runId, policy = requiredWorkflows }) {
+    if (!Number.isSafeInteger(Number(runId)) || Number(runId) < 1) throw new Error('Invalid triggering run ID.');
+    const { repository, workflows } = await sourcePolicy(github, repo, policy);
     const signal = (await github.rest.actions.getWorkflowRun({ ...repo, run_id: Number(runId) })).data;
     const branch = signal.head_branch;
     const sha = signal.head_sha;
@@ -57,18 +70,23 @@ export async function assessCandidate({ github, repo, runId, policy = requiredWo
         throw new Error('The signal must be a successful push check from this repository on main or dev.');
     }
 
-    const workflows = [];
-    for (const required of policy.workflows) {
-        const workflow = (await github.rest.actions.getWorkflow({ ...repo, workflow_id: required.file })).data;
-        if (workflow.path !== `.github/workflows/${required.file}` || workflow.name !== required.name) {
-            throw new Error(`Required workflow identity changed: ${required.file}`);
-        }
-        workflows.push({ ...workflow, checks: required.checks });
-    }
     const signalWorkflow = workflows.find(workflow => workflow.id === signal.workflow_id);
     if (!signalWorkflow || !validSourceRun(signal, repository, branch, sha, signalWorkflow)) {
         throw new Error('The signal does not belong to a required workflow.');
     }
+    return inspectSource({ github, repo, repository, workflows, branch, sha });
+}
+
+/** The release gate uses the same push/matrix policy without inventing a CI signal. */
+export async function assessSourceCandidate({ github, repo, branch, sha, policy = requiredWorkflows }) {
+    if (!policy.sourceBranches.includes(branch) || typeof sha !== 'string' || sha.length !== 40 || !shaPattern.test(sha)) {
+        throw new Error('Invalid source branch or SHA.');
+    }
+    const { repository, workflows } = await sourcePolicy(github, repo, policy);
+    return inspectSource({ github, repo, repository, workflows, branch, sha });
+}
+
+async function inspectSource({ github, repo, repository, workflows, branch, sha }) {
     const head = (await github.rest.repos.getBranch({ ...repo, branch })).data.commit.sha;
     if (head !== sha) {
         const comparison = (await github.rest.repos.compareCommits({ ...repo, base: sha, head })).data;

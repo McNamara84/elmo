@@ -24,7 +24,7 @@ export function validateArtifact(record, expected = {}) {
 }
 
 /** Only plumbing commands run here; no candidate checkout, hooks, or shell code. */
-export function gitRepository(cwd = process.cwd()) {
+export function gitRepository(cwd = process.cwd(), { productionOnly = false } = {}) {
     const environment = {
         ...process.env, GIT_TERMINAL_PROMPT: '0',
         GIT_AUTHOR_NAME: 'github-actions[bot]', GIT_AUTHOR_EMAIL: '41898282+github-actions[bot]@users.noreply.github.com',
@@ -86,7 +86,9 @@ export function gitRepository(cwd = process.cwd()) {
         }
     };
     const push = (ref, sha, previous) => {
-        if (!/^refs\/heads\/(?:artifacts\/(?:main|dev)|deploy\/stage)$/u.test(ref)) throw new Error('Not an AP 3 machine branch.');
+        const allowed = productionOnly ? ref === 'refs/heads/deploy/prod'
+            : /^refs\/heads\/(?:artifacts\/(?:main|dev)|deploy\/stage)$/u.test(ref);
+        if (!allowed) throw new Error(productionOnly ? 'Only the Production machine branch may be written.' : 'Not an AP 3 machine branch.');
         if (previous && !ancestor(previous, sha)) throw new Error('Refusing to rewrite deployment history.');
         if (head(ref) !== previous) return false;
         const result = attempt(['push', '--quiet', `--force-with-lease=${ref}:${previous ?? ''}`, 'origin', `${sha}:${ref}`]);
