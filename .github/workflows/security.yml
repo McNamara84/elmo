@@ -32,6 +32,12 @@ jobs:
       - name: Test scan failure handling
         run: bash tests/ci/container-scan.sh
 
+      - name: Install deployment helper dependencies without lifecycle scripts
+        run: npm ci --omit=dev --ignore-scripts
+
+      - name: Test publication guards and machine-branch reconciliation
+        run: node --test tests/ci/*.test.mjs
+
       - name: Prepare scan directories and cache key
         id: prepare
         env:
