@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "validationEvent": "push",
+  "sourceBranches": ["main", "dev"],
+  "workflows": [
+    {
+      "file": "phpunit.yml",
+      "name": "PHPUnit Tests",
+      "checks": ["test"]
+    },
+    {
+      "file": "phpstan.yml",
+      "name": "PHPStan Static Analysis",
+      "checks": ["phpstan"]
+    },
+    {
+      "file": "jest.yml",
+      "name": "Jest Tests",
+      "checks": ["test (24.22.2)", "test (26.x)"]
+    },
+    {
+      "file": "playwright.yml",
+      "name": "Playwright Tests",
+      "checks": [
+        "playwright-tests (chromium, chromium)",
+        "playwright-tests (firefox, firefox-gem --project=firefox-igsn)",
+        "playwright-tests (webkit, webkit)"
+      ]
+    },
+    {
+      "file": "npm-audit.yml",
+      "name": "npm audit",
+      "checks": ["audit"]
+    },
+    {
+      "file": "security.yml",
+      "name": "Container Security Checks",
+      "checks": ["Container scan (web)", "Container scan (mariadb)"]
+    }
+  ]
+}
