@@ -205,7 +205,9 @@ jobs:
             image_id="$WEB_ID"
             if [[ "$kind" == mariadb ]]; then image_id="$MARIADB_ID"; fi
             root="$RUNNER_TEMP/elmo-published-scan/$kind"
-            bash automation/scripts/ci/scan-container-image.sh "$root/image.tar" "$image_id" "$root/reports" || status=1
+            scan_args=("$root/image.tar" "$image_id" "$root/reports")
+            if [[ "$kind" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+            bash automation/scripts/ci/scan-container-image.sh "${scan_args[@]}" || status=1
           done
           exit "$status"
       - name: Upload published-image scan evidence

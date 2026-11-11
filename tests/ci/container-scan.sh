@@ -71,21 +71,27 @@ BASH
 chmod +x "$test_root/bin/docker"
 
 run_case() {
-  local mode="$1" expected="$2" status=0
+  local mode="$1" expected="$2" image_ref="${3:-}" status=0
+  local case_name="$mode"
+  local extra_args=()
+  if [[ -n "$image_ref" ]]; then
+    case_name="$mode-official"
+    extra_args+=("$image_ref")
+  fi
   if PATH="$test_root/bin:$PATH" TRIVY_CACHE_DIR="$test_root/cache" \
       MOCK_MODE="$mode" MOCK_IMAGE_ID="$image_id" \
       bash "$repo_root/scripts/ci/scan-container-image.sh" \
-      "$test_root/image.tar" "$image_id" "$test_root/$mode" > "$test_root/$mode.log" 2>&1; then
+      "$test_root/image.tar" "$image_id" "$test_root/$case_name" "${extra_args[@]}" > "$test_root/$case_name.log" 2>&1; then
     status=0
   else
     status=$?
   fi
   if [[ "$status" != "$expected" ]]; then
-    cat "$test_root/$mode.log" >&2
-    echo "$mode: expected exit $expected, got $status" >&2
+    cat "$test_root/$case_name.log" >&2
+    echo "$case_name: expected exit $expected, got $status" >&2
     exit 1
   fi
-  echo "PASS $mode (exit $status)"
+  echo "PASS $case_name (exit $status)"
 }
 
 run_case clean 0
@@ -105,6 +111,33 @@ run_case missing-text 1
 mkdir -p "$test_root/missing-report/scan.stale"
 cp "$test_root/clean"/scan.*/all.json "$test_root/missing-report/scan.stale/all.json"
 run_case missing-report 1
+
+official_mariadb="mariadb:12.3.3-noble@$image_id"
+run_case fixed-high 0 "$official_mariadb"
+run_case fixed-critical 0 "$official_mariadb"
+run_case scanner-error 42 "$official_mariadb"
+run_case blocking-error 43 "$official_mariadb"
+run_case missing-report 1 "$official_mariadb"
+run_case missing-blocking 1 "$official_mariadb"
+run_case malformed-report 1 "$official_mariadb"
+run_case wrong-image 1 "$official_mariadb"
+run_case no-packages 1 "$official_mariadb"
+run_case missing-text 1 "$official_mariadb"
+run_case clean 2 'mariadb:latest'
+run_case clean 2 "ghcr.io/mcnamara84/elmo-web@$image_id"
+
+node --input-type=module - "$test_root/fixed-critical-official" <<'JS'
+import assert from 'node:assert/strict';
+import { readFileSync, readdirSync } from 'node:fs';
+const root = process.argv[2];
+const directory = `${root}/${readdirSync(root)[0]}`;
+assert.equal(JSON.parse(readFileSync(`${directory}/policy.json`, 'utf8')).policy, 'report-only-official-mariadb');
+for (const name of ['all.json', 'blocking.json']) {
+  const report = JSON.parse(readFileSync(`${directory}/${name}`, 'utf8'));
+  assert.equal(report.Results[0].Vulnerabilities.length, 1, 'MariaDB findings remain visible');
+  assert.equal(report.Results[0].Vulnerabilities[0].Severity, 'CRITICAL');
+}
+JS
 
 node --input-type=module - "$test_root/unfixed" <<'JS'
 import assert from 'node:assert/strict';
