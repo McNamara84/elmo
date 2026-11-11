@@ -1,0 +1,63 @@
+name: Synchronize main into dev
+
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows:
+      - PHPUnit Tests
+      - PHPStan Static Analysis
+      - Jest Tests
+      - Playwright Tests
+      - npm audit
+      - Container Security Checks
+    types: [completed]
+    branches: [main, dev]
+  schedule:
+    - cron: '7,22,37,52 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: synchronize-main-into-dev
+  cancel-in-progress: false
+
+jobs:
+  synchronize:
+    if: github.ref == 'refs/heads/main' && github.repository == 'McNamara84/elmo'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    # Restrict this environment to main. The App is never a rules bypass actor.
+    environment: branch-sync
+    steps:
+      - name: Create an ELMO-only synchronization token
+        id: token
+        uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        with:
+          client-id: ${{ vars.SYNC_APP_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_APP_PRIVATE_KEY }}
+          owner: McNamara84
+          repositories: elmo
+          permission-contents: write
+          permission-pull-requests: write
+          permission-workflows: write
+          permission-checks: read
+          permission-statuses: read
+      - name: Checkout trusted automation from the workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          token: ${{ steps.token.outputs.token }}
+      - name: Reconcile the single synchronization PR
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          SYNC_PAUSED: ${{ vars.SYNC_MAIN_TO_DEV_PAUSED }}
+        with:
+          github-token: ${{ steps.token.outputs.token }}
+          script: |
+            const { reconcileSync } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/ci/syncMainToDev.mjs`);
+            const result = await reconcileSync({ github, repo: context.repo, core,
+              paused: process.env.SYNC_PAUSED?.toLowerCase() === 'true' });
+            await core.summary.addHeading('main → dev').addRaw(result.message).write();
