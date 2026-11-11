@@ -150,7 +150,7 @@ export async function reconcileSync({ github, repo, git = createSyncGit(), core,
     if (unchanged && git.contains(dev, oldHead) && git.contains(main, oldHead)) tree = git.run('rev-parse', `${oldHead}^{tree}`);
     const description = `${marker}\n\nSynchronize reviewed main changes into dev.\n\n${sourcePair}\n${tree
         ? 'Both histories are preserved. Required reviews and CI apply.'
-        : 'Merge conflicts need resolution on a helper branch based on dev. Never merge dev into main to resolve this PR.'}\n\nChangelog conflicts require a deliberate resolution: preserve currentVersion, upcoming entries and editions.\n\nAdd \`sync:hold\`, mark draft or disable auto-merge to pause. See [branching and releases](../blob/main/README.md#branching-and-releases).\n`;
+        : 'Merge conflicts need resolution on a helper branch based on dev. Never merge dev into main to resolve this PR.'}\n\nChangelog conflicts require a deliberate resolution: preserve currentVersion, upcoming entries and editions.\n\nAdd \`sync:hold\`, mark draft or disable auto-merge to pause. Operational procedures belong in the internal wiki.\n`;
     if (pr) {
         pr = (await github.rest.pulls.get({ ...repo, pull_number: pr.number })).data;
         assertManaged(pr);
