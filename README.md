@@ -22,6 +22,7 @@ Ehrmann, H., Mohammed, A., Franz, J., Torkhov, A., Antipanova, T., Brauser, A., 
     - [Quick installation guide](#quick-installation-guide)
   - [Settings](#settings)
   - [Dependencies](#dependencies)
+  - [GitHub deployment setup](#github-deployment-setup)
   - [API documentation](#api-documentation)
   - [Form fields](#Form-fields)
   - [Data Mapping and Occurences](#data-mapping-and-occurences)
@@ -293,7 +294,7 @@ Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.
 
 Playwright CI uses Ubuntu 24.04 so WebKit's native libraries match its browser build. Browser cache keys include the Ubuntu release and runner architecture to prevent reuse across incompatible runner images. A browser startup check verifies each engine before the application tests run.
 
-The PHP image builds also install available Debian security updates (including Apache 2.4.69). Production omits npm development packages, compilers, and Linux development headers. Trivy still reports upstream vulnerabilities in Debian's MariaDB client and libxml2 packages without available distribution fixes, and in the Go runtime embedded in the official database images' `gosu` helper. The image update therefore does not establish a zero-vulnerability container baseline; review these findings again before deployment.
+The PHP image builds also install available Debian security updates. Production omits npm development packages, compilers, and Linux development headers. The container security workflow retains unfixed HIGH/CRITICAL findings in its reports and blocks fixable HIGH/CRITICAL findings. Successful scans do not establish a vulnerability-free container baseline.
 
 The targeted `@istanbuljs/load-nyc-config` override reuses the direct `js-yaml` 5 dependency. This removes its old YAML/argparse dependency chain and the vulnerable `sprintf-js` package ([GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)). Retest YAML configuration loading and Jest coverage when changing this override. Swagger UI is served from the locked local npm package, including in the API documentation.
 
@@ -301,6 +302,47 @@ Before deploying the MariaDB 11 to 12.3 upgrade, back up the database and rehear
 
 </details>
 
+
+## GitHub deployment setup
+
+Stage and Production use GitHub-built Linux/AMD64 images from the public package `ghcr.io/mcnamara84/elmo-web`. Configure the following settings once before enabling the workflows and changing the existing Portainer stacks. These instructions describe the required configuration; committing them does not change GitHub or Portainer settings.
+
+### Branch protection and required checks
+
+Keep `main` as the default branch and preserve the existing `dev` history. For **both** code branches, require pull requests, the existing required approvals and successful checks on an up-to-date branch. Block force pushes and deletion, including deletion after merging a PR. Apply the rules without a bypass for the sync App. Allow merge commits and auto-merge in repository settings. Use merge commits for the sync PR and for `dev` → `main` release integrations, preserving both histories; a linear-history requirement would prevent this workflow.
+
+Select the actual GitHub check contexts below as required checks. Their shared source is [.github/required-workflows.json](.github/required-workflows.json); all matrix jobs must run. Do not select the publication, promotion, mirror or sync workflows as PR requirements: they reconcile after the source checks or after a release.
+
+| Workflow | Required check contexts |
+| --- | --- |
+| PHPUnit Tests | `test` |
+| PHPStan Static Analysis | `phpstan` |
+| Jest Tests | `test (24.22.2)`, `test (26.x)` |
+| Playwright Tests | `playwright-tests (chromium, chromium)`, `playwright-tests (firefox, firefox-gem --project=firefox-igsn)`, `playwright-tests (webkit, webkit)` |
+| npm audit | `audit` |
+| Container Security Checks | `Container scan (web)`, `Container scan (mariadb)` |
+
+Wait for the checks to appear on GitHub before selecting them. The publication and promotion gates additionally require successful **push** runs from the exact repository, source branch and SHA, including all latest matrix-job attempts. A green PR merge commit alone is insufficient.
+
+Keep `artifacts/main`, `artifacts/dev`, `deploy/stage` and `deploy/prod` outside rules that require a PR for every machine write. Give the job-scoped `GITHUB_TOKEN` permission to update those refs; the scripts preserve history and use explicit leases. Protect their history from manual changes, deletion and cleanup. Allow the sync App to update only its integration branch `automation/sync-main-to-dev` using a lease, including when that update replaces an earlier integration commit. That branch needs no independent review rule; the PR targeting protected `dev` carries the review and CI requirements.
+
+### ELMO synchronization App
+
+Create a dedicated GitHub App and install it for **McNamara84/elmo only**. Grant repository permissions **Contents: read/write**, **Pull requests: read/write**, **Workflows: read/write**, **Checks: read** and **Commit statuses: read**. Do not add the App to any branch-rule bypass list and do not grant it administration permissions. The workflow requests an installation token scoped to ELMO and these permissions; App-created pushes and PRs can start the normal CI workflows.
+
+Create the Actions environment `branch-sync`. Under deployment branches/tags, select **only the branch `main`**, with no tag rule. Add environment variable `SYNC_APP_CLIENT_ID` and environment secret `SYNC_APP_PRIVATE_KEY` containing the App's private key. Leave required environment reviewers and wait timers disabled for routine synchronization; reviews remain required on the resulting PR. Keep the key out of repository files and repository-wide secrets. Rotate it in this environment when needed.
+
+Set repository variable `SYNC_MAIN_TO_DEV_PAUSED` to `true` for a repository-wide pause, and to `false` to resume automation-managed pauses. A PR-specific `sync:hold` label, draft state, manually disabled auto-merge or deliberately closed PR remains a separate pause. The sync workflow runs on `main` pushes, completion of the six source-check workflows, manual dispatch **on main**, and approximately every 15 minutes; GitHub may delay scheduled runs. See [GitHub's auto-merge behavior](https://docs.github.com/en/pull-requests/how-tos/merge-and-close-pull-requests/automatically-merging-a-pull-request) and [environment branch restrictions](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments).
+
+### Actions, registry and existing secrets
+
+Use read-only Actions token permissions by default. The workflows request package writes only for publishing, content writes only for recording/deployment jobs, and App permissions only for synchronization. The sync App is not a deployment credential. No required Actions environment approval is added for Production: publishing the validated stable release is the authorization.
+
+After the first package push, set **elmo-web → Package settings → Change visibility → Public**, link it to ELMO and allow this repository's Actions to use it. A public repository does not automatically make its new package public. The first publication may stop at the public-visibility check; make the package public and rerun that publication. Verify an anonymous pull of the **recorded digest** on the confirmed Linux/AMD64 Docker endpoint. Use an empty temporary Docker configuration directory for this check so stored login credentials cannot mask a private package. See [GHCR visibility and digest pulls](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+Keep images referenced by artifact records and releases available by digest; exclude them from automated package deletion. Preserve `artifacts/*` history as well. A missing recorded image stops publication/promotion rather than rebuilding a different image under the same record. Fixable HIGH/CRITICAL findings, scanner errors and missing results block approval. Unfixed findings remain visible in the scan evidence.
+
+Verify the existing CI secrets are accessible to push checks on **both main and dev**, especially `ERNIE_URL` and `ERNIE_API_KEY` used by Playwright. Keep `CODECOV_TOKEN` for the configured coverage uploads and `GITLAB_TOKEN` for the release mirror. Use the appropriate test integration for CI; production SMTP, database and API secrets belong in the existing Portainer runtime configuration. Do not copy secret values into the README, images, build arguments or logs.
 
 ## [API documentation](https://env.rz-vm182.gfz.de/elmo/api/v2/docs/)
 

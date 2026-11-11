@@ -1,10 +1,14 @@
 #!/bin/sh
 set -e
 
-# Give www-data ownership of the xml folder every start when present.
-#if [ -d /var/www/html/xml ]; then
-#  chown -R www-data:www-data /var/www/html/xml
-#fi
+# A stopped container may retain its writable layer; never reuse old readiness.
+rm -f /tmp/elmo-startup-ready
+
+INSTALL_ACTION="${INSTALL_ACTION:-basic}"
+case "$INSTALL_ACTION" in
+  basic|complete|skip) ;;
+  *) echo "Invalid INSTALL_ACTION: expected basic, complete, or skip." >&2; exit 2 ;;
+esac
 
 warn_missing_dir() {
   dir_path="$1"
@@ -54,19 +58,9 @@ else
   #chown www-data:www-data /var/www/html/settings.php
 fi
 
-# Wait for the DB using mysqladmin ping (more reliable)
-wait_for_db() {
-  local db_host="${DB_HOST:-db}"
-  local db_port="${DB_PORT:-3306}"
-  echo "Waiting for MariaDB at ${db_host}:${db_port}..."
-  until mysqladmin ping -h "${db_host}" -P "${db_port}" -u "${DB_USER}" -p"${DB_PASSWORD}" --silent >/dev/null 2>&1; do
-    echo "... still waiting"
-    sleep 2
-  done
-  echo "MariaDB reachable at ${db_host}:${db_port}"
-}
-
-wait_for_db
+# Authenticate before provisioning; the application database/user may not exist yet.
+echo "Waiting for authenticated database server access..."
+php /var/www/html/scripts/container_database.php wait-server
 
 # Create application database and user with read/write permissions if not exists
 # in MariaBD the users priveleges are tied to a specific host, so we need to explicitly create 
@@ -74,7 +68,7 @@ wait_for_db
 echo "Configuring database and user..."
 db_host="${DB_HOST:-db}"
 db_port="${DB_PORT:-3306}"
-mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
+mysql --connect-timeout=5 -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
   CREATE DATABASE IF NOT EXISTS ${DB_NAME};
   CREATE USER IF NOT EXISTS '${DB_USER}'@'%' IDENTIFIED BY '${DB_PASSWORD}';
   GRANT ALL PRIVILEGES ON ${DB_NAME}.* TO '${DB_USER}'@'%';
@@ -88,12 +82,8 @@ mysql -h "${db_host}" -P "${db_port}" -uroot -p"${ROOT_PASSWORD}" <<-EOSQL
 EOSQL
 echo "Database and user configured at ${db_host}:${db_port}."
 
-# Always run the CLI installer after DB is reachable.
-INSTALL_ACTION="${INSTALL_ACTION:-basic}"
-echo "Running database setup via scripts/install.php (${INSTALL_ACTION})..."
-php /var/www/html/scripts/install.php "${INSTALL_ACTION}"
-echo "Database setup finished."
-# Do sync to DB so that ERNIE ids are correctly mapped.
-php /var/www/html/includes/sync_on_start.php
+# basic/complete deliberately reset the cache DB on every start, even when its
+# volume already exists. One DB lock covers both the reset and ERNIE mapping.
+php /var/www/html/scripts/container_database.php initialize "$INSTALL_ACTION"
 
 exec "$@"

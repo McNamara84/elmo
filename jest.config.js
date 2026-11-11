@@ -4,6 +4,7 @@ module.exports = {
     '/node_modules/',
     '/tests/playwright/', // Ignore Playwright tests
     '/tests/integration/',
+    '/tests/ci/', // Executed separately with node --test in security.yml
     '/\\.tmp/'
   ],
   collectCoverageFrom: [

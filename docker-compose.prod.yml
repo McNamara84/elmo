@@ -20,12 +20,15 @@ services:
       - internal
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8080:80"
+    # Template only: release promotion pins this image to the tested digest.
+    image: "${ELMO_PROD_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    pull_policy: always
+    healthcheck: &web-healthcheck
+      test: ["CMD", "php", "/var/www/html/scripts/container_database.php", "healthcheck"]
+      interval: 10s
+      timeout: 8s
+      retries: 3
+      start_period: 180s
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -33,7 +36,6 @@ services:
       DB_NAME: ${DB_NAME}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: drop_data
       ROOT_PASSWORD: ${ROOT_PASSWORD}
       SMTP_HOST: ${SMTP_HOST}
       SMTP_PORT: ${SMTP_PORT}
@@ -73,20 +75,18 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo`)"
-      - "traefik.http.routers.elmo-router.entrypoints=https"
-      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
-      - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
-      - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.elmo-prod.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo`)"
+      - "traefik.http.routers.elmo-prod.entrypoints=https"
+      - "traefik.http.routers.elmo-prod.service=elmo-prod"
+      - "traefik.http.routers.elmo-prod.middlewares=elmo-prod-stripprefix"
+      - "traefik.http.middlewares.elmo-prod-stripprefix.stripprefix.prefixes=/elmo"
+      - "traefik.http.services.elmo-prod.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
 
   web-msl:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8081:80"
+    image: "${ELMO_PROD_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    pull_policy: always
+    healthcheck: *web-healthcheck
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -126,17 +126,20 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      web:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-msl-router.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo-msl`)"
-      - "traefik.http.routers.elmo-msl-router.entrypoints=https"
-      - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
-      - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
-      - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.elmo-prod-msl.rule=Host(`dataservices.gfz.de`) && PathPrefix(`/elmo-msl`)"
+      - "traefik.http.routers.elmo-prod-msl.entrypoints=https"
+      - "traefik.http.routers.elmo-prod-msl.service=elmo-prod-msl"
+      - "traefik.http.routers.elmo-prod-msl.middlewares=elmo-prod-msl-stripprefix"
+      - "traefik.http.middlewares.elmo-prod-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
+      - "traefik.http.services.elmo-prod-msl.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
 
 volumes:
@@ -146,5 +149,5 @@ networks:
   internal:
     driver: bridge
   frontend:
-    external:
-      name: traefik
+    external: true
+    name: traefik

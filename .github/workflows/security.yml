@@ -1,0 +1,153 @@
+name: Container Security Checks
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+jobs:
+  container-scan:
+    name: Container scan (${{ matrix.image }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [web, mariadb]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js for report validation
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - name: Test scan failure handling
+        run: bash tests/ci/container-scan.sh
+
+      - name: Install deployment helper dependencies without lifecycle scripts
+        run: npm ci --omit=dev --ignore-scripts
+
+      - name: Test publication guards and machine-branch reconciliation
+        run: node --test tests/ci/*.test.mjs
+
+      - name: Prepare scan directories and cache key
+        id: prepare
+        env:
+          SCAN_ROOT: ${{ runner.temp }}/elmo-container-scan/${{ matrix.image }}
+          TRIVY_CACHE_DIR: ${{ runner.temp }}/elmo-trivy-cache
+        run: |
+          mkdir -p "$SCAN_ROOT/reports" "$TRIVY_CACHE_DIR"
+          printf 'SCAN_ROOT=%s\nTRIVY_CACHE_DIR=%s\n' "$SCAN_ROOT" "$TRIVY_CACHE_DIR" >> "$GITHUB_ENV"
+          {
+            echo "report_directory=$SCAN_ROOT/reports"
+            echo "cache_directory=$TRIVY_CACHE_DIR"
+            echo "date=$(date -u +%Y-%m-%d)"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Cache Trivy vulnerability databases
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ steps.prepare.outputs.cache_directory }}
+          key: ${{ runner.os }}-trivy-0.76.2-${{ steps.prepare.outputs.date }}
+          restore-keys: |
+            ${{ runner.os }}-trivy-0.76.2-
+
+      - name: Set up Docker Buildx
+        if: matrix.image == 'web'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+
+      - name: Build the production web image without publishing
+        if: matrix.image == 'web'
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          file: Dockerfile.web
+          target: prod
+          platforms: linux/amd64
+          load: true
+          push: false
+          pull: true
+          # Refresh distro packages instead of reusing an outdated apt layer.
+          no-cache-filters: base
+          tags: elmo-web-security:${{ github.sha }}
+          cache-from: type=gha,scope=container-security-web
+          cache-to: type=gha,mode=max,scope=container-security-web
+
+      - name: Resolve and pull the deployed MariaDB image
+        if: matrix.image == 'mariadb'
+        id: database
+        shell: bash
+        run: |
+          set -euo pipefail
+          for environment in stage prod; do
+            docker compose --env-file /dev/null -f "docker-compose.${environment}.yml" \
+              config --format json > "$SCAN_ROOT/${environment}.json" \
+              2> "$SCAN_ROOT/${environment}-compose.log" || {
+                cat "$SCAN_ROOT/${environment}-compose.log" >&2
+                exit 1
+              }
+          done
+          stage_image="$(jq -er '.services.db.image' "$SCAN_ROOT/stage.json")"
+          prod_image="$(jq -er '.services.db.image' "$SCAN_ROOT/prod.json")"
+          if [[ "$stage_image" != "$prod_image" ||
+                ! "$stage_image" =~ ^mariadb:[a-zA-Z0-9_.-]+@sha256:[a-f0-9]{64}$ ]]; then
+            echo 'Stage and Prod must use the same digest-pinned official MariaDB image.' >&2
+            exit 1
+          fi
+          docker pull --platform linux/amd64 "$stage_image"
+          echo "image_ref=$stage_image" >> "$GITHUB_OUTPUT"
+
+      - name: Export the exact image to scan
+        id: image
+        shell: bash
+        env:
+          TARGET_IMAGE: ${{ matrix.image }}
+          SOURCE_SHA: ${{ github.sha }}
+          DATABASE_IMAGE: ${{ steps.database.outputs.image_ref }}
+        run: |
+          set -euo pipefail
+          if [[ "$TARGET_IMAGE" == web ]]; then
+            image_ref="elmo-web-security:$SOURCE_SHA"
+          else
+            image_ref="$DATABASE_IMAGE"
+          fi
+          docker save --output "$SCAN_ROOT/image.tar" "$image_ref"
+          # The containerd image store can expose an index ID via inspect.
+          # Trivy reports the config digest inside the actual saved image.
+          config_path="$(tar -xOf "$SCAN_ROOT/image.tar" manifest.json | jq -er 'if length == 1 then .[0].Config else error("Expected one exported image") end')"
+          config_digest="${config_path##*/}"
+          image_id="sha256:${config_digest%.json}"
+          if [[ ! "$image_id" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+            echo 'The exported image has no valid configuration digest.' >&2
+            exit 1
+          fi
+          printf 'source_sha=%s\nimage_ref=%s\nimage_id=%s\n' \
+            "$SOURCE_SHA" "$image_ref" "$image_id" > "$SCAN_ROOT/reports/image.txt"
+          echo "image_id=$image_id" >> "$GITHUB_OUTPUT"
+
+      - name: Scan the exported image and enforce the vulnerability policy
+        env:
+          EXPECTED_IMAGE_ID: ${{ steps.image.outputs.image_id }}
+          TARGET_IMAGE: ${{ matrix.image }}
+          DATABASE_IMAGE: ${{ steps.database.outputs.image_ref }}
+        run: |
+          scan_args=("$SCAN_ROOT/image.tar" "$EXPECTED_IMAGE_ID" "$SCAN_ROOT/reports")
+          if [[ "$TARGET_IMAGE" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+          bash scripts/ci/scan-container-image.sh "${scan_args[@]}"
+
+      - name: Upload full and blocking scan reports
+        if: always() && steps.prepare.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: container-security-${{ matrix.image }}-${{ github.sha }}
+          path: ${{ steps.prepare.outputs.report_directory }}/
+          if-no-files-found: error
+          retention-days: 14
