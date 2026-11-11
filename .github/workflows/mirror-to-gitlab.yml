@@ -1,36 +1,67 @@
-name: Mirror latest release to GitLab
+name: Mirror stable release to GitLab
 
 on:
-  workflow_dispatch: # manual trigger for initial setup
-  release:
-    types: [published]
+  workflow_run:
+    workflows: [Production Release Signal]
+    types: [completed]
+  workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: mirror-stable-release-to-gitlab
+  cancel-in-progress: false
+
 jobs:
   mirror:
-    runs-on: ubuntu-latest
+    if: >-
+      github.repository == 'McNamara84/elmo' && github.ref == 'refs/heads/main' &&
+      (github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.head_repository.full_name == github.repository &&
+         github.event.workflow_run.event == 'release' && github.event.workflow_run.conclusion == 'success'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: read
     steps:
-      - name: Checkout repository with full history
+      - name: Checkout trusted default-branch automation
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 0
-
-      - name: Get latest release
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+      - name: Install trusted helper dependencies without lifecycle scripts
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Select the signalled stable release or the deliberate manual target
         id: release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          TAG=$(gh release view --json tagName --jq .tagName)
-          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
-          echo "Latest release: $TAG"
-
-      - name: Push tag and state to GitLab
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { selectMirrorRelease } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/ci/gitlabMirror.mjs`);
+            const selection = await selectMirrorRelease({ github, repo: context.repo, event: context.eventName,
+              runId: context.payload.workflow_run?.id, runAttempt: context.payload.workflow_run?.run_attempt });
+            core.setOutput('selection', JSON.stringify(selection));
+            core.setOutput('ready', selection.status === 'ready');
+            if (selection.status === 'superseded') await core.summary.addRaw(`Release ${selection.tag} was superseded; no other release is substituted.\n`).write();
+      - name: Atomically mirror only this tag and its source commit to GitLab main
+        if: steps.release.outputs.ready == 'true'
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GITLAB_TOKEN: ${{ secrets.GITLAB_TOKEN }}
-          TAG: ${{ steps.release.outputs.tag }}
-        run: |
-          git remote add gitlab "https://oauth2:${GITLAB_TOKEN}@git.gfz-potsdam.de/data_services/elmo.git"
-          git push gitlab "refs/tags/${TAG}:refs/tags/${TAG}"
-          git push --force gitlab "refs/tags/${TAG}^{commit}:refs/heads/main"
+          MIRROR_SELECTION: ${{ steps.release.outputs.selection }}
+        with:
+          script: |
+            const { createMirrorGit, mirrorRelease, selectMirrorRelease, withMirrorCredentials } = await import(`${process.env.GITHUB_WORKSPACE}/scripts/ci/gitlabMirror.mjs`);
+            const selection = JSON.parse(process.env.MIRROR_SELECTION);
+            const revalidate = () => selectMirrorRelease({ github, repo: context.repo, event: context.eventName,
+              runId: context.payload.workflow_run?.id, runAttempt: context.payload.workflow_run?.run_attempt, expected: selection });
+            const result = await withMirrorCredentials(process.env.GITLAB_TOKEN, env =>
+              mirrorRelease(createMirrorGit(process.env.GITHUB_WORKSPACE, undefined, env), selection, revalidate));
+            await core.summary.addHeading(`GitLab release mirror ${selection.release.tag}: ${result.status}`)
+              .addLink('Exact GitHub release', `https://github.com/${selection.repository}/releases/tag/${selection.release.tag}`)
+              .addRaw(`\nSource: ${selection.release.sha}. Only the release tag and GitLab main are mirror targets.\n`).write();

@@ -53,7 +53,7 @@ export function decodeSignalArchive(data, execute = execFileSync) {
     }
 }
 
-async function readSignal({ github, repo, runId, runAttempt, decodeArchive }) {
+export async function readReleaseSignal({ github, repo, runId, runAttempt, decodeArchive = decodeSignalArchive }) {
     if (!positiveInteger(runId) || !positiveInteger(runAttempt)) throw new Error('Invalid release signal run selection.');
     const repository = (await github.rest.repos.get(repo)).data;
     const workflow = (await github.rest.actions.getWorkflow({ ...repo, workflow_id: 'production-release-signal.yml' })).data;
@@ -125,7 +125,7 @@ export function validateReleaseChangelog(text, release) {
 
 /** Fully read-only; every call re-reads the release, tag, main checks and record. */
 export async function assessProductionRelease({ github, repo, git, runId, runAttempt, expected, decodeArchive = decodeSignalArchive }) {
-    const signal = await readSignal({ github, repo, runId, runAttempt, decodeArchive });
+    const signal = await readReleaseSignal({ github, repo, runId, runAttempt, decodeArchive });
     const release = (await github.rest.repos.getRelease({ ...repo, release_id: signal.release.id })).data;
     const latest = (await github.rest.repos.getLatestRelease(repo)).data;
     const releases = await github.paginate(github.rest.repos.listReleases, { ...repo, per_page: 100 });
