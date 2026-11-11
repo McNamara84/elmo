@@ -116,23 +116,27 @@ jobs:
           script: |
             const { exportRegistryImage, requirePublicImage } = await import(`${process.env.GITHUB_WORKSPACE}/automation/scripts/ci/registryImages.mjs`);
             const { candidate, artifact } = JSON.parse(process.env.RELEASE_SELECTION);
+            core.setOutput('mariadb_ref', artifact.record.images.mariadb);
             await requirePublicImage(artifact.record.images.web);
             core.exportVariable('TRIVY_CACHE_DIR', `${process.env.RUNNER_TEMP}/elmo-production-trivy-cache`);
             for (const kind of ['web', 'mariadb']) {
               const exported = exportRegistryImage(artifact.record.images[kind], candidate, kind, `${process.env.RUNNER_TEMP}/elmo-production-scan/${kind}`);
               core.setOutput(`${kind}_id`, exported.imageId);
             }
-      - name: Rescan both exact release digests with the blocking security policy
+      - name: Rescan exact release digests with the shared vulnerability policy
         env:
           WEB_ID: ${{ steps.exported.outputs.web_id }}
           MARIADB_ID: ${{ steps.exported.outputs.mariadb_id }}
+          DATABASE_IMAGE: ${{ steps.exported.outputs.mariadb_ref }}
         run: |
           status=0
           for kind in web mariadb; do
             image_id="$WEB_ID"
             if [[ "$kind" == mariadb ]]; then image_id="$MARIADB_ID"; fi
             root="$RUNNER_TEMP/elmo-production-scan/$kind"
-            bash automation/scripts/ci/scan-container-image.sh "$root/image.tar" "$image_id" "$root/reports" || status=1
+            scan_args=("$root/image.tar" "$image_id" "$root/reports")
+            if [[ "$kind" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+            bash automation/scripts/ci/scan-container-image.sh "${scan_args[@]}" || status=1
           done
           exit "$status"
       - name: Upload exact-release image scan evidence

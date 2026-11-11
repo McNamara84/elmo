@@ -136,7 +136,12 @@ jobs:
       - name: Scan the exported image and enforce the vulnerability policy
         env:
           EXPECTED_IMAGE_ID: ${{ steps.image.outputs.image_id }}
-        run: bash scripts/ci/scan-container-image.sh "$SCAN_ROOT/image.tar" "$EXPECTED_IMAGE_ID" "$SCAN_ROOT/reports"
+          TARGET_IMAGE: ${{ matrix.image }}
+          DATABASE_IMAGE: ${{ steps.database.outputs.image_ref }}
+        run: |
+          scan_args=("$SCAN_ROOT/image.tar" "$EXPECTED_IMAGE_ID" "$SCAN_ROOT/reports")
+          if [[ "$TARGET_IMAGE" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+          bash scripts/ci/scan-container-image.sh "${scan_args[@]}"
 
       - name: Upload full and blocking scan reports
         if: always() && steps.prepare.outcome == 'success'

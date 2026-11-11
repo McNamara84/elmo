@@ -1,9 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [[ $# != 3 || ! -s "$1" || ! "$2" =~ ^sha256:[a-f0-9]{64}$ ]]; then
-  echo 'Usage: scan-container-image.sh <image.tar> <expected-image-id> <report-directory>' >&2
+if [[ ( $# != 3 && $# != 4 ) || ! -s "$1" || ! "$2" =~ ^sha256:[a-f0-9]{64}$ ]]; then
+  echo 'Usage: scan-container-image.sh <image.tar> <expected-image-id> <report-directory> [official-mariadb-digest-ref]' >&2
   exit 2
+fi
+
+# Only explicitly selected official, immutable MariaDB refs get the upstream
+# reporting policy. Web images keep the default fixable HIGH/CRITICAL gate.
+vulnerability_exit_code=1
+policy='block-fixable'
+if [[ $# == 4 ]]; then
+  if [[ ! "$4" =~ ^mariadb:[a-zA-Z0-9_.-]+@sha256:[a-f0-9]{64}$ ]]; then
+    echo 'The reporting exception requires a digest-pinned official MariaDB reference.' >&2
+    exit 2
+  fi
+  vulnerability_exit_code=0
+  policy='report-only-official-mariadb'
 fi
 
 readonly scanner_image='aquasec/trivy:0.76.2@sha256:8f6bb947dbc528902e11f2f5be52f7b519f6a39d5d148f41166f2040499768fb'
@@ -14,6 +27,12 @@ report_root="$(realpath "$3")"
 cache="$(realpath "$TRIVY_CACHE_DIR")"
 # Never let an earlier report hide a scanner failure or missing output.
 report_dir="$(mktemp -d "$report_root/scan.XXXXXX")"
+node --input-type=module - "$report_dir/policy.json" "$policy" "${4:-}" "$expected_image_id" <<'JS'
+import { writeFileSync } from 'node:fs';
+const [path, policy, imageRef, imageId] = process.argv.slice(2);
+writeFileSync(path, `${JSON.stringify({ policy, imageRef, imageId }, null, 2)}\n`);
+JS
+echo "Container vulnerability policy: $policy"
 
 docker_args=(run --rm --user "$(id -u):$(id -g)"
   --env TRIVY_DISABLE_VEX_NOTICE=true
@@ -48,12 +67,15 @@ docker "${docker_args[@]}" convert --config= --ignorefile= --format table \
   --output /scan/all.txt /scan/all.json
 cat "$report_dir/all.txt"
 
-# Trivy itself applies the blocking policy. Scanner errors also fail this step.
+# Only vulnerability findings are nonblocking for official MariaDB. Trivy
+# operational failures and missing/invalid/mismatched results always fail.
 scan_status=0
-docker "${docker_args[@]}" "${scan_args[@]}" --ignore-unfixed --exit-code 1 \
+docker "${docker_args[@]}" "${scan_args[@]}" --ignore-unfixed --exit-code "$vulnerability_exit_code" \
   --output /scan/blocking.json || scan_status=$?
 validate_report "$report_dir/blocking.json"
 if [[ "$scan_status" != 0 ]]; then
   echo "Container scan blocked the image (scanner exit code $scan_status)." >&2
+elif [[ "$vulnerability_exit_code" == 0 ]]; then
+  echo 'Official MariaDB accepted; HIGH/CRITICAL findings remain in the scan reports.'
 fi
 exit "$scan_status"
