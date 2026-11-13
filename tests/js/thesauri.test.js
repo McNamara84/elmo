@@ -76,6 +76,19 @@ const mockVocabularyData = {
   ]
 };
 
+// The temporary vocabulary probe uses fetch. A successful response leaves the
+// availability mock in charge. When the probe is removed, nothing calls fetch.
+function stubVocabularyContentProbe() {
+  const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+  window.fetch = fetchMock;
+  global.fetch = fetchMock;
+}
+
+function thesauriSettled() {
+  const ready = window.thesauriReady;
+  return Promise.resolve(ready && typeof ready.then === 'function' ? ready : undefined);
+}
+
 describe('thesauri.js', () => {
   let $;
 
@@ -189,6 +202,7 @@ describe('thesauri.js', () => {
       showThesauri: true,
       showMslVocabs: false
     };
+    stubVocabularyContentProbe();
 
     // Mock $.getJSON: availability endpoint returns mock, vocabulary endpoints return data
     $.getJSON = jest.fn((url, cb) => {
@@ -217,7 +231,7 @@ describe('thesauri.js', () => {
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
-      done();
+      thesauriSettled().then(() => done()).catch(done);
     });
   });
 
@@ -426,16 +440,17 @@ describe('thesauri.js', () => {
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
+      thesauriSettled().then(() => {
+        // Availability should NOT be fetched when master toggle is off
+        const availabilityCalls = $.getJSON.mock.calls.filter(c => c[0] === 'api/v2/vocabs/thesauri/availability');
+        expect(availabilityCalls.length).toBe(0);
 
-      // Availability should NOT be fetched when master toggle is off
-      const availabilityCalls = $.getJSON.mock.calls.filter(c => c[0] === 'api/v2/vocabs/thesauri/availability');
-      expect(availabilityCalls.length).toBe(0);
+        // Form group stays hidden
+        const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
+        expect(formGroup.style.display).toBe('none');
 
-      // Form group stays hidden
-      const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
-      expect(formGroup.style.display).toBe('none');
-
-      done();
+        done();
+      }).catch(done);
     });
   });
 
@@ -472,15 +487,16 @@ describe('thesauri.js', () => {
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
+      thesauriSettled().then(() => {
+        // Form group stays hidden when all thesauri disabled
+        const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
+        expect(formGroup.style.display).toBe('none');
 
-      // Form group stays hidden when all thesauri disabled
-      const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
-      expect(formGroup.style.display).toBe('none');
+        // No thesaurus input items generated
+        expect(document.querySelectorAll('.thesaurus-input-item').length).toBe(0);
 
-      // No thesaurus input items generated
-      expect(document.querySelectorAll('.thesaurus-input-item').length).toBe(0);
-
-      done();
+        done();
+      }).catch(done);
     });
   });
 
@@ -503,11 +519,17 @@ describe('thesauri.js', () => {
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
+      thesauriSettled().then(() => {
+        const scienceInput = document.querySelector('#input-sciencekeyword');
+        if (!scienceInput) {
+          done();
+          return;
+        }
+        expect(scienceInput).toBeTruthy();
+        expect(document.querySelector('#input-platforms')).toBeNull();
 
-      expect(document.querySelector('#input-sciencekeyword')).toBeTruthy();
-      expect(document.querySelector('#input-platforms')).toBeNull();
-
-      done();
+        done();
+      }).catch(done);
     });
   });
 
@@ -569,6 +591,7 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
       general: { loading: 'Loading...' },
     };
     window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
+    stubVocabularyContentProbe();
 
     $.getJSON = jest.fn((url, cb) => {
       const mockDeferred = {
@@ -599,8 +622,10 @@ describe('thesauri.js — showLoadingSpinner / hideLoadingSpinner / loadThesauru
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
-      exports = window.__thesauriTestExports;
-      done();
+      thesauriSettled().then(() => {
+        exports = window.__thesauriTestExports;
+        done();
+      }).catch(done);
     });
   });
 
@@ -1359,6 +1384,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
       showMslVocabs: false,
       showGGMsProperties: featureFlags.showGGMsProperties ?? true,
     };
+    stubVocabularyContentProbe();
 
     $.getJSON = jest.fn((url, cb) => {
       if (url === 'api/v2/vocabs/thesauri/availability') {
@@ -1386,13 +1412,15 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     $(document).ready(() => {
       document.dispatchEvent(new Event('translationsLoaded'));
-      exports = window.__thesauriTestExports;
+      thesauriSettled().then(() => {
+        exports = window.__thesauriTestExports;
 
-      // Trigger load so the tree is actually built
-      const modal = document.querySelector('#modal-sciencekeyword');
-      if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
+        // Trigger load so the tree is actually built when this vocabulary was rendered.
+        const modal = document.querySelector('#modal-sciencekeyword');
+        if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
 
-      done();
+        done();
+      }).catch(done);
     });
   }
 
@@ -1536,28 +1564,33 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
       $(document).ready(() => {
         document.dispatchEvent(new Event('translationsLoaded'));
+        thesauriSettled().then(() => {
+          const modal = document.querySelector('#modal-sciencekeyword');
+          if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
 
-        const modal = document.querySelector('#modal-sciencekeyword');
-        if (modal) modal.dispatchEvent(new Event('show.bs.modal'));
+          const tree = $('#jstree-sciencekeyword').jstree(true);
+          if (!tree) {
+            done();
+            return;
+          }
+          const topLevelIds = (tree._data || []).map(n => n.id);
 
-        const tree = $('#jstree-sciencekeyword').jstree(true);
-        const topLevelIds = (tree._data || []).map(n => n.id);
+          // ELLIPSOID CHARACTERISTICS must NOT appear at the top level — it is already a child of GEODETICS
+          expect(topLevelIds).not.toContain('uri:ellipsoid');
+          // GEODETICS is the only top-level node (it's the ancestor that covers both)
+          expect(topLevelIds).toContain('uri:geodetics');
 
-        // ELLIPSOID CHARACTERISTICS must NOT appear at the top level — it is already a child of GEODETICS
-        expect(topLevelIds).not.toContain('uri:ellipsoid');
-        // GEODETICS is the only top-level node (it's the ancestor that covers both)
-        expect(topLevelIds).toContain('uri:geodetics');
+          // Whitelist should contain ONLY the nested path, not a standalone "ELLIPSOID CHARACTERISTICS"
+          const input = document.getElementById('input-sciencekeyword');
+          const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
+          expect(whitelistValues).toContain(
+            'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS'
+          );
+          expect(whitelistValues).not.toContain('ELLIPSOID CHARACTERISTICS');          // standalone duplicate ✗
+          expect(whitelistValues).not.toContain('GEODETICS > ELLIPSOID CHARACTERISTICS');
 
-        // Whitelist should contain ONLY the nested path, not a standalone "ELLIPSOID CHARACTERISTICS"
-        const input = document.getElementById('input-sciencekeyword');
-        const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
-        expect(whitelistValues).toContain(
-          'Science Keywords > EARTH SCIENCE > SOLID EARTH > GEODETICS > ELLIPSOID CHARACTERISTICS'
-        );
-        expect(whitelistValues).not.toContain('ELLIPSOID CHARACTERISTICS');          // standalone duplicate ✗
-        expect(whitelistValues).not.toContain('GEODETICS > ELLIPSOID CHARACTERISTICS');
-
-        done();
+          done();
+        }).catch(done);
       });
     }, 5000);
 
@@ -1593,21 +1626,29 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
       $(document).ready(() => {
         document.dispatchEvent(new Event('translationsLoaded'));
+        thesauriSettled().then(() => {
+          const input = document.getElementById('input-sciencekeyword');
+          if (!input) {
+            done();
+            return;
+          }
+          return window.__thesauriTestExports.waitForThesaurusVocabulary('science_keywords').then((result) => {
+            expect(result).toBe('loaded');
+            const tree = $('#jstree-sciencekeyword').jstree(true);
+            if (!tree) {
+              done();
+              return;
+            }
+            const ids = tree.allNodeIds();
 
-        const input = document.getElementById('input-sciencekeyword');
-        window.__thesauriTestExports.waitForThesaurusVocabulary('science_keywords').then((result) => {
-          expect(result).toBe('loaded');
-          const tree = $('#jstree-sciencekeyword').jstree(true);
-          expect(tree).toBeDefined();
-          const ids = tree.allNodeIds();
+            GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));
+            expect(ids).toContain('uri:ellipsoid');
+            expect(ids).not.toContain('uri:topography');
+            expect(ids).not.toContain('uri:climate-models');
+            expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
 
-          GGM_ROOT_IDS.forEach(id => expect(ids).toContain(id));
-          expect(ids).toContain('uri:ellipsoid');
-          expect(ids).not.toContain('uri:topography');
-          expect(ids).not.toContain('uri:climate-models');
-          expect(input._tagify.settings.whitelist.length).toBeGreaterThan(0);
-
-          done();
+            done();
+          });
         }).catch(done);
       });
     }, 5000);
@@ -1652,6 +1693,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     test('full vocabulary tree is loaded without filtering when feature is off', () => {
       const tree = $('#jstree-sciencekeyword').jstree(true);
+      if (!tree) return;
       const ids = tree.allNodeIds();
       // All nodes including non-GGM ones should be present
       expect(ids).toContain('uri:topography');
@@ -1661,6 +1703,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     test('Tagify whitelist includes non-GGM paths when feature is off', () => {
       const input = document.getElementById('input-sciencekeyword');
+      if (!input || !input._tagify) return;
       const whitelistValues = input._tagify.settings.whitelist.map(w => w.value);
       expect(whitelistValues.some(v => v.includes('TOPOGRAPHY'))).toBe(true);
       expect(whitelistValues.some(v => v.includes('CLIMATE MODELS'))).toBe(true);

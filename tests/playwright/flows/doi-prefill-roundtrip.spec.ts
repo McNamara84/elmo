@@ -76,7 +76,9 @@ test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
         { id: 1, name: 'Alternative Title' }, { id: 2, name: 'Main Title' },
         { id: 3, name: 'Other' }, { id: 4, name: 'Subtitle' }, { id: 5, name: 'Translated Title' },
       ] }));
-      await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));
+      // Empty 200s cover availability and the temporary per-vocabulary probe.
+      // Without the probe, only availability is requested and still receives {}.
+      await page.route('**/api/v2/vocabs/thesauri/**', route => route.fulfill({ json: {} }));
       await page.route('**/api/v2/doi/lookup/**', route =>
         route.fulfill({ json: { found: true, attributes } }));
 
