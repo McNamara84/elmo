@@ -1180,7 +1180,7 @@ $(document).ready(function () {
      * @returns {Array<{key: string, displayName: string}>} Available thesauri.
      */
     async function filterAvailableThesauri(availability) {
-        const result = [];
+        let result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
             if (THESAURUS_CONFIG[key].dynamicOnly) return;
             if (hiddenThesauri.has(key)) return;
