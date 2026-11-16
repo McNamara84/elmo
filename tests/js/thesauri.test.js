@@ -79,7 +79,11 @@ const mockVocabularyData = {
 // The temporary vocabulary probe uses fetch. A successful response leaves the
 // availability mock in charge. When the probe is removed, nothing calls fetch.
 function stubVocabularyContentProbe() {
-  const fetchMock = jest.fn().mockResolvedValue({ ok: true, status: 200 });
+  const fetchMock = jest.fn().mockResolvedValue({
+    ok: true,
+    status: 200,
+    json: async () => ({ available: true }),
+  });
   window.fetch = fetchMock;
   global.fetch = fetchMock;
 }
