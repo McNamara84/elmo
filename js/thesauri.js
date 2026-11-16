@@ -1192,25 +1192,25 @@ $(document).ready(function () {
                 });
             }
         });
-        // check number 2: exclude them from available if the API responds with an error:
-        // can be removed if the availability endpoint fully consistent
+        // Drop a thesaurus whose vocabulary body reports an error, even when
+        // the availability list still marks it available. The probe is a small
+        // 200 response: a 503 here is logged by the browser and cannot be hidden.
         const excludedKeys = new Set();
-        for (const key of Object.keys(THESAURUS_CONFIG)) {
-            const apiSuffix = THESAURUS_CONFIG[key].apiEndpoint;
+        for (const item of result) {
+            const apiSuffix = THESAURUS_CONFIG[item.key].apiEndpoint;
             if (!apiSuffix) continue;
 
             try {
-                const response = await fetch(`./${apiSuffix}`);
-                if (!response.ok) { // no data is a 503 response
-                    excludedKeys.add(key);
+                const response = await fetch(`./${apiSuffix}?probe=1`);
+                const data = await response.json().catch(function () { return null; });
+                if (!response.ok || (data && typeof data === 'object' && 'error' in data)) {
+                    excludedKeys.add(item.key);
                 }
             } catch (error) {
-                excludedKeys.add(key);
+                excludedKeys.add(item.key);
             }
-        } // exclude the thesauri that respond with an error from the list of aavailable thesauri.
-        result = result.filter(item => !excludedKeys.has(item.key));
-        
-        return result;
+        }
+        return result.filter(item => !excludedKeys.has(item.key));
     }
 
     /**
