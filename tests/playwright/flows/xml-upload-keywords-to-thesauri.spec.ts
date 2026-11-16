@@ -231,19 +231,19 @@ test('XML upload splits Hochvogel keywords into every supported thesaurus', asyn
   test.slow();
   await registerGoogleMapsNoopRoute(page);
   await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: MOCK_AVAILABILITY }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords*', route => route.fulfill({
     json: vocabPayload(SCIENCE_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments*', route => route.fulfill({
     json: vocabPayload(INSTRUMENT_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms*', route => route.fulfill({
     json: vocabPayload(PLATFORM_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gemet', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gemet*', route => route.fulfill({
     json: vocabPayload(GEMET_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/chronostrat-timescale', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/chronostrat-timescale*', route => route.fulfill({
     json: vocabPayload(CHRONOSTRAT_KEYWORDS),
   }));
 
