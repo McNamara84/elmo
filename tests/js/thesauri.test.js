@@ -525,10 +525,6 @@ describe('thesauri.js', () => {
       document.dispatchEvent(new Event('translationsLoaded'));
       thesauriSettled().then(() => {
         const scienceInput = document.querySelector('#input-sciencekeyword');
-        if (!scienceInput) {
-          done();
-          return;
-        }
         expect(scienceInput).toBeTruthy();
         expect(document.querySelector('#input-platforms')).toBeNull();
 
