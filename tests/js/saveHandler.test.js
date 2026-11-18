@@ -90,8 +90,9 @@ describe('saveHandler.js', () => {
         validationError: 've',
         filenameErrorHeading: 'fh',
         filenameError: 'fe',
-        successHeading: 'sh',
+        savingSuccessHeading: 'ssh',
         savingSuccess: 'ss',
+        savingSuccessJsonLd: 'ssJsonLd',
         errorHeading: 'eh',
         saveError: 'se',
         savingHeading: 'savH',
@@ -140,8 +141,11 @@ describe('saveHandler.js', () => {
 
     handler.showNotification.mockClear();
     $('#input-saveas-filename').val('file');
-    await handler.handleSaveConfirm();
+    const confirmation = handler.handleSaveConfirm();
     expect(modalInstances[0].hide).toHaveBeenCalled();
+    expect(handler.saveAndDownload).not.toHaveBeenCalled();
+    $('#modal-saveas').trigger('hidden.bs.modal');
+    await confirmation;
     expect(handler.saveAndDownload).toHaveBeenCalledWith('file', 'xml');
   });
 
@@ -198,7 +202,11 @@ describe('saveHandler.js', () => {
     for (const group of ['authors', 'contributors']) {
       expect(JSON.parse(request[1].body.get(`${group}Payload`))[0].affiliations).toEqual([affiliation]);
     }
-    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    expect(handler.showNotification).toHaveBeenLastCalledWith(
+      'success',
+      'ssh',
+      format === 'jsonld' ? 'ssJsonLd' : 'ss'
+    );
     delete global.fetch;
   });
 
@@ -219,7 +227,7 @@ describe('saveHandler.js', () => {
     expect(request).toBeDefined();
     expect(request[1].body.get('version')).toBe('1.2.3');
     expect(JSON.parse(request[1].body.get('resourceInformationPayload')).version).toBe('1.2.3');
-    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'ssh', format === 'jsonld' ? 'ssJsonLd' : 'ss');
     expect(document.getElementById('input-resourceinformation-version').classList.contains('is-invalid')).toBe(false);
     delete global.fetch;
   });
