@@ -170,6 +170,8 @@ describe('saveHandler.js', () => {
     expect($('#saveas-extension').text()).toBe('.jsonld');
     expect($('#input-saveas-filename').val()).toBe('dataset_20240530_123456');
     expect(modalInstances[0].show).toHaveBeenCalled();
+    expect($('#label-saveas-modal').attr('data-translate')).toBe('modals.save.saveAsJsonLd');
+    expect(handler.showNotification).not.toHaveBeenCalled();
   });
 
   test.each(['xml', 'jsonld'])('handleSave opens the %s dialog despite incomplete confirmed labels', async format => {
