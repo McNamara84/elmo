@@ -33,7 +33,7 @@
       "checks": ["audit"]
     },
     {
-      "file": "security.yml",
+      "file": "container-scan.yml",
       "name": "Container Security Checks",
       "checks": ["Container scan (web)", "Container scan (mariadb)"]
     }
