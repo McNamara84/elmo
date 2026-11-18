@@ -16,12 +16,14 @@ const SAVE_FORMATS = {
     xml: {
         extension: 'xml',
         modalTitleKey: 'saveAs',
+        successMessageKey: 'savingSuccess',
         fallbackTitle: 'Save as XML',
         logLabel: 'xml file locally'
     },
     jsonld: {
         extension: 'jsonld',
         modalTitleKey: 'saveAsJsonLd',
+        successMessageKey: 'savingSuccessJsonLd',
         fallbackTitle: 'Save as JSON-LD',
         logLabel: 'json-ld file locally'
     }
@@ -60,14 +62,6 @@ class SaveHandler {
      */
     initializeEventListeners() {
         $('#button-saveas-save').on('click', () => this.handleSaveConfirm());
-        $('#modal-saveas').on('hidden.bs.modal', () => {
-            // Cancel dismisses the preparatory info alert. During a save, keep
-            // the notification open: Bootstrap ignores show() while hide() is
-            // animating, which could otherwise swallow the save result.
-            if (!this.saveInProgress && $('#modal-notification-body .alert-info').length) {
-                this.modals.notification.hide();
-            }
-        });
 
         // Focus on filename input when modal opens
         $('#modal-saveas').on('shown.bs.modal', () => {
@@ -102,9 +96,7 @@ class SaveHandler {
             return;
         }
         this.updateSaveAsModal();
-        this.showNotification('info',
-            translations.alerts.processingHeading,
-            translations.alerts.preparingDownload);
+
         const suggestedFilename = await this.generateFilename();
         if (suggestedFilename) {
             $('#input-saveas-filename').val(suggestedFilename);
@@ -145,10 +137,14 @@ class SaveHandler {
             return;
         }
 
+        const format = this.currentFormat;
         this.saveInProgress = true;
         try {
-            this.modals.saveAs.hide();
-            await this.saveAndDownload(filename, this.currentFormat);
+            await new Promise(resolve => {
+                $('#modal-saveas').one('hidden.bs.modal', resolve);
+                this.modals.saveAs.hide();
+            });
+            await this.saveAndDownload(filename, format);
         } finally {
             this.saveInProgress = false;
         }
@@ -258,8 +254,8 @@ class SaveHandler {
             }
 
             this.showNotification('success',
-                translations.alerts.successHeading,
-                translations.alerts.savingSuccess);
+                translations.alerts.savingSuccessHeading,
+                translations.alerts[formatConfig.successMessageKey]);
         } catch (error) {
             console.error('Error saving dataset:', error);
 
@@ -328,7 +324,7 @@ class SaveHandler {
     /**
      * Return the config for a supported format.
      * @param {string} format - Requested format
-     * @returns {{extension: string, modalTitleKey: string, fallbackTitle: string, logLabel: string}}
+     * @returns {{extension: string, modalTitleKey: string, successMessageKey: string, fallbackTitle: string, logLabel: string}}
      */
     getFormatConfig(format) {
         return SAVE_FORMATS[format] || SAVE_FORMATS.xml;
@@ -342,6 +338,7 @@ class SaveHandler {
         const translatedTitle = translations?.modals?.save?.[formatConfig.modalTitleKey] || formatConfig.fallbackTitle;
 
         if (this.modalElements.title) {
+            this.modalElements.title.dataset.translate = `modals.save.${formatConfig.modalTitleKey}`;
             this.modalElements.title.textContent = translatedTitle;
         }
 
