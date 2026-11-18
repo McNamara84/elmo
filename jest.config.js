@@ -4,7 +4,7 @@ module.exports = {
     '/node_modules/',
     '/tests/playwright/', // Ignore Playwright tests
     '/tests/integration/',
-    '/tests/ci/', // Executed separately with node --test in security.yml
+    '/tests/ci/', // Executed separately with node --test in container-scan.yml
     '/\\.tmp/'
   ],
   collectCoverageFrom: [

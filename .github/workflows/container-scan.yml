@@ -30,7 +30,7 @@ jobs:
           node-version-file: .nvmrc
 
       - name: Test scan failure handling
-        run: bash tests/ci/container-scan.sh
+        run: bash tests/ci/container-scan.test.sh
 
       - name: Install deployment helper dependencies without lifecycle scripts
         run: npm ci --omit=dev --ignore-scripts
