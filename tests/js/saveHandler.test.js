@@ -122,11 +122,20 @@ describe('saveHandler.js', () => {
     delete window.resourceInformation;
   });
 
-  test('generateFilename returns formatted timestamp', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z').getTime());
-    const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
-    const name = await handler.generateFilename();
-    expect(name).toBe('dataset_20240530_123456');
+  test('generateFilename uses the local date and time', async () => {
+    jest.useFakeTimers();
+
+    try {
+      // November 4 at 00:49:12 in the test process's local time zone.
+      jest.setSystemTime(new Date(2026, 10, 4, 0, 49, 12));
+      const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+
+      await expect(handler.generateFilename()).resolves.toBe(
+        'dataset_20261104_004912'
+      );
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('handleSaveConfirm validates filename', async () => {
