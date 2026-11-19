@@ -27,7 +27,7 @@ test.describe('Widget theme', () => {
           id, text, children, scheme: 'GCMD', language: 'en',
           schemeURI: 'https://gcmd.earthdata.nasa.gov/kms/concepts/concept_scheme/sciencekeywords'
         });
-        await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', route => route.fulfill({
+        await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords*', route => route.fulfill({
           json: { data: [node('science-root', 'Science Keywords', [
             node('https://gcmd.earthdata.nasa.gov/kms/concept/221386f6-ef9b-4990-82b3-f990b0fe39fa', 'GEODETICS', [
               node('theme-leaf', 'TEST KEYWORD')

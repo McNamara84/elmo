@@ -216,13 +216,13 @@ test('DOI prefill splits keywords into thesauri and saves them in the XML', asyn
   // Thesauri are not bundled. The page asks ELMO, and ELMO proxies ERNIE.
   // CI cannot rely on that hop, so the vocabularies are the DOI subjects plus one unused concept.
   await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: MOCK_AVAILABILITY }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords*', route => route.fulfill({
     json: vocabPayload([...SCIENCE_KEYWORDS, EXTRA_SCIENCE_KEYWORD]),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', route => route.fulfill({
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments*', route => route.fulfill({
     json: vocabPayload(INSTRUMENT_KEYWORDS),
   }));
-  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', route => route.fulfill({ json: { data: [] } }));
+  await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms*', route => route.fulfill({ json: { data: [] } }));
   await page.route(`**/api/v2/doi/lookup/${encodeURIComponent(DOI)}`, route => {
     if (route.request().method() !== 'GET') return route.fallback();
     return route.fulfill({ json: LOOKUP });

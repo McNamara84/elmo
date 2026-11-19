@@ -166,13 +166,13 @@ test.describe('Thesauri Keywords Form Group', () => {
     });
 
     // Mock vocabulary API endpoints with inline test data
-    await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords', async route => {
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-science-keywords*', async route => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_SCIENCE_KEYWORDS) });
     });
-    await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms', async route => {
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-platforms*', async route => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_PLATFORMS) });
     });
-    await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments', async route => {
+    await page.route('**/api/v2/vocabs/thesauri/gcmd-instruments*', async route => {
       await route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(MOCK_INSTRUMENTS) });
     });
 
