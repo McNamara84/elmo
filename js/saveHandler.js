@@ -140,6 +140,7 @@ class SaveHandler {
         const format = this.currentFormat;
         this.saveInProgress = true;
         try {
+            // Wait for Save As to finish closing before showing the saving notification.
             await new Promise(resolve => {
                 $('#modal-saveas').one('hidden.bs.modal', resolve);
                 this.modals.saveAs.hide();
