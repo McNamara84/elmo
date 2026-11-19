@@ -105,15 +105,18 @@ class SaveHandler {
     }
 
     /**
-     * Generate filename with timestamp
+     * Generate a filename with a local timestamp.
      * @returns {Promise<string|null>} Generated filename or null if error
      */
     async generateFilename() {
         try {
-            const timestamp = new Date().toISOString()
-                .replace(/[-:]/g, '')
-                .replace(/[T.]/g, '_')
-                .slice(0, 15);
+            const now = new Date();
+            const pad = value => String(value).padStart(2, '0');
+
+            const date = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}`;
+            const time = `${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+            const timestamp = `${date}_${time}`;
+
             return `dataset_${timestamp}`;
         } catch (error) {
             console.error('Error generating filename:', error);
