@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/../../../includes/connect_db.php';
 if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
     require_once __DIR__ . '/../../../settings.php';
 }
@@ -14,10 +15,9 @@ class DatasetController
     protected mysqli $connection;
     protected mixed $logger;
 
-    public function __construct() 
+    public function __construct()
     {
-        global $connection;
-        $this->connection = $connection;
+        $this->connection = getConnection();
         $this->logger = null; // Optional logger
     }
 
@@ -1226,7 +1226,7 @@ class DatasetController
         
         if ($sourceXmlString === null) {
             // Temporarily create FreestyleXML
-            $this->getResourceAsXml($GLOBALS['connection'], $id);
+            $this->getResourceAsXml($this->connection, $id);
             $inputXmlPath = $this->generate_xml_path($id);
 
             if (!file_exists($inputXmlPath)) {

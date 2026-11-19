@@ -69,7 +69,9 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
  * @throws Exception When a form-group save or transaction operation fails.
  */
 function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie = null): int {
-    global $connection, $showMslMode;
+    require_once __DIR__ . '/connect_db.php';
+    $connection = getConnection();
+    global $showMslMode;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
     global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
 
@@ -167,7 +169,8 @@ function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie
  */
 function generateDatasetPayloadByResourceId(int $resourceId, array $options = []): array
 {
-    global $connection;
+    require_once __DIR__ . '/connect_db.php';
+    $connection = getConnection();
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
     $postData = $options['postData'] ?? null;
     $requestedVariant = isset($options['variant']) ? strtolower((string) $options['variant']) : null;

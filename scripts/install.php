@@ -27,11 +27,12 @@ if (!defined('INCLUDED_FROM_TEST')) {
         ]));
     }
     require_once $settingsPath;
-    // Check database connection. Assuming that the test methods take care of passing the connection.
-    if (!isset($connection) || !$connection) {
+    require_once dirname(__DIR__) . '/includes/connect_db.php';
+    $connection = getConnection();
+    if ($connection->connect_error) {
         die(json_encode([
             'status' => 'error',
-            'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
+            'message' => 'Error: Database connection could not be established. Check DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, and DB_PORT.'
         ]));
     }
 }
@@ -1374,7 +1375,8 @@ function parseInstallationAction(array $arguments): string
  */
 function runInstallationCli(array $arguments): int
 {
-    global $connection;
+    require_once dirname(__DIR__) . '/includes/connect_db.php';
+    $connection = getConnection();
 
     try {
         $action = parseInstallationAction($arguments);
@@ -1383,7 +1385,7 @@ function runInstallationCli(array $arguments): int
         return 2;
     }
 
-    if (!isset($connection)) {
+    if ($connection->connect_error) {
         fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
         return 1;
     }

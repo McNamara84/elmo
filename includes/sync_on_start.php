@@ -4,6 +4,9 @@
 require_once __DIR__ . '/../api/v2/controllers/VocabController.php';
 require_once __DIR__ . '/../api/v2/services/ErnieService.php';
 require_once __DIR__ . '/../api/v2/services/LicenseRepository.php';
+require_once __DIR__ . '/connect_db.php';
+
+$connection = getConnection();
 
 try {
     $controller = new VocabController();

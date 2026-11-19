@@ -95,14 +95,6 @@ jobs:
       run: |
         cat << 'EOF' > settings.php
         <?php
-        function connectDb() {
-            $host = '127.0.0.1';
-            $username = 'test_user';
-            $password = 'test_password';
-            $database = 'mde2-msl-test';
-            $conn = new mysqli($host, $username, $password, $database);
-            return $conn;
-        }
         $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: '';
         $mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
         function getSettings($setting) {
@@ -126,7 +118,6 @@ jobs:
                 getSettings($_GET['setting']);
             }
         }
-        $connection = connectDb();
         $ELMO_API_KEY = '1234-1234-1234-1234';
         $apiKeyTimezone = 'test_timezone_api_key';
         $maxTitles = 2;
@@ -188,6 +179,11 @@ jobs:
         EOF
 
     - name: Initialize database structure and lookup data
+      env:
+        DB_HOST: 127.0.0.1
+        DB_USER: test_user
+        DB_PASSWORD: test_password
+        DB_NAME: mde2-msl-test
       run: php -r "require 'scripts/install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
     - name: Shrink large JSON fixtures for faster page loads
@@ -198,6 +194,10 @@ jobs:
         ERNIE_URL: ${{ secrets.ERNIE_URL }}
         ERNIE_API_KEY: ${{ secrets.ERNIE_API_KEY }}
       run: |
+        export DB_HOST=127.0.0.1
+        export DB_USER=test_user
+        export DB_PASSWORD=test_password
+        export DB_NAME=mde2-msl-test
         # Standard ELMO uses deterministic ERNIE data for license submissions.
         # The other editions and live smoke tests retain their existing credentials.
         mkdir -p .tmp/ernie-license-ci storage/cache

@@ -29,7 +29,8 @@ require_once __DIR__ . '/../api/security.php';
 if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
     require_once __DIR__ . '/../settings.php';
 }
-global $connection;
+require_once __DIR__ . '/../includes/connect_db.php';
+getConnection();
 
 // ========= EXECUTION PIPELINE =========
 

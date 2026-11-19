@@ -11,9 +11,11 @@ function generateAllXmlFiles(): array
 {
     $projectRoot = dirname(__DIR__);
     require_once $projectRoot . '/settings.php';
+    require_once $projectRoot . '/includes/connect_db.php';
     require_once $projectRoot . '/api/v2/controllers/DatasetController.php';
+    $connection = getConnection();
 
-    if (!isset($connection) || !$connection instanceof mysqli || $connection->connect_error) {
+    if ($connection->connect_error) {
         return [
             'status' => 'error',
             'message' => 'Database connection could not be established.',

@@ -12,7 +12,7 @@ use PHPUnit\Framework\MockObject\MockObject;
  * Unit tests for ICGEMController
  * 
  * Part 1: GET* functions - Mock database responses and verify data fetching/transformation
- * These tests use reflection to instantiate the controller without triggering the global $connection
+ * These tests use reflection to instantiate the controller without opening a database connection.
  */
 #[AllowMockObjectsWithoutExpectations]
 final class ICGEMControllerTest extends TestCase
@@ -23,32 +23,13 @@ final class ICGEMControllerTest extends TestCase
 
     public static function setUpBeforeClass(): void
     {
-        // Only try to load classes once per test run
         if (self::$classesLoaded) {
             return;
         }
 
-        // Define mock connectDb function BEFORE requiring files
-        if (!function_exists('connectDb')) {
-            function connectDb() {
-                return null; // Return null instead of attempting real connection
-            }
-        }
-
-        // Try to load the controller files
-        // They may fail on first load due to database connection in settings.php
-        // but subsequent loads should work
-        try {
-            ob_start();
-            require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
-            require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
-            ob_end_clean();
-            self::$classesLoaded = true;
-        } catch (\Throwable $e) {
-            ob_end_clean();
-            // Suppress the error - classes may still be loaded despite the exception
-            self::$classesLoaded = true;
-        }
+        require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
+        require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
+        self::$classesLoaded = true;
     }
 
     protected function setUp(): void
@@ -59,9 +40,8 @@ final class ICGEMControllerTest extends TestCase
         // Create mock connection FRESH for each test
         $this->mockConnection = $this->createMock(\mysqli::class);
         
-        // Set global connection for this test
-        global $connection;
-        $connection = $this->mockConnection;
+        // Controllers read this through getConnection().
+        $GLOBALS['connection'] = $this->mockConnection;
 
         // Create controller instance without calling constructor
         $reflection = new \ReflectionClass(\ICGEMController::class);
@@ -74,6 +54,12 @@ final class ICGEMControllerTest extends TestCase
         // Initialize $logger property (required, typed as mixed but uninitialized)
         $loggerProperty = $reflection->getParentClass()->getProperty('logger');
         $loggerProperty->setValue($this->controller, null);
+    }
+
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['connection']);
+        parent::tearDown();
     }
 
     // ============================================

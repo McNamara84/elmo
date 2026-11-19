@@ -101,20 +101,6 @@ jobs:
         run: |
           cat <<'PHP' > settings.php
           <?php
-          function connectDb() {
-              $host = '127.0.0.1';
-              $username = 'test_user';
-              $password = 'test_password';
-              $database = 'mde2-msl-test';
-              $conn = new mysqli($host, $username, $password, $database);
-              return $conn;
-          }
-
-          // Establish the database connection (skip in unit testing context)
-          if (!defined('INCLUDED_FROM_TEST')) {
-              $connection = connectDb();
-          }
-
           $ELMO_API_KEY = '1234-1234-1234-1234';
           $apiKeyGoogleMaps = 'test_api_key';
           $apiKeyTimezone = 'test_timezone_api_key';
