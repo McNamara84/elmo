@@ -108,11 +108,9 @@ test.describe('Minimal dataset save-as flow', () => {
     await saveButton.click();
 
     const notificationModal = page.locator(SELECTORS.modals.notification);
-    await expect(notificationModal).toBeVisible();
-    await expect(notificationModal.locator('.alert-info')).toHaveCount(1);
-
     const saveAsModal = page.locator(SELECTORS.modals.saveAs);
     await expect(saveAsModal).toBeVisible();
+    await expect(notificationModal).toBeHidden();
   });
 
   test('saves the dataset and triggers an XML download', async ({ page }) => {
@@ -166,10 +164,8 @@ test.describe('Minimal dataset save-as flow', () => {
     if (translatedSuccessMessage) {
       await expect(successAlert).toContainText(translatedSuccessMessage);
     } else {
-      await expect(successAlert).toContainText(
-        /Dataset saved successfully|successfully saved/
-      );
-    }
+    await expect(successAlert).toContainText('The XML file is downloading.');
+  }
 
     await closeNotificationModalIfVisible(page);
     await page.unroute(SAVE_ENDPOINT);
