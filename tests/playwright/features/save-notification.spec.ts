@@ -44,10 +44,13 @@ for (const result of ['success', 'danger']) {
     await page.evaluate(result => {
       const handler = (window as any).saveHandler;
       handler.saveAndDownload = async () => {
+        const saveDialog = document.querySelector<HTMLElement>('#modal-saveas');
+
+        if (saveDialog?.style.display !== 'none') {
+          throw new Error('Save started before the Save As dialog closed');
+        }
+
         handler.showNotification('info', 'Saving', 'Saving metadata');
-        await new Promise<void>(resolve => {
-          document.querySelector('#modal-saveas')!.addEventListener('hidden.bs.modal', () => resolve(), { once: true });
-        });
         handler.showNotification(result, 'Save result', 'Finished saving');
       };
     }, result);
