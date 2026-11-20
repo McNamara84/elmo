@@ -19,12 +19,15 @@ services:
       - internal
 
   web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8080:80"
+    # Template only: the publishing workflow pins this image to a validated digest.
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    pull_policy: always
+    healthcheck: &web-healthcheck
+      test: ["CMD", "php", "/var/www/html/scripts/container_database.php", "healthcheck"]
+      interval: 10s
+      timeout: 8s
+      retries: 3
+      start_period: 180s
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -54,7 +57,6 @@ services:
       FUNDER_PID: ${FUNDER_PID:-CFID}
       # Database install routine
       INSTALL_ACTION: basic
-      DB_INIT_MODE: drop_data
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: ${SHOW_GGMS_PROPERTIES:-false}
@@ -73,11 +75,12 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo`)"
-      - "traefik.http.routers.elmo-router.entrypoints=https"
-      - "traefik.http.routers.elmo-router.middlewares=elmo-stripprefix"
-      - "traefik.http.middlewares.elmo-stripprefix.stripprefix.prefixes=/elmo"
-      - "traefik.http.services.elmo-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.elmo-stage.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo`)"
+      - "traefik.http.routers.elmo-stage.entrypoints=https"
+      - "traefik.http.routers.elmo-stage.service=elmo-stage"
+      - "traefik.http.routers.elmo-stage.middlewares=elmo-stage-stripprefix"
+      - "traefik.http.middlewares.elmo-stage-stripprefix.stripprefix.prefixes=/elmo"
+      - "traefik.http.services.elmo-stage.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
     volumes:
       # Shared API responses cache: all variants see the same cached responses.
@@ -87,12 +90,9 @@ services:
       - web_drafts:/var/www/html/storage/drafts
 
   web-msl:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8081:80"
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    pull_policy: always
+    healthcheck: *web-healthcheck
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -133,29 +133,29 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      web:
+        condition: service_healthy
     restart: unless-stopped
     networks:
       - internal
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-msl-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-msl`)"
-      - "traefik.http.routers.elmo-msl-router.entrypoints=https"
-      - "traefik.http.routers.elmo-msl-router.middlewares=elmo-msl-stripprefix"
-      - "traefik.http.middlewares.elmo-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
-      - "traefik.http.services.elmo-msl-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.elmo-stage-msl.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-msl`)"
+      - "traefik.http.routers.elmo-stage-msl.entrypoints=https"
+      - "traefik.http.routers.elmo-stage-msl.service=elmo-stage-msl"
+      - "traefik.http.routers.elmo-stage-msl.middlewares=elmo-stage-msl-stripprefix"
+      - "traefik.http.middlewares.elmo-stage-msl-stripprefix.stripprefix.prefixes=/elmo-msl"
+      - "traefik.http.services.elmo-stage-msl.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
     volumes:
       - api_cache_volume:/var/www/html/storage/cache
       - web_msl_drafts:/var/www/html/storage/drafts
 
   web-igsn:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-      target: prod
-    ports:
-      - "8083:80"
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    pull_policy: always
+    healthcheck: *web-healthcheck
     environment:
       DB_HOST: db
       DB_USER: ${DB_USER}
@@ -194,9 +194,12 @@ services:
       SHOW_SPATIAL_TEMPORAL_COVERAGE: "false"
       SHOW_RELATED_WORK: "false"
       INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
-      DB_INIT_MODE: "keep_data"
     depends_on:
       db:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+      web-msl:
         condition: service_healthy
     restart: unless-stopped
     networks:
@@ -204,11 +207,12 @@ services:
       - frontend
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.elmo-igsn-router.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-igsn`)"
-      - "traefik.http.routers.elmo-igsn-router.entrypoints=https"
-      - "traefik.http.routers.elmo-igsn-router.middlewares=elmo-igsn-stripprefix"
-      - "traefik.http.middlewares.elmo-igsn-stripprefix.stripprefix.prefixes=/elmo-igsn"
-      - "traefik.http.services.elmo-igsn-service.loadbalancer.server.port=80"
+      - "traefik.http.routers.elmo-stage-igsn.rule=Host(`env.rz-vm182.gfz.de`) && PathPrefix(`/elmo-igsn`)"
+      - "traefik.http.routers.elmo-stage-igsn.entrypoints=https"
+      - "traefik.http.routers.elmo-stage-igsn.service=elmo-stage-igsn"
+      - "traefik.http.routers.elmo-stage-igsn.middlewares=elmo-stage-igsn-stripprefix"
+      - "traefik.http.middlewares.elmo-stage-igsn-stripprefix.stripprefix.prefixes=/elmo-igsn"
+      - "traefik.http.services.elmo-stage-igsn.loadbalancer.server.port=80"
       - "traefik.docker.network=traefik"
     volumes:
       - api_cache_volume:/var/www/html/storage/cache
@@ -225,5 +229,5 @@ networks:
   internal:
     driver: bridge
   frontend:
-    external:
-      name: traefik
+    external: true
+    name: traefik
