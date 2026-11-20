@@ -30,28 +30,6 @@ function resolveFeatureToggle(?bool $value, bool $default): bool
     return $value ?? $default;
 }
 
-// Translate the environment secret variables to the PHP used on application level.
-// ELMO API Key
-$ELMO_API_KEY = getenv('ELMO_API_KEY');
-// Google Maps API Key
-$apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY');
-// Google Maps Map ID (required for AdvancedMarkerElement)
-$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID');
-// API Key for https://timezonedb.com/
-$apiKeyTimezone = getenv('TIMEZONE_API_KEY');
-
-// ERNIE Integration (External Vocabulary Service)
-$ernieUrl = getenv('ERNIE_URL');
-$ernieApiKey = getenv('ERNIE_API_KEY');
-// Cache TTL for all ERNIE data in seconds (default: 6 hours)
-
-// Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
-$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
-
-// URL for primary data upload (shown after successful submit)
-$dataUploadUrl = getenv('DATA_UPLOAD_URL');
-
-
 /**
  * Apply cross-feature overrides for specific ELMO GEM variant
  *
