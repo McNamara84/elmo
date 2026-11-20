@@ -128,7 +128,14 @@ abstract class DatabaseTestCase extends TestCase
             throw new \RuntimeException("Shared connection not initialized in setUpBeforeClass");
         }
 
-        $this->connection = self::$sharedConnection;    
+        $this->connection = self::$sharedConnection;
+        require_once __DIR__ . '/../includes/connect_db.php';
+        // Publish the test database through the same accessor production code uses.
+        $GLOBALS['connection'] = $this->connection;
+        if (getConnection() !== $this->connection) {
+            throw new \RuntimeException('getConnection() did not reuse the test database connection');
+        }
+
         // Drop existing tables to ensure clean state
         require_once __DIR__ . '/../scripts/install.php';
         dropTables($this->connection);
@@ -141,10 +148,6 @@ abstract class DatabaseTestCase extends TestCase
         
         // Insert lookup data
         insertLookupData($this->connection);
-
-        // IMPORTANT: Set global $connection for legacy code that uses global variables
-        // Many save functions like save_resourceinformation_and_rights.php use global $connection
-        $GLOBALS['connection'] = $this->connection;
     }
     
     /**

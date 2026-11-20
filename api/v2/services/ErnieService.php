@@ -1,9 +1,13 @@
 <?php
 
 
-// Only require settings.php if not in a test environment that already defined the globals
+// Only load configuration outside the ErnieService unit-test harness.
 if (!defined('ERNIE_SERVICE_TEST_MODE')) {
-    require_once __DIR__ . '/../../../settings.php';
+    require_once __DIR__ . '/../../../feature_flags.php';
+    require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../../../settings.php')) {
+        require_once __DIR__ . '/../../../settings.php';
+    }
 }
 
 class ErnieService

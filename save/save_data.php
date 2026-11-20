@@ -25,11 +25,16 @@ $saveDataInitialOutputBufferLevel = ob_get_level();
 
 require_once __DIR__ . '/../api/security.php';
 
-// Only load settings if connection not already injected (for testing)
+// Only load configuration if the test has not already injected a connection.
 if (!isset($GLOBALS['connection']) || $GLOBALS['connection'] === null) {
-    require_once __DIR__ . '/../settings.php';
+    require_once __DIR__ . '/../feature_flags.php';
+    require_once __DIR__ . '/../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../settings.php')) {
+        require_once __DIR__ . '/../settings.php';
+    }
 }
-global $connection;
+require_once __DIR__ . '/../includes/connect_db.php';
+getConnection();
 
 // ========= EXECUTION PIPELINE =========
 

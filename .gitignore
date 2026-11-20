@@ -1,5 +1,5 @@
 settings.php
-playwright-variant-lock.php
+playwright_variant_lock.php
 .vscode/
 .phpunit.result.cache
 .env

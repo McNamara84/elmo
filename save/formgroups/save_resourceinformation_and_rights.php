@@ -85,7 +85,8 @@ function saveResourceInformationAndRights($connection, $postData, ?array $prepar
  */
 function prepareResourceData($postData, ?array $preparedRights = null)
 {
-    global $connection;
+    require_once __DIR__ . '/../../includes/connect_db.php';
+    $connection = getConnection();
     require_once __DIR__ . '/../../api/v2/services/LicenseService.php';
     $rightsId = $preparedRights !== null ? $preparedRights['rights_id'] : LicenseService::draftRightsId($connection, $postData);
     return [

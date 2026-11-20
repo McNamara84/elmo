@@ -13,7 +13,11 @@ use PHPMailer\PHPMailer\Exception;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 require $projectRoot . '/api/security.php';
-include $projectRoot . '/settings.php';
+require_once $projectRoot . '/feature_flags.php';
+require_once $projectRoot . '/includes/env_variables_reader.php';
+if (is_readable($projectRoot . '/settings.php')) {
+    include $projectRoot . '/settings.php';
+}
 
 ensureAppSession();
 

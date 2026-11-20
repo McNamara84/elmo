@@ -31,8 +31,7 @@ final class DataUploadUrlSettingsTest extends TestCase
     // ── Settings files consistency tests ─────────────────────────────
 
     /**
-     * All three settings files must contain the $dataUploadUrl definition
-     * using getenv('DATA_UPLOAD_URL') with an empty string fallback.
+     * The environment reader must define $dataUploadUrl from DATA_UPLOAD_URL.
      */
     #[DataProvider('settingsFileProvider')]
     public function testSettingsFileDefinesDataUploadUrl(string $filename): void
@@ -44,7 +43,7 @@ final class DataUploadUrlSettingsTest extends TestCase
         $this->assertNotFalse($contents);
 
         $this->assertStringContainsString(
-            "\$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';",
+            "\$dataUploadUrl = getenv_with_warning('DATA_UPLOAD_URL');",
             $contents,
             sprintf('%s must define $dataUploadUrl reading from DATA_UPLOAD_URL env var', $filename)
         );
@@ -56,9 +55,7 @@ final class DataUploadUrlSettingsTest extends TestCase
     public static function settingsFileProvider(): array
     {
         return [
-            'settings.php' => ['settings.php'],
-            'settings.elmo.php' => ['settings.elmo.php'],
-            'sample_settings.php' => ['sample_settings.php'],
+            'includes/env_variables_reader.php' => ['includes/env_variables_reader.php'],
         ];
     }
 

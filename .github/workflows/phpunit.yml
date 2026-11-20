@@ -12,6 +12,24 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      DB_HOST: 127.0.0.1
+      DB_USER: test_user
+      DB_PASSWORD: test_password
+      DB_NAME: mde2-msl-test
+      ELMO_API_KEY: 1234-1234-1234-1234
+      GOOGLE_MAPS_API_KEY: test_api_key
+      TIMEZONE_API_KEY: test_timezone_api_key
+      SMTP_HOST: smtp.test.de
+      SMTP_PORT: "465"
+      SMTP_USER: test_user
+      SMTP_PASSWORD: test_password
+      SMTP_SENDER: test_sender@test.com
+      SIMULATE_EMAIL: "true"
+      FEEDBACK_ADDRESS: feedback@test.com
+      XML_SUBMIT_ADDRESS: xmlsubmit@test.com
+      INSTANCE_TITLE: ELMO Test
+      API_BASE_URL: http://localhost:8000
     services:
       mysql:
         image: mysql:9.7.4@sha256:df90258da46f6e7ff8574ff84f17618aba0765cac749928299c69fd4e7cb8ad8
@@ -97,92 +115,6 @@ jobs:
             FLUSH PRIVILEGES;
           "
 
-      - name: Create settings.php
-        run: |
-          cat <<'PHP' > settings.php
-          <?php
-          function connectDb() {
-              $host = '127.0.0.1';
-              $username = 'test_user';
-              $password = 'test_password';
-              $database = 'mde2-msl-test';
-              $conn = new mysqli($host, $username, $password, $database);
-              return $conn;
-          }
-
-          // Establish the database connection (skip in unit testing context)
-          if (!defined('INCLUDED_FROM_TEST')) {
-              $connection = connectDb();
-          }
-
-          $ELMO_API_KEY = '1234-1234-1234-1234';
-          $apiKeyGoogleMaps = 'test_api_key';
-          $apiKeyTimezone = 'test_timezone_api_key';
-
-          $ernieUrl = getenv('ERNIE_URL') ?: '';
-          $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-          $ernieCacheTtl = 21600;
-
-          $dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
-
-          $maxTitles = 2;
-
-          $showMslLogo = false;
-          $showThesauri = true;
-          $showFreeKeywords = true;
-          $showSpatialTemporalCoverage = true;
-          $showRelatedWork = true;
-          $showFundingReference = true;
-          $showAuthorInstitution = true;
-          $showLicense = true;
-          $defaultLicense = 'CC-BY-4.0';
-          $showMslLabs = false;
-          $showMslVocabs = false;
-          $mslVocabsUrl = '';
-          $showUsedInstruments = false;
-          $showGGMsProperties = false;
-
-          $showFeedbackLink = true;
-          $smtpHost = 'smtp.test.de';
-          $smtpPort = 465;
-          $smtpUser = 'test_user';
-          $smtpPassword = 'test_password';
-          $smtpSender = 'test_sender@test.com';
-          $smtpSecure = '';
-          $smtpAuth = '';
-          $SIMULATE_EMAIL = true;
-          $feedbackAddress = 'feedback@test.com';
-          $xmlSubmitAddress = 'xmlsubmit@test.com';
-          $contactAddressRepository = 'datapub@gfz.de';
-          $instanceTitle = 'ELMO Test';
-
-          function getSettings($setting) {
-              global $apiKeyGoogleMaps, $showMslLabs;
-              header('Content-Type: application/json; charset=utf-8');
-              switch ($setting) {
-                  case 'apiKey':
-                      echo json_encode(['apiKey' => $apiKeyGoogleMaps]);
-                      break;
-                  case 'all':
-                      echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'showMslLabs' => $showMslLabs]);
-                      break;
-                  default:
-                      echo json_encode(['error' => 'Unknown setting']);
-                      break;
-              }
-              exit;
-          }
-
-          if (isset($_GET['setting'])) {
-              getSettings($_GET['setting']);
-              exit;
-          }
-
-          function elmo_log($msg) {
-              error_log('[ELMO save_data] ' . $msg);
-          }
-          PHP
-
       - name: Initialize database structure and lookup data
         run: php -r "require 'scripts/install.php'; createDatabaseStructure(\$connection); insertLookupData(\$connection);"
 
@@ -216,8 +148,6 @@ jobs:
         run: chmod +x vendor/bin/phpunit
 
       - name: Run PHPUnit tests
-        env:
-          API_BASE_URL: http://localhost:8000
         run: |
           set -euo pipefail
 
@@ -252,7 +182,6 @@ jobs:
       - name: Generate coverage (PHP 8.5 push builds only)
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
-          API_BASE_URL: http://localhost:8000
           XDEBUG_MODE: coverage
         run: |
           echo "Checking Xdebug status:"

@@ -26,10 +26,16 @@ final class ICGEMControllerDescriptionsTest extends TestCase
     {
         $this->mockConnection = $this->createMock(\mysqli::class);
 
-        global $connection;
-        $connection = $this->mockConnection;
+        $GLOBALS['connection'] = $this->mockConnection;
 
         $this->controller = new ICGEMController();
+        self::assertSame($this->mockConnection, getConnection());
+    }
+
+    protected function tearDown(): void
+    {
+        unset($GLOBALS['connection']);
+        parent::tearDown();
     }
 
     /**
