@@ -42,8 +42,8 @@ final class ConnectDbTest extends TestCase
     public static function settingsFileProvider(): array
     {
         return [
-            'settings.elmo.php' => ['settings.elmo.php'],
-            'sample_settings.php' => ['sample_settings.php'],
+            'feature_flags.php' => ['feature_flags.php'],
+            'includes/env_variables_reader.php' => ['includes/env_variables_reader.php'],
         ];
     }
 }
