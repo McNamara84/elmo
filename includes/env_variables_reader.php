@@ -48,7 +48,7 @@ $showMslDefaultFreeKeywords = $showMslMode;
 $showMslLogo = $showMslMode;
 
 // SETTINGS FOR ICGEM
-$envShowGGMsProperties = getenv_with_warning('SHOW_GGMS_PROPERTIES', 'false');
+$showGGMsProperties = getenv_with_warning('SHOW_GGMS_PROPERTIES', 'false');
 // ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
 // true: send confirmation emails to contact persons. false: do not email them.
 $sendResearcherConfirmationEmail = filter_var(
