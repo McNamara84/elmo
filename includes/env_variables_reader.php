@@ -40,7 +40,8 @@ $dataUploadUrl = getenv_with_warning('DATA_UPLOAD_URL');
 
 
 // SETTING FOR MSL MODE
-$showMslMode = getenv_with_warning('SHOW_MSL_MODE');
+// filter_var: the string "false" is truthy if it is later cast to bool.
+$showMslMode = filter_var(getenv_with_warning('SHOW_MSL_MODE', 'false'), FILTER_VALIDATE_BOOLEAN);
 // Keep all MSL-related UI elements in sync with MSL mode.
 $showMslLabs = $showMslMode;
 $showMslVocabs = $showMslMode;
@@ -48,7 +49,10 @@ $showMslDefaultFreeKeywords = $showMslMode;
 $showMslLogo = $showMslMode;
 
 // SETTINGS FOR ICGEM
-$showGGMsProperties = getenv_with_warning('SHOW_GGMS_PROPERTIES', 'false');
+$showGGMsProperties = filter_var(
+    getenv_with_warning('SHOW_GGMS_PROPERTIES', 'false'),
+    FILTER_VALIDATE_BOOLEAN
+);
 // ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
 // true: send confirmation emails to contact persons. false: do not email them.
 $sendResearcherConfirmationEmail = filter_var(

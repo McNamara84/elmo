@@ -51,8 +51,8 @@ $showFeedbackLink = true;
 // Simulate email (true = skip actual sending, only log. Set to false in production)
 $SIMULATE_EMAIL = false;
 $envSimulateEmail = getenv('SIMULATE_EMAIL');
-if ($envSimulateEmail == true) {
-    $SIMULATE_EMAIL = true;
+if ($envSimulateEmail !== false) {
+    $SIMULATE_EMAIL = filter_var($envSimulateEmail, FILTER_VALIDATE_BOOLEAN);
 }
 
 
