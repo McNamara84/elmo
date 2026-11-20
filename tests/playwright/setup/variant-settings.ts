@@ -63,7 +63,7 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
 /** settings.php in the ELMO project root, beside this test tree. */
 const SETTINGS_PHP = path.join(REPO_ROOT, 'settings.php');
 /** Lock file applied after env overrides in settings.php / settings.elmo.php. */
-const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright-variant-lock.php');
+const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright_variant_lock.php');
 
 const MSL_DERIVED_FLAGS = [
   'showMslLabs',
@@ -118,7 +118,7 @@ function writeVariantLockFile(variant: Variant): void {
  * PHP re-reads the file on every request so no server restart is needed.
  *
  * We patch plain boolean assignments in settings.php and also write
- * playwright-variant-lock.php, which settings.php includes after any
+ * playwright_variant_lock.php, which settings.php includes after any
  * environment-variable overrides. That keeps Docker env vars such as
  * SHOW_GGMS_PROPERTIES or SHOW_MSL_MODE from defeating the active variant.
  */
