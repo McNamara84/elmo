@@ -26,17 +26,8 @@ $showAuthorInstitution = true;
 $showLicense = true;
 $defaultLicense = 'CC-BY-4.0';
 
-
-
-// MSL-specific UI elements are disabled by default.
-$showMslLogo = false;
-$showMslLabs = false;
-$showMslVocabs = false;
-$showMslDefaultFreeKeywords = false;
-
 // MSL data sources.
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
-
 
 
 // SETTINGS FOR PID4INST INSTRUMENTS
