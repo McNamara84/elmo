@@ -1,27 +1,40 @@
 <?php
 // Translate the environment secret variables to the PHP used on application level.
+
+$getenv_with_warning = function($varName, $default = '') {
+    $value = getenv($varName);
+    if ($value === false) {
+        error_log("Warning: Environment variable $varName is not set.");
+        if ($default !== '') {
+            error_log("Using default value: $default");
+            return $default;
+        }
+    }
+    return $value;
+};
+
 // ELMO API Key
-$ELMO_API_KEY = getenv('ELMO_API_KEY');
+$ELMO_API_KEY = getenv_with_warning('ELMO_API_KEY');
 // Google Maps API Key
-$apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY');
+$apiKeyGoogleMaps = getenv_with_warning('GOOGLE_MAPS_API_KEY');
 // Google Maps Map ID (required for AdvancedMarkerElement)
-$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID');
+$mapIdGoogleMaps = getenv_with_warning('GOOGLE_MAPS_MAP_ID');
 // API Key for https://timezonedb.com/
-$apiKeyTimezone = getenv('TIMEZONE_API_KEY');
+$apiKeyTimezone = getenv_with_warning('TIMEZONE_API_KEY');
 
 // ERNIE Integration (External Vocabulary Service)
-$ernieUrl = getenv('ERNIE_URL');
-$ernieApiKey = getenv('ERNIE_API_KEY');
+$ernieUrl = getenv_with_warning('ERNIE_URL');
+$ernieApiKey = getenv_with_warning('ERNIE_API_KEY');
 
 // Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
-$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
+$funderPidMode = getenv_with_warning('FUNDER_PID', 'CFID');
 
 // URL for primary data upload (shown after successful submit)
-$dataUploadUrl = getenv('DATA_UPLOAD_URL');
+$dataUploadUrl = getenv_with_warning('DATA_UPLOAD_URL');
 
 
 // SETTING FOR MSL MODE
-$showMslMode = getenv('SHOW_MSL_MODE');
+$showMslMode = getenv_with_warning('SHOW_MSL_MODE');
 // Keep all MSL-related UI elements in sync with MSL mode.
 $showMslLabs = $showMslMode;
 $showMslVocabs = $showMslMode;
@@ -29,13 +42,13 @@ $showMslDefaultFreeKeywords = $showMslMode;
 $showMslLogo = $showMslMode;
 
 // SETTINGS FOR ICGEM
-$envShowGGMsProperties = getenv('SHOW_GGMS_PROPERTIES');
+$envShowGGMsProperties = getenv_with_warning('SHOW_GGMS_PROPERTIES', 'false');
 // ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
 // true: send confirmation emails to contact persons. false: do not email them.
 $sendResearcherConfirmationEmail = filter_var(
-    getenv('SEND_RESEARCHER_CONFIRMATION_EMAIL') ?: 'true',
+    getenv_with_warning('SEND_RESEARCHER_CONFIRMATION_EMAIL', 'true'),
     FILTER_VALIDATE_BOOLEAN
 );
 // ELMO-GEM only ($showGGMsProperties). Upload page linked from the ICGEM registration mail.
 // Empty means the mail falls back to the test database URL.
-$icgemDatabaseUrl = getenv('ICGEM_UPLOAD_URL') ?: '';
+$icgemDatabaseUrl = getenv_with_warning('ICGEM_UPLOAD_URL');
