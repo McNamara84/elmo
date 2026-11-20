@@ -13,8 +13,22 @@ error_reporting(E_ALL);
 // Start output buffering
 ob_start();
 
+// ENV variables inclusion
+include_once __DIR__ . '/settings.elmo.php';
+
+
 // Include settings and configurations
 include_once __DIR__ . '/settings.php';
+
+// Playwright variant setup writes this lock file after env overrides so local
+// Docker env vars (SHOW_GGMS_PROPERTIES, SHOW_MSL_MODE, etc.) cannot override
+// the active test variant on a single shared container.
+if (is_readable(__DIR__ . '/playwright-variant-lock.php')) {
+    require __DIR__ . '/playwright-variant-lock.php';
+}
+// 
+include_once __DIR__ . '/includes/env_variables_reader.php';
+
 
 // Provide default feature toggles when settings.php does not define them.
 // This keeps the application resilient in environments that bootstrap a minimal
