@@ -1,38 +1,15 @@
 <?php
 /**
  *
- * API keys, feature flags, addresses, and other application configuration.
+ * feature flags, addresses, and other application configuration, that is not subject to change from the .env
  * Database credentials stay in the environment. includes/connect_db.php opens the connection.
  *
  */
 
-// ELMO API Key
-$ELMO_API_KEY = getenv('ELMO_API_KEY') ?: '1234-1234-1234-1234';
-// Google Maps API Key
-$apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: 'xxxxxxxxxxxxxxxxxxxxxxxxx-xxxxxxxxxxxxxx';
-// Google Maps Map ID (required for AdvancedMarkerElement)
-$mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
-// API Key for https://timezonedb.com/
-$apiKeyTimezone = getenv('TIMEZONE_API_KEY') ?: 'your_timezone_api_key';
-
-// ERNIE Integration (External Vocabulary Service)
-$ernieUrl = getenv('ERNIE_URL') ?: '';
-$ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-// Cache TTL for all ERNIE data in seconds (default: 6 hours)
-$ernieCacheTtl = 21600;
-
-// Funder PID mode: 'CFID' = Crossref Funder ID (default), 'ROR' = ROR ID
-$funderPidMode = getenv('FUNDER_PID') ?: 'CFID';
-
-// URL for primary data upload (shown after successful submit)
-$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';
-
-// SETTINGS FOR GENERIC DATACITE RESEARCH DATA
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 
-
-$showContactInstitution = filter_var(getenv('SHOW_CONTACT_INSTITUTION') ?: 'false', FILTER_VALIDATE_BOOLEAN);
+$showContactInstitution = true;
 // Show Thesauri Keywords form group (master switch; individual thesauri controlled by ERNIE)
 $showThesauri = true;
 // Show Free Keywords form group
@@ -124,29 +101,10 @@ if (is_readable(__DIR__ . '/playwright-variant-lock.php')) {
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;
 
-// Settings for sending mail with SMTP
-$smtpHost = getenv('SMTP_HOST') ?: 'your_smtp_host';
-$smtpPort = getenv('SMTP_PORT') ?: 465;
-$smtpUser = getenv('SMTP_USER') ?: '';
-$smtpPassword = getenv('SMTP_PASSWORD') ?: '';
-$smtpSender = getenv('SMTP_SENDER') ?: 'your_smtp_sender_email';
-$smtpSecure = getenv('SMTP_SECURE') ?: '';
-$smtpAuth   = getenv('SMTP_AUTH') ?: '';
 
 // Simulate email (true = skip actual sending, only log. Set to false in production)
 $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'false', FILTER_VALIDATE_BOOLEAN);
 
-// Target address for feedback
-$feedbackAddress = getenv('FEEDBACK_ADDRESS') ?: 'feedback@example.com';
-
-// Target address for XML submit
-$xmlSubmitAddress = getenv('XML_SUBMIT_ADDRESS') ?: 'xmlsubmit@example.com';
-
-// Email written into contact/CI_ResponsibleParty of the ISO metadata.
-$contactAddressRepository = getenv('CONTACT_ADDRESS_REPOSITORY') ?: 'datapub@gfz.de';
-
-// Target address for the ELMO GEM ICGEM registration mail.
-$icgemSubmitAddress = getenv('ICGEM_SUBMIT_ADDRESS') ?: 'icgem@gfz.de';
 
 // ELMO-GEM only ($showGGMsProperties). Other variants always mail researchers.
 // true: send confirmation emails to contact persons. false: do not email them.
@@ -159,34 +117,6 @@ $sendResearcherConfirmationEmail = filter_var(
 // Empty means the mail falls back to the test database URL.
 $icgemDatabaseUrl = getenv('ICGEM_UPLOAD_URL') ?: '';
 
-function getSettings($setting)
-{
-    global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
-
-    header('Content-Type: application/json; charset=utf-8');
-
-    switch ($setting) {
-        case 'apiKey':
-            echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps,
-                'mapId' => $mapIdGoogleMaps
-            ]);
-            break;
-
-        case 'all':
-            echo json_encode([
-                'apiKey' => $apiKeyGoogleMaps,
-                'mapId' => $mapIdGoogleMaps,
-                'showMslLabs' => $showMslLabs
-            ]);
-            break;
-
-        default:
-            echo json_encode(['error' => 'Unknown setting']);
-            break;
-    }
-    exit;
-}
 
 if (isset($_GET['setting'])) {
     getSettings($_GET['setting']);
@@ -195,8 +125,3 @@ if (isset($_GET['setting'])) {
 
 // Instance title for header (can be overridden via environment variable)
 $instanceTitle = getenv('INSTANCE_TITLE') ?: 'ELMO – GFZ Metadata Editor';
-
-// Initialize logging
-function elmo_log($msg) {
-    error_log('[ELMO save_data] ' . $msg);
-}
