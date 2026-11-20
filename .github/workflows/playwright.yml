@@ -133,7 +133,6 @@ jobs:
 
         $ernieUrl = getenv('ERNIE_URL') ?: '';
         $ernieApiKey = getenv('ERNIE_API_KEY') ?: '';
-        $ernieCacheTtl = 21600;
 
         // Feature toggles from environment variables (set per PHP server instance)
         $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'true', FILTER_VALIDATE_BOOLEAN);
