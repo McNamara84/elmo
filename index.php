@@ -17,8 +17,10 @@ ob_start();
 include_once __DIR__ . '/feature_flags.php';
 
 
-// Include settings and configurations
-include_once __DIR__ . '/settings.php';
+// A developer settings.php may override the committed flags. CI does not have one.
+if (is_readable(__DIR__ . '/settings.php')) {
+    include_once __DIR__ . '/settings.php';
+}
 
 // Playwright variant setup writes this lock file after env overrides so local
 // Docker env vars (SHOW_GGMS_PROPERTIES, SHOW_MSL_MODE, etc.) cannot override

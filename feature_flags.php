@@ -50,6 +50,10 @@ $showFeedbackLink = true;
 
 // Simulate email (true = skip actual sending, only log. Set to false in production)
 $SIMULATE_EMAIL = false;
+$envSimulateEmail = getenv('SIMULATE_EMAIL');
+if ($envSimulateEmail == true) {
+    $SIMULATE_EMAIL = true;
+}
 
 
 if (isset($_GET['setting'])) {
