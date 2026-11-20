@@ -7,9 +7,14 @@
 
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
-// Include settings.php so that variables are available
+// Feature flags and the process environment supply configuration.
+// settings.php is an optional developer override.
 if (!defined('UNIT_TESTING')) {
-    require_once __DIR__ . '/../../../settings.php';
+    require_once __DIR__ . '/../../../feature_flags.php';
+    require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../../../settings.php')) {
+        require_once __DIR__ . '/../../../settings.php';
+    }
 }
 require_once __DIR__ . '/../../../includes/connect_db.php';
 require_once __DIR__ . '/../services/DataCiteRelationType.php';

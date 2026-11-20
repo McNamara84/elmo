@@ -17,16 +17,12 @@ if ($isDirectInstallationRequest && PHP_SAPI !== 'cli') {
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
+    require_once dirname(__DIR__) . '/feature_flags.php';
+    require_once dirname(__DIR__) . '/includes/env_variables_reader.php';
     $settingsPath = dirname(__DIR__) . '/settings.php';
-    if (!file_exists($settingsPath)) {
-        $msg = 'Error: settings.php not found. ' .
-            'Please copy sample_settings.php to settings.php and update your database credentials.';
-        die(json_encode([
-            'status' => 'error',
-            'message' => $msg,
-        ]));
+    if (is_readable($settingsPath)) {
+        require_once $settingsPath;
     }
-    require_once $settingsPath;
     require_once dirname(__DIR__) . '/includes/connect_db.php';
     $connection = getConnection();
     if ($connection->connect_error) {

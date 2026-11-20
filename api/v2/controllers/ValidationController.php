@@ -5,8 +5,13 @@
  *
  */
 
-// Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+// Feature flags and the process environment supply configuration.
+// settings.php is an optional developer override.
+require_once __DIR__ . '/../../../feature_flags.php';
+require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+if (is_readable(__DIR__ . '/../../../settings.php')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
 require_once __DIR__ . '/../../../includes/connect_db.php';
 require_once __DIR__ . '/../services/IdentifierTypePatterns.php';
 

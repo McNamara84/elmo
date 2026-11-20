@@ -7,7 +7,11 @@
  */
 
 if (!defined('UNIT_TESTING')) {
-    require_once __DIR__ . '/../../../settings.php';
+    require_once __DIR__ . '/../../../feature_flags.php';
+    require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../../../settings.php')) {
+        require_once __DIR__ . '/../../../settings.php';
+    }
 }
 
 class DoiController

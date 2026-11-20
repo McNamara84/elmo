@@ -1,7 +1,11 @@
 <?php
 require_once __DIR__ . '/../../../includes/connect_db.php';
 if (!defined('UNIT_TESTING') && !defined('INCLUDED_FROM_TEST')) {
-    require_once __DIR__ . '/../../../settings.php';
+    require_once __DIR__ . '/../../../feature_flags.php';
+    require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../../../settings.php')) {
+        require_once __DIR__ . '/../../../settings.php';
+    }
 }
 require_once __DIR__ . '/../services/DataCiteJsonLdService.php';
 

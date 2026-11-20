@@ -5,8 +5,12 @@
  *
  */
 
-// Include the settings.php file to access configuration variables
-include_once __DIR__ . '/../settings.php';
+// Committed flags first. settings.php is an optional developer override.
+include_once __DIR__ . '/../feature_flags.php';
+include_once __DIR__ . '/../includes/env_variables_reader.php';
+if (is_readable(__DIR__ . '/../settings.php')) {
+    include_once __DIR__ . '/../settings.php';
+}
 include_once __DIR__ . '/../includes/feature_toggles.php';
 
 $variantOverrides = applyELMOGEMFeatureOverrides([
