@@ -1,17 +1,23 @@
 <?php
 // Translate the environment secret variables to the PHP used on application level.
 
-$getenv_with_warning = function($varName, $default = '') {
-    $value = getenv($varName);
-    if ($value === false) {
-        error_log("Warning: Environment variable $varName is not set.");
-        if ($default !== '') {
-            error_log("Using default value: $default");
-            return $default;
+if (!function_exists('getenv_with_warning')) {
+    /**
+     * Read an environment variable. Log when it is missing, and use $default when one is given.
+     */
+    function getenv_with_warning(string $varName, string $default = ''): string|false
+    {
+        $value = getenv($varName);
+        if ($value === false) {
+            error_log("Warning: Environment variable $varName is not set.");
+            if ($default !== '') {
+                error_log("Using default value: $default");
+                return $default;
+            }
         }
+        return $value;
     }
-    return $value;
-};
+}
 
 // ELMO API Key
 $ELMO_API_KEY = getenv_with_warning('ELMO_API_KEY');
@@ -52,3 +58,15 @@ $sendResearcherConfirmationEmail = filter_var(
 // ELMO-GEM only ($showGGMsProperties). Upload page linked from the ICGEM registration mail.
 // Empty means the mail falls back to the test database URL.
 $icgemDatabaseUrl = getenv_with_warning('ICGEM_UPLOAD_URL');
+
+// SMTP and mail addresses are set in the container environment.
+$smtpHost = getenv_with_warning('SMTP_HOST', 'your_smtp_host');
+$smtpPort = (int) getenv_with_warning('SMTP_PORT', '465');
+$smtpUser = getenv_with_warning('SMTP_USER') ?: '';
+$smtpPassword = getenv_with_warning('SMTP_PASSWORD') ?: '';
+$smtpSender = getenv_with_warning('SMTP_SENDER', 'your_smtp_sender_email');
+$smtpSecure = getenv_with_warning('SMTP_SECURE') ?: '';
+$smtpAuth = getenv_with_warning('SMTP_AUTH') ?: '';
+$feedbackAddress = getenv_with_warning('FEEDBACK_ADDRESS', 'feedback@example.com');
+$xmlSubmitAddress = getenv_with_warning('XML_SUBMIT_ADDRESS', 'xmlsubmit@example.com');
+$icgemSubmitAddress = getenv_with_warning('ICGEM_SUBMIT_ADDRESS', 'icgem@gfz.de');

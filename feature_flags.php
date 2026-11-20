@@ -6,6 +6,9 @@
  *
  */
 
+// Cache TTL for all ERNIE data in seconds (default: 24 hours).
+$ernieCacheTtl = 86400;
+
 // maximale Anzahl der eingebbaren Titel
 $maxTitles = 2;
 
