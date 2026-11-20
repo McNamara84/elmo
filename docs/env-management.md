@@ -21,3 +21,12 @@ the files are loaded in order (first overwrites last):
 2. settings.php (untracked)
 3. env_variables_reader.php 
 4. feature_flags.php
+
+## Adding a new variable
+
+If your variable is a secret:
+- declare it in all compose files
+- add the php reader to env_variables_reader.php
+
+If your variable is a feature flag that can be visible in the repo:
+- add it to feature_flags.php
