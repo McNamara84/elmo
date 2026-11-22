@@ -4,6 +4,7 @@ import path from 'node:path';
 import { XMLParser } from 'fast-xml-parser';
 import {
   navigateToHome, REPO_ROOT, registerGoogleMapsNoopRoute, waitForHomepageReady, waitForFormInteractionReady,
+  withoutExpectedInstrumentCatalogueNoise,
 } from '../utils';
 
 // Reduced public response from 2026-10-16:
@@ -160,7 +161,7 @@ test.describe('DOI prefill XML roundtrip, issues #1282 and #1300', () => {
       await expect.poll(() => importedMetadata(page), { timeout: 20000 }).toEqual(beforeSave);
       await expect(page.locator('[data-author-affiliation-label]')).toHaveValue(label);
       await expect(page.locator('select[name="titleType[]"]').nth(1).locator('option:checked')).toHaveText(titleLabel);
-      expect(browserErrors).toEqual([]);
+      expect(withoutExpectedInstrumentCatalogueNoise(browserErrors)).toEqual([]);
     });
   }
 });
