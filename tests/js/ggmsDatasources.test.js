@@ -256,7 +256,7 @@ describe('ggmsDatasources.js', () => {
 
     global.Tagify = MockTagify;
     global.translations = { keywords: { thesaurus: { label: 'initial' } } };
-    window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
+    window.ELMO_FEATURES = { showThesauri: true, showMslMode: false };
 
     const originalIs = $.fn.is;
     $.fn.is = function(selector) {

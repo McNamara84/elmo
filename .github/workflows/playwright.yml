@@ -98,14 +98,14 @@ jobs:
         $apiKeyGoogleMaps = getenv('GOOGLE_MAPS_API_KEY') ?: '';
         $mapIdGoogleMaps = getenv('GOOGLE_MAPS_MAP_ID') ?: '';
         function getSettings($setting) {
-            global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslLabs;
+            global $apiKeyGoogleMaps, $mapIdGoogleMaps, $showMslMode;
             header('Content-Type: application/json; charset=utf-8');
             switch ($setting) {
                 case 'apiKey':
                     echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps]);
                     break;
                 case 'all':
-                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps, 'showMslLabs' => $showMslLabs]);
+                    echo json_encode(['apiKey' => $apiKeyGoogleMaps, 'mapId' => $mapIdGoogleMaps, 'showMslMode' => $showMslMode]);
                     break;
                 default:
                     echo json_encode(['error' => 'Unknown setting']);
@@ -138,10 +138,6 @@ jobs:
         $SIMULATE_EMAIL = filter_var(getenv('SIMULATE_EMAIL') ?: 'true', FILTER_VALIDATE_BOOLEAN);
 
         $showMslMode = false;
-        $showMslLabs = false;
-        $showMslVocabs = false;
-        $showMslLogo = false;
-        $showMslDefaultFreeKeywords = false;
         $showGGMsProperties = false;
         $showUsedInstruments = false;
         $showThesauri = true;
@@ -168,12 +164,6 @@ jobs:
                 $$varName = filter_var($envVal, FILTER_VALIDATE_BOOLEAN);
             }
         }
-
-        // Derive MSL-specific flags from central SHOW_MSL_MODE
-        $showMslLabs = $showMslMode;
-        $showMslVocabs = $showMslMode;
-        $showMslDefaultFreeKeywords = $showMslMode;
-        $showMslLogo = $showMslMode;
 
         EOF
 

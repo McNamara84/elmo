@@ -62,14 +62,8 @@ $showFundingReference = resolveFeatureToggle($showFundingReference ?? null, true
 $showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, false);
 /** @var bool $showGGMsProperties */
 $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
-/** @var bool $showMslLabs */
-$showMslLabs = resolveFeatureToggle($showMslLabs ?? null, false);
-/** @var bool $showMslVocabs */
-$showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
-/** @var bool $showMslDefaultFreeKeywords */
-$showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?? null, false);
-/** @var bool $showMslLogo */
-$showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
+/** @var bool $showMslMode */
+$showMslMode = resolveFeatureToggle($showMslMode ?? null, false);
 
 // Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
@@ -97,7 +91,7 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/ggms-data-sources.html';
 }
 include $baseDir . 'formgroups/contributors.html';
-if ($showMslLabs) {
+if ($showMslMode) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
 }
 if ($showGGMsProperties) {
@@ -105,7 +99,7 @@ if ($showGGMsProperties) {
 } else {
     include $baseDir . 'formgroups/descriptions.html';
 }
-if ($showMslVocabs) {
+if ($showMslMode) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showThesauri) {

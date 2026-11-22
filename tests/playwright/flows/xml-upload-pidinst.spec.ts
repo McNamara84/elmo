@@ -263,8 +263,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       (window as any).translations = translations;
       (window as any).ELMO_FEATURES = {
         showUsedInstruments: true,
-        showMslLabs: false,
-        showMslVocabs: false,
+        showMslMode: false,
         showGGMsProperties: false,
         showThesauri: false,
       };

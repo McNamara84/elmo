@@ -42,11 +42,6 @@ $dataUploadUrl = getenv_with_warning('DATA_UPLOAD_URL');
 // SETTING FOR MSL MODE
 // filter_var: the string "false" is truthy if it is later cast to bool.
 $showMslMode = filter_var(getenv_with_warning('SHOW_MSL_MODE', 'false'), FILTER_VALIDATE_BOOLEAN);
-// Keep all MSL-related UI elements in sync with MSL mode.
-$showMslLabs = $showMslMode;
-$showMslVocabs = $showMslMode;
-$showMslDefaultFreeKeywords = $showMslMode;
-$showMslLogo = $showMslMode;
 
 // SETTINGS FOR ICGEM
 $showGGMsProperties = filter_var(

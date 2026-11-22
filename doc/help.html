@@ -78,7 +78,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
-                        <?php if ($showMslLabs ?? false): ?>
+                        <?php if ($showMslMode ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
@@ -95,7 +95,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
-                        <?php if ($showMslVocabs ?? false): ?>
+                        <?php if ($showMslMode ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-mslkeywords" data-bs-dismiss="offcanvas">EPOS MSL
                                 Keywords</a>
@@ -513,7 +513,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
             </div>
             <!-- formgroup originating laboratory -->
-            <?php if ($showMslLabs ?? false): ?>
+            <?php if ($showMslMode ?? false): ?>
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
                     <h3>Originating Laboratory</h3>
@@ -875,7 +875,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup MSL Keywords -->
-            <?php if ($showMslVocabs ?? false): ?>
+            <?php if ($showMslMode ?? false): ?>
             <div id="help-mslkeywords" class="section-content">
                 <div id="help-mslKeywords-keyword">
                     <h3>EPOS Multi-Scale Laboratories Keywords</h3>

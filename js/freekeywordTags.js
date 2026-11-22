@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function () {
      */
     function ensureMslDefaultFreeKeywords() {
         if (!window.ELMO_FEATURES ||
-            window.ELMO_FEATURES.showMslDefaultFreeKeywords !== true ||
+            window.ELMO_FEATURES.showMslMode !== true ||
             !input._tagify) {
             return;
         }

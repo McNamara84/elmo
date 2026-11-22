@@ -24,7 +24,7 @@ setup('configure ELMO-GEM variant', async ({ page, baseURL }) => {
   if (ggmsElement === 0) {
     throw new Error('[VARIANT VERIFICATION FAILED] GEM: #group-ggmspropertiesessential should be present, but not found. Settings not applied correctly.');
   }
-  // MSL Originating Laboratory form group must NOT be in the DOM (showMslLabs=false)
+  // MSL Originating Laboratory form group must NOT be in the DOM (showMslMode=false)
   const mslElement = await page.locator('#group-originatinglaboratory').count();
   if (mslElement > 0) {
     throw new Error('[VARIANT VERIFICATION FAILED] GEM: #group-originatinglaboratory should NOT be present, but found ' + mslElement + ' element(s). Settings not applied correctly.');

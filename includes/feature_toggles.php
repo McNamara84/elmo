@@ -6,8 +6,7 @@
  * If a toggle is not defined, the default value specified here will be used.
  * 
  * Available toggles (define in settings.php):
- *   $showMslLabs          - Show MSL laboratory selection (default: true)
- *   $showMslVocabs        - Show MSL vocabulary keywords (default: false)
+ *   $showMslMode          - MSL edition: logo, laboratory, keywords, default free keywords (default: false)
  *   $showContactInstitution - Allow an institution to be a contact (default: false)
  *   $showCoverage         - Show Spatial/Temporal Coverage section (default: true)
  *   $showFeedbackLink     - Show feedback button in footer (default: false)
@@ -15,7 +14,7 @@
  *   $showGGMsProperties   - Show ICGEM/GGMs specific fields (default: false)
  * 
  * Example in settings.php:
- *   $showMslLabs = true;
+ *   $showMslMode = true;
  *   $showFeedbackLink = true;
  * 
  * @see sample_settings.php for all available configuration options

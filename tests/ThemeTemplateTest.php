@@ -9,7 +9,7 @@ final class ThemeTemplateTest extends TestCase
     public function testEditorAppliesThemeBeforeStylesAndVersionsEveryThemeAsset(): void
     {
         $instanceTitle = 'Theme test';
-        $showMslLogo = false;
+        $showMslMode = false;
         ob_start();
         try {
             include __DIR__ . '/../header.php';

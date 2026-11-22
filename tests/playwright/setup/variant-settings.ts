@@ -5,7 +5,7 @@ import { REPO_ROOT } from '../utils/constants';
 export type Variant = 'generic' | 'gem' | 'msl' | 'igsn';
 
 interface VariantConfig {
-  // MSL master switch (derived MSL flags are synced in the lock file)
+  // MSL edition switch: logo, laboratory, keywords, and default free keywords.
   showMslMode: boolean;
   // GEM-specific
   showGGMsProperties: boolean;
@@ -65,13 +65,6 @@ const SETTINGS_PHP = path.join(REPO_ROOT, 'settings.php');
 /** Lock file applied after env overrides in settings.php / settings.elmo.php. */
 const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright_variant_lock.php');
 
-const MSL_DERIVED_FLAGS = [
-  'showMslLabs',
-  'showMslVocabs',
-  'showMslDefaultFreeKeywords',
-  'showMslLogo',
-] as const;
-
 const VARIANT_LOCK_FLAGS: Array<keyof VariantConfig> = [
   'showGGMsProperties',
   'showUsedInstruments',
@@ -102,10 +95,6 @@ function writeVariantLockFile(variant: Variant): void {
     `$showMslMode = ${config.showMslMode ? 'true' : 'false'};`,
   ];
 
-  for (const flag of MSL_DERIVED_FLAGS) {
-    lines.push(`$${flag} = $showMslMode;`);
-  }
-
   for (const flag of VARIANT_LOCK_FLAGS) {
     lines.push(`$${flag} = ${config[flag] ? 'true' : 'false'};`);
   }
@@ -125,14 +114,8 @@ function writeVariantLockFile(variant: Variant): void {
 export function applyVariantSettings(variant: Variant): void {
   let content = readFileSync(SETTINGS_PHP, 'utf-8');
 
-  content = setBoolVar(content, 'showMslMode', VARIANT_SETTINGS[variant].showMslMode);
-
   for (const [varName, value] of Object.entries(VARIANT_SETTINGS[variant])) {
     content = setBoolVar(content, varName, value);
-  }
-
-  for (const flag of MSL_DERIVED_FLAGS) {
-    content = setBoolVar(content, flag, VARIANT_SETTINGS[variant].showMslMode);
   }
 
   writeFileSync(SETTINGS_PHP, content, 'utf-8');

@@ -51,10 +51,10 @@ function sendFeedbackMail(
     string $feedbackQuestion6,
     string $feedbackQuestion7
 ): void {
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslLabs, $showGGMsProperties, $SIMULATE_EMAIL;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslMode, $showGGMsProperties, $SIMULATE_EMAIL;
     
     // Determine ELMO version
-    if ($showMslLabs) {
+    if ($showMslMode) {
         $elmoVersion = 'MSL';
     } elseif ($showGGMsProperties) {
         $elmoVersion = 'ELMOGEM';
