@@ -57,7 +57,6 @@ services:
       # Edition selector. Form-group flags live in feature_flags.php.
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
     depends_on:
       db:
         condition: service_healthy
@@ -116,7 +115,6 @@ services:
       # Edition selector. Form-group flags live in feature_flags.php.
       SHOW_MSL_MODE: "true"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS_MSL:-false}
       INSTANCE_TITLE: "ELMO MSL Edition – GFZ Metadata Editor"
     depends_on:
       db:
@@ -174,7 +172,6 @@ services:
       # Edition selector. Form-group flags live in feature_flags.php.
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "false"
-      SHOW_USED_INSTRUMENTS: ${SHOW_USED_INSTRUMENTS:-false}
       INSTANCE_TITLE: "ELMO IGSN Edition – Alpha Version"
       DB_INIT_MODE: "keep_data"
     depends_on:

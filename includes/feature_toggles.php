@@ -10,7 +10,6 @@
  *   $showContactInstitution - Allow an institution to be a contact (default: false)
  *   $showCoverage         - Show Spatial/Temporal Coverage section (default: true)
  *   $showFeedbackLink     - Show feedback button in footer (default: false)
- *   $showUsedInstruments  - Show Used Instruments / PID4INST selection (default: false)
  *   $showGGMsProperties   - Show ICGEM/GGMs specific fields (default: false)
  * 
  * Example in settings.php:
@@ -39,8 +38,6 @@ function applyELMOGEMFeatureOverrides(array $features): array
 {
     $variantOverrideMap = [
         'showGGMsProperties' => [
-            // PID4INST is not part of the current ELMOGEM variant.
-            'showUsedInstruments' => false,
             // Hide thesauri that are not relevant for ELMOGEM workflows.
             'thesauriHiddenKeys' => ['chronostratigraphy', 'gemet'],
         ],

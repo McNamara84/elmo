@@ -139,7 +139,6 @@ jobs:
 
         $showMslMode = false;
         $showGGMsProperties = false;
-        $showUsedInstruments = false;
         $showThesauri = true;
         $showFreeKeywords = true;
         $showSpatialTemporalCoverage = true;
@@ -152,7 +151,6 @@ jobs:
         $envOverrides = [
             'SHOW_MSL_MODE' => 'showMslMode',
             'SHOW_GGMS_PROPERTIES' => 'showGGMsProperties',
-            'SHOW_USED_INSTRUMENTS' => 'showUsedInstruments',
             'SHOW_THESAURI' => 'showThesauri',
             'SHOW_FREE_KEYWORDS' => 'showFreeKeywords',
             'SHOW_SPATIAL_TEMPORAL_COVERAGE' => 'showSpatialTemporalCoverage',
@@ -205,7 +203,7 @@ jobs:
         # ELMO Standard (Port 8000)
         ERNIE_URL=http://localhost:8010 ERNIE_API_KEY=license-test-key \
         SHOW_MSL_MODE=false \
-        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
+        SHOW_GGMS_PROPERTIES=false \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \
@@ -216,7 +214,7 @@ jobs:
         # ELMO-GEM (Port 8001)
         ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
-        SHOW_GGMS_PROPERTIES=true SHOW_USED_INSTRUMENTS=false \
+        SHOW_GGMS_PROPERTIES=true \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \
@@ -227,7 +225,7 @@ jobs:
         # ELMO-IGSN (Port 8002)
         ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=false \
-        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=true \
+        SHOW_GGMS_PROPERTIES=false \
         SHOW_THESAURI=false SHOW_FREE_KEYWORDS=false \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=false SHOW_RELATED_WORK=false \
         SIMULATE_EMAIL=true \
@@ -238,7 +236,7 @@ jobs:
         # ELMO-MSL (Port 8003)
         ERNIE_URL="${ERNIE_URL}" ERNIE_API_KEY="${ERNIE_API_KEY}" \
         SHOW_MSL_MODE=true \
-        SHOW_GGMS_PROPERTIES=false SHOW_USED_INSTRUMENTS=false \
+        SHOW_GGMS_PROPERTIES=false \
         SHOW_THESAURI=true SHOW_FREE_KEYWORDS=true \
         SHOW_SPATIAL_TEMPORAL_COVERAGE=true SHOW_RELATED_WORK=true \
         SIMULATE_EMAIL=true \

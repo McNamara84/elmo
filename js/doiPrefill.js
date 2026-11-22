@@ -611,6 +611,15 @@ async function prefillKeywords(subjects) {
  * Maps relatedIdentifiers to the Related Works form group.
  */
 function prefillRelatedWorks(relatedIdentifiers) {
+  if (window.usedInstrumentsReady && typeof window.usedInstrumentsReady.then === 'function') {
+    return Promise.resolve(window.usedInstrumentsReady).then(function () {
+      applyPrefillRelatedWorks(relatedIdentifiers);
+    });
+  }
+  applyPrefillRelatedWorks(relatedIdentifiers);
+}
+
+function applyPrefillRelatedWorks(relatedIdentifiers) {
   if (!Array.isArray(relatedIdentifiers) || relatedIdentifiers.length === 0) return;
 
   const showUsedInstruments = window.ELMO_FEATURES && window.ELMO_FEATURES.showUsedInstruments;
@@ -734,7 +743,7 @@ async function applyDoiPrefill(attributes) {
   prefillDescriptions(attributes.descriptions);
   prefillDates(attributes.dates);
   prefillGeoLocations(attributes.geoLocations);
-  prefillRelatedWorks(attributes.relatedIdentifiers);
+  await prefillRelatedWorks(attributes.relatedIdentifiers);
   prefillFunding(attributes.fundingReferences);
 
   // Async prefills (need API lookups for vocab mappings)

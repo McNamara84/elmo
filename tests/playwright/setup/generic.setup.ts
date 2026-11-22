@@ -4,7 +4,7 @@ import { applyVariantSettings } from './variant-settings';
 /**
  * ELMO-GENERIC setup:
  *   - Standard DataCite form groups only
- *   - Used Instruments (PID4INST) ON
+ *   - Used Instruments follows the Ernie PID4INST list
  *   - All MSL-specific form groups OFF
  *   - GGMs Properties OFF
  *

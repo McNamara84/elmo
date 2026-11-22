@@ -4,7 +4,7 @@ import { applyVariantSettings } from './variant-settings';
 /**
  * ELMO-IGSN setup:
  *   - Same settings as GENERIC variant
- *   - Used Instruments (PID4INST) ON
+ *   - Used Instruments follows the Ernie PID4INST list
  *   - Free Keywords ON
  *   - Spatial/temporal coverage ON
  *   - Related Work ON

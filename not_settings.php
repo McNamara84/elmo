@@ -61,15 +61,8 @@ if ($envShowMslMode !== false) {
 }
 
 
-// SETTINGS FOR PID4INST INSTRUMENTS
-// Show Used Instruments form group (PID4INST via ERNIE API)
-$showUsedInstruments = true;
-
-$envShowUsedInstruments = getenv('SHOW_USED_INSTRUMENTS');
-
-if ($envShowUsedInstruments !== false) {
-    $showUsedInstruments = filter_var($envShowUsedInstruments, FILTER_VALIDATE_BOOLEAN);
-}
+// Used Instruments (PID4INST) follows the Ernie instrument list.
+// The field is hidden when that list is empty or Ernie returns an error.
 
 // SETTINGS FOR ICGEM
 // Show ICGEM form groups (GGMs Properties and Characteristics of the model)

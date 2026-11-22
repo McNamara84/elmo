@@ -10,7 +10,6 @@ interface VariantConfig {
   // GEM-specific
   showGGMsProperties: boolean;
   // Shared form groups (IGSN turns several off)
-  showUsedInstruments: boolean;
   showSpatialTemporalCoverage: boolean;
   showFreeKeywords: boolean;
   showRelatedWork: boolean;
@@ -25,7 +24,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   generic: {
     showMslMode: false,
     showGGMsProperties: false,
-    showUsedInstruments: true,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -34,7 +32,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   gem: {
     showMslMode: false,
     showGGMsProperties: true,
-    showUsedInstruments: false,
     showSpatialTemporalCoverage: false,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -43,7 +40,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   msl: {
     showMslMode: true,
     showGGMsProperties: false,
-    showUsedInstruments: false,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -52,7 +48,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   igsn: {
     showMslMode: false,
     showGGMsProperties: false,
-    showUsedInstruments: true,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -67,7 +62,6 @@ const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright_variant_lock.php');
 
 const VARIANT_LOCK_FLAGS: Array<keyof VariantConfig> = [
   'showGGMsProperties',
-  'showUsedInstruments',
   'showSpatialTemporalCoverage',
   'showFreeKeywords',
   'showRelatedWork',

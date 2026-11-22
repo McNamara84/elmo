@@ -1278,7 +1278,7 @@ async function processKeywords(xmlDoc, resolver) {
 
 /**
  * Transforms Related Identifiers into the internal RelatedWorks map and rebuilds
- * the card stack in batches. When showUsedInstruments is active,
+ * the card stack in batches. When the PID4INST catalogue is shown,
  * relationType="IsCollectedBy" is filtered by the XSLT and remains owned by
  * processUsedInstruments().
  * @param {Document} xmlDoc - The parsed XML document
@@ -1290,6 +1290,10 @@ async function processKeywords(xmlDoc, resolver) {
  * @returns {Promise<Array<Record<string, string>>>} Imported entries in XML order
  */
 async function processRelatedWorks(xmlDoc, resolver, options = {}) {
+  if (window.usedInstrumentsReady && typeof window.usedInstrumentsReady.then === 'function') {
+    await window.usedInstrumentsReady;
+  }
+
   const relatedWorkStack = window.relatedWorkStack
     && typeof window.relatedWorkStack.setRelatedWorks === 'function'
     ? window.relatedWorkStack
@@ -1340,7 +1344,7 @@ async function processRelatedWorks(xmlDoc, resolver, options = {}) {
 /**
  * Process related identifiers with relationType="IsCollectedBy" from XML
  * and populate the Used Instruments Tagify field.
- * Only active when the showUsedInstruments feature toggle is enabled.
+ * Only active when Ernie returned a non-empty PID4INST catalogue.
  * Adds PID-only tags immediately so the import pipeline is never blocked,
  * then triggers a background API load that upgrades them with full metadata
  * (name, instrument types) once the data arrives.
@@ -1348,6 +1352,15 @@ async function processRelatedWorks(xmlDoc, resolver, options = {}) {
  * @param {Function} resolver - The namespace resolver function
  */
 function processUsedInstruments(xmlDoc, resolver) {
+  if (window.usedInstrumentsReady && typeof window.usedInstrumentsReady.then === 'function') {
+    return Promise.resolve(window.usedInstrumentsReady).then(function () {
+      applyUsedInstrumentsFromXml(xmlDoc, resolver);
+    });
+  }
+  applyUsedInstrumentsFromXml(xmlDoc, resolver);
+}
+
+function applyUsedInstrumentsFromXml(xmlDoc, resolver) {
   if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
     return;
   }
@@ -1526,7 +1539,7 @@ async function loadXmlToForm(xmlDoc, options = {}) {
     batchSize: options.relatedWorksBatchSize
   });
   // Process Used Instruments (IsCollectedBy entries)
-  processUsedInstruments(xmlDoc, resolver);
+  await processUsedInstruments(xmlDoc, resolver);
   // Process Funders
   processFunders(xmlDoc, resolver);
   // Process Dates

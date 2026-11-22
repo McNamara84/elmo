@@ -193,7 +193,7 @@ If you encounter problems with the installation, feel free to leave an entry in 
   - `$showRelatedWork`: Specifies whether the form group Related Work should be displayed (true/false).
   - `$showFundingReference`: Specifies whether the form group Funding Reference should be displayed (true/false).
   - `$funderPidMode`: Controls the funder identifier type used in the Funding Reference form group. Set via the `FUNDER_PID` environment variable. Allowed values: `CFID` (Crossref Funder ID, default) or `ROR` (ROR ID via ERNIE affiliations API).
-  - `$showUsedInstruments`: Specifies whether the form group Used Instruments (PID4INST via ERNIE API) should be displayed (true/false).
+  - Used Instruments (PID4INST) is shown only when Ernie returns a non-empty instrument list. An empty list or an Ernie error leaves the field hidden. It is not controlled by an environment variable.
   - `$showGGMsProperties`: specific for implementation for the ICGEM platform. Specifies whether ICGEM form groups (GGMs Properties and Characteristics of the model) should be displayed (true/false).
 
   ### ERNIE Integration (Bidirectional Communication)

@@ -33,16 +33,8 @@ $defaultLicense = 'CC-BY-4.0';
 $mslVocabsUrl = 'https://raw.githubusercontent.com/UtrechtUniversity/msl_vocabularies/main/vocabularies/combined/editor/';
 
 
-// SETTINGS FOR PID4INST INSTRUMENTS
-// Show Used Instruments form group (PID4INST via ERNIE API)
-$showUsedInstruments = false;
-
-$envShowUsedInstruments = getenv('SHOW_USED_INSTRUMENTS');
-
-if ($envShowUsedInstruments !== false) {
-    $showUsedInstruments = filter_var($envShowUsedInstruments, FILTER_VALIDATE_BOOLEAN);
-}
-
+// Used Instruments (PID4INST) is not configured here.
+// The form group is shown only when Ernie returns a non-empty instrument list.
 
 // Display the feedback link (true to display, false to hide)
 $showFeedbackLink = true;

@@ -71,7 +71,6 @@ services:
       # Edition selector. Form-group flags live in feature_flags.php.
       SHOW_MSL_MODE: "false"
       SHOW_GGMS_PROPERTIES: "true"
-      SHOW_USED_INSTRUMENTS: "false"
       INSTANCE_TITLE: "ELMO for ICGEM (open beta testing)"
     restart: unless-stopped
     healthcheck:

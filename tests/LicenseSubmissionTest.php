@@ -34,7 +34,7 @@ final class LicenseSubmissionTest extends DatabaseTestCase
     {
         parent::setUp();
         foreach (['showGGMsProperties', 'showMslMode', 'showThesauri', 'showFreeKeywords',
-            'showSpatialTemporalCoverage', 'showRelatedWork', 'showUsedInstruments', 'showFundingReference', 'showLicense', 'defaultLicense'] as $key) {
+            'showSpatialTemporalCoverage', 'showRelatedWork', 'showFundingReference', 'showLicense', 'defaultLicense'] as $key) {
             $this->globals[$key] = $GLOBALS[$key] ?? null;
             $GLOBALS[$key] = false;
         }

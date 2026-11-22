@@ -58,8 +58,6 @@ $showSpatialTemporalCoverage = resolveFeatureToggle($showSpatialTemporalCoverage
 $showRelatedWork = resolveFeatureToggle($showRelatedWork ?? null, true);
 /** @var bool $showFundingReference */
 $showFundingReference = resolveFeatureToggle($showFundingReference ?? null, true);
-/** @var bool $showUsedInstruments */
-$showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, false);
 /** @var bool $showGGMsProperties */
 $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 /** @var bool $showMslMode */
@@ -68,11 +66,9 @@ $showMslMode = resolveFeatureToggle($showMslMode ?? null, false);
 // Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
     'showGGMsProperties' => $showGGMsProperties,
-    'showUsedInstruments' => $showUsedInstruments,
     'thesauriHiddenKeys' => [],
 ]);
 
-$showUsedInstruments = $variantOverrides['showUsedInstruments'];
 $thesauriHiddenKeys = $variantOverrides['thesauriHiddenKeys'];
 
 // Include HTML components using absolute paths to ensure reliable file access
@@ -112,9 +108,7 @@ include $baseDir . 'formgroups/dates.html';
 if ($showSpatialTemporalCoverage) {
     include $baseDir . 'formgroups/coverage.html';
 }
-if ($showUsedInstruments) {
-    include $baseDir . 'formgroups/usedInstruments.html';
-}
+include $baseDir . 'formgroups/usedInstruments.html';
 if ($showRelatedWork) {
     include $baseDir . 'formgroups/relatedwork.html';
 }
