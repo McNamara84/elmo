@@ -8,6 +8,8 @@ The ordinal feature toggles are defined in feature_flags.php
 
 settings.php stays untracked (.gitignore), it can overwrite any settings provided in other files for testing and conveniecce in local setup.
 
+running ELMO locally still requires some variables in env format. .env_sample file lists the variables tthat you need to include into the local .env configuration.
+
 ## Testing
 
 running Playwrright tests for all the versions requires iterating the versions in one container. To enable this, playwright creates it's own untracked configuration file: 
