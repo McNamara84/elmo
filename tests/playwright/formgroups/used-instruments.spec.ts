@@ -46,7 +46,7 @@ async function loadInstrumentFixture(page: Page, instruments = searchFixture) {
 }
 
 const usedInstrumentsTemplate = readFileSync(
-    path.join(REPO_ROOT, 'formgroups/usedInstruments.html'),
+    path.join(REPO_ROOT, 'formgroups/used-instruments.html'),
     'utf8'
 );
 

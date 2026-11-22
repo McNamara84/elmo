@@ -108,7 +108,7 @@ include $baseDir . 'formgroups/dates.html';
 if ($showSpatialTemporalCoverage) {
     include $baseDir . 'formgroups/coverage.html';
 }
-include $baseDir . 'formgroups/usedInstruments.html';
+include $baseDir . 'formgroups/used-instruments.html';
 if ($showRelatedWork) {
     include $baseDir . 'formgroups/relatedwork.html';
 }
