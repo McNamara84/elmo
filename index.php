@@ -17,14 +17,13 @@ ob_start();
 include_once __DIR__ . '/feature_flags.php';
 
 
+// Translate into the PHP environment the variables set in .env 
+include_once __DIR__ . '/includes/env_variables_reader.php';
+
 // A developer settings.php may override the committed flags. CI does not have one.
 if (is_readable(__DIR__ . '/settings.php')) {
     include_once __DIR__ . '/settings.php';
 }
-
-// Translate into the PHP environment the variables set in .env 
-include_once __DIR__ . '/includes/env_variables_reader.php';
-
 // Playwright variant setup writes this lock file after env overrides so local
 if (is_readable(__DIR__ . '/playwright_variant_lock.php')) {
     require __DIR__ . '/playwright_variant_lock.php';
