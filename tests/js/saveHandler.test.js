@@ -90,8 +90,9 @@ describe('saveHandler.js', () => {
         validationError: 've',
         filenameErrorHeading: 'fh',
         filenameError: 'fe',
-        successHeading: 'sh',
+        savingSuccessHeading: 'ssh',
         savingSuccess: 'ss',
+        savingSuccessJsonLd: 'ssJsonLd',
         errorHeading: 'eh',
         saveError: 'se',
         savingHeading: 'savH',
@@ -121,11 +122,20 @@ describe('saveHandler.js', () => {
     delete window.resourceInformation;
   });
 
-  test('generateFilename returns formatted timestamp', async () => {
-    jest.useFakeTimers().setSystemTime(new Date('2024-05-30T12:34:56Z').getTime());
-    const handler = new SaveHandler('form-mde','modal-saveas','modal-notification');
-    const name = await handler.generateFilename();
-    expect(name).toBe('dataset_20240530_123456');
+  test('generateFilename uses the local date and time', async () => {
+    jest.useFakeTimers();
+
+    try {
+      // November 4 at 00:49:12 in the test process's local time zone.
+      jest.setSystemTime(new Date(2026, 10, 4, 0, 49, 12));
+      const handler = new SaveHandler('form-mde', 'modal-saveas', 'modal-notification');
+
+      await expect(handler.generateFilename()).resolves.toBe(
+        'dataset_20261104_004912'
+      );
+    } finally {
+      jest.useRealTimers();
+    }
   });
 
   test('handleSaveConfirm validates filename', async () => {
@@ -140,8 +150,11 @@ describe('saveHandler.js', () => {
 
     handler.showNotification.mockClear();
     $('#input-saveas-filename').val('file');
-    await handler.handleSaveConfirm();
+    const confirmation = handler.handleSaveConfirm();
     expect(modalInstances[0].hide).toHaveBeenCalled();
+    expect(handler.saveAndDownload).not.toHaveBeenCalled();
+    $('#modal-saveas').trigger('hidden.bs.modal');
+    await confirmation;
     expect(handler.saveAndDownload).toHaveBeenCalledWith('file', 'xml');
   });
 
@@ -166,6 +179,8 @@ describe('saveHandler.js', () => {
     expect($('#saveas-extension').text()).toBe('.jsonld');
     expect($('#input-saveas-filename').val()).toBe('dataset_20240530_123456');
     expect(modalInstances[0].show).toHaveBeenCalled();
+    expect($('#label-saveas-modal').attr('data-translate')).toBe('modals.save.saveAsJsonLd');
+    expect(handler.showNotification).not.toHaveBeenCalled();
   });
 
   test.each(['xml', 'jsonld'])('handleSave opens the %s dialog despite incomplete confirmed labels', async format => {
@@ -198,7 +213,11 @@ describe('saveHandler.js', () => {
     for (const group of ['authors', 'contributors']) {
       expect(JSON.parse(request[1].body.get(`${group}Payload`))[0].affiliations).toEqual([affiliation]);
     }
-    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    expect(handler.showNotification).toHaveBeenLastCalledWith(
+      'success',
+      'ssh',
+      format === 'jsonld' ? 'ssJsonLd' : 'ss'
+    );
     delete global.fetch;
   });
 
@@ -219,7 +238,7 @@ describe('saveHandler.js', () => {
     expect(request).toBeDefined();
     expect(request[1].body.get('version')).toBe('1.2.3');
     expect(JSON.parse(request[1].body.get('resourceInformationPayload')).version).toBe('1.2.3');
-    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'sh', 'ss');
+    expect(handler.showNotification).toHaveBeenLastCalledWith('success', 'ssh', format === 'jsonld' ? 'ssJsonLd' : 'ss');
     expect(document.getElementById('input-resourceinformation-version').classList.contains('is-invalid')).toBe(false);
     delete global.fetch;
   });
