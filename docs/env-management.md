@@ -26,9 +26,11 @@ the files are loaded in order (first overwrites last):
 
 ## Adding a new variable
 
-If your variable is a secret:
-- declare it in all compose files
-- add the php reader to env_variables_reader.php
+A secret is added into the
+-  appropriate env manager (locally it is the .env file)
+-  compose-files forwards it into the container internal env
+- `env_files_reader.php` maps it into PHP environment
 
-If your variable is a feature flag that can be visible in the repo:
-- add it to feature_flags.php
+A public variable is added into the
+- `feature_flags.php`
+- Function JSVariables forwards it into JS if needed
