@@ -1,0 +1,329 @@
+name: Publish Validated Images
+
+on:
+  workflow_run:
+    workflows:
+      - PHPUnit Tests
+      - PHPStan Static Analysis
+      - Jest Tests
+      - Playwright Tests
+      - npm audit
+      - Container Security Checks
+    types: [completed]
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+# Keep publication and recording serialized for the same source, across both
+# code branches. Different source commits reconcile machine refs with leases.
+concurrency:
+  group: publish-images-${{ github.event.workflow_run.head_repository.id }}-${{ github.event.workflow_run.head_sha }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: >-
+      github.repository == 'McNamara84/elmo' && github.ref == 'refs/heads/main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      ready: ${{ steps.candidate.outputs.ready }}
+      branch: ${{ steps.candidate.outputs.branch }}
+      sha: ${{ steps.candidate.outputs.sha }}
+      version: ${{ steps.candidate.outputs.version }}
+      database: ${{ steps.candidate.outputs.database }}
+      platform: ${{ steps.candidate.outputs.platform }}
+      image: ${{ steps.candidate.outputs.image }}
+    steps:
+      - name: Checkout trusted automation from the workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Validate the exact source and latest complete push checks
+        id: candidate
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { assessCandidate, candidateSummary } = await import(`${process.env.GITHUB_WORKSPACE}/automation/scripts/ci/deploymentChecks.mjs`);
+            const candidate = await assessCandidate({ github, repo: context.repo, runId: context.payload.workflow_run.id });
+            await candidateSummary(core, candidate);
+            for (const key of ['branch', 'sha', 'version', 'database', 'platform', 'image']) core.setOutput(key, candidate[key]);
+            core.setOutput('ready', candidate.ready && (candidate.branch === 'main' || candidate.current));
+
+  publish:
+    needs: validate
+    if: needs.validate.outputs.ready == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      actions: read
+      contents: read
+      packages: write
+    env:
+      SOURCE_BRANCH: ${{ needs.validate.outputs.branch }}
+      SOURCE_SHA: ${{ needs.validate.outputs.sha }}
+      SOURCE_VERSION: ${{ needs.validate.outputs.version }}
+      DATABASE_IMAGE: ${{ needs.validate.outputs.database }}
+      IMAGE_PLATFORM: ${{ needs.validate.outputs.platform }}
+      WEB_IMAGE: ${{ needs.validate.outputs.image }}
+    outputs:
+      web_ref: ${{ steps.refs.outputs.web_ref }}
+    steps:
+      - name: Checkout trusted automation from the workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Revalidate checks and reuse the first recorded image
+        id: plan
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessCandidate, requireReadyCandidate } = await import(`${root}/scripts/ci/deploymentChecks.mjs`);
+            const { gitRepository, readArtifact, validateArtifact } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const candidate = await assessCandidate({ github, repo: context.repo, runId: context.payload.workflow_run.id });
+            requireReadyCandidate(candidate, { branch: process.env.SOURCE_BRANCH, sha: process.env.SOURCE_SHA,
+              version: process.env.SOURCE_VERSION, database: process.env.DATABASE_IMAGE, platform: process.env.IMAGE_PLATFORM });
+            const git = gitRepository(root);
+            const artifact = readArtifact(git, candidate.repository, candidate.branch, candidate.sha)
+              ?? readArtifact(git, candidate.repository, candidate.branch === 'main' ? 'dev' : 'main', candidate.sha);
+            if (artifact) validateArtifact(artifact.record, { repository: candidate.repository, sha: candidate.sha,
+              version: candidate.version, database: candidate.database, platform: candidate.platform });
+            core.setOutput('reuse', Boolean(artifact));
+            core.setOutput('web_ref', artifact?.record.images.web ?? '');
+      - name: Checkout candidate data separately from automation
+        if: steps.plan.outputs.reuse == 'false'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.validate.outputs.sha }}
+          path: candidate
+          persist-credentials: false
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Export and inspect the actual public build context
+        if: steps.plan.outputs.reuse == 'false'
+        id: context
+        working-directory: automation
+        shell: bash
+        run: |
+          set -euo pipefail
+          audit_root="$RUNNER_TEMP/elmo-public-context"
+          mkdir -p "$audit_root"
+          printf 'FROM scratch\nCOPY . /context/\n' > "$audit_root/audit.Dockerfile"
+          docker build --file "$audit_root/audit.Dockerfile" \
+            --output "type=local,dest=$audit_root/export" "$GITHUB_WORKSPACE/candidate"
+          node scripts/ci/publicBuildContext.mjs "$audit_root/export/context"
+          echo "directory=$audit_root/export/context" >> "$GITHUB_OUTPUT"
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and publish the production image from the audited context
+        if: steps.plan.outputs.reuse == 'false'
+        id: build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: ${{ steps.context.outputs.directory }}
+          file: candidate/Dockerfile.web
+          target: prod
+          platforms: ${{ needs.validate.outputs.platform }}
+          push: true
+          pull: true
+          no-cache-filters: base
+          tags: ${{ needs.validate.outputs.image }}:sha-${{ needs.validate.outputs.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+            org.opencontainers.image.revision=${{ needs.validate.outputs.sha }}
+            org.opencontainers.image.version=${{ needs.validate.outputs.version }}
+          cache-from: type=gha,scope=publish-web
+          cache-to: type=gha,mode=max,scope=publish-web
+      - name: Select the exact immutable published reference
+        id: refs
+        env:
+          RECORDED_IMAGE: ${{ steps.plan.outputs.web_ref }}
+          PUBLISHED_DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { appendFileSync } from 'node:fs';
+          const ref = process.env.RECORDED_IMAGE || `${process.env.WEB_IMAGE}@${process.env.PUBLISHED_DIGEST}`;
+          assert.ok(ref.startsWith(`${process.env.WEB_IMAGE}@`));
+          assert.match(ref.slice(process.env.WEB_IMAGE.length + 1), /^sha256:[a-f0-9]{64}$/u);
+          appendFileSync(process.env.GITHUB_OUTPUT, `web_ref=${ref}\n`);
+          JS
+      - name: Verify manifests, provenance and platform; export exact images
+        id: exported
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          PUBLISHED_IMAGE: ${{ steps.refs.outputs.web_ref }}
+        with:
+          script: |
+            const { exportRegistryImage, requirePublicImage } = await import(`${process.env.GITHUB_WORKSPACE}/automation/scripts/ci/registryImages.mjs`);
+            const candidate = { repository: `${context.repo.owner}/${context.repo.repo}`, sha: process.env.SOURCE_SHA,
+              version: process.env.SOURCE_VERSION, image: process.env.WEB_IMAGE, database: process.env.DATABASE_IMAGE, platform: process.env.IMAGE_PLATFORM };
+            const root = `${process.env.RUNNER_TEMP}/elmo-published-scan`;
+            await requirePublicImage(process.env.PUBLISHED_IMAGE);
+            core.exportVariable('TRIVY_CACHE_DIR', `${process.env.RUNNER_TEMP}/elmo-publish-trivy-cache`);
+            for (const [kind, ref] of [['web', process.env.PUBLISHED_IMAGE], ['mariadb', candidate.database]]) {
+              const exported = exportRegistryImage(ref, candidate, kind, `${root}/${kind}`);
+              core.setOutput(`${kind}_id`, exported.imageId);
+            }
+      - name: Scan the exact published digests before recording them
+        env:
+          WEB_ID: ${{ steps.exported.outputs.web_id }}
+          MARIADB_ID: ${{ steps.exported.outputs.mariadb_id }}
+        run: |
+          status=0
+          for kind in web mariadb; do
+            image_id="$WEB_ID"
+            if [[ "$kind" == mariadb ]]; then image_id="$MARIADB_ID"; fi
+            root="$RUNNER_TEMP/elmo-published-scan/$kind"
+            scan_args=("$root/image.tar" "$image_id" "$root/reports")
+            if [[ "$kind" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+            bash automation/scripts/ci/scan-container-image.sh "${scan_args[@]}" || status=1
+          done
+          exit "$status"
+      - name: Upload published-image scan evidence
+        if: always() && steps.refs.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: published-image-scans-${{ needs.validate.outputs.branch }}-${{ needs.validate.outputs.sha }}
+          path: ${{ runner.temp }}/elmo-published-scan/*/reports/
+          if-no-files-found: error
+          retention-days: 14
+
+  record:
+    needs: [validate, publish]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      actions: read
+      contents: write
+      packages: read
+    env:
+      SOURCE_BRANCH: ${{ needs.validate.outputs.branch }}
+      SOURCE_SHA: ${{ needs.validate.outputs.sha }}
+      SOURCE_VERSION: ${{ needs.validate.outputs.version }}
+      DATABASE_IMAGE: ${{ needs.validate.outputs.database }}
+      IMAGE_PLATFORM: ${{ needs.validate.outputs.platform }}
+      WEB_IMAGE: ${{ needs.validate.outputs.image }}
+      SCANNED_IMAGE: ${{ needs.publish.outputs.web_ref }}
+    steps:
+      - name: Checkout trusted automation with machine-branch write access
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Revalidate CI and record immutable image artifacts
+        id: artifact
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessCandidate, requireReadyCandidate } = await import(`${root}/scripts/ci/deploymentChecks.mjs`);
+            const { gitRepository, publishArtifact } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const candidate = await assessCandidate({ github, repo: context.repo, runId: context.payload.workflow_run.id });
+            requireReadyCandidate(candidate, { branch: process.env.SOURCE_BRANCH, sha: process.env.SOURCE_SHA,
+              version: process.env.SOURCE_VERSION, database: process.env.DATABASE_IMAGE, platform: process.env.IMAGE_PLATFORM });
+            const artifact = publishArtifact(gitRepository(root), { schema: 1, repository: candidate.repository,
+              branch: candidate.branch, sha: candidate.sha, version: candidate.version, platform: candidate.platform,
+              images: { web: process.env.SCANNED_IMAGE, mariadb: candidate.database } });
+            core.setOutput('web_ref', artifact.record.images.web);
+            core.setOutput('rescan', artifact.record.images.web !== process.env.SCANNED_IMAGE);
+            await core.summary.addHeading('Immutable image artifacts')
+              .addCodeBlock(JSON.stringify(artifact.record, null, 2), 'json')
+              .addLink('Immutable artifact snapshot', `https://github.com/${candidate.repository}/blob/${artifact.commit}/${candidate.sha}.json`).write();
+      - name: Log in to inspect a concurrent winning image
+        if: steps.artifact.outputs.rescan == 'true'
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx for concurrent image verification
+        if: steps.artifact.outputs.rescan == 'true'
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Export the first recorded image if another writer won
+        if: steps.artifact.outputs.rescan == 'true'
+        id: winner
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        env:
+          WINNING_IMAGE: ${{ steps.artifact.outputs.web_ref }}
+        with:
+          script: |
+            const { exportRegistryImage, requirePublicImage } = await import(`${process.env.GITHUB_WORKSPACE}/automation/scripts/ci/registryImages.mjs`);
+            const candidate = { repository: `${context.repo.owner}/${context.repo.repo}`, sha: process.env.SOURCE_SHA,
+              version: process.env.SOURCE_VERSION, image: process.env.WEB_IMAGE, platform: process.env.IMAGE_PLATFORM };
+            await requirePublicImage(process.env.WINNING_IMAGE);
+            const exported = exportRegistryImage(process.env.WINNING_IMAGE, candidate, 'web', `${process.env.RUNNER_TEMP}/elmo-winner-scan`);
+            core.setOutput('image_id', exported.imageId);
+            core.exportVariable('TRIVY_CACHE_DIR', `${process.env.RUNNER_TEMP}/elmo-winner-trivy-cache`);
+      - name: Scan the concurrent winning digest before any Stage update
+        if: steps.artifact.outputs.rescan == 'true'
+        env:
+          WINNING_IMAGE_ID: ${{ steps.winner.outputs.image_id }}
+        run: bash automation/scripts/ci/scan-container-image.sh "$RUNNER_TEMP/elmo-winner-scan/image.tar" "$WINNING_IMAGE_ID" "$RUNNER_TEMP/elmo-winner-scan/reports"
+      - name: Upload concurrent winning-image scan evidence
+        if: always() && steps.artifact.outputs.rescan == 'true'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: recorded-image-scan-${{ needs.validate.outputs.sha }}
+          path: ${{ runner.temp }}/elmo-winner-scan/reports/
+          if-no-files-found: error
+          retention-days: 14
+      - name: Reconcile Stage only for the still-current dev commit
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            if (process.env.SOURCE_BRANCH === 'main') {
+              await core.summary.addHeading('Main release candidate').addRaw('Recorded candidate images. Stage and Production deployment branches were not changed.\n').write();
+              return;
+            }
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessCandidate, requireReadyCandidate } = await import(`${root}/scripts/ci/deploymentChecks.mjs`);
+            const { gitRepository, readArtifact } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const { updateStage } = await import(`${root}/scripts/ci/stageDeployment.mjs`);
+            const candidate = await assessCandidate({ github, repo: context.repo, runId: context.payload.workflow_run.id });
+            requireReadyCandidate(candidate, { branch: process.env.SOURCE_BRANCH, sha: process.env.SOURCE_SHA,
+              version: process.env.SOURCE_VERSION, database: process.env.DATABASE_IMAGE, platform: process.env.IMAGE_PLATFORM });
+            const git = gitRepository(root);
+            const artifact = readArtifact(git, candidate.repository, 'dev', candidate.sha);
+            if (!artifact) throw new Error('The recorded dev artifact is missing.');
+            const result = updateStage(git, artifact);
+            await core.summary.addHeading('Stage deployment pointer').addRaw(`Result: ${result.status}.\n`)
+              .addRaw('Portainer must still pull the deployment branch and recreate the containers; this workflow result does not verify the running stack.\n').write();
+            if (result.commit) await core.summary.addLink('Stage deployment commit', `https://github.com/${candidate.repository}/commit/${result.commit}`).write();

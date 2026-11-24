@@ -31,8 +31,11 @@ test.describe('Resource version validation (#873)', () => {
     });
     page.on('pageerror', error => problems.push(`pageerror: ${error.message}`));
     // These version scenarios do not exercise external Maps or thesaurus services.
+    // Empty 200s cover availability and the temporary per-vocabulary probe, so a
+    // 503 from that probe is not a console error. Without the probe, only
+    // availability is requested and still receives {}.
     await registerGoogleMapsNoopRoute(page);
-    await page.route('**/api/v2/vocabs/thesauri/availability', route => route.fulfill({ json: {} }));
+    await page.route('**/api/v2/vocabs/thesauri/**', route => route.fulfill({ json: {} }));
     await page.addInitScript(() => localStorage.setItem('userLanguage', 'en'));
     await navigateToHome(page);
     await page.waitForFunction(() => Boolean(window.resourceInformation?.setResourceInformation

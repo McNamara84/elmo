@@ -1092,75 +1092,80 @@ $(document).ready(function () {
 
         $.getJSON('api/v2/vocabs/thesauri/availability')
             .done(function (availability) {
-                const availableThesauri = filterAvailableThesauri(availability);
+                filterAvailableThesauri(availability)
+                    .then(function (availableThesauri) {
+                        if (availableThesauri.length === 0) {
+                            markThesauriReady();
+                            return;
+                        }
 
-                if (availableThesauri.length === 0) {
-                    markThesauriReady();
-                    return;
-                }
+                        const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
+                        const modalContainer = document.getElementById('thesaurusModalsContainer');
+                        if (!thesaurusContainer || !modalContainer) {
+                            markThesauriReady();
+                            return;
+                        }
+                        // main thesauri generation process
+                        availableThesauri.forEach(function (item) {
+                            const config = THESAURUS_CONFIG[item.key];
+                            if (!config) return;
 
-                const thesaurusContainer = document.getElementById('thesaurusKeywordsGroup');
-                const modalContainer = document.getElementById('thesaurusModalsContainer');
-                if (!thesaurusContainer || !modalContainer) {
-                    markThesauriReady();
-                    return;
-                }
+                            thesaurusContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName);
+                            modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
 
-                availableThesauri.forEach(function (item) {
-                    const config = THESAURUS_CONFIG[item.key];
-                    if (!config) return;
+                            // Build keywordConfigurations entry for this thesaurus.
+                            // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
+                            // over any static values in THESAURUS_CONFIG when the feature is active.
+                            const ggmsOverride = showGGMsProperties
+                                ? GGM_THESAURUS_ROOT_NODES[item.key]
+                                : undefined;
 
-                    thesaurusContainer.innerHTML += generateThesaurusInputItem(item.key, config, item.displayName);
-                    modalContainer.innerHTML += generateModal(item.key, config, item.displayName);
+                            const entry = {
+                                key: item.key,
+                                inputId: '#' + config.inputId,
+                                apiEndpoint: config.apiEndpoint,
+                                jsTreeId: '#' + config.jsTreeId,
+                                searchInputId: '#' + config.searchInputId,
+                                selectedKeywordsListId: config.selectedListId,
+                                modalId: '#' + config.modalId,
+                            };
 
-                    // Build keywordConfigurations entry for this thesaurus.
-                    // GGMs overrides (array → rootNodes, string → rootNodeId) take priority
-                    // over any static values in THESAURUS_CONFIG when the feature is active.
-                    const ggmsOverride = showGGMsProperties
-                        ? GGM_THESAURUS_ROOT_NODES[item.key]
-                        : undefined;
+                            if (Array.isArray(ggmsOverride)) {
+                                entry.rootNodes = ggmsOverride;
+                            } else if (typeof ggmsOverride === 'string') {
+                                entry.rootNodeId = ggmsOverride;
+                            } else {
+                                // No GGMs override — fall back to static config values.
+                                if (config.rootNodes) entry.rootNodes = config.rootNodes;
+                                if (config.rootNodeId) entry.rootNodeId = config.rootNodeId;
+                            }
 
-                    const entry = {
-                        key: item.key,
-                        inputId: '#' + config.inputId,
-                        apiEndpoint: config.apiEndpoint,
-                        jsTreeId: '#' + config.jsTreeId,
-                        searchInputId: '#' + config.searchInputId,
-                        selectedKeywordsListId: config.selectedListId,
-                        modalId: '#' + config.modalId,
-                    };
+                            keywordConfigurations.push(entry);
+                        });
 
-                    if (Array.isArray(ggmsOverride)) {
-                        entry.rootNodes = ggmsOverride;
-                    } else if (typeof ggmsOverride === 'string') {
-                        entry.rootNodeId = ggmsOverride;
-                    } else {
-                        // No GGMs override — fall back to static config values.
-                        if (config.rootNodes) entry.rootNodes = config.rootNodes;
-                        if (config.rootNodeId) entry.rootNodeId = config.rootNodeId;
-                    }
+                        if (typeof window.applyTranslations === 'function') {
+                            window.applyTranslations();
+                        }
 
-                    keywordConfigurations.push(entry);
-                });
+                        // Initialize Tagify for each configuration
+                        keywordConfigurations.forEach(function (kc) {
+                            if ($(kc.inputId).length) {
+                                initializeKeywordInputWithLazyLoading(kc);
+                            }
+                        });
 
-                if (typeof window.applyTranslations === 'function') {
-                    window.applyTranslations();
-                }
+                        setupLazyLoadingForModals();
+                        setupLazyLoadingForInputs();
 
-                // Initialize Tagify for each configuration
-                keywordConfigurations.forEach(function (kc) {
-                    if ($(kc.inputId).length) {
-                        initializeKeywordInputWithLazyLoading(kc);
-                    }
-                });
+                        const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
+                        if (formGroup) formGroup.style.display = '';
 
-                setupLazyLoadingForModals();
-                setupLazyLoadingForInputs();
-
-                const formGroup = document.getElementById('thesaurusKeywordsFormGroup');
-                if (formGroup) formGroup.style.display = '';
-
-                markThesauriReady();
+                        markThesauriReady();
+                    })
+                    .catch(function (error) {
+                        console.error('Failed to determine available thesauri:', error);
+                        markThesauriReady();
+                    });
             })
             .fail(function (jqxhr, textStatus, error) {
                 console.error('Failed to fetch thesauri availability:', textStatus, error);
@@ -1174,8 +1179,8 @@ $(document).ready(function () {
      * @param {Object} availability - Response from the availability endpoint.
      * @returns {Array<{key: string, displayName: string}>} Available thesauri.
      */
-    function filterAvailableThesauri(availability) {
-        const result = [];
+    async function filterAvailableThesauri(availability) {
+        let result = [];
         Object.keys(THESAURUS_CONFIG).forEach(function (key) {
             if (THESAURUS_CONFIG[key].dynamicOnly) return;
             if (hiddenThesauri.has(key)) return;
@@ -1187,7 +1192,25 @@ $(document).ready(function () {
                 });
             }
         });
-        return result;
+        // Drop a thesaurus whose vocabulary body reports an error, even when
+        // the availability list still marks it available. The probe is a small
+        // 200 response: a 503 here is logged by the browser and cannot be hidden.
+        const excludedKeys = new Set();
+        for (const item of result) {
+            const apiSuffix = THESAURUS_CONFIG[item.key].apiEndpoint;
+            if (!apiSuffix) continue;
+
+            try {
+                const response = await fetch(`./${apiSuffix}?probe=1`);
+                const data = await response.json().catch(function () { return null; });
+                if (!response.ok || (data && typeof data === 'object' && 'error' in data)) {
+                    excludedKeys.add(item.key);
+                }
+            } catch (error) {
+                excludedKeys.add(item.key);
+            }
+        }
+        return result.filter(item => !excludedKeys.has(item.key));
     }
 
     /**

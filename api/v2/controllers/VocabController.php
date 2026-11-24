@@ -2064,6 +2064,9 @@ class VocabController
      */
     private function getThesaurusVocabulary(string $slug): void
     {
+        // ?probe=1 answers with a tiny 200 body. Otherwise, a 503 is always printed by the
+        // browser console, which is confusing.
+        $probe = ($_GET['probe'] ?? '') === '1';
         try {
             $ernieService = $this->getErnieService();
 
@@ -2071,9 +2074,15 @@ class VocabController
                 $data = $ernieService->getThesaurusVocabularyWithCache($slug);
                 if (!empty($data)) {
                     header('Content-Type: application/json');
-                    echo json_encode($data);
+                    echo json_encode($probe ? ['available' => true] : $data);
                     return;
                 }
+            }
+
+            if ($probe) {
+                header('Content-Type: application/json');
+                echo json_encode(['error' => "Thesaurus vocabulary '$slug' currently unavailable"]);
+                return;
             }
 
             http_response_code(503);
@@ -2081,6 +2090,11 @@ class VocabController
             echo json_encode(['error' => "Thesaurus vocabulary '$slug' currently unavailable"]);
         } catch (Exception $e) {
             error_log("API Error in getThesaurusVocabulary($slug): " . $e->getMessage());
+            if ($probe) {
+                header('Content-Type: application/json');
+                echo json_encode(['error' => $e->getMessage()]);
+                return;
+            }
             http_response_code(500);
             header('Content-Type: application/json');
             echo json_encode(['error' => $e->getMessage()]);
