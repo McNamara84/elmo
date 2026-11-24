@@ -30,6 +30,24 @@ final class FeatureFlagBooleanTest extends TestCase
         self::assertSame('bool', $flags['showGGMsProperties']['type']);
     }
 
+    public function testContactAddressRepositoryReadsEnvironment(): void
+    {
+        $value = $this->loadVariable('includes/env_variables_reader.php', [
+            'CONTACT_ADDRESS_REPOSITORY' => 'repo@example.org',
+        ], 'contactAddressRepository');
+
+        self::assertSame('repo@example.org', $value);
+    }
+
+    public function testContactAddressRepositoryDefaultsWhenUnset(): void
+    {
+        $value = $this->loadVariable('includes/env_variables_reader.php', [
+            'CONTACT_ADDRESS_REPOSITORY' => null,
+        ], 'contactAddressRepository');
+
+        self::assertSame('datapub@gfz.de', $value);
+    }
+
     #[DataProvider('simulateEmailProvider')]
     public function testFeatureFlagsSimulateEmailIsBoolean(?string $simulateEmail, bool $expected): void
     {
@@ -100,6 +118,38 @@ final class FeatureFlagBooleanTest extends TestCase
         self::assertSame(0, $exitCode, $stderr);
         $decoded = json_decode($stdout, true);
         self::assertIsArray($decoded, $stdout);
+
+        return $decoded;
+    }
+
+    /**
+     * @param array<string, ?string> $environment null unsets the variable
+     */
+    private function loadVariable(string $relativePath, array $environment, string $name): mixed
+    {
+        $root = dirname(__DIR__);
+        $assignments = '';
+        foreach ($environment as $envName => $value) {
+            $assignments .= $value === null
+                ? 'putenv(' . var_export($envName, true) . ');'
+                : 'putenv(' . var_export($envName . '=' . $value, true) . ');';
+        }
+        $script = $assignments . 'require ' . var_export($root . '/' . $relativePath, true) . ';'
+            . 'echo json_encode($' . $name . ');';
+
+        $command = [PHP_BINARY, '-d', 'display_errors=stderr', '-r', $script];
+        $descriptor = [1 => ['pipe', 'w'], 2 => ['pipe', 'w']];
+        $process = proc_open($command, $descriptor, $pipes);
+        self::assertIsResource($process);
+        $stdout = stream_get_contents($pipes[1]);
+        $stderr = stream_get_contents($pipes[2]);
+        fclose($pipes[1]);
+        fclose($pipes[2]);
+        $exitCode = proc_close($process);
+
+        self::assertSame(0, $exitCode, $stderr);
+        $decoded = json_decode($stdout, true);
+        self::assertIsString($decoded, $stdout);
 
         return $decoded;
     }
