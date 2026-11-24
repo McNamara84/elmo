@@ -23,6 +23,8 @@ $showSpatialTemporalCoverage = true;
 $showRelatedWork = true;
 // Show Funding Reference form group
 $showFundingReference = true;
+// Show Used Instruments form group
+$showUsedInstruments = true;
 
 $showAuthorInstitution = true;
 // Show license formgroup. if not shown defaults to CC-BY 4.0
