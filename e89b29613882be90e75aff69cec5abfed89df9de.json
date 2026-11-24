@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "repository": "McNamara84/elmo",
+  "branch": "main",
+  "sha": "e89b29613882be90e75aff69cec5abfed89df9de",
+  "version": "2.2.1",
+  "platform": "linux/amd64",
+  "images": {
+    "web": "ghcr.io/mcnamara84/elmo-web@sha256:54bbaf28463f0d03921223cdd984cb3a3e1e512a8b99b6f0a10875006a2226ac",
+    "mariadb": "mariadb:12.3.3-noble@sha256:99c125f103f5d081ebbc9ffe064e63daf7f688ac33a5f7f29af2d7260a96debf"
+  }
+}
