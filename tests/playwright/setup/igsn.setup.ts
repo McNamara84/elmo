@@ -4,7 +4,7 @@ import { applyVariantSettings } from './variant-settings';
 /**
  * ELMO-IGSN setup:
  *   - Same settings as GENERIC variant
- *   - Used Instruments (PID4INST) ON
+ *   - Used Instruments follows the Ernie PID4INST list
  *   - Free Keywords ON
  *   - Spatial/temporal coverage ON
  *   - Related Work ON
@@ -28,7 +28,7 @@ setup('configure ELMO-IGSN variant', async ({ page, baseURL }) => {
   if (ggmsEl > 0) {
     throw new Error('[VARIANT VERIFICATION FAILED] IGSN: #group-ggmspropertiesessential should NOT be present, but found ' + ggmsEl + ' element(s). Settings not applied correctly.');
   }
-  // MSL Originating Laboratory must NOT be in the DOM (showMslLabs=false)
+  // MSL Originating Laboratory must NOT be in the DOM (showMslMode=false)
   const mslEl = await page.locator('#group-originatinglaboratory').count();
   if (mslEl > 0) {
     throw new Error('[VARIANT VERIFICATION FAILED] IGSN: #group-originatinglaboratory should NOT be present, but found ' + mslEl + ' element(s). Settings not applied correctly.');

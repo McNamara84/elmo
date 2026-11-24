@@ -1010,7 +1010,7 @@ $(document).ready(function () {
     const features = window.ELMO_FEATURES || {};
     const showThesauri = features.showThesauri !== false;
     const hiddenThesauri = new Set(Array.isArray(features.hiddenThesauri) ? features.hiddenThesauri : []);
-    const showMslVocabs = features.showMslVocabs === true;
+    const showMslMode = features.showMslMode === true;
     const showGGMsProperties = features.showGGMsProperties === true;
 
     let resolveThesauriReady;
@@ -1309,7 +1309,7 @@ $(document).ready(function () {
      * Initializes MSL keywords configurations (unchanged, uses static local JSON).
      */
     function initMslKeywords() {
-        if (!showMslVocabs) return;
+        if (!showMslMode) return;
 
         keywordConfigurations.push(
             {

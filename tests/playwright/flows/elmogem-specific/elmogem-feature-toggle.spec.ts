@@ -12,14 +12,8 @@ const MOCK_THESAURI_AVAILABILITY = {
 /**
  * ELMO-GEM Feature Toggle Verification
  *
- * Confirms that when showGGMsProperties=true in settings.php,
- * the following features are correctly hidden:
- * - GEMET thesaurus
- * - Chronostratigraphy (ICS) thesaurus
- * - Used Instruments form group
- *
- * This is a regression test for the feature override system that applies
- * these restrictions to the ELMO-GEM variant.
+ * Confirms that when showGGMsProperties=true, GEMET and Chronostratigraphy
+ * stay hidden. Used Instruments is not part of this edition.
  */
 test.describe('ELMO-GEM Feature Toggle Override', () => {
   test.beforeEach(async ({ page }) => {
@@ -71,16 +65,12 @@ test.describe('ELMO-GEM Feature Toggle Override', () => {
     await expect(chronolabel).toHaveCount(0);
   });
 
-  test('does NOT render Used Instruments form group', async ({ page }) => {
-    // Used Instruments form group should not be in the DOM when showUsedInstruments=false
-    // (which is forced by the override when showGGMsProperties=true)
-    const usedInstrumentsGroup = page.locator('#group-usedinstruments');
-    await expect(usedInstrumentsGroup).toHaveCount(0);
-
-    // Verify the form group container doesn't exist
-    const usedInstrumentsContainer = page.locator('[id*="usedinstruments"]');
-    const count = await usedInstrumentsContainer.count();
-    expect(count).toBe(0);
+  test('does not render Used Instruments', async ({ page }) => {
+    await expect(page.locator('#usedInstrumentsFormGroup')).toHaveCount(0);
+    const showUsedInstruments = await page.evaluate(() => {
+      return (window as any).ELMO_FEATURES?.showUsedInstruments;
+    });
+    expect(showUsedInstruments).toBe(false);
   });
 
   test('window.ELMO_FEATURES.hiddenThesauri contains the expected values', async ({ page }) => {

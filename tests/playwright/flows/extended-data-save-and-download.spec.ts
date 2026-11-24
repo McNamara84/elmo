@@ -94,7 +94,7 @@ test.describe('Dataset Save with XML Verification', () => {
     // Assert abstract/description
     expect(actualRoot.descriptions.description['#text']).toBe(refRoot.descriptions.description['#text']);
     
-    await expectIsoContactEmail(page, actualEnvelope, refEnvelope);
+    expectIsoContactEmail(actualEnvelope, refEnvelope);
 
     console.log('✓ Minimal dataset XML verification passed');
   });
@@ -158,7 +158,7 @@ test.describe('Dataset Save with XML Verification', () => {
       }
     }
 
-    await expectIsoContactEmail(page, actualEnvelope, refEnvelope);
+    expectIsoContactEmail(actualEnvelope, refEnvelope);
 
     console.log('✓ Extended dataset XML verification passed');
   });
@@ -347,9 +347,8 @@ function extractResourceNode(envelope: any): any | null {
   return null;
 }
 
-async function expectIsoContactEmail(page: Page, actualEnvelope: any, refEnvelope: any) {
-  const configuredEmail = await page.evaluate(() => (window as any).ELMO_FEATURES?.contactAddressRepository || null);
-  const expectedMetadataContactEmail = configuredEmail || getIsoMetadataContactEmail(refEnvelope);
+function expectIsoContactEmail(actualEnvelope: any, refEnvelope: any) {
+  const expectedMetadataContactEmail = process.env.CONTACT_ADDRESS_REPOSITORY || 'datapub@gfz.de';
   const expectedPointOfContactEmail = getIsoPointOfContactEmail(refEnvelope);
 
   expect(getIsoPointOfContactEmail(actualEnvelope)).toBe(expectedPointOfContactEmail);

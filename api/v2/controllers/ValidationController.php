@@ -5,8 +5,14 @@
  *
  */
 
-// Include settings.php so that variables are available
-require_once __DIR__ . '/../../../settings.php';
+// Feature flags and the process environment supply configuration.
+// settings.php is an optional developer override.
+require_once __DIR__ . '/../../../feature_flags.php';
+require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+if (is_readable(__DIR__ . '/../../../settings.php')) {
+    require_once __DIR__ . '/../../../settings.php';
+}
+require_once __DIR__ . '/../../../includes/connect_db.php';
 require_once __DIR__ . '/../services/IdentifierTypePatterns.php';
 
 /**
@@ -28,8 +34,7 @@ class ValidationController
      */
     public function __construct()
     {
-        global $connection;
-        $this->connection = $connection;
+        $this->connection = getConnection();
     }
 
     /**
@@ -180,7 +185,7 @@ class ValidationController
     private function getActiveIdentifierTypesFromDb(): void
     {
         try {
-            global $connection;
+            $connection = $this->connection;
             $sql = 'SELECT name, pattern, description FROM Identifier_Type WHERE isShown = 1 ORDER BY name ASC';
             $result = $connection->query($sql);
             if ($result === false) {
@@ -218,7 +223,7 @@ class ValidationController
     public function getInactiveIdentifierTypes(): void
     {
         try {
-            global $connection;
+            $connection = $this->connection;
             $sql = 'SELECT name, pattern, description FROM Identifier_Type WHERE isShown = 0 ORDER BY name ASC';
             $result = $connection->query($sql);
             if ($result === false) {

@@ -1,4 +1,4 @@
-<div class="card mb-2">
+<div id="usedInstrumentsFormGroup" class="card mb-2" style="display: none;">
   <div class="card-header">
     <b data-translate="usedInstruments.title">Used Instruments</b>
     <i class="bi bi-question-circle-fill" data-help-section-id="help-usedinstruments-fg"></i>
@@ -19,6 +19,8 @@
       </div>
       <!-- Hidden inputs for instrument PIDs and PID types (populated by JS) -->
       <div id="usedinstruments-hidden-inputs"></div>
+      <!-- Posted only after Ernie returns a non-empty instrument list. -->
+      <input type="hidden" name="usedInstrumentsActive" id="used-instruments-active" value="1" disabled>
     </div>
   </div>
 </div>

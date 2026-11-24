@@ -17,6 +17,7 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
 
 export default defineConfig({
   testDir: './tests/playwright',
+  globalTeardown: './tests/playwright/setup/remove-variant-lock.ts',
   fullyParallel: true,
   workers: undefined,
   forbidOnly: !!process.env.CI,

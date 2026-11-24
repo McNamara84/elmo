@@ -115,7 +115,7 @@ test.describe('Language preferences', () => {
     await page.route('**/settings.php?*', async (route) => {
       await route.fulfill({
         status: 200,
-        body: JSON.stringify({ apiKey: 'test', showMslLabs: false }),
+        body: JSON.stringify({ apiKey: 'test', showMslMode: false }),
         headers: { 'content-type': 'application/json; charset=utf-8' },
       });
     });

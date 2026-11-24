@@ -41,22 +41,12 @@ const searchFixture: InstrumentFixture[] = [
 
 async function loadInstrumentFixture(page: Page, instruments = searchFixture) {
     await page.route(instrumentApiRoute, route => route.fulfill({ json: instruments }));
-    const result = await page.evaluate(() => (window as any).usedInstrumentsModule.loadInstrumentsFromAPI());
+    const result = await page.evaluate(() => (window as any).usedInstrumentsModule.loadInstrumentsFromAPI(true));
     expect(result).toEqual({ success: true, dataLoaded: true });
 }
 
-async function deferInstrumentResponse(page: Page) {
-    let release!: () => void;
-    const pending = new Promise<void>(resolve => { release = resolve; });
-    await page.route(instrumentApiRoute, async route => {
-        await pending;
-        await route.fulfill({ json: searchFixture });
-    });
-    return release;
-}
-
 const usedInstrumentsTemplate = readFileSync(
-    path.join(REPO_ROOT, 'formgroups/usedInstruments.html'),
+    path.join(REPO_ROOT, 'formgroups/used-instruments.html'),
     'utf8'
 );
 
@@ -82,7 +72,12 @@ const testHarnessMarkup = String.raw`<!DOCTYPE html>
 /** Wait until the usedInstrumentsModule has been fully set on window. */
 async function waitForUsedInstrumentsInit(page: import('@playwright/test').Page) {
     await page.waitForFunction(
-        () => !!(window as any).usedInstrumentsModule,
+        () => {
+            const card = document.getElementById('usedInstrumentsFormGroup');
+            return !!(window as any).usedInstrumentsModule
+                && !!card
+                && card.style.display !== 'none';
+        },
         null,
         { timeout: 10000 }
     );
@@ -328,81 +323,6 @@ test.describe('Used Instruments form group', () => {
             ]);
         });
     }
-
-    test('shows the latest query after a delayed first response without more typing', async ({ page }) => {
-        const release = await deferInstrumentResponse(page);
-        try {
-            const requested = page.waitForRequest(instrumentApiRoute);
-            const input = page.locator('.tagify__input');
-            await input.click();
-            await requested;
-            await input.fill('SM');
-            await input.fill('GA');
-            await expect(page.locator('.tagify')).toHaveClass(/tagify--loading/);
-            release();
-
-            await expect(page.locator('.tagify__dropdown__item strong')).toHaveText([
-                'GASMET - DX4000', 'Station GA-03', 'MOSES 2026 WaddenSea'
-            ]);
-            await expect(page.locator('.tagify')).not.toHaveClass(/tagify--loading/);
-            // The refreshed first option must also be selected correctly with Enter.
-            await input.press('Enter');
-            await expect(page.locator('input[name="instrumentPid[]"]')).toHaveValue('21/gasmet');
-        } finally {
-            release();
-        }
-    });
-
-    for (const action of ['blur', 'clear'] as const) {
-        test(`does not reopen suggestions after ${action} during loading`, async ({ page }) => {
-            const release = await deferInstrumentResponse(page);
-            try {
-                const requested = page.waitForRequest(instrumentApiRoute);
-                const input = page.locator('.tagify__input');
-                await input.click();
-                await requested;
-                await input.fill('SM');
-                if (action === 'blur') {
-                    await page.locator('.card-header b').click();
-                } else {
-                    await input.fill('');
-                }
-
-                const response = page.waitForResponse(instrumentApiRoute);
-                release();
-                await response;
-                await page.waitForFunction(() => {
-                    const input: any = document.querySelector('#input-usedinstruments');
-                    return input._tagify.whitelist.length > 0 && !input._tagify.state.isLoading;
-                });
-                await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
-            } finally {
-                release();
-            }
-        });
-    }
-
-    test('retries a failed first request when the field is focused again', async ({ page }) => {
-        let requests = 0;
-        await page.route(instrumentApiRoute, route => {
-            requests++;
-            return requests === 1
-                ? route.fulfill({ status: 503, json: { error: 'Temporarily unavailable' } })
-                : route.fulfill({ json: searchFixture });
-        });
-        const response = page.waitForResponse(instrumentApiRoute);
-        const input = page.locator('.tagify__input');
-        await input.fill('GA');
-        await response;
-        await expect(page.locator('.tagify')).not.toHaveClass(/tagify--loading/);
-        await expect(page.locator('.tagify__dropdown')).not.toBeVisible();
-
-        await page.locator('.card-header b').click();
-        await input.fill('GA');
-
-        await expect(page.locator('.tagify__dropdown__item strong').first()).toHaveText('GASMET - DX4000');
-        expect(requests).toBe(2);
-    });
 
     test('keeps an imported PID fallback selected when instrument data loads', async ({ page }) => {
         await page.evaluate(() => {

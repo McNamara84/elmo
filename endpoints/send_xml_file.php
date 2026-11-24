@@ -17,7 +17,12 @@ ob_start();
 $projectRoot = dirname(__DIR__);
 
 require_once $projectRoot . '/api/security.php';
-require_once $projectRoot . '/settings.php';
+require_once $projectRoot . '/feature_flags.php';
+require_once $projectRoot . '/includes/env_variables_reader.php';
+if (is_readable($projectRoot . '/settings.php')) {
+    require_once $projectRoot . '/settings.php';
+}
+require_once $projectRoot . '/includes/connect_db.php';
 require_once $projectRoot . '/includes/save_to_db_helper.php';
 require_once $projectRoot . '/includes/send_file_helper.php';
 require_once $projectRoot . '/includes/mail_helper.php';
@@ -27,7 +32,8 @@ require_once $projectRoot . '/includes/contact_requirement.php';
 require_once $projectRoot . '/includes/doi_submission_policy.php';
 require_once $projectRoot . '/api/v2/controllers/DoiController.php';
 
-global $connection, $showGGMsProperties;
+getConnection();
+global $showGGMsProperties;
 global $xmlSubmitAddress, $icgemSubmitAddress;
 global $SIMULATE_EMAIL;
 global $sendResearcherConfirmationEmail, $icgemDatabaseUrl;

@@ -13,8 +13,21 @@ error_reporting(E_ALL);
 // Start output buffering
 ob_start();
 
-// Include settings and configurations
-include_once __DIR__ . '/settings.php';
+// ENV variables inclusion
+include_once __DIR__ . '/feature_flags.php';
+
+
+// Translate into the PHP environment the variables set in .env 
+include_once __DIR__ . '/includes/env_variables_reader.php';
+
+// A developer settings.php may override the committed flags. CI does not have one.
+if (is_readable(__DIR__ . '/settings.php')) {
+    include_once __DIR__ . '/settings.php';
+}
+// Playwright variant setup writes this lock file after env overrides so local
+if (is_readable(__DIR__ . '/playwright_variant_lock.php')) {
+    require __DIR__ . '/playwright_variant_lock.php';
+}
 
 // Provide default feature toggles when settings.php does not define them.
 // This keeps the application resilient in environments that bootstrap a minimal
@@ -45,18 +58,12 @@ $showSpatialTemporalCoverage = resolveFeatureToggle($showSpatialTemporalCoverage
 $showRelatedWork = resolveFeatureToggle($showRelatedWork ?? null, true);
 /** @var bool $showFundingReference */
 $showFundingReference = resolveFeatureToggle($showFundingReference ?? null, true);
-/** @var bool $showUsedInstruments */
-$showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, false);
 /** @var bool $showGGMsProperties */
 $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
-/** @var bool $showMslLabs */
-$showMslLabs = resolveFeatureToggle($showMslLabs ?? null, false);
-/** @var bool $showMslVocabs */
-$showMslVocabs = resolveFeatureToggle($showMslVocabs ?? null, false);
-/** @var bool $showMslDefaultFreeKeywords */
-$showMslDefaultFreeKeywords = resolveFeatureToggle($showMslDefaultFreeKeywords ?? null, false);
-/** @var bool $showMslLogo */
-$showMslLogo = resolveFeatureToggle($showMslLogo ?? null, false);
+/** @var bool $showMslMode */
+$showMslMode = resolveFeatureToggle($showMslMode ?? null, false);
+/** @var bool $showUsedInstruments */
+$showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, true);
 
 // Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
@@ -84,7 +91,7 @@ if ($showGGMsProperties) {
     include $baseDir . 'formgroups/ggms-data-sources.html';
 }
 include $baseDir . 'formgroups/contributors.html';
-if ($showMslLabs) {
+if ($showMslMode) {
     include $baseDir . 'formgroups/originatingLaboratory.html';
 }
 if ($showGGMsProperties) {
@@ -92,7 +99,7 @@ if ($showGGMsProperties) {
 } else {
     include $baseDir . 'formgroups/descriptions.html';
 }
-if ($showMslVocabs) {
+if ($showMslMode) {
     include $baseDir . 'formgroups/mslKeywords.html';
 }
 if ($showThesauri) {
@@ -106,7 +113,7 @@ if ($showSpatialTemporalCoverage) {
     include $baseDir . 'formgroups/coverage.html';
 }
 if ($showUsedInstruments) {
-    include $baseDir . 'formgroups/usedInstruments.html';
+    include $baseDir . 'formgroups/used-instruments.html';
 }
 if ($showRelatedWork) {
     include $baseDir . 'formgroups/relatedwork.html';

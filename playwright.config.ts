@@ -34,6 +34,7 @@ const BASE_URL = process.env.BASE_URL ?? 'http://localhost:8080/';
 
 export default defineConfig({
   testDir: './tests/playwright',
+  globalTeardown: './tests/playwright/setup/remove-variant-lock.ts',
   // Sequential execution is required: only one variant's settings.php can be
   // active at a time on the single container. workers:1 ensures declaration
   // order is respected — all generic tests drain before gem-setup starts, etc.
@@ -103,6 +104,8 @@ export default defineConfig({
       testIgnore: [
         '**/spatial-temporal-coverages.spec.ts',
         '**/minimal-data-submission.spec.ts',
+        // PID4INST is not part of ELMO GEM.
+        '**/used-instruments.spec.ts',
       ],
     },
 

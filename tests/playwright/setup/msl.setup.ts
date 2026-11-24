@@ -19,7 +19,7 @@ setup('configure ELMO-MSL variant', async ({ page, baseURL }) => {
   await expect(page).toHaveTitle(/ELMO/i);
 
   // ── Variant verification ──────────────────────────────────────────────────
-  // MSL Originating Laboratory form group must be present in the DOM (showMslLabs=true)
+  // MSL Originating Laboratory form group must be present in the DOM (showMslMode=true)
   const mslElement = await page.locator('#group-originatinglaboratory').count();
   if (mslElement === 0) {
     throw new Error('[VARIANT VERIFICATION FAILED] MSL: #group-originatinglaboratory should be present, but not found. Settings not applied correctly.');

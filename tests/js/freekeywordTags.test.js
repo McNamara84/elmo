@@ -128,7 +128,7 @@ describe('freekeywordTags.js', () => {
   test('adds default MSL free keywords for new records when feature is enabled', async () => {
     // Set feature flags before loading the script so the DOMContentLoaded handler sees them
     global.window = global.window || {};
-    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: true };
+    window.ELMO_FEATURES = { showMslMode: true };
     window.elmo = { isNewRecord: true };
 
     loadScript(() => ({
@@ -147,7 +147,7 @@ describe('freekeywordTags.js', () => {
   });
 
   test('restores missing MSL default free keywords after a user-confirmed clear without duplicates', () => {
-    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: true };
+    window.ELMO_FEATURES = { showMslMode: true };
     window.elmo = { isNewRecord: false };
 
     loadScript(() => ({
@@ -168,7 +168,7 @@ describe('freekeywordTags.js', () => {
   });
 
   test('does not restore MSL default free keywords when the feature is disabled', () => {
-    window.ELMO_FEATURES = { showMslDefaultFreeKeywords: false };
+    window.ELMO_FEATURES = { showMslMode: false };
     window.elmo = { isNewRecord: false };
 
     loadScript(() => ({

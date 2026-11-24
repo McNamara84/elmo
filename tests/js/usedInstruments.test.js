@@ -55,10 +55,13 @@ describe('usedInstruments.js', () => {
     beforeEach(() => {
         // Set up DOM
         document.body.innerHTML = `
-            <div id="group-usedinstruments">
-                <input type="text" id="input-usedinstruments" name="usedInstruments"
-                    data-translate-placeholder="usedInstruments.placeholder" />
-                <div id="usedinstruments-hidden-inputs"></div>
+            <div id="usedInstrumentsFormGroup" class="card mb-2" style="display: none;">
+                <div id="group-usedinstruments">
+                    <input type="text" id="input-usedinstruments" name="usedInstruments"
+                        data-translate-placeholder="usedInstruments.placeholder" />
+                    <div id="usedinstruments-hidden-inputs"></div>
+                    <input type="hidden" name="usedInstrumentsActive" id="used-instruments-active" value="1" disabled>
+                </div>
             </div>
         `;
 
@@ -74,7 +77,7 @@ describe('usedInstruments.js', () => {
 
         // Set up ELMO_FEATURES
         window.ELMO_FEATURES = {
-            showUsedInstruments: true
+            showUsedInstruments: false
         };
 
         // Set up translations
@@ -88,8 +91,10 @@ describe('usedInstruments.js', () => {
         // Mock applyTagifyAccessibilityAttributes
         window.applyTagifyAccessibilityAttributes = jest.fn();
 
-        // Save and mock fetch via jQuery
+        // Save and mock fetch via jQuery. The module requests the catalogue
+        // during initialization, so the default request stays pending.
         originalFetch = $.ajax;
+        $.ajax = jest.fn(() => $.Deferred().promise());
     });
 
     afterEach(() => {
@@ -98,6 +103,7 @@ describe('usedInstruments.js', () => {
         delete window.translations;
         delete window.applyTagifyAccessibilityAttributes;
         delete window.usedInstrumentsModule;
+        delete window.usedInstrumentsReady;
         $.ajax = originalFetch;
         jest.restoreAllMocks();
     });
@@ -111,13 +117,15 @@ describe('usedInstruments.js', () => {
         document.dispatchEvent(event);
     }
 
-    test('does not initialize when feature is disabled', () => {
-        window.ELMO_FEATURES.showUsedInstruments = false;
-
+    test('keeps the card hidden until Ernie returns instruments', () => {
         loadScript();
 
-        const input = document.getElementById('input-usedinstruments');
-        expect(input._tagify).toBeUndefined();
+        const card = document.getElementById('usedInstrumentsFormGroup');
+        const marker = document.getElementById('used-instruments-active');
+        expect(card.style.display).toBe('none');
+        expect(marker.disabled).toBe(true);
+        expect(window.ELMO_FEATURES.showUsedInstruments).toBe(false);
+        expect(document.getElementById('input-usedinstruments')._tagify).toBeInstanceOf(MockTagify);
     });
 
     test('initializes Tagify when feature is enabled', () => {
@@ -341,9 +349,9 @@ describe('usedInstruments.js', () => {
         ];
 
         function pendingLoad() {
-            loadScript();
             const deferred = $.Deferred();
             $.ajax = jest.fn(() => deferred.promise());
+            loadScript();
             const tagify = document.getElementById('input-usedinstruments')._tagify;
             const promise = window.usedInstrumentsModule.loadInstrumentsFromAPI();
             return { deferred, tagify, promise };
@@ -458,40 +466,46 @@ describe('usedInstruments.js', () => {
         }
 
         test('resolves with success and dataLoaded when API returns instruments', async () => {
-            loadScript();
-
             const apiData = [
                 { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
             ];
             mockAjaxSuccess(apiData);
+            loadScript();
 
             const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
             expect(result).toEqual({ success: true, dataLoaded: true });
+            expect(document.getElementById('usedInstrumentsFormGroup').style.display).toBe('');
+            expect(document.getElementById('used-instruments-active').disabled).toBe(false);
+            expect(window.ELMO_FEATURES.showUsedInstruments).toBe(true);
         });
 
         test('resolves with dataLoaded false when API returns empty array', async () => {
-            loadScript();
             mockAjaxSuccess([]);
+            loadScript();
 
             const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
             expect(result).toEqual({ success: true, dataLoaded: false });
+            expect(document.getElementById('usedInstrumentsFormGroup').style.display).toBe('none');
+            expect(document.getElementById('used-instruments-active').disabled).toBe(true);
+            expect(window.ELMO_FEATURES.showUsedInstruments).toBe(false);
         });
 
         test('resolves (never rejects) on AJAX failure', async () => {
-            loadScript();
             mockAjaxFailure();
+            loadScript();
 
             const result = await window.usedInstrumentsModule.loadInstrumentsFromAPI();
             expect(result).toEqual({ success: false, dataLoaded: false });
+            expect(document.getElementById('usedInstrumentsFormGroup').style.display).toBe('none');
+            expect(window.ELMO_FEATURES.showUsedInstruments).toBe(false);
         });
 
         test('returns cached result on second call', async () => {
-            loadScript();
-
             const apiData = [
                 { pid: '21.11157/0001', pidType: 'Handle', name: 'Seismometer', instrumentTypes: ['Seismometer'] }
             ];
             mockAjaxSuccess(apiData);
+            loadScript();
 
             await window.usedInstrumentsModule.loadInstrumentsFromAPI();
             // Second call should not hit AJAX again
@@ -504,10 +518,6 @@ describe('usedInstruments.js', () => {
 
     describe('addInstrumentsByPid', () => {
         function loadWithApiData(apiData) {
-            loadScript();
-
-            // Mock $.ajax to return the given data, then call loadInstrumentsFromAPI()
-            // so the module's internal instrumentData array is populated.
             const mockDeferred = $.Deferred();
             $.ajax = jest.fn(() => {
                 setTimeout(() => mockDeferred.resolve(apiData), 0);
@@ -517,6 +527,7 @@ describe('usedInstruments.js', () => {
                 promise.always = function (cb) { mockDeferred.always(cb); return this; };
                 return promise;
             });
+            loadScript();
 
             return window.usedInstrumentsModule.loadInstrumentsFromAPI();
         }
@@ -610,8 +621,6 @@ describe('usedInstruments.js', () => {
 
     describe('upgradeInstrumentTags', () => {
         function loadWithApiData(apiData) {
-            loadScript();
-
             const mockDeferred = $.Deferred();
             $.ajax = jest.fn(() => {
                 setTimeout(() => mockDeferred.resolve(apiData), 0);
@@ -621,6 +630,7 @@ describe('usedInstruments.js', () => {
                 promise.always = function (cb) { mockDeferred.always(cb); return this; };
                 return promise;
             });
+            loadScript();
 
             return window.usedInstrumentsModule.loadInstrumentsFromAPI();
         }
@@ -650,7 +660,7 @@ describe('usedInstruments.js', () => {
                 promise.always = function (cb) { mockDeferred.always(cb); return this; };
                 return promise;
             });
-            await window.usedInstrumentsModule.loadInstrumentsFromAPI();
+            await window.usedInstrumentsModule.loadInstrumentsFromAPI(true);
 
             // Step 3: Upgrade
             window.usedInstrumentsModule.upgradeInstrumentTags();

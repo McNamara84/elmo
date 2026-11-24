@@ -7,10 +7,16 @@
 
 // Set Max Execution Time to 300 seconds
 ini_set('max_execution_time', 300);
-// Include settings.php so that variables are available
+// Feature flags and the process environment supply configuration.
+// settings.php is an optional developer override.
 if (!defined('UNIT_TESTING')) {
-    require_once __DIR__ . '/../../../settings.php';
+    require_once __DIR__ . '/../../../feature_flags.php';
+    require_once __DIR__ . '/../../../includes/env_variables_reader.php';
+    if (is_readable(__DIR__ . '/../../../settings.php')) {
+        require_once __DIR__ . '/../../../settings.php';
+    }
 }
+require_once __DIR__ . '/../../../includes/connect_db.php';
 require_once __DIR__ . '/../services/DataCiteRelationType.php';
 
 class VocabController
@@ -253,7 +259,7 @@ class VocabController
      */
     private function getRelationsFromDb(): void
     {
-        global $connection;
+        $connection = getConnection();
         $stmt = $connection->prepare('SELECT relation_id, name, description FROM Relation ORDER BY name ASC');
 
         if (!$stmt || !$stmt->execute()) {
@@ -630,7 +636,7 @@ class VocabController
      */
     private function getRolesFromDb(string $type): void
     {
-        global $connection;
+        $connection = getConnection();
 
         if ($type === 'all') {
             $sql = 'SELECT * FROM Role';
@@ -673,7 +679,7 @@ class VocabController
      */
     public function syncRolesToDb(array $ernieRoles, int $forInstitutions): void
     {
-        global $connection;
+        $connection = getConnection();
         $connection->begin_transaction();
 
         try {
@@ -791,7 +797,7 @@ class VocabController
         require_once __DIR__ . '/../services/LicenseRepository.php';
         $service = $this->getErnieService();
         $result = $service->getLicensesWithCache($slug);
-        $result['licenses'] = (new LicenseRepository($GLOBALS['connection']))->map(
+        $result['licenses'] = (new LicenseRepository(getConnection()))->map(
             $result['licenses'], $service->getLicenseOrigin()
         );
         return $result;
@@ -804,7 +810,7 @@ class VocabController
         header('Content-Type: application/json; charset=utf-8');
         header('Cache-Control: no-store');
         try {
-            $slug = LicenseService::resolveResourceType($GLOBALS['connection'], $vars['resourceTypeId'] ?? null);
+            $slug = LicenseService::resolveResourceType(getConnection(), $vars['resourceTypeId'] ?? null);
             $result = $this->licenseResult($slug);
             http_response_code($result['availability'] === 'unavailable' ? 503 : 200);
             echo json_encode($result);
@@ -857,7 +863,7 @@ class VocabController
     public function getAllFreeKeywords(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
 
             $sql = 'SELECT free_keyword FROM Free_Keywords ORDER BY free_keyword ASC';
             $result = $connection->query($sql);
@@ -896,7 +902,7 @@ class VocabController
     public function getCuratedFreeKeywords(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
 
             $sql = 'SELECT free_keyword FROM Free_Keywords WHERE isCurated = 1 ORDER BY free_keyword ASC';
             $result = $connection->query($sql);
@@ -930,7 +936,7 @@ class VocabController
     public function getUncuratedFreeKeywords(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
 
             $sql = 'SELECT free_keyword FROM Free_Keywords WHERE isCurated = 0 ORDER BY free_keyword ASC';
             $result = $connection->query($sql);
@@ -1290,7 +1296,7 @@ class VocabController
     public function getICGEMFileFormats(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
             $stmt = $connection->prepare('SELECT File_format_id as id, name, description FROM File_Format ORDER BY File_format_id ASC');
 
             if (!$stmt) {
@@ -1324,7 +1330,7 @@ class VocabController
     public function getICGEMModelTypes(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
             $stmt = $connection->prepare('SELECT Model_type_id as id, name, description FROM Model_Type ORDER BY Model_type_id ASC');
 
             if (!$stmt) {
@@ -1358,7 +1364,7 @@ class VocabController
     public function getMathRepresentations(): void
     {
         try {
-            global $connection;
+            $connection = getConnection();
             $stmt = $connection->prepare('SELECT Mathematical_representation_id as id, name, description FROM Mathematical_Representation ORDER BY Mathematical_representation_id ASC');
 
             if (!$stmt) {
@@ -1435,7 +1441,7 @@ class VocabController
      */
     private function getResourceTypesFromDb(): void
     {
-        global $connection;
+        $connection = getConnection();
 
         $stmt = $connection->prepare(
             'SELECT resource_name_id as id, resource_type_general, description 
@@ -1584,7 +1590,7 @@ class VocabController
      */
     private function syncErnieToDb(string $dbTable, array $items, array $tableStructure): bool
     {
-        global $connection;
+        $connection = getConnection();
 
         $ernieIdCol = $tableStructure['ernie_id_col'];
         $nameCol = $tableStructure['name_col'];
@@ -1656,7 +1662,7 @@ class VocabController
         string $ernieIdCol,
         array $outputFieldMap
     ): array {
-        global $connection;
+        $connection = getConnection();
 
         $result = [];
 
@@ -1732,7 +1738,7 @@ class VocabController
      */
     private function getLanguagesFromDb(): void
     {
-        global $connection;
+        $connection = getConnection();
 
         $stmt = $connection->prepare('SELECT language_id as id, code, name FROM Language ORDER BY name');
 
@@ -1766,7 +1772,7 @@ class VocabController
      */
     public function syncLanguagesToDb(array $ernieLanguages): void
     {
-        global $connection;
+        $connection = getConnection();
         $connection->begin_transaction();
 
         try {
@@ -1806,7 +1812,7 @@ class VocabController
      */
     private function mapLanguagesByCode(array $ernieLanguages): array
     {
-        global $connection;
+        $connection = getConnection();
 
         $result = [];
 
@@ -1937,7 +1943,7 @@ class VocabController
      */
     private function getTitleTypesFromDb(): void
     {
-        global $connection;
+        $connection = getConnection();
 
         $stmt = $connection->prepare(
             'SELECT title_type_id as id, name FROM Title_Type ORDER BY name'
@@ -2162,7 +2168,7 @@ class VocabController
     public function syncIdentifierTypesToDb(array $ernieTypes): void
     {
         require_once __DIR__ . '/../services/IdentifierTypePatterns.php';
-        global $connection;
+        $connection = getConnection();
 
         $connection->begin_transaction();
 

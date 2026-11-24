@@ -17,21 +17,18 @@ if ($isDirectInstallationRequest && PHP_SAPI !== 'cli') {
 // Include database connection
 if (!defined('INCLUDED_FROM_TEST')) {
     // Include database connection only when not called from tests
+    require_once dirname(__DIR__) . '/feature_flags.php';
+    require_once dirname(__DIR__) . '/includes/env_variables_reader.php';
     $settingsPath = dirname(__DIR__) . '/settings.php';
-    if (!file_exists($settingsPath)) {
-        $msg = 'Error: settings.php not found. ' .
-            'Please copy sample_settings.php to settings.php and update your database credentials.';
-        die(json_encode([
-            'status' => 'error',
-            'message' => $msg,
-        ]));
+    if (is_readable($settingsPath)) {
+        require_once $settingsPath;
     }
-    require_once $settingsPath;
-    // Check database connection. Assuming that the test methods take care of passing the connection.
-    if (!isset($connection) || !$connection) {
+    require_once dirname(__DIR__) . '/includes/connect_db.php';
+    $connection = getConnection();
+    if ($connection->connect_error) {
         die(json_encode([
             'status' => 'error',
-            'message' => 'Error: Database connection could not be established. Please check settings.php and database availability.'
+            'message' => 'Error: Database connection could not be established. Check DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, and DB_PORT.'
         ]));
     }
 }
@@ -1374,7 +1371,8 @@ function parseInstallationAction(array $arguments): string
  */
 function runInstallationCli(array $arguments): int
 {
-    global $connection;
+    require_once dirname(__DIR__) . '/includes/connect_db.php';
+    $connection = getConnection();
 
     try {
         $action = parseInstallationAction($arguments);
@@ -1383,7 +1381,7 @@ function runInstallationCli(array $arguments): int
         return 2;
     }
 
-    if (!isset($connection)) {
+    if ($connection->connect_error) {
         fwrite(STDERR, "Error: Database connection not available." . PHP_EOL);
         return 1;
     }

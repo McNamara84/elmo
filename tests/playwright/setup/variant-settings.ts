@@ -5,12 +5,13 @@ import { REPO_ROOT } from '../utils/constants';
 export type Variant = 'generic' | 'gem' | 'msl' | 'igsn';
 
 interface VariantConfig {
-  // MSL master switch (derived MSL flags are synced in the lock file)
+  // MSL edition switch: logo, laboratory, keywords, and default free keywords.
   showMslMode: boolean;
   // GEM-specific
   showGGMsProperties: boolean;
+  // GEM does not include PID4INST. Other editions leave this unset.
+  showUsedInstruments?: boolean;
   // Shared form groups (IGSN turns several off)
-  showUsedInstruments: boolean;
   showSpatialTemporalCoverage: boolean;
   showFreeKeywords: boolean;
   showRelatedWork: boolean;
@@ -25,7 +26,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   generic: {
     showMslMode: false,
     showGGMsProperties: false,
-    showUsedInstruments: true,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -43,7 +43,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   msl: {
     showMslMode: true,
     showGGMsProperties: false,
-    showUsedInstruments: false,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -52,7 +51,6 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   igsn: {
     showMslMode: false,
     showGGMsProperties: false,
-    showUsedInstruments: true,
     showSpatialTemporalCoverage: true,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -63,18 +61,10 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
 /** settings.php in the ELMO project root, beside this test tree. */
 const SETTINGS_PHP = path.join(REPO_ROOT, 'settings.php');
 /** Lock file applied after env overrides in settings.php / settings.elmo.php. */
-const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright-variant-lock.php');
-
-const MSL_DERIVED_FLAGS = [
-  'showMslLabs',
-  'showMslVocabs',
-  'showMslDefaultFreeKeywords',
-  'showMslLogo',
-] as const;
+const VARIANT_LOCK_PHP = path.join(REPO_ROOT, 'playwright_variant_lock.php');
 
 const VARIANT_LOCK_FLAGS: Array<keyof VariantConfig> = [
   'showGGMsProperties',
-  'showUsedInstruments',
   'showSpatialTemporalCoverage',
   'showFreeKeywords',
   'showRelatedWork',
@@ -102,12 +92,12 @@ function writeVariantLockFile(variant: Variant): void {
     `$showMslMode = ${config.showMslMode ? 'true' : 'false'};`,
   ];
 
-  for (const flag of MSL_DERIVED_FLAGS) {
-    lines.push(`$${flag} = $showMslMode;`);
-  }
-
   for (const flag of VARIANT_LOCK_FLAGS) {
     lines.push(`$${flag} = ${config[flag] ? 'true' : 'false'};`);
+  }
+
+  if (config.showUsedInstruments !== undefined) {
+    lines.push(`$showUsedInstruments = ${config.showUsedInstruments ? 'true' : 'false'};`);
   }
 
   writeFileSync(VARIANT_LOCK_PHP, `${lines.join('\n')}\n`, 'utf-8');
@@ -118,21 +108,15 @@ function writeVariantLockFile(variant: Variant): void {
  * PHP re-reads the file on every request so no server restart is needed.
  *
  * We patch plain boolean assignments in settings.php and also write
- * playwright-variant-lock.php, which settings.php includes after any
+ * playwright_variant_lock.php, which settings.php includes after any
  * environment-variable overrides. That keeps Docker env vars such as
  * SHOW_GGMS_PROPERTIES or SHOW_MSL_MODE from defeating the active variant.
  */
 export function applyVariantSettings(variant: Variant): void {
   let content = readFileSync(SETTINGS_PHP, 'utf-8');
 
-  content = setBoolVar(content, 'showMslMode', VARIANT_SETTINGS[variant].showMslMode);
-
   for (const [varName, value] of Object.entries(VARIANT_SETTINGS[variant])) {
     content = setBoolVar(content, varName, value);
-  }
-
-  for (const flag of MSL_DERIVED_FLAGS) {
-    content = setBoolVar(content, flag, VARIANT_SETTINGS[variant].showMslMode);
   }
 
   writeFileSync(SETTINGS_PHP, content, 'utf-8');

@@ -59,6 +59,18 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
 } // end function_exists('executeSaveFunction')
 
 /**
+ * Reports whether the browser showed the PID4INST instrument list.
+ *
+ * The form posts this only after Ernie returns a non-empty catalogue.
+ * When it is absent, IsCollectedBy stays with Related Work and existing
+ * instrument rows are left untouched.
+ */
+function usedInstrumentsWereShown(array $postData): bool
+{
+    return filter_var($postData['usedInstrumentsActive'] ?? false, FILTER_VALIDATE_BOOLEAN);
+}
+
+/**
  * Saves every enabled form group in a single database transaction.
  *
  * @param array<string, mixed> $postData Submitted form data.
@@ -69,9 +81,11 @@ function executeSaveFunction(callable $callback, mixed ...$args): mixed
  * @throws Exception When a form-group save or transaction operation fails.
  */
 function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie = null): int {
-    global $connection, $showMslMode;
+    require_once __DIR__ . '/connect_db.php';
+    $connection = getConnection();
+    global $showMslMode;
     global $showThesauri, $showFreeKeywords, $showSpatialTemporalCoverage;
-    global $showRelatedWork, $showUsedInstruments, $showFundingReference, $showGGMsProperties;
+    global $showRelatedWork, $showFundingReference, $showGGMsProperties;
 
     $postData = normalizeResourceInformationPostData($postData);
     // The HTTP entry point chooses this mode. A POST action cannot downgrade submission.
@@ -115,7 +129,7 @@ function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie
         if ($showRelatedWork) {
             executeSaveFunction('saveRelatedWork', $connection, $postData, $resource_id);
         }
-        if ($showUsedInstruments) {
+        if (usedInstrumentsWereShown($postData)) {
             executeSaveFunction('saveUsedInstruments', $connection, $postData, $resource_id);
         }
         if ($showFundingReference) {
@@ -167,7 +181,8 @@ function saveALL(array $postData, bool $submission = false, ?ErnieService $ernie
  */
 function generateDatasetPayloadByResourceId(int $resourceId, array $options = []): array
 {
-    global $connection;
+    require_once __DIR__ . '/connect_db.php';
+    $connection = getConnection();
     $downloadFormat = strtolower((string) ($options['format'] ?? 'xml'));
     $postData = $options['postData'] ?? null;
     $requestedVariant = isset($options['variant']) ? strtolower((string) $options['variant']) : null;
@@ -281,7 +296,7 @@ function buildResourceXmlWithCurrentFormPayloads(
         $resourceXml = applyRelatedWorksPayloadToResourceXmlString(
             $resourceXml,
             $postData,
-            (bool) ($GLOBALS['showUsedInstruments'] ?? false)
+            usedInstrumentsWereShown($postData)
         );
     }
 

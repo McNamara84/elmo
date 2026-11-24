@@ -286,7 +286,7 @@ describe('originatingLaboratories.js', () => {
             document.body.innerHTML = fs.readFileSync(path.join(__dirname, '../../formgroups/originatingLaboratory.html'), 'utf8');
             document.documentElement.dataset.helpStatus = status;
             localStorage.setItem('helpStatus', status);
-            window.ELMO_FEATURES = { showMslLabs: true };
+            window.ELMO_FEATURES = { showMslMode: true };
             window.replaceHelpButtonInClonedRows = require('../../js/eventhandlers/functions.js').replaceHelpButtonInClonedRows;
             $.getJSON = jest.fn((url, callback) => {
                 callback({ data: [{ display_name: 'Test laboratory', scientific_domain: 'Geology' }] });

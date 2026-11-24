@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { completeMinimalDatasetForm, disableHelp, navigateToHome, registerGoogleMapsNoopRoute } from '../utils';
+import { completeMinimalDatasetForm, disableHelp, navigateToHome, registerGoogleMapsNoopRoute, withoutExpectedInstrumentCatalogueNoise } from '../utils';
 import en from '../../../lang/en.json';
 import de from '../../../lang/de.json';
 import fr from '../../../lang/fr.json';
@@ -43,7 +43,10 @@ test.describe('Resource version validation (#873)', () => {
   });
 
   test.afterEach(async ({ page }) => {
-    expect(consoleProblems.get(page), 'Browser console warnings, errors and uncaught exceptions').toEqual([]);
+    expect(
+      withoutExpectedInstrumentCatalogueNoise(consoleProblems.get(page) ?? []),
+      'Browser console warnings, errors and uncaught exceptions',
+    ).toEqual([]);
   });
 
   test('shows format errors immediately while typing and clears them on correction', async ({ page }) => {

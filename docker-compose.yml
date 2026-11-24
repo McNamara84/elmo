@@ -33,22 +33,20 @@ services:
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME}
-      ROOT_PASSWORD: ${ROOT_PASSWORD}
       INSTALL_ACTION: basic
+      ROOT_PASSWORD: ${ROOT_PASSWORD}
+      CONTACT_ADDRESS_REPOSITORY: ${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}
+      SIMULATE_EMAIL: "true"
       TZ: Europe/Berlin
+      ELMO_API_KEY: ${ELMO_API_KEY}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY}
-      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID:-}
+      GOOGLE_MAPS_MAP_ID: ${GOOGLE_MAPS_MAP_ID}
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
-      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL:-}
+      DATA_UPLOAD_URL: ${DATA_UPLOAD_URL}
       FUNDER_PID: ${FUNDER_PID:-CFID}
-      # Flags for MSL
-      SHOW_MSL_MODE: "false"
-      SHOW_USED_INSTRUMENTS: "false"
-      SHOW_CONTACT_INSTITUTION: ${SHOW_CONTACT_INSTITUTION:-false}
-      SIMULATE_EMAIL: "true"
-      CONTACT_ADDRESS_REPOSITORY: ${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}
+      # Edition selector. Form-group flags live in feature_flags.php.
       API_BASE_URL: ${API_BASE_URL:-http://localhost:8080}
       LOCAL_DEVELOPMENT: "true"
     depends_on:
@@ -76,6 +74,7 @@ services:
       BASE_URL: http://hostmachine:8080/
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      CONTACT_ADDRESS_REPOSITORY: ${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}
     volumes:
       - .:/work
       - ./playwright-report:/work/playwright-report

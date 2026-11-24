@@ -27,18 +27,64 @@
  * and scenarios where the script loads after DOMContentLoaded has already fired
  * (e.g. Playwright route interception, dynamic script injection).
  */
-function initUsedInstrumentsModule() {
-    // Only initialize if the feature is enabled
-    if (!window.ELMO_FEATURES || !window.ELMO_FEATURES.showUsedInstruments) {
+/**
+ * Shows the Used Instruments card and lets the save request keep IsCollectedBy
+ * with this form group. Called only after Ernie returns at least one instrument.
+ */
+function revealUsedInstruments() {
+    var card = document.getElementById('usedInstrumentsFormGroup');
+    if (card) {
+        card.style.display = '';
+    }
+    window.ELMO_FEATURES = window.ELMO_FEATURES || {};
+    window.ELMO_FEATURES.showUsedInstruments = true;
+    var marker = document.getElementById('used-instruments-active');
+    if (marker) {
+        marker.disabled = false;
+    }
+}
+
+/**
+ * Keeps the card hidden when Ernie has no instrument list.
+ */
+function hideUsedInstruments() {
+    var card = document.getElementById('usedInstrumentsFormGroup');
+    if (card) {
+        card.style.display = 'none';
+    }
+    window.ELMO_FEATURES = window.ELMO_FEATURES || {};
+    window.ELMO_FEATURES.showUsedInstruments = false;
+    var marker = document.getElementById('used-instruments-active');
+    if (marker) {
+        marker.disabled = true;
+    }
+}
+
+var usedInstrumentsReadySettled = false;
+var resolveUsedInstrumentsReady;
+window.usedInstrumentsReady = new Promise(function (resolve) {
+    resolveUsedInstrumentsReady = resolve;
+});
+
+function settleUsedInstrumentsReady(available) {
+    if (usedInstrumentsReadySettled) {
         return;
     }
+    usedInstrumentsReadySettled = true;
+    resolveUsedInstrumentsReady({ available: Boolean(available) });
+}
 
+function initUsedInstrumentsModule() {
     /**
      * The HTML input element where Tagify is applied.
      * @type {HTMLInputElement|null}
      */
     var input = document.getElementById('input-usedinstruments');
-    if (!input) return;
+    if (!input) {
+        hideUsedInstruments();
+        settleUsedInstrumentsReady(false);
+        return;
+    }
 
     /**
      * The Tagify instance for the Used Instruments input.
@@ -296,13 +342,21 @@ function initUsedInstrumentsModule() {
 
     /**
      * Fetches PID4INST instruments from the API and updates the Tagify whitelist.
-     * Uses lazy loading - only called when user first interacts with the field.
+     * The first request starts as soon as the form group is initialized.
+     * A later call can replace that catalogue when forceReload is true.
      * Always resolves (never rejects) so callers don't need error handling.
      * If data is already loaded, resolves immediately.
-     * 
+     *
+     * @param {boolean} [forceReload] Fetch again even when a catalogue is already stored.
      * @returns {Promise<{success: boolean, dataLoaded: boolean}>}
      */
-    function loadInstrumentsFromAPI() {
+    function loadInstrumentsFromAPI(forceReload) {
+        if (forceReload) {
+            dataLoaded = false;
+            loadInProgress = false;
+            loadPromise = null;
+        }
+
         // If data is already loaded, resolve immediately
         if (dataLoaded) {
             return Promise.resolve({ success: true, dataLoaded: true });
@@ -331,12 +385,14 @@ function initUsedInstrumentsModule() {
                     try {
                         if (!Array.isArray(data)) {
                             console.error('PID4INST API returned unexpected data format:', data);
+                            hideUsedInstruments();
                             resolve({ success: false, dataLoaded: false });
                             return;
                         }
 
                         if (data.length === 0) {
                             console.log('No PID4INST instruments available.');
+                            hideUsedInstruments();
                             resolve({ success: true, dataLoaded: false });
                             return;
                         }
@@ -344,6 +400,7 @@ function initUsedInstrumentsModule() {
                         // Store full instrument data
                         instrumentData = data;
                         dataLoaded = true;
+                        revealUsedInstruments();
 
                         // Update Tagify whitelist while preserving existing tags
                         if (instrumentsTagify) {
@@ -377,6 +434,7 @@ function initUsedInstrumentsModule() {
                         resolve({ success: true, dataLoaded: true });
                     } catch (error) {
                         console.error('Error processing PID4INST instrument data:', error);
+                        hideUsedInstruments();
                         resolve({ success: false, dataLoaded: false });
                     }
                 })
@@ -386,6 +444,7 @@ function initUsedInstrumentsModule() {
                         statusText: jqXHR.statusText,
                         error: errorThrown
                     });
+                    hideUsedInstruments();
                     resolve({ success: false, dataLoaded: false });
                 })
                 .always(function () {
@@ -552,6 +611,12 @@ function initUsedInstrumentsModule() {
         getSelectedInstruments: getSelectedInstruments,
         loadInstrumentsFromAPI: loadInstrumentsFromAPI
     };
+
+    // The catalogue decides whether the card is shown. Import waits on this
+    // same request so IsCollectedBy is not filed before the result is known.
+    loadInstrumentsFromAPI().then(function (result) {
+        settleUsedInstrumentsReady(Boolean(result && result.dataLoaded));
+    });
 }
 
 // Initialize: handle both "script loaded before DOMContentLoaded" and

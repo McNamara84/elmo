@@ -381,9 +381,9 @@ final class SaveGGMsDataSourcesTest extends DatabaseTestCase
         require_once __DIR__ . '/../api/v2/controllers/DatasetController.php';
         require_once __DIR__ . '/../api/v2/controllers/ICGEMController.php';
 
-        global $connection;
-        $connection = $this->connection;
+        $GLOBALS['connection'] = $this->connection;
         $controller = new \ICGEMController();
+        $this->assertSame($this->connection, getConnection());
         $dataSources = $controller->getDataSources($this->connection, $resourceId);
 
         $terrain = array_values(array_filter(

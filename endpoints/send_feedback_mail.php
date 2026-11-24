@@ -13,7 +13,11 @@ use PHPMailer\PHPMailer\Exception;
 $projectRoot = dirname(__DIR__);
 require $projectRoot . '/vendor/autoload.php';
 require $projectRoot . '/api/security.php';
-include $projectRoot . '/settings.php';
+require_once $projectRoot . '/feature_flags.php';
+require_once $projectRoot . '/includes/env_variables_reader.php';
+if (is_readable($projectRoot . '/settings.php')) {
+    include $projectRoot . '/settings.php';
+}
 
 ensureAppSession();
 
@@ -47,10 +51,10 @@ function sendFeedbackMail(
     string $feedbackQuestion6,
     string $feedbackQuestion7
 ): void {
-    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslLabs, $showGGMsProperties, $SIMULATE_EMAIL;
+    global $smtpHost, $smtpPort, $smtpUser, $smtpPassword, $smtpSender, $feedbackAddress, $smtpSecure, $smtpAuth, $showMslMode, $showGGMsProperties, $SIMULATE_EMAIL;
     
     // Determine ELMO version
-    if ($showMslLabs) {
+    if ($showMslMode) {
         $elmoVersion = 'MSL';
     } elseif ($showGGMsProperties) {
         $elmoVersion = 'ELMOGEM';

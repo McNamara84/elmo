@@ -27,35 +27,13 @@ warn_missing_dir() {
 warn_missing_dir "/var/www/html/vendor" "Run 'composer install' locally or rebuild the image."
 warn_missing_dir "/var/www/html/node_modules" "Run 'npm install' locally or rebuild the image."
 
-# Submission mail reads XML_SUBMIT_ADDRESS at request time (settings.elmo.php).
-# An empty value falls back to xmlsubmit@example.com.
+# Submission mail reads XML_SUBMIT_ADDRESS at request time 
 if [ -n "${XML_SUBMIT_ADDRESS}" ]; then
   echo "Submission mail recipient: ${XML_SUBMIT_ADDRESS}"
 else
   echo "===================================================================="
   echo "WARNING: XML_SUBMIT_ADDRESS is empty."
-  echo "Submission mail will be sent to xmlsubmit@example.com."
-  echo "Set XML_SUBMIT_ADDRESS in the Portainer stack environment, then update the stack."
-  echo "===================================================================="
-fi
 
-# Ensure a settings.php exists; in production always refresh from settings.elmo.php
-# In local development, keep the existing settings.php
-# Set LOCAL_DEVELOPMENT=true in docker-compose for local deployments
-if [ "${LOCAL_DEVELOPMENT}" = "true" ]; then
-  # Local development mode - keep existing settings.php
-  if [ ! -f /var/www/html/settings.php ]; then
-    echo "Local development: settings.php not found, creating from settings.elmo.php"
-    cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-    #chown www-data:www-data /var/www/html/settings.php
-  else
-    echo "Local development: keeping existing settings.php"
-  fi
-else
-  # Production mode - always refresh settings.php for environment variable changes
-  echo "Production mode: refreshing settings.php from settings.elmo.php"
-  cp /var/www/html/settings.elmo.php /var/www/html/settings.php
-  #chown www-data:www-data /var/www/html/settings.php
 fi
 
 # Authenticate before provisioning; the application database/user may not exist yet.

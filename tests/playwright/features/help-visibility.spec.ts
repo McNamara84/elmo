@@ -82,7 +82,7 @@ async function mount(page: Page, baseURL: string | undefined, edition = 'generic
       <link rel="stylesheet" href="css/gfz-cd.css"><link rel="stylesheet" href="css/tagify-adj.css">
     </head><body>${headerMarkup}${groups.map(clean).join('\n')}</form></main>${clean(modals)}${footerMarkup}
       <span class="input-group-text" id="unit-addon">m</span>
-      <script>window.ELMO_FEATURES = { showGGMsProperties: ${gem}, showMslLabs: ${msl}, showThesauri: true };
+      <script>window.ELMO_FEATURES = { showGGMsProperties: ${gem}, showMslMode: ${msl}, showThesauri: true };
         window.translations = { general: {}, keywords: {} }; window.maxTitles = 4;
         window.titleTypeOptionsHtml = '<option value="2">Alternative Title</option>';
         // Supply the identifier vocabulary normally loaded by select.js.

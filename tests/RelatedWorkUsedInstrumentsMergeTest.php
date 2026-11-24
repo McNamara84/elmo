@@ -88,45 +88,34 @@ final class RelatedWorkUsedInstrumentsMergeTest extends TestCase
         ], $this->relatedWorks($updatedXml));
     }
 
-    public function testExportCompositionUsesConfiguredUsedInstrumentsFeatureFlag(): void
+    public function testExportCompositionKeepsDatabaseInstrumentsWhenTheCatalogueWasShown(): void
     {
-        $hadFeatureFlag = array_key_exists('showUsedInstruments', $GLOBALS);
-        $previousFeatureFlag = $GLOBALS['showUsedInstruments'] ?? null;
-        $GLOBALS['showUsedInstruments'] = true;
-
-        try {
-            $controller = new class($this->databaseResourceXml()) {
-                public function __construct(private readonly string $resourceXml)
-                {
-                }
-
-                public function getResourceAsXml(): string
-                {
-                    return $this->resourceXml;
-                }
-            };
-
-            $updatedXml = buildResourceXmlWithCurrentFormPayloads(
-                new \mysqli(),
-                $controller,
-                7,
-                [
-                    'relatedWorksPayload' => json_encode([
-                        [
-                            'identifier' => 'https://payload.example/only',
-                            'relation' => 'References',
-                            'identifierType' => 'URL',
-                        ],
-                    ], JSON_THROW_ON_ERROR),
-                ]
-            );
-        } finally {
-            if ($hadFeatureFlag) {
-                $GLOBALS['showUsedInstruments'] = $previousFeatureFlag;
-            } else {
-                unset($GLOBALS['showUsedInstruments']);
+        $controller = new class($this->databaseResourceXml()) {
+            public function __construct(private readonly string $resourceXml)
+            {
             }
-        }
+
+            public function getResourceAsXml(): string
+            {
+                return $this->resourceXml;
+            }
+        };
+
+        $updatedXml = buildResourceXmlWithCurrentFormPayloads(
+            new \mysqli(),
+            $controller,
+            7,
+            [
+                'usedInstrumentsActive' => '1',
+                'relatedWorksPayload' => json_encode([
+                    [
+                        'identifier' => 'https://payload.example/only',
+                        'relation' => 'References',
+                        'identifierType' => 'URL',
+                    ],
+                ], JSON_THROW_ON_ERROR),
+            ]
+        );
 
         self::assertNotNull($updatedXml);
         self::assertSame([

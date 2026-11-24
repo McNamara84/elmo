@@ -17,7 +17,8 @@ $_SERVER['REMOTE_ADDR'] = $_SERVER['REMOTE_ADDR'] ?? '127.0.0.1';
 // Load Composer autoloader
 require_once __DIR__ . '/../vendor/autoload.php';
 
-// Prevent settings.php from establishing a database connection during tests
+// install.php skips its runtime bootstrap when tests include it.
+// Database connections are opened by includes/connect_db.php, not by settings.php.
 if (!defined('INCLUDED_FROM_TEST')) {
     define('INCLUDED_FROM_TEST', true);
 }

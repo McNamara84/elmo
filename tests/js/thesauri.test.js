@@ -204,7 +204,7 @@ describe('thesauri.js', () => {
     };
     window.ELMO_FEATURES = {
       showThesauri: true,
-      showMslVocabs: false
+      showMslMode: false
     };
     stubVocabularyContentProbe();
 
@@ -436,7 +436,7 @@ describe('thesauri.js', () => {
       <div id="thesaurusModalsContainer"></div>
     `;
 
-    window.ELMO_FEATURES = { showThesauri: false, showMslVocabs: false };
+    window.ELMO_FEATURES = { showThesauri: false, showMslMode: false };
     $.getJSON.mockClear();
 
     const script = fs.readFileSync(path.resolve(__dirname, '../../js/thesauri.js'), 'utf8');
@@ -466,7 +466,7 @@ describe('thesauri.js', () => {
       <div id="thesaurusModalsContainer"></div>
     `;
 
-    window.ELMO_FEATURES = { showThesauri: true, showMslVocabs: false };
+    window.ELMO_FEATURES = { showThesauri: true, showMslMode: false };
 
     const allDisabledAvailability = {
       science_keywords: { available: false, displayName: 'GCMD Science Keywords' },
@@ -514,7 +514,7 @@ describe('thesauri.js', () => {
 
     window.ELMO_FEATURES = {
       showThesauri: true,
-      showMslVocabs: false,
+      showMslMode: false,
       hiddenThesauri: ['platforms']
     };
 
@@ -1381,7 +1381,7 @@ describe('thesauri.js — GGMs root node filtering', () => {
 
     window.ELMO_FEATURES = {
       showThesauri: true,
-      showMslVocabs: false,
+      showMslMode: false,
       showGGMsProperties: featureFlags.showGGMsProperties ?? true,
     };
     stubVocabularyContentProbe();

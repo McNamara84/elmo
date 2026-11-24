@@ -1,4 +1,5 @@
 export * from './assets';
+export * from './console';
 export * from './accessibility';
 export * from './constants';
 export * from './flows';

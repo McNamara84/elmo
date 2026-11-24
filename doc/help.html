@@ -78,7 +78,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-authors" data-bs-dismiss="offcanvas">Authors</a>
                         </li>
-                        <?php if ($showMslLabs ?? false): ?>
+                        <?php if ($showMslMode ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-originatinglaboratory"
                                 data-bs-dismiss="offcanvas">Originating Laboratory</a>
@@ -95,7 +95,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                         <li class="nav-item">
                             <a class="nav-link" href="#help-descriptions" data-bs-dismiss="offcanvas">Description(s)</a>
                         </li>
-                        <?php if ($showMslVocabs ?? false): ?>
+                        <?php if ($showMslMode ?? false): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-mslkeywords" data-bs-dismiss="offcanvas">EPOS MSL
                                 Keywords</a>
@@ -137,11 +137,9 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                             <a class="nav-link" href="#help-relatedwork" data-bs-dismiss="offcanvas">Related Work</a>
                         </li>
                         <?php endif; ?>
-                        <?php if ($showUsedInstruments ?? false): ?>
-                        <li class="nav-item">
+                        <li class="nav-item" data-pid4inst="instruments" style="display:none">
                             <a class="nav-link" href="#help-usedinstruments" data-bs-dismiss="offcanvas">Used Instruments</a>
                         </li>
-                        <?php endif; ?>
                         <?php if ($showFundingReference ?? true): ?>
                         <li class="nav-item">
                             <a class="nav-link" href="#help-fundingreference" data-bs-dismiss="offcanvas">Funding
@@ -513,7 +511,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                 </div>
             </div>
             <!-- formgroup originating laboratory -->
-            <?php if ($showMslLabs ?? false): ?>
+            <?php if ($showMslMode ?? false): ?>
             <div id="help-originatinglaboratory" class="section-content">
                 <div id="help-originatinglaboratory-fg">
                     <h3>Originating Laboratory</h3>
@@ -875,7 +873,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <div class="section-divider"></div>
             <hr>
             <!-- formgroup MSL Keywords -->
-            <?php if ($showMslVocabs ?? false): ?>
+            <?php if ($showMslMode ?? false): ?>
             <div id="help-mslkeywords" class="section-content">
                 <div id="help-mslKeywords-keyword">
                     <h3>EPOS Multi-Scale Laboratories Keywords</h3>
@@ -1142,8 +1140,7 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
             <hr>
             <?php endif; ?>
             <!-- formgroup used instruments -->
-            <?php if ($showUsedInstruments ?? false): ?>
-            <div id="help-usedinstruments" class="section-content">
+            <div id="help-usedinstruments" class="section-content" data-pid4inst="instruments" style="display:none">
                 <div id="help-usedinstruments-fg">
                     <h3>Used Instruments</h3>
                     <p>
@@ -1175,9 +1172,8 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     </p>
                 </div>
             </div>
-            <div class="section-divider"></div>
-            <hr>
-            <?php endif; ?>
+            <div class="section-divider" data-pid4inst="instruments" style="display:none"></div>
+            <hr data-pid4inst="instruments" style="display:none">
             <!-- formgroup related work-->
             <?php if ($showRelatedWork ?? true): ?>
             <div id="help-relatedwork" class="section-content">
@@ -1637,6 +1633,25 @@ $assetVersion = static fn($path) => substr(hash_file('sha256', dirname(__DIR__) 
                     el.style.display = '';
                 });
             });
+
+        // Used Instruments help follows the same Ernie list as the form.
+        // An empty list or an error leaves the section hidden.
+        fetch('../api/v2/vocabs/pid4inst/instruments')
+            .then(function (response) {
+                if (!response.ok) {
+                    throw new Error('PID4INST instruments unavailable');
+                }
+                return response.json();
+            })
+            .then(function (instruments) {
+                if (!Array.isArray(instruments) || instruments.length === 0) {
+                    return;
+                }
+                document.querySelectorAll('[data-pid4inst="instruments"]').forEach(function (el) {
+                    el.style.display = '';
+                });
+            })
+            .catch(function () {});
     });
     </script>
 </body>

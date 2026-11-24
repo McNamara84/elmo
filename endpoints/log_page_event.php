@@ -1,6 +1,10 @@
 <?php
 if (!defined('UNIT_TESTING')) {
-    require_once dirname(__DIR__) . '/settings.php';
+    require_once dirname(__DIR__) . '/feature_flags.php';
+    require_once dirname(__DIR__) . '/includes/env_variables_reader.php';
+    if (is_readable(dirname(__DIR__) . '/settings.php')) {
+        require_once dirname(__DIR__) . '/settings.php';
+    }
 }
 
 if (!function_exists('handle_log_page_event')) {

@@ -112,7 +112,7 @@ const RIGHTS_HTML = loadTemplate('formgroups/rights.html');
 const AUTHORS_HTML = loadTemplate('formgroups/authors.html');
 const DESCRIPTIONS_HTML = loadTemplate('formgroups/descriptions.html');
 const DATES_HTML = loadTemplate('formgroups/dates.html');
-const USED_INSTRUMENTS_HTML = loadTemplate('formgroups/usedInstruments.html');
+const USED_INSTRUMENTS_HTML = loadTemplate('formgroups/used-instruments.html');
 const MODALS_HTML = loadTemplate('modals.html');
 
 const TEST_PAGE_HTML = `<!DOCTYPE html>
@@ -263,8 +263,7 @@ test.describe('XML Upload with PIDINST Instruments', () => {
       (window as any).translations = translations;
       (window as any).ELMO_FEATURES = {
         showUsedInstruments: true,
-        showMslLabs: false,
-        showMslVocabs: false,
+        showMslMode: false,
         showGGMsProperties: false,
         showThesauri: false,
       };

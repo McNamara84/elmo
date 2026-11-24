@@ -15,7 +15,7 @@ use PHPUnit\Framework\TestCase;
  * - All settings files define $dataUploadUrl consistently
  * - The variable reads from the DATA_UPLOAD_URL environment variable
  * - An empty string is used as fallback when the env var is not set
- * - The footer.html correctly references $dataUploadUrl for JS output
+ * - The footer publishes dataUploadUrl through the browser allowlist
  */
 #[CoversNothing]
 final class DataUploadUrlSettingsTest extends TestCase
@@ -31,8 +31,7 @@ final class DataUploadUrlSettingsTest extends TestCase
     // ── Settings files consistency tests ─────────────────────────────
 
     /**
-     * All three settings files must contain the $dataUploadUrl definition
-     * using getenv('DATA_UPLOAD_URL') with an empty string fallback.
+     * The environment reader must define $dataUploadUrl from DATA_UPLOAD_URL.
      */
     #[DataProvider('settingsFileProvider')]
     public function testSettingsFileDefinesDataUploadUrl(string $filename): void
@@ -44,7 +43,7 @@ final class DataUploadUrlSettingsTest extends TestCase
         $this->assertNotFalse($contents);
 
         $this->assertStringContainsString(
-            "\$dataUploadUrl = getenv('DATA_UPLOAD_URL') ?: '';",
+            "\$dataUploadUrl = getenv_with_warning('DATA_UPLOAD_URL');",
             $contents,
             sprintf('%s must define $dataUploadUrl reading from DATA_UPLOAD_URL env var', $filename)
         );
@@ -56,9 +55,7 @@ final class DataUploadUrlSettingsTest extends TestCase
     public static function settingsFileProvider(): array
     {
         return [
-            'settings.php' => ['settings.php'],
-            'settings.elmo.php' => ['settings.elmo.php'],
-            'sample_settings.php' => ['sample_settings.php'],
+            'includes/env_variables_reader.php' => ['includes/env_variables_reader.php'],
         ];
     }
 
@@ -153,24 +150,27 @@ final class DataUploadUrlSettingsTest extends TestCase
 
     public function testFooterHtmlOutputsDataUploadUrlToJavaScript(): void
     {
-        $filePath = $this->projectRoot . '/footer.html';
-        $this->assertFileExists($filePath);
+        $dataUploadUrl = 'https://nextcloud.example.com/upload';
+        $xmlSubmitAddress = 'curator@example.org';
+        $contactAddressRepository = 'repo@example.org';
+        $showFeedbackLink = false;
+        $maxTitles = 2;
 
-        $contents = file_get_contents($filePath);
-        $this->assertNotFalse($contents);
+        ob_start();
+        try {
+            include $this->projectRoot . '/footer.html';
+            $html = (string) ob_get_contents();
+        } finally {
+            ob_end_clean();
+        }
 
-        $this->assertStringContainsString(
-            'dataUploadUrl:',
-            $contents,
-            'footer.html must expose dataUploadUrl in the ELMO_FEATURES JavaScript object'
-        );
+        $this->assertSame(1, preg_match('/window\.ELMO_FEATURES = (\{.*?\});/s', $html, $match));
+        $features = json_decode($match[1], true, 512, JSON_THROW_ON_ERROR);
 
-        // Verify it uses json_encode with the correct variable
-        $this->assertMatchesRegularExpression(
-            '/dataUploadUrl:\s*<\?php\s+echo\s+json_encode\(\$dataUploadUrl\b/',
-            $contents,
-            'footer.html must use json_encode($dataUploadUrl) for safe JS output'
-        );
+        $this->assertSame($dataUploadUrl, $features['dataUploadUrl']);
+        $this->assertSame($xmlSubmitAddress, $features['xmlSubmitAddress']);
+        $this->assertArrayNotHasKey('contactAddressRepository', $features);
+        $this->assertArrayNotHasKey('showFreeKeywords', $features);
     }
 
     // ── Translation keys consistency tests ───────────────────────────

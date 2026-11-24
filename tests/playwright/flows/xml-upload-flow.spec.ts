@@ -434,10 +434,8 @@ test.describe('XML Upload Mapping Flow', () => {
 
     await page.addInitScript(({ translations }) => {
       (window as any).translations = translations;
-      // Enable MSL Labs feature for test
       (window as any).ELMO_FEATURES = {
-        showMslLabs: true,
-        showMslVocabs: false,
+        showMslMode: true,
         showGGMsProperties: false,
         showThesauri: true
       };
