@@ -90,25 +90,22 @@ foreach ([
 echo json_encode(['imports' => $themeModuleImports], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG);
 ?>
 </script>
-<!-- If some thesauri need to be hidden in regards of ERNIE settings, they can be added to the "hiddenThesauri" array here -->
+<!-- Browser-visible flags. JSVariables() is the allowlist. -->
 <script>
-window.ELMO_FEATURES = {
-    showThesauri: <?php echo json_encode($showThesauri ?? true); ?>,
-    showMslMode: <?php echo json_encode($showMslMode ?? false); ?>,
-    showFreeKeywords: <?php echo json_encode($showFreeKeywords ?? true); ?>,
-    showAuthorInstitution: <?php echo json_encode($showAuthorInstitution ?? true); ?>,
-    showContactInstitution: <?php echo json_encode($showContactInstitution ?? false); ?>,
-    showGGMsProperties: <?php echo json_encode($showGGMsProperties ?? false); ?>,
-    showSpatialTemporalCoverage: <?php echo json_encode($showSpatialTemporalCoverage ?? true); ?>,
-    showUsedInstruments: <?php echo json_encode($showUsedInstruments ?? true); ?>,
-    hiddenThesauri: <?php echo json_encode($thesauriHiddenKeys ?? []); ?>,
-    showRelatedWork: <?php echo json_encode($showRelatedWork ?? true); ?>,
-    showFundingReference: <?php echo json_encode($showFundingReference ?? true); ?>,
-    funderPidMode: <?php echo json_encode($funderPidMode ?? 'CFID'); ?>,
-    dataUploadUrl: <?php echo json_encode($dataUploadUrl ?? ''); ?>,
-    xmlSubmitAddress: <?php echo json_encode($xmlSubmitAddress ?? 'datapub@gfz.de'); ?>,
-    contactAddressRepository: <?php echo json_encode($contactAddressRepository ?? 'datapub@gfz.de'); ?>
-};
+window.ELMO_FEATURES = <?php
+require_once __DIR__ . '/includes/feature_toggles.php';
+echo json_encode(JSVariables([
+    'showThesauri' => $showThesauri ?? null,
+    'showMslMode' => $showMslMode ?? null,
+    'showContactInstitution' => $showContactInstitution ?? null,
+    'showGGMsProperties' => $showGGMsProperties ?? null,
+    'showUsedInstruments' => $showUsedInstruments ?? null,
+    'hiddenThesauri' => $thesauriHiddenKeys ?? [],
+    'funderPidMode' => $funderPidMode ?? null,
+    'dataUploadUrl' => $dataUploadUrl ?? null,
+    'xmlSubmitAddress' => $xmlSubmitAddress ?? null,
+]), JSON_HEX_TAG | JSON_UNESCAPED_SLASHES);
+?>;
 </script>
 
 <!-- Expose "isNewRecord" so JS can apply behavior only for new records -->

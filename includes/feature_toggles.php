@@ -29,6 +29,67 @@ function resolveFeatureToggle(?bool $value, bool $default): bool
 }
 
 /**
+ * Values the browser may read. Pass flags after environment, settings, and variant overrides.
+ * Anything omitted here stays on the server, including repository contact details and credentials.
+ *
+ * @param array<string, mixed> $resolved
+ * @return array{
+ *   showThesauri: bool,
+ *   showMslMode: bool,
+ *   showContactInstitution: bool,
+ *   showGGMsProperties: bool,
+ *   showUsedInstruments: bool,
+ *   hiddenThesauri: list<string>,
+ *   funderPidMode: string,
+ *   dataUploadUrl: string,
+ *   xmlSubmitAddress: string
+ * }
+ */
+function JSVariables(array $resolved): array
+{
+    $bool = static function (string $key, bool $default) use ($resolved): bool {
+        $value = $resolved[$key] ?? null;
+        if (is_bool($value)) {
+            return $value;
+        }
+        if (is_string($value) || is_int($value)) {
+            $parsed = filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($parsed !== null) {
+                return $parsed;
+            }
+        }
+        return $default;
+    };
+
+    $text = static function (string $key, string $default) use ($resolved): string {
+        $value = $resolved[$key] ?? null;
+        return is_string($value) ? $value : $default;
+    };
+
+    $hidden = $resolved['hiddenThesauri'] ?? [];
+    $hiddenKeys = [];
+    if (is_array($hidden)) {
+        foreach ($hidden as $key) {
+            if (is_string($key) && $key !== '') {
+                $hiddenKeys[] = $key;
+            }
+        }
+    }
+
+    return [
+        'showThesauri' => $bool('showThesauri', true),
+        'showMslMode' => $bool('showMslMode', false),
+        'showContactInstitution' => $bool('showContactInstitution', false),
+        'showGGMsProperties' => $bool('showGGMsProperties', false),
+        'showUsedInstruments' => $bool('showUsedInstruments', true),
+        'hiddenThesauri' => array_values(array_unique($hiddenKeys)),
+        'funderPidMode' => $text('funderPidMode', 'CFID'),
+        'dataUploadUrl' => $text('dataUploadUrl', ''),
+        'xmlSubmitAddress' => $text('xmlSubmitAddress', 'datapub@gfz.de'),
+    ];
+}
+
+/**
  * Apply cross-feature overrides for specific ELMO GEM variant
  *
  * The override map is intentionally defined here so PHP rendering and JS
