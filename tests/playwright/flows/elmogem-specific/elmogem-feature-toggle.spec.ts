@@ -13,19 +13,10 @@ const MOCK_THESAURI_AVAILABILITY = {
  * ELMO-GEM Feature Toggle Verification
  *
  * Confirms that when showGGMsProperties=true, GEMET and Chronostratigraphy
- * stay hidden. Used Instruments follows the Ernie PID4INST list on every
- * variant, including GEM: no list or an error leaves the card hidden.
+ * stay hidden. Used Instruments is not part of this edition.
  */
 test.describe('ELMO-GEM Feature Toggle Override', () => {
   test.beforeEach(async ({ page }) => {
-    await page.route('**/api/v2/vocabs/pid4inst/instruments', async route => {
-      await route.fulfill({
-        status: 503,
-        contentType: 'application/json',
-        body: JSON.stringify({ error: 'PID4INST instruments currently unavailable', instruments: [] }),
-      });
-    });
-
     await page.route('**/api/v2/vocabs/thesauri/availability', async route => {
       await route.fulfill({
         status: 200,
@@ -74,29 +65,12 @@ test.describe('ELMO-GEM Feature Toggle Override', () => {
     await expect(chronolabel).toHaveCount(0);
   });
 
-  test('keeps Used Instruments hidden when Ernie has no instrument list', async ({ page }) => {
-    const usedInstrumentsCard = page.locator('#usedInstrumentsFormGroup');
-    await expect(usedInstrumentsCard).toBeAttached();
-    await expect(usedInstrumentsCard).toBeHidden();
-  });
-
-  test('shows Used Instruments when Ernie returns a list', async ({ page }) => {
-    await page.unroute('**/api/v2/vocabs/pid4inst/instruments');
-    await page.route('**/api/v2/vocabs/pid4inst/instruments', async route => {
-      await route.fulfill({
-        status: 200,
-        contentType: 'application/json',
-        body: JSON.stringify([{
-          pid: '21.11157/1',
-          pidType: 'Handle',
-          name: 'Seismometer',
-          instrumentTypes: ['Seismometer'],
-        }]),
-      });
+  test('does not render Used Instruments', async ({ page }) => {
+    await expect(page.locator('#usedInstrumentsFormGroup')).toHaveCount(0);
+    const showUsedInstruments = await page.evaluate(() => {
+      return (window as any).ELMO_FEATURES?.showUsedInstruments;
     });
-
-    await page.reload();
-    await expect(page.locator('#usedInstrumentsFormGroup')).toBeVisible();
+    expect(showUsedInstruments).toBe(false);
   });
 
   test('window.ELMO_FEATURES.hiddenThesauri contains the expected values', async ({ page }) => {

@@ -9,6 +9,8 @@ interface VariantConfig {
   showMslMode: boolean;
   // GEM-specific
   showGGMsProperties: boolean;
+  // GEM does not include PID4INST. Other editions leave this unset.
+  showUsedInstruments?: boolean;
   // Shared form groups (IGSN turns several off)
   showSpatialTemporalCoverage: boolean;
   showFreeKeywords: boolean;
@@ -32,6 +34,7 @@ const VARIANT_SETTINGS: Record<Variant, VariantConfig> = {
   gem: {
     showMslMode: false,
     showGGMsProperties: true,
+    showUsedInstruments: false,
     showSpatialTemporalCoverage: false,
     showFreeKeywords: true,
     showRelatedWork: true,
@@ -91,6 +94,10 @@ function writeVariantLockFile(variant: Variant): void {
 
   for (const flag of VARIANT_LOCK_FLAGS) {
     lines.push(`$${flag} = ${config[flag] ? 'true' : 'false'};`);
+  }
+
+  if (config.showUsedInstruments !== undefined) {
+    lines.push(`$showUsedInstruments = ${config.showUsedInstruments ? 'true' : 'false'};`);
   }
 
   writeFileSync(VARIANT_LOCK_PHP, `${lines.join('\n')}\n`, 'utf-8');

@@ -104,6 +104,8 @@ export default defineConfig({
       testIgnore: [
         '**/spatial-temporal-coverages.spec.ts',
         '**/minimal-data-submission.spec.ts',
+        // PID4INST is not part of ELMO GEM.
+        '**/used-instruments.spec.ts',
       ],
     },
 

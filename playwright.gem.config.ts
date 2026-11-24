@@ -12,7 +12,8 @@ import { defineConfig, devices } from '@playwright/test';
  * TEST SCOPE:
  *   features, flows (excl. minimal-data-submission, contact-person-roundtrip,
  *   save-optional-formgroups), shared formgroups (excl. spatial-temporal-coverages,
- *   resource-type-ernie, descriptions), formgroups/elmogem-specific, flows/elmogem-specific.
+ *   resource-type-ernie, descriptions, used-instruments), formgroups/elmogem-specific,
+ *   flows/elmogem-specific.
  *   Individual tests that require ERNIE, a larger generic catalog, or a map
  *   container are excluded via grepInvert. GEM descriptions are covered by
  *   formgroups/elmogem-specific/elmogem-descriptions.spec.ts.
@@ -63,6 +64,8 @@ export default defineConfig({
         // GEM descriptions are static on the page. These tests wait for ERNIE
         // accordion items that carry data-description-slug.
         '**/formgroups/descriptions.spec.ts',
+        // PID4INST is not part of ELMO GEM.
+        '**/used-instruments.spec.ts',
       ],
       // Skip individual tests that are generic-only or do not match the GEM stage catalog.
       // - Navbar / validation / software license: generic-only flows
