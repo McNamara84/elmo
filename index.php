@@ -62,6 +62,8 @@ $showFundingReference = resolveFeatureToggle($showFundingReference ?? null, true
 $showGGMsProperties = resolveFeatureToggle($showGGMsProperties ?? null, false);
 /** @var bool $showMslMode */
 $showMslMode = resolveFeatureToggle($showMslMode ?? null, false);
+/** @var bool $showUsedInstruments */
+$showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, true);
 
 // Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
