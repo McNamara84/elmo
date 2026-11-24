@@ -4,9 +4,38 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import * as yaml from 'js-yaml';
 import { requiredWorkflows } from '../../scripts/ci/deploymentChecks.mjs';
-import { enableSyncMerge, syncBranch, syncHeld } from '../../scripts/ci/syncMainToDev.mjs';
+import { createSyncGit, enableSyncMerge, syncBranch, syncHeld } from '../../scripts/ci/syncMainToDev.mjs';
 import { root } from './deploymentFixtures.mjs';
 import { armed, conflict, marker, repo, repositoryPaused, syncFixture } from './syncFixtures.mjs';
+
+test('the workflow checkout preserves the common history needed to synchronize diverged branches', async t => {
+    const fixture = syncFixture(t), { state } = fixture;
+    const workflow = yaml.load(readFileSync(join(root, '.github/workflows/sync-main-to-dev.yml'), 'utf8'));
+    const checkout = workflow.jobs.synchronize.steps.find(step => step.uses?.startsWith('actions/checkout@'));
+    const clone = (name, depth) => {
+        const directory = join(fixture.directory, name);
+        const args = ['clone', '--quiet', '--no-local', '--no-tags', '--branch', 'main'];
+        if (depth > 0) args.push('--depth', String(depth));
+        fixture.git.run('-C', fixture.directory, ...args, fixture.remote, directory);
+        return createSyncGit(directory);
+    };
+
+    // Fetching both tip SHAs does not remove a checkout's shallow boundary.
+    const shallow = clone('shallow-checkout', 1);
+    shallow.fetch(state.main); shallow.fetch(state.dev);
+    assert.equal(shallow.run('rev-parse', '--is-shallow-repository'), 'true');
+    assert.throws(() => shallow.merge(state.dev, state.main), /Cannot prepare synchronization merge/u);
+
+    const trusted = clone('workflow-checkout', checkout.with?.['fetch-depth'] ?? 1);
+    await fixture.run({ git: trusted });
+    const head = trusted.head(syncBranch);
+    assert.ok(trusted.contains(state.main, head));
+    assert.ok(trusted.contains(state.dev, head));
+    assert.equal(trusted.run('show', `${head}:main-fix.txt`), 'Only on main');
+    assert.equal(trusted.run('show', `${head}:dev-feature.txt`), 'Only on dev');
+    assert.equal(trusted.run('rev-parse', 'HEAD'), state.main);
+    assert.equal(trusted.run('status', '--porcelain'), '');
+});
 
 test('one App-authored integration PR preserves main and dev, reusing its commit and reviews on retries', async t => {
     const fixture = syncFixture(t), { git, state } = fixture;
