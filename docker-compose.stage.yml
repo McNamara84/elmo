@@ -20,7 +20,7 @@ services:
 
   web:
     # Template only: the publishing workflow pins this image to a validated digest.
-    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web@sha256:fbc4f43b7b752dd1e958bc4fc1f9215dafa6d4240d516c9be9db1ea5a72fb7c8}"
     pull_policy: always
     healthcheck: &web-healthcheck
       test: ["CMD", "php", "/var/www/html/scripts/container_database.php", "healthcheck"]
@@ -90,7 +90,7 @@ services:
       - web_drafts:/var/www/html/storage/drafts
 
   web-msl:
-    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web@sha256:fbc4f43b7b752dd1e958bc4fc1f9215dafa6d4240d516c9be9db1ea5a72fb7c8}"
     pull_policy: always
     healthcheck: *web-healthcheck
     environment:
@@ -153,7 +153,7 @@ services:
       - web_msl_drafts:/var/www/html/storage/drafts
 
   web-igsn:
-    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web:deployment-template}"
+    image: "${ELMO_STAGE_WEB_IMAGE:-ghcr.io/mcnamara84/elmo-web@sha256:fbc4f43b7b752dd1e958bc4fc1f9215dafa6d4240d516c9be9db1ea5a72fb7c8}"
     pull_policy: always
     healthcheck: *web-healthcheck
     environment:
