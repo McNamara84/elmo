@@ -68,9 +68,11 @@ $showUsedInstruments = resolveFeatureToggle($showUsedInstruments ?? null, true);
 // Apply cross-feature overrides for specific ELMO GEM variant
 $variantOverrides = applyELMOGEMFeatureOverrides([
     'showGGMsProperties' => $showGGMsProperties,
+    'showUsedInstruments' => $showUsedInstruments,
     'thesauriHiddenKeys' => [],
 ]);
 
+$showUsedInstruments = $variantOverrides['showUsedInstruments'];
 $thesauriHiddenKeys = $variantOverrides['thesauriHiddenKeys'];
 
 // Include HTML components using absolute paths to ensure reliable file access

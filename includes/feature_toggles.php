@@ -99,6 +99,8 @@ function applyELMOGEMFeatureOverrides(array $features): array
 {
     $variantOverrideMap = [
         'showGGMsProperties' => [
+            // PID4INST is not part of the ELMO GEM edition.
+            'showUsedInstruments' => false,
             // Hide thesauri that are not relevant for ELMOGEM workflows.
             'thesauriHiddenKeys' => ['chronostratigraphy', 'gemet'],
         ],

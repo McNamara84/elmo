@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 
 #[CoversFunction('resolveFeatureToggle')]
 #[CoversFunction('JSVariables')]
+#[CoversFunction('applyELMOGEMFeatureOverrides')]
 final class FeatureToggleDefaultsTest extends TestCase
 {
     protected function setUp(): void
@@ -78,5 +79,29 @@ final class FeatureToggleDefaultsTest extends TestCase
             'dataUploadUrl' => '',
             'xmlSubmitAddress' => 'datapub@gfz.de',
         ], JSVariables([]));
+    }
+
+    public function testGemPropertiesTurnUsedInstrumentsOff(): void
+    {
+        $overridden = applyELMOGEMFeatureOverrides([
+            'showGGMsProperties' => true,
+            'showUsedInstruments' => true,
+            'thesauriHiddenKeys' => [],
+        ]);
+
+        $this->assertFalse($overridden['showUsedInstruments']);
+        $this->assertSame(['chronostratigraphy', 'gemet'], $overridden['thesauriHiddenKeys']);
+    }
+
+    public function testOtherEditionsKeepUsedInstruments(): void
+    {
+        $overridden = applyELMOGEMFeatureOverrides([
+            'showGGMsProperties' => false,
+            'showUsedInstruments' => true,
+            'thesauriHiddenKeys' => [],
+        ]);
+
+        $this->assertTrue($overridden['showUsedInstruments']);
+        $this->assertSame([], $overridden['thesauriHiddenKeys']);
     }
 }
