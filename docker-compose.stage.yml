@@ -57,8 +57,6 @@ services:
       DATACITE_JSONLD_CONTEXT_URL: ${DATACITE_JSONLD_CONTEXT_URL}
       DATA_UPLOAD_URL: ${DATA_UPLOAD_URL}
       FUNDER_PID: ${FUNDER_PID:-CFID}
-      # Database install routine
-      INSTALL_ACTION: basic
       # Edition selector. Form-group flags live in feature_flags.php.
       # Flags for Standard ELMO
       SHOW_MSL_MODE: "false"
