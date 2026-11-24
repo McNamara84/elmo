@@ -69,3 +69,6 @@ $smtpAuth = getenv_with_warning('SMTP_AUTH') ?: '';
 $feedbackAddress = getenv_with_warning('FEEDBACK_ADDRESS', 'feedback@example.com');
 $xmlSubmitAddress = getenv_with_warning('XML_SUBMIT_ADDRESS', 'xmlsubmit@example.com');
 $icgemSubmitAddress = getenv_with_warning('ICGEM_SUBMIT_ADDRESS', 'icgem@gfz.de');
+// Written into ISO repository metadata. The browser allowlist does not include it.
+$contactAddressRepository = getenv_with_warning('CONTACT_ADDRESS_REPOSITORY', 'datapub@gfz.de');
+$GLOBALS['contactAddressRepository'] = $contactAddressRepository;

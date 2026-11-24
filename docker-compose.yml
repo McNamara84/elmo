@@ -74,6 +74,7 @@ services:
       BASE_URL: http://hostmachine:8080/
       ERNIE_URL: ${ERNIE_URL}
       ERNIE_API_KEY: ${ERNIE_API_KEY}
+      CONTACT_ADDRESS_REPOSITORY: ${CONTACT_ADDRESS_REPOSITORY:-datapub@gfz.de}
     volumes:
       - .:/work
       - ./playwright-report:/work/playwright-report
