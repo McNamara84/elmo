@@ -293,7 +293,7 @@ Infrastructure uses the latest patches of supported LTS releases: Node.js 24.22.
 
 Playwright CI uses Ubuntu 24.04 so WebKit's native libraries match its browser build. Browser cache keys include the Ubuntu release and runner architecture to prevent reuse across incompatible runner images. A browser startup check verifies each engine before the application tests run.
 
-The PHP image builds also install available Debian security updates (including Apache 2.4.69). Production omits npm development packages, compilers, and Linux development headers. Trivy still reports upstream vulnerabilities in Debian's MariaDB client and libxml2 packages without available distribution fixes, and in the Go runtime embedded in the official database images' `gosu` helper. The image update therefore does not establish a zero-vulnerability container baseline; review these findings again before deployment.
+The PHP image builds also install available Debian security updates. Production omits npm development packages, compilers, and Linux development headers. The container security workflow retains unfixed HIGH/CRITICAL findings in its reports and blocks fixable HIGH/CRITICAL findings. Successful scans do not establish a vulnerability-free container baseline.
 
 The targeted `@istanbuljs/load-nyc-config` override reuses the direct `js-yaml` 5 dependency. This removes its old YAML/argparse dependency chain and the vulnerable `sprintf-js` package ([GHSA-hp3w-g68c-fv3c](https://github.com/advisories/GHSA-hp3w-g68c-fv3c)). Retest YAML configuration loading and Jest coverage when changing this override. Swagger UI is served from the locked local npm package, including in the API documentation.
 

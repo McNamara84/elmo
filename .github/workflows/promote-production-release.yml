@@ -1,0 +1,192 @@
+name: Promote Production Release
+
+on:
+  workflow_run:
+    workflows: [Production Release Signal]
+    types: [completed]
+
+permissions:
+  contents: read
+
+# Never cancel a writer mid-push. All releases share one promotion queue; a
+# superseded run must pass fresh Latest/Semver/tag checks before it can write.
+concurrency:
+  group: promote-production-release
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    if: >-
+      github.repository == 'McNamara84/elmo' && github.ref == 'refs/heads/main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository &&
+      github.event.workflow_run.event == 'release' &&
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      selection: ${{ steps.release.outputs.selection }}
+    steps:
+      - name: Checkout trusted automation from the workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Validate the signalled release and exact main artifacts
+        id: release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessProductionRelease } = await import(`${root}/scripts/ci/productionRelease.mjs`);
+            const { gitRepository } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const { inspectProduction } = await import(`${root}/scripts/ci/productionDeployment.mjs`);
+            const { candidateSummary } = await import(`${root}/scripts/ci/deploymentChecks.mjs`);
+            const selection = await assessProductionRelease({ github, repo: context.repo, git: gitRepository(root),
+              runId: context.payload.workflow_run.id, runAttempt: context.payload.workflow_run.run_attempt });
+            inspectProduction(gitRepository(root), selection);
+            await candidateSummary(core, selection.candidate);
+            core.setOutput('selection', JSON.stringify(selection));
+            await core.summary.addHeading(`Production candidate ${selection.release.tag}`)
+              .addLink('Published release', `https://github.com/${selection.artifact.record.repository}/releases/tag/${selection.release.tag}`)
+              .addLink('Exact source', `https://github.com/${selection.artifact.record.repository}/commit/${selection.release.sha}`)
+              .addLink('Immutable main artifact record', `https://github.com/${selection.artifact.record.repository}/blob/${selection.artifact.commit}/${selection.release.sha}.json`)
+              .addCodeBlock(JSON.stringify(selection.artifact.record, null, 2), 'json').write();
+
+  inspect:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 40
+    permissions:
+      actions: read
+      contents: read
+      packages: read
+    env:
+      RELEASE_SELECTION: ${{ needs.validate.outputs.selection }}
+    outputs:
+      selection: ${{ steps.release.outputs.selection }}
+    steps:
+      - name: Checkout trusted automation from the workflow commit
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+          persist-credentials: false
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Revalidate the release before pulling its images
+        id: release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessProductionRelease } = await import(`${root}/scripts/ci/productionRelease.mjs`);
+            const { gitRepository } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const selection = await assessProductionRelease({ github, repo: context.repo, git: gitRepository(root),
+              runId: context.payload.workflow_run.id, runAttempt: context.payload.workflow_run.run_attempt,
+              expected: JSON.parse(process.env.RELEASE_SELECTION) });
+            core.setOutput('selection', JSON.stringify(selection));
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - name: Log in to GitHub Container Registry for read access
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify public manifests, platform and provenance; export exact digests
+        id: exported
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { exportRegistryImage, requirePublicImage } = await import(`${process.env.GITHUB_WORKSPACE}/automation/scripts/ci/registryImages.mjs`);
+            const { candidate, artifact } = JSON.parse(process.env.RELEASE_SELECTION);
+            core.setOutput('mariadb_ref', artifact.record.images.mariadb);
+            await requirePublicImage(artifact.record.images.web);
+            core.exportVariable('TRIVY_CACHE_DIR', `${process.env.RUNNER_TEMP}/elmo-production-trivy-cache`);
+            for (const kind of ['web', 'mariadb']) {
+              const exported = exportRegistryImage(artifact.record.images[kind], candidate, kind, `${process.env.RUNNER_TEMP}/elmo-production-scan/${kind}`);
+              core.setOutput(`${kind}_id`, exported.imageId);
+            }
+      - name: Rescan exact release digests with the shared vulnerability policy
+        env:
+          WEB_ID: ${{ steps.exported.outputs.web_id }}
+          MARIADB_ID: ${{ steps.exported.outputs.mariadb_id }}
+          DATABASE_IMAGE: ${{ steps.exported.outputs.mariadb_ref }}
+        run: |
+          status=0
+          for kind in web mariadb; do
+            image_id="$WEB_ID"
+            if [[ "$kind" == mariadb ]]; then image_id="$MARIADB_ID"; fi
+            root="$RUNNER_TEMP/elmo-production-scan/$kind"
+            scan_args=("$root/image.tar" "$image_id" "$root/reports")
+            if [[ "$kind" == mariadb ]]; then scan_args+=("$DATABASE_IMAGE"); fi
+            bash automation/scripts/ci/scan-container-image.sh "${scan_args[@]}" || status=1
+          done
+          exit "$status"
+      - name: Upload exact-release image scan evidence
+        if: always() && steps.release.outcome == 'success'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: production-image-scans-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/elmo-production-scan/*/reports/
+          if-no-files-found: error
+          retention-days: 90
+
+  promote:
+    needs: [validate, inspect]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      actions: read
+      contents: write
+    env:
+      SCANNED_SELECTION: ${{ needs.inspect.outputs.selection }}
+    steps:
+      - name: Checkout trusted automation with Production branch write access
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          path: automation
+      - name: Set up Node.js
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: automation/.nvmrc
+      - name: Install trusted automation dependencies without lifecycle scripts
+        working-directory: automation
+        run: npm ci --omit=dev --ignore-scripts
+      - name: Revalidate and advance Production exactly once for this release
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const root = `${process.env.GITHUB_WORKSPACE}/automation`;
+            const { assessProductionRelease } = await import(`${root}/scripts/ci/productionRelease.mjs`);
+            const { gitRepository } = await import(`${root}/scripts/ci/deploymentArtifacts.mjs`);
+            const { updateProduction } = await import(`${root}/scripts/ci/productionDeployment.mjs`);
+            const selection = JSON.parse(process.env.SCANNED_SELECTION);
+            const git = gitRepository(root, { productionOnly: true });
+            const revalidate = () => assessProductionRelease({ github, repo: context.repo, git,
+              runId: context.payload.workflow_run.id, runAttempt: context.payload.workflow_run.run_attempt, expected: selection });
+            const result = await updateProduction(git, selection, revalidate);
+            await core.summary.addHeading(`Production ${selection.release.tag}: ${result.status}`)
+              .addLink('Published release', `https://github.com/${selection.artifact.record.repository}/releases/tag/${selection.release.tag}`)
+              .addLink('Deployment commit', `https://github.com/${selection.artifact.record.repository}/commit/${result.commit}`)
+              .addLink('Immutable main artifact record', `https://github.com/${selection.artifact.record.repository}/blob/${selection.artifact.commit}/${selection.release.sha}.json`)
+              .addCodeBlock(JSON.stringify(selection.artifact.record, null, 2), 'json')
+              .addRaw(result.status === 'unchanged' ? 'No new deployment commit; this retry does not request a redeploy.\n'
+                : 'deploy/prod updated. The actual Portainer pull, recreate and health must still be verified.\n').write();
